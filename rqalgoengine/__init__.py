@@ -1,4 +1,4 @@
 # -*- coding: utf-8 -*-
 
-from .StrategyExecutor import StrategyExecutor
-from .Strategy import Strategy
+from .strategy_executor import StrategyExecutor
+from .strategy import Strategy
