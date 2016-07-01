@@ -7,7 +7,7 @@ from pip.req import parse_requirements
 
 setup(
     name='rqalgoengine',
-    version='0.1.0',
+    version='0.0.1',
     description='Python Distribution Utilities',
     packages=find_packages(exclude=[]),
     author='ricequant',
