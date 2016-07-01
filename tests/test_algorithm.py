@@ -21,6 +21,7 @@ def test_Strategy():
         print(bar_dict["000001.XSHE"])
         print(bar_dict["600485.XSHG"])
         print(bar_dict["600099.XSHG"])
+        print(context.portfolio)
         order_shares("000001.XSHG", 100)
 
     data_proxy = MyDataProxy()
