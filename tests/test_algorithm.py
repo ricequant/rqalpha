@@ -6,8 +6,10 @@ from rqalgoengine.data import RqDataProxy, MyDataProxy
 from rqalgoengine import Strategy, StrategyExecutor
 from rqalgoengine.scope.api import order_shares
 
+from .fixture import *
 
-def test_Strategy():
+
+def test_Strategy(trading_calendar, rq_data_proxy):
 
     def init(context):
         print("init", context)
@@ -24,16 +26,7 @@ def test_Strategy():
         print(context.portfolio)
         order_shares("000001.XSHG", 100)
 
-    data_proxy = MyDataProxy()
-    data_proxy = RqDataProxy()
-
-    trading_calendar = ts.trade_cal()["calendarDate"].apply(lambda x: "%s-%02d-%02d" % tuple(map(int, x.split("/"))))
-    trading_calendar = trading_calendar[
-        (trading_calendar >= "2013-02-01") & (trading_calendar <= "2013-05-01")
-    ]
-    trading_calendar = trading_calendar.tolist()
-
     strategy = Strategy(init, before_trading, handle_bar)
-    executor = StrategyExecutor(strategy, data_proxy, trading_calendar)
+    executor = StrategyExecutor(strategy, rq_data_proxy, trading_calendar)
 
     perf = executor.execute()
