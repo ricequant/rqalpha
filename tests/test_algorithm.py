@@ -10,7 +10,7 @@ from rqalgoengine.trading_env import TradingEnv
 from .fixture import *
 
 
-def test_Strategy(trading_calendar, rq_data_proxy):
+def test_Strategy(trading_calendar, rq_data_proxy, trading_env):
 
     def init(context):
         print("init", context)
@@ -28,7 +28,6 @@ def test_Strategy(trading_calendar, rq_data_proxy):
         print(context.portfolio)
         order_shares("000001.XSHG", 100)
 
-    env = TradingEnv(trading_calendar)
     strategy = Strategy(
         init=init,
         before_trading=before_trading,
@@ -36,7 +35,7 @@ def test_Strategy(trading_calendar, rq_data_proxy):
     )
     executor = StrategyExecutor(
         strategy,
-        trading_env=env,
+        trading_env=trading_env,
     )
 
     perf = executor.execute()

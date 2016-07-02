@@ -8,8 +8,7 @@ from rqalgoengine.trading_env import TradingEnv
 from .fixture import *
 
 
-def test_event_source(trading_calendar):
-    env = TradingEnv(trading_calendar)
-    source = SimulatorAStockTradingEventSource(env)
+def test_event_source(trading_env):
+    source = SimulatorAStockTradingEventSource(trading_env)
 
-    assert len(trading_calendar) * len(EventType) == len(list(source))
+    assert len(trading_env.trading_calendar) * len(EventType) == len(list(source))

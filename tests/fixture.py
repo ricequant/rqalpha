@@ -7,6 +7,7 @@ import pytest
 import pytz
 
 from rqalgoengine.data import RqDataProxy, MyDataProxy
+from rqalgoengine.trading_env import TradingEnv
 
 
 @pytest.fixture()
@@ -23,6 +24,12 @@ def trading_calendar():
     ]
 
     return trading_cal
+
+
+@pytest.fixture()
+def trading_env():
+    env = TradingEnv(trading_calendar())
+    return env
 
 
 @pytest.fixture()
