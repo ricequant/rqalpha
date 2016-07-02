@@ -5,3 +5,4 @@ pytz==2016.4
 six==1.10.0
 
 pytest==2.9.2
+enum34

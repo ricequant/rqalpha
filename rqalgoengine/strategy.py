@@ -5,10 +5,10 @@ from .domains import Position, Portfolio, Instrument, Order
 
 
 class Strategy(object):
-    def __init__(self, init, before_trading, handle_bar):
-        self.init = init
-        self.handle_bar = handle_bar
-        self.before_trading = before_trading
+    def __init__(self, **kwargs):
+        self._init = kwargs.get("init", lambda _: None)
+        self._handle_bar = kwargs.get("handle_bar", lambda _, __: None)
+        self._before_trading = kwargs.get("before_trading", lambda _: None)
         self.now = None
 
     @export_as_api
