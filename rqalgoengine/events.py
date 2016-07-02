@@ -9,14 +9,6 @@ from enum import Enum
 EventType = Enum("EventType", "DAY_START HANDLE_BAR DAY_END")
 
 
-class Event(object):
-    pass
-
-
-class EventManager(object):
-    pass
-
-
 class SimulatorAStockTradingEventSource(object):
     def __init__(self, trading_calendar):
         self.trading_calendar = trading_calendar
