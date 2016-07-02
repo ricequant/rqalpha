@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from .utils import ExecutionContext
-from .data import BarMap
+from .data import BarMap, RqDataProxy
 from .events import SimulatorAStockTradingEventSource, EventType
 
 
 class StrategyExecutor(object):
-    def __init__(self, strategy, data_proxy, trading_calendar):
+    def __init__(self, strategy, trading_env, **kwargs):
         self.strategy = strategy
-        self.data_proxy = data_proxy
-        self.event_source = SimulatorAStockTradingEventSource(trading_calendar)
+        self.trading_env = trading_env
+        self.event_source = SimulatorAStockTradingEventSource(trading_env)
+
+        self.data_proxy = kwargs.get("data_proxy", RqDataProxy())
 
     def execute(self):
         data_proxy = self.data_proxy

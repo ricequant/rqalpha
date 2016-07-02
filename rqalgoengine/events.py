@@ -10,13 +10,13 @@ EventType = Enum("EventType", "DAY_START HANDLE_BAR DAY_END")
 
 
 class SimulatorAStockTradingEventSource(object):
-    def __init__(self, trading_calendar):
-        self.trading_calendar = trading_calendar
-        self.timezone = pytz.timezone("Asia/Shanghai")
+    def __init__(self, trading_env):
+        self.trading_env = trading_env
+        self.timezone = trading_env.timezone
         self.generator = self.create_generator()
 
     def create_generator(self):
-        for date in self.trading_calendar:
+        for date in self.trading_env.trading_calendar:
             yield date.replace(hour=9, minute=0, tzinfo=self.timezone), EventType.DAY_START
             yield date.replace(hour=15, minute=0, tzinfo=self.timezone), EventType.HANDLE_BAR
             yield date.replace(hour=16, minute=0, tzinfo=self.timezone), EventType.DAY_END
