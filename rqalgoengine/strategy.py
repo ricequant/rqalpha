@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from .scope import export_as_api
-from .domains import Position, Portfolio, Instrument, Order
+from .analyser import Position, Portfolio, Order
+from .instruments import Instrument
 
 
 class Strategy(object):
@@ -13,11 +14,11 @@ class Strategy(object):
 
     @export_as_api
     def order_shares(self, id_or_ins, amount, style=None):
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def order_lots(self, id_or_ins, amount, style=None):
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def order_shares(self, id_or_ins, amount, style=None):
@@ -36,7 +37,7 @@ class Strategy(object):
         :return:  A unique order id.
         :rtype: int
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def order_lots(self, id_or_ins, amount, style=None):
@@ -54,7 +55,7 @@ class Strategy(object):
         :return:  A unique order id.
         :rtype: int
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def order_value(self, id_or_ins, cash_amount, style=None):
@@ -74,7 +75,7 @@ class Strategy(object):
         :return:  A unique order id.
         :rtype: int
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def order_percent(self, id_or_ins, percent, style=None):
@@ -96,7 +97,7 @@ class Strategy(object):
         :return:  A unique order id.
         :rtype: int
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def order_target_value(self, id_or_ins, cash_amount, style=None):
@@ -116,7 +117,7 @@ class Strategy(object):
         :return:  A unique order id.
         :rtype: int
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def order_target_percent(self, id_or_ins, percent, style=None):
@@ -141,7 +142,7 @@ class Strategy(object):
         :return:  A unique order id.
         :rtype: int
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def get_order(self, order_id):
@@ -152,15 +153,15 @@ class Strategy(object):
             like `order_shares`
         :return: an `Order` object.
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def get_open_orders(self):
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def cancel_order(self, order_or_id):
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def update_universe(self, id_or_symbols):
@@ -171,7 +172,7 @@ class Strategy(object):
         :param id_or_symbols: one or a list of id_or_symbol(s).
         :type id_or_symbols: str or an iterable of strings
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def instruments(self, id_or_symbols):
@@ -186,11 +187,11 @@ class Strategy(object):
         :return: one / a list of instrument(s) object(s) - by the
             id_or_symbol(s) requested.
         """
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def history(self, bar_count, frequency, field):
-        pass
+        raise NotImplementedError
 
     @export_as_api
     def is_st_stock(self, order_book_id):
@@ -198,24 +199,28 @@ class Strategy(object):
         instrument, = _get_instruments([order_book_id])
         return instrument.is_st
         """
-        pass
+        raise NotImplementedError
 
     @property
     def slippage(self):
-        return 0.
+        raise NotImplementedError
 
     @property
     def commission(self):
-        return None
+        raise NotImplementedError
 
     @property
     def benchmark(self):
-        return None
+        raise NotImplementedError
 
     @property
     def short_selling_allowed(self):
-        return False
+        raise NotImplementedError
 
     @property
     def portfolio(self):
-        return None
+        raise NotImplementedError
+
+    def __repr__(self):
+        items = ("%s = %r" % (k, v) for k, v in self.__dict__.items() if not callable(v))
+        return "Context({%s})" % (', '.join(items), )

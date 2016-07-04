@@ -55,6 +55,9 @@ class BarObject(object):
     def __repr__(self):
         return "BarObject({0})".format(self.__dict__)
 
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
 
 class BarMap(object):
     def __init__(self, dt, data_proxy):
@@ -66,3 +69,6 @@ class BarMap(object):
 
     def __getitem__(self, key):
         return self.data_proxy.get_data(key, self.dt)
+
+    def __repr__(self):
+        return "{0}()".format(type(self).__name__)
