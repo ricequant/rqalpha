@@ -21,19 +21,19 @@ class BarObject(object):
 
     @property
     def instrument(self):
-        pass
+        raise NotImplementedError
 
     @property
     def order_book_id(self):
-        pass
+        raise NotImplementedError
 
     @property
     def symbol(self):
-        pass
+        raise NotImplementedError
 
     @property
     def is_trading(self):
-        pass
+        raise NotImplementedError
 
     def mavg(self, intervals, frequency="day"):
         """
@@ -44,13 +44,13 @@ class BarObject(object):
         :param str frequency: frequency of the give number of intervals, by
             default as ‘day’.
         """
-        pass
+        raise NotImplementedError
 
     def vwap(self, intervals, frequency="day"):
-        pass
+        raise NotImplementedError
 
     def history(self, bar_count, frequency, field):
-        pass
+        raise NotImplementedError
 
     def __repr__(self):
         return "BarObject({0})".format(self.__dict__)
