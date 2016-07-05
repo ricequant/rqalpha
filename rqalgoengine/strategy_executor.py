@@ -26,7 +26,7 @@ class StrategyExecutor(object):
             init(strategy)
 
         for dt, event in self.event_source:
-            strategy.now = dt
+            strategy.on_dt_change(dt)
 
             bar_dict = BarMap(dt, data_proxy)
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .scope import export_as_api
-from .analyser import Position, Portfolio, Order
+from .analyser import Position, Portfolio, Order, OrderManager
 from .instruments import Instrument
 
 
@@ -11,14 +11,10 @@ class Strategy(object):
         self._handle_bar = kwargs.get("handle_bar", lambda _, __: None)
         self._before_trading = kwargs.get("before_trading", lambda _: None)
         self.now = None
+        self.order_manager = OrderManager()
 
-    @export_as_api
-    def order_shares(self, id_or_ins, amount, style=None):
-        raise NotImplementedError
-
-    @export_as_api
-    def order_lots(self, id_or_ins, amount, style=None):
-        raise NotImplementedError
+    def on_dt_change(self, dt):
+        self.now = dt
 
     @export_as_api
     def order_shares(self, id_or_ins, amount, style=None):
@@ -37,7 +33,11 @@ class Strategy(object):
         :return:  A unique order id.
         :rtype: int
         """
-        raise NotImplementedError
+        # TODO handle str or Instrument
+        order_book_id = id_or_ins
+
+        order_id = self.order_manager.add_order(order_book_id, amount, style)
+        return order_id
 
     @export_as_api
     def order_lots(self, id_or_ins, amount, style=None):
