@@ -10,3 +10,6 @@ class Trade(object):
         self.amount = amount
         self.order_id = order_id
         self.commission = commission
+
+    def __repr__(self):
+        return "Trade({0})".format(self.__dict__)

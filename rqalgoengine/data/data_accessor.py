@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
+import abc
+
+from six import with_metaclass
 import pandas as pd
 
 from .bar import BarObject
 
 
-class RqDataProxy(object):
+class DataProxy(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
+    def get_data(self, order_book_id, dt):
+        raise NotImplementedError
+
+
+class RqDataProxy(DataProxy):
     def __init__(self):
         import rqdata
         self.rqdata = rqdata
@@ -44,7 +53,7 @@ class RqDataProxy(object):
         return bar
 
 
-class MyDataProxy(object):
+class MyDataProxy(DataProxy):
     def __init__(self):
         from quantor import model, dblogic as dbl
 

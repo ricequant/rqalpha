@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
 
 from .scope import export_as_api
-from .analyser import Position, Portfolio, Order, OrderManager
+from .analyser import Position, Portfolio, Order
 from .instruments import Instrument
+from .analyser.simulation_exchange import SimuExchange
 
 
 class Strategy(object):
-    def __init__(self, **kwargs):
+    def __init__(self, data_proxy, **kwargs):
         self._init = kwargs.get("init", lambda _: None)
         self._handle_bar = kwargs.get("handle_bar", lambda _, __: None)
         self._before_trading = kwargs.get("before_trading", lambda _: None)
         self.now = None
-        self.order_manager = OrderManager()
+
+        self._simu_exchange = kwargs.get("simu_exchange", SimuExchange(data_proxy))
 
     def on_dt_change(self, dt):
         self.now = dt
+
+        self._simu_exchange.on_dt_change(dt)
+
+    def on_day_close(self):
+        self._simu_exchange.on_day_close()
 
     @export_as_api
     def order_shares(self, id_or_ins, amount, style=None):
@@ -36,8 +43,9 @@ class Strategy(object):
         # TODO handle str or Instrument
         order_book_id = id_or_ins
 
-        order_id = self.order_manager.add_order(order_book_id, amount, style)
-        return order_id
+        order = self._simu_exchange.create_order(order_book_id, amount, style)
+
+        return order.order_id
 
     @export_as_api
     def order_lots(self, id_or_ins, amount, style=None):

@@ -9,17 +9,19 @@ def gen_order_id():
 
 class Order(object):
 
-    def __init__(self, dt, order_book_id, amount, style):
+    def __init__(self, dt, order_book_id, quantity, style):
         self.dt = dt
-        self.order_book_id = order_book_id
-        self.amount = amount
-        self.style = style
+        self._order_book_id = order_book_id
+        self._style = style
+        self._order_id = gen_order_id()
 
         self.filled_shares = 0.0
-        self.quantity = 0.0
+        self.quantity = quantity
         self.reject_reason = ""
 
-        self._order_id = gen_order_id()
+    @property
+    def style(self):
+        return self._style
 
     @property
     def order_id(self):
@@ -31,3 +33,6 @@ class Order(object):
 
     def cancel(self):
         raise NotImplementedError
+
+    def __repr__(self):
+        return "Order({0})".format(self.__dict__)

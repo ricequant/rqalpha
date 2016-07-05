@@ -9,7 +9,7 @@ from rqalgoengine.scope.api import order_shares
 from .fixture import *
 
 
-def test_strategy_print_call(trading_env):
+def test_strategy_print_call(trading_env, rq_data_proxy):
 
     def init(context):
         print("init", context)
@@ -27,10 +27,12 @@ def test_strategy_print_call(trading_env):
         init=init,
         before_trading=before_trading,
         handle_bar=handle_bar,
+        data_proxy=rq_data_proxy,
     )
     executor = StrategyExecutor(
-        strategy,
+        strategy=strategy,
         trading_env=trading_env,
+        data_proxy=rq_data_proxy,
     )
 
     perf = executor.execute()
@@ -53,10 +55,12 @@ def test_strategy_load_data(trading_env, rq_data_proxy):
         init=init,
         before_trading=before_trading,
         handle_bar=handle_bar,
+        data_proxy=rq_data_proxy,
     )
     executor = StrategyExecutor(
-        strategy,
+        strategy=strategy,
         trading_env=trading_env,
+        data_proxy=rq_data_proxy,
     )
 
     perf = executor.execute()
@@ -65,7 +69,7 @@ def test_strategy_load_data(trading_env, rq_data_proxy):
     assert strategy.close[-1] == rq_data_proxy.get_data(strategy.stock, trading_env.trading_calendar[-1])["close"]
 
 
-def test_strategy_portfolio(trading_env):
+def test_strategy_portfolio(trading_env, rq_data_proxy):
 
     def handle_bar(context, bar_dict):
         pass
@@ -73,10 +77,30 @@ def test_strategy_portfolio(trading_env):
 
     strategy = Strategy(
         handle_bar=handle_bar,
+        data_proxy=rq_data_proxy,
     )
     executor = StrategyExecutor(
-        strategy,
+        strategy=strategy,
         trading_env=trading_env,
+        data_proxy=rq_data_proxy,
+    )
+
+    perf = executor.execute()
+
+
+def test_strategy_order(trading_env, rq_data_proxy):
+
+    def handle_bar(context, bar_dict):
+        order_shares("000001.XSHE", 100)
+
+    strategy = Strategy(
+        handle_bar=handle_bar,
+        data_proxy=rq_data_proxy,
+    )
+    executor = StrategyExecutor(
+        strategy=strategy,
+        trading_env=trading_env,
+        data_proxy=rq_data_proxy,
     )
 
     perf = executor.execute()
