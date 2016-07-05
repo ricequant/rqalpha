@@ -20,10 +20,11 @@ class RqDataProxy(object):
             data = rqdata.get_price(order_book_id)
             self.cache[order_book_id] = data
 
+        str_date = dt.strftime("%Y-%m-%d")
         try:
-            bar_data = data.ix[dt]
+            bar_data = data.ix[str_date]
         except KeyError:
-            bar_data = data[data.index <= dt].iloc[-1]
+            bar_data = data[data.index <= str_date].iloc[-1]
 
         bar = BarObject()
         bar.datetime = dt
