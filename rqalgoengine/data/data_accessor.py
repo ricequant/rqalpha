@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import abc
 
-from six import with_metaclass
+from six import with_metaclass, iteritems
 import pandas as pd
 
 from .bar import BarObject
+from ..utils.context import ExecutionContext
 
 
 class DataProxy(with_metaclass(abc.ABCMeta)):
@@ -26,7 +27,7 @@ class RqDataProxy(DataProxy):
 
         data = self.cache.get(order_book_id)
         if data is None:
-            data = rqdata.get_price(order_book_id)
+            data = rqdata.get_price(order_book_id, start_date="2006-01-01", end_date="2020-01-01")
             self.cache[order_book_id] = data
 
         str_date = dt.strftime("%Y-%m-%d")
@@ -47,7 +48,7 @@ class RqDataProxy(DataProxy):
             "TotalTurnover": "total_turnover",
             # TODO: fill bar
         }
-        for origin_key, new_key in mapping.items():
+        for origin_key, new_key in iteritems(mapping):
             setattr(bar, new_key, bar_data[origin_key])
 
         return bar
@@ -85,7 +86,7 @@ class MyDataProxy(DataProxy):
             "low": "low",
             "volume": "volume",
         }
-        for origin_key, new_key in mapping.items():
+        for origin_key, new_key in iteritems(mapping):
             setattr(bar, new_key, bar_data[origin_key])
 
         return bar

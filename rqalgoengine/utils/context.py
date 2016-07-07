@@ -64,7 +64,3 @@ class ExecutionContext(object):
     @classmethod
     def get_strategy(cls):
         return cls.get_active().strategy
-
-    @classmethod
-    def get_bridge(cls):
-        return cls.get_strategy().converter
