@@ -178,7 +178,7 @@ class SimuExchange(object):
 
         # check money is enough
         if money > self.portfolio.cash:
-            return False, _("Your money is no enough to buy {order_book_id}, needs {money:.2f}, cash {cash:.2f}").format(
+            return False, _("Order Rejected: no enough money to buy {order_book_id}, needs {money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order_book_id,
                 money=money,
                 cash=self.portfolio.cash,
@@ -190,7 +190,7 @@ class SimuExchange(object):
         # from ipdb import set_trace ; set_trace()
 
         if order.quantity < 0 and abs(order.quantity) > position.sellable:
-            return False, _("You don't have enough stock {order_book_id} to sell, you want to sell {quantity}, sellable {sellable}").format(
+            return False, _("Order Rejected: no enough stock {order_book_id} to sell, you want to sell {quantity}, sellable {sellable}").format(
                 order_book_id=order_book_id,
                 quantity=abs(order.quantity),
                 sellable=position.sellable,
