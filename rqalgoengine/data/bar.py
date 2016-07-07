@@ -68,7 +68,7 @@ class BarMap(object):
         self.dt = dt
 
     def __getitem__(self, key):
-        return self.data_proxy.get_data(key, self.dt)
+        return self.data_proxy.get_bar(key, self.dt)
 
     def __repr__(self):
         return "{0}()".format(type(self).__name__)

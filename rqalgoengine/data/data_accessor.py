@@ -10,7 +10,7 @@ from ..utils.context import ExecutionContext
 
 class DataProxy(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
-    def get_data(self, order_book_id, dt):
+    def get_bar(self, order_book_id, dt):
         raise NotImplementedError
 
 
@@ -21,7 +21,7 @@ class RqDataProxy(DataProxy):
         rqdata.init()
         self.cache = {}
 
-    def get_data(self, order_book_id, dt):
+    def get_bar(self, order_book_id, dt):
         # should use a better cache here
         rqdata = self.rqdata
 
@@ -61,7 +61,7 @@ class MyDataProxy(DataProxy):
         self.db = model.new_mongo_db()
         self.cache = {}
 
-    def get_data(self, order_book_id, dt):
+    def get_bar(self, order_book_id, dt):
         from quantor import model, dblogic as dbl
         db = self.db
 

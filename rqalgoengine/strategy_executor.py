@@ -35,8 +35,6 @@ class StrategyExecutor(object):
             init(strategy)
 
         def process_bar(bar_dict):
-            portfolio_mgr = strategy._portfolio_mgr
-
             # run user's strategy
             handle_bar(strategy, bar_dict)
 
