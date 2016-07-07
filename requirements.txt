@@ -6,3 +6,5 @@ six==1.10.0
 
 pytest==2.9.2
 enum34
+
+logbook==1.0.0

@@ -4,24 +4,24 @@ from .scope import export_as_api
 from .analyser import Position, Portfolio, Order
 from .instruments import Instrument
 from .analyser.simulation_exchange import SimuExchange
+from .analyser.portfolio_manager import PortfolioManager
 
 
 class Strategy(object):
-    def __init__(self, data_proxy, **kwargs):
+    def __init__(self, data_proxy, trading_env, **kwargs):
         self._init = kwargs.get("init", lambda _: None)
         self._handle_bar = kwargs.get("handle_bar", lambda _, __: None)
         self._before_trading = kwargs.get("before_trading", lambda _: None)
+        self.trading_env = trading_env
         self.now = None
 
-        self._simu_exchange = kwargs.get("simu_exchange", SimuExchange(data_proxy))
+        self._simu_exchange = kwargs.get("simu_exchange", SimuExchange(data_proxy, self.trading_env))
+        self._portfolio_mgr = PortfolioManager()
 
     def on_dt_change(self, dt):
         self.now = dt
 
         self._simu_exchange.on_dt_change(dt)
-
-    def on_day_close(self):
-        self._simu_exchange.on_day_close()
 
     @export_as_api
     def order_shares(self, id_or_ins, amount, style=None):
@@ -152,6 +152,9 @@ class Strategy(object):
         """
         raise NotImplementedError
 
+    def _order_to_target_shares(self, order_book_id, amount, style=None):
+        pass
+
     @export_as_api
     def get_order(self, order_id):
         """
@@ -168,8 +171,8 @@ class Strategy(object):
         raise NotImplementedError
 
     @export_as_api
-    def cancel_order(self, order_or_id):
-        raise NotImplementedError
+    def cancel_order(self, order_id):
+        self._simu_exchange.cancel_order(order_id)
 
     @export_as_api
     def update_universe(self, id_or_symbols):
@@ -227,7 +230,7 @@ class Strategy(object):
 
     @property
     def portfolio(self):
-        raise NotImplementedError
+        return self._simu_exchange.portfolio
 
     def __repr__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items() if not callable(v))

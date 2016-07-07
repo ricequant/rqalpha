@@ -46,5 +46,18 @@ def rq_data_proxy():
 
 
 @pytest.fixture()
+def my_data_proxy():
+    return MyDataProxy()
+
+
+@pytest.fixture()
+def data_proxy():
+    if os.environ.get("DATA_PROXY") == "my_data_proxy":
+        return my_data_proxy()
+    else:
+        return rq_data_proxy()
+
+
+@pytest.fixture()
 def simu_exchange():
-    return SimuExchange(rq_data_proxy())
+    return SimuExchange(rq_data_proxy(), trading_env())

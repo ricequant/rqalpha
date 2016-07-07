@@ -85,5 +85,7 @@ class MyDataProxy(DataProxy):
             "low": "low",
             "volume": "volume",
         }
+        for origin_key, new_key in mapping.items():
+            setattr(bar, new_key, bar_data[origin_key])
 
         return bar

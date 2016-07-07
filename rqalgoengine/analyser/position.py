@@ -13,3 +13,6 @@ class Position(object):
         self.total_trades = 0.0
         self.sellable = 0.0
         self.average_cost = 0.0
+
+    def __repr__(self):
+        return "Position({%s})" % self.__dict__

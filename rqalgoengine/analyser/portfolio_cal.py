@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-class Portfolio(object):
+class PortfolioCal(object):
 
     def __init__(self):
         self.starting_cash = 0.0
@@ -15,6 +15,3 @@ class Portfolio(object):
         self.annualized_returns = 0.0
         self.positions = {}
         self.start_date = None
-
-    def __repr__(self):
-        return "Portfolio({0})".format(self.__dict__)
