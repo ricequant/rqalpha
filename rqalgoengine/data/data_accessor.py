@@ -13,6 +13,11 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
     def get_bar(self, order_book_id, dt):
         raise NotImplementedError
 
+    def latest_bar(self, order_book_id):
+        dt = ExecutionContext.get_strategy().now
+
+        return self.get_bar(order_book_id, dt)
+
 
 class RqDataProxy(DataProxy):
     def __init__(self):

@@ -51,6 +51,10 @@ class Order(object):
         self.status = OrderStatus.REJECTED
 
     @property
+    def is_buy(self):
+        return self.quantity > 0
+
+    @property
     def reject_reason(self):
         return self._reject_reason
 

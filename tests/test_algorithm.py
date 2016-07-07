@@ -2,7 +2,7 @@
 
 from pprint import pprint
 
-from six import print_ as print
+from six import print_ as print, iteritems
 import tushare as ts
 
 from rqalgoengine import Strategy, StrategyExecutor
@@ -135,7 +135,9 @@ def test_strategy_keep_buy(trading_env, data_proxy):
     pprint(strategy._simu_exchange.trades)
     pprint(strategy._simu_exchange.positions)
     pprint(strategy._simu_exchange.portfolio)
-    pprint(strategy._simu_exchange.daily_portfolios)
+    for date, portfolio in iteritems(strategy._simu_exchange.daily_portfolios):
+        print(date)
+        pprint(portfolio)
 
 
 def test_strategy_buy_and_sell(trading_env, data_proxy):

@@ -5,6 +5,7 @@ from collections import defaultdict, OrderedDict
 
 from six import iteritems
 
+from ..utils.context import ExecutionContext
 from ..logger import user_log
 from .position import Position
 from .portfolio import Portfolio
@@ -32,9 +33,14 @@ class SimuExchange(object):
 
         self.daily_portfolios = OrderedDict()
 
+        self.strategy = None
+
         portfolio.cash = portfolio.starting_cash = kwargs.get("init_cash", 100000.)
         portfolio.positions = self.positions
         portfolio.start_date = trading_env.trading_calendar[0].date()
+
+    def set_strategy(self, strategy):
+        self.strategy = strategy
 
     def on_dt_change(self, dt):
         self.dt = dt
@@ -119,6 +125,9 @@ class SimuExchange(object):
         close_orders = []
 
         portfolio = self.portfolio
+        slippage_decider = self.strategy.slippage_decider
+        commission_decider = self.strategy.commission_decider
+        data_proxy = self.data_proxy
 
         for order_book_id, order_list in iteritems(self.open_orders):
             # TODO handle limit order
@@ -130,22 +139,25 @@ class SimuExchange(object):
                     user_log.error(reason)
                     continue
 
-                price = bar_dict[order.order_book_id].close
+                trade_price = slippage_decider.get_trade_price(data_proxy, order)
                 amount = order.quantity
-                money = price * amount
 
                 # TODO consider commission and slippage
 
                 trade = Trade(
                     date=order.dt,
                     order_book_id=order_book_id,
-                    price=price,
+                    price=trade_price,
                     amount=order.quantity,
                     order_id=order.order_id,
                     commission=None,
                 )
 
-                portfolio.cash -= money
+                commission = commission_decider.get_commission(order, trade)
+                trade.commission = commission
+
+                portfolio.cash -= trade_price * amount
+                portfolio.cash -= commission
 
                 # update order
                 # TODO simu to create more trades
@@ -170,17 +182,15 @@ class SimuExchange(object):
     def validate_order(self, bar_dict, order):
         # TODO need to be abstract
         order_book_id = order.order_book_id
-        price = bar_dict[order_book_id].close
-        # one order might has mulitple trades
-
         amount = order.quantity
-        money = price * amount
+        price = self.strategy.slippage_decider.get_trade_price(self.data_proxy, order)
+        cost_money = price * amount
 
         # check money is enough
-        if money > self.portfolio.cash:
-            return False, _("Order Rejected: no enough money to buy {order_book_id}, needs {money:.2f}, cash {cash:.2f}").format(
+        if cost_money > self.portfolio.cash:
+            return False, _("Order Rejected: no enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order_book_id,
-                money=money,
+                cost_money=cost_money,
                 cash=self.portfolio.cash,
                 )
 

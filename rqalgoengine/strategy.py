@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from .analyser.commission import AStockCommission
 from .scope import export_as_api
 from .analyser import Position, Portfolio, Order
 from .instruments import Instrument
 from .analyser.simulation_exchange import SimuExchange
 from .analyser.portfolio_manager import PortfolioManager
+from .analyser.slippage import FixedPercentSlippageDecider
 
 
 class Strategy(object):
@@ -15,8 +17,13 @@ class Strategy(object):
         self.trading_env = trading_env
         self.now = None
 
+        self.slippage_decider = kwargs.get("slippage", FixedPercentSlippageDecider())
+        self.commission_decider = kwargs.get("commission", AStockCommission())
+
         self._simu_exchange = kwargs.get("simu_exchange", SimuExchange(data_proxy, self.trading_env))
         self._portfolio_mgr = PortfolioManager()
+
+        self._simu_exchange.set_strategy(self)
 
     def on_dt_change(self, dt):
         self.now = dt
