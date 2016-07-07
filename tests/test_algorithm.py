@@ -135,6 +135,7 @@ def test_strategy_keep_buy(trading_env, data_proxy):
     pprint(strategy._simu_exchange.trades)
     pprint(strategy._simu_exchange.positions)
     pprint(strategy._simu_exchange.portfolio)
+    pprint(strategy._simu_exchange.daily_portfolios)
 
 
 def test_strategy_buy_and_sell(trading_env, data_proxy):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from collections import defaultdict
+import copy
+from collections import defaultdict, OrderedDict
 
 from six import iteritems
 
@@ -29,6 +30,8 @@ class SimuExchange(object):
         self.positions = defaultdict(Position)
         self.portfolio = portfolio = Portfolio()
 
+        self.daily_portfolios = OrderedDict()
+
         portfolio.cash = portfolio.starting_cash = kwargs.get("init_cash", 100000.)
         portfolio.positions = self.positions
         portfolio.start_date = trading_env.trading_calendar[0].date()
@@ -52,6 +55,9 @@ class SimuExchange(object):
             position = self.positions[trade.order_book_id]
             position.sellable += trade.amount
 
+        # store today portfolio
+        self.daily_portfolios[self.current_date] = copy.deepcopy(self.portfolio)
+
     def reject_all_open_orders(self):
         for order_book_id, order_list in iteritems(self.open_orders):
             for order in order_list:
@@ -59,7 +65,7 @@ class SimuExchange(object):
             order_list.clear()
 
     def on_bar_close(self, bar_dict):
-        trades, close_orders = self.create_trades(bar_dict)
+        trades, close_orders = self.match_orders(bar_dict)
 
         # from ipdb import set_trace ; set_trace()
 
@@ -76,6 +82,8 @@ class SimuExchange(object):
             for order_book_id, position in iteritems(positions)
         )
         portfolio.portfolio_value = portfolio.market_value + portfolio.cash
+
+        # TODO cal remain fields
         portfolio.pnl = 0
 
     def create_order(self, order_book_id, amount, style):
@@ -105,7 +113,8 @@ class SimuExchange(object):
     def get_order(self, order_id):
         return self.all_orders[order_id]
 
-    def create_trades(self, bar_dict):
+    def match_orders(self, bar_dict):
+        # TODO abstract Matching Engine
         trades = []
         close_orders = []
 
@@ -124,6 +133,8 @@ class SimuExchange(object):
                 price = bar_dict[order.order_book_id].close
                 amount = order.quantity
                 money = price * amount
+
+                # TODO consider commission and slippage
 
                 trade = Trade(
                     date=order.dt,
@@ -157,6 +168,7 @@ class SimuExchange(object):
         return trades, close_orders
 
     def validate_order(self, bar_dict, order):
+        # TODO need to be abstract
         order_book_id = order.order_book_id
         price = bar_dict[order_book_id].close
         # one order might has mulitple trades
@@ -185,5 +197,11 @@ class SimuExchange(object):
                 )
 
         # check price low and high
+
+        # check whether is trading
+
+        # check whether is limit up or limit down
+
+        # check volume is over 25%
 
         return True, None
