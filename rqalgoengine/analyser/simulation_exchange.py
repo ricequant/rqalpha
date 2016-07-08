@@ -182,9 +182,7 @@ class SimuExchange(object):
                 position = self.positions[order_book_id]
                 position.quantity += trade.amount
 
-                # position sellable should be update on_day_close
-
-                # update portfofio
+                # TODO handle divide
 
         return trades, close_orders
 
