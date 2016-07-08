@@ -133,8 +133,6 @@ def test_strategy_keep_buy(trading_env, data_proxy):
     perf = executor.execute()
 
     pprint(strategy._simu_exchange.trades)
-    pprint(strategy._simu_exchange.positions)
-    pprint(strategy._simu_exchange.portfolio)
     for date, portfolio in iteritems(strategy._simu_exchange.daily_portfolios):
         print(date)
         pprint(portfolio)
@@ -172,6 +170,11 @@ def test_strategy_buy_and_sell(trading_env, data_proxy):
     position = strategy._simu_exchange.positions["000001.XSHE"]
     assert position.quantity == 0
     assert position.sellable == 0
+
+    pprint(strategy._simu_exchange.trades)
+    for date, portfolio in iteritems(strategy._simu_exchange.daily_portfolios):
+        print(date)
+        pprint(portfolio)
 
 
 def test_strategy_sell_no_sellable(trading_env, data_proxy):

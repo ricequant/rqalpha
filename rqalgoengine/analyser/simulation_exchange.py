@@ -127,6 +127,7 @@ class SimuExchange(object):
         portfolio = self.portfolio
         slippage_decider = self.strategy.slippage_decider
         commission_decider = self.strategy.commission_decider
+        tax_decider = self.strategy.tax_decider
         data_proxy = self.data_proxy
 
         for order_book_id, order_list in iteritems(self.open_orders):
@@ -156,8 +157,13 @@ class SimuExchange(object):
                 commission = commission_decider.get_commission(order, trade)
                 trade.commission = commission
 
+                tax = tax_decider.get_tax(order, trade)
+                trade.tax = tax
+
                 portfolio.cash -= trade_price * amount
+
                 portfolio.cash -= commission
+                portfolio.cash -= tax
 
                 # update order
                 # TODO simu to create more trades
