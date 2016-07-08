@@ -23,7 +23,7 @@ def trading_calendar():
     df = df[df.isOpen == 1]
     trading_cal = df["calendarDate"].apply(lambda x: "%s-%02d-%02d" % tuple(map(int, x.split("/"))))
     trading_cal = trading_cal[
-        (trading_cal >= "2014-01-01") & (trading_cal <= "2014-07-01")
+        (trading_cal >= "2013-02-01") & (trading_cal <= "2013-05-01")
     ]
 
     trading_cal = [

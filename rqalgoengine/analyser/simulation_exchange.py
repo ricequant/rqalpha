@@ -39,17 +39,26 @@ class SimuExchange(object):
         portfolio.positions = self.positions
         portfolio.start_date = trading_env.trading_calendar[0].date()
 
+        self.last_date = None
+        self.simu_days = 0
+        self.days_a_year = 365
+
     def set_strategy(self, strategy):
         self.strategy = strategy
 
     def on_dt_change(self, dt):
+        if dt.date() != self.current_date:
+            self.last_date = self.current_date
+
         self.dt = dt
 
     @property
     def current_date(self):
-        return self.dt.date()
+        return self.dt.date() if self.dt else None
 
     def on_day_close(self):
+        self.simu_days += 1
+
         self.reject_all_open_orders()
 
         # from ipdb import set_trace ; set_trace()
@@ -61,8 +70,25 @@ class SimuExchange(object):
             position = self.positions[trade.order_book_id]
             position.sellable += trade.amount
 
+        yesterday_portfolio = self.get_yesterday_portfolio()
+        portfolio = self.portfolio
+
+        if yesterday_portfolio is None:
+            yesterday_portfolio_value = portfolio.starting_cash
+        else:
+            yesterday_portfolio_value = yesterday_portfolio.portfolio_value
+
+        portfolio.pnl = portfolio.portfolio_value - yesterday_portfolio_value
+        portfolio.total_returns = portfolio.portfolio_value / portfolio.starting_cash - 1
+        portfolio.annualized_returns = (1 + portfolio.total_returns) ** (self.days_a_year / float((self.current_date - portfolio.start_date).days + 1)) - 1
+        print(self.simu_days)
+
         # store today portfolio
         self.daily_portfolios[self.current_date] = copy.deepcopy(self.portfolio)
+
+    def get_yesterday_portfolio(self):
+        return self.daily_portfolios.get(self.last_date)
+
 
     def reject_all_open_orders(self):
         for order_book_id, order_list in iteritems(self.open_orders):
@@ -193,6 +219,12 @@ class SimuExchange(object):
         price = self.strategy.slippage_decider.get_trade_price(self.data_proxy, order)
         cost_money = price * amount
 
+        # check amount
+        if abs(amount) < 100:
+            return False, _("Order Rejected: amount must over 100 for {order_book_id} ").format(
+                order_book_id=order_book_id,
+                )
+
         # check money is enough
         if cost_money > self.portfolio.cash:
             return False, _("Order Rejected: no enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
@@ -213,12 +245,12 @@ class SimuExchange(object):
                 sellable=position.sellable,
                 )
 
-        # check price low and high
+        # TODO check price low and high
 
-        # check whether is trading
+        # TODO check whether is trading
 
-        # check whether is limit up or limit down
+        # TODO check whether is limit up or limit down
 
-        # check volume is over 25%
+        # TODO check volume is over 25%
 
         return True, None
