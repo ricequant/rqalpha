@@ -177,6 +177,42 @@ def test_strategy_buy_and_sell(trading_env, data_proxy):
         pprint(portfolio)
 
 
+def test_strategy_buy_and_sell2(trading_env, data_proxy):
+    def init(context):
+        context.cnt = 0
+
+    def handle_bar(context, bar_dict):
+        context.cnt += 1
+
+        if context.cnt % 2 == 1:
+            order_shares("000001.XSHE", 5000)
+        else:
+            order_shares("000001.XSHE", -5000)
+
+    strategy = Strategy(
+        init=init,
+        handle_bar=handle_bar,
+        data_proxy=data_proxy,
+        trading_env=trading_env,
+    )
+    executor = StrategyExecutor(
+        strategy=strategy,
+        trading_env=trading_env,
+        data_proxy=data_proxy,
+    )
+
+    perf = executor.execute()
+
+    position = strategy._simu_exchange.positions["000001.XSHE"]
+    # assert position.quantity == 0
+    # assert position.sellable == 0
+
+    pprint(strategy._simu_exchange.trades)
+    for date, portfolio in iteritems(strategy._simu_exchange.daily_portfolios):
+        print(date)
+        pprint(portfolio)
+
+
 def test_strategy_sell_no_sellable(trading_env, data_proxy):
     def init(context):
         context.cnt = 0

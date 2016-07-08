@@ -4,8 +4,7 @@ import uuid
 
 from enum import Enum
 
-
-OrderStatus = Enum("OrderStatus", "OPEN FILLED REJECTED CANCELLED")
+from ..const import ORDER_STATUS
 
 
 def gen_order_id():
@@ -24,7 +23,7 @@ class Order(object):
         self.quantity = quantity
         self._reject_reason = ""
 
-        self.status = OrderStatus.OPEN
+        self.status = ORDER_STATUS.OPEN
 
     @property
     def style(self):
@@ -48,7 +47,7 @@ class Order(object):
 
     def mark_rejected(self, reject_reason):
         self._reject_reason = reject_reason
-        self.status = OrderStatus.REJECTED
+        self.status = ORDER_STATUS.REJECTED
 
     @property
     def is_buy(self):

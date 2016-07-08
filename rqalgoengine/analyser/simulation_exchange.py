@@ -182,7 +182,7 @@ class SimuExchange(object):
                 position = self.positions[order_book_id]
                 position.quantity += trade.amount
 
-                # TODO handle divide
+                # TODO handle Dividend
 
         return trades, close_orders
 

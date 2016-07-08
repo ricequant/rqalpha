@@ -4,7 +4,8 @@ import sys
 
 from .utils import ExecutionContext
 from .data import BarMap, RqDataProxy
-from .events import SimulatorAStockTradingEventSource, EventType
+from .events import SimulatorAStockTradingEventSource
+from .const import EVENT_TYPE
 
 
 class StrategyExecutor(object):
@@ -45,12 +46,12 @@ class StrategyExecutor(object):
 
             self.current_bar_dict = bar_dict = BarMap(dt, data_proxy)
 
-            if event == EventType.DAY_START:
+            if event == EVENT_TYPE.DAY_START:
                 # run user's before_trading
                 with ExecutionContext(strategy):
                     before_trading(strategy)
-            elif event == EventType.HANDLE_BAR:
+            elif event == EVENT_TYPE.HANDLE_BAR:
                 with ExecutionContext(strategy):
                     process_bar(bar_dict)
-            elif event == EventType.DAY_END:
+            elif event == EVENT_TYPE.DAY_END:
                 on_day_close()
