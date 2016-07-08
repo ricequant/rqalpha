@@ -165,6 +165,9 @@ class SimuExchange(object):
                 portfolio.cash -= commission
                 portfolio.cash -= tax
 
+                portfolio.total_commission += commission
+                portfolio.total_tax += tax
+
                 # update order
                 # TODO simu to create more trades
                 order.filled_shares = order.quantity

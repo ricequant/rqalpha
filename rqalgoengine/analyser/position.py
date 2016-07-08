@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
+# TODO make field readonly
+
+
 class Position(object):
 
     def __init__(self):
