@@ -217,6 +217,8 @@ def test_strategy_buy_and_sell2(trading_env, data_proxy):
     with open("/tmp/a.pkl", "wb") as f:
         pickle.dump(strategy._simu_exchange.daily_portfolios, f)
 
+    pprint(strategy._simu_exchange.risk)
+
 
 def test_strategy_sell_no_sellable(trading_env, data_proxy):
     def init(context):

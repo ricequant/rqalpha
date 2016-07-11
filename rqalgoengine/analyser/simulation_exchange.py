@@ -3,12 +3,15 @@
 import copy
 from collections import defaultdict, OrderedDict
 
+import pandas as pd
+import numpy as np
 from six import iteritems
 
 from ..utils.context import ExecutionContext
 from ..logger import user_log
 from .position import Position
 from .portfolio import Portfolio
+from .risk import Risk
 from .order_style import MarketOrder, LimitOrder
 from .order import Order
 from .trade import Trade
@@ -30,6 +33,7 @@ class SimuExchange(object):
 
         self.positions = defaultdict(Position)
         self.portfolio = portfolio = Portfolio()
+        self.risk = Risk()
 
         self.daily_portfolios = OrderedDict()
 
@@ -75,9 +79,10 @@ class SimuExchange(object):
         # store today portfolio
         self.daily_portfolios[self.current_date] = copy.deepcopy(self.portfolio)
 
+        self.cal_risk()
+
     def get_yesterday_portfolio(self):
         return self.daily_portfolios.get(self.last_date)
-
 
     def reject_all_open_orders(self):
         for order_book_id, order_list in iteritems(self.open_orders):
@@ -104,6 +109,7 @@ class SimuExchange(object):
             yesterday_portfolio_value = yesterday_portfolio.portfolio_value
 
         portfolio.pnl = portfolio.portfolio_value - yesterday_portfolio_value
+        portfolio.daily_returns = portfolio.pnl / yesterday_portfolio_value - 1
         portfolio.total_returns = portfolio.portfolio_value / portfolio.starting_cash - 1
         portfolio.annualized_returns = (1 + portfolio.total_returns) ** (self.days_a_year / float((self.current_date - portfolio.start_date).days + 1)) - 1
 
@@ -119,6 +125,16 @@ class SimuExchange(object):
 
         # TODO cal remain fields
         portfolio.pnl = 0
+
+    def cal_risk(self):
+        # TODO abstract to risk cal
+        risk = self.risk
+
+        # FIXME too dirty
+        daily_returns = []
+        for date, portfolio in iteritems(self.daily_portfolios):
+            daily_returns.append(portfolio.daily_returns)
+        risk.volatility = np.std(daily_returns, ddof=1) * 252 ** 0.5
 
     def create_order(self, order_book_id, amount, style):
         if style is None:
