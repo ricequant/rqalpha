@@ -18,6 +18,14 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
 
         return self.get_bar(order_book_id, dt)
 
+    @abc.abstractmethod
+    def get_yield_curve(self, start_date=None, end_date=None):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_dividend(self, order_book_id, start_date=None, end_date=None):
+        raise NotImplementedError
+
 
 class RqDataProxy(DataProxy):
     def __init__(self):
@@ -30,10 +38,11 @@ class RqDataProxy(DataProxy):
         # should use a better cache here
         rqdata = self.rqdata
 
-        data = self.cache.get(order_book_id)
+        cache_key = "get_bar:%s" % order_book_id
+        data = self.cache.get(cache_key)
         if data is None:
             data = rqdata.get_price(order_book_id, start_date="2006-01-01", end_date="2020-01-01")
-            self.cache[order_book_id] = data
+            self.cache[cache_key] = data
 
         str_date = dt.strftime("%Y-%m-%d")
         try:
@@ -57,6 +66,26 @@ class RqDataProxy(DataProxy):
             setattr(bar, new_key, bar_data[origin_key])
 
         return bar
+
+    def get_yield_curve(self, start_date=None, end_date=None):
+        rqdata = self.rqdata
+
+        cache_key = "get_yield_curve"
+        data = self.cache.get(cache_key)
+        if data is None:
+            data = rqdata.get_yield_curve(start_date="2006-01-01", end_date="2020-01-01")
+            self.cache[cache_key] = data
+        return data
+
+    def get_dividend(self, order_book_id, start_date=None, end_date=None):
+        rqdata = self.rqdata
+
+        cache_key = "get_dividend:%s" % order_book_id
+        data = self.cache.get(cache_key)
+        if data is None:
+            data = rqdata.get_dividend(order_book_id, start_date="2006-01-01", end_date="2020-01-01")
+            self.cache[cache_key] = data
+        return data
 
 
 class MyDataProxy(DataProxy):

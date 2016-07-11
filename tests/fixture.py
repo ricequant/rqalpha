@@ -25,6 +25,8 @@ def trading_calendar():
     trading_cal = df["calendarDate"].apply(lambda x: "%s-%02d-%02d" % tuple(map(int, x.split("/"))))
     trading_cal = trading_cal.apply(lambda date: pd.Timestamp(date, tz=timezone))
 
+    trading_cal = pd.Index(trading_cal)
+
     return trading_cal
 
 

@@ -11,7 +11,7 @@ from ..utils.context import ExecutionContext
 from ..logger import user_log
 from .position import Position
 from .portfolio import Portfolio
-from .risk import Risk
+from .risk_cal import RiskCal
 from .order_style import MarketOrder, LimitOrder
 from .order import Order
 from .trade import Trade
@@ -33,7 +33,8 @@ class SimuExchange(object):
 
         self.positions = defaultdict(Position)
         self.portfolio = portfolio = Portfolio()
-        self.risk = Risk()
+
+        self.risk_cal = RiskCal(trading_env)
 
         self.daily_portfolios = OrderedDict()
 
@@ -42,6 +43,10 @@ class SimuExchange(object):
         portfolio.cash = portfolio.starting_cash = kwargs.get("init_cash", 100000.)
         portfolio.positions = self.positions
         portfolio.start_date = trading_env.trading_calendar[0].date()
+
+        self.benchmark_order_book_id = trading_env.benchmark
+        self.benchmark_portfolio_value = self.data_proxy.get_bar(
+            self.benchmark_order_book_id, portfolio.start_date).close
 
         self.last_date = None
         self.simu_days = 0
@@ -79,7 +84,14 @@ class SimuExchange(object):
         # store today portfolio
         self.daily_portfolios[self.current_date] = copy.deepcopy(self.portfolio)
 
-        self.cal_risk()
+        # TODO make benchmark cal works better
+        # update benchmark
+        new_benchmark_portfolio_value = self.data_proxy.get_bar(
+            self.benchmark_order_book_id, self.current_date).close
+        benchmark_daily_returns = new_benchmark_portfolio_value / self.benchmark_portfolio_value - 1
+        self.benchmark_portfolio_value = new_benchmark_portfolio_value
+
+        self.risk_cal.calculate(self.current_date, self.portfolio.daily_returns, benchmark_daily_returns)
 
     def get_yesterday_portfolio(self):
         return self.daily_portfolios.get(self.last_date)
@@ -99,6 +111,9 @@ class SimuExchange(object):
 
         self.update_portfolio(bar_dict)
 
+    def update_daily_benchmark(self):
+        pass
+
     def update_daily_portfolio(self):
         yesterday_portfolio = self.get_yesterday_portfolio()
         portfolio = self.portfolio
@@ -109,9 +124,10 @@ class SimuExchange(object):
             yesterday_portfolio_value = yesterday_portfolio.portfolio_value
 
         portfolio.pnl = portfolio.portfolio_value - yesterday_portfolio_value
-        portfolio.daily_returns = portfolio.pnl / yesterday_portfolio_value - 1
+        portfolio.daily_returns = portfolio.pnl / yesterday_portfolio_value
         portfolio.total_returns = portfolio.portfolio_value / portfolio.starting_cash - 1
-        portfolio.annualized_returns = (1 + portfolio.total_returns) ** (self.days_a_year / float((self.current_date - portfolio.start_date).days + 1)) - 1
+        portfolio.annualized_returns = (1 + portfolio.total_returns) ** (
+            self.days_a_year / float((self.current_date - portfolio.start_date).days + 1)) - 1
 
     def update_portfolio(self, bar_dict):
         portfolio = self.portfolio
@@ -125,16 +141,6 @@ class SimuExchange(object):
 
         # TODO cal remain fields
         portfolio.pnl = 0
-
-    def cal_risk(self):
-        # TODO abstract to risk cal
-        risk = self.risk
-
-        # FIXME too dirty
-        daily_returns = []
-        for date, portfolio in iteritems(self.daily_portfolios):
-            daily_returns.append(portfolio.daily_returns)
-        risk.volatility = np.std(daily_returns, ddof=1) * 252 ** 0.5
 
     def create_order(self, order_book_id, amount, style):
         if style is None:
