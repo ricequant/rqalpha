@@ -95,7 +95,14 @@ class RiskCal(object):
 
     def cal_alpha(self):
         beta = self.risk.beta
-        return 0
+
+        strategy_rets = self.strategy_current_annual_avg_returns[-1]
+        benchmark_rets = self.benchmark_current_annual_avg_returns[-1]
+
+        self.risk_free_rate
+
+        alpha = strategy_rets - (self.risk_free_rate + beta * (benchmark_rets - self.risk_free_rate))
+        return alpha
 
     def cal_beta(self):
         cov = np.cov(np.vstack([
