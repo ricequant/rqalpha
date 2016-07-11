@@ -23,7 +23,7 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_dividend(self, order_book_id, start_date=None, end_date=None):
+    def get_dividend_per_share(self, order_book_id, date):
         raise NotImplementedError
 
 
@@ -77,15 +77,21 @@ class RqDataProxy(DataProxy):
             self.cache[cache_key] = data
         return data
 
-    def get_dividend(self, order_book_id, start_date=None, end_date=None):
+    def get_dividend_per_share(self, order_book_id, date):
         rqdata = self.rqdata
 
         cache_key = "get_dividend:%s" % order_book_id
-        data = self.cache.get(cache_key)
-        if data is None:
-            data = rqdata.get_dividend(order_book_id, start_date="2006-01-01", end_date="2020-01-01")
-            self.cache[cache_key] = data
-        return data
+        dividend_df = self.cache.get(cache_key)
+        if dividend_df is None:
+            dividend_df = rqdata.get_dividend(order_book_id, start_date="2006-01-01", end_date="2020-01-01")
+            self.cache[cache_key] = dividend_df
+
+        df = dividend_df[dividend_df.payable_date == date]
+
+        if df.empty:
+            return 0
+
+        return df.iloc[0]["dividend_cash_before_tax"] / df.iloc[0]["round_lot"]
 
 
 class MyDataProxy(DataProxy):

@@ -65,6 +65,9 @@ class SimuExchange(object):
     def current_date(self):
         return self.dt.date() if self.dt else None
 
+    def on_day_open(self):
+        self.handle_dividend()
+
     def on_day_close(self):
         self.simu_days += 1
 
@@ -279,3 +282,15 @@ class SimuExchange(object):
         # TODO check volume is over 25%
 
         return True, None
+
+    def handle_dividend(self):
+        data_proxy = self.data_proxy
+        for order_book_id, position in iteritems(self.positions):
+            dividend_per_share = data_proxy.get_dividend_per_share(order_book_id, self.current_date)
+            if dividend_per_share > 0 and position.quantity > 0:
+                dividend = dividend_per_share * position.quantity
+                self.portfolio.cash += dividend
+                user_log.info(_("get dividend {dividend} for {order_book_id}").format(
+                    dividend=dividend,
+                    order_book_id=order_book_id,
+                ))

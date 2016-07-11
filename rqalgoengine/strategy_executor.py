@@ -30,6 +30,7 @@ class StrategyExecutor(object):
         on_dt_change = strategy.on_dt_change
 
         on_day_close = simu_exchange.on_day_close
+        on_day_open = simu_exchange.on_day_open
 
         # run user's init
         with ExecutionContext(strategy):
@@ -49,6 +50,7 @@ class StrategyExecutor(object):
             if event == EVENT_TYPE.DAY_START:
                 # run user's before_trading
                 with ExecutionContext(strategy):
+                    on_day_open()
                     before_trading(strategy)
             elif event == EVENT_TYPE.HANDLE_BAR:
                 with ExecutionContext(strategy):

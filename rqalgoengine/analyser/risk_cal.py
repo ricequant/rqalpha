@@ -78,6 +78,9 @@ class RiskCal(object):
         risk.sharpe = self.cal_sharpe()
         risk.sortino = self.cal_sortino()
 
+        # TODO
+        risk.tracking_error = 0.
+
     def cal_volatility(self):
         daily_returns = self.strategy_current_daily_returns
         volatility = self.trading_days_a_year ** 0.5 * np.std(daily_returns, ddof=1)
@@ -131,9 +134,7 @@ class RiskCal(object):
         return sortino
 
     def cal_downside_risk(self):
-        # FIXME
-        # return 0.2042
-
+        # FIXME not same as java, might be benchmark
         mask = self.strategy_current_daily_returns < self.benchmark_current_daily_returns
         downside_diff = self.strategy_current_daily_returns[mask] - self.benchmark_current_daily_returns[mask]
         return self.trading_days_a_year ** 0.5 * np.std(downside_diff, ddof=1)
