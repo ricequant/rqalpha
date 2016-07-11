@@ -75,6 +75,7 @@ class RiskCal(object):
         risk.downside_risk = self.cal_downside_risk()
         risk.beta = self.cal_beta()
         risk.alpha = self.cal_alpha()
+        risk.sharpe = self.cal_sharpe()
 
     def cal_volatility(self):
         daily_returns = self.strategy_current_daily_returns
@@ -112,6 +113,14 @@ class RiskCal(object):
         beta = cov[0][1] / cov[1][1]
 
         return beta
+
+    def cal_sharpe(self):
+        volatility = self.risk.volatility
+        strategy_rets = self.strategy_current_annual_avg_returns[-1]
+
+        sharpe = (strategy_rets - self.risk_free_rate) / volatility
+
+        return sharpe
 
     def cal_downside_risk(self):
         return 0.
