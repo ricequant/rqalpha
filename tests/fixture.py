@@ -15,27 +15,28 @@ from rqalgoengine.analyser.simulation_exchange import SimuExchange
 
 @pytest.fixture()
 def trading_calendar():
-    timezone = pytz.timezone("Asia/Shanghai")
+    # timezone = pytz.timezone("Asia/Shanghai")
+    timezone = pytz.utc
 
     # df = ts.trade_cal()
     df = pd.read_pickle(os.path.join(os.path.dirname(os.path.realpath(__file__)), "trade_cal.pkl"))
 
     df = df[df.isOpen == 1]
     trading_cal = df["calendarDate"].apply(lambda x: "%s-%02d-%02d" % tuple(map(int, x.split("/"))))
-    trading_cal = trading_cal[
-        (trading_cal >= "2013-02-01") & (trading_cal <= "2013-05-01")
-    ]
-
-    trading_cal = [
-        datetime.datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone) for date in trading_cal.tolist()
-    ]
+    trading_cal = trading_cal.apply(lambda date: pd.Timestamp(date, tz=timezone))
 
     return trading_cal
 
 
 @pytest.fixture()
 def trading_env():
-    env = TradingEnv(trading_calendar())
+    trading_cal = trading_calendar()
+
+    trading_cal = trading_cal[
+        (trading_cal >= "2013-02-01") & (trading_cal <= "2013-05-01")
+    ]
+
+    env = TradingEnv(trading_cal)
     return env
 
 

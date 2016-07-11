@@ -70,18 +70,7 @@ class SimuExchange(object):
             position = self.positions[trade.order_book_id]
             position.sellable += trade.amount
 
-        yesterday_portfolio = self.get_yesterday_portfolio()
-        portfolio = self.portfolio
-
-        if yesterday_portfolio is None:
-            yesterday_portfolio_value = portfolio.starting_cash
-        else:
-            yesterday_portfolio_value = yesterday_portfolio.portfolio_value
-
-        portfolio.pnl = portfolio.portfolio_value - yesterday_portfolio_value
-        portfolio.total_returns = portfolio.portfolio_value / portfolio.starting_cash - 1
-        portfolio.annualized_returns = (1 + portfolio.total_returns) ** (self.days_a_year / float((self.current_date - portfolio.start_date).days + 1)) - 1
-        print(self.simu_days)
+        self.update_daily_portfolio()
 
         # store today portfolio
         self.daily_portfolios[self.current_date] = copy.deepcopy(self.portfolio)
@@ -104,6 +93,19 @@ class SimuExchange(object):
         self.remove_close_orders(close_orders)
 
         self.update_portfolio(bar_dict)
+
+    def update_daily_portfolio(self):
+        yesterday_portfolio = self.get_yesterday_portfolio()
+        portfolio = self.portfolio
+
+        if yesterday_portfolio is None:
+            yesterday_portfolio_value = portfolio.starting_cash
+        else:
+            yesterday_portfolio_value = yesterday_portfolio.portfolio_value
+
+        portfolio.pnl = portfolio.portfolio_value - yesterday_portfolio_value
+        portfolio.total_returns = portfolio.portfolio_value / portfolio.starting_cash - 1
+        portfolio.annualized_returns = (1 + portfolio.total_returns) ** (self.days_a_year / float((self.current_date - portfolio.start_date).days + 1)) - 1
 
     def update_portfolio(self, bar_dict):
         portfolio = self.portfolio
@@ -213,7 +215,8 @@ class SimuExchange(object):
         return trades, close_orders
 
     def validate_order(self, bar_dict, order):
-        # TODO need to be abstract
+        # TODO need to be abstract as a validator
+
         order_book_id = order.order_book_id
         amount = order.quantity
         price = self.strategy.slippage_decider.get_trade_price(self.data_proxy, order)
