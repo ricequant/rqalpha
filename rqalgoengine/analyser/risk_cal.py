@@ -76,6 +76,7 @@ class RiskCal(object):
         risk.beta = self.cal_beta()
         risk.alpha = self.cal_alpha()
         risk.sharpe = self.cal_sharpe()
+        risk.sortino = self.cal_sortino()
 
     def cal_volatility(self):
         daily_returns = self.strategy_current_daily_returns
@@ -122,13 +123,20 @@ class RiskCal(object):
 
         return sharpe
 
+    def cal_sortino(self):
+        strategy_rets = self.strategy_current_annual_avg_returns[-1]
+        downside_risk = self.risk.downside_risk
+
+        sortino = (strategy_rets - self.risk_free_rate) / downside_risk
+        return sortino
+
     def cal_downside_risk(self):
-        return 0.
-        # mask = self.strategy_current_total_returns < self.strategy_current_total_avg_returns
-        # downside_diff = self.strategy_current_total_returns[mask] - self.strategy_current_total_avg_returns[mask]
-        # if len(downside_diff) <= 1:
-        #     return 0.0
-        # return self.trading_days_a_year ** 0.5 * np.std(downside_diff, ddof=1)
+        # FIXME
+        # return 0.2042
+
+        mask = self.strategy_current_daily_returns < self.benchmark_current_daily_returns
+        downside_diff = self.strategy_current_daily_returns[mask] - self.benchmark_current_daily_returns[mask]
+        return self.trading_days_a_year ** 0.5 * np.std(downside_diff, ddof=1)
 
     def __repr__(self):
         return "RiskCal({0})".format(self.__dict__)
