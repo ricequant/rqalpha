@@ -83,6 +83,8 @@ class RiskCal(object):
 
     def cal_volatility(self):
         daily_returns = self.strategy_current_daily_returns
+        if len(daily_returns) <= 1:
+            return 0.
         volatility = self.trading_days_a_year ** 0.5 * np.std(daily_returns, ddof=1)
         return volatility
 
@@ -110,6 +112,8 @@ class RiskCal(object):
         return alpha
 
     def cal_beta(self):
+        if len(self.strategy_current_daily_returns) <= 1:
+            return 0.
         cov = np.cov(np.vstack([
             self.strategy_current_daily_returns,
             self.benchmark_current_daily_returns,
@@ -136,8 +140,10 @@ class RiskCal(object):
     def cal_downside_risk(self):
         # FIXME not same as java, might be benchmark
         mask = self.strategy_current_daily_returns < self.benchmark_current_daily_returns
-        downside_diff = self.strategy_current_daily_returns[mask] - self.benchmark_current_daily_returns[mask]
-        return self.trading_days_a_year ** 0.5 * np.std(downside_diff, ddof=1)
+        diff = self.strategy_current_daily_returns[mask] - self.benchmark_current_daily_returns[mask]
+        if len(diff) <= 1:
+            return 0.
+        return self.trading_days_a_year ** 0.5 * np.std(diff, ddof=1)
 
     def __repr__(self):
         return "RiskCal({0})".format(self.__dict__)

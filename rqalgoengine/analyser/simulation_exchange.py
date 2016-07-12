@@ -27,7 +27,6 @@ class SimuExchange(object):
 
         self.all_orders = {}
         self.open_orders = defaultdict(list)
-        # self.pending_orders = {}
         self.dt = None
         self.trades = defaultdict(list)
 
@@ -72,8 +71,6 @@ class SimuExchange(object):
         self.simu_days += 1
 
         self.reject_all_open_orders()
-
-        # from ipdb import set_trace ; set_trace()
 
         trades = self.trades[self.current_date]
 
@@ -263,8 +260,6 @@ class SimuExchange(object):
 
         # check whether is enough to sell
         position = self.positions[order_book_id]
-
-        # from ipdb import set_trace ; set_trace()
 
         if order.quantity < 0 and abs(order.quantity) > position.sellable:
             return False, _("Order Rejected: no enough stock {order_book_id} to sell, you want to sell {quantity}, sellable {sellable}").format(
