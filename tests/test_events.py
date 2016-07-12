@@ -4,12 +4,12 @@ import tushare as ts
 
 from rqalgoengine.events import SimulatorAStockTradingEventSource
 from rqalgoengine.const import EVENT_TYPE
-from rqalgoengine.trading_env import TradingEnv
+from rqalgoengine.trading_params import TradingParams
 
 from .fixture import *
 
 
-def test_event_source(trading_env):
-    source = SimulatorAStockTradingEventSource(trading_env)
+def test_event_source(trading_params):
+    source = SimulatorAStockTradingEventSource(trading_params)
 
-    assert len(trading_env.trading_calendar) * len(EVENT_TYPE) == len(list(source))
+    assert len(trading_params.trading_calendar) * len(EVENT_TYPE) == len(list(source))

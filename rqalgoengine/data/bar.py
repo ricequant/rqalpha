@@ -60,8 +60,9 @@ class BarObject(object):
 
 
 class BarMap(object):
-    def __init__(self, dt, data_proxy):
+    def __init__(self, dt, universe, data_proxy):
         self.dt = dt
+        self.universe = universe
         self.data_proxy = data_proxy
 
     def update_dt(self, dt):

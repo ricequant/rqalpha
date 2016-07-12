@@ -9,7 +9,7 @@ import pytest
 import pytz
 
 from rqalgoengine.data import RqDataProxy, MyDataProxy
-from rqalgoengine.trading_env import TradingEnv
+from rqalgoengine.trading_params import TradingParams
 from rqalgoengine.analyser.simulation_exchange import SimuExchange
 
 
@@ -31,15 +31,15 @@ def trading_calendar():
 
 
 @pytest.fixture()
-def trading_env():
+def trading_params():
     trading_cal = trading_calendar()
 
     trading_cal = trading_cal[
         (trading_cal >= "2013-02-01") & (trading_cal <= "2013-05-01")
     ]
 
-    env = TradingEnv(trading_cal)
-    return env
+    params = TradingParams(trading_cal)
+    return params
 
 
 @pytest.fixture()
@@ -63,4 +63,4 @@ def data_proxy():
 
 @pytest.fixture()
 def simu_exchange():
-    return SimuExchange(rq_data_proxy(), trading_env())
+    return SimuExchange(rq_data_proxy(), trading_params())

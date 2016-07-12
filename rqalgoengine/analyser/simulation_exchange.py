@@ -21,9 +21,9 @@ from ..i18n import gettext as _
 
 
 class SimuExchange(object):
-    def __init__(self, data_proxy, trading_env, **kwargs):
+    def __init__(self, data_proxy, trading_params, **kwargs):
         self.data_proxy = data_proxy
-        self.trading_env = trading_env
+        self.trading_params = trading_params
 
         self.all_orders = {}
         self.open_orders = defaultdict(list)
@@ -33,7 +33,8 @@ class SimuExchange(object):
         self.positions = defaultdict(Position)
         self.portfolio = portfolio = Portfolio()
 
-        self.risk_cal = RiskCal(trading_env)
+        # TODO move risk cal outside this class
+        self.risk_cal = RiskCal(trading_params)
 
         self.daily_portfolios = OrderedDict()
 
@@ -41,9 +42,9 @@ class SimuExchange(object):
 
         portfolio.cash = portfolio.starting_cash = kwargs.get("init_cash", 100000.)
         portfolio.positions = self.positions
-        portfolio.start_date = trading_env.trading_calendar[0].date()
+        portfolio.start_date = trading_params.trading_calendar[0].date()
 
-        self.benchmark_order_book_id = trading_env.benchmark
+        self.benchmark_order_book_id = trading_params.benchmark
         self.benchmark_portfolio_value = self.data_proxy.get_bar(
             self.benchmark_order_book_id, portfolio.start_date).close
 

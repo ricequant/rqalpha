@@ -8,6 +8,7 @@ import tushare as ts
 
 from rqalgoengine import Strategy, StrategyExecutor
 from rqalgoengine.scope.api import order_shares
+from rqalgoengine.trading_params import TradingParams
 from .fixture import *
 
 
@@ -28,17 +29,17 @@ def test_buy_and_sell(trading_calendar, data_proxy):
     trading_cal = trading_cal[
         (trading_cal >= "2013-02-01") & (trading_cal <= "2013-05-01")
     ]
-    trading_env = TradingEnv(trading_cal)
+    trading_params = TradingParams(trading_cal)
 
     strategy = Strategy(
         init=init,
         handle_bar=handle_bar,
         data_proxy=data_proxy,
-        trading_env=trading_env,
+        trading_params=trading_params,
     )
     executor = StrategyExecutor(
         strategy=strategy,
-        trading_env=trading_env,
+        trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
@@ -63,17 +64,17 @@ def test_dividend(trading_calendar, data_proxy):
     trading_cal = trading_cal[
         (trading_cal >= "2013-02-01") & (trading_cal <= "2013-07-01")
     ]
-    trading_env = TradingEnv(trading_cal)
+    trading_params = TradingParams(trading_cal)
 
     strategy = Strategy(
         init=init,
         handle_bar=handle_bar,
         data_proxy=data_proxy,
-        trading_env=trading_env,
+        trading_params=trading_params,
     )
     executor = StrategyExecutor(
         strategy=strategy,
-        trading_env=trading_env,
+        trading_params=trading_params,
         data_proxy=data_proxy,
     )
 

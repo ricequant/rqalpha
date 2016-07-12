@@ -9,13 +9,15 @@ from .const import EVENT_TYPE
 
 
 class StrategyExecutor(object):
-    def __init__(self, strategy, trading_env, data_proxy, **kwargs):
+    def __init__(self, strategy, trading_params, data_proxy, **kwargs):
         self.strategy = strategy
-        self.trading_env = trading_env
-        self.event_source = SimulatorAStockTradingEventSource(trading_env)
+        self.trading_params = trading_params
+        self.event_source = SimulatorAStockTradingEventSource(trading_params)
 
         self.data_proxy = data_proxy
         self.current_bar_dict = {}
+
+        self.universe = set()
 
     def execute(self):
         data_proxy = self.data_proxy
@@ -45,7 +47,7 @@ class StrategyExecutor(object):
         for dt, event in self.event_source:
             on_dt_change(dt)
 
-            self.current_bar_dict = bar_dict = BarMap(dt, data_proxy)
+            self.current_bar_dict = bar_dict = BarMap(dt, self.universe, data_proxy)
 
             if event == EVENT_TYPE.DAY_START:
                 # run user's before_trading

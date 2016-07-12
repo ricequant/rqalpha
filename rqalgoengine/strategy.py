@@ -11,18 +11,18 @@ from .scope import export_as_api
 
 
 class Strategy(object):
-    def __init__(self, data_proxy, trading_env, **kwargs):
+    def __init__(self, data_proxy, trading_params, **kwargs):
         self._init = kwargs.get("init", lambda _: None)
         self._handle_bar = kwargs.get("handle_bar", lambda _, __: None)
         self._before_trading = kwargs.get("before_trading", lambda _: None)
-        self.trading_env = trading_env
+        self.trading_params = trading_params
         self.now = None
 
         self.slippage_decider = kwargs.get("slippage", FixedPercentSlippageDecider())
         self.commission_decider = kwargs.get("commission", AStockCommission())
         self.tax_decider = kwargs.get("tax", AStockTax())
 
-        self._simu_exchange = kwargs.get("simu_exchange", SimuExchange(data_proxy, self.trading_env))
+        self._simu_exchange = kwargs.get("simu_exchange", SimuExchange(data_proxy, self.trading_params))
         self._portfolio_mgr = PortfolioManager()
 
         self._simu_exchange.set_strategy(self)

@@ -7,9 +7,9 @@ from .risk import Risk
 
 
 class RiskCal(object):
-    def __init__(self, trading_env):
+    def __init__(self, trading_params):
         self.trading_days_a_year = 252
-        self.trading_index = trading_env.trading_calendar
+        self.trading_index = trading_params.trading_calendar
         self.trading_days_cnt = len(self.trading_index)
 
         self.strategy_total_daily_returns = np.full(self.trading_days_cnt, np.nan)

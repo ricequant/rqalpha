@@ -4,7 +4,7 @@ import pytz
 import pandas as pd
 
 
-class TradingEnv(object):
+class TradingParams(object):
     def __init__(self, trading_calendar, **kwargs):
         assert isinstance(trading_calendar, pd.Index)
         self.trading_calendar = trading_calendar
