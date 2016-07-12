@@ -2,6 +2,8 @@
 
 
 # TODO make field readonly
+# TODO use nametuple to reduce memory
+
 
 class Risk(object):
     def __init__(self):

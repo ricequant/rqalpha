@@ -11,6 +11,8 @@ def gen_order_id():
     return uuid.uuid4().hex
 
 
+# TODO use nametuple to reduce memory
+
 class Order(object):
 
     def __init__(self, dt, order_book_id, quantity, style):

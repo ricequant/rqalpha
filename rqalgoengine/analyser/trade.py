@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# TODO use nametuple to reduce memory
+
 
 class Trade(object):
 

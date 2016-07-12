@@ -2,6 +2,7 @@
 
 
 # TODO make field readonly
+# TODO use nametuple to reduce memory
 
 
 class Position(object):

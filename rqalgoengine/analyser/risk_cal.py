@@ -78,7 +78,7 @@ class RiskCal(object):
         risk.sharpe = self.cal_sharpe()
         risk.sortino = self.cal_sortino()
 
-        # TODO
+        # TODO cal tracking_error
         risk.tracking_error = 0.
 
     def cal_volatility(self):
@@ -105,8 +105,6 @@ class RiskCal(object):
 
         strategy_rets = self.strategy_current_annual_avg_returns[-1]
         benchmark_rets = self.benchmark_current_annual_avg_returns[-1]
-
-        self.risk_free_rate
 
         alpha = strategy_rets - (self.risk_free_rate + beta * (benchmark_rets - self.risk_free_rate))
         return alpha
