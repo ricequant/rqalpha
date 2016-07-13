@@ -5,8 +5,8 @@ from pprint import pprint
 from six import print_ as print, iteritems
 import tushare as ts
 
-from rqalgoengine import Strategy, StrategyExecutor
-from rqalgoengine.scope.api import order_shares
+from rqalgoengine import StrategyExecutor
+from rqalgoengine.api import order_shares
 from .fixture import *
 
 
@@ -24,15 +24,11 @@ def test_strategy_print_call(trading_params, data_proxy):
         print(bar_dict["600099.XSHG"])
         print(context.now)
 
-    strategy = Strategy(
+    executor = StrategyExecutor(
         init=init,
         before_trading=before_trading,
         handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
-    executor = StrategyExecutor(
-        strategy=strategy,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
@@ -53,23 +49,19 @@ def test_strategy_load_data(trading_params, data_proxy):
     def handle_bar(context, bar_dict):
         context.close.append(bar_dict[context.stock].close)
 
-    strategy = Strategy(
+    executor = StrategyExecutor(
         init=init,
         before_trading=before_trading,
         handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
-    executor = StrategyExecutor(
-        strategy=strategy,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
     perf = executor.execute()
 
-    assert len(strategy.close) == len(trading_params.trading_calendar)
-    assert strategy.close[-1] == data_proxy.get_bar(strategy.stock, trading_params.trading_calendar[-1])["close"]
+    assert len(executor.strategy_context.close) == len(trading_params.trading_calendar)
+    assert executor.strategy_context.close[-1] == data_proxy.get_bar(executor.strategy_context.stock, trading_params.trading_calendar[-1])["close"]
 
 
 def test_strategy_portfolio(trading_params, data_proxy):
@@ -78,13 +70,9 @@ def test_strategy_portfolio(trading_params, data_proxy):
         pass
         # print(context.portfolio)
 
-    strategy = Strategy(
-        handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
     executor = StrategyExecutor(
-        strategy=strategy,
+        handle_bar=handle_bar,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
@@ -97,13 +85,9 @@ def test_strategy_order(trading_params, data_proxy):
     def handle_bar(context, bar_dict):
         order_shares("000001.XSHE", 100)
 
-    strategy = Strategy(
-        handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
     executor = StrategyExecutor(
-        strategy=strategy,
+        handle_bar=handle_bar,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
@@ -119,23 +103,14 @@ def test_strategy_keep_buy(trading_params, data_proxy):
         print(context.portfolio.positions["000001.XSHE"])
         print(context.portfolio.cash, context.portfolio.market_value, context.portfolio.portfolio_value)
 
-    strategy = Strategy(
-        handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
     executor = StrategyExecutor(
-        strategy=strategy,
+        handle_bar=handle_bar,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
     perf = executor.execute()
-
-    pprint(strategy._simu_exchange.trades)
-    for date, portfolio in iteritems(strategy._simu_exchange.daily_portfolios):
-        print(date)
-        pprint(portfolio)
 
 
 def test_strategy_buy_and_sell(trading_params, data_proxy):
@@ -153,28 +128,20 @@ def test_strategy_buy_and_sell(trading_params, data_proxy):
         if context.cnt == 4:
             order_shares("000001.XSHE", -5000)
 
-    strategy = Strategy(
+    executor = StrategyExecutor(
         init=init,
         handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
-    executor = StrategyExecutor(
-        strategy=strategy,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
     perf = executor.execute()
 
-    position = strategy._simu_exchange.positions["000001.XSHE"]
+    positions = executor.exchange.portfolio.positions
+    position = positions["000001.XSHE"]
     assert position.quantity == 0
     assert position.sellable == 0
-
-    pprint(strategy._simu_exchange.trades)
-    for date, portfolio in iteritems(strategy._simu_exchange.daily_portfolios):
-        print(date)
-        pprint(portfolio)
 
 
 def test_strategy_buy_and_sell2(trading_params, data_proxy):
@@ -189,35 +156,20 @@ def test_strategy_buy_and_sell2(trading_params, data_proxy):
         else:
             order_shares("000001.XSHE", -5000)
 
-    strategy = Strategy(
+    executor = StrategyExecutor(
         init=init,
         handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
-    executor = StrategyExecutor(
-        strategy=strategy,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
     perf = executor.execute()
 
-    position = strategy._simu_exchange.positions["000001.XSHE"]
-    # assert position.quantity == 0
-    # assert position.sellable == 0
-
-    pprint(strategy._simu_exchange.trades)
-    for date, portfolio in iteritems(strategy._simu_exchange.daily_portfolios):
-        print(date)
-        pprint(portfolio)
-
-    print(len(strategy._simu_exchange.daily_portfolios))
-    import pickle
-    with open("/tmp/a.pkl", "wb") as f:
-        pickle.dump(strategy._simu_exchange.daily_portfolios, f)
-
-    pprint(strategy._simu_exchange.risk_cal.risk)
+    positions = executor.exchange.portfolio.positions
+    position = positions["000001.XSHE"]
+    assert position.quantity == 0
+    assert position.sellable == 0
 
 
 def test_strategy_sell_no_sellable(trading_params, data_proxy):
@@ -228,19 +180,12 @@ def test_strategy_sell_no_sellable(trading_params, data_proxy):
         order_shares("000001.XSHE", 5000)
         order_shares("000001.XSHE", -5000)
 
-    strategy = Strategy(
+    executor = StrategyExecutor(
         init=init,
         handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
-    executor = StrategyExecutor(
-        strategy=strategy,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
     perf = executor.execute()
-
-    pprint(strategy._simu_exchange.trades)
-    pprint(strategy._simu_exchange.positions)

@@ -16,3 +16,11 @@ EVENT_TYPE = Enum("EVENT_TYPE", [
     "HANDLE_BAR",
     "DAY_END",
 ])
+
+
+EXECUTION_PHASE = Enum("EXECUTION_PHASE", [
+    "INIT",
+    "HANDLE_BAR",
+    "BEFORE_TRADING",
+    "SCHEDULED",
+])

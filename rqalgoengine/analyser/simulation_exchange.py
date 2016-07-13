@@ -7,17 +7,20 @@ import pandas as pd
 import numpy as np
 from six import iteritems
 
-from ..utils.context import ExecutionContext
-from ..logger import user_log
-from .position import Position
-from .portfolio import Portfolio
-from .risk_cal import RiskCal
-from .order_style import MarketOrder, LimitOrder
-from .order import Order
-from .trade import Trade
 from ..data import BarMap, RqDataProxy
-from .portfolio_manager import PortfolioManager
 from ..i18n import gettext as _
+from ..logger import user_log
+from ..utils.context import ExecutionContext
+from .commission import AStockCommission
+from .slippage import FixedPercentSlippageDecider
+from .tax import AStockTax
+from .order import Order
+from .order_style import MarketOrder, LimitOrder
+from .portfolio import Portfolio
+from .portfolio_manager import PortfolioManager
+from .position import Position
+from .risk_cal import RiskCal
+from .trade import Trade
 
 
 class SimuExchange(object):
@@ -38,7 +41,17 @@ class SimuExchange(object):
 
         self.daily_portfolios = OrderedDict()
 
-        self.strategy = None
+        self.slippage_decider = kwargs.get("slippage")
+        if self.slippage_decider is None:
+            self.slippage_decider = FixedPercentSlippageDecider()
+
+        self.commission_decider = kwargs.get("commission")
+        if self.commission_decider is None:
+            self.commission_decider = AStockCommission()
+
+        self.tax_decider = kwargs.get("tax")
+        if self.tax_decider is None:
+            self.tax_decider = AStockTax()
 
         portfolio.cash = portfolio.starting_cash = kwargs.get("init_cash", 100000.)
         portfolio.positions = self.positions
@@ -51,9 +64,6 @@ class SimuExchange(object):
         self.last_date = None
         self.simu_days = 0
         self.days_a_year = 365
-
-    def set_strategy(self, strategy):
-        self.strategy = strategy
 
     def on_dt_change(self, dt):
         if dt.date() != self.current_date:
@@ -176,9 +186,9 @@ class SimuExchange(object):
         close_orders = []
 
         portfolio = self.portfolio
-        slippage_decider = self.strategy.slippage_decider
-        commission_decider = self.strategy.commission_decider
-        tax_decider = self.strategy.tax_decider
+        slippage_decider = self.slippage_decider
+        commission_decider = self.commission_decider
+        tax_decider = self.tax_decider
         data_proxy = self.data_proxy
 
         for order_book_id, order_list in iteritems(self.open_orders):
@@ -242,7 +252,7 @@ class SimuExchange(object):
 
         order_book_id = order.order_book_id
         amount = order.quantity
-        price = self.strategy.slippage_decider.get_trade_price(self.data_proxy, order)
+        price = self.slippage_decider.get_trade_price(self.data_proxy, order)
         cost_money = price * amount
 
         # check amount

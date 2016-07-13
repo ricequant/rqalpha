@@ -6,8 +6,8 @@ import numpy as np
 from six import print_ as print, iteritems
 import tushare as ts
 
-from rqalgoengine import Strategy, StrategyExecutor
-from rqalgoengine.scope.api import order_shares
+from rqalgoengine import StrategyExecutor
+from rqalgoengine.api import order_shares
 from rqalgoengine.trading_params import TradingParams
 from .fixture import *
 
@@ -31,21 +31,17 @@ def test_buy_and_sell(trading_calendar, data_proxy):
     ]
     trading_params = TradingParams(trading_cal)
 
-    strategy = Strategy(
+    executor = StrategyExecutor(
         init=init,
         handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
-    executor = StrategyExecutor(
-        strategy=strategy,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
     perf = executor.execute()
-    portfolio = strategy._simu_exchange.portfolio
 
+    portfolio = executor.exchange.portfolio
     assert np.isclose(portfolio.annualized_returns, -0.094760148802936484)
     assert np.isclose(portfolio.total_returns, -0.022917433828999911)
 
@@ -66,20 +62,17 @@ def test_dividend(trading_calendar, data_proxy):
     ]
     trading_params = TradingParams(trading_cal)
 
-    strategy = Strategy(
+    executor = StrategyExecutor(
         init=init,
         handle_bar=handle_bar,
-        data_proxy=data_proxy,
-        trading_params=trading_params,
-    )
-    executor = StrategyExecutor(
-        strategy=strategy,
+
         trading_params=trading_params,
         data_proxy=data_proxy,
     )
 
     perf = executor.execute()
-    portfolio = strategy._simu_exchange.portfolio
+
+    portfolio = executor.exchange.portfolio
 
     assert np.isclose(portfolio.annualized_returns, -0.47051001393709346)
     assert np.isclose(portfolio.total_returns, -0.23129389564400005)

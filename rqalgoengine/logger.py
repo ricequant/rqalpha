@@ -14,7 +14,7 @@ __all__ = [
 
 def user_log_formatter(record, handler):
     return "[{dt}] {level}: {msg}".format(
-        dt=ExecutionContext.get_strategy().now,
+        dt=ExecutionContext.get_current_dt(),
         level=record.level_name,
         msg=record.message,
     )

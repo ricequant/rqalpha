@@ -11,19 +11,50 @@ from ..utils.context import ExecutionContext
 class DataProxy(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def get_bar(self, order_book_id, dt):
+        """get stock Bar object
+
+        :param str order_book_id:
+        :param datetime.datetime dt:
+        :returns: bar object
+        :rtype: BarObject
+
+        """
         raise NotImplementedError
 
     def latest_bar(self, order_book_id):
-        dt = ExecutionContext.get_strategy().now
+        """get latest bar of the stock
+
+        :param str order_book_id:
+        :returns: bar object
+        :rtype: BarObject
+
+        """
+        dt = ExecutionContext.get_current_dt()
 
         return self.get_bar(order_book_id, dt)
 
     @abc.abstractmethod
     def get_yield_curve(self, start_date=None, end_date=None):
+        """get yield curve of treasure
+
+        :param datetime.date start_date:
+        :param datetime.date end_date:
+        :returns:
+        :rtype: pd.DataFrame
+
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_dividend_per_share(self, order_book_id, date):
+        """get dividend of date
+
+        :param str order_book_id:
+        :param datetime.datetime date:
+        :returns: dividend per share
+        :rtype: float
+
+        """
         raise NotImplementedError
 
 

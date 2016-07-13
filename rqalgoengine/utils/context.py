@@ -35,8 +35,16 @@ class ContextStack(object):
 class ExecutionContext(object):
     stack = ContextStack()
 
-    def __init__(self, strategy):
-        self.strategy = strategy
+    def __init__(self, strategy_executor, phase, bar_dict=None):
+        """init
+
+        :param StrategyExecutor strategy_executor:
+        :param EXECUTION_PHASE phase: current execution phase
+        :param BarMap bar_dict: current bar dict
+        """
+        self.strategy_executor = strategy_executor
+        self.phase = phase
+        self.bar_dict = bar_dict
 
     def _push(self):
         self.stack.push(self)
@@ -62,5 +70,16 @@ class ExecutionContext(object):
         return cls.stack.top
 
     @classmethod
-    def get_strategy(cls):
-        return cls.get_active().strategy
+    def get_strategy_context(cls):
+        ctx = cls.get_active()
+        return ctx.strategy_executor.strategy_context
+
+    @classmethod
+    def get_exchange(cls):
+        ctx = cls.get_active()
+        return ctx.strategy_executor.exchange
+
+    @classmethod
+    def get_current_dt(cls):
+        ctx = cls.get_active()
+        return ctx.strategy_executor.current_dt
