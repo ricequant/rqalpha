@@ -45,7 +45,7 @@ class MatchingEngine(object):
 
     def _create_market_order(self, order, order_update_cb, trade_update_cb):
         # TODO check volume
-
+        pass
 
     def _create_limit_order(self, order, order_update_cb, trade_update_cb):
         pass

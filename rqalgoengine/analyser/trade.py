@@ -5,7 +5,7 @@
 
 class Trade(object):
 
-    def __init__(self, date, order_book_id, price, amount, order_id, commission=None, tax=0.):
+    def __init__(self, date, order_book_id, price, amount, order_id, commission=0., tax=0.):
         self.date = date
         self.order_book_id = order_book_id
         self.price = price

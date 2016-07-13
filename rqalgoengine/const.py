@@ -24,3 +24,8 @@ EXECUTION_PHASE = Enum("EXECUTION_PHASE", [
     "BEFORE_TRADING",
     "SCHEDULED",
 ])
+
+
+class DAYS_CNT(object):
+    DAYS_A_YEAR = 365
+    TRADING_DAYS_A_YEAR = 252

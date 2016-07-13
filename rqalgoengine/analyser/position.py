@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
 
 # TODO make field readonly
 # TODO use nametuple to reduce memory
@@ -22,3 +23,6 @@ class Position(object):
 
     def __repr__(self):
         return "Position({%s})" % self.__dict__
+
+
+Positions = lambda: defaultdict(Position)

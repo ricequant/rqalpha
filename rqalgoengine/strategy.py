@@ -57,7 +57,7 @@ class StrategyContext(object):
 
     @property
     def portfolio(self):
-        return ExecutionContext.get_exchange().portfolio
+        return ExecutionContext.get_exchange().account.portfolio
 
     def __repr__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items() if not callable(v))

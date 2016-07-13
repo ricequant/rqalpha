@@ -138,7 +138,7 @@ def test_strategy_buy_and_sell(trading_params, data_proxy):
 
     perf = executor.execute()
 
-    positions = executor.exchange.portfolio.positions
+    positions = executor.exchange.account.portfolio.positions
     position = positions["000001.XSHE"]
     assert position.quantity == 0
     assert position.sellable == 0
@@ -166,7 +166,7 @@ def test_strategy_buy_and_sell2(trading_params, data_proxy):
 
     perf = executor.execute()
 
-    positions = executor.exchange.portfolio.positions
+    positions = executor.exchange.account.portfolio.positions
     position = positions["000001.XSHE"]
     assert position.quantity == 0
     assert position.sellable == 0

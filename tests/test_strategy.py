@@ -41,7 +41,7 @@ def test_buy_and_sell(trading_calendar, data_proxy):
 
     perf = executor.execute()
 
-    portfolio = executor.exchange.portfolio
+    portfolio = executor.exchange.account.portfolio
     assert np.isclose(portfolio.annualized_returns, -0.094760148802936484)
     assert np.isclose(portfolio.total_returns, -0.022917433828999911)
 
@@ -72,7 +72,7 @@ def test_dividend(trading_calendar, data_proxy):
 
     perf = executor.execute()
 
-    portfolio = executor.exchange.portfolio
+    portfolio = executor.exchange.account.portfolio
 
     assert np.isclose(portfolio.annualized_returns, -0.47051001393709346)
     assert np.isclose(portfolio.total_returns, -0.23129389564400005)

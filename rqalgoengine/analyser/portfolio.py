@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .position import Positions
 
 # TODO make field readonly
 # TODO use nametuple to reduce memory
@@ -17,7 +18,7 @@ class Portfolio(object):
         self.pnl = 0.                 # float	当前投资组合的￥盈亏
         self.annualized_returns = 0.  #	float	投资组合的年化收益率
         self.dividend_receivable = 0. # float	投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
-        self.positions = {}           # Dictionary	一个包含所有仓位的字典，以id_or_symbol作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
+        self.positions = Positions()  # Dictionary	一个包含所有仓位的字典，以id_or_symbol作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
         self.start_date = None        # DateTime	策略投资组合的回测/实时模拟交易的开始日期
 
         self.total_commission = 0.    # float 总的交易费
