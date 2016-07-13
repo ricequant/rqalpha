@@ -27,15 +27,31 @@ class StrategyContext(object):
     def slippage(self):
         raise NotImplementedError
 
+    @slippage.setter
+    def slippage(self):
+        raise NotImplementedError
+
     @property
     def commission(self):
+        raise NotImplementedError
+
+    @commission.setter
+    def commission(self, value):
         raise NotImplementedError
 
     @property
     def benchmark(self):
         raise NotImplementedError
 
+    @benchmark.setter
+    def benchmark(self):
+        raise NotImplementedError
+
     @property
+    def short_selling_allowed(self):
+        raise NotImplementedError
+
+    @short_selling_allowed.setter
     def short_selling_allowed(self):
         raise NotImplementedError
 

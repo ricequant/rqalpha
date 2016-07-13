@@ -171,6 +171,11 @@ def test_strategy_buy_and_sell2(trading_params, data_proxy):
     assert position.quantity == 0
     assert position.sellable == 0
 
+    # pprint(executor.exchange.trades)
+    # for date, portfolio in iteritems(executor.exchange.daily_portfolios):
+    #     print(date)
+    #     pprint(portfolio)
+
 
 def test_strategy_sell_no_sellable(trading_params, data_proxy):
     def init(context):
