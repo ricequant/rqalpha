@@ -75,6 +75,11 @@ class ExecutionContext(object):
         return ctx.strategy_executor.strategy_context
 
     @classmethod
+    def get_strategy_executor(cls):
+        ctx = cls.get_active()
+        return ctx.strategy_executor
+
+    @classmethod
     def get_exchange(cls):
         ctx = cls.get_active()
         return ctx.strategy_executor.exchange

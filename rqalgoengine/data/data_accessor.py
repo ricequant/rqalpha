@@ -57,8 +57,33 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
+    @abc.abstractclassmethod
+    def history(self, order_book_id, bar_count, frequency, field):
+        """get history data
+
+        :param str order_book_id:
+        :param int bar_count:
+        :param str frequency: '1d' or '1m'
+        :param str field: "open", "close", "high", "low", "volume", "last", "total_turnover"
+        :returns:
+        :rtype: pandas.DataFrame
+
+        """
+        raise NotImplementedError
+
+
 
 class RqDataProxy(DataProxy):
+    fields_mapping = {
+        "ClosingPx": "close",
+        "OpeningPx": "open",
+        "HighPx": "high",
+        "LowPx": "low",
+        "TotalVolumeTraded": "volume",
+        "TotalTurnover": "total_turnover",
+        # TODO: fill bar
+    }
+
     def __init__(self):
         import rqdata
         self.rqdata = rqdata
@@ -84,16 +109,7 @@ class RqDataProxy(DataProxy):
         bar = BarObject()
         bar.datetime = dt
 
-        mapping = {
-            "ClosingPx": "close",
-            "OpeningPx": "open",
-            "HighPx": "high",
-            "LowPx": "low",
-            "TotalVolumeTraded": "volume",
-            "TotalTurnover": "total_turnover",
-            # TODO: fill bar
-        }
-        for origin_key, new_key in iteritems(mapping):
+        for origin_key, new_key in iteritems(self.fields_mapping):
             setattr(bar, new_key, bar_data[origin_key])
 
         return bar
@@ -123,6 +139,29 @@ class RqDataProxy(DataProxy):
             return 0
 
         return df.iloc[0]["dividend_cash_before_tax"] / df.iloc[0]["round_lot"]
+
+    def history(self, order_book_id, bar_count, frequency, field):
+        if frequency != "1d":
+            raise NotImplementedError
+
+        rqdata = self.rqdata
+
+        cache_key = "get_bar:%s" % order_book_id
+        data = self.cache.get(cache_key)
+        if data is None:
+            data = rqdata.get_price(order_book_id, start_date="2006-01-01", end_date="2020-01-01")
+            self.cache[cache_key] = data
+
+        dt = ExecutionContext.get_current_dt()
+        str_date = dt.strftime("%Y-%m-%d")
+        bar_data = data[data.index <= str_date]
+
+        # FIXME dirty code
+        bar_data = bar_data.rename(columns=self.fields_mapping)
+
+        bar_data = bar_data[-bar_count:]
+
+        return bar_data[field]
 
 
 class MyDataProxy(DataProxy):

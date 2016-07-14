@@ -22,4 +22,4 @@ class LimitOrder(OrderStyle):
         self.limit_price = limit_price
 
     def get_limit_price(self, is_buy):
-        raise NotImplementedError
+        return limit_price

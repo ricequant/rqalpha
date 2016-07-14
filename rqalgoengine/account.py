@@ -59,6 +59,15 @@ class Account(object):
     def get_trades(self, date):
         return self._daily_trades[date]
 
+    def get_all_trades(self):
+        """get all trades
+
+        :returns:
+        :rtype: Dict[date, List[]]
+
+        """
+        return self._daily_trades
+
     def set_start_date(self, start_date):
         assert isinstance(date, datetime.date)
         self._portfolio.start_date = start_date

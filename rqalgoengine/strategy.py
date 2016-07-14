@@ -89,7 +89,7 @@ class StrategyExecutor(object):
 
         self._event_source = SimulatorAStockTradingEventSource(trading_params)
         self._current_dt = None
-        self._current_universe = set()
+        self.current_universe = set()
 
     def execute(self):
         """run strategy
@@ -122,7 +122,7 @@ class StrategyExecutor(object):
         for dt, event in self._event_source:
             on_dt_change(dt)
 
-            bar_dict = BarMap(dt, self._current_universe, data_proxy)
+            bar_dict = BarMap(dt, self.current_universe, data_proxy)
 
             if event == EVENT_TYPE.DAY_START:
                 with ExecutionContext(self, EXECUTION_PHASE.BEFORE_TRADING, bar_dict):

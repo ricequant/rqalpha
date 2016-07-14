@@ -10,3 +10,4 @@ class TradingParams(object):
         self.trading_calendar = trading_calendar
         self.timezone = kwargs.get("timezone", pytz.utc)
         self.benchmark = kwargs.get("benchmark", "000300.XSHG")
+        self.frequency = kwargs.get("frequency", "1d")

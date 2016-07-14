@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import pandas as pd
+import six
+
 from .utils import ExecutionContext
 
 
@@ -8,7 +11,7 @@ __all__ = [
 
 
 def export_as_api(func):
-    __all__.append(func)
+    __all__.append(func.__name__)
     return func
 
 
@@ -182,7 +185,11 @@ def update_universe(id_or_symbols):
     :param id_or_symbols: one or a list of id_or_symbol(s).
     :type id_or_symbols: str or an iterable of strings
     """
-    raise NotImplementedError
+    if isinstance(id_or_symbols, six.string_types):
+        id_or_symbols = [id_or_symbols]
+
+    executor = get_strategy_executor()
+    executor.current_universe = set(id_or_symbols)
 
 
 @export_as_api
@@ -203,7 +210,15 @@ def instruments(id_or_symbols):
 
 @export_as_api
 def history(bar_count, frequency, field):
-    raise NotImplementedError
+    executor = get_strategy_executor()
+    data_proxy = get_data_proxy()
+
+    results = {}
+    for order_book_id in executor.current_universe:
+        hist = data_proxy.history(order_book_id, bar_count, frequency, field)
+        results[order_book_id] = hist
+
+    return pd.DataFrame(results)
 
 
 @export_as_api
@@ -221,3 +236,15 @@ def get_simu_exchange():
 
 def get_strategy_context():
     return ExecutionContext.get_strategy_context()
+
+
+def get_strategy_executor():
+    return ExecutionContext.get_strategy_executor()
+
+
+def get_current_dt():
+    return ExecutionContext.get_current_dt()
+
+
+def get_data_proxy():
+    return ExecutionContext.get_strategy_executor().data_proxy

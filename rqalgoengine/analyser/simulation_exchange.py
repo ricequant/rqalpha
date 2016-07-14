@@ -239,13 +239,33 @@ class SimuExchange(object):
     def validate_order(self, bar_dict, order):
         # TODO need to be abstract as a validator
 
+        order_book_id = order.order_book_id
+
         portfolio = self.account.portfolio
         positions = portfolio.positions
+        position = positions[order_book_id]
 
-        order_book_id = order.order_book_id
+        bar = bar_dict[order_book_id]
+
         amount = order.quantity
         price = self.account.slippage_decider.get_trade_price(self.data_proxy, order)
         cost_money = price * amount
+        is_buy = amount > 0
+
+        # handle limit order
+        if self.trading_params.frequency == "1d":
+            if isinstance(order.style, LimitOrder):
+                # FIXME this is future func, you order at the end of the day, while low/high might be
+                # at the beginning of the day
+                limit_price = order.style.get_limit_price(is_buy)
+                if is_buy and limit_price < bar.low:
+                    return False, _("Order Rejected: price is to low to buy {order_book_id}").format(
+                        order_book_id=order_book_id)
+                elif not is_buy and limit_price > bar.high:
+                    return False, _("Order Rejected: price is to high to sell {order_book_id}").format(
+                        order_book_id=order_book_id)
+        else:
+            raise NotImplementedError
 
         # check amount
         if abs(amount) < 100:
@@ -254,16 +274,14 @@ class SimuExchange(object):
                 )
 
         # check money is enough
-        if cost_money > self.account.portfolio.cash:
+        if is_buy and cost_money > self.account.portfolio.cash:
             return False, _("Order Rejected: no enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order_book_id,
                 cost_money=cost_money,
                 cash=portfolio.cash,
                 )
 
-        # check whether is enough to sell
-        position = positions[order_book_id]
-
+        # TODO check whether is enough to sell
         if order.quantity < 0 and abs(order.quantity) > position.sellable:
             return False, _("Order Rejected: no enough stock {order_book_id} to sell, you want to sell {quantity}, sellable {sellable}").format(
                 order_book_id=order_book_id,
@@ -271,13 +289,31 @@ class SimuExchange(object):
                 sellable=position.sellable,
                 )
 
-        # TODO check price low and high
-
-        # TODO check whether is trading
+        # check whether is trading
+        # FIXME need a better solution
+        if bar.volume == 0:
+            return False, _("Order Rejected: {order_book_id} is not trading.").format(
+                order_book_id=order_book_id,
+                )
 
         # TODO check whether is limit up or limit down
+        # FIXME need to handle ST 5%
+        last_close = self.data_proxy.history(order_book_id, 2, "1d", "close").iloc[-2]
+        if is_buy and price >= last_close * 1.1:
+            return False, _("Order Rejected: {order_book_id} is limit up.").format(
+                order_book_id=order_book_id,
+                )
+        elif not is_buy and price <= last_close * 0.9:
+            return False, _("Order Rejected: {order_book_id} is limit down.").format(
+                order_book_id=order_book_id,
+                )
 
         # TODO check volume is over 25%
+        # FIXME might have mulitiple order
+        if amount > bar.volume * 0.25:
+            return False, _("Order Rejected: {order_book_id} volume is over 25%.").format(
+                order_book_id=order_book_id,
+                )
 
         return True, None
 

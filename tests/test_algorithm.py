@@ -6,7 +6,7 @@ from six import print_ as print, iteritems
 import tushare as ts
 
 from rqalgoengine import StrategyExecutor
-from rqalgoengine.api import order_shares
+from rqalgoengine.api import *
 from .fixture import *
 
 
@@ -171,10 +171,10 @@ def test_strategy_buy_and_sell2(trading_params, data_proxy):
     assert position.quantity == 0
     assert position.sellable == 0
 
-    # pprint(executor.exchange.trades)
-    # for date, portfolio in iteritems(executor.exchange.daily_portfolios):
-    #     print(date)
-    #     pprint(portfolio)
+    pprint(executor.exchange.account.get_all_trades())
+    for date, portfolio in iteritems(executor.exchange.daily_portfolios):
+        print(date)
+        pprint(portfolio)
 
 
 def test_strategy_sell_no_sellable(trading_params, data_proxy):
@@ -184,6 +184,25 @@ def test_strategy_sell_no_sellable(trading_params, data_proxy):
     def handle_bar(context, bar_dict):
         order_shares("000001.XSHE", 5000)
         order_shares("000001.XSHE", -5000)
+
+    executor = StrategyExecutor(
+        init=init,
+        handle_bar=handle_bar,
+
+        trading_params=trading_params,
+        data_proxy=data_proxy,
+    )
+
+    perf = executor.execute()
+
+
+def test_strategy_history(trading_params, data_proxy):
+    def init(context):
+        context.cnt = 0
+        update_universe(["000001.XSHE"])
+
+    def handle_bar(context, bar_dict):
+        print(history(5, "1d", "close")["000001.XSHE"])
 
     executor = StrategyExecutor(
         init=init,
