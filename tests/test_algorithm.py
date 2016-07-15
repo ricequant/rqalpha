@@ -15,7 +15,7 @@ def test_strategy_print_call(trading_params, data_proxy):
     def init(context):
         print("init", context)
 
-    def before_trading(context):
+    def before_trading(context, bar_dict):
         print("before_trading", context.now)
 
     def handle_bar(context, bar_dict):
@@ -43,7 +43,7 @@ def test_strategy_load_data(trading_params, data_proxy):
         context.stock = "600099.XSHG"
         context.close = []
 
-    def before_trading(context):
+    def before_trading(context, bar_dict):
         pass
 
     def handle_bar(context, bar_dict):

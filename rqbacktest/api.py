@@ -7,6 +7,7 @@ import six
 
 from .logger import user_log
 from .utils import ExecutionContext
+from .i18n import gettext as _
 
 
 __all__ = [
@@ -42,6 +43,8 @@ def order_shares(id_or_ins, amount, style=None):
         user_log.warn(_("order_shares {order_book_id} amount is 0.").format(
             order_book_id=order_book_id,
         ))
+
+    amount = int(amount) // 100 * 100
 
     if not isinstance(id_or_ins, six.string_types):
         raise NotImplementedError
@@ -94,7 +97,8 @@ def order_value(id_or_ins, cash_amount, style=None):
     order_book_id = id_or_ins
 
     # TODO market order might be different
-    price = ExecutionContext.get_current_bar_dict()
+    bar_dict = ExecutionContext.get_current_bar_dict()
+    price = bar_dict[order_book_id].close
     amount = ((cash_amount // price) // 100) * 100
 
     # if the cash_amount is larger than you current security’s position,
@@ -151,7 +155,19 @@ def order_target_value(id_or_ins, cash_amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    raise NotImplementedError
+    if not isinstance(id_or_ins, six.string_types):
+        raise NotImplementedError
+
+    order_book_id = id_or_ins
+
+    # TODO market order might be different
+    bar_dict = ExecutionContext.get_current_bar_dict()
+    price = bar_dict[order_book_id].close
+    position = get_simu_exchange().account.portfolio.positions[order_book_id]
+
+    current_value = position.quantity * price
+
+    return order_value(order_book_id, cash_amount - current_value, style)
 
 
 @export_as_api
@@ -177,7 +193,20 @@ def order_target_percent(id_or_ins, percent, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    raise NotImplementedError
+    if not isinstance(id_or_ins, six.string_types):
+        raise NotImplementedError
+
+    order_book_id = id_or_ins
+
+    # TODO market order might be different
+    bar_dict = ExecutionContext.get_current_bar_dict()
+    price = bar_dict[order_book_id].close
+    position = get_simu_exchange().account.portfolio.positions[order_book_id]
+
+    current_value = position.quantity * price
+    portfolio_value = get_simu_exchange().account.portfolio.portfolio_value
+
+    return order_value(order_book_id, portfolio_value * percent - current_value, style)
 
 
 def _order_to_target_shares(order_book_id, amount, style=None):
@@ -258,6 +287,16 @@ def is_st_stock(order_book_id):
     return instrument.is_st
     """
     raise NotImplementedError
+
+
+@export_as_api
+def plot(series_name, value):
+    """
+    Add a point to custom series.
+    :param str series_name: the name of custom series
+    :param float value: the value of the series in this time
+    :return: None
+    """
 
 
 def get_simu_exchange():

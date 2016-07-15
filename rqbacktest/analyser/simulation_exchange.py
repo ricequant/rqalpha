@@ -19,7 +19,6 @@ from .tax import AStockTax
 from .order import Order
 from .order_style import MarketOrder, LimitOrder
 from .portfolio import Portfolio
-from .portfolio_manager import PortfolioManager
 from .position import Position
 from .risk_cal import RiskCal
 from .trade import Trade
@@ -39,11 +38,11 @@ class SimuExchange(object):
         self.all_orders = {}                       # type: Dict[str, Order]
         self.open_orders = defaultdict(list)       # type: Dict[str, List[Order]]
 
-        start_date = self.trading_params.trading_calendar[0].date()
+        self.start_date = start_date = self.trading_params.trading_calendar[0].date()
         self.account = Account(start_date=start_date)
 
         self.benchmark_order_book_id = trading_params.benchmark
-        self.benchmark_portfolio_value = self.data_proxy.get_bar(self.benchmark_order_book_id, start_date).close
+        self.benchmark_portfolio_value = None
 
         self.last_date = None
         self.simu_days_cnt = 0
@@ -82,6 +81,14 @@ class SimuExchange(object):
 
         # TODO make benchmark cal works better
         # update benchmark
+        if self.benchmark_portfolio_value is None:
+            # self.benchmark_portfolio_value = self.account.init_cash
+            # slippage_decider = self.account.slippage_decider
+            # commission_decider = self.account.commission_decider
+            # tax_decider = self.account.tax_decider
+
+            self.benchmark_portfolio_value = self.data_proxy.get_bar(self.benchmark_order_book_id, self.start_date).close
+
         new_benchmark_portfolio_value = self.data_proxy.get_bar(
             self.benchmark_order_book_id, self.current_date).close
         benchmark_daily_returns = new_benchmark_portfolio_value / self.benchmark_portfolio_value - 1
@@ -248,6 +255,7 @@ class SimuExchange(object):
         bar = bar_dict[order_book_id]
 
         amount = order.quantity
+        close_price = bar.close
         price = self.account.slippage_decider.get_trade_price(self.data_proxy, order)
         cost_money = price * amount
         is_buy = amount > 0
@@ -274,7 +282,7 @@ class SimuExchange(object):
                 )
 
         # check money is enough
-        if is_buy and cost_money > self.account.portfolio.cash:
+        if is_buy and close_price * amount > self.account.portfolio.cash:
             return False, _("Order Rejected: no enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order_book_id,
                 cost_money=cost_money,

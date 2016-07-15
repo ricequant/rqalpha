@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import copy
+from collections import OrderedDict
+
 import pandas as pd
 import numpy as np
 
@@ -33,6 +36,8 @@ class RiskCal(object):
         self.benchmark_current_annual_avg_returns = None
 
         self.risk = Risk()
+
+        self.daily_risks = OrderedDict()
 
         # TODO use yield curve
         self.risk_free_rate = 0.0271
@@ -80,6 +85,8 @@ class RiskCal(object):
 
         # TODO cal tracking_error
         risk.tracking_error = 0.
+
+        self.daily_risks[date] = copy.deepcopy(risk)
 
     def cal_volatility(self):
         daily_returns = self.strategy_current_daily_returns

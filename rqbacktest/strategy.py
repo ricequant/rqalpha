@@ -2,9 +2,11 @@
 
 import sys
 
+from six import iteritems
+import pandas as pd
+
 from .analyser import Position, Portfolio, Order
 from .analyser.commission import AStockCommission
-from .analyser.portfolio_manager import PortfolioManager
 from .analyser.simulation_exchange import SimuExchange
 from .analyser.slippage import FixedPercentSlippageDecider
 from .analyser.tax import AStockTax
@@ -72,16 +74,18 @@ class StrategyExecutor(object):
         :param TradingParams trading_params: current trading params
         :param DataProxy data_proxy: current data proxy to access data
         """
-        self._trading_params = trading_params
+        self.trading_params = trading_params
         self._data_proxy = data_proxy
 
         self._strategy_context = kwargs.get("strategy_context")
         if self._strategy_context is None:
             self._strategy_context = StrategyContext()
 
-        self._user_init = kwargs.get("init", lambda _: None)
-        self._user_handle_bar = kwargs.get("handle_bar", lambda _, __: None)
-        self._user_before_trading = kwargs.get("before_trading", lambda _: None)
+        dummy_func = lambda *args, **kwargs: None
+
+        self._user_init = kwargs.get("init", dummy_func)
+        self._user_handle_bar = kwargs.get("handle_bar", dummy_func)
+        self._user_before_trading = kwargs.get("before_trading", dummy_func)
 
         self._simu_exchange = kwargs.get("simu_exchange")
         if self._simu_exchange is None:
@@ -127,7 +131,7 @@ class StrategyExecutor(object):
             if event == EVENT_TYPE.DAY_START:
                 with ExecutionContext(self, EXECUTION_PHASE.BEFORE_TRADING, bar_dict):
                     exchange_on_day_open()
-                    before_trading(strategy_context)
+                    before_trading(strategy_context, None)
 
             elif event == EVENT_TYPE.HANDLE_BAR:
                 with ExecutionContext(self, EXECUTION_PHASE.HANDLE_BAR, bar_dict):
@@ -136,6 +140,51 @@ class StrategyExecutor(object):
 
             elif event == EVENT_TYPE.DAY_END:
                 exchange_on_day_close()
+
+        # prepare backtest results
+        account = simu_exchange.account
+        risk_cal = simu_exchange.risk_cal
+        columns = [
+            "daily_returns",
+            "total_returns",
+            "annualized_returns",
+            "market_value",
+            "portfolio_value",
+            "total_commission",
+            "total_tax",
+            "pnl",
+            "positions",
+            "cash",
+        ]
+        data = []
+        for date, portfolio in iteritems(simu_exchange.daily_portfolios):
+            # portfolio
+            items = {"date": pd.Timestamp(date)}
+            for key in columns:
+                items[key] = getattr(portfolio, key)
+
+            # trades
+            items["trades"] = account.get_all_trades()[date]
+
+            # risk
+            risk = risk_cal.daily_risks[date]
+            risk_keys = ["volatility", "max_drawdown",
+                         "alpha", "beta", "sharpe",
+                         # "information_rate", "downside_risk",
+                         ]
+            for risk_key in risk_keys:
+                items[risk_key] = getattr(risk, risk_key)
+
+            idx = risk_cal.trading_index.get_loc(date)
+            items["benchmark_total_returns"] = risk_cal.benchmark_total_returns[idx]
+            items["benchmark_daily_returns"] = risk_cal.benchmark_total_daily_returns[idx]
+
+            data.append(items)
+
+        results_df = pd.DataFrame(data)
+        results_df.set_index("date", inplace=True)
+
+        return results_df
 
     @property
     def strategy_context(self):
