@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 import pandas as pd
 import six
 
+from .logger import user_log
 from .utils import ExecutionContext
 
 
@@ -35,6 +38,14 @@ def order_shares(id_or_ins, amount, style=None):
     # TODO handle str or Instrument
     order_book_id = id_or_ins
 
+    if amount == 0:
+        user_log.warn(_("order_shares {order_book_id} amount is 0.").format(
+            order_book_id=order_book_id,
+        ))
+
+    if not isinstance(id_or_ins, six.string_types):
+        raise NotImplementedError
+
     order = get_simu_exchange().create_order(order_book_id, amount, style)
 
     return order.order_id
@@ -56,7 +67,7 @@ def order_lots(id_or_ins, amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    raise NotImplementedError
+    return order_shares(id_or_ins, amount * 100, style)
 
 
 @export_as_api
@@ -77,7 +88,23 @@ def order_value(id_or_ins, cash_amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    raise NotImplementedError
+    if not isinstance(id_or_ins, six.string_types):
+        raise NotImplementedError
+
+    order_book_id = id_or_ins
+
+    # TODO market order might be different
+    price = ExecutionContext.get_current_bar_dict()
+    amount = ((cash_amount // price) // 100) * 100
+
+    # if the cash_amount is larger than you current security’s position,
+    # then it will sell all shares of this security.
+    position = get_simu_exchange().account.portfolio.positions[order_book_id]
+    if amount < 0:
+        if abs(amount) > position.sellable:
+            amount = -position.sellable
+
+    return order_shares(id_or_ins, amount, style)
 
 
 @export_as_api
@@ -100,7 +127,10 @@ def order_percent(id_or_ins, percent, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    raise NotImplementedError
+    assert 0 < percent <= 1
+
+    portfolio_value = get_simu_exchange().account.portfolio.portfolio_value
+    return order_value(id_or_ins, portfolio_value * percent, style)
 
 
 @export_as_api

@@ -81,10 +81,13 @@ class ExecutionContext(object):
 
     @classmethod
     def get_exchange(cls):
-        ctx = cls.get_active()
-        return ctx.strategy_executor.exchange
+        return cls.get_strategy_executor().exchange
 
     @classmethod
     def get_current_dt(cls):
+        return cls.get_strategy_executor().current_dt
+
+    @classmethod
+    def get_current_bar_dict(cls):
         ctx = cls.get_active()
-        return ctx.strategy_executor.current_dt
+        return ctx.bar_dict

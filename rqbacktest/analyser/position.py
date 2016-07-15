@@ -14,8 +14,8 @@ class Position(object):
         self.sold_quantity = 0.     # int	该证券的总卖出股数，例如：如果你的投资组合曾经买入过平安银行股票200股并且卖出过100股，那么这个属性会返回100.
         self.bought_value = 0.      # float	该证券的总买入的价值，等于每一个该证券的买入成交的价格*买入股数的总和。
         self.sold_value = 0.        # float	该证券的总卖出价值，等于每一个该证券的卖出成交的价格*卖出股数的总和。
-        self.total_orders = 0.      # int	该仓位的总订单的次数。
-        self.total_trades = 0.      # int	该仓位的总成交的次数。
+        # self.total_orders = 0.      # int	该仓位的总订单的次数。
+        # self.total_trades = 0.      # int	该仓位的总成交的次数。
         self.sellable = 0.          # int	该仓位可卖出股数。T＋1的市场中sellable = 所有持仓-今日买入的仓位。
         self.average_cost = 0.      # float	获得该持仓的买入均价，计算方法为每次买入的数量做加权平均。
         self.market_value = 0.      # float	获得该持仓的实时市场价值。

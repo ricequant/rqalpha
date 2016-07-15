@@ -6,7 +6,7 @@ from pip.req import parse_requirements
 
 
 setup(
-    name='rqalgoengine',
+    name='rqbacktest',
     version='0.0.1',
     description='Python Distribution Utilities',
     packages=find_packages(exclude=[]),

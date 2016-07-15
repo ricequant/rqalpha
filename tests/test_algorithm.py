@@ -5,8 +5,8 @@ from pprint import pprint
 from six import print_ as print, iteritems
 import tushare as ts
 
-from rqalgoengine import StrategyExecutor
-from rqalgoengine.api import *
+from rqbacktest import StrategyExecutor
+from rqbacktest.api import *
 from .fixture import *
 
 

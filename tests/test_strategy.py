@@ -6,9 +6,9 @@ import numpy as np
 from six import print_ as print, iteritems
 import tushare as ts
 
-from rqalgoengine import StrategyExecutor
-from rqalgoengine.api import order_shares
-from rqalgoengine.trading_params import TradingParams
+from rqbacktest import StrategyExecutor
+from rqbacktest.api import order_shares
+from rqbacktest.trading_params import TradingParams
 from .fixture import *
 
 

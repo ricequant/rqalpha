@@ -8,9 +8,9 @@ import tushare as ts
 import pytest
 import pytz
 
-from rqalgoengine.data import RqDataProxy, MyDataProxy
-from rqalgoengine.trading_params import TradingParams
-from rqalgoengine.analyser.simulation_exchange import SimuExchange
+from rqbacktest.data import RqDataProxy, MyDataProxy
+from rqbacktest.trading_params import TradingParams
+from rqbacktest.analyser.simulation_exchange import SimuExchange
 
 
 @pytest.fixture()

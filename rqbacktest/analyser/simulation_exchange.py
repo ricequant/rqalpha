@@ -31,17 +31,13 @@ class SimuExchange(object):
         self.trading_params = trading_params
 
         self.dt = None
-        # self.trades = defaultdict(list)
 
         # TODO move risk cal outside this class
         self.risk_cal = RiskCal(trading_params)
 
-        # self.daily_portfolios = OrderedDict()
-        # self.orders = defaultdict(list)            # type: Dict[date, List[Order]]
+        self.daily_portfolios = OrderedDict()      # type: Dict[str, Portfolio]
         self.all_orders = {}                       # type: Dict[str, Order]
         self.open_orders = defaultdict(list)       # type: Dict[str, List[Order]]
-
-        self.daily_portfolios = {}
 
         start_date = self.trading_params.trading_calendar[0].date()
         self.account = Account(start_date=start_date)
@@ -110,7 +106,7 @@ class SimuExchange(object):
 
         self.remove_close_orders(close_orders)
 
-        self.update_portfolio(bar_dict)
+        self.update_portfolio_on_bar_close(bar_dict)
 
     def update_daily_benchmark(self):
         pass
@@ -130,7 +126,7 @@ class SimuExchange(object):
         portfolio.annualized_returns = (1 + portfolio.total_returns) ** (
             const.DAYS_CNT.DAYS_A_YEAR / float((self.current_date - portfolio.start_date).days + 1)) - 1
 
-    def update_portfolio(self, bar_dict):
+    def update_portfolio_on_bar_close(self, bar_dict):
         portfolio = self.account.portfolio
         positions = portfolio.positions
 
@@ -196,8 +192,6 @@ class SimuExchange(object):
                 trade_price = slippage_decider.get_trade_price(data_proxy, order)
                 amount = order.quantity
 
-                # TODO consider commission and slippage
-
                 trade = Trade(
                     date=order.dt,
                     order_book_id=order_book_id,
@@ -213,11 +207,12 @@ class SimuExchange(object):
                 tax = tax_decider.get_tax(order, trade)
                 trade.tax = tax
 
+                # deduct available cash
                 portfolio.cash -= trade_price * amount
 
+                # cal commisssion & tax
                 portfolio.cash -= commission
                 portfolio.cash -= tax
-
                 portfolio.total_commission += commission
                 portfolio.total_tax += tax
 
@@ -232,7 +227,12 @@ class SimuExchange(object):
                 position = positions[order_book_id]
                 position.quantity += trade.amount
 
-                # TODO handle Dividend
+                if trade.amount > 0:
+                    position.bought_quantity += trade.amount
+                    position.bought_value += trade_price * amount
+                else:
+                    position.sold_quantity += abs(trade.amount)
+                    position.sold_value += abs(trade_price * amount)
 
         return trades, close_orders
 
