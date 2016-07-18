@@ -33,7 +33,8 @@ def entry_point():
 @click.option('-e', '--end-date', type=Date(), required=True)
 @click.option('-o', '--output-file', type=click.Path(writable=True))
 @click.option('--draw-result/--no-draw-result', default=True)
-def run(strategy_file, start_date, end_date, output_file, draw_result):
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path(exists=True))
+def run(strategy_file, start_date, end_date, output_file, draw_result, data_bundle_path):
     '''run strategy from file
     '''
     # import rqdata
@@ -52,7 +53,7 @@ def run(strategy_file, start_date, end_date, output_file, draw_result):
 
     timezone = pytz.utc
 
-    data_proxy = LocalDataProxy('tools')
+    data_proxy = LocalDataProxy(data_bundle_path)
 
     trading_cal = data_proxy.get_trading_dates(start_date, end_date)
 
@@ -85,8 +86,8 @@ def run(strategy_file, start_date, end_date, output_file, draw_result):
         ax.grid(b=True, which='minor', linewidth=.2)
         ax.grid(b=True, which='major', linewidth=1)
 
-        ax.plot(results_df["total_returns"], label="strategy")
-        ax.plot(results_df["benchmark_total_returns"], label="benchmark")
+        ax.plot(results_df["total_returns"], label="strategy", alpha=1, linewidth=2, color="#aa4643")
+        ax.plot(results_df["benchmark_total_returns"], label="benchmark", alpha=1, linewidth=2, color="#4572a7")
 
         plt.legend()
         plt.show()
