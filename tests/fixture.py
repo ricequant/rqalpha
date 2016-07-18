@@ -8,7 +8,7 @@ import tushare as ts
 import pytest
 import pytz
 
-from rqbacktest.data import RqDataProxy, MyDataProxy
+from rqbacktest.data import RqDataProxy, LocalDataProxy
 from rqbacktest.trading_params import TradingParams
 from rqbacktest.analyser.simulation_exchange import SimuExchange
 
@@ -54,16 +54,8 @@ def rq_data_proxy():
 
 
 @pytest.fixture()
-def my_data_proxy():
-    return MyDataProxy()
-
-
-@pytest.fixture()
 def data_proxy():
-    if os.environ.get("DATA_PROXY") == "my_data_proxy":
-        return my_data_proxy()
-    else:
-        return rq_data_proxy()
+    return LocalDataProxy(os.environ.get("RQ_LOCAL_STORE"))
 
 
 @pytest.fixture()

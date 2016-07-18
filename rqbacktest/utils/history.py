@@ -2,8 +2,6 @@
 
 import pandas as pd
 
-from . import ExecutionContext
-
 
 class HybridDataFrame(pd.DataFrame):
 
@@ -23,15 +21,3 @@ class HybridDataFrame(pd.DataFrame):
                 raise e
             self[key] = rv
             return rv
-
-
-def missing_handler(key, bar_count, frequency, field):
-    order_book_id = key
-    data_proxy = ExecutionContext.get_strategy_executor().data_proxy
-    hist = data_proxy.history(order_book_id, bar_count, frequency, field)
-    series = hist
-
-    executor = ExecutionContext.get_strategy_executor()
-    executor.current_universe.add(key)
-
-    return series

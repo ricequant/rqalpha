@@ -61,7 +61,8 @@ def test_strategy_load_data(trading_params, data_proxy):
     perf = executor.execute()
 
     assert len(executor.strategy_context.close) == len(trading_params.trading_calendar)
-    assert executor.strategy_context.close[-1] == data_proxy.get_bar(executor.strategy_context.stock, trading_params.trading_calendar[-1])["close"]
+    assert executor.strategy_context.close[-1] == data_proxy.get_bar(executor.strategy_context.stock,
+                                                                     trading_params.trading_calendar[-1]).close
 
 
 def test_strategy_portfolio(trading_params, data_proxy):

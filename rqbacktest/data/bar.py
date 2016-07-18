@@ -2,38 +2,53 @@
 
 
 class BarObject(object):
-    def __init__(self):
-        self.open = 0.0
-        self.close = 0.0
-        self.high = 0.0
-        self.low = 0.0
-        self.volume = 0.0
-        self.last = 0.0
-        self.acc_net_value = 0.0
-        self.unit_net_value = 0.0
-        self.discount_rate = 0.0
-        self.total_turnover = 0.0
-        self.settlement = 0.0
-        self.prev_settlement = 0.0
-        self.open_interest = 0.0
-        self.basis_spread = 0.0
-        self.datetime = None
+    def __init__(self, instrument, series):
+        self._series = series
+        self._instrument = instrument
+
+    @property
+    def open(self):
+        return self._series.open
+
+    @property
+    def close(self):
+        return self._series.close
+
+    @property
+    def low(self):
+        return self._series.low
+
+    @property
+    def high(self):
+        return self.series.high
+
+    @property
+    def last(self):
+        return self.close
+
+    @property
+    def volume(self):
+        return self._series.volume
+
+    @property
+    def datetime(self):
+        return self._series.name
 
     @property
     def instrument(self):
-        raise NotImplementedError
+        return self._instrument
 
     @property
     def order_book_id(self):
-        raise NotImplementedError
+        return self._instrument.order_book_id
 
     @property
     def symbol(self):
-        raise NotImplementedError
+        return self._instrument.symbol
 
     @property
     def is_trading(self):
-        raise NotImplementedError
+        return self._series.volumn > 0
 
     def mavg(self, intervals, frequency="day"):
         """

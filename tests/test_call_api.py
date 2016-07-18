@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from six import print_ as print
 
-from rqbacktest.data import RqDataProxy, MyDataProxy
+from rqbacktest.data import RqDataProxy
 
 
 def test_import_api():

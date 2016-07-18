@@ -115,6 +115,9 @@ class SimuExchange(object):
 
         self.update_portfolio_on_bar_close(bar_dict)
 
+    def update_daily_benchmark(self):
+        pass
+
     def update_daily_portfolio(self):
         yesterday_portfolio = self.get_yesterday_portfolio()
         portfolio = self.account.portfolio
@@ -139,6 +142,9 @@ class SimuExchange(object):
             for order_book_id, position in iteritems(positions)
         )
         portfolio.portfolio_value = portfolio.market_value + portfolio.cash
+
+        # TODO cal remain fields
+        portfolio.pnl = 0
 
     def create_order(self, order_book_id, amount, style):
         if style is None:

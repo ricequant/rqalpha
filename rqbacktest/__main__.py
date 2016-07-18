@@ -12,7 +12,7 @@ from .trading_params import TradingParams
 from . import api
 from .utils.click_helper import Date
 from . import StrategyExecutor
-from .data import RqDataProxy
+from .data import RqDataProxy, LocalDataProxy
 from .logger import user_log
 
 
@@ -36,8 +36,8 @@ def entry_point():
 def run(strategy_file, start_date, end_date, output_file, draw_result):
     '''run strategy from file
     '''
-    import rqdata
-    rqdata.init()
+    # import rqdata
+    # rqdata.init()
 
     with open(strategy_file) as f:
         source_code = f.read()
@@ -52,15 +52,12 @@ def run(strategy_file, start_date, end_date, output_file, draw_result):
 
     timezone = pytz.utc
 
-    trading_cal = pd.Index(pd.Series(
-        rqdata.get_trading_dates("2005-01-01", "2020-01-01")).apply(lambda date: pd.Timestamp(date, tz=timezone)))
+    data_proxy = LocalDataProxy('tools')
 
-    trading_cal = trading_cal[
-        (trading_cal >= start_date) & (trading_cal <= end_date)
-    ]
+    trading_cal = data_proxy.get_trading_dates(start_date, end_date)
 
     trading_params = TradingParams(trading_cal)
-    data_proxy = RqDataProxy()
+    #data_proxy = RqDataProxy()
 
     executor = StrategyExecutor(
         init=scope.get("init", dummy_func),
@@ -81,7 +78,7 @@ def run(strategy_file, start_date, end_date, output_file, draw_result):
         import matplotlib.pyplot as plt
         plt.style.use('ggplot')
 
-        f, ax = plt.subplots(num=strategy_file, figsize=(16, 8))
+        f, ax = plt.subplots()
 
         ax.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
         ax.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())

@@ -1,3 +1,6 @@
 /*.egg-info
 .cache/
 dist/
+.idea
+__pycache__
+algoengine.iml

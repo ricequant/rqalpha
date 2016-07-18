@@ -6,6 +6,7 @@ import pandas as pd
 
 from .bar import BarObject
 from ..utils.context import ExecutionContext
+from .data_source import LocalDataSource
 
 
 class DataProxy(with_metaclass(abc.ABCMeta)):
@@ -106,12 +107,7 @@ class RqDataProxy(DataProxy):
         except KeyError:
             bar_data = data[data.index <= str_date].iloc[-1]
 
-        bar = BarObject()
-        bar.datetime = dt
-
-        for origin_key, new_key in iteritems(self.fields_mapping):
-            setattr(bar, new_key, bar_data[origin_key])
-
+        bar = BarObject(None, bar_data)
         return bar
 
     def get_yield_curve(self, start_date=None, end_date=None):
@@ -163,40 +159,88 @@ class RqDataProxy(DataProxy):
 
         return bar_data[field]
 
+#
+# class MyDataProxy(DataProxy):
+#     def __init__(self):
+#         from quantor import model, dblogic as dbl
+#
+#         self.db = model.new_mongo_db()
+#         self.cache = {}
+#
+#     def get_bar(self, order_book_id, dt):
+#         from quantor import model, dblogic as dbl
+#         db = self.db
+#
+#         code, _ = order_book_id.split(".")
+#         data = self.cache.get(order_book_id)
+#         if data is None:
+#             data = dbl.get_k_data(db, code)
+#             self.cache[order_book_id] = data
+#
+#         try:
+#             bar_data = data.ix[dt]
+#         except KeyError:
+#             bar_data = data[data.index <= dt].iloc[-1]
+#
+#         bar = BarObject()
+#         bar.datetime = dt
+#
+#         mapping = {
+#             "close": "close",
+#             "open": "open",
+#             "high": "high",
+#             "low": "low",
+#             "volume": "volume",
+#         }
+#         for origin_key, new_key in iteritems(mapping):
+#             setattr(bar, new_key, bar_data[origin_key])
+#
+#         return bar
 
-class MyDataProxy(DataProxy):
-    def __init__(self):
-        from quantor import model, dblogic as dbl
 
-        self.db = model.new_mongo_db()
-        self.cache = {}
+class LocalDataProxy(DataProxy):
+    def __init__(self, root_dir):
+        self._data_source = LocalDataSource(root_dir)
+        self._cache = {}
+        self._dividend_cache = {}
 
     def get_bar(self, order_book_id, dt):
-        from quantor import model, dblogic as dbl
-        db = self.db
+        if order_book_id not in self._cache:
+            self._cache[order_book_id] = self._data_source.get_all_bars(order_book_id)
 
-        code, _ = order_book_id.split(".")
-        data = self.cache.get(order_book_id)
-        if data is None:
-            data = dbl.get_k_data(db, code)
-            self.cache[order_book_id] = data
+        pf = self._cache[order_book_id]
+        return BarObject(self._data_source.instruments(order_book_id), pf.xs(dt.strftime("%Y-%m-%d")))
 
-        try:
-            bar_data = data.ix[dt]
-        except KeyError:
-            bar_data = data[data.index <= dt].iloc[-1]
+    def history(self, order_book_id, bar_count, frequency, field):
+        if frequency == '1m':
+            raise RuntimeError('Minute bar not supported yet!')
 
-        bar = BarObject()
-        bar.datetime = dt
+        if order_book_id not in self._cache:
+            self._cache[order_book_id] = self._data_source.get_all_bars(order_book_id)
 
-        mapping = {
-            "close": "close",
-            "open": "open",
-            "high": "high",
-            "low": "low",
-            "volume": "volume",
-        }
-        for origin_key, new_key in iteritems(mapping):
-            setattr(bar, new_key, bar_data[origin_key])
+        df = self._cache[order_book_id]
+        dt = ExecutionContext.get_current_dt()
+        str_date = dt.strftime("%Y-%m-%d")
+        bar_data = df[df.index <= str_date]
+        return bar_data[-bar_count:][field]
 
-        return bar
+    def get_yield_curve(self, start_date=None, end_date=None):
+        return self._data_source.get_yield_curve(start_date, end_date)
+
+    def get_dividend_per_share(self, order_book_id, date):
+        if order_book_id not in self._dividend_cache:
+            self._dividend_cache[order_book_id] = self._data_source.get_dividends(order_book_id)
+
+        dividend_df = self._data_source.get_dividends(order_book_id)
+        if dividend_df is None:
+            return 0
+
+        df = dividend_df[dividend_df.payable_date == date]
+
+        if df.empty:
+            return 0
+
+        return df.iloc[0]["dividend_cash_before_tax"] / df.iloc[0]["round_lot"]
+
+    def get_trading_dates(self, start_date, end_date):
+        return self._data_source.get_trading_dates(start_date, end_date)
