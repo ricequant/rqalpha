@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+import shutil
+
 import pytz
 import click
 from six import exec_
@@ -78,6 +81,14 @@ def run(strategy_file, start_date, end_date, output_file):
 
     if output_file is not None:
         results_df.to_pickle(output_file)
+
+
+@cli.command()
+@click.option('-d', '--directory', default="./", type=click.Path(), required=True)
+def generate_examples(directory):
+    source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
+
+    shutil.copytree(source_dir, os.path.join(directory, "examples"))
 
 
 if __name__ == '__main__':
