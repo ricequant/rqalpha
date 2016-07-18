@@ -16,11 +16,6 @@ from .data import RqDataProxy
 from .logger import user_log
 
 
-def parse_strategy(source, filename="<unknown>"):
-    ast = parse_ast(source, filename, mode="exec")
-    return ast
-
-
 @click.group()
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
