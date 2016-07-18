@@ -304,17 +304,17 @@ class SimuExchange(object):
                 order_book_id=order_book_id,
                 )
 
-        # TODO check whether is limit up or limit down
-        # FIXME need to handle ST 5%
-        last_close = self.data_proxy.history(order_book_id, 2, "1d", "close").iloc[-2]
-        if is_buy and price >= last_close * 1.1:
-            return False, _("Order Rejected: {order_book_id} is limit up.").format(
-                order_book_id=order_book_id,
-                )
-        elif not is_buy and price <= last_close * 0.9:
-            return False, _("Order Rejected: {order_book_id} is limit down.").format(
-                order_book_id=order_book_id,
-                )
+        # # TODO check whether is limit up or limit down
+        # # FIXME need to handle ST 5%
+        # last_close = self.data_proxy.history(order_book_id, 2, "1d", "close").iloc[-2]
+        # if is_buy and price >= last_close * 1.1:
+        #     return False, _("Order Rejected: {order_book_id} is limit up.").format(
+        #         order_book_id=order_book_id,
+        #         )
+        # elif not is_buy and price <= last_close * 0.9:
+        #     return False, _("Order Rejected: {order_book_id} is limit down.").format(
+        #         order_book_id=order_book_id,
+        #         )
 
         # TODO check volume is over 25%
         # FIXME might have mulitiple order
