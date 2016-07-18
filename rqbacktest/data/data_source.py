@@ -103,7 +103,6 @@ class LocalDataSource:
         d = start_date.year*10000 + start_date.month*100 + start_date.day
         return self._yield_curve.fetchwhere('date<={}'.format(d)).cols[self.YIELD_CURVE_TENORS[tenor]][-1] / 10000.0
 
-    @memoize
     def get_dividends(self, order_book_id):
         try:
             sid = self._dividend.attrs['stock_id'][order_book_id]

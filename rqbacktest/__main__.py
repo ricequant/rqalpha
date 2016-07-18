@@ -5,7 +5,7 @@ import shutil
 
 import pytz
 import click
-from six import exec_
+from six import exec_, print_ as print
 import pandas as pd
 
 from .trading_params import TradingParams
@@ -78,6 +78,7 @@ def run_strategy(source_code, strategy_filename, start_date, end_date, data_bund
     dummy_func = lambda *args, **kwargs: None
     scope = {
         "logger": user_log,
+        "print": print,
     }
     scope.update(api.__dict__)
     code = compile(source_code, strategy_filename, 'exec')

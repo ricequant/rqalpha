@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import copy
 
 from six import iteritems
 import pandas as pd
@@ -19,7 +20,7 @@ from .utils import ExecutionContext
 
 class StrategyContext(object):
     def __init__(self):
-        pass
+        self.__last_portfolio_update_dt = None
 
     @property
     def now(self):
@@ -59,7 +60,11 @@ class StrategyContext(object):
 
     @property
     def portfolio(self):
-        return ExecutionContext.get_exchange().account.portfolio
+        dt = self.now
+        if self.__last_portfolio_update_dt != dt:
+            self.__portfolio = copy.deepcopy(ExecutionContext.get_exchange().account.portfolio)
+            self.__last_portfolio_update_dt = dt
+        return self.__portfolio
 
     def __repr__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items() if not callable(v))

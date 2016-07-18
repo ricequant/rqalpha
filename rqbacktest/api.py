@@ -271,9 +271,11 @@ def history(bar_count, frequency, field):
     data_proxy = get_data_proxy()
 
     results = {}
-    for order_book_id in executor.current_universe:
-        hist = data_proxy.history(order_book_id, bar_count, frequency, field)
-        results[order_book_id] = hist
+
+    # This make history slow
+    # for order_book_id in list(executor.current_universe)[:1]:
+    #     hist = data_proxy.history(order_book_id, bar_count, frequency, field)
+    #     results[order_book_id] = hist
 
     return HybridDataFrame(results, missing_handler=partial(missing_handler, bar_count=bar_count, frequency=frequency, field=field))
 

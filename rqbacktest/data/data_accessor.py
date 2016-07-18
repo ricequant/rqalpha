@@ -84,6 +84,7 @@ class LocalDataProxy(DataProxy):
             self._cache[order_book_id] = self._data_source.get_all_bars(order_book_id)
 
         pf = self._cache[order_book_id]
+        # from ipdb import set_trace ; set_trace()
 
         return BarObject(self._data_source.instruments(order_book_id), pf.xs(dt.date()))
 
