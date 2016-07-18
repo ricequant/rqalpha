@@ -11,7 +11,6 @@ def init(context):
     context.s2 = "601988.XSHG"
     context.s3 = "000068.XSHE"
     context.stocks = [context.s1,context.s2,context.s3]
-    update_universe(context.stocks)
 
     context.TIME_PERIOD = 14
     context.HIGH_RSI = 85

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+from functools import partial
 
 import pandas as pd
 import six
 
 from .logger import user_log
 from .utils import ExecutionContext
+from .utils.history import HybridDataFrame
 from .i18n import gettext as _
 
 
@@ -209,10 +211,6 @@ def order_target_percent(id_or_ins, percent, style=None):
     return order_value(order_book_id, portfolio_value * percent - current_value, style)
 
 
-def _order_to_target_shares(order_book_id, amount, style=None):
-    pass
-
-
 @export_as_api
 def get_order(order_id):
     """
@@ -277,7 +275,7 @@ def history(bar_count, frequency, field):
         hist = data_proxy.history(order_book_id, bar_count, frequency, field)
         results[order_book_id] = hist
 
-    return pd.DataFrame(results)
+    return HybridDataFrame(results, missing_handler=partial(missing_handler, bar_count=bar_count, frequency=frequency, field=field))
 
 
 @export_as_api
@@ -317,3 +315,15 @@ def get_current_dt():
 
 def get_data_proxy():
     return ExecutionContext.get_strategy_executor().data_proxy
+
+
+def missing_handler(key, bar_count, frequency, field):
+    order_book_id = key
+    data_proxy = get_data_proxy()
+    hist = data_proxy.history(order_book_id, bar_count, frequency, field)
+    series = hist
+
+    executor = get_strategy_executor()
+    executor.current_universe.add(key)
+
+    return series

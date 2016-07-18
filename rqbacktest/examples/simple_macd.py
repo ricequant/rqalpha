@@ -7,7 +7,6 @@ import pandas
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init(context):
     context.s1 = "000001.XSHE"
-    update_universe(context.s1)
 
     # 使用MACD需要设置长短均线和macd平均线的参数
     context.SHORTPERIOD = 12
