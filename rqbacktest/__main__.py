@@ -32,7 +32,8 @@ def entry_point():
 @click.option('-s', '--start-date', type=Date(), required=True)
 @click.option('-e', '--end-date', type=Date(), required=True)
 @click.option('-o', '--output-file', type=click.Path(writable=True))
-def run(strategy_file, start_date, end_date, output_file):
+@click.option('--draw-result/--no-draw-result', default=True)
+def run(strategy_file, start_date, end_date, output_file, draw_result):
     '''run strategy from file
     '''
     import rqdata
@@ -74,6 +75,24 @@ def run(strategy_file, start_date, end_date, output_file):
 
     if output_file is not None:
         results_df.to_pickle(output_file)
+
+    if draw_result:
+        import matplotlib
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+
+        f, ax = plt.subplots()
+
+        ax.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+        ax.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+        ax.grid(b=True, which='minor', linewidth=.2)
+        ax.grid(b=True, which='major', linewidth=1)
+
+        ax.plot(results_df["total_returns"], label="strategy")
+        ax.plot(results_df["benchmark_total_returns"], label="benchmark")
+
+        plt.legend()
+        plt.show()
 
 
 @cli.command()
