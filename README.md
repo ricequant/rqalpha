@@ -15,6 +15,21 @@ Commands:
   run                run strategy from file
 ```
 
+### Run
+```
+Usage: rqbacktest run [OPTIONS]
+
+  run strategy from file
+
+Options:
+  -f, --strategy-file PATH        [required]
+  -s, --start-date DATE           [required]
+  -e, --end-date DATE             [required]
+  -o, --output-file PATH
+  --draw-result / --no-draw-result
+  --help                          Show this message and exit.
+```
+
 ### examples
 ```
 # 生成sample策略
