@@ -202,7 +202,6 @@ class LocalDataProxy(DataProxy):
     def __init__(self, root_dir):
         self._data_source = LocalDataSource(root_dir)
         self._cache = {}
-        self._dividend_cache = {}
 
     def get_bar(self, order_book_id, dt):
         if order_book_id not in self._cache:
@@ -228,13 +227,7 @@ class LocalDataProxy(DataProxy):
         return self._data_source.get_yield_curve(start_date, end_date)
 
     def get_dividend_per_share(self, order_book_id, date):
-        if order_book_id not in self._dividend_cache:
-            self._dividend_cache[order_book_id] = self._data_source.get_dividends(order_book_id)
-
         dividend_df = self._data_source.get_dividends(order_book_id)
-        if dividend_df is None:
-            return 0
-
         df = dividend_df[dividend_df.payable_date == date]
 
         if df.empty:
