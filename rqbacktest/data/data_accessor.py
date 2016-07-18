@@ -87,7 +87,7 @@ class RqDataProxy(DataProxy):
     def __init__(self):
         import rqdata
         self.rqdata = rqdata
-        rqdata.init()
+        # rqdata.init()
         self.cache = {}
 
     def get_bar(self, order_book_id, dt):

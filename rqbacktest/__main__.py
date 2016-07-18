@@ -35,6 +35,9 @@ def entry_point():
 def run(strategy_file, start_date, end_date, output_file):
     '''run strategy from file
     '''
+    import rqdata
+    rqdata.init()
+
     with open(strategy_file) as f:
         source_code = f.read()
 
@@ -46,15 +49,10 @@ def run(strategy_file, start_date, end_date, output_file):
     code = compile(source_code, strategy_file, 'exec')
     exec_(code, scope)
 
-    # FIXME test code here
     timezone = pytz.utc
-    df = pd.read_pickle("tests/trade_cal.pkl")
-    df = df[df.isOpen == 1]
-    trading_cal = df["calendarDate"].apply(lambda x: "%s-%02d-%02d" % tuple(map(int, x.split("/"))))
-    trading_cal = trading_cal.apply(lambda date: pd.Timestamp(date, tz=timezone))
-    trading_cal = pd.Index(trading_cal)
 
-    # from ipdb import set_trace ; set_trace()
+    trading_cal = pd.Index(pd.Series(
+        rqdata.get_trading_dates("2005-01-01", "2020-01-01")).apply(lambda date: pd.Timestamp(date, tz=timezone)))
 
     trading_cal = trading_cal[
         (trading_cal >= start_date) & (trading_cal <= end_date)
