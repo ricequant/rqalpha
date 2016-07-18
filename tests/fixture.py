@@ -8,29 +8,19 @@ import tushare as ts
 import pytest
 import pytz
 
-from rqbacktest.data import RqDataProxy, LocalDataProxy
+from rqbacktest.data import LocalDataProxy
 from rqbacktest.trading_params import TradingParams
 from rqbacktest.analyser.simulation_exchange import SimuExchange
 
 
 @pytest.fixture()
+def data_proxy():
+    return LocalDataProxy(os.environ.get("RQ_LOCAL_STORE", os.path.expanduser("~/.rqbacktest")))
+
+
+@pytest.fixture()
 def trading_calendar():
-    # timezone = pytz.timezone("Asia/Shanghai")
-    timezone = pytz.utc
-
-    # # df = ts.trade_cal()
-    # df = pd.read_pickle(os.path.join(os.path.dirname(os.path.realpath(__file__)), "trade_cal.pkl"))
-
-    # df = df[df.isOpen == 1]
-    # trading_cal = df["calendarDate"].apply(lambda x: "%s-%02d-%02d" % tuple(map(int, x.split("/"))))
-    # trading_cal = trading_cal.apply(lambda date: pd.Timestamp(date, tz=timezone))
-
-    # trading_cal = pd.Index(trading_cal)
-    import rqdata
-    rqdata.init()
-
-    trading_cal = pd.Index(pd.Series(
-        rqdata.get_trading_dates("2005-01-01", "2020-01-01")).apply(lambda date: pd.Timestamp(date, tz=timezone)))
+    trading_cal = data_proxy().get_trading_dates("2005-01-01", "2020-01-01")
 
     return trading_cal
 
@@ -45,19 +35,3 @@ def trading_params():
 
     params = TradingParams(trading_cal)
     return params
-
-
-@pytest.fixture()
-def rq_data_proxy():
-    data_proxy = RqDataProxy()
-    return data_proxy
-
-
-@pytest.fixture()
-def data_proxy():
-    return LocalDataProxy(os.environ.get("RQ_LOCAL_STORE"))
-
-
-@pytest.fixture()
-def simu_exchange():
-    return SimuExchange(rq_data_proxy(), trading_params())

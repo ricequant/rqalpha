@@ -12,7 +12,7 @@ from .trading_params import TradingParams
 from . import api
 from .utils.click_helper import Date
 from . import StrategyExecutor
-from .data import RqDataProxy, LocalDataProxy
+from .data import LocalDataProxy
 from .logger import user_log
 
 
@@ -37,39 +37,10 @@ def entry_point():
 def run(strategy_file, start_date, end_date, output_file, draw_result, data_bundle_path):
     '''run strategy from file
     '''
-    # import rqdata
-    # rqdata.init()
-
     with open(strategy_file) as f:
         source_code = f.read()
 
-    dummy_func = lambda *args, **kwargs: None
-    scope = {
-        "logger": user_log,
-    }
-    scope.update(api.__dict__)
-    code = compile(source_code, strategy_file, 'exec')
-    exec_(code, scope)
-
-    timezone = pytz.utc
-
-    data_proxy = LocalDataProxy(data_bundle_path)
-
-    trading_cal = data_proxy.get_trading_dates(start_date, end_date)
-
-    trading_params = TradingParams(trading_cal)
-    #data_proxy = RqDataProxy()
-
-    executor = StrategyExecutor(
-        init=scope.get("init", dummy_func),
-        before_trading=scope.get("before_trading", dummy_func),
-        handle_bar=scope.get("handle_bar", dummy_func),
-
-        trading_params=trading_params,
-        data_proxy=data_proxy,
-    )
-
-    results_df = executor.execute()
+    results_df = run_strategy(source_code, strategy_file, start_date, end_date, data_bundle_path)
 
     if output_file is not None:
         results_df.to_pickle(output_file)
@@ -101,6 +72,34 @@ def generate_examples(directory):
     source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
 
     shutil.copytree(source_dir, os.path.join(directory, "examples"))
+
+
+def run_strategy(source_code, strategy_filename, start_date, end_date, data_bundle_path):
+    dummy_func = lambda *args, **kwargs: None
+    scope = {
+        "logger": user_log,
+    }
+    scope.update(api.__dict__)
+    code = compile(source_code, strategy_filename, 'exec')
+    exec_(code, scope)
+
+    data_proxy = LocalDataProxy(data_bundle_path)
+
+    trading_cal = data_proxy.get_trading_dates(start_date, end_date)
+    trading_params = TradingParams(trading_cal)
+
+    executor = StrategyExecutor(
+        init=scope.get("init", dummy_func),
+        before_trading=scope.get("before_trading", dummy_func),
+        handle_bar=scope.get("handle_bar", dummy_func),
+
+        trading_params=trading_params,
+        data_proxy=data_proxy,
+    )
+
+    results_df = executor.execute()
+
+    return results_df
 
 
 if __name__ == '__main__':

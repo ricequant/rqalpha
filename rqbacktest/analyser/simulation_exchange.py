@@ -9,7 +9,7 @@ from six import iteritems
 
 from .. import const
 from ..account import Account
-from ..data import BarMap, RqDataProxy
+from ..data import BarMap
 from ..i18n import gettext as _
 from ..logger import user_log
 from ..utils.context import ExecutionContext

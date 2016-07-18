@@ -11,7 +11,7 @@ from .analyser.simulation_exchange import SimuExchange
 from .analyser.slippage import FixedPercentSlippageDecider
 from .analyser.tax import AStockTax
 from .const import EVENT_TYPE, EXECUTION_PHASE
-from .data import BarMap, RqDataProxy
+from .data import BarMap
 from .events import SimulatorAStockTradingEventSource
 from .instruments import Instrument
 from .utils import ExecutionContext
