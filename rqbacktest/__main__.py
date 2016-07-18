@@ -98,6 +98,8 @@ def run(strategy_file, start_date, end_date, output_file, draw_result):
 @cli.command()
 @click.option('-d', '--directory', default="./", type=click.Path(), required=True)
 def generate_examples(directory):
+    '''generate example strategies to target folder
+    '''
     source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
 
     shutil.copytree(source_dir, os.path.join(directory, "examples"))
