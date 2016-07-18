@@ -84,7 +84,8 @@ class LocalDataProxy(DataProxy):
             self._cache[order_book_id] = self._data_source.get_all_bars(order_book_id)
 
         pf = self._cache[order_book_id]
-        return BarObject(self._data_source.instruments(order_book_id), pf.xs(dt.strftime("%Y-%m-%d")))
+
+        return BarObject(self._data_source.instruments(order_book_id), pf.xs(dt.date()))
 
     def history(self, order_book_id, bar_count, frequency, field):
         if frequency == '1m':
@@ -105,20 +106,18 @@ class LocalDataProxy(DataProxy):
         return self._data_source.get_yield_curve(start_date, end_date)
 
     def get_dividend_per_share(self, order_book_id, date):
-        try:
-            dividend_df = self._dividend_cache[order_book_id]
-        except KeyError:
+        if order_book_id not in self._dividend_cache:
             dividend_df = self._data_source.get_dividends(order_book_id)
+            dividend_df.set_index("payable_date", inplace=True)
             self._dividend_cache[order_book_id] = dividend_df
 
-        if dividend_df is None:
+        dividend_df = self._dividend_cache[order_book_id]
+        try:
+            series = dividend_df.ix[date]
+        except KeyError:
             return 0
 
-        df = dividend_df[dividend_df.payable_date == date]
-        if df.empty:
-            return 0
-
-        return df.iloc[0]["dividend_cash_before_tax"] / df.iloc[0]["round_lot"]
+        return series["dividend_cash_before_tax"] / series["round_lot"]
 
     def get_trading_dates(self, start_date, end_date):
         return self._data_source.get_trading_dates(start_date, end_date)

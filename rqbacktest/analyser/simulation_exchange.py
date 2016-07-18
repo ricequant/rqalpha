@@ -87,10 +87,10 @@ class SimuExchange(object):
             # commission_decider = self.account.commission_decider
             # tax_decider = self.account.tax_decider
 
-            self.benchmark_portfolio_value = self.data_proxy.get_bar(self.benchmark_order_book_id, self.start_date).close
+            self.benchmark_portfolio_value = self.data_proxy.get_bar(self.benchmark_order_book_id, pd.Timestamp(self.start_date)).close
 
         new_benchmark_portfolio_value = self.data_proxy.get_bar(
-            self.benchmark_order_book_id, self.current_date).close
+            self.benchmark_order_book_id, pd.Timestamp(self.current_date)).close
         benchmark_daily_returns = new_benchmark_portfolio_value / self.benchmark_portfolio_value - 1
         self.benchmark_portfolio_value = new_benchmark_portfolio_value
 
