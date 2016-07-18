@@ -8,7 +8,7 @@ import six
 
 from .logger import user_log
 from .utils import ExecutionContext
-from .utils.history import HybridDataFrame
+from .utils.history import HybridDataFrame, missing_handler
 from .i18n import gettext as _
 
 
@@ -315,15 +315,3 @@ def get_current_dt():
 
 def get_data_proxy():
     return ExecutionContext.get_strategy_executor().data_proxy
-
-
-def missing_handler(key, bar_count, frequency, field):
-    order_book_id = key
-    data_proxy = get_data_proxy()
-    hist = data_proxy.history(order_book_id, bar_count, frequency, field)
-    series = hist
-
-    executor = get_strategy_executor()
-    executor.current_universe.add(key)
-
-    return series

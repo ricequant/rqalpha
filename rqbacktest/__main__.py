@@ -81,7 +81,7 @@ def run(strategy_file, start_date, end_date, output_file, draw_result):
         import matplotlib.pyplot as plt
         plt.style.use('ggplot')
 
-        f, ax = plt.subplots(figsize=(16, 8))
+        f, ax = plt.subplots(num=strategy_file, figsize=(16, 8))
 
         ax.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
         ax.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
