@@ -12,3 +12,7 @@ class Date(click.ParamType):
 
     def convert(self, value, param, ctx):
         return pd.Timestamp(value, self.tz)
+
+    @property
+    def name(self):
+        return type(self).__name__.upper()
