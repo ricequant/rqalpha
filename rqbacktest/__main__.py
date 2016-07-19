@@ -32,6 +32,7 @@ def entry_point():
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path())
 def update_data(data_bundle_path):
+    """Update data bundle. Download if no data bundle found."""
     day = datetime.date.today() - datetime.timedelta(days=1)
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
 
@@ -54,9 +55,11 @@ def update_data(data_bundle_path):
         out.close()
         break
 
-    shutil.rmtree(data_bundle_path)
+    shutil.rmtree(data_bundle_path, ignore_errors=True)
+    os.mkdir(data_bundle_path)
     tar = tarfile.open(tmp, 'r:bz2')
     tar.extractall(data_bundle_path)
+    os.remove(tmp)
 
 
 @cli.command()
