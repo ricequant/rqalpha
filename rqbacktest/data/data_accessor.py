@@ -202,6 +202,7 @@ class LocalDataProxy(DataProxy):
     def __init__(self, root_dir):
         self._data_source = LocalDataSource(root_dir)
         self._cache = {}
+        self._dividend_cache = {}
 
     def get_bar(self, order_book_id, dt):
         if order_book_id not in self._cache:
@@ -214,22 +215,31 @@ class LocalDataProxy(DataProxy):
         if frequency == '1m':
             raise RuntimeError('Minute bar not supported yet!')
 
-        if order_book_id not in self._cache:
-            self._cache[order_book_id] = self._data_source.get_all_bars(order_book_id)
+        try:
+            df = self._cache[order_book_id]
+        except KeyError:
+            df = self._data_source.get_all_bars(order_book_id)
+            self._cache[order_book_id] = df
 
-        df = self._cache[order_book_id]
-        dt = ExecutionContext.get_current_dt()
-        str_date = dt.strftime("%Y-%m-%d")
-        bar_data = df[df.index <= str_date]
-        return bar_data[-bar_count:][field]
+        dt = ExecutionContext.get_current_dt().date()
+        i = df.index.searchsorted(dt, side='right')
+        left = i - bar_count if i >= bar_count else 0
+        return df[left:i][field]
 
     def get_yield_curve(self, start_date=None, end_date=None):
         return self._data_source.get_yield_curve(start_date, end_date)
 
     def get_dividend_per_share(self, order_book_id, date):
-        dividend_df = self._data_source.get_dividends(order_book_id)
-        df = dividend_df[dividend_df.payable_date == date]
+        try:
+            dividend_df = self._dividend_cache[order_book_id]
+        except KeyError:
+            dividend_df = self._data_source.get_dividends(order_book_id)
+            self._dividend_cache[order_book_id] = dividend_df
 
+        if dividend_df is None:
+            return 0
+
+        df = dividend_df[dividend_df.payable_date == date]
         if df.empty:
             return 0
 
