@@ -44,7 +44,7 @@ class RiskCal(object):
         self.current_max_returns = -np.inf
         self.current_max_drawdown = 0
 
-        # might change dynamically
+        # FIXME might change daily?
         self.risk_free_rate = data_proxy.get_yield_curve(self.trading_index[0], self.trading_index[-1])
 
     def calculate(self, date, strategy_daily_returns, benchmark_daily_returns):
@@ -79,15 +79,13 @@ class RiskCal(object):
         risk = self.risk
         risk.volatility = self.cal_volatility()
         risk.max_drawdown = self.cal_max_drawdown()
-        risk.information_rate = self.cal_information_rate()
+        risk.tracking_error = self.cal_tracking_error()
+        risk.information_rate = self.cal_information_rate(risk.tracking_error)
         risk.downside_risk = self.cal_downside_risk()
         risk.beta = self.cal_beta()
         risk.alpha = self.cal_alpha()
         risk.sharpe = self.cal_sharpe()
         risk.sortino = self.cal_sortino()
-
-        # TODO cal tracking_error
-        risk.tracking_error = 0.
 
         self.daily_risks[date] = copy.deepcopy(risk)
 
@@ -105,16 +103,18 @@ class RiskCal(object):
              self.current_max_drawdown = today_drawdown
         return self.current_max_drawdown
 
-    def cal_information_rate(self):
-        strategy_rets = self.strategy_current_annual_avg_returns[-1]
-        benchmark_rets = self.benchmark_current_annual_avg_returns[-1]
-        return (strategy_rets - benchmark_rets) / self.risk.volatility
+    def cal_tracking_error(self):
+        diff = self.strategy_current_daily_returns - self.benchmark_current_daily_returns
+        return ((diff * diff).sum() / len(diff)) ** 0.5 * self.trading_days_a_year ** 0.5
+
+    def cal_information_rate(self, tracking_error):
+        return (self.strategy_current_total_returns[-1] - self.benchmark_current_total_returns[-1]) / tracking_error
 
     def cal_alpha(self):
         beta = self.risk.beta
 
-        strategy_rets = self.strategy_current_annual_avg_returns[-1]
-        benchmark_rets = self.benchmark_current_annual_avg_returns[-1]
+        strategy_rets = self.strategy_current_total_returns[-1]
+        benchmark_rets = self.benchmark_current_total_returns[-1]
 
         alpha = strategy_rets - (self.risk_free_rate + beta * (benchmark_rets - self.risk_free_rate))
         return alpha
@@ -132,7 +132,7 @@ class RiskCal(object):
 
     def cal_sharpe(self):
         volatility = self.risk.volatility
-        strategy_rets = self.strategy_current_annual_avg_returns[-1]
+        strategy_rets = self.strategy_current_total_returns[-1]
 
         sharpe = (strategy_rets - self.risk_free_rate) / volatility
 
@@ -146,12 +146,13 @@ class RiskCal(object):
         return sortino
 
     def cal_downside_risk(self):
-        # FIXME not same as java, might be benchmark
         mask = self.strategy_current_daily_returns < self.benchmark_current_daily_returns
         diff = self.strategy_current_daily_returns[mask] - self.benchmark_current_daily_returns[mask]
         if len(diff) <= 1:
             return 0.
-        return self.trading_days_a_year ** 0.5 * np.std(diff, ddof=1)
+
+        return ((diff * diff).sum() / len(diff)) ** 0.5 * self.trading_days_a_year ** 0.5
+        # return self.trading_days_a_year ** 0.5 * np.std(diff, ddof=1)
 
     def __repr__(self):
         return "RiskCal({0})".format(self.__dict__)

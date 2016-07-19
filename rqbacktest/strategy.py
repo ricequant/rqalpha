@@ -175,7 +175,8 @@ class StrategyExecutor(object):
             risk = risk_cal.daily_risks[date]
             risk_keys = ["volatility", "max_drawdown",
                          "alpha", "beta", "sharpe",
-                         # "information_rate", "downside_risk",
+                         "information_rate", "downside_risk",
+                         "tracking_error", "sortino",
                          ]
             for risk_key in risk_keys:
                 items[risk_key] = getattr(risk, risk_key)
