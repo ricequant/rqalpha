@@ -10,5 +10,5 @@ TA-Lib==0.4.9
 
 logbook==1.0.0
 click==6.6
-rqdata
 matplotlib
+bcolz>=1.1.0
