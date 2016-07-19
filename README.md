@@ -43,13 +43,13 @@ Options:
 rqbacktest generate_examples -d ./
 
 # 运行回测
-rqbacktest run -f examples/simple_macd.py -s 2013-01-01 -e 2015-01-04 -o /tmp/a.pkl
+rqbacktest run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
 ```
 
 
 ## install
 ```
-pip install --index-url https://rquser:ricequant99@py.ricequant.com/simple/ rqbacktest
+pip install --trusted-host mirrors.aliyun.com --index-url http://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://rquser:ricequant99@py.ricequant.com/simple/ -U rqbacktest
 ```
 
 
