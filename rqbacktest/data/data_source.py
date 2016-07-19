@@ -119,11 +119,11 @@ class LocalDataSource:
 
     def get_all_bars(self, order_book_id):
         try:
-            id = self._daily_table.attrs['id_map'][order_book_id]
+            sid = self._daily_table.attrs['id_map'][order_book_id]
         except KeyError:
             raise RuntimeError('No data for {}'.format(order_book_id))
 
-        bars = self._daily_table.fetchwhere('id=={}'.format(id))
+        bars = self._daily_table.fetchwhere('id=={}'.format(sid))
         return pd.DataFrame({
             'open': (bars.cols['open'][:] / self.PRICE_SCALE).round(2),
             'close': (bars.cols['close'][:] / self.PRICE_SCALE).round(2),
