@@ -3,7 +3,6 @@
 from pprint import pprint
 
 from six import print_ as print, iteritems
-import tushare as ts
 
 from rqbacktest import StrategyExecutor
 from rqbacktest.api import *

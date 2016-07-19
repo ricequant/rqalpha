@@ -4,7 +4,6 @@ from pprint import pprint
 
 import numpy as np
 from six import print_ as print, iteritems
-import tushare as ts
 
 from rqbacktest import StrategyExecutor
 from rqbacktest.api import order_shares

@@ -4,7 +4,6 @@ import datetime
 import os
 
 import pandas as pd
-import tushare as ts
 import pytest
 import pytz
 

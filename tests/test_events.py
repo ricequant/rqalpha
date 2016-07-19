@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from six import print_ as print
-import tushare as ts
 
 from rqbacktest.events import SimulatorAStockTradingEventSource
 from rqbacktest.const import EVENT_TYPE
