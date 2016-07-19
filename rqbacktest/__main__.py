@@ -74,7 +74,7 @@ def run(strategy_file, start_date, end_date, output_file, draw_result, data_bund
     '''run strategy from file
     '''
     if not os.path.exists(data_bundle_path):
-        print("data bundle not found. Run `%s update_data` to download data bundle." % sys.argv[0])
+        print("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
         return
 
     with open(strategy_file) as f:
@@ -127,7 +127,7 @@ def run_strategy(source_code, strategy_filename, start_date, end_date, data_bund
     try:
         data_proxy = LocalDataProxy(data_bundle_path)
     except FileNotFoundError:
-        print("data bundle might crash. Run `%s update_data` to redownload data bundle." % sys.argv[0])
+        print("data bundle might crash. Run `%s update_bundle` to redownload data bundle." % sys.argv[0])
         sys.exit()
 
     trading_cal = data_proxy.get_trading_dates(start_date, end_date)
