@@ -72,6 +72,17 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
+    @abc.abstractclassmethod
+    def instrument(self, order_book_id):
+        """get instrument of order book id
+
+        :param str order_book_id:
+        :returns: result instrument
+        :rtype: Instrument
+
+        """
+        raise NotImplementedError
+
 
 class LocalDataProxy(DataProxy):
     def __init__(self, root_dir):
@@ -122,3 +133,6 @@ class LocalDataProxy(DataProxy):
 
     def get_trading_dates(self, start_date, end_date):
         return self._data_source.get_trading_dates(start_date, end_date)
+
+    def instrument(self, order_book_id):
+        return self._data_source.instruments(order_book_id)

@@ -1,4 +1,5 @@
 import pytz
+import six
 
 import pandas as pd
 from ..instruments import Instrument
@@ -54,7 +55,7 @@ class LocalDataSource:
                                        bcolz.open(os.path.join(root_dir, LocalDataSource.TRADING_DATES)))
 
     def instruments(self, order_book_ids):
-        if type(order_book_ids) == str:
+        if isinstance(order_book_ids, six.string_types):
             try:
                 return self._instruments[order_book_ids]
             except KeyError:

@@ -2,10 +2,12 @@
 
 from __future__ import division
 from functools import partial
+from collections import Iterable
 
 import pandas as pd
 import six
 
+from .instruments import Instrument
 from .logger import user_log
 from .utils import ExecutionContext
 from .utils.history import HybridDataFrame, missing_handler
@@ -38,8 +40,10 @@ def order_shares(id_or_ins, amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    # TODO handle str or Instrument
-    order_book_id = id_or_ins
+    if isinstance(id_or_ins, Instrument):
+        order_book_id = id_or_ins.order_book_id
+    else:
+        order_book_id = id_or_ins
 
     if amount == 0:
         user_log.warn(_("order_shares {order_book_id} amount is 0.").format(
@@ -94,10 +98,10 @@ def order_value(id_or_ins, cash_amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if not isinstance(id_or_ins, six.string_types):
-        raise NotImplementedError
-
-    order_book_id = id_or_ins
+    if isinstance(id_or_ins, Instrument):
+        order_book_id = id_or_ins.order_book_id
+    else:
+        order_book_id = id_or_ins
 
     # TODO market order might be different
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -158,10 +162,10 @@ def order_target_value(id_or_ins, cash_amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if not isinstance(id_or_ins, six.string_types):
-        raise NotImplementedError
-
-    order_book_id = id_or_ins
+    if isinstance(id_or_ins, Instrument):
+        order_book_id = id_or_ins.order_book_id
+    else:
+        order_book_id = id_or_ins
 
     # TODO market order might be different
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -221,12 +225,12 @@ def get_order(order_id):
         like `order_shares`
     :return: an `Order` object.
     """
-    raise NotImplementedError
+    return get_simu_exchange().get_order(order_id)
 
 
 @export_as_api
 def get_open_orders():
-    raise NotImplementedError
+    return deepcopy.copy(get_simu_exchange().open_orders)
 
 
 @export_as_api
@@ -245,6 +249,15 @@ def update_universe(id_or_symbols):
     """
     if isinstance(id_or_symbols, six.string_types):
         id_or_symbols = [id_or_symbols]
+    elif isinstance(id_or_symbols, Instrument):
+        id_or_symbols = [Instrument.order_book_id]
+    elif isinstance(id_or_symbols, Iterable):
+        id_or_symbols = [
+            (item.order_book_id if isinstance(item, Instrument) else item)
+            for item in id_or_symbols
+        ]
+    else:
+        raise RuntimeError(_("unknown type"))
 
     executor = get_strategy_executor()
     executor.current_universe = set(id_or_symbols)
@@ -263,7 +276,10 @@ def instruments(id_or_symbols):
     :return: one / a list of instrument(s) object(s) - by the
         id_or_symbol(s) requested.
     """
-    raise NotImplementedError
+    if isinstance(id_or_symbols, six.string_types):
+        return get_data_proxy().instrument(id_or_symbols)
+
+    return map(get_data_proxy().instrument, id_or_symbols)
 
 
 @export_as_api
@@ -278,7 +294,8 @@ def history(bar_count, frequency, field):
     #     hist = data_proxy.history(order_book_id, bar_count, frequency, field)
     #     results[order_book_id] = hist
 
-    return HybridDataFrame(results, missing_handler=partial(missing_handler, bar_count=bar_count, frequency=frequency, field=field))
+    handler = partial(missing_handler, bar_count=bar_count, frequency=frequency, field=field)
+    return HybridDataFrame(results, missing_handler=handler)
 
 
 @export_as_api
