@@ -3,10 +3,8 @@
 import os
 import shutil
 
-import pytz
 import click
 from six import exec_, print_ as print
-import pandas as pd
 
 from .trading_params import TradingParams
 from . import api
