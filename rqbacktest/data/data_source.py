@@ -12,7 +12,7 @@ class LocalDataSource:
     YIELD_CURVE = 'yield_curve.bcolz'
 
     YIELD_CURVE_TENORS = {
-        0 : 'S0',
+        0: 'S0',
         30: 'M1',
         60: 'M2',
         90: 'M3',
@@ -104,11 +104,11 @@ class LocalDataSource:
 
     def get_dividends(self, order_book_id):
         try:
-            id = self._dividend.attrs['stock_id'][order_book_id]
+            sid = self._dividend.attrs['stock_id'][order_book_id]
         except KeyError:
             return None
 
-        dividends = self._dividend.fetchwhere('id=={}'.format(id))
+        dividends = self._dividend.fetchwhere('id=={}'.format(sid))
         return pd.DataFrame({
             'book_closure_date': pd.Index(pd.Timestamp(str(d)) for d in dividends.cols['closure_date']),
             'ex_dividend_date': pd.Index(pd.Timestamp(str(d)) for d in dividends.cols['ex_date']),
