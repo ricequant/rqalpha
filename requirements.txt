@@ -5,10 +5,10 @@ pytz==2016.4
 six==1.10.0
 
 pytest==2.9.2
-enum34
+enum34==1.1.6
 TA-Lib==0.4.9
 
 logbook==1.0.0
 click==6.6
-matplotlib
-bcolz>=1.1.0
+matplotlib==1.5.1
+bcolz==1.1.0
