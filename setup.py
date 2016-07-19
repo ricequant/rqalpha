@@ -7,7 +7,7 @@ from pip.req import parse_requirements
 
 setup(
     name='rqbacktest',
-    version='0.0.9',
+    version='0.0.10',
     description='Python Distribution Utilities',
     packages=find_packages(exclude=[]),
     author='ricequant',

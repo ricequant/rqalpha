@@ -11,8 +11,15 @@ Options:
   --help         Show this message and exit.
 
 Commands:
-  generate_examples
+  generate_examples  generate example strategies to target folder
   run                run strategy from file
+  update_bundle      update data bundle, download if not found
+```
+
+### Downlaod data bundle
+
+```
+rqbacktest update_bundle
 ```
 
 ### Run
