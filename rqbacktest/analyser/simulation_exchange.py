@@ -32,7 +32,7 @@ class SimuExchange(object):
         self.dt = None
 
         # TODO move risk cal outside this class
-        self.risk_cal = RiskCal(trading_params)
+        self.risk_cal = RiskCal(trading_params, data_proxy)
 
         self.daily_portfolios = OrderedDict()      # type: Dict[str, Portfolio]
         self.all_orders = {}                       # type: Dict[str, Order]
@@ -75,6 +75,11 @@ class SimuExchange(object):
             position.sellable += trade.amount
 
         self.update_daily_portfolio()
+
+        for order_book_id in list(positions.keys()):
+            position = positions[order_book_id]
+            if position.quantity == 0:
+                positions.pop(order_book_id)
 
         # store today portfolio
         self.daily_portfolios[self.current_date] = copy.deepcopy(portfolio)
@@ -129,17 +134,20 @@ class SimuExchange(object):
         portfolio.daily_returns = portfolio.pnl / yesterday_portfolio_value
         portfolio.total_returns = portfolio.portfolio_value / portfolio.starting_cash - 1
         portfolio.annualized_returns = (1 + portfolio.total_returns) ** (
-            const.DAYS_CNT.DAYS_A_YEAR / float((self.current_date - portfolio.start_date).days + 1)) - 1
+            const.DAYS_CNT.DAYS_A_YEAR / float((self.current_date - self.trading_params.start_date).days + 1)) - 1
 
     def update_portfolio_on_bar_close(self, bar_dict):
         portfolio = self.account.portfolio
         positions = portfolio.positions
 
-        portfolio.market_value = sum(
-            position.quantity * bar_dict[order_book_id].close
-            for order_book_id, position in iteritems(positions)
-        )
+        for order_book_id, position in iteritems(positions):
+            position.market_value = position.quantity * bar_dict[order_book_id].close
+
+        portfolio.market_value = sum(position.market_value for order_book_id, position in iteritems(positions))
         portfolio.portfolio_value = portfolio.market_value + portfolio.cash
+
+        for order_book_id, position in iteritems(positions):
+            position.value_percent = position.market_value / portfolio.portfolio_value
 
     def create_order(self, order_book_id, amount, style):
         if style is None:

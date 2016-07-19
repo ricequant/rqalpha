@@ -45,6 +45,7 @@ def order_shares(id_or_ins, amount, style=None):
         user_log.warn(_("order_shares {order_book_id} amount is 0.").format(
             order_book_id=order_book_id,
         ))
+        return
 
     amount = int(amount) // 100 * 100
 

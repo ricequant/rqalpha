@@ -119,7 +119,7 @@ def run_strategy(source_code, strategy_filename, start_date, end_date, data_bund
     data_proxy = LocalDataProxy(data_bundle_path)
 
     trading_cal = data_proxy.get_trading_dates(start_date, end_date)
-    trading_params = TradingParams(trading_cal)
+    trading_params = TradingParams(trading_cal, start_date=start_date.date(), end_date=end_date.date())
 
     executor = StrategyExecutor(
         init=scope.get("init", dummy_func),
