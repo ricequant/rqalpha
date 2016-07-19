@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import os
 import shutil
 
@@ -68,10 +69,14 @@ def update_bundle(data_bundle_path):
 @click.option('-e', '--end-date', type=Date(), required=True)
 @click.option('-o', '--output-file', type=click.Path(writable=True))
 @click.option('--draw-result/--no-draw-result', default=True)
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path(exists=True))
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path())
 def run(strategy_file, start_date, end_date, output_file, draw_result, data_bundle_path):
     '''run strategy from file
     '''
+    if not os.path.exists(data_bundle_path):
+        print("data bundle not found. Run `%s update_data` to download data bundle." % sys.argv[0])
+        return
+
     with open(strategy_file) as f:
         source_code = f.read()
 
@@ -119,7 +124,11 @@ def run_strategy(source_code, strategy_filename, start_date, end_date, data_bund
     code = compile(source_code, strategy_filename, 'exec')
     exec_(code, scope)
 
-    data_proxy = LocalDataProxy(data_bundle_path)
+    try:
+        data_proxy = LocalDataProxy(data_bundle_path)
+    except FileNotFoundError:
+        print("data bundle might crash. Run `%s update_data` to redownload data bundle." % sys.argv[0])
+        sys.exit()
 
     trading_cal = data_proxy.get_trading_dates(start_date, end_date)
     trading_params = TradingParams(trading_cal, start_date=start_date.date(), end_date=end_date.date())
