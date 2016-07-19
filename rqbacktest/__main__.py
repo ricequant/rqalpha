@@ -3,20 +3,20 @@
 import sys
 import os
 import shutil
-
-import click
-from six import exec_, print_ as print
-
-from .trading_params import TradingParams
-from . import api
-from .utils.click_helper import Date
-from . import StrategyExecutor
-from .data import LocalDataProxy
-from .logger import user_log
 import datetime
 import tempfile
-import requests
 import tarfile
+
+import click
+import requests
+from six import exec_, print_ as print
+
+from . import StrategyExecutor
+from . import api
+from .data import LocalDataProxy
+from .logger import user_log
+from .trading_params import TradingParams
+from .utils.click_helper import Date
 
 
 @click.group()
