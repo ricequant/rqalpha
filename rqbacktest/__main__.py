@@ -31,8 +31,8 @@ def entry_point():
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path())
-def update_data(data_bundle_path):
-    """Update data bundle. Download if no data bundle found."""
+def update_bundle(data_bundle_path):
+    """update data bundle, download if not found"""
     day = datetime.date.today() - datetime.timedelta(days=1)
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
 
