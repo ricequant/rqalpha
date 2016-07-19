@@ -12,6 +12,10 @@ from .utils.click_helper import Date
 from . import StrategyExecutor
 from .data import LocalDataProxy
 from .logger import user_log
+import datetime
+import tempfile
+import requests
+import tarfile
 
 
 @click.group()
@@ -23,6 +27,36 @@ def cli(ctx, verbose):
 
 def entry_point():
     cli(obj={})
+
+
+@cli.command()
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path())
+def update_data(data_bundle_path):
+    day = datetime.date.today() - datetime.timedelta(days=1)
+    tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
+
+    while True:
+        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles/rqbundle_%04d%02d%02d.tar.bz2' % (day.year, day.month, day.day)
+        print('try {} ...'.format(url))
+        r = requests.get(url, stream=True)
+        if r.status_code != 200:
+            day = day - datetime.timedelta(days=1)
+            continue
+
+        out = open(tmp, 'wb')
+        total_length = int(r.headers.get('content-length'))
+
+        with click.progressbar(length=total_length, label='downloading ...') as bar:
+            for data in r.iter_content(chunk_size=8192):
+                bar.update(len(data))
+                out.write(data)
+
+        out.close()
+        break
+
+    shutil.rmtree(data_bundle_path)
+    tar = tarfile.open(tmp, 'r:bz2')
+    tar.extractall(data_bundle_path)
 
 
 @cli.command()
