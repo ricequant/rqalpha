@@ -140,11 +140,14 @@ class SimuExchange(object):
         portfolio = self.account.portfolio
         positions = portfolio.positions
 
-        portfolio.market_value = sum(
-            position.quantity * bar_dict[order_book_id].close
-            for order_book_id, position in iteritems(positions)
-        )
+        for order_book_id, position in iteritems(positions):
+            position.market_value = position.quantity * bar_dict[order_book_id].close
+
+        portfolio.market_value = sum(position.market_value for order_book_id, position in iteritems(positions))
         portfolio.portfolio_value = portfolio.market_value + portfolio.cash
+
+        for order_book_id, position in iteritems(positions):
+            position.value_percent = position.market_value / portfolio.portfolio_value
 
     def create_order(self, order_book_id, amount, style):
         if style is None:
