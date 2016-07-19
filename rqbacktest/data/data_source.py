@@ -107,7 +107,7 @@ class LocalDataSource:
         try:
             sid = self._dividend.attrs['stock_id'][order_book_id]
         except KeyError:
-            return None
+            return pd.DataFrame()
 
         dividends = self._dividend.fetchwhere('id=={}'.format(sid))
         return pd.DataFrame({

@@ -10,7 +10,9 @@ from .risk import Risk
 
 
 class RiskCal(object):
-    def __init__(self, trading_params):
+    def __init__(self, trading_params, data_proxy):
+        self.data_proxy = data_proxy
+
         self.trading_days_a_year = 252
         self.trading_index = trading_params.trading_calendar
         self.trading_days_cnt = len(self.trading_index)
@@ -39,13 +41,14 @@ class RiskCal(object):
 
         self.daily_risks = OrderedDict()
 
-        # TODO use yield curve
-        self.risk_free_rate = 0.0271
-
         self.current_max_returns = -np.inf
         self.current_max_drawdown = 0
 
+        # might change dynamically
+        self.risk_free_rate = data_proxy.get_yield_curve(self.trading_index[0], self.trading_index[-1])
+
     def calculate(self, date, strategy_daily_returns, benchmark_daily_returns):
+
         idx = self.latest_idx = self.trading_index.get_loc(date)
 
         self.strategy_total_daily_returns[idx] = strategy_daily_returns

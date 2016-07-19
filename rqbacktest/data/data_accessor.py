@@ -84,7 +84,6 @@ class LocalDataProxy(DataProxy):
             self._cache[order_book_id] = self._data_source.get_all_bars(order_book_id)
 
         pf = self._cache[order_book_id]
-        # from ipdb import set_trace ; set_trace()
 
         return BarObject(self._data_source.instruments(order_book_id), pf.xs(dt.date()))
 
@@ -109,7 +108,8 @@ class LocalDataProxy(DataProxy):
     def get_dividend_per_share(self, order_book_id, date):
         if order_book_id not in self._dividend_cache:
             dividend_df = self._data_source.get_dividends(order_book_id)
-            dividend_df.set_index("payable_date", inplace=True)
+            if not dividend_df.empty:
+                dividend_df.set_index("payable_date", inplace=True)
             self._dividend_cache[order_book_id] = dividend_df
 
         dividend_df = self._dividend_cache[order_book_id]
