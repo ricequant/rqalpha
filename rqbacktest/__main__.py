@@ -17,6 +17,7 @@ from .data import LocalDataProxy
 from .logger import user_log
 from .trading_params import TradingParams
 from .utils.click_helper import Date
+from .utils import dummy_func
 
 
 @click.group()
@@ -115,7 +116,6 @@ def generate_examples(directory):
 
 
 def run_strategy(source_code, strategy_filename, start_date, end_date, data_bundle_path):
-    dummy_func = lambda *args, **kwargs: None
     scope = {
         "logger": user_log,
         "print": print,

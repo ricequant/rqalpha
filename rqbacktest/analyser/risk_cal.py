@@ -100,7 +100,7 @@ class RiskCal(object):
         today_return = self.strategy_current_total_returns[-1]
         today_drawdown = (1. + today_return) / (1. + self.current_max_returns) - 1.
         if today_drawdown < self.current_max_drawdown:
-             self.current_max_drawdown = today_drawdown
+            self.current_max_drawdown = today_drawdown
         return self.current_max_drawdown
 
     def cal_tracking_error(self):

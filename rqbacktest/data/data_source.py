@@ -21,20 +21,20 @@ class LocalDataSource:
         180: 'M6',
         270: 'M9',
         365: 'Y1',
-        365*2: 'Y2',
-        365*3: 'Y3',
-        365*4: 'Y4',
-        365*5: 'Y5',
-        365*6: 'Y6',
-        365*7: 'Y7',
-        365*8: 'Y8',
-        365*9: 'Y9',
-        365*10: 'Y10',
-        365*15: 'Y15',
-        365*20: 'Y20',
-        365*30: 'Y30',
-        365*40: 'Y40',
-        365*50: 'Y50',
+        365 * 2: 'Y2',
+        365 * 3: 'Y3',
+        365 * 4: 'Y4',
+        365 * 5: 'Y5',
+        365 * 6: 'Y6',
+        365 * 7: 'Y7',
+        365 * 8: 'Y8',
+        365 * 9: 'Y9',
+        365 * 10: 'Y10',
+        365 * 15: 'Y15',
+        365 * 20: 'Y20',
+        365 * 30: 'Y30',
+        365 * 40: 'Y40',
+        365 * 50: 'Y50',
     }
 
     YIELD_CURVE_DURATION = sorted(YIELD_CURVE_TENORS.keys())
@@ -101,7 +101,7 @@ class LocalDataSource:
             else:
                 break
 
-        d = start_date.year*10000 + start_date.month*100 + start_date.day
+        d = start_date.year * 10000 + start_date.month * 100 + start_date.day
         return self._yield_curve.fetchwhere('date<={}'.format(d)).cols[self.YIELD_CURVE_TENORS[tenor]][-1] / 10000.0
 
     def get_dividends(self, order_book_id):

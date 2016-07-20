@@ -25,4 +25,5 @@ class Position(object):
         return "Position({%s})" % self.__dict__
 
 
-Positions = lambda: defaultdict(Position)
+def Positions():
+    return defaultdict(Position)

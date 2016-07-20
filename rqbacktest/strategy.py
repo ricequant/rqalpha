@@ -15,7 +15,7 @@ from .const import EVENT_TYPE, EXECUTION_PHASE
 from .data import BarMap
 from .events import SimulatorAStockTradingEventSource
 from .instruments import Instrument
-from .utils import ExecutionContext
+from .utils import ExecutionContext, dummy_func
 
 
 class StrategyContext(object):
@@ -85,8 +85,6 @@ class StrategyExecutor(object):
         self._strategy_context = kwargs.get("strategy_context")
         if self._strategy_context is None:
             self._strategy_context = StrategyContext()
-
-        dummy_func = lambda *args, **kwargs: None
 
         self._user_init = kwargs.get("init", dummy_func)
         self._user_handle_bar = kwargs.get("handle_bar", dummy_func)

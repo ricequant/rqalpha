@@ -19,3 +19,7 @@ def memoize(function):
             return rv
 
     return wrapper
+
+
+def dummy_func(*args, **kwargs):
+    return None
