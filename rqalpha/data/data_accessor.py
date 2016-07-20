@@ -92,12 +92,13 @@ class LocalDataProxy(DataProxy):
         self._dividend_cache = {}
 
     def get_bar(self, order_book_id, dt):
-        if order_book_id not in self._cache:
-            self._cache[order_book_id] = self._data_source.get_all_bars(order_book_id)
+        try:
+            df = self._cache[order_book_id]
+        except KeyError:
+            df = self._data_source.get_all_bars(order_book_id)
+            self._cache[order_book_id] = df
 
-        pf = self._cache[order_book_id]
-
-        return BarObject(self._data_source.instruments(order_book_id), pf.xs(dt.date()))
+        return BarObject(self._data_source.instruments(order_book_id), df.xs(dt.date()))
 
     def history(self, order_book_id, bar_count, frequency, field):
         if frequency == '1m':

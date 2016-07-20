@@ -3,7 +3,6 @@ import six
 
 import pandas as pd
 from ..instruments import Instrument
-from ..utils import memoize
 
 
 class LocalDataSource:
