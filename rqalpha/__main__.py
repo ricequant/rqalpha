@@ -120,7 +120,7 @@ def run_strategy(source_code, strategy_filename, start_date, end_date, data_bund
         "logger": user_log,
         "print": print_,
     }
-    scope.update(api.__dict__)
+    scope.update({export_name: getattr(api, export_name) for export_name in api.__all__})
     code = compile(source_code, strategy_filename, 'exec')
     exec_(code, scope)
 
