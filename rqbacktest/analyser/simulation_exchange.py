@@ -29,14 +29,14 @@ class SimuExchange(object):
         self.data_proxy = data_proxy
         self.trading_params = trading_params
 
-        self.dt = None
+        self.dt = None          # type: datetime.datetime current simulation datetime
 
         # TODO move risk cal outside this class
         self.risk_cal = RiskCal(trading_params, data_proxy)
 
-        self.daily_portfolios = OrderedDict()      # type: Dict[str, Portfolio]
-        self.all_orders = {}                       # type: Dict[str, Order]
-        self.open_orders = defaultdict(list)       # type: Dict[str, List[Order]]
+        self.daily_portfolios = OrderedDict()      # type: Dict[str, Portfolio], each day has a portfolio copy
+        self.all_orders = {}                       # type: Dict[str, Order], all orders, including cancel orders
+        self.open_orders = defaultdict(list)       # type: Dict[str, List[Order]], all open orders
 
         self.start_date = start_date = self.trading_params.trading_calendar[0].date()
         self.account = Account(start_date=start_date)
@@ -44,8 +44,8 @@ class SimuExchange(object):
         self.benchmark_order_book_id = trading_params.benchmark
         self.benchmark_portfolio_value = None
 
-        self.last_date = None
-        self.simu_days_cnt = 0
+        self.last_date = None        # type: datetime.date, last trading date
+        self.simu_days_cnt = 0       # type: int, days count since simulation start
 
     def on_dt_change(self, dt):
         if dt.date() != self.current_date:
