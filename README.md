@@ -2,7 +2,7 @@
 
 ## install
 ```
-pip install --trusted-host mirrors.aliyun.com --index-url http://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://rquser:ricequant99@py.ricequant.com/simple/ -U rqalpha
+pip install -U rqalpha
 ```
 
 ## Usage
