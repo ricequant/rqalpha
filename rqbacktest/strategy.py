@@ -182,6 +182,7 @@ class StrategyExecutor(object):
             idx = risk_cal.trading_index.get_loc(date)
             items["benchmark_total_returns"] = risk_cal.benchmark_total_returns[idx]
             items["benchmark_daily_returns"] = risk_cal.benchmark_total_daily_returns[idx]
+            items["benchmark_annualized_returns"] = risk_cal.benchmark_annualized_returns[idx]
 
             data.append(items)
 

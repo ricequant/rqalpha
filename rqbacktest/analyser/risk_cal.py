@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import division
 import copy
 from collections import OrderedDict
 
@@ -7,13 +7,13 @@ import pandas as pd
 import numpy as np
 
 from .risk import Risk
+from .. import const
 
 
 class RiskCal(object):
     def __init__(self, trading_params, data_proxy):
         self.data_proxy = data_proxy
 
-        self.trading_days_a_year = 252
         self.trading_index = trading_params.trading_calendar
         self.trading_days_cnt = len(self.trading_index)
 
@@ -27,15 +27,10 @@ class RiskCal(object):
         self.strategy_current_total_returns = None
         self.benchmark_current_total_returns = None
 
-        self.strategy_total_avg_returns = np.full(self.trading_days_cnt, np.nan)
-        self.benchmark_total_avg_returns = np.full(self.trading_days_cnt, np.nan)
-        self.strategy_current_total_avg_returns = None
-        self.benchmark_current_total_avg_returns = None
-
-        self.strategy_annual_avg_returns = np.full(self.trading_days_cnt, np.nan)
-        self.benchmark_annual_avg_returns = np.full(self.trading_days_cnt, np.nan)
-        self.strategy_current_annual_avg_returns = None
-        self.benchmark_current_annual_avg_returns = None
+        self.strategy_annualized_returns = np.full(self.trading_days_cnt, np.nan)
+        self.benchmark_annualized_returns = np.full(self.trading_days_cnt, np.nan)
+        self.strategy_current_annualized_returns = None
+        self.benchmark_current_annualized_returns = None
 
         self.risk = Risk()
 
@@ -47,31 +42,32 @@ class RiskCal(object):
         # FIXME might change daily?
         self.risk_free_rate = data_proxy.get_yield_curve(self.trading_index[0], self.trading_index[-1])
 
-    def calculate(self, date, strategy_daily_returns, benchmark_daily_returns):
+    def calculate(self, date, strategy_daily_returns, benchmark_daily_returns, trading_params):
 
         idx = self.latest_idx = self.trading_index.get_loc(date)
 
+        # daily
         self.strategy_total_daily_returns[idx] = strategy_daily_returns
         self.benchmark_total_daily_returns[idx] = benchmark_daily_returns
         self.strategy_current_daily_returns = self.strategy_total_daily_returns[:idx + 1]
         self.benchmark_current_daily_returns = self.benchmark_total_daily_returns[:idx + 1]
 
         self.days_cnt = len(self.strategy_current_daily_returns)
+        days_pass_cnt = (date - trading_params.start_date).days + 1
 
+        # total
         self.strategy_total_returns[idx] = (1. + self.strategy_current_daily_returns).prod() - 1
         self.benchmark_total_returns[idx] = (1. + self.benchmark_current_daily_returns).prod() - 1
         self.strategy_current_total_returns = self.strategy_total_returns[:idx + 1]
         self.benchmark_current_total_returns = self.benchmark_total_returns[:idx + 1]
 
-        self.strategy_total_avg_returns[idx] = self.strategy_current_total_returns[-1] / self.days_cnt
-        self.strategy_current_total_avg_returns = self.strategy_total_avg_returns[:idx + 1]
-        self.benchmark_total_avg_returns[idx] = self.benchmark_current_total_returns[-1] / self.days_cnt
-        self.benchmark_current_total_avg_returns = self.benchmark_total_avg_returns[:idx + 1]
-
-        self.strategy_annual_avg_returns[idx] = self.strategy_current_total_avg_returns[-1] * self.trading_days_a_year
-        self.strategy_current_annual_avg_returns = self.strategy_annual_avg_returns[:idx + 1]
-        self.benchmark_annual_avg_returns[idx] = self.benchmark_current_total_avg_returns[-1] * self.trading_days_a_year
-        self.benchmark_current_annual_avg_returns = self.benchmark_annual_avg_returns[:idx + 1]
+        # annual
+        self.strategy_annualized_returns[idx] = (1 + self.strategy_current_total_returns[-1]) ** (
+                    const.DAYS_CNT.DAYS_A_YEAR / days_pass_cnt) - 1
+        self.benchmark_annualized_returns[idx] = (1 + self.benchmark_current_total_returns[-1]) ** (
+            const.DAYS_CNT.DAYS_A_YEAR / days_pass_cnt) - 1
+        self.strategy_current_annualized_returns = self.strategy_annualized_returns[:idx + 1]
+        self.benchmark_current_annualized_returns = self.benchmark_annualized_returns[:idx + 1]
 
         if self.strategy_current_total_returns[-1] > self.current_max_returns:
             self.current_max_returns = self.strategy_current_total_returns[-1]
@@ -80,7 +76,7 @@ class RiskCal(object):
         risk.volatility = self.cal_volatility()
         risk.max_drawdown = self.cal_max_drawdown()
         risk.tracking_error = self.cal_tracking_error()
-        risk.information_rate = self.cal_information_rate(risk.tracking_error)
+        risk.information_rate = self.cal_information_rate(risk.volatility)
         risk.downside_risk = self.cal_downside_risk()
         risk.beta = self.cal_beta()
         risk.alpha = self.cal_alpha()
@@ -93,7 +89,7 @@ class RiskCal(object):
         daily_returns = self.strategy_current_daily_returns
         if len(daily_returns) <= 1:
             return 0.
-        volatility = self.trading_days_a_year ** 0.5 * np.std(daily_returns, ddof=1)
+        volatility = const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5 * np.std(daily_returns, ddof=1)
         return volatility
 
     def cal_max_drawdown(self):
@@ -105,16 +101,16 @@ class RiskCal(object):
 
     def cal_tracking_error(self):
         diff = self.strategy_current_daily_returns - self.benchmark_current_daily_returns
-        return ((diff * diff).sum() / len(diff)) ** 0.5 * self.trading_days_a_year ** 0.5
+        return ((diff * diff).sum() / len(diff)) ** 0.5 * const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5
 
-    def cal_information_rate(self, tracking_error):
-        return (self.strategy_current_total_returns[-1] - self.benchmark_current_total_returns[-1]) / tracking_error
+    def cal_information_rate(self, volatility):
+        return (self.strategy_current_annualized_returns[-1] - self.benchmark_current_annualized_returns[-1]) / volatility
 
     def cal_alpha(self):
         beta = self.risk.beta
 
-        strategy_rets = self.strategy_current_total_returns[-1]
-        benchmark_rets = self.benchmark_current_total_returns[-1]
+        strategy_rets = self.strategy_current_annualized_returns[-1]
+        benchmark_rets = self.benchmark_current_annualized_returns[-1]
 
         alpha = strategy_rets - (self.risk_free_rate + beta * (benchmark_rets - self.risk_free_rate))
         return alpha
@@ -139,7 +135,7 @@ class RiskCal(object):
         return sharpe
 
     def cal_sortino(self):
-        strategy_rets = self.strategy_current_annual_avg_returns[-1]
+        strategy_rets = self.strategy_current_total_returns[-1]
         downside_risk = self.risk.downside_risk
 
         sortino = (strategy_rets - self.risk_free_rate) / downside_risk
@@ -151,8 +147,8 @@ class RiskCal(object):
         if len(diff) <= 1:
             return 0.
 
-        return ((diff * diff).sum() / len(diff)) ** 0.5 * self.trading_days_a_year ** 0.5
-        # return self.trading_days_a_year ** 0.5 * np.std(diff, ddof=1)
+        return ((diff * diff).sum() / len(diff)) ** 0.5 * const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5
+        # return const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5 * np.std(diff, ddof=1)
 
     def __repr__(self):
         return "RiskCal({0})".format(self.__dict__)
