@@ -5,6 +5,7 @@ from six import with_metaclass, iteritems
 
 
 class BaseSlippageDecider(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
     def get_trade_price(self, data_proxy, order):
         raise NotImplementedError
 

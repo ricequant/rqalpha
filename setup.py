@@ -8,7 +8,7 @@ from pip.req import parse_requirements
 setup(
     name='rqalpha',
     version='0.0.12',
-    description='Python Distribution Utilities',
+    description='Ricequant Backtest Engine',
     packages=find_packages(exclude=[]),
     author='ricequant',
     author_email='public@ricequant.com',

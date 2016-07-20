@@ -5,6 +5,7 @@ from six import with_metaclass, iteritems
 
 
 class BaseCommission(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
     def get_commission(self, data_proxy, order):
         raise NotImplementedError
 

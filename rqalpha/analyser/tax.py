@@ -5,6 +5,7 @@ from six import with_metaclass, iteritems
 
 
 class BaseTax(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
     def get_tax(self, data_proxy, order):
         raise NotImplementedError
 
