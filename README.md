@@ -20,13 +20,6 @@ Commands:
   update_bundle      update data bundle, download if not found
 ```
 
-### Download data bundle
-
-```
-rqbacktest update_bundle
-```
-
-### Run
 ```
 Usage: rqbacktest run [OPTIONS]
 
@@ -41,12 +34,18 @@ Options:
   --help                          Show this message and exit.
 ```
 
+### Download data bundle
+```
+rqbacktest update_bundle
+```
+
 ### examples
 ```
-# 生成sample策略
 rqbacktest generate_examples -d ./
+```
 
-# 运行回测
+### run backtest
+```
 rqbacktest run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
 ```
 
