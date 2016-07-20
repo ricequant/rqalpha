@@ -3,13 +3,27 @@
 ![Architecture](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/QQ20160713-1.jpeg)
 
 ## install
+You can install from PyPI:
+
 ```
+# install
+pip install rqalpha
+
+# upgrade
 pip install -U rqalpha
 ```
 
-### Dependencies
+## Dependencies
 
-To use TA-Lib for python, you need to have the
+### TA-Lib Installation
+
+You can install from PyPI:
+
+```
+$ pip install TA-Lib
+```
+
+To use [TA-Lib](https://github.com/mrjbq7/ta-lib) for python, you need to have the
 [TA-Lib](http://ta-lib.org/hdr_dw.html) already installed:
 
 ##### Mac OS X
