@@ -3,7 +3,7 @@
 from pprint import pprint
 
 import numpy as np
-from six import print_ as print, iteritems
+from six import iteritems
 
 from rqalpha import StrategyExecutor
 from rqalpha.api import order_shares

@@ -2,7 +2,7 @@
 
 from pprint import pprint
 
-from six import print_ as print, iteritems
+from six import iteritems
 
 from rqalpha import StrategyExecutor
 from rqalpha.api import *

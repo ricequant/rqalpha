@@ -109,7 +109,7 @@ class SimuExchange(object):
         for order_book_id, order_list in iteritems(self.open_orders):
             for order in order_list:
                 order.mark_rejected(_("market close"))
-            order_list.clear()
+            del order_list[:]
 
     def on_bar_close(self, bar_dict):
         trades, close_orders = self.match_orders(bar_dict)

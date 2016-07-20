@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six import print_ as print
 
 from .fixture import *
 from rqalpha import StrategyExecutor

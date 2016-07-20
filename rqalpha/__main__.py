@@ -9,7 +9,7 @@ import tarfile
 
 import click
 import requests
-from six import exec_, print_ as print
+from six import exec_, print_
 
 from . import StrategyExecutor
 from . import api
@@ -40,7 +40,7 @@ def update_bundle(data_bundle_path):
 
     while True:
         url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles/rqbundle_%04d%02d%02d.tar.bz2' % (day.year, day.month, day.day)
-        print('try {} ...'.format(url))
+        print_('try {} ...'.format(url))
         r = requests.get(url, stream=True)
         if r.status_code != 200:
             day = day - datetime.timedelta(days=1)
@@ -75,7 +75,7 @@ def run(strategy_file, start_date, end_date, output_file, draw_result, data_bund
     '''run strategy from file
     '''
     if not os.path.exists(data_bundle_path):
-        print("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
+        print_("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
         return
 
     with open(strategy_file) as f:
@@ -118,7 +118,7 @@ def generate_examples(directory):
 def run_strategy(source_code, strategy_filename, start_date, end_date, data_bundle_path):
     scope = {
         "logger": user_log,
-        "print": print,
+        "print": print_,
     }
     scope.update(api.__dict__)
     code = compile(source_code, strategy_filename, 'exec')
@@ -127,7 +127,7 @@ def run_strategy(source_code, strategy_filename, start_date, end_date, data_bund
     try:
         data_proxy = LocalDataProxy(data_bundle_path)
     except FileNotFoundError:
-        print("data bundle might crash. Run `%s update_bundle` to redownload data bundle." % sys.argv[0])
+        print_("data bundle might crash. Run `%s update_bundle` to redownload data bundle." % sys.argv[0])
         sys.exit()
 
     trading_cal = data_proxy.get_trading_dates(start_date, end_date)

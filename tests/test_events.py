@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from six import print_ as print
 
 from rqalpha.events import SimulatorAStockTradingEventSource
 from rqalpha.const import EVENT_TYPE

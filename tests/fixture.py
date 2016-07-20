@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import pytest
 import pytz
+from six import print_
 
 from rqalpha.data import LocalDataProxy
 from rqalpha.trading_params import TradingParams

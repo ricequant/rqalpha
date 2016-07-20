@@ -58,7 +58,7 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def history(self, order_book_id, bar_count, frequency, field):
         """get history data
 
@@ -72,7 +72,7 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def instrument(self, order_book_id):
         """get instrument of order book id
 

@@ -7,7 +7,8 @@ from . import ExecutionContext
 
 class HybridDataFrame(pd.DataFrame):
 
-    def __init__(self, *args, missing_handler=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        missing_handler = kwargs.pop("missing_handler")
         super(HybridDataFrame, self).__init__(*args, **kwargs)
         self.missing_handler = missing_handler
 
