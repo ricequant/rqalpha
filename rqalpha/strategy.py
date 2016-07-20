@@ -150,7 +150,12 @@ class StrategyExecutor(object):
         return results_df
 
     def generate_result(self, simu_exchange):
-        # prepare backtest results
+        """generate result dataframe
+
+        :param simu_exchange:
+        :returns: result dataframe contains daliy portfolio, risk and trades
+        :rtype: pd.DataFrame
+        """
         account = simu_exchange.account
         risk_cal = simu_exchange.risk_cal
         columns = [
@@ -165,6 +170,13 @@ class StrategyExecutor(object):
             "positions",
             "cash",
         ]
+        risk_keys = [
+            "volatility", "max_drawdown",
+            "alpha", "beta", "sharpe",
+            "information_rate", "downside_risk",
+            "tracking_error", "sortino",
+        ]
+
         data = []
         for date, portfolio in iteritems(simu_exchange.daily_portfolios):
             # portfolio
@@ -177,11 +189,6 @@ class StrategyExecutor(object):
 
             # risk
             risk = risk_cal.daily_risks[date]
-            risk_keys = ["volatility", "max_drawdown",
-                         "alpha", "beta", "sharpe",
-                         "information_rate", "downside_risk",
-                         "tracking_error", "sortino",
-                         ]
             for risk_key in risk_keys:
                 items[risk_key] = getattr(risk, risk_key)
 
