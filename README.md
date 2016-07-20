@@ -1,7 +1,11 @@
 # Ricequant Opensource Algo Engine
 
-## RUN
-### Usage
+## install
+```
+pip install --trusted-host mirrors.aliyun.com --index-url http://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://rquser:ricequant99@py.ricequant.com/simple/ -U rqbacktest
+```
+
+## Usage
 
 ```
 Usage: rqbacktest [OPTIONS] COMMAND [ARGS]...
@@ -44,12 +48,6 @@ rqbacktest generate_examples -d ./
 
 # 运行回测
 rqbacktest run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
-```
-
-
-## install
-```
-pip install --trusted-host mirrors.aliyun.com --index-url http://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://rquser:ricequant99@py.ricequant.com/simple/ -U rqbacktest
 ```
 
 
