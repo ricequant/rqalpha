@@ -2,12 +2,12 @@
 from six import print_ as print
 
 from .fixture import *
-from rqbacktest import StrategyExecutor
-from rqbacktest.api import *
+from rqalpha import StrategyExecutor
+from rqalpha.api import *
 
 
 def test_import_api():
-    from rqbacktest.api import (
+    from rqalpha.api import (
         order_shares, order_percent, order_lots, order_value,
         order_target_value, order_target_percent, get_order,
         get_open_orders, cancel_order, update_universe,

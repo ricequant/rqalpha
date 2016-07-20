@@ -5,9 +5,9 @@ from pprint import pprint
 import numpy as np
 from six import print_ as print, iteritems
 
-from rqbacktest import StrategyExecutor
-from rqbacktest.api import order_shares
-from rqbacktest.trading_params import TradingParams
+from rqalpha import StrategyExecutor
+from rqalpha.api import order_shares
+from rqalpha.trading_params import TradingParams
 from .fixture import *
 
 

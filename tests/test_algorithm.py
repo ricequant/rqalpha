@@ -4,8 +4,8 @@ from pprint import pprint
 
 from six import print_ as print, iteritems
 
-from rqbacktest import StrategyExecutor
-from rqbacktest.api import *
+from rqalpha import StrategyExecutor
+from rqalpha.api import *
 from .fixture import *
 
 

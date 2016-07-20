@@ -18,7 +18,7 @@ current_translation = NullTranslations()
 def set_locale(locales):
     global current_translation
     current_translation = translation(
-        domain="rqbacktest",
+        domain="rqalpha",
         localedir=translation_dir,
         languages=locales,
     )

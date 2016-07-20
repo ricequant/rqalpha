@@ -1,14 +1,14 @@
-# Ricequant Opensource Algo Engine
+# rqalpha
 
 ## install
 ```
-pip install --trusted-host mirrors.aliyun.com --index-url http://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://rquser:ricequant99@py.ricequant.com/simple/ -U rqbacktest
+pip install --trusted-host mirrors.aliyun.com --index-url http://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://rquser:ricequant99@py.ricequant.com/simple/ -U rqalpha
 ```
 
 ## Usage
 
 ```
-Usage: rqbacktest [OPTIONS] COMMAND [ARGS]...
+Usage: rqalpha [OPTIONS] COMMAND [ARGS]...
 
 Options:
   -v, --verbose
@@ -21,7 +21,7 @@ Commands:
 ```
 
 ```
-Usage: rqbacktest run [OPTIONS]
+Usage: rqalpha run [OPTIONS]
 
   run strategy from file
 
@@ -36,17 +36,17 @@ Options:
 
 ### Download data bundle
 ```
-rqbacktest update_bundle
+rqalpha update_bundle
 ```
 
 ### examples
 ```
-rqbacktest generate_examples -d ./
+rqalpha generate_examples -d ./
 ```
 
 ### run backtest
 ```
-rqbacktest run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
+rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
 ```
 
 

@@ -7,14 +7,14 @@ import pandas as pd
 import pytest
 import pytz
 
-from rqbacktest.data import LocalDataProxy
-from rqbacktest.trading_params import TradingParams
-from rqbacktest.analyser.simulation_exchange import SimuExchange
+from rqalpha.data import LocalDataProxy
+from rqalpha.trading_params import TradingParams
+from rqalpha.analyser.simulation_exchange import SimuExchange
 
 
 @pytest.fixture()
 def data_proxy():
-    return LocalDataProxy(os.environ.get("RQ_LOCAL_STORE", os.path.expanduser("~/.rqbacktest")))
+    return LocalDataProxy(os.environ.get("RQ_LOCAL_STORE", os.path.expanduser("~/.rqalpha")))
 
 
 @pytest.fixture()

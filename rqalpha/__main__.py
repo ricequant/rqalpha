@@ -32,7 +32,7 @@ def entry_point():
 
 
 @cli.command()
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path())
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
 def update_bundle(data_bundle_path):
     """update data bundle, download if not found"""
     day = datetime.date.today() - datetime.timedelta(days=1)
@@ -70,7 +70,7 @@ def update_bundle(data_bundle_path):
 @click.option('-e', '--end-date', type=Date(), required=True)
 @click.option('-o', '--output-file', type=click.Path(writable=True))
 @click.option('--draw-result/--no-draw-result', default=True)
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqbacktest"), type=click.Path())
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
 def run(strategy_file, start_date, end_date, output_file, draw_result, data_bundle_path):
     '''run strategy from file
     '''

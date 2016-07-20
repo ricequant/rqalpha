@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from six import print_ as print
 
-from rqbacktest.events import SimulatorAStockTradingEventSource
-from rqbacktest.const import EVENT_TYPE
-from rqbacktest.trading_params import TradingParams
+from rqalpha.events import SimulatorAStockTradingEventSource
+from rqalpha.const import EVENT_TYPE
+from rqalpha.trading_params import TradingParams
 
 from .fixture import *
 
