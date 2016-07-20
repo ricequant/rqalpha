@@ -16,7 +16,7 @@ Commands:
   update_bundle      update data bundle, download if not found
 ```
 
-### Downlaod data bundle
+### Download data bundle
 
 ```
 rqbacktest update_bundle
