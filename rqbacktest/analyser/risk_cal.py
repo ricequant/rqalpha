@@ -14,6 +14,7 @@ class RiskCal(object):
     def __init__(self, trading_params, data_proxy):
         self.data_proxy = data_proxy
 
+        self.start_date = trading_params.start_date
         self.trading_index = trading_params.trading_calendar
         self.trading_days_cnt = len(self.trading_index)
 
@@ -42,7 +43,7 @@ class RiskCal(object):
         # FIXME might change daily?
         self.risk_free_rate = data_proxy.get_yield_curve(self.trading_index[0], self.trading_index[-1])
 
-    def calculate(self, date, strategy_daily_returns, benchmark_daily_returns, trading_params):
+    def calculate(self, date, strategy_daily_returns, benchmark_daily_returns):
 
         idx = self.latest_idx = self.trading_index.get_loc(date)
 
@@ -53,7 +54,7 @@ class RiskCal(object):
         self.benchmark_current_daily_returns = self.benchmark_total_daily_returns[:idx + 1]
 
         self.days_cnt = len(self.strategy_current_daily_returns)
-        days_pass_cnt = (date - trading_params.start_date).days + 1
+        days_pass_cnt = (date - self.start_date).days + 1
 
         # total
         self.strategy_total_returns[idx] = (1. + self.strategy_current_daily_returns).prod() - 1

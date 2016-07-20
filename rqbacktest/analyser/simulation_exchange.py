@@ -100,7 +100,7 @@ class SimuExchange(object):
         benchmark_daily_returns = new_benchmark_portfolio_value / self.benchmark_portfolio_value - 1
         self.benchmark_portfolio_value = new_benchmark_portfolio_value
 
-        self.risk_cal.calculate(self.current_date, portfolio.daily_returns, benchmark_daily_returns, self.trading_params)
+        self.risk_cal.calculate(self.current_date, portfolio.daily_returns, benchmark_daily_returns)
 
     def get_yesterday_portfolio(self):
         return self.daily_portfolios.get(self.last_date)

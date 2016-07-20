@@ -144,6 +144,12 @@ class StrategyExecutor(object):
             elif event == EVENT_TYPE.DAY_END:
                 exchange_on_day_close()
 
+
+        results_df = self.generate_result(simu_exchange)
+
+        return results_df
+
+    def generate_result(self, simu_exchange):
         # prepare backtest results
         account = simu_exchange.account
         risk_cal = simu_exchange.risk_cal
