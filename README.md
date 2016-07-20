@@ -1,5 +1,7 @@
 # rqalpha
 
+![Architecture](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/QQ20160713-1.jpeg)
+
 ## install
 ```
 pip install -U rqalpha
