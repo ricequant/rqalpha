@@ -132,6 +132,7 @@ def run_strategy(source_code, strategy_filename, start_date, end_date, data_bund
         sys.exit()
 
     trading_cal = data_proxy.get_trading_dates(start_date, end_date)
+    print(trading_cal)
     Scheduler.set_trading_dates(data_proxy.get_trading_dates(start_date, datetime.date.today()))
     trading_params = TradingParams(trading_cal, start_date=start_date.date(), end_date=end_date.date())
 
