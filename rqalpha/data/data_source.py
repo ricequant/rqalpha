@@ -88,8 +88,8 @@ class LocalDataSource:
                 if v.type == 'CS' and any(c in v.concept_names.split('|') for c in concepts)]
 
     def get_trading_dates(self, start_date, end_date):
-        d = self._trading_dates
-        return d[(d >= start_date) & (d <= end_date)]
+        left, right = self._trading_dates.searchsorted(start_date), self._trading_dates.searchsorted(end_date)
+        return self._trading_dates[left:right]
 
     def get_yield_curve(self, start_date, end_date):
         duration = (end_date - start_date).days
