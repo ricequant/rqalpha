@@ -2,6 +2,7 @@
 
 import copy
 
+import six
 from six import iteritems
 import pandas as pd
 
@@ -11,6 +12,8 @@ from .data import BarMap
 from .events import SimulatorAStockTradingEventSource
 from .utils import ExecutionContext, dummy_func
 from .scheduler import scheduler
+from .analyser.commission import AStockCommission
+from .analyser.slippage import FixedPercentSlippageDecider
 
 
 class StrategyContext(object):
@@ -23,27 +26,36 @@ class StrategyContext(object):
 
     @property
     def slippage(self):
-        raise NotImplementedError
+        return copy.deepcopy(ExecutionContext.get_exchange().account.slippage_decider)
 
     @slippage.setter
-    def slippage(self):
-        raise NotImplementedError
+    @ExecutionContext.enforce_phase(EXECUTION_PHASE.INIT)
+    def slippage(self, value):
+        assert isinstance(value, (int, float))
+
+        ExecutionContext.get_exchange().account.slippage_decider = FixedPercentSlippageDecider(rate=value)
 
     @property
     def commission(self):
-        raise NotImplementedError
+        return copy.deepcopy(ExecutionContext.get_exchange().account.commission_decider)
 
     @commission.setter
+    @ExecutionContext.enforce_phase(EXECUTION_PHASE.INIT)
     def commission(self, value):
-        raise NotImplementedError
+        assert isinstance(value, (int, float))
+
+        ExecutionContext.get_exchange().account.commission_decider = AStockCommission(commission_rate=value)
 
     @property
     def benchmark(self):
-        raise NotImplementedError
+        return copy.deepcopy(ExecutionContext.get_trading_params().benchmark)
 
     @benchmark.setter
-    def benchmark(self):
-        raise NotImplementedError
+    @ExecutionContext.enforce_phase(EXECUTION_PHASE.INIT)
+    def benchmark(self, value):
+        assert isinstance(value, six.string_types)
+
+        ExecutionContext.get_trading_params().benchmark = value
 
     @property
     def short_selling_allowed(self):
@@ -62,7 +74,9 @@ class StrategyContext(object):
         return self.__portfolio
 
     def __repr__(self):
-        items = ("%s = %r" % (k, v) for k, v in self.__dict__.items() if not callable(v))
+        items = ("%s = %r" % (k, v)
+                 for k, v in self.__dict__.items()
+                 if not callable(v) and not k.startswith("_"))
         return "Context({%s})" % (', '.join(items), )
 
 

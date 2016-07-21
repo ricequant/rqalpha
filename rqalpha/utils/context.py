@@ -4,6 +4,8 @@ from functools import wraps
 
 from contextlib import contextmanager
 
+from ..i18n import gettext as _
+
 
 class ContextStack(object):
 
@@ -94,6 +96,10 @@ class ExecutionContext(object):
     def get_current_bar_dict(cls):
         ctx = cls.get_active()
         return ctx.bar_dict
+
+    @classmethod
+    def get_trading_params(cls):
+        return cls.get_exchange().trading_params
 
     @classmethod
     def enforce_phase(cls, *phases):

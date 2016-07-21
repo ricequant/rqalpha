@@ -41,7 +41,6 @@ class SimuExchange(object):
         self.start_date = start_date = self.trading_params.trading_calendar[0].date()
         self.account = Account(start_date=start_date)
 
-        self.benchmark_order_book_id = trading_params.benchmark
         self.benchmark_portfolio_value = None
 
         self.last_date = None        # type: datetime.date, last trading date
@@ -87,16 +86,11 @@ class SimuExchange(object):
         # TODO make benchmark cal works better
         # update benchmark
         if self.benchmark_portfolio_value is None:
-            # self.benchmark_portfolio_value = self.account.init_cash
-            # slippage_decider = self.account.slippage_decider
-            # commission_decider = self.account.commission_decider
-            # tax_decider = self.account.tax_decider
-
             self.benchmark_portfolio_value = self.data_proxy.get_bar(
-                self.benchmark_order_book_id, pd.Timestamp(self.start_date)).close
+                self.trading_params.benchmark, pd.Timestamp(self.start_date)).close
 
         new_benchmark_portfolio_value = self.data_proxy.get_bar(
-            self.benchmark_order_book_id, pd.Timestamp(self.current_date)).close
+            self.trading_params.benchmark, pd.Timestamp(self.current_date)).close
         benchmark_daily_returns = new_benchmark_portfolio_value / self.benchmark_portfolio_value - 1
         self.benchmark_portfolio_value = new_benchmark_portfolio_value
 
