@@ -7,6 +7,7 @@ import pandas as pd
 from .bar import BarObject
 from ..utils.context import ExecutionContext
 from .data_source import LocalDataSource
+from ..const import EXECUTION_PHASE
 
 
 class DataProxy(with_metaclass(abc.ABCMeta)):
@@ -110,6 +111,9 @@ class LocalDataProxy(DataProxy):
 
         dt = ExecutionContext.get_current_dt().date()
         i = df.index.searchsorted(dt, side='right')
+        # you can only access yesterday history in before_trading
+        if ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+            i -= 1
         left = i - bar_count if i >= bar_count else 0
         return df[left:i][field]
 
