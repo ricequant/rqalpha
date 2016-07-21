@@ -3,8 +3,8 @@
 from __future__ import division
 from functools import partial
 from collections import Iterable
+import copy
 
-import pandas as pd
 import six
 
 from .instruments import Instrument
@@ -12,9 +12,10 @@ from .logger import user_log
 from .utils import ExecutionContext
 from .utils.history import HybridDataFrame, missing_handler
 from .i18n import gettext as _
-
+from .scheduler import scheduler
 
 __all__ = [
+    'scheduler'
 ]
 
 
@@ -230,7 +231,7 @@ def get_order(order_id):
 
 @export_as_api
 def get_open_orders():
-    return deepcopy.copy(get_simu_exchange().open_orders)
+    return copy.deepcopy(get_simu_exchange().open_orders)
 
 
 @export_as_api
