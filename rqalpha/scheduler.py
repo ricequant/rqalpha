@@ -73,14 +73,13 @@ class Scheduler:
                 func(context, bars)
 
     def _fill_week(self):
-        left = self.TRADING_DATES.searchsorted(self._today)
-        right = self.TRADING_DATES.searchsorted(self._today + datetime.timedelta(days=7))
-        self._this_week = []
-        weekday = self._today.weekday()
-        for i in range(left, right):
-            d = self.TRADING_DATES[i].date()
-            if d.weekday() >= weekday:
-                self._this_week.append(d)
+        weekday = self._today.isoweekday()
+        weekend = self._today + datetime.timedelta(days=7-weekday)
+        week_start = weekend - datetime.timedelta(days=6)
+
+        left = self.TRADING_DATES.searchsorted(week_start)
+        right = self.TRADING_DATES.searchsorted(weekend, side='right')
+        self._this_week = [d.date() for d in self.TRADING_DATES[left:right]]
 
     def _fill_month(self):
         try:
