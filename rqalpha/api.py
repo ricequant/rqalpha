@@ -13,6 +13,8 @@ from .utils import ExecutionContext
 from .utils.history import HybridDataFrame, missing_handler
 from .i18n import gettext as _
 from .scheduler import scheduler
+from .const import EXECUTION_PHASE
+
 
 __all__ = [
     'scheduler'
@@ -25,6 +27,8 @@ def export_as_api(func):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def order_shares(id_or_ins, amount, style=None):
     """
     Place an order by specified number of shares. Order type is also
@@ -63,6 +67,8 @@ def order_shares(id_or_ins, amount, style=None):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def order_lots(id_or_ins, amount, style=None):
     """
     Place an order by specified number of lots. Order type is also passed
@@ -82,6 +88,8 @@ def order_lots(id_or_ins, amount, style=None):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def order_value(id_or_ins, cash_amount, style=None):
     """
     Place ann order by specified value amount rather than specific number
@@ -120,6 +128,8 @@ def order_value(id_or_ins, cash_amount, style=None):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def order_percent(id_or_ins, percent, style=None):
     """
     Place an order for a security for a given percent of the current
@@ -146,6 +156,8 @@ def order_percent(id_or_ins, percent, style=None):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def order_target_value(id_or_ins, cash_amount, style=None):
     """
     Place an order to adjust a position to a target value. If there is no
@@ -179,6 +191,8 @@ def order_target_value(id_or_ins, cash_amount, style=None):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def order_target_percent(id_or_ins, percent, style=None):
     """
     Place an order to adjust position to a target percent of the portfolio
@@ -218,6 +232,9 @@ def order_target_percent(id_or_ins, percent, style=None):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def get_order(order_id):
     """
     Get a specified order by the unique order_id. The order object will be
@@ -230,11 +247,17 @@ def get_order(order_id):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def get_open_orders():
     return copy.deepcopy(get_simu_exchange().open_orders)
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def cancel_order(order_id):
     get_simu_exchange().cancel_order(order_id)
 
@@ -284,6 +307,9 @@ def instruments(id_or_symbols):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def history(bar_count, frequency, field):
     executor = get_strategy_executor()
     data_proxy = get_data_proxy()
@@ -309,6 +335,8 @@ def is_st_stock(order_book_id):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
 def plot(series_name, value):
     """
     Add a point to custom series.
