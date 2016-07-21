@@ -89,7 +89,7 @@ class LocalDataSource:
 
     def get_trading_dates(self, start_date, end_date):
         left, right = self._trading_dates.searchsorted(start_date), self._trading_dates.searchsorted(end_date)
-        return self._trading_dates[left:right]
+        return self._trading_dates[left:right + 1]
 
     def get_yield_curve(self, start_date, end_date):
         duration = (end_date - start_date).days
