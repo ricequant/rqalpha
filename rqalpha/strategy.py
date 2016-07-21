@@ -1,21 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import sys
 import copy
 
 from six import iteritems
 import pandas as pd
 
-from .analyser import Position, Portfolio, Order
-from .analyser.commission import AStockCommission
 from .analyser.simulation_exchange import SimuExchange
-from .analyser.slippage import FixedPercentSlippageDecider
-from .analyser.tax import AStockTax
 from .const import EVENT_TYPE, EXECUTION_PHASE
 from .data import BarMap
 from .events import SimulatorAStockTradingEventSource
-from .instruments import Instrument
 from .utils import ExecutionContext, dummy_func
+from .scheduler import scheduler
 
 
 class StrategyContext(object):
@@ -139,11 +134,11 @@ class StrategyExecutor(object):
             elif event == EVENT_TYPE.HANDLE_BAR:
                 with ExecutionContext(self, EXECUTION_PHASE.HANDLE_BAR, bar_dict):
                     handle_bar(strategy_context, bar_dict)
+                    scheduler.next_day(dt, strategy_context, bar_dict)
                     exchange_on_bar_close(bar_dict)
 
             elif event == EVENT_TYPE.DAY_END:
                 exchange_on_day_close()
-
 
         results_df = self.generate_result(simu_exchange)
 
