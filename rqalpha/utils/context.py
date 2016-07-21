@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+from functools import wraps
+
 from contextlib import contextmanager
 
 
@@ -91,3 +94,19 @@ class ExecutionContext(object):
     def get_current_bar_dict(cls):
         ctx = cls.get_active()
         return ctx.bar_dict
+
+    @classmethod
+    def enforce_phase(cls, *phases):
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                if cls.get_active().phase not in phases:
+                    raise RuntimeError(
+                        _("You can only call %s when executing %s") % (
+                            func.__name__,
+                            ", ".join(map(lambda x: x.name.lower(), phases))
+                        )
+                    )
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
