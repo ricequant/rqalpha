@@ -260,13 +260,11 @@ class SimuExchange(object):
         # handle limit order
         if self.trading_params.frequency == "1d":
             if isinstance(order.style, LimitOrder):
-                # FIXME this is future func, you order at the end of the day, while low/high might be
-                # at the beginning of the day
                 limit_price = order.style.get_limit_price(is_buy)
-                if is_buy and limit_price < bar.low:
+                if is_buy and limit_price < bar.close:
                     return False, _("Order Rejected: price is to low to buy {order_book_id}").format(
                         order_book_id=order_book_id)
-                elif not is_buy and limit_price > bar.high:
+                elif not is_buy and limit_price > bar.close:
                     return False, _("Order Rejected: price is to high to sell {order_book_id}").format(
                         order_book_id=order_book_id)
         else:
