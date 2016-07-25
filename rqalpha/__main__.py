@@ -36,7 +36,7 @@ def entry_point():
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
 def update_bundle(data_bundle_path):
     """update data bundle, download if not found"""
-    day = datetime.date.today() - datetime.timedelta(days=1)
+    day = datetime.date.today()
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
 
     while True:

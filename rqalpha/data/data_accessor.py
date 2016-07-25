@@ -48,13 +48,13 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_dividend_per_share(self, order_book_id, date):
-        """get dividend of date
+    def get_dividends_by_book_date(self, order_book_id, date):
+        """get dividend of info by ex date
 
         :param str order_book_id:
         :param datetime.datetime date:
-        :returns: dividend per share
-        :rtype: float
+        :returns: dividend
+        :rtype: pd.Series
 
         """
         raise NotImplementedError
@@ -121,20 +121,19 @@ class LocalDataProxy(DataProxy):
     def get_yield_curve(self, start_date=None, end_date=None):
         return self._data_source.get_yield_curve(start_date, end_date)
 
-    def get_dividend_per_share(self, order_book_id, date):
+    def get_dividends_by_book_date(self, order_book_id, date):
         if order_book_id not in self._dividend_cache:
             dividend_df = self._data_source.get_dividends(order_book_id)
             if not dividend_df.empty:
-                dividend_df.set_index("payable_date", inplace=True)
+                dividend_df.set_index("book_closure_date", inplace=True)
             self._dividend_cache[order_book_id] = dividend_df
 
         dividend_df = self._dividend_cache[order_book_id]
         try:
             series = dividend_df.ix[date]
+            return series
         except KeyError:
-            return 0
-
-        return series["dividend_cash_before_tax"] / series["round_lot"]
+            return None
 
     def get_trading_dates(self, start_date, end_date):
         return self._data_source.get_trading_dates(start_date, end_date)

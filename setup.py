@@ -7,7 +7,7 @@ from pip.req import parse_requirements
 
 setup(
     name='rqalpha',
-    version='0.0.17',
+    version='0.0.18',
     description='Ricequant Backtest Engine',
     packages=find_packages(exclude=[]),
     author='ricequant',
@@ -20,5 +20,4 @@ setup(
             "rqalpha = rqalpha.__main__:entry_point",
         ]
     },
-
 )

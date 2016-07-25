@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
+
 from .position import Positions
 
 # TODO make field readonly
 # TODO use nametuple to reduce memory
+
+
+class Dividend(object):
+    def __init__(self, order_book_id, quantity, dividend_series):
+        self.order_book_id = order_book_id
+        self.quantity = quantity
+        self.dividend_series = dividend_series
 
 
 class Portfolio(object):
@@ -24,5 +33,11 @@ class Portfolio(object):
         self.total_commission = 0.      # float 总的交易费
         self.total_tax = 0.             # float 总的交易税
 
+        self._dividend_info = {}
+
     def __repr__(self):
-        return "Portfolio({0})".format(self.__dict__)
+        return "Portfolio({0})".format({
+            k: v
+            for k, v in self.__dict__.items()
+            if not k.startswith("_")
+        })

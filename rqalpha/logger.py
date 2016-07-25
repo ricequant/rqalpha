@@ -30,7 +30,7 @@ handler.push_application()
 user_log = Logger("user_log")
 
 
-def user_print(*args, **kwargs):  # sep=" ", end="\n", file=None, flush=False):
+def user_print(*args, **kwargs):
     sep = kwargs.get("sep", " ")
     end = kwargs.get("end", "")
 

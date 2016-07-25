@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from six import iteritems
 
+from ..const import ORDER_STATUS
 from .. import const
 from ..account import Account
 from ..data import BarMap
@@ -18,7 +19,7 @@ from .slippage import FixedPercentSlippageDecider
 from .tax import AStockTax
 from .order import Order
 from .order_style import MarketOrder, LimitOrder
-from .portfolio import Portfolio
+from .portfolio import Portfolio, Dividend
 from .position import Position
 from .risk_cal import RiskCal
 from .trade import Trade
@@ -57,7 +58,7 @@ class SimuExchange(object):
         return self.dt.date() if self.dt else None
 
     def on_day_open(self):
-        self.handle_dividend()
+        self.handle_dividend_payable()
 
     def on_day_close(self):
         self.simu_days_cnt += 1
@@ -96,6 +97,8 @@ class SimuExchange(object):
 
         self.risk_cal.calculate(self.current_date, portfolio.daily_returns, benchmark_daily_returns)
 
+        self.handle_dividend_ex_dividend()
+
     def get_yesterday_portfolio(self):
         return self.daily_portfolios.get(self.last_date)
 
@@ -109,7 +112,7 @@ class SimuExchange(object):
                 order.mark_rejected(_("market close"))
             del order_list[:]
 
-    def on_bar_close(self, bar_dict):
+    def match_current_orders(self, bar_dict):
         trades, close_orders = self.match_orders(bar_dict)
 
         for trade in trades:
@@ -117,6 +120,17 @@ class SimuExchange(object):
 
         self.remove_close_orders(close_orders)
 
+        # remove rejected order
+        rejected_orders = []
+        for order_book_id, order_list in iteritems(self.open_orders):
+            for order in order_list:
+                if order.status == ORDER_STATUS.REJECTED:
+                    rejected_orders.append(order)
+
+        self.remove_close_orders(rejected_orders)
+
+    def on_bar_close(self, bar_dict):
+        self.match_orders(bar_dict)
         self.update_portfolio_on_bar_close(bar_dict)
 
     def update_daily_portfolio(self):
@@ -147,7 +161,7 @@ class SimuExchange(object):
         for order_book_id, position in iteritems(positions):
             position.value_percent = position.market_value / portfolio.portfolio_value
 
-    def create_order(self, order_book_id, amount, style):
+    def create_order(self, bar_dict, order_book_id, amount, style):
         if style is None:
             style = MarketOrder()
 
@@ -155,6 +169,10 @@ class SimuExchange(object):
 
         self.open_orders[order_book_id].append(order)
         self.all_orders[order.order_id] = order
+
+        # match order here because ricequant do this
+        self.match_current_orders(bar_dict)
+        self.update_portfolio_on_bar_close(bar_dict)
 
         return order
 
@@ -324,15 +342,40 @@ class SimuExchange(object):
 
         return True, None
 
-    def handle_dividend(self):
+    def handle_dividend_ex_dividend(self):
         data_proxy = self.data_proxy
         portfolio = self.account.portfolio
+
         for order_book_id, position in iteritems(portfolio.positions):
-            dividend_per_share = data_proxy.get_dividend_per_share(order_book_id, self.current_date)
-            if dividend_per_share > 0 and position.quantity > 0:
-                dividend = dividend_per_share * position.quantity
-                portfolio.cash += dividend
-                user_log.info(_("get dividend {dividend} for {order_book_id}").format(
-                    dividend=dividend,
-                    order_book_id=order_book_id,
-                ))
+            dividend_series = data_proxy.get_dividends_by_book_date(order_book_id, self.current_date)
+            if dividend_series is None:
+                continue
+            dividend_per_share = dividend_series["dividend_cash_before_tax"] / dividend_series["round_lot"]
+            portfolio._dividend_info[order_book_id] = Dividend(order_book_id, position.quantity, dividend_series)
+            portfolio.dividend_receivable += dividend_per_share * position.quantity
+            print("handle_dividend_ex_dividend", order_book_id, position, self.current_date)
+
+    def handle_dividend_payable(self):
+        """handle dividend payable before trading
+        """
+        data_proxy = self.data_proxy
+        portfolio = self.account.portfolio
+
+        to_delete_dividend = []
+        for order_book_id, dividend_info in iteritems(portfolio._dividend_info):
+            dividend_series = dividend_info.dividend_series
+
+            if pd.Timestamp(self.current_date) == pd.Timestamp(dividend_series.payable_date):
+                dividend_per_share = dividend_series["dividend_cash_before_tax"] / dividend_series["round_lot"]
+                if dividend_per_share > 0 and dividend_info.quantity > 0:
+                    dividend_cash = dividend_per_share * dividend_info.quantity
+                    portfolio.dividend_receivable -= dividend_cash
+                    portfolio.cash += dividend_cash
+                    user_log.info(_("get dividend {dividend} for {order_book_id}").format(
+                        dividend=dividend_cash,
+                        order_book_id=order_book_id,
+                    ))
+                    to_delete_dividend.append(order_book_id)
+
+        for order_book_id in to_delete_dividend:
+            portfolio._dividend_info.pop(order_book_id, None)

@@ -68,7 +68,9 @@ class StrategyContext(object):
     @property
     def portfolio(self):
         dt = self.now
-        if self.__last_portfolio_update_dt != dt:
+        # if self.__last_portfolio_update_dt != dt:
+        # FIXME need to use cache
+        if True:
             self.__portfolio = copy.deepcopy(ExecutionContext.get_exchange().account.portfolio)
             self.__last_portfolio_update_dt = dt
         return self.__portfolio

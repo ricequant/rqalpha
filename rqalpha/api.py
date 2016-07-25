@@ -61,7 +61,8 @@ def order_shares(id_or_ins, amount, style=None):
     if not isinstance(id_or_ins, six.string_types):
         raise NotImplementedError
 
-    order = get_simu_exchange().create_order(order_book_id, amount, style)
+    bar_dict = ExecutionContext.get_current_bar_dict()
+    order = get_simu_exchange().create_order(bar_dict, order_book_id, amount, style)
 
     return order.order_id
 
