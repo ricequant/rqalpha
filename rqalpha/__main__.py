@@ -14,7 +14,7 @@ from six import exec_, print_
 from . import StrategyExecutor
 from . import api
 from .data import LocalDataProxy
-from .logger import user_log
+from .logger import user_log, user_print
 from .trading_params import TradingParams
 from .utils.click_helper import Date
 from .utils import dummy_func
@@ -119,7 +119,7 @@ def generate_examples(directory):
 def run_strategy(source_code, strategy_filename, start_date, end_date, data_bundle_path):
     scope = {
         "logger": user_log,
-        "print": print_,
+        "print": user_print,
     }
     scope.update({export_name: getattr(api, export_name) for export_name in api.__all__})
     code = compile(source_code, strategy_filename, 'exec')

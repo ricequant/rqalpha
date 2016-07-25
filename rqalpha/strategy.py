@@ -152,7 +152,8 @@ class StrategyExecutor(object):
                     exchange_on_bar_close(bar_dict)
 
             elif event == EVENT_TYPE.DAY_END:
-                exchange_on_day_close()
+                with ExecutionContext(self, EXECUTION_PHASE.FINALIZED, bar_dict):
+                    exchange_on_day_close()
 
         results_df = self.generate_result(simu_exchange)
 

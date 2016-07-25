@@ -102,6 +102,10 @@ class SimuExchange(object):
     def reject_all_open_orders(self):
         for order_book_id, order_list in iteritems(self.open_orders):
             for order in order_list:
+                user_log.warn(_("Order Rejected: {order_book_id} can not match, {order_list}").format(
+                    order_book_id=order_book_id,
+                    order_list=order_list,
+                ))
                 order.mark_rejected(_("market close"))
             del order_list[:]
 
