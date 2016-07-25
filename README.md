@@ -106,11 +106,11 @@ init(context)
 Called only once at the start of a backtest / paper trading. Your algorithm can use this method to set up any initial configuration or information that you'd like.
 The context object will be passed to all other methods in your algorithm listed below as well.
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> context | a plain object | Will be used globally in the whole algorithm. Properties are accessed using dot notation as well and also the traditional bracket notation.
-```
+
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| context | a plain object | Will be used globally in the whole algorithm. Properties are accessed using dot notation as well and also the traditional bracket notation. |
+
 
 **Returns**
 None
@@ -129,12 +129,12 @@ handle_bar(context, bar)
 ```
 Triggered whenever a bar market event happens for any of your algorithm interested securities. It could be historical day bar, minute bar and real time minute bar. Refer to the table below for details about [Bar object](#bar-object).
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> context | Same context object in init(context), stores any state/setup defined, and stores the portfolio object |
-> bar | A dictionary containing all the bar data keyed by order_book_id. It represents a snapshot of the current market's bar data when this method is called. Market bar data snapshot information about each security interested are all available in this object.
-```
+
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| context | Same context object in init(context), stores any state/setup defined, and stores the portfolio object |
+| bar | A dictionary containing all the bar data keyed by order_book_id. It represents a snapshot of the current market's bar data when this method is called. Market bar data snapshot information about each security interested are all available in this object. |
+
 
 **Returns**
 None
@@ -158,15 +158,12 @@ Place an order by specified number of shares. Order type is also passed in as pa
 order_shares(id_or_ins, amount, style=MarketOrder())
 ```
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object.
-> amount | float-required | Number of shares to order. Positive means buy, negative means sell. It will be rounded down to the closest integral multiple of the lot size
-> style | OrderType-optional | Order type and default is market order. The available order types are:
->> - style=MarketOrder()
->> - style=LimitOrder(limit_price)
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
+| amount | float-required | Number of shares to order. Positive means buy, negative means sell. It will be rounded down to the closest integral multiple of the lot size |
+| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+
 
 **Returns**
 A unique order id of int type.
@@ -198,16 +195,11 @@ Place an order by specified number of lots. Order type is also passed in as para
 order_lots(id_or_ins, amount, style=OrderType)
 ```
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object.
-> amount | float-required | Number of lots to order. Positive means buy, negative means sell.
-> style | OrderType-optional | Order type and default is market order. The available order types are:
->> - style=MarketOrder()
->> - style=LimitOrder(limit_price)
->
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
+| amount | float-required | Number of lots to order. Positive means buy, negative means sell. |
+| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
 
 **Returns**
 A unique order id of int type.
@@ -234,16 +226,14 @@ Place ann order by specified value amount rather than specific number of shares/
 order_value(id_or_ins, cash_amount, style=OrderType)
 ```
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object.
-> cash_amount | float-required | Cash amount to buy / sell the given value of securities. Positive means buy, negative means sell.
-> style | OrderType-optional | Order type and default is market order. The available order types are:
->> - style=MarketOrder()
->> - style=LimitOrder(limit_price)
->
-```
+
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
+| cash_amount | float-required | Cash amount to buy / sell the given value of securities. Positive means buy, negative means sell. |
+| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+
+
 
 **Returns**
 A unique order id of int type.
@@ -271,16 +261,11 @@ Place an order for a security for a given percent of the current portfolio value
 order_percent(id_or_ins, percent, style=OrderType)
 ```
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object.
-> percent | float-required | Percent of the current portfolio value. Positive means buy, negative means selling give percent of the current portfolio value. Orders are always truncated according to lot size.
-> style | OrderType-optional | Order type and default is market order. The available order types are:
->> - style=MarketOrder()
->> - style=LimitOrder(limit_price)
->
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
+| percent | float-required | Percent of the current portfolio value. Positive means buy, negative means selling give percent of the current portfolio value. Orders are always truncated according to lot size. |
+| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
 
 **Returns**
 A unique order id of int type.
@@ -301,16 +286,11 @@ Place an order to adjust a position to a target value. If there is no position f
 order_target_value(id_or_ins, cash_amount, style=OrderType)
 ```
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object.
-> cash_amount | float-required | Target cash value for the adjusted position after placing order.
-> style | OrderType-optional | Order type and default is market order. The available order types are:
->> - style=MarketOrder()
->> - style=LimitOrder(limit_price)
->
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
+| cash_amount | float-required | Target cash value for the adjusted position after placing order. |
+| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
 
 **Returns**
 A unique order id of int type.
@@ -338,16 +318,11 @@ If the ```position_to_adjust``` calculated is positive, then it fires buy orders
 order_target_percent(id_or_ins, percent, style=OrderType)
 ```
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object.
-> percent | float-required | Portfolio percentage allocated to the security. Positive means buy, negative means sell.
-> style | OrderType-optional | Order type and default is market order. The available order types are:
->> - style=MarketOrder()
->> - style=LimitOrder(limit_price)
->
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
+| percent | float-required | Portfolio percentage allocated to the security. Positive means buy, negative means sell. |
+| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
 
 **Returns**
 A unique order id of int type.
@@ -372,13 +347,9 @@ Get a specified order by the unique order_id. The order object will be discarded
 get_order(order_id)
 ```
 
-> Parameters | Type | Notes
-> -- | -- | --
-> order_id | int-required | order's unique identifier
-
-#### get_open_orders
-
-TODO
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| order_id | int-required | order's unique identifier |
 
 
 ### Other Methods
@@ -391,11 +362,9 @@ update_universe(id_or_symbols)
 
 This method takes one or a list of id_or_symbol(s) as argument(s), to update the current subscription set of the instruments. It takes effect on the next bar event.
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_symbols | str or iterable of strings | one or a list of id_or_symbol(s).
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_symbols | str or iterable of strings | one or a list of id_or_symbol(s). |
 
 #### instruments
 ```python
@@ -403,11 +372,9 @@ instruments(id_or_symbols)
 ```
 Convert a string or a list of strings as order_book_id to instrument object(s).
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> id_or_symbols | str or iterable of strings | Passed in strings / iterable of strings are interpreted as order_book_ids. China market's order_book_ids are like '000001.XSHE' while US's market's order_book_ids are like 'AAPL.US'
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| id_or_symbols | str or iterable of strings | Passed in strings / iterable of strings are interpreted as order_book_ids. China market's order_book_ids are like '000001.XSHE' while US's market's order_book_ids are like 'AAPL.US' |
 
 Returns : one / a list of instrument(s) object(s) - by the id_or_symbol(s) requested.
 
@@ -434,18 +401,16 @@ For example, if you want to access the market data event bar data for 000001.XSH
 
 TODO: if open is collision with python keyword?
 
-```
-> Properties | Type | Notes
-> -- | -- | --
-> `order_book_id` | str | Securities' unique identifier, e.g. "000001.XSHE"
-> `symbol` | str | Securities' unique symbol, e.g. "平安银行"
-> `datetime` | DateTime | The UTC timestamp of the bar market data event.
-> `open` | float | The opening price of a security of a give bar.
-> `close` | float | The closing price of a security of a given bar.
-> `high` | float | The highest price of the security within the given bar.
-> `low` | float | The lowest price of the security within the given bar.
-> `volume`  | float | Total number of shares traded in the most recent bar event for this security.
-```
+| Properties | Type | Notes |
+| --- | --- | --- |
+| `order_book_id` | str | Securities' unique identifier, e.g. "000001.XSHE" |
+| `symbol` | str | Securities' unique symbol, e.g. "平安银行" |
+| `datetime` | DateTime | The UTC timestamp of the bar market data event. |
+| `open` | float | The opening price of a security of a give bar. |
+| `close` | float | The closing price of a security of a given bar. |
+| `high` | float | The highest price of the security within the given bar. |
+| `low` | float | The lowest price of the security within the given bar. |
+| `volume`  | float | Total number of shares traded in the most recent bar event for this security. |
 
 There're also transforms provided:
 
@@ -455,46 +420,40 @@ mavg(intervals, frequency='day')
 
 Moving average price for the given security for a give number of intervals for a frequency, by default to day.
 
-```
-> Parameters | Type | Notes
-> -- | -- | --
-> intervals | int | a given number of intervals, e.g. given number of days
-> frequency | str | frequency of the give number of intervals, by default as 'day'.
-```
+| Parameters | Type | Notes |
+| --- | --- | --- |
+| intervals | int | a given number of intervals, e.g. given number of days |
+| frequency | str | frequency of the give number of intervals, by default as 'day'. |
 
 ### Order object
 
 Several properties in the Order object:
 
-```
-> Properties | Type | Notes
-> -- | -- | --
-> `instrument` | instrument object | The security which placed order at
-> `filled_shares` | float | Total shares bought / sold for this order
-> `quantity` | float | Total shares ordered.
-> `last_price` | float | TODO: there is no support in Java yet.  The order's last filled price. If order is rejected, then it will return 0.
-```
+| Properties | Type | Notes |
+| --- | --- | --- |
+| `instrument` | instrument object | The security which placed order at |
+| `filled_shares` | float | Total shares bought / sold for this order |
+| `quantity` | float | Total shares ordered. |
+| `last_price` | float | TODO: there is no support in Java yet.  The order's last filled price. If order is rejected, then it will return 0. |
 
 ### Portfolio object
 The portfolio object contains the whole strategy's portfolio information. In day bar backtest, this means the portfolio information after each day closing. The portfolio object is accessed using: `context.portfolio`
 
 And has the following properties:
 
-```
-> Properties | Type | Notes
-> -- | -- | --
-> `starting_cash` | float | Starting cash allocated for the strategy for backtest or live trading.
-> `cash` | float | Current amount of cash in your portfolio.
-> `total_returns` | float | Cumulative percentage returns for the entire portfolio up to this point. Calculated as current portfolio value / starting value of the portfolio. The returns calculation includes cash and market_value. The return number is a percentage as 0.1
-> `daily_returns` | float | The current date's portfolio's day returns.
-> `market_value` | float | Current portfolio's market value (unrealized value).
-> `portfolio_value` | float | Current portfolio's total value, includes both market_value and cash.
-> `pnl` | float | Current portfolio's profit and loss.
-> `start_date` | DateTime | Starting date of the portfolio's backtest / real trading.
-> `annualized_returns` | float | Portfolio's annualized returns.
-> `positions` | Dictionary | A dictionary of all the open positions, keyed by id_or_symbol. More details about position object could be found in the below section.
-> `dividend_receivable` | float | Portfolio's dividend receivable before dividend cash allocated to portfolio. Explained in details in [Dividend Part](#dividends-splits-header)
-```
+| Properties | Type | Notes |
+| --- | --- | --- |
+| `starting_cash` | float | Starting cash allocated for the strategy for backtest or live trading. |
+| `cash` | float | Current amount of cash in your portfolio. |
+| `total_returns` | float | Cumulative percentage returns for the entire portfolio up to this point. Calculated as current portfolio value / starting value of the portfolio. The returns calculation includes cash and market_value. The return number is a percentage as 0.1 |
+| `daily_returns` | float | The current date's portfolio's day returns. |
+| `market_value` | float | Current portfolio's market value (unrealized value). |
+| `portfolio_value` | float | Current portfolio's total value, includes both market_value and cash. |
+| `pnl` | float | Current portfolio's profit and loss. |
+| `start_date` | DateTime | Starting date of the portfolio's backtest / real trading. |
+| `annualized_returns` | float | Portfolio's annualized returns. |
+| `positions` | Dictionary | A dictionary of all the open positions, keyed by id_or_symbol. More details about position object could be found in the below section. |
+| `dividend_receivable` | float | Portfolio's dividend receivable before dividend cash allocated to portfolio. Explained in details in [Dividend Part](#dividends-splits-header) |
 
 ### Position object
 The position object represents the current open position for a security. And it is contained inside the positions dictionary. e.g. if your portfolio has an open pingan (000001.XSHE) position, you could get it by using:
@@ -504,31 +463,27 @@ context.portfolio.positions['000001.XSHE']
 ```
 And the position object has following properties:
 
-```
-> Properties | Type | Notes
-> -- | -- | --
-> `quantity` | int | Total number of shares in this position which means the non-closed position.
-> `bought_quantity` | int | Total bought shares for a security. e.g. "If your portfolio has no trade for '000001.XSHE', then it returns 0"
-> `sold_quantity` | int | Total sold shares for a security. e.g. "If your portfolio has 200 shares sold for '000001.XSHE' and 100 shares bought for '000001.XSHE'" Then it will return 200.
-> `bought_value` | float | Total value of security bought. It equals sum every trade's bought price * bought shares, always positive.
-> `sold_value` | float | Total value of security sold. It equals sum every trade's sold price * sold shares, always positive.
-> `total_orders` | int | This position's total placed orders amount.
-> `total_trades` | int | This position's total filled trades amount.
-```
+| Properties | Type | Notes |
+| --- | --- | --- |
+| `quantity` | int | Total number of shares in this position which means the non-closed position. |
+| `bought_quantity` | int | Total bought shares for a security. e.g. "If your portfolio has no trade for '000001.XSHE', then it returns 0" |
+| `sold_quantity` | int | Total sold shares for a security. e.g. "If your portfolio has 200 shares sold for '000001.XSHE' and 100 shares bought for '000001.XSHE'" Then it will return 200. |
+| `bought_value` | float | Total value of security bought. It equals sum every trade's bought price * bought shares, always positive. |
+| `sold_value` | float | Total value of security sold. It equals sum every trade's sold price * sold shares, always positive. |
+| `total_orders` | int | This position's total placed orders amount. |
+| `total_trades` | int | This position's total filled trades amount. |
 
 ### Instrument object
 Instrument represents all kinds of finance securities, e.g. Could be a stock, ETF, index or even futures contract in the future. There're several properties:
 
-```
-> Properties | Type | Notes
-> -- | -- | --
-> `order_book_id` | str | Unique identifier for a instrument/security.
-> `symbol` | str | Security's human readable name.
-> `abbrev_symbol` | str | Security's abbreviation symbol, e.g. Security's pinyin in China market, like: 'PAYH' for '000001.XSHE'.
-> `round_lot` | int | How many shares for one lot.
-> `sector_code` | str | Sector code abbreviation for a security, used globally.
-> `sector_name` | str | Full sector code in local language.
-```
+| Properties | Type | Notes |
+| --- | --- | --- |
+| `order_book_id` | str | Unique identifier for a instrument/security. |
+| `symbol` | str | Security's human readable name. |
+| `abbrev_symbol` | str | Security's abbreviation symbol, e.g. Security's pinyin in China market, like: 'PAYH' for '000001.XSHE'. |
+| `round_lot` | int | How many shares for one lot. |
+| `sector_code` | str | Sector code abbreviation for a security, used globally. |
+| `sector_name` | str | Full sector code in local language. |
 
 ## Develop
 ```
