@@ -1,5 +1,9 @@
 # rqalpha
 
+## 简介
+
+rqalpha是一个开源的Python回测引擎，适合A股市场，自带日线数据。目前支持日线回测。
+
 ![Architecture](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/QQ20160713-1.jpeg)
 
 ## 安装
