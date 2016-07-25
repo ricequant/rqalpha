@@ -1,3 +1,5 @@
+![rqalpha](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/rqalpha4.jpg)
+
 # rqalpha
 
 ## 简介
