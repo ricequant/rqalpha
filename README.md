@@ -71,7 +71,7 @@ rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
 
 ### Python策略Hello World
 
-以下的策略是最简单的一个买入并持有平安银行（buy and hold）的展示，您也可以点击右上角的clone按钮复制到自己的策略列表中进行修改和测试，非常简单：
+以下的策略是最简单的一个买入并持有平安银行（buy and hold）的展示，非常简单：
 
 ```python[clone:SimpleBuyAndHoldStrategy]
 # 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等。
@@ -171,14 +171,10 @@ None
 **范例**
 ```python
 def before_trading(context, bar_dict):
-	# 拿取财务数据的逻辑，自己构建SQLAlchemy query
-	fundamental_df = get_fundamentals(your_own_query)
-
-    # 把查询到的财务数据保存到conext对象中
-    context.fundamental_df = fundamental_df
+    context.stock_list = ["000001.XSHE", "000099.XSHE"]
 
     # 手动更新股票池
-    update_universe(context.fundamental_df.columns.values)
+    update_universe(context.stock_list)
 ```
 
 ----
