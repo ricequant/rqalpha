@@ -2,54 +2,26 @@
 
 ![Architecture](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/QQ20160713-1.jpeg)
 
-## install
-You can install from PyPI:
+## 安装
 
 ```
-# install
+# 安装rqalpha
 pip install rqalpha
 
-# upgrade
+# 升级rqalpha
 pip install -U rqalpha
 ```
 
-## Dependencies
+## 安装依赖
 
-### TA-Lib Installation
-
-You can install from PyPI:
+### 安装TA-Lib
+你可以通过PyPI安装：
 
 ```
 $ pip install TA-Lib
 ```
 
-To use [TA-Lib](https://github.com/mrjbq7/ta-lib) for python, you need to have the
-[TA-Lib](http://ta-lib.org/hdr_dw.html) already installed:
-
-##### Mac OS X
-
-```
-$ brew install ta-lib
-```
-
-##### Windows
-
-Download [ta-lib-0.4.0-msvc.zip](http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-msvc.zip)
-and unzip to ``C:\ta-lib``
-
-##### Linux
-
-Download [ta-lib-0.4.0-src.tar.gz](http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz) and:
-```
-$ untar and cd
-$ ./configure --prefix=/usr
-$ make
-$ sudo make install
-```
-
-> If you build ``TA-Lib`` using ``make -jX`` it will fail but that's OK!
-> Simply rerun ``make -jX`` followed by ``[sudo] make install``.
-
+如果发现无法通过 pip 安装，请访问 [https://mrjbq7.github.io/ta-lib/install.html](https://mrjbq7.github.io/ta-lib/install.html) 解决。
 
 ## Usage
 
@@ -57,8 +29,8 @@ $ sudo make install
 Usage: rqalpha [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  -v, --verbose
-  --help         Show this message and exit.
+  -v, ---verbose
+  ---help         Show this message and exit.
 
 Commands:
   generate_examples  generate example strategies to target folder
@@ -72,181 +44,243 @@ Usage: rqalpha run [OPTIONS]
   run strategy from file
 
 Options:
-  -f, --strategy-file PATH        [required]
-  -s, --start-date DATE           [required]
-  -e, --end-date DATE             [required]
-  -o, --output-file PATH
-  --draw-result / --no-draw-result
-  --help                          Show this message and exit.
+  -f, ---strategy-file PATH        [required]
+  -s, ---start-date DATE           [required]
+  -e, ---end-date DATE             [required]
+  -o, ---output-file PATH
+  ---draw-result / ---no-draw-result
+  ---help                          Show this message and exit.
 ```
 
-### Download data bundle
+### 下载回测需要的数据bundle
 ```
 rqalpha update_bundle
 ```
 
-### examples
+### 生成样例策略
 ```
 rqalpha generate_examples -d ./
 ```
 
-### run backtest
+### 运行回测
 ```
 rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
 ```
 
-## API Documentation
-### Methods to be implemented
-Your strategy algorithm has to implement at least two methods now: init and handle_bar
+## Python SDK 简介
+
+### Python策略Hello World
+
+以下的策略是最简单的一个买入并持有平安银行（buy and hold）的展示，您也可以点击右上角的clone按钮复制到自己的策略列表中进行修改和测试，非常简单：
+
+```python[clone:SimpleBuyAndHoldStrategy]
+# 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等。
+
+# 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
+def init(context):
+    context.s1 = "000001.XSHE"
+    # order是否被发送出去
+    context.fired = False
+
+# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
+def handle_bar(context, bar_dict):
+    # 开始编写你的主要的算法逻辑
+
+    # bar_dict[order_book_id] 可以拿到某个证券的bar信息
+    # context.portfolio 可以拿到现在的投资组合状态信息
+
+    # 使用order_shares(id_or_ins, amount)方法进行落单
+
+    # TODO: 开始编写你的算法吧！
+    if not context.fired:
+	    # order_percent并且传入1代表买入该股票并且使其占有投资组合的100%
+        order_percent(context.s1, 1)
+        context.fired = True
+```
+
+----
+
+### 需要实现的方法
+
+你的算法策略目前必须实现至少两个方法：`init` 和 `handle_bar`，而`before_trading`是可选择实现的方法。
 
 #### init
+
 ```python
 init(context)
 ```
-Called only once at the start of a backtest / paper trading. Your algorithm can use this method to set up any initial configuration or information that you'd like.
-The context object will be passed to all other methods in your algorithm listed below as well.
 
+初始化方法 - 在回测和实时模拟交易只会在启动的时候触发一次。你的算法会使用这个方法来设置你需要的各种初始化配置。
+`context` 对象将会在你的算法的所有其他的方法之间进行传递以方便你可以拿取到。
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| context | a plain object | Will be used globally in the whole algorithm. Properties are accessed using dot notation as well and also the traditional bracket notation. |
+| context | python简单对象 | 将会在整个算法中当做一个全局变量来使用。属性通过点标记（"."）来取到。 |
 
-
-**Returns**
+**返回**
 None
 
-**Example:**
+**范例:**
+
 ```python
 def init(context):
-	# the naming of "cash_limit" is arbitrary, our engine
-	# does not assume any special names on the context object
+	# cash_limit的属性是根据用户需求自己定义的，你可以定义无限多种自己随后需要的属性，ricequant的系统默认只是会占用context.portfolio的关键字来调用策略的投资组合信息
 	context.cash_limit = 5000
 ```
 
 #### handle_bar
+
 ```python
-handle_bar(context, bar)
+handle_bar(context, bar_dict)
 ```
-Triggered whenever a bar market event happens for any of your algorithm interested securities. It could be historical day bar, minute bar and real time minute bar. Refer to the table below for details about [Bar object](#bar-object).
 
+切片数据的更新会自动触发调用这个方法，如果是日回测则是每日的切片数据（OHLC）会触发调用，分钟回测则会是每分钟的切片数据会调用，那么在实时模拟交易中则是实时每分钟会调用一次。对于切片数据对象你可以看关于[Bar对象](#bar-object)的更详细的信息。
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| context | Same context object in init(context), stores any state/setup defined, and stores the portfolio object |
-| bar | A dictionary containing all the bar data keyed by order_book_id. It represents a snapshot of the current market's bar data when this method is called. Market bar data snapshot information about each security interested are all available in this object. |
+| context | 和init方法中的context对象一样 | 存储所有策略的自己定义的变量状态或是初始设置。|
+| bar_dict | bar dictionary - 存储了关注的证券的bar的一个dict，order_book_id作为key | 所有已‘关注’的股票的切片数据信息都会更新在这个dict里面。 |
 
-
-**Returns**
+**返回**
 None
 
-**Examples**
+**范例**
 ```python
-def handle_bar(context, bar):
+def handle_bar(context, bar_dict):
 	# put all your algorithm main logic here.
 	# ...
 	order_shares('000001.XSHE', 500)
 	# ...
 ```
 
-### Order Methods
-In your own algorithm, you can use the order methods listed below. We provide quite a few order related APIs to make you to be able to place orders easily. We also provide some risk and position management when you are using advanced order methods like ```order_percent```.
+#### before_trading
+
+非强制，可选择实现的函数。每天在市场开始前会被调用。**不可以在这个函数中发送订单（即不可以调用`order_xxxx`函数）。**
+
+```python
+before_trading(context, bar_dict)
+```
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| context | 和init方法中的context对象一样 | 存储所有策略的自己定义的变量状态或是初始设置，也保存了`portfolio`的信息。 |
+
+**返回**
+None
+
+**范例**
+```python
+def before_trading(context, bar_dict):
+	# 拿取财务数据的逻辑，自己构建SQLAlchemy query
+	fundamental_df = get_fundamentals(your_own_query)
+
+    # 把查询到的财务数据保存到conext对象中
+    context.fundamental_df = fundamental_df
+
+    # 手动更新股票池
+    update_universe(context.fundamental_df.columns.values)
+```
+
+----
+
+### Order方法
+
+你可以在策略中使用下面的几种丰富的落单方法，他们不同的用法可以让你落单的操作十分便捷。我们在交易系统内部提供好了仓位计算，因此你可以非常便利使用一些基于仓位管理上的落单方法，比如`order_percent` 可以让你基于目前的仓位价值进行落单。
 
 #### order_shares
-Place an order by specified number of shares. Order type is also passed in as parameters if needed. If style is omitted, it fires a market order by default.
+
+落指定**股数**的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
 ```python
 order_shares(id_or_ins, amount, style=MarketOrder())
 ```
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
-| amount | float-required | Number of shares to order. Positive means buy, negative means sell. It will be rounded down to the closest integral multiple of the lot size |
-| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+| id_or_ins | str或instrument对象-required | order_book_id或symbol或instrument对象 |
+| amount | float-required | 需要落单的股数。正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。 |
+| style | OrderType-optional | 订单类型，默认是市价单。目前支持的订单类型有：<ul><li>style=MarketOrder()</li><li>style=LimitOrder(<span></span>limit_price)</li></ul> |
 
+**返回**
+int，唯一的order id
 
-**Returns**
-A unique order id of int type.
+**范例**
 
-**Examples**
-
-- Buy 2000 shares  of pingan stock as market order:
+- 购买Buy 2000 股的平安银行股票，并以市价单发送
 
 ```python
 order_shares('000001.XSHE', 2000)
 ```
 
-- Sell 2000 shares of pingan stock as market order:
+- 卖出2000股的平安银行股票，并以市价单发送：
 
 ```python
 order_shares('000001.XSHE', -2000)
 ```
 
-- Buy 1000 shares of pingan stock as limit order with price=10:
+- 购买1000股的平安银行股票，并以限价单发送，价格为￥10：
 
 ```python
-order_shares('000001.XSHGE', 1000, style=LimitOrder(10))
+order_shares('000001.XSHG', 1000, style=LimitOrder(10))
 ```
 
 #### order_lots
-Place an order by specified number of lots. Order type is also passed in as parameters if needed. If style is omitted, it fires a market order by default.
+
+指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
 ```python
 order_lots(id_or_ins, amount, style=OrderType)
 ```
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
-| amount | float-required | Number of lots to order. Positive means buy, negative means sell. |
-| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+| id_or_ins | str或instrument对象-required | order_book_id或symbol或instrument对象 |
+| amount | float-required | 多少手的数目。正数表示买入，负数表示卖出 |
+| style | OrderType-optional | 订单类型，默认是市价单。目前支持的订单类型有：<ul><li>style=MarketOrder</li><li>style=LimitOrder(<span></span>limit_price)</li></ul> |
 
-**Returns**
-A unique order id of int type.
+**返回**
+int，唯一的order id
 
-**Examples**
+**范例**
 
-- Buy 20 lots of pingan stock as market order:
+- 买入20手的平安银行股票，并且发送市价单：
 
 ```python
 order_lots('000001.XSHE', 20)
 ```
 
-- Buy 10 lots of pingan stock as limit order with price=10:
+- 买入10手平安银行股票，并且发送限价单，价格为￥10：
 
 ```python
-order_lots('000001.XSHGE', 10, style=LimitOrder(10))
+order_lots('000001.XSHE', 10, style=LimitOrder(10))
 ```
 
 #### order_value
 
-Place ann order by specified value amount rather than specific number of shares/lots. Negative cash_amount results in selling the given amount of value, if the cash_amount is larger than you current security's position, then it will sell all shares of this security. Orders are always truncated to whole lot shares.
+使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。当您提交一个卖单时，该方法代表的意义是您希望通过卖出该股票套现的金额。如果金额超出了您所持有股票的价值，那么您将卖出所有股票。
 
 ```python
 order_value(id_or_ins, cash_amount, style=OrderType)
 ```
 
-
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
-| cash_amount | float-required | Cash amount to buy / sell the given value of securities. Positive means buy, negative means sell. |
-| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+| id_or_ins | str或instrument对象-required | order_book_id或symbol或instrument对象 |
+| cash_amount | float-required | 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。 |
+| style | OrderType-optional | 订单类型，默认是市价单。目前支持的订单类型有：<ul><li>style=MarketOrder()</li><li>style=LimitOrder(<span></span>limit_price)</li></ul> |
 
+**返回**
+int，唯一的order id
 
+**范例**
 
-**Returns**
-A unique order id of int type.
-
-**Examples**
-
-- Place a order for buying ￥10000 amount of pingan stock as market order. If the current price of pingan stock is ￥7.5, then the below code will buy 1300 shares since less than 100 shares will be truncated.
+- 买入价值￥10000的平安银行股票，并以市价单发送。如果现在平安银行股票的价格是￥7.5，那么下面的代码会买入1300股的平安银行，因为少于100股的数目将会被自动删除掉。
 
 ```python
 order_value('000001.XSHE', 10000)
 ```
 
-- Place an order for selling ￥ 10000 amount of pingan stock currently holding:
+- 卖出价值￥10000的现在持有的平安银行：
 
 ```python
 order_value('000001.XSHE', -10000)
@@ -255,48 +289,49 @@ order_value('000001.XSHE', -10000)
 
 #### order_percent
 
-Place an order for a security for a given percent of the current portfolio value, which is the sum of the positions value and ending cash balance. A negative percent order will result in selling given percent of current portfolio value. Orders are always truncated to whole shares. Percent should be a decimal number (0.50 means 50%), and its absolute value is <= 1.
+发送一个等于目前投资组合价值（市场价值和目前现金的总和）一定百分比的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%
 
 ```python
 order_percent(id_or_ins, percent, style=OrderType)
 ```
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
-| percent | float-required | Percent of the current portfolio value. Positive means buy, negative means selling give percent of the current portfolio value. Orders are always truncated according to lot size. |
-| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+| id_or_ins | str或instrument对象 -required | order_book_id或symbol或instrument object. |
+| percent | float-required | 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。|
+| style | OrderType-optional | 订单类型，默认是市价单。目前支持的订单类型有：<ul><li>style=MarketOrder()</li><li>style=LimitOrder(<span></span>limit_price)</li></ul> |
 
-**Returns**
-A unique order id of int type.
+**返回**
+int，唯一的order id
 
-**Sample**
+**范例**
 
-- Order pingan stock shares worth 50% of current portfolio value. If pingan's price is currently ￥10/share and current portfolio's total value is ￥2000, then it will buy 200 shares of pingan stock. (Not including transaction cost and slippage.)
+- 买入等于现有投资组合50%价值的平安银行股票。如果现在平安银行的股价是￥10/股并且现在的投资组合总价值是￥2000，那么将会买入200股的平安银行股票。（不包含交易成本和滑点的损失）
 
 ```python
-order_percent('000001.XSHGE', 0.5)
+order_percent('000001.XSHG', 0.5)
 ```
 
 #### order_target_value
 
-Place an order to adjust a position to a target value. If there is no position for the security, an order is placed for the whole amount of target value. If there is already a position for the security, an order is placed for the difference between target value and current position value.
+买入/卖出并且自动调整该证券的仓位到一个目标价值。如果还没有任何该证券的仓位，那么会买入全部目标价值的证券。如果已经有了该证券的仓位，则会买入/卖出调整该证券的现在仓位和目标仓位的价值差值的数目的证券。
 
 ```python
 order_target_value(id_or_ins, cash_amount, style=OrderType)
 ```
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
-| cash_amount | float-required | Target cash value for the adjusted position after placing order. |
-| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+| id_or_ins | str或instrument对象-required | order_book_id或symbol或instrument对象. |
+| cash_amount | float-required | 最终的该证券的仓位目标价值 |
+| style | OrderType-optional | 订单类型，默认是市价单。目前支持的订单类型有：<ul><li>style=MarketOrder()</li><li>style=LimitOrder(<span></span>limit_price)</li></ul> |
 
-**Returns**
-A unique order id of int type.
+**返回**
+int，唯一的order id
 
-**Examples**
-- If current portfolio already has pingan stock's position worth￥3000 , and cash_amount is set to ￥10000 in order_target_value, then the below code will buy pingan stock's woth ￥7000. (Shares truncated to multiple of lot size)
+**范例**
+
+-  如果现在的投资组合中持有价值￥3000的平安银行股票的仓位并且设置其目标价值为￥10000，以下代码范例会发送价值￥7000的平安银行的买单到市场。（向下调整到最接近每手股数即100的倍数的股数）
 
 ```python
 order_target_value('000001.XSHE', 10000)
@@ -304,55 +339,348 @@ order_target_value('000001.XSHE', 10000)
 
 #### order_target_percent
 
-Place an order to adjust position to a target percent of the portfolio value, so that your final position value takes the percentage you defined of your whole portfolio.
+买入/卖出证券以自动调整该证券的仓位到占有一个指定的投资组合的目标百分比。
 
+- 如果投资组合中没有任何该证券的仓位，那么会买入等于现在投资组合总价值的目标百分比的数目的证券。
+- 如果投资组合中已经拥有该证券的仓位，那么会买入/卖出目标百分比和现有百分比的差额数目的证券，最终调整该证券的仓位占据投资组合的比例至目标百分比。
+
+其实我们需要计算一个position_to_adjust (即应该调整的仓位)
 ```
 position_to_adjust = target_position - current_position
 ```
 
-Portfolio value is calculated as sum of positions value and ending cash balance. The order quantity will be rounded down to integral multiple of lot size. Percent should be a decimal number (0.50 means 50%), and its absolute value is <= 1.
+投资组合价值等于所有已有仓位的价值和剩余现金的总和。买/卖单会被下舍入一手股数（A股是100的倍数）的倍数。目标百分比应该是一个小数，并且最大值应该<=1，比如0.5表示50%。
 
-If the ```position_to_adjust``` calculated is positive, then it fires buy orders, otherwise it fires sell orders.
+如果`position_to_adjust` 计算之后是正的，那么会买入该证券，否则会卖出该证券。
 
 ```python
 order_target_percent(id_or_ins, percent, style=OrderType)
 ```
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_ins | str or instrument object -required | order_book_id or symbol or instrument object. |
-| percent | float-required | Portfolio percentage allocated to the security. Positive means buy, negative means sell. |
-| style | OrderType-optional | Order type and default is market order. The available order types are: style=MarketOrder(), style=LimitOrder(limit_price) |
+| id_or_ins | str或instrument对象-required | order_book_id或symbol或instrument对象。 |
+| percent | float-required | 仓位最终所占投资组合总价值的目标百分比。 |
+| style | OrderType-optional | 订单类型，默认是市价单。目前支持的订单类型有：<ul><li>style=MarketOrder()</li><li>style=LimitOrder(<span></span>limit_price)</li></ul> |
 
-**Returns**
-A unique order id of int type.
+**返回**
+int，唯一的order id
 
-**Examples**
+**范例**
 
-- If there's an existing position for pingan stock and occupies 10% of the current portfolio value, then our target is to allocate 15% of the portfolio value to pingan stock:
+- 如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会买入平安银行股票最终使其占据投资组合价值的15%：
 
 ```python
-order_target_percent('000001.XSHE', 0.15)
+order_target_percent('平安银行', 0.15)
 ```
 
 #### cancel_order
 
-TODO
+取消由order_id代表的限价单。
+
+```python
+cancel_order(order_id)
+```
 
 #### get_order
 
-Get a specified order by the unique order_id. The order object will be discarded at end of handle_bar.
+通过唯一的order_id拿到对应的订单信息，不过这个订单信息会在`handle_bar`结尾处丢弃掉。
 
 ```python
 get_order(order_id)
 ```
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| order_id | int-required | order's unique identifier |
+| order_id | int-required | 订单的唯一标示符 |
+
+**返回**
+order对象，如：
+```python
+<Order: filled_shares=100.0 quantity=100.0 instrument=<Instrument: order_book_id='000001.XSHE' symbol='平安银行' abbrev_symbol='PAYH' round_lot=100.0 sector_code='Financials' sector_name='金融'>>
+```
+
+#### get_open_orders
+
+获取一个由order_id到order对象映射的dict，凡在此dict中的order都未被完全成交或取消。
+
+----
+
+### 更改context中的预设值
+
+----
+
+#### 更改默认基准
+
+可以在```init```函数中使用：
+
+```python
+def init(context):
+	context.benchmark = "000001.XSHE"
+```
+
+上面的代码片段把你的策略的对比参考基准从默认的```csi300```修改成了平安银行。
+
+----
+
+#### 开启允许卖空
+
+默认卖空是不允许的，不过我们提供了API可以开启卖空，不会让您的卖空单被我们的系统拒掉，可以在```init```函数中使用：
+
+```python
+def init(context):
+	context.short_selling_allowed = True
+```
+
+如果您在测试一些诸如统计套利（pair trading）需要允许卖空机制的策略的时候可以开启这一项，不过注意到在中国A股市场卖空股票是一件非常难的事情。
+
+----
+
+#### 更改滑点
+
+可以在```init```函数中使用：
+
+```python
+def init(context):
+	context.slippage = 0.5
+```
+
+注意 ： 其中的数值应为x%中的x， 例子中的0.5=0.5%。
+
+上面的代码片段把你的策略的滑点更改为了0.5%。
+
+----
+
+#### 更改交易费
+
+可以在```init```函数中使用：
+
+```python
+def init(context):
+	context.commission = 0.02
+```
+
+注意 ： 其中的数值应为x%中的x， 例子中的0.02=0.02%，即万分之2.
+
+上面的代码片段把你的策略使用的交易费更改为了0.02%。
+
+----
+
+### scheduler方法
+
+如果需要在某个日期、某个时间点运行一个函数，可以在```init```函数中使用```scheduler```, **注意：```scheduler```必须在```init```函数中调用。**
+
+```python
+scheduler.run_daily(function)
+scheduler.run_weekly(function, weekday=x,tradingday=t)
+scheduler.run_monthly(function, tradingday=t)
+```
+
+#### 定日期运行
+
+**每天**
+
+每天运行一次传入的```function```
+
+```python
+scheduler.run_daily(function)
+```
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| function | function | 使传入的```function```每日运行 |
+
+**返回**
+None
+
+**注意**
+1, schedule一定在其对应时间点的handle_bar之后执行。
+
+**范例**
+
+以下的范例代码片段是一个非常简单的例子，在每天交易后查询现在```portfolio```中剩下的cash的情况
+
+```python
+def log_cash(context, bar_dict):
+    logger.info("Remaning cash: %r" % context.portfolio.cash)
+
+def init(context):
+	#...
+	# 每天运行一次
+	scheduler.run_daily(log_cash)
+```
+
+----
+
+**每周某天**
+
+每周在固定的某天运行一下传入的```function```
+
+```python
+scheduler.run_weekly(function, weekday=x, tradingday=t)
+```
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| function | function | 使传入的```function```每日交易开始前运行 |
+| weekday | int - required | 1：周一，2：周二, ..., 5: 周五 |
+| tradingday | int - not required | 范围为\[-5,1\],\[1,5\] 例：1（-1）：每周（倒数）第一个交易日，n（-n)：每周（倒数）第n个交易日 |
+
+**返回**
+None
+
+**注意**
+1, ```tradingday```中的负数表示倒数。
+
+2, ```tradingday```表示交易日。如某周只有四个交易日，则此周的```tradingday=4```与```tradingday=-1```表示同一天
+
+3, ```weekday```和```tradingday```不能同时使用。
+**范例**
+
+以下的代码片段非常简单，在每周二固定运行打印一下现在的```portfolio```剩余的资金：
+
+```python
+def log_cash(context, bar_dict):
+    logger.info("Remaning cash: %r" % context.portfolio.cash)
+
+def init(context):
+	#...
+	# 每周二打印一下剩余资金：
+	scheduler.run_weekly(log_cash, weekday=2)
+
+	# 每周第二个交易日打印剩余资金：
+	#scheduler.run_weekly(log_cash, tradingday=2)
+```
+
+----
+
+**每月某交易日**
+
+在每月的某个**交易日**运行一次传入的```function```:
+
+```python
+scheduler.run_monthly(function,tradingday=t)
+```
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| function | function | 使传入的```function```每日交易开始前运行 |
+| tradingday | int - required |范围为\[-23,1\], \[1,23\] ，如: 1（-1）：每月（倒数）第一个交易日，2（-2）：每月（倒数）第二个交易日, ..., 28（-28）：每月（倒数）第28个交易日 |
+
+**返回**
+None
+
+**注意**
+1， ```tradingday```的负数表示倒数
+
+2， ```tradingday```表示交易日，如某月只有三个交易日，则此月的tradingday=3与tradingday=-1表示同一天
+
+**范例**
+以下的代码片段非常简单的展示了每个月第一个交易日的时候我们进行一次财务数据查询，这样子会非常有用在一些根据财务数据来自动调节仓位股票组合的算法来说：
+
+```python
+def query_fundamental(context, bar_dict):
+        # 查询revenue前十名的公司的股票并且他们的pe_ratio在25和30之间。打fundamentals的时候会有auto-complete方便写查询代码。
+    fundamental_df = get_fundamentals(
+        query(
+            fundamentals.income_statement.revenue, fundamentals.eod_derivative_indicator.pe_ratio
+        ).filter(
+            fundamentals.eod_derivative_indicator.pe_ratio > 25
+        ).filter(
+            fundamentals.eod_derivative_indicator.pe_ratio < 30
+        ).order_by(
+            fundamentals.income_statement.revenue.desc()
+        ).limit(
+            10
+        )
+    )
+
+    # 将查询结果dataframe的fundamental_df存放在context里面以备后面只需：
+    context.fundamental_df = fundamental_df
+
+    # 实时打印日志看下查询结果，会有我们精心处理的数据表格显示：
+    logger.info(context.fundamental_df)
+    update_universe(context.fundamental_df.columns.values)
+
+# 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
+def init(context):
+	# 每月的第一个交易日查询以下财务数据，以确保可以拿到最新更新的财务数据信息用来调整仓位
+	scheduler.run_monthly(query_fundamental, tradingday=1)
+```
+
+----
+
+#### 定时间运行
+
+`scheduler`还可以用来做定时间运行，比如在每天开盘后的一小时后或一分钟后定时运行，这里有很多种组合可以让您达到各种自己想要达到的定时运行的目的。
+
+**注意**：使用`time_rule`定时运行只会在分钟级别回测和实时模拟交易中有定义的效果，在日回测中只会默认依然在该天运行，并不能在固定的时间运行。
+
+使用的方法是和上面的`scheduler.run_daily`,`scheduler.run_weekly`和`scheduler.run_monthly`进行组合加入`time_rule`来一起使用：
 
 
-### Other Methods
+如何使用`scheduler`来进行定日期运行已经在上面解释的很清楚了，这里我们主要介绍如何使用`time_rule`来进行定时间运行：
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| time_rule | market_open / market_close | 定时具体几点几分运行某个函数。这个可以设置为```market_open``` - 开市后多久运行或```market_close``` - 闭市前多久运行。如果不设置```time_rule```默认的值是开市后一分钟运行。 |
+
+
+martet_open /market_close参数如下：
+
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| hour | int - option [0,4] | 具体在market_open/market_close后/前第多少小时执行, 股票的交易时间为[9:30 - 11:30],[13:01 - 15:00]共240分钟，所以hour的范围为 [0,4] |
+| minute | int - option [0,240] | 具体在market_open/market_close的后/前第多少分钟执行,同上，股票每天交易时间240分钟，所以minute的范围为 [0,240],中午休市的时间区间会被忽略。 |
+
+**返回**：
+None
+
+**每天**的开市后某个时间点运行：
+
+```python
+scheduler.run_daily(function, time_rule=market_open(hour=x, minute=x))
+```
+
+**每周**的闭市前某个时间点运行：
+
+```python
+scheduler.run_weekly(function, weekday=w ,tradingday=t, time_rule=market_close(hour=x, minute=x))
+```
+
+**每月**的第t个交易日开市后某个时间点运行：
+
+```python
+scheduler.run_monthly(function,traingday=t ,time_rule=market_open(hour=x, minute=x))
+```
+**注意**
+1， 在分钟回测中如未指定```time_rule```,则默认在开盘后一分钟运行,即09:31分。
+2， 如果两个```schedule```，分别使用```market_open``` 与```market_close```规则，但规则触发时间在同一时刻，则```market_open```的```handle```一定在```market_close```的```handle```前执行。
+3， 目前暂不支持开盘交易(即 09:30分交易) ,所以```time_rule(minute=0)``` 和```time_rule(hour=0)``` 将不会触发任何事件。
+4， market_open(minute=120)将在11:30执行， market_open(minute=121)在13:01执行，中午休市的区间会被忽略。
+**范例**
+ - 每天开盘后一小时：
+
+```python
+scheduler.run_daily(function, time_rule=market_open(hour=1))
+```
+
+ - 每周周一开盘后一分钟：
+
+```python
+scheduler.run_weekly(function, weekday=1, time_rule=market_open(minute=1))
+```
+
+ - 每月第一个交易日收盘前一小时：
+
+```python
+scheduler.run_monthly(function, tradingday=1,time_rule=market_close(hour=1))
+```
+
+----
+
+### 其他方法
 
 #### update_universe
 
@@ -360,139 +688,276 @@ get_order(order_id)
 update_universe(id_or_symbols)
 ```
 
-This method takes one or a list of id_or_symbol(s) as argument(s), to update the current subscription set of the instruments. It takes effect on the next bar event.
+这个方法传入一个或一个列表的```id_or_symbol(s)```作为参数，用以更新现在关注的证券的集合（e.g
+.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为```['000001
+.XSHE', '000024.XSHE']```然后调用了```update_universe(['000030.XSHE'])```之后，股票池就会变成```000030
+.XSHE```一个股票了，随后的数据更新也只会跟踪```000030.XSHE```这一个股票了。
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_symbols | str or iterable of strings | one or a list of id_or_symbol(s). |
+| id_or_symbols | str或iterable of strings | 单个或一个id_or_symbol(s)列表. |
+
+**范例**
+
+下面的代码是将股票池变更为只有2个股票```000001.XSHE```和```000024.XSHE```:
+
+```python
+update_universe(['000001.XSHE', '000024.XSHE'])
+```
+
+----
 
 #### instruments
+
 ```python
 instruments(id_or_symbols)
 ```
-Convert a string or a list of strings as order_book_id to instrument object(s).
 
-| Parameters | Type | Notes |
+转换单个string或一个string列表的order_book_id到instrument对象
+
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| id_or_symbols | str or iterable of strings | Passed in strings / iterable of strings are interpreted as order_book_ids. China market's order_book_ids are like '000001.XSHE' while US's market's order_book_ids are like 'AAPL.US' |
+| id_or_symbols | str或iterable of strings | 单个或一个列表的order_book_id，中国市场的A股的order_book_ids是类似‘000001.XSHE’的写法 |
 
-Returns : one / a list of instrument(s) object(s) - by the id_or_symbol(s) requested.
+**返回**
 
-##### Examples
-- Get only one instrument - stock's information:
+单个或一个列表的<a href="/api/python/chn#instrument-object" target="_blank">instrument对象</a> - 用id_or_symbol请求的。
+
+**范例**
+
+- 只得到单个instrument的对象：
 ```python
 [In]instruments('000001.XSHE')
 [Out]
-Instrument(order_book_id=000001.XSHE, symbol=平安银行, abbrev_symbol=PAYH, listed_date=19910403, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active)
+<Instrument: industry_name='货币金融服务', listed_date=datetime.datetime(1991, 4, 3, 0, 0), round_lot=100.0, listing=False, abbrev_symbol='PAYH', symbol='平安银行', industry_code='J66', type='CS', sector_code='Financials', sector_name='金融', order_book_id='000001.XSHE'>
 ```
 
-- Get a list of instruments - China stocks' information:
-
+- 得到一个列表的instrument对象 - 中国股票：
 ```python
 [In]instruments(['平安银行', '000024.XSHE'])
 [Out]
-[Instrument(order_book_id=000001.XSHE, symbol=平安银行, abbrev_symbol=PAYH, listed_date=19910403, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active), Instrument(order_book_id=000024.XSHE, symbol=招商地产, abbrev_symbol=ZSDC, listed_date=19930607, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active)]
+[<Instrument: industry_name='货币金融服务', listed_date=datetime.datetime(1991, 4, 3, 0, 0), round_lot=100.0, listing=False, abbrev_symbol='PAYH', symbol='平安银行', industry_code='J66', type='CS', sector_code='Financials', sector_name='金融', order_book_id='000001.XSHE'>,
+<Instrument: industry_name='房地产业', listed_date=datetime.datetime(1993, 6, 7, 0, 0), round_lot=100.0, listing=False, abbrev_symbol='ZSDC', symbol='招商地产', industry_code='K70', type='CS', sector_code='Financials', sector_name='金融', order_book_id='000024.XSHE'>]
 ```
 
-### Bar object
-Ricequant backend trading system (hammer) processes all the referenced securities in your strategy, it sends the bar events and also other events in the futures. (e.g.: tick data). Each time any of the securities has a bar event(could be day bar or minute bar, etc), [python]handle_bar[python] is called and the Bar object contains all the market data for securities.
+----
 
-For example, if you want to access the market data event bar data for 000001.XSHE, use TODO. The following properties in Bar object are supported:
+#### history
 
-TODO: if open is collision with python keyword?
+```python
+history(bar_count, frequency, field)
+```
 
-| Properties | Type | Notes |
+`history`函数返回所有已关注证券的历史行情，同时支持**日以及分钟**历史数据。以pandas的[DataFrame](http://pandas.pydata.org/pandas-docs/dev/dsintro.html#dataframe)对象装载为时间序列。
+
+**注意**：在我们最新加入的可以动态处理调整证券池的功能以后，您并不只能使用`history`函数拿到已经加入证券池的历史数据，您可以拿到所有想要拿的任意的证券的历史数据了。
+
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| `order_book_id` | str | Securities' unique identifier, e.g. "000001.XSHE" |
-| `symbol` | str | Securities' unique symbol, e.g. "平安银行" |
-| `datetime` | DateTime | The UTC timestamp of the bar market data event. |
-| `open` | float | The opening price of a security of a give bar. |
-| `close` | float | The closing price of a security of a given bar. |
-| `high` | float | The highest price of the security within the given bar. |
-| `low` | float | The lowest price of the security within the given bar. |
-| `volume`  | float | Total number of shares traded in the most recent bar event for this security. |
+| `bar_count` | int-required | 表示回溯的bar的数量 |
+| `frequency` | str-required | 表示回溯时以什么样的频率进行。例如"1d"或"1m"分别表示每日和每分钟 |
+| `field` | str-required | 制定返回的DataFrame中以哪个指标作为数据值，可取“open”，“close”，“high”，“low”，“volume”，“last”, "total_turnover" - 总成交额 |
 
-There're also transforms provided:
+**返回**：
+
+DataFrame
+
+**范例：**
+
+1. 拿取四天的历史数据：
+
+```python
+print (history(4, '1d', 'close')['000001.XSHE'])
+```
+
+当前日期：2013-01-05
+
+| 日期 | 收盘价格 |
+| --- | --- |
+| 2013-01-02 | 12.0 |
+| 2013-01-03 | 11.0 |
+| 2013-01-04 | 13.0 |
+| 2013-01-05 | 11.0 |
+
+2. 拿取四分钟的历史数据：
+
+```python
+print(history(4, '1m', 'close')['000001.XSHE'])
+```
+
+当前时间：2014-01-06  09:34:00
+
+| 日期 | 收盘价格 |
+| --- | --- |
+| 2014-01-06 09:31 | 8.2569 |
+| 2014-01-06 09:32 | 8.2292 |
+| 2014-01-06 09:33 | 8.2014 |
+| 2014-01-06 09:34 | 8.2083 |
+
+----
+
+#### plot
+
+```python
+plot(series_name, value)
+```
+
+`plot`函数可以将时间序列的数据传给页面进行绘图，结果是以时间为横轴，value为纵轴的曲线。
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| 'series_name' | str - required | 绘制曲线的名称 |
+| 'value' | float - required | 当前日期的曲线的点的值 |
+
+**范例：**
+
+```python
+# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
+def handle_bar(context, bar_dict):
+    # TODO: 开始编写你的算法吧！
+
+    plot('close', bar_dict['000001.XSHE'].close)
+    plot('high', bar_dict['000001.XSHE'].high)
+    plot('low', bar_dict['000001.XSHE'].low)
+    plot('open', bar_dict['000001.XSHE'].open)
+```
+
+----
+
+#### 拿到当前时间
+
+```python
+context.now
+```
+
+使用以上的方法就可以在`handle_bar`中拿到当前的bar的时间，比如day bar的话就是那天的时间，minute bar的话就是这一分钟的时间点。
+
+----
+
+### Bar对象
+
+Ricequant的后端算法交易系统会处理你的算法中所有关注的证券，我们支持的包括股票、ETF、LOF、分级基金和期货。
+它会发送`bar`事件并且将来还可以发送其他的事件给你的算法策略（比如：tick数据）。`bar_dict`是所有的关注的证券的bar数据的一个总集合，你可以在`handle_bar`中拿取到`bar`对象，其中包含了该证券的所有的市场数据信息。
+
+例如，如果你想拿到平安银行股票'000001.XSHE'的切片数据信息，那么可以使用这段代码`bar_dict['000001.XSHE']`。下面会介绍我们已经支持的`bar`对象的属性：
+
+同时对`bar`对象我们也支持如下的转换方法：
 
 ```python
 mavg(intervals, frequency='day')
 ```
 
-Moving average price for the given security for a give number of intervals for a frequency, by default to day.
+可以用来计算某个证券的某段时间的移动平均价格，默认单位是‘天’
 
-| Parameters | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| intervals | int | a given number of intervals, e.g. given number of days |
-| frequency | str | frequency of the give number of intervals, by default as 'day'. |
+| 间隔 | int | 一段时间间隔，比如：3 |
+| 频率 | str | 间隔的频率，默认是“天” |
 
-### Order object
+```python
+vwap(intervals, frequency='day')
+```
 
-Several properties in the Order object:
+可以用来计算某个证券的某段时间的加权平均价格，默认单位是“天”
 
-| Properties | Type | Notes |
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| `instrument` | instrument object | The security which placed order at |
-| `filled_shares` | float | Total shares bought / sold for this order |
-| `quantity` | float | Total shares ordered. |
-| `last_price` | float | TODO: there is no support in Java yet.  The order's last filled price. If order is rejected, then it will return 0. |
+| 间隔 | int | 一段时间间隔，比如：3 |
+| 频率 | str | 间隔的频率，默认是“天” |
 
-### Portfolio object
-The portfolio object contains the whole strategy's portfolio information. In day bar backtest, this means the portfolio information after each day closing. The portfolio object is accessed using: `context.portfolio`
+----
 
-And has the following properties:
+### Order对象
 
-| Properties | Type | Notes |
+在order对象中的属性：
+
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| `starting_cash` | float | Starting cash allocated for the strategy for backtest or live trading. |
-| `cash` | float | Current amount of cash in your portfolio. |
-| `total_returns` | float | Cumulative percentage returns for the entire portfolio up to this point. Calculated as current portfolio value / starting value of the portfolio. The returns calculation includes cash and market_value. The return number is a percentage as 0.1 |
-| `daily_returns` | float | The current date's portfolio's day returns. |
-| `market_value` | float | Current portfolio's market value (unrealized value). |
-| `portfolio_value` | float | Current portfolio's total value, includes both market_value and cash. |
-| `pnl` | float | Current portfolio's profit and loss. |
-| `start_date` | DateTime | Starting date of the portfolio's backtest / real trading. |
-| `annualized_returns` | float | Portfolio's annualized returns. |
-| `positions` | Dictionary | A dictionary of all the open positions, keyed by id_or_symbol. More details about position object could be found in the below section. |
-| `dividend_receivable` | float | Portfolio's dividend receivable before dividend cash allocated to portfolio. Explained in details in [Dividend Part](#dividends-splits-header) |
+| `instrument` | instrument对象 | 订单对应的证券的instrument对象 |
+| `filled_shares` | float | 该订单已经成交的股数 |
+| `quantity` | float | 该订单的所有的股数 |
 
-### Position object
-The position object represents the current open position for a security. And it is contained inside the positions dictionary. e.g. if your portfolio has an open pingan (000001.XSHE) position, you could get it by using:
+----
+
+### Portfolio对象
+
+`portfolio`对象包含算法策略的所有的投资组合的信息。在日级别回测中，这表示的是每日收盘以后的投资组合信息。可以使用`context.portfolio`去拿取`portfolio`对象的信息。
+
+并且有以下的属性：
+
+| 参数 | 类型 | 注释 |
+| --- | --- | --- |
+| `starting_cash` | float | 回测或实盘交易给算法策略设置的初始资金 |
+| `cash` | float | 现在投资组合中剩余的现金 |
+| `total_returns` | float | 算法投资组合至今的累积百分比收益率。计算方法是现在的投资组合价值/投资组合的初始资金。投资组合价值包含剩余现金和其市场价值。 |
+| `daily_returns` | float | 当前最新一天的每日收益。 |
+| `market_value` | float | 投资组合当前的市场价值（未实现/平仓的价值） |
+| `portfolio_value` | float | 当前投资组合的总共价值，包含市场价值和剩余现金。 |
+| `pnl` | float | 当前投资组合的￥盈亏 |
+| `start_date` | DateTime | 策略投资组合的回测/实时模拟交易的开始日期 |
+| `annualized_returns` | float | 投资组合的年化收益率 |
+| `positions` | Dictionary | 一个包含所有仓位的字典，以id_or_symbol作为键，`position`对象作为值，关于position的更多的信息可以在下面的部分找到。 |
+| `dividend_receivable` | float | 投资组合在分红现金收到账面之前的应收分红部分。具体细节在[分红部分](#dividends-splits-header) |
+
+----
+
+### Position对象
+
+`position`对象代表一个证券的仓位信息。可以通过positions字典拿到，例如：如果你的投资组合有平安银行股票（000001.XSHE）的仓位，你可以通过以下代码拿到它的仓位：
 
 ```python
 context.portfolio.positions['000001.XSHE']
 ```
-And the position object has following properties:
 
-| Properties | Type | Notes |
+并且`position`对象有以下的属性：
+
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| `quantity` | int | Total number of shares in this position which means the non-closed position. |
-| `bought_quantity` | int | Total bought shares for a security. e.g. "If your portfolio has no trade for '000001.XSHE', then it returns 0" |
-| `sold_quantity` | int | Total sold shares for a security. e.g. "If your portfolio has 200 shares sold for '000001.XSHE' and 100 shares bought for '000001.XSHE'" Then it will return 200. |
-| `bought_value` | float | Total value of security bought. It equals sum every trade's bought price * bought shares, always positive. |
-| `sold_value` | float | Total value of security sold. It equals sum every trade's sold price * sold shares, always positive. |
-| `total_orders` | int | This position's total placed orders amount. |
-| `total_trades` | int | This position's total filled trades amount. |
+| `quantity` | int | 未平仓部分的总股数。 |
+| `bought_quantity` | int | 该证券的总买入股数，例如：如果你的投资组合并没有任何平安银行的成交，那么平安银行这个股票的仓位就是0. |
+| `sold_quantity` | int | 该证券的总卖出股数，例如：如果你的投资组合曾经买入过平安银行股票200股并且卖出过100股，那么这个属性会返回100. |
+| `bought_value` | float | 该证券的总买入的价值，等于每一个该证券的买入成交的价格*买入股数的总和。 |
+| `sold_value` | float | 该证券的总卖出价值，等于每一个该证券的卖出成交的价格*卖出股数的总和。 |
+| `total_orders` | int | 该仓位的总订单的次数。 |
+| `total_trades` | int | 该仓位的总成交的次数。 |
+| `sellable` | int | 该仓位可卖出股数。T＋1的市场中sellable = 所有持仓-今日买入的仓位。 |
+| `average_cost` | float | 获得该持仓的买入均价，计算方法为每次买入的数量做加权平均。 |
+| `market_value` | float | 获得该持仓的实时市场价值。 |
+| `value_percent` | float | 获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]。 |
 
-### Instrument object
-Instrument represents all kinds of finance securities, e.g. Could be a stock, ETF, index or even futures contract in the future. There're several properties:
+----
 
-| Properties | Type | Notes |
+### Instrument对象
+
+`Instrument`代表所有的金融证券，例如：可以是股票，ETF，指数和期货合同。
+
+#### 股票，ETF，指数Instrument对象
+
+股票，ETF，指数Instrument对象有如下的属性：
+
+| 参数 | 类型 | 注释 |
 | --- | --- | --- |
-| `order_book_id` | str | Unique identifier for a instrument/security. |
-| `symbol` | str | Security's human readable name. |
-| `abbrev_symbol` | str | Security's abbreviation symbol, e.g. Security's pinyin in China market, like: 'PAYH' for '000001.XSHE'. |
-| `round_lot` | int | How many shares for one lot. |
-| `sector_code` | str | Sector code abbreviation for a security, used globally. |
-| `sector_name` | str | Full sector code in local language. |
+| `order_book_id` | str | 证券的独特的标识符。 |
+| `symbol` | str | 证券的易读的名字。 |
+| `abbrev_symbol` | str | 证券的名称缩写，比如：在中国A股就是股票的拼音缩写，‘PAYH’就是平安银行股票的证券名缩写。 |
+| `round_lot` | int | 一手是多少股，中国A股一手是100股。 |
+| `sector_code` | str | 板块缩写代码，全球通用标准定义。 |
+| `sector_name` | str | 以当地语言为标准的板块代码名。 |
+| `industry_code` | str | 国民经济行业分类代码。 |
+| `industry_name` | str | 国民经济行业分类名称。 |
+| `listing` | bool | 该证券是否还在交易所交易。 |
+| `listed_date` | DateTime |该证券的上市日期。 |
+| `type` | str | 需要使用种类简称，下面的type列表会解释我们目前支持的证券类型：'CS', 'INDX', 'LOF', 'ETF', 'FenjiMu', 'FenjiA', 'FenjiB', 'Future' |
+| `board_type` | str | 'MainBoard' - 主板，'GEM' - 创业板 |
 
-## Develop
+## 开发
 ```
 pyvenv venv
 source venv/bin/activate
 pip install -e .
 ```
 
-## run unittest
+## 运行单元测试
 ```
 py.test
 ```
