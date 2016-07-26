@@ -96,6 +96,33 @@ RQAlpha可以输出一个DataFrame，其中包含了每天的Portfolio信息、R
 import pandas as pd
 df = pd.read_pickle("/tmp/result.pkl")
 print(df.iloc[-1])
+
+'''
+alpha                                                                   0.0180666
+annualized_returns                                                      0.0559331
+benchmark_annualized_returns                                            0.0454542
+benchmark_daily_returns                                               8.87784e-05
+benchmark_total_returns                                                  0.525913
+beta                                                                     0.518371
+cash                                                                      4971.44
+daily_returns                                                          0.00250376
+downside_risk                                                            0.246409
+information_rate                                                        0.0380054
+market_value                                                               162796
+max_drawdown                                                            -0.602535
+pnl                                                                           419
+portfolio_value                                                            167767
+positions                       {'000068.XSHE': Position({{'value_percent': 0....
+sharpe                                                                    2.35011
+sortino                                                                   2.62967
+total_commission                                                          2585.89
+total_returns                                                            0.677674
+total_tax                                                                 1172.01
+tracking_error                                                           0.269138
+trades                                                                         []
+volatility                                                               0.275721
+Name: 2016-07-01 00:00:00, dtype: object
+'''
 ```
 
 ## 架构图
