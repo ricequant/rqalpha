@@ -101,7 +101,10 @@ def generate_examples(directory):
     '''
     source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
 
-    shutil.copytree(source_dir, os.path.join(directory, "examples"))
+    try:
+        shutil.copytree(source_dir, os.path.join(directory, "examples"))
+    except FileExistsError:
+        print("Folder examples is exists.")
 
 
 def run_strategy(source_code, strategy_filename, start_date, end_date, init_cash, data_bundle_path, show_progress):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等。
 import talib
 import numpy as np
