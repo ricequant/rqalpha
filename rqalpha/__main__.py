@@ -8,6 +8,7 @@ import datetime
 import tempfile
 import tarfile
 
+import pandas as pd
 import click
 import requests
 from six import exec_, print_
@@ -106,6 +107,15 @@ def generate_examples(directory):
         shutil.copytree(source_dir, os.path.join(directory, "examples"))
     except FileExistsError:
         print("Folder examples is exists.")
+
+
+@cli.command()
+@click.option('-f', '--result-file', type=click.Path(exists=True), required=True)
+def draw_result_df(result_file):
+    '''draw result DataFrame
+    '''
+    results_df = pd.read_pickle(result_file)
+    show_draw_result(result_file, results_df)
 
 
 def run_strategy(source_code, strategy_filename, start_date, end_date, init_cash, data_bundle_path, show_progress):

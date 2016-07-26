@@ -44,10 +44,11 @@ $ pip install TA-Lib
 Usage: rqalpha [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  -v, ---verbose
-  ---help         Show this message and exit.
+  -v, --verbose
+  --help         Show this message and exit.
 
 Commands:
+  draw_result_df     draw result DataFrame
   generate_examples  generate example strategies to target folder
   run                run strategy from file
   update_bundle      update data bundle, download if not found
@@ -96,6 +97,12 @@ rqalpha run -f examples/multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o /tmp/result.
 等待回测结束后，将显示您的收益率和Risk。
 
 ![backtest](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/multi_rsi.png)
+
+### 绘制回测结果
+如果运行完回测后，还需要再次绘制回测结果，可以运行以下命令：
+```
+rqalpha draw_result_df -f /tmp/result.pkl
+```
 
 ### 分析结果
 RQAlpha可以输出一个DataFrame，其中包含了每天的Portfolio信息、Risk信息、Trades和Positions。
