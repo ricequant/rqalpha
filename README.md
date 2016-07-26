@@ -53,6 +53,29 @@ Commands:
   update_bundle      update data bundle, download if not found
 ```
 
+### 下载回测需要的数据bundle
+运行以下命令，将会从Ricequant的服务器下载最新的日级别数据，为回测提供数据支持。
+
+```
+rqalpha update_bundle
+```
+
+### 生成样例策略
+运行以下命令，将会在指定目录生成一个examples文件夹，其中包含几个有趣的样例策略。
+
+```
+rqalpha generate_examples -d ./
+```
+
+### 运行回测
+运行以下命令，将开始回测
+
+```
+rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -i 100000 -o /tmp/result.pkl
+```
+
+其运行的参数如下：
+
 ```
 Usage: rqalpha run [OPTIONS]
 
@@ -70,20 +93,6 @@ Options:
   --help                          Show this message and exit.
 ```
 
-### 下载回测需要的数据bundle
-```
-rqalpha update_bundle
-```
-
-### 生成样例策略
-```
-rqalpha generate_examples -d ./
-```
-
-### 运行回测
-```
-rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/result.pkl
-```
 
 ### 分析结果
 RQAlpha可以输出一个DataFrame，其中包含了每天的Portfolio信息、Risk信息、Trades和Positions。
