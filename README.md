@@ -88,7 +88,7 @@ rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/resul
 ### 分析结果
 RQAlpha可以输出一个DataFrame，其中包含了每天的Portfolio信息、Risk信息、Trades和Positions。
 
-其Index是交易日，columns包括`'alpha', 'annualized_returns', 'benchmark_annualized_returns', 'benchmark_daily_returns', 'benchmark_total_returns', 'beta', 'cash', 'daily_returns', 'downside_risk', 'information_rate', 'market_value', 'max_drawdown', 'pnl', 'portfolio_value', 'positions', 'sharpe', 'sortino', 'total_commission', 'total_returns', 'total_tax', 'tracking_error', 'trades', 'volatility'`。
+其Index是交易日，columns包括`alpha`, `annualized_returns`, `benchmark_annualized_returns`, `benchmark_daily_returns`, `benchmark_total_returns`, `beta`, `cash`, `daily_returns`, `downside_risk`, `information_rate`, `market_value`, `max_drawdown`, `pnl`, `portfolio_value`, `positions`, `sharpe`, `sortino`, `total_commission`, `total_returns`, `total_tax`, `tracking_error`, `trades`, `volatility`。
 
 其中`positions`是当日的持仓信息，`trades`是当日的交易信息。
 
@@ -185,6 +185,7 @@ handle_bar(context, bar_dict)
 None
 
 **范例**
+
 ```python
 def handle_bar(context, bar_dict):
 	# put all your algorithm main logic here.
