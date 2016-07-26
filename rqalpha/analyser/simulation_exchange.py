@@ -353,7 +353,6 @@ class SimuExchange(object):
             dividend_per_share = dividend_series["dividend_cash_before_tax"] / dividend_series["round_lot"]
             portfolio._dividend_info[order_book_id] = Dividend(order_book_id, position.quantity, dividend_series)
             portfolio.dividend_receivable += dividend_per_share * position.quantity
-            print("handle_dividend_ex_dividend", order_book_id, position, self.current_date)
 
     def handle_dividend_payable(self):
         """handle dividend payable before trading
