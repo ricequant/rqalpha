@@ -143,7 +143,6 @@ class RiskCal(object):
 
     def cal_sortino(self):
         strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
-        # strategy_rets = self.strategy_current_annualized_returns[-1]
         downside_risk = self.risk.downside_risk
 
         sortino = (strategy_rets - self.riskfree_total_returns) / downside_risk
@@ -156,7 +155,6 @@ class RiskCal(object):
             return 0.
 
         return ((diff * diff).sum() / len(diff)) ** 0.5 * const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5
-        # return const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5 * np.std(diff, ddof=1)
 
     def __repr__(self):
         return "RiskCal({0})".format(self.__dict__)

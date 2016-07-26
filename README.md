@@ -68,13 +68,7 @@ rqalpha generate_examples -d ./
 ```
 
 ### 运行回测
-运行以下命令，将开始回测
-
-```
-rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -i 100000 -o /tmp/result.pkl
-```
-
-其运行的参数如下：
+回测脚本参数如下：
 
 ```
 Usage: rqalpha run [OPTIONS]
@@ -93,6 +87,15 @@ Options:
   --help                          Show this message and exit.
 ```
 
+运行以下命令，将开始回测
+
+```
+rqalpha run -f examples/multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o /tmp/result.pkl --draw-result
+```
+
+等待回测结束后，将显示您的收益率和Risk。
+
+![backtest](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/multi_rsi.png)
 
 ### 分析结果
 RQAlpha可以输出一个DataFrame，其中包含了每天的Portfolio信息、Risk信息、Trades和Positions。

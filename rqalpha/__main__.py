@@ -213,7 +213,9 @@ def show_draw_result(title, results_df):
     vals = ax.get_yticks()
     ax.set_yticklabels(['{:3.2f}%'.format(x*100) for x in vals])
 
-    plt.legend()
+    leg = plt.legend(loc="upper left")
+    leg.get_frame().set_alpha(0.5)
+
     plt.show()
 
 
