@@ -44,7 +44,6 @@ class RiskCal(object):
         self.risk_free_rate = data_proxy.get_yield_curve(self.trading_index[0], self.trading_index[-1])
 
     def calculate(self, date, strategy_daily_returns, benchmark_daily_returns):
-
         idx = self.latest_idx = self.trading_index.get_loc(date)
 
         # daily
@@ -55,6 +54,10 @@ class RiskCal(object):
 
         self.days_cnt = len(self.strategy_current_daily_returns)
         days_pass_cnt = (date - self.start_date).days + 1
+
+        # risk
+        # self.riskfree_total_returns = self.risk_free_rate / self.days_cnt * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        self.riskfree_total_returns = self.risk_free_rate
 
         # total
         self.strategy_total_returns[idx] = (1. + self.strategy_current_daily_returns).prod() - 1
@@ -105,15 +108,18 @@ class RiskCal(object):
         return ((diff * diff).sum() / len(diff)) ** 0.5 * const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5
 
     def cal_information_rate(self, volatility):
-        return (self.strategy_current_annualized_returns[-1] - self.benchmark_current_annualized_returns[-1]) / volatility
+        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        benchmark_rets = self.benchmark_current_daily_returns.sum() / len(self.benchmark_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+
+        return (strategy_rets - benchmark_rets) / volatility
 
     def cal_alpha(self):
         beta = self.risk.beta
 
-        strategy_rets = self.strategy_current_annualized_returns[-1]
-        benchmark_rets = self.benchmark_current_annualized_returns[-1]
+        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        benchmark_rets = self.benchmark_current_daily_returns.sum() / len(self.benchmark_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
 
-        alpha = strategy_rets - (self.risk_free_rate + beta * (benchmark_rets - self.risk_free_rate))
+        alpha = strategy_rets - (self.riskfree_total_returns + beta * (benchmark_rets - self.riskfree_total_returns))
         return alpha
 
     def cal_beta(self):
@@ -129,17 +135,19 @@ class RiskCal(object):
 
     def cal_sharpe(self):
         volatility = self.risk.volatility
-        strategy_rets = self.strategy_current_total_returns[-1]
+        # strategy_rets = self.strategy_current_annualized_returns[-1]
+        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
 
-        sharpe = (strategy_rets - self.risk_free_rate) / volatility
+        sharpe = (strategy_rets - self.riskfree_total_returns) / volatility
 
         return sharpe
 
     def cal_sortino(self):
-        strategy_rets = self.strategy_current_total_returns[-1]
+        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        # strategy_rets = self.strategy_current_annualized_returns[-1]
         downside_risk = self.risk.downside_risk
 
-        sortino = (strategy_rets - self.risk_free_rate) / downside_risk
+        sortino = (strategy_rets - self.riskfree_total_returns) / downside_risk
         return sortino
 
     def cal_downside_risk(self):
