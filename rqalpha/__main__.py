@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import codecs
 import sys
 import os
 import shutil
@@ -81,7 +82,7 @@ def run(strategy_file, start_date, end_date, output_file, draw_result, data_bund
         print_("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
         return
 
-    with open(strategy_file) as f:
+    with codecs.open(strategy_file, encoding="utf-8") as f:
         source_code = f.read()
 
     results_df = run_strategy(source_code, strategy_file, start_date, end_date,

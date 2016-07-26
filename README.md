@@ -73,6 +73,11 @@ rqalpha generate_examples -d ./
 rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
 ```
 
+## FAQ
+### 在Windows运行报Error on import matplotlib.pyplot
+
+请访问 [Error on import matplotlib.pyplot (on Anaconda3 for Windows 10 Home 64-bit PC)](http://stackoverflow.com/questions/34004063/error-on-import-matplotlib-pyplot-on-anaconda3-for-windows-10-home-64-bit-pc) 解决。
+
 ## Python SDK 简介
 
 ### Python策略Hello World
