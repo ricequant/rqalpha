@@ -42,7 +42,10 @@ class SimuExchange(object):
         self.start_date = start_date = self.trading_params.trading_calendar[0].date()
         self.account = Account(start_date=start_date, init_cash=self.trading_params.init_cash)
 
-        self.benchmark_portfolio_value = None
+        # TODO should treat benchmark as a buy and hold strategy
+        self.benchmark_portfolio_value = self.benchmark_cash = self.trading_params.init_cash
+        self.benchmark_market_value = 0
+        self.benchmark_quantity = 0
 
         self.last_date = None        # type: datetime.date, last trading date
         self.simu_days_cnt = 0       # type: int, days count since simulation start
@@ -86,14 +89,32 @@ class SimuExchange(object):
 
         # TODO make benchmark cal works better
         # update benchmark
-        if self.benchmark_portfolio_value is None:
-            self.benchmark_portfolio_value = self.data_proxy.get_bar(
-                self.trading_params.benchmark, pd.Timestamp(self.start_date)).close
+        if self.benchmark_market_value == 0:
+            self.benchmark_market_value = None
 
-        new_benchmark_portfolio_value = self.data_proxy.get_bar(
-            self.trading_params.benchmark, pd.Timestamp(self.current_date)).close
-        benchmark_daily_returns = new_benchmark_portfolio_value / self.benchmark_portfolio_value - 1
-        self.benchmark_portfolio_value = new_benchmark_portfolio_value
+            origin_benchmark_portfolio_value = self.benchmark_portfolio_value
+
+            # FIXME quick dirty hack
+            price = self.data_proxy.get_bar(self.trading_params.benchmark, pd.Timestamp(self.start_date)).close
+            self.benchmark_quantity = self.benchmark_portfolio_value / price
+            self.benchmark_quantity = int(self.benchmark_quantity)
+            trade_price = price
+            commission = 0.0008 * trade_price * self.benchmark_quantity
+
+            self.benchmark_cash -= trade_price * self.benchmark_quantity
+            self.benchmark_cash -= commission
+
+            self.benchmark_market_value = price * self.benchmark_quantity
+            self.benchmark_portfolio_value = self.benchmark_market_value + self.benchmark_cash
+
+            benchmark_daily_returns = self.benchmark_portfolio_value / origin_benchmark_portfolio_value - 1
+        else:
+            new_benchmark_market_value = self.data_proxy.get_bar(
+                self.trading_params.benchmark, pd.Timestamp(self.current_date)).close * self.benchmark_quantity
+            new_benchmark_portfolio_value = new_benchmark_market_value + self.benchmark_cash
+
+            benchmark_daily_returns = new_benchmark_portfolio_value / self.benchmark_portfolio_value - 1
+            self.benchmark_portfolio_value = new_benchmark_portfolio_value
 
         self.risk_cal.calculate(self.current_date, portfolio.daily_returns, benchmark_daily_returns)
 
