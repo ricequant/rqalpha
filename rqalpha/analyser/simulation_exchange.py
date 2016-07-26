@@ -40,7 +40,7 @@ class SimuExchange(object):
         self.open_orders = defaultdict(list)       # type: Dict[str, List[Order]], all open orders
 
         self.start_date = start_date = self.trading_params.trading_calendar[0].date()
-        self.account = Account(start_date=start_date)
+        self.account = Account(start_date=start_date, init_cash=self.trading_params.init_cash)
 
         self.benchmark_portfolio_value = None
 

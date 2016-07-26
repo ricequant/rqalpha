@@ -21,6 +21,7 @@ class Account(object):
 
         # init portfolio
         self._portfolio.cash = self._portfolio.starting_cash = kwargs.get("init_cash", 100000.)
+
         self._portfolio.portfolio_value = self._portfolio.cash
         self._portfolio.start_date = kwargs.get("start_date")
 
