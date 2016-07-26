@@ -1,2 +1,2 @@
 include requirements.txt
-include rqalpha/resource/ricequant-logo.png
+recursive-include rqalpha/resource *.png
