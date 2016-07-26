@@ -59,12 +59,15 @@ Usage: rqalpha run [OPTIONS]
   run strategy from file
 
 Options:
-  -f, ---strategy-file PATH        [required]
-  -s, ---start-date DATE           [required]
-  -e, ---end-date DATE             [required]
-  -o, ---output-file PATH
-  ---draw-result / ---no-draw-result
-  ---help                          Show this message and exit.
+  -f, --strategy-file PATH        [required]
+  -s, --start-date DATE           [required]
+  -e, --end-date DATE             [required]
+  -o, --output-file PATH
+  -i, --init-cash INTEGER
+  --draw-result / --no-draw-result
+  --show-progress / --no-show-progress
+  -d, --data-bundle-path PATH
+  --help                          Show this message and exit.
 ```
 
 ### 下载回测需要的数据bundle
