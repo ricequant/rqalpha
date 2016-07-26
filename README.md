@@ -140,7 +140,7 @@ Name: 2016-07-01 00:00:00, dtype: object
 
 以下的策略是最简单的一个买入并持有平安银行（buy and hold）的展示，非常简单：
 
-```python[clone:SimpleBuyAndHoldStrategy]
+```python
 # 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等。
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。

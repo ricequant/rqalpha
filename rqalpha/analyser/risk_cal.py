@@ -135,7 +135,6 @@ class RiskCal(object):
 
     def cal_sharpe(self):
         volatility = self.risk.volatility
-        # strategy_rets = self.strategy_current_annualized_returns[-1]
         strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
 
         sharpe = (strategy_rets - self.riskfree_total_returns) / volatility

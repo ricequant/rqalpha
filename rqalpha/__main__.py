@@ -72,8 +72,8 @@ def update_bundle(data_bundle_path):
 @click.option('-e', '--end-date', type=Date(), required=True)
 @click.option('-o', '--output-file', type=click.Path(writable=True))
 @click.option('-i', '--init-cash', default=100000, type=click.INT)
-@click.option('--draw-result/--no-draw-result', default=True)
-@click.option('--show-progress/--no-show-progress', default=False)
+@click.option('--draw-result/--no-draw-result', default=os.name != "nt")
+@click.option('--show-progress/--no-show-progress', default=True)
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
 def run(strategy_file, start_date, end_date, output_file, draw_result, data_bundle_path, init_cash, show_progress):
     '''run strategy from file
