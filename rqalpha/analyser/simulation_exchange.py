@@ -131,7 +131,7 @@ class SimuExchange(object):
 
     def on_bar_close(self, bar_dict):
         self.match_orders(bar_dict)
-        self.update_portfolio_on_bar_close(bar_dict)
+        # self.update_portfolio(bar_dict)
 
     def update_daily_portfolio(self):
         yesterday_portfolio = self.get_yesterday_portfolio()
@@ -148,7 +148,7 @@ class SimuExchange(object):
         portfolio.annualized_returns = (1 + portfolio.total_returns) ** (
             const.DAYS_CNT.DAYS_A_YEAR / float((self.current_date - self.trading_params.start_date).days + 1)) - 1
 
-    def update_portfolio_on_bar_close(self, bar_dict):
+    def update_portfolio(self, bar_dict):
         portfolio = self.account.portfolio
         positions = portfolio.positions
 
@@ -172,7 +172,7 @@ class SimuExchange(object):
 
         # match order here because ricequant do this
         self.match_current_orders(bar_dict)
-        self.update_portfolio_on_bar_close(bar_dict)
+        self.update_portfolio(bar_dict)
 
         return order
 

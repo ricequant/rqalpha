@@ -129,6 +129,7 @@ class StrategyExecutor(object):
         exchange_on_bar_close = simu_exchange.on_bar_close
         exchange_on_day_open = simu_exchange.on_day_open
         exchange_on_day_close = simu_exchange.on_day_close
+        exchange_update_portfolio = simu_exchange.update_portfolio
 
         def on_dt_change(dt):
             self._current_dt = dt
@@ -149,6 +150,7 @@ class StrategyExecutor(object):
 
             elif event == EVENT_TYPE.HANDLE_BAR:
                 with ExecutionContext(self, EXECUTION_PHASE.HANDLE_BAR, bar_dict):
+                    exchange_update_portfolio(bar_dict)
                     handle_bar(strategy_context, bar_dict)
                     scheduler.next_day(dt, strategy_context, bar_dict)
                     exchange_on_bar_close(bar_dict)

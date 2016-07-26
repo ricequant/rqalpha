@@ -216,10 +216,10 @@ def order_target_percent(id_or_ins, percent, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if not isinstance(id_or_ins, six.string_types):
-        raise NotImplementedError
-
-    order_book_id = id_or_ins
+    if isinstance(id_or_ins, Instrument):
+        order_book_id = id_or_ins.order_book_id
+    else:
+        order_book_id = id_or_ins
 
     # TODO market order might be different
     bar_dict = ExecutionContext.get_current_bar_dict()
