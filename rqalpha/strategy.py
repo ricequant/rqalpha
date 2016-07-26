@@ -2,6 +2,7 @@
 
 import copy
 
+import click
 import six
 from six import iteritems
 import pandas as pd
@@ -109,6 +110,8 @@ class StrategyExecutor(object):
         self._current_dt = None
         self.current_universe = set()
 
+        self.progressbar = click.progressbar(length=len(self.trading_params.trading_calendar), show_eta=False)
+
     def execute(self):
         """run strategy
 
@@ -130,6 +133,8 @@ class StrategyExecutor(object):
         exchange_on_day_open = simu_exchange.on_day_open
         exchange_on_day_close = simu_exchange.on_day_close
         exchange_update_portfolio = simu_exchange.update_portfolio
+
+        is_show_progress_bar = self.trading_params.show_progress
 
         def on_dt_change(dt):
             self._current_dt = dt
@@ -158,6 +163,9 @@ class StrategyExecutor(object):
             elif event == EVENT_TYPE.DAY_END:
                 with ExecutionContext(self, EXECUTION_PHASE.FINALIZED, bar_dict):
                     exchange_on_day_close()
+
+                if is_show_progress_bar:
+                    self.progressbar.update(1)
 
         results_df = self.generate_result(simu_exchange)
 

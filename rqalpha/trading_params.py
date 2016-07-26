@@ -16,3 +16,5 @@ class TradingParams(object):
         self.end_date = kwargs.get("end_date", self.trading_calendar[-1].date())
 
         self.init_cash = kwargs.get("init_cash", 100000)
+
+        self.show_progress = kwargs.get("show_progress", False)
