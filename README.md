@@ -1,12 +1,21 @@
 ![rqalpha](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/rqalpha4.jpg)
 
-# rqalpha
+# RQAlpha
 
 ## 简介
 
-rqalpha是一个开源的Python回测引擎，适合A股市场，自带日线数据。目前支持日线回测。
+RQAlpha是一个开源的Python算法交易和回测引擎，适合A股市场，是事件驱动的设计。自带日线数据。目前支持日线回测。
 
-![Architecture](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/QQ20160713-1.jpeg)
+RQAlpha的逻辑也将会在[Ricequant](https://www.ricequant.com)的一些回测部分使用，[Ricequant](https://www.ricequant.com)  - 是一个开放的量化算法交易社区，有免费的服务器资源给大家测试、实盘模拟您的交易算法，并且可以将交易信号通过微信和邮件实时推送给大家。
+
+如果您想参与和贡献进来这个项目，可以发邮件给 public@ricequant.com 联系，随后我们也会搭建一个讨论组来方便大家沟通。
+
+## 特色
+
+- 容易使用：RQAlpha可以让你集中精力在策略的开发商。可以参考./examples 下的范例
+- 需要传入历史数据，计算的结果是pandas的DataFrame, 和PyData的生态系统很好的结合在一起
+- 可以使用Python的统计、机器学习等科学计算库如matplotlib, scipy, statsmodels和sklearn等
+- 免费提供了Ricequant的日级别数据，可以通过互联网自己更新data bundle
 
 ## 安装
 
@@ -72,6 +81,10 @@ rqalpha generate_examples -d ./
 ```
 rqalpha run -f examples/simple_macd.py -s 2014-01-04 -e 2015-01-05 -o /tmp/a.pkl
 ```
+
+## 架构图
+
+![Architecture](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/QQ20160713-1.jpeg)
 
 ## Python SDK 简介
 
