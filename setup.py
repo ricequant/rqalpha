@@ -7,16 +7,12 @@ from pip.req import parse_requirements
 
 setup(
     name='rqalpha',
-    version='0.0.24',
+    version='0.0.26',
     description='Ricequant Backtest Engine',
     packages=find_packages(exclude=[]),
     author='ricequant',
     author_email='public@ricequant.com',
-    package_data={
-        'rqalpha.resource': [
-            'rqalpha/resource/*.png'
-        ],
-    },
+    package_data={'': ['*.*']},
     url='https://github.com/ricequant/rqalpha',
     install_requires=[str(ir.req) for ir in parse_requirements("requirements.txt", session=False)],
     zip_safe=False,

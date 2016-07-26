@@ -160,11 +160,11 @@ def show_draw_result(title, results_df):
     # draw logo
     ax = plt.subplot(gs[:3, -1:])
     ax.axis("off")
-    # filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "resource")
-    # filename = os.path.join(filename, "ricequant-logo.png")
-    # img = mpimg.imread(filename)
-    # imgplot = ax.imshow(img, interpolation="nearest")
-    # ax.autoscale_view()
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "resource")
+    filename = os.path.join(filename, "ricequant-logo.png")
+    img = mpimg.imread(filename)
+    imgplot = ax.imshow(img, interpolation="nearest")
+    ax.autoscale_view()
 
     # draw risk and portfolio
     series = results_df.iloc[-1]
