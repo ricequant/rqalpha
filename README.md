@@ -12,7 +12,7 @@ RQAlpha的逻辑也将会在[Ricequant](https://www.ricequant.com)的一些回�
 
 ## 特色
 
-- 容易使用：RQAlpha可以让你集中精力在策略的开发商。可以参考./examples 下的范例
+- 容易使用：RQAlpha可以让你集中精力在策略的开发上。可以参考./examples 下的范例
 - 需要传入历史数据，计算的结果是pandas的DataFrame, 和PyData的生态系统很好的结合在一起
 - 可以使用Python的统计、机器学习等科学计算库如matplotlib, scipy, statsmodels和sklearn等
 - 免费提供了Ricequant的日级别数据，可以通过互联网自己更新data bundle
