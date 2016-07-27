@@ -40,12 +40,12 @@ $ pip install TA-Lib
 
 对于Windows用户，如果编译困难，可以根据您本地的Python版本下载指定版本的whl包，然后`pip install TA_Lib-0.4.9-cp27-none-win_amd64.whl`。
 
-[TA_Lib-0.4.9-cp27-none-win32.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp27-none-win32.whl)
-[TA_Lib-0.4.9-cp27-none-win_amd64.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp27-none-win_amd64.whl)
-[TA_Lib-0.4.9-cp34-none-win32.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp34-none-win32.whl)
-[TA_Lib-0.4.9-cp34-none-win_amd64.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp34-none-win_amd64.whl)
-[TA_Lib-0.4.9-cp35-none-win32.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp35-none-win32.whl)
-[TA_Lib-0.4.9-cp35-none-win_amd64.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp35-none-win_amd64.whl)
+- [TA_Lib-0.4.9-cp27-none-win32.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp27-none-win32.whl)
+- [TA_Lib-0.4.9-cp27-none-win_amd64.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp27-none-win_amd64.whl)
+- [TA_Lib-0.4.9-cp34-none-win32.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp34-none-win32.whl)
+- [TA_Lib-0.4.9-cp34-none-win_amd64.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp34-none-win_amd64.whl)
+- [TA_Lib-0.4.9-cp35-none-win32.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp35-none-win32.whl)
+- [TA_Lib-0.4.9-cp35-none-win_amd64.whl](http://www.lfd.uci.edu/~gohlke/pythonlibs/6kbpejrn/TA_Lib-0.4.9-cp35-none-win_amd64.whl)
 
 ## Usage
 
