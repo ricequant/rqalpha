@@ -48,10 +48,10 @@ Options:
   --help         Show this message and exit.
 
 Commands:
-  draw_result_df     draw result DataFrame
-  generate_examples  generate example strategies to target folder
-  run                run strategy from file
-  update_bundle      update data bundle, download if not found
+  examples       generate example strategies to target folder
+  plot           draw result DataFrame
+  run            run strategy from file
+  update_bundle  update data bundle, download if not found
 ```
 
 ### 下载回测需要的数据bundle
@@ -65,7 +65,7 @@ rqalpha update_bundle
 运行以下命令，将会在指定目录生成一个examples文件夹，其中包含几个有趣的样例策略。
 
 ```
-rqalpha generate_examples -d ./
+rqalpha examples -d ./
 ```
 
 ### 运行回测
@@ -101,7 +101,7 @@ rqalpha run -f examples/multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o /tmp/result.
 ### 绘制回测结果
 如果运行完回测后，还需要再次绘制回测结果，可以运行以下命令：
 ```
-rqalpha draw_result_df -f /tmp/result.pkl
+rqalpha plot /tmp/result.pkl
 ```
 
 ### 分析结果

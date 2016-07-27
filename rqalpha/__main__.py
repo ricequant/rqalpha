@@ -98,7 +98,7 @@ def run(strategy_file, start_date, end_date, output_file, draw_result, data_bund
 
 @cli.command()
 @click.option('-d', '--directory', default="./", type=click.Path(), required=True)
-def generate_examples(directory):
+def examples(directory):
     '''generate example strategies to target folder
     '''
     source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
@@ -110,8 +110,8 @@ def generate_examples(directory):
 
 
 @cli.command()
-@click.option('-f', '--result-file', type=click.Path(exists=True), required=True)
-def draw_result_df(result_file):
+@click.argument('result-file', type=click.Path(exists=True), required=True)
+def plot(result_file):
     '''draw result DataFrame
     '''
     results_df = pd.read_pickle(result_file)
