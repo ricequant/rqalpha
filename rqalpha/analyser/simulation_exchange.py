@@ -305,10 +305,10 @@ class SimuExchange(object):
             if isinstance(order.style, LimitOrder):
                 limit_price = order.style.get_limit_price(is_buy)
                 if is_buy and limit_price < bar.close:
-                    return False, _("Order Rejected: price is to low to buy {order_book_id}").format(
+                    return False, _("Order Rejected: price is too low to buy {order_book_id}").format(
                         order_book_id=order_book_id)
                 elif not is_buy and limit_price > bar.close:
-                    return False, _("Order Rejected: price is to high to sell {order_book_id}").format(
+                    return False, _("Order Rejected: price is too high to sell {order_book_id}").format(
                         order_book_id=order_book_id)
         else:
             raise NotImplementedError
@@ -327,7 +327,6 @@ class SimuExchange(object):
                 cash=portfolio.cash,
             )
 
-        # TODO check whether is enough to sell
         if order.quantity < 0 and abs(order.quantity) > position.sellable:
             return False, _("Order Rejected: no enough stock {order_book_id} to sell, you want to sell {quantity}, sellable {sellable}").format(
                 order_book_id=order_book_id,
@@ -336,8 +335,7 @@ class SimuExchange(object):
             )
 
         # check whether is trading
-        # FIXME need a better solution
-        if bar.volume == 0:
+        if not bar.is_trading:
             return False, _("Order Rejected: {order_book_id} is not trading.").format(
                 order_book_id=order_book_id,
             )
@@ -391,10 +389,10 @@ class SimuExchange(object):
                     dividend_cash = dividend_per_share * dividend_info.quantity
                     portfolio.dividend_receivable -= dividend_cash
                     portfolio.cash += dividend_cash
-                    user_log.info(_("get dividend {dividend} for {order_book_id}").format(
-                        dividend=dividend_cash,
-                        order_book_id=order_book_id,
-                    ))
+                    # user_log.info(_("get dividend {dividend} for {order_book_id}").format(
+                    #     dividend=dividend_cash,
+                    #     order_book_id=order_book_id,
+                    # ))
                     to_delete_dividend.append(order_book_id)
 
         for order_book_id in to_delete_dividend:

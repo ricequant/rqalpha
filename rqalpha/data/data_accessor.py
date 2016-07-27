@@ -101,8 +101,7 @@ class LocalDataProxy(DataProxy):
             df = self._cache[order_book_id]
         except KeyError:
             df = self._data_source.get_all_bars(order_book_id)
-            trading_calendar = self.trading_calendar
-            df = pd.concat([pd.DataFrame(columns=df.columns, index=trading_calendar[trading_calendar < df.index[0]]).fillna(0), df])
+            df = self._fill_all_bars(df)
             self._cache[order_book_id] = df
 
         instrument = self._data_source.instruments(order_book_id)
@@ -116,9 +115,7 @@ class LocalDataProxy(DataProxy):
             df = self._cache[order_book_id]
         except KeyError:
             df = self._data_source.get_all_bars(order_book_id)
-            # fill dataframe
-            trading_calendar = self.trading_calendar
-            df = pd.concat([pd.DataFrame(columns=df.columns, index=trading_calendar[trading_calendar < df.index[0]]).fillna(0), df])
+            df = self._fill_all_bars(df)
             self._cache[order_book_id] = df
 
         dt = ExecutionContext.get_current_dt().date()
@@ -153,3 +150,18 @@ class LocalDataProxy(DataProxy):
 
     def instrument(self, order_book_id):
         return self._data_source.instruments(order_book_id)
+
+    def _fill_all_bars(self, df):
+        trading_calendar = self.trading_calendar
+
+        t = df.index[0] if not df.empty else pd.Timestamp(datetime.date.today())
+        _df = pd.DataFrame(columns=df.columns, index=trading_calendar[trading_calendar < t]).fillna(0)
+        df = pd.concat([_df, df])
+
+        t = df.index[-1]
+        _df = pd.DataFrame(columns=df.columns, index=trading_calendar[trading_calendar > t])
+        for column in df.columns:
+            _df[column] = df.iloc[-1][column]
+        df = pd.concat([df, _df])
+
+        return df
