@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
-from functools import partial
+from functools import partial, wraps
 from collections import Iterable
 import copy
 
@@ -26,6 +26,28 @@ def export_as_api(func):
     return func
 
 
+def check_is_trading(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        id_or_ins = args[0]
+        if isinstance(id_or_ins, Instrument):
+            order_book_id = id_or_ins.order_book_id
+        else:
+            order_book_id = id_or_ins
+
+        bar_dict = ExecutionContext.get_current_bar_dict()
+        if not bar_dict[order_book_id].is_trading:
+            user_log.error(_("Order Rejected: {order_book_id} is not trading.").format(
+                order_book_id=order_book_id,
+            ))
+            return -1
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@check_is_trading
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
@@ -67,6 +89,7 @@ def order_shares(id_or_ins, amount, style=None):
     return order.order_id
 
 
+@check_is_trading
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
@@ -88,6 +111,7 @@ def order_lots(id_or_ins, amount, style=None):
     return order_shares(id_or_ins, amount * 100, style)
 
 
+@check_is_trading
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
@@ -128,6 +152,7 @@ def order_value(id_or_ins, cash_amount, style=None):
     return order_shares(id_or_ins, amount, style)
 
 
+@check_is_trading
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
@@ -156,6 +181,7 @@ def order_percent(id_or_ins, percent, style=None):
     return order_value(id_or_ins, portfolio_value * percent, style)
 
 
+@check_is_trading
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
@@ -191,6 +217,7 @@ def order_target_value(id_or_ins, cash_amount, style=None):
     return order_value(order_book_id, cash_amount - current_value, style)
 
 
+@check_is_trading
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.HANDLE_BAR,
                                 EXECUTION_PHASE.SCHEDULED)

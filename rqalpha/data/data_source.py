@@ -50,7 +50,7 @@ class LocalDataSource:
                              for d in pickle.load(open(os.path.join(root_dir, LocalDataSource.INSTRUMENTS), 'rb'))}
         self._dividend = bcolz.open(os.path.join(root_dir, LocalDataSource.DIVIDEND))
         self._yield_curve = bcolz.open(os.path.join(root_dir, LocalDataSource.YIELD_CURVE))
-        self._trading_dates = pd.Index(pd.Timestamp(str(d), tz=pytz.utc) for d in
+        self._trading_dates = pd.Index(pd.Timestamp(str(d)) for d in
                                        bcolz.open(os.path.join(root_dir, LocalDataSource.TRADING_DATES)))
 
     def instruments(self, order_book_ids):

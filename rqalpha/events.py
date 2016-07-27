@@ -14,9 +14,9 @@ class SimulatorAStockTradingEventSource(object):
 
     def create_generator(self):
         for date in self.trading_param.trading_calendar:
-            yield date.replace(hour=9, minute=0, tzinfo=self.timezone), EVENT_TYPE.DAY_START
-            yield date.replace(hour=15, minute=0, tzinfo=self.timezone), EVENT_TYPE.HANDLE_BAR
-            yield date.replace(hour=16, minute=0, tzinfo=self.timezone), EVENT_TYPE.DAY_END
+            yield date.replace(hour=9, minute=0), EVENT_TYPE.DAY_START
+            yield date.replace(hour=15, minute=0), EVENT_TYPE.HANDLE_BAR
+            yield date.replace(hour=16, minute=0), EVENT_TYPE.DAY_END
 
     def __iter__(self):
         return self

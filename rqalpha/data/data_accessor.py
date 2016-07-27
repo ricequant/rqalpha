@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import abc
+import datetime
 
 from six import with_metaclass, iteritems
 import pandas as pd
+import numpy as np
 
 from .bar import BarObject
 from ..utils.context import ExecutionContext
@@ -86,19 +88,25 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
 
 
 class LocalDataProxy(DataProxy):
+
     def __init__(self, root_dir):
         self._data_source = LocalDataSource(root_dir)
         self._cache = {}
         self._dividend_cache = {}
+
+        self.trading_calendar = self.get_trading_dates("2005-01-01", datetime.date.today())
 
     def get_bar(self, order_book_id, dt):
         try:
             df = self._cache[order_book_id]
         except KeyError:
             df = self._data_source.get_all_bars(order_book_id)
+            trading_calendar = self.trading_calendar
+            df = pd.concat([pd.DataFrame(columns=df.columns, index=trading_calendar[trading_calendar < df.index[0]]).fillna(0), df])
             self._cache[order_book_id] = df
 
-        return BarObject(self._data_source.instruments(order_book_id), df.xs(dt.date()))
+        instrument = self._data_source.instruments(order_book_id)
+        return BarObject(instrument, df.xs(dt.date()))
 
     def history(self, order_book_id, bar_count, frequency, field):
         if frequency == '1m':
@@ -108,6 +116,9 @@ class LocalDataProxy(DataProxy):
             df = self._cache[order_book_id]
         except KeyError:
             df = self._data_source.get_all_bars(order_book_id)
+            # fill dataframe
+            trading_calendar = self.trading_calendar
+            df = pd.concat([pd.DataFrame(columns=df.columns, index=trading_calendar[trading_calendar < df.index[0]]).fillna(0), df])
             self._cache[order_book_id] = df
 
         dt = ExecutionContext.get_current_dt().date()
@@ -116,7 +127,9 @@ class LocalDataProxy(DataProxy):
         if ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
             i -= 1
         left = i - bar_count if i >= bar_count else 0
-        return df[left:i][field]
+        hist = df[left:i][field]
+
+        return hist
 
     def get_yield_curve(self, start_date=None, end_date=None):
         return self._data_source.get_yield_curve(start_date, end_date)

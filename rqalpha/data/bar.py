@@ -48,7 +48,7 @@ class BarObject(object):
 
     @property
     def is_trading(self):
-        return self._series.volumn > 0
+        return self._series.volume > 0
 
     def mavg(self, intervals, frequency="day"):
         """

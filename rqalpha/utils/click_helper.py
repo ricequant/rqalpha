@@ -11,7 +11,8 @@ class Date(click.ParamType):
         self.tz = tz
 
     def convert(self, value, param, ctx):
-        return pd.Timestamp(value, self.tz)
+        # return pd.Timestamp(value, self.tz)
+        return pd.Timestamp(value)
 
     @property
     def name(self):
