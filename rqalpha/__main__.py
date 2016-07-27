@@ -73,10 +73,10 @@ def update_bundle(data_bundle_path):
 @click.option('-e', '--end-date', type=Date(), required=True)
 @click.option('-o', '--output-file', type=click.Path(writable=True))
 @click.option('-i', '--init-cash', default=100000, type=click.INT)
-@click.option('--draw-result/--no-draw-result', default=os.name != "nt")
-@click.option('--show-progress/--no-show-progress', default=True)
+@click.option('--plot/--no-plot', default=os.name != "nt")
+@click.option('--progress/--no-progress', default=True)
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
-def run(strategy_file, start_date, end_date, output_file, draw_result, data_bundle_path, init_cash, show_progress):
+def run(strategy_file, start_date, end_date, output_file, plot, data_bundle_path, init_cash, progress):
     '''run strategy from file
     '''
     if not os.path.exists(data_bundle_path):
@@ -87,12 +87,12 @@ def run(strategy_file, start_date, end_date, output_file, draw_result, data_bund
         source_code = f.read()
 
     results_df = run_strategy(source_code, strategy_file, start_date, end_date,
-                              init_cash, data_bundle_path, show_progress)
+                              init_cash, data_bundle_path, progress)
 
     if output_file is not None:
         results_df.to_pickle(output_file)
 
-    if draw_result:
+    if plot:
         show_draw_result(strategy_file, results_df)
 
 

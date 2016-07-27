@@ -14,6 +14,8 @@ matplotlib==1.5.1
 bcolz==1.1.0
 requests==2.10.0
 
+# ipdb
+
 # addition
 scipy
 statsmodels
