@@ -20,6 +20,9 @@ RQAlpha的逻辑也将会在[Ricequant](https://www.ricequant.com)的一些回�
 ## 安装
 
 ```
+# 为了避免一些安装问题，请先升级您的pip和setuptools
+pip install -U pip setuptools
+
 # 安装rqalpha
 pip install rqalpha
 
