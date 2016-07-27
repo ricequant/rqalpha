@@ -28,7 +28,6 @@ pip install -U rqalpha
 
 # 国内的用户们可以使用镜像
 pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com -U rqalpha
-pip install -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -U rqalpha
 ```
 
 ## 安装依赖
