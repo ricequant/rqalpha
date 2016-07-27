@@ -112,6 +112,8 @@ class StrategyExecutor(object):
         self._current_dt = None
         self.current_universe = set()
 
+        self.progress_bar = click.progressbar(length=len(self.trading_params.trading_calendar), show_eta=False)
+
     def execute(self):
         """run strategy
 
@@ -143,7 +145,7 @@ class StrategyExecutor(object):
         with ExecutionContext(self, EXECUTION_PHASE.INIT):
             init(strategy_context)
 
-        with click.progressbar(length=len(self.trading_params.trading_calendar), show_eta=False) as progressbar:
+        try:
             for dt, event in self._event_source:
                 on_dt_change(dt)
 
@@ -166,7 +168,9 @@ class StrategyExecutor(object):
                         exchange_on_day_close()
 
                     if is_show_progress_bar:
-                        progressbar.update(1)
+                        self.progress_bar.update(1)
+        finally:
+            self.progress_bar.render_finish()
 
         results_df = self.generate_result(simu_exchange)
 
