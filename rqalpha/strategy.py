@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import sys
 
 import click
 import six
+from six import print_
 from six import iteritems
 import pandas as pd
 
@@ -110,8 +112,6 @@ class StrategyExecutor(object):
         self._current_dt = None
         self.current_universe = set()
 
-        self.progressbar = click.progressbar(length=len(self.trading_params.trading_calendar), show_eta=False)
-
     def execute(self):
         """run strategy
 
@@ -143,29 +143,30 @@ class StrategyExecutor(object):
         with ExecutionContext(self, EXECUTION_PHASE.INIT):
             init(strategy_context)
 
-        for dt, event in self._event_source:
-            on_dt_change(dt)
+        with click.progressbar(length=len(self.trading_params.trading_calendar), show_eta=False) as progressbar:
+            for dt, event in self._event_source:
+                on_dt_change(dt)
 
-            bar_dict = BarMap(dt, self.current_universe, data_proxy)
+                bar_dict = BarMap(dt, self.current_universe, data_proxy)
 
-            if event == EVENT_TYPE.DAY_START:
-                with ExecutionContext(self, EXECUTION_PHASE.BEFORE_TRADING, bar_dict):
-                    exchange_on_day_open()
-                    before_trading(strategy_context, None)
+                if event == EVENT_TYPE.DAY_START:
+                    with ExecutionContext(self, EXECUTION_PHASE.BEFORE_TRADING, bar_dict):
+                        exchange_on_day_open()
+                        before_trading(strategy_context, None)
 
-            elif event == EVENT_TYPE.HANDLE_BAR:
-                with ExecutionContext(self, EXECUTION_PHASE.HANDLE_BAR, bar_dict):
-                    exchange_update_portfolio(bar_dict)
-                    handle_bar(strategy_context, bar_dict)
-                    scheduler.next_day(dt, strategy_context, bar_dict)
-                    exchange_on_bar_close(bar_dict)
+                elif event == EVENT_TYPE.HANDLE_BAR:
+                    with ExecutionContext(self, EXECUTION_PHASE.HANDLE_BAR, bar_dict):
+                        exchange_update_portfolio(bar_dict)
+                        handle_bar(strategy_context, bar_dict)
+                        scheduler.next_day(dt, strategy_context, bar_dict)
+                        exchange_on_bar_close(bar_dict)
 
-            elif event == EVENT_TYPE.DAY_END:
-                with ExecutionContext(self, EXECUTION_PHASE.FINALIZED, bar_dict):
-                    exchange_on_day_close()
+                elif event == EVENT_TYPE.DAY_END:
+                    with ExecutionContext(self, EXECUTION_PHASE.FINALIZED, bar_dict):
+                        exchange_on_day_close()
 
-                if is_show_progress_bar:
-                    self.progressbar.update(1)
+                    if is_show_progress_bar:
+                        progressbar.update(1)
 
         results_df = self.generate_result(simu_exchange)
 
