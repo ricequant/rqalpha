@@ -79,6 +79,7 @@ def update_bundle(data_bundle_path):
     os.mkdir(data_bundle_path)
     tar = tarfile.open(tmp, 'r:bz2')
     tar.extractall(data_bundle_path)
+    tar.close()
     os.remove(tmp)
 
 
