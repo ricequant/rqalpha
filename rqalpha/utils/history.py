@@ -26,10 +26,12 @@ class HybridDataFrame(pd.DataFrame):
         missing_handler = kwargs.pop("missing_handler")
         super(HybridDataFrame, self).__init__(*args, **kwargs)
         self.missing_handler = missing_handler
+        self._cache = {}
 
     def __getitem__(self, key):
         try:
-            return super(HybridDataFrame, self).__getitem__(key)
+            return self._cache[key]
+            # return super(HybridDataFrame, self).__getitem__(key)
         except KeyError as e:
             if not isinstance(key, str) or self.missing_handler is None:
                 raise
@@ -37,7 +39,8 @@ class HybridDataFrame(pd.DataFrame):
                 rv = self.missing_handler(key)
             except KeyError:
                 raise e
-            self[key] = rv
+            # self[key] = rv
+            self._cache[key] = rv
             return rv
 
 
