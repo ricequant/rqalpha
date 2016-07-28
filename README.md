@@ -33,6 +33,7 @@ pip install -U rqalpha
 pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com -U rqalpha
 ```
 
+Windows用户如果出现缺失`cl.exe`，请访问[https://wiki.python.org/moin/WindowsCompilers](https://wiki.python.org/moin/WindowsCompilers)下载VC并且安装。
 ## 安装依赖
 
 ### 安装TA-Lib
