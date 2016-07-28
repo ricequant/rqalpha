@@ -111,7 +111,7 @@ Options:
 运行以下命令，将开始回测
 
 ```
-rqalpha run -f examples/multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o /tmp/result.pkl --plot
+rqalpha run -f examples/multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot
 ```
 
 等待回测结束后，将显示您的收益率和Risk。
@@ -121,7 +121,7 @@ rqalpha run -f examples/multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o /tmp/result.
 ### 绘制回测结果
 如果运行完回测后，还需要再次绘制回测结果，可以运行以下命令：
 ```
-rqalpha plot /tmp/result.pkl
+rqalpha plot result.pkl
 ```
 
 ### 分析结果
@@ -133,7 +133,7 @@ RQAlpha可以输出一个DataFrame，其中包含了每天的Portfolio信息、R
 
 ```python
 import pandas as pd
-df = pd.read_pickle("/tmp/result.pkl")
+df = pd.read_pickle("result.pkl")
 print(df.iloc[-1])
 
 '''
