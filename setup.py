@@ -23,7 +23,7 @@ from pip.req import parse_requirements
 
 setup(
     name='rqalpha',
-    version='0.0.64',
+    version='0.0.65',
     description='Ricequant Backtest Engine',
     packages=find_packages(exclude=[]),
     author='ricequant',
