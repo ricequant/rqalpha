@@ -17,7 +17,8 @@
 
 import pandas as pd
 
-from . import ExecutionContext
+from . import ExecutionContext, get_last_date
+from ..const import EXECUTION_PHASE
 
 
 class HybridDataFrame(pd.DataFrame):
@@ -47,7 +48,15 @@ class HybridDataFrame(pd.DataFrame):
 def missing_handler(key, bar_count, frequency, field):
     order_book_id = key
     data_proxy = ExecutionContext.get_strategy_executor().data_proxy
-    hist = data_proxy.history(order_book_id, bar_count, frequency, field)
+
+    if frequency == '1m':
+        raise RuntimeError('Minute bar not supported yet!')
+
+    dt = ExecutionContext.get_current_dt().date()
+    if ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+        dt = get_last_date(ExecutionContext.get_trading_params().trading_calendar, dt)
+
+    hist = data_proxy.history(order_book_id, dt, bar_count, frequency, field)
     series = hist
 
     executor = ExecutionContext.get_strategy_executor()

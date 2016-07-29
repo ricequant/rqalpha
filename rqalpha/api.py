@@ -359,13 +359,29 @@ def history(bar_count, frequency, field):
 
     results = {}
 
+    dt = ExecutionContext.get_current_dt().date()
+    if ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+        dt = get_last_date(ExecutionContext.get_trading_params().trading_calendar, dt)
+
     # This make history slow
-    # for order_book_id in list(executor.current_universe)[:1]:
-    #     hist = data_proxy.history(order_book_id, bar_count, frequency, field)
-    #     results[order_book_id] = hist
+    for order_book_id in list(executor.current_universe)[:1]:
+        hist = data_proxy.history(order_book_id, dt, bar_count, frequency, field)
+        results[order_book_id] = hist
 
     handler = partial(missing_handler, bar_count=bar_count, frequency=frequency, field=field)
     return HybridDataFrame(results, missing_handler=handler)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.HANDLE_BAR,
+                                EXECUTION_PHASE.SCHEDULED)
+def last(order_book_id, bar_count, frequency, field):
+    executor = get_strategy_executor()
+    data_proxy = get_data_proxy()
+
+    data = data_proxy.last(order_book_id, dt, bar_count, frequency, field)
+    return data
 
 
 @export_as_api

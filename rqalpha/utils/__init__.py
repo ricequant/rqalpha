@@ -38,3 +38,8 @@ def memoize(function):
 
 def dummy_func(*args, **kwargs):
     return None
+
+
+def get_last_date(trading_calendar, dt):
+    idx = trading_calendar.searchsorted(dt)
+    return trading_calendar[idx - 1]

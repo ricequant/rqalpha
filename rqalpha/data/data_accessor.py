@@ -17,6 +17,7 @@
 import abc
 import datetime
 
+import six
 from six import with_metaclass, iteritems
 import pandas as pd
 import numpy as np
@@ -77,13 +78,28 @@ class DataProxy(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def history(self, order_book_id, bar_count, frequency, field):
+    def history(self, order_book_id, dt, bar_count, frequency, field):
         """get history data
 
         :param str order_book_id:
+        :param datetime dt:
         :param int bar_count:
         :param str frequency: '1d' or '1m'
         :param str field: "open", "close", "high", "low", "volume", "last", "total_turnover"
+        :returns:
+        :rtype: pandas.DataFrame
+
+        """
+        raise NotImplementedError
+
+    def last(self, order_book_id, dt, bar_count, frequency, fields):
+        """get history data, will not fill empty data
+
+        :param str order_book_id:
+        :param datetime dt:
+        :param int bar_count:
+        :param str frequency: '1d' or '1m'
+        :param str/list fields: "open", "close", "high", "low", "volume", "last", "total_turnover"
         :returns:
         :rtype: pandas.DataFrame
 
@@ -107,6 +123,7 @@ class LocalDataProxy(DataProxy):
     def __init__(self, root_dir):
         self._data_source = LocalDataSource(root_dir)
         self._cache = {}
+        self._origin_cache = {}
         self._dividend_cache = {}
 
         self.trading_calendar = self.get_trading_dates("2005-01-01", datetime.date.today())
@@ -122,7 +139,7 @@ class LocalDataProxy(DataProxy):
         instrument = self._data_source.instruments(order_book_id)
         return BarObject(instrument, df.xs(dt.date()))
 
-    def history(self, order_book_id, bar_count, frequency, field):
+    def history(self, order_book_id, dt, bar_count, frequency, field):
         if frequency == '1m':
             raise RuntimeError('Minute bar not supported yet!')
 
@@ -133,13 +150,29 @@ class LocalDataProxy(DataProxy):
             df = self._fill_all_bars(df)
             self._cache[order_book_id] = df
 
-        dt = ExecutionContext.get_current_dt().date()
         i = df.index.searchsorted(dt, side='right')
-        # you can only access yesterday history in before_trading
-        if ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
-            i -= 1
         left = i - bar_count if i >= bar_count else 0
         hist = df[left:i][field]
+
+        return hist
+
+    def last(self, order_book_id, dt, bar_count, frequency, fields):
+        if isinstance(fields, six.string_types):
+            fields = [fields]
+
+        if frequency == '1m':
+            raise RuntimeError('Minute bar not supported yet!')
+
+        try:
+            df = self._origin_cache[order_book_id]
+        except KeyError:
+            df = self._data_source.get_all_bars(order_book_id)
+            df = df[df.volume > 0]
+            self._origin_cache[order_book_id] = df
+
+        i = df.index.searchsorted(dt, side='right')
+        left = i - bar_count if i >= bar_count else 0
+        hist = df[left:i][fields]
 
         return hist
 
