@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等。
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。

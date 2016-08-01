@@ -22,6 +22,7 @@ import shutil
 import datetime
 import tempfile
 import tarfile
+import errno
 
 import pandas as pd
 import click
@@ -121,8 +122,9 @@ def examples(directory):
 
     try:
         shutil.copytree(source_dir, os.path.join(directory, "examples"))
-    except FileExistsError:
-        print("Folder examples is exists.")
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            print("Folder examples is exists.")
 
 
 @cli.command()
