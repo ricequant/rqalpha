@@ -16,6 +16,8 @@
 
 
 from six import iteritems
+import six
+import pandas as pd
 
 from .context import ExecutionContext
 
@@ -43,3 +45,18 @@ def dummy_func(*args, **kwargs):
 def get_last_date(trading_calendar, dt):
     idx = trading_calendar.searchsorted(dt)
     return trading_calendar[idx - 1]
+
+
+def convert_date_to_int(dt):
+    if isinstance(dt, six.string_types):
+        dt = pd.Timestamp(dt)
+
+    t = dt.year * 10000 + dt.month * 100 + dt.day
+    t *= 1000000
+    return t
+
+
+def convert_dt_to_int(dt):
+    t = convert_date_to_int(dt)
+    t += dt.hour * 10000 + dt.minute * 100 + dt.second
+    return t

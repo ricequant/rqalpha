@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
+from functools import partial
 
+import numpy as np
 import pytz
 import six
 
@@ -60,6 +63,8 @@ class LocalDataSource(object):
     def __init__(self, root_dir):
         self._root_dir = root_dir
         import bcolz
+        bcolz.defaults.out_flavor = "numpy"
+
         import os
         import pickle
         self._daily_table = bcolz.open(os.path.join(root_dir, LocalDataSource.DAILY))
@@ -119,7 +124,7 @@ class LocalDataSource(object):
                 break
 
         d = start_date.year * 10000 + start_date.month * 100 + start_date.day
-        return self._yield_curve.fetchwhere('date<={}'.format(d)).cols[self.YIELD_CURVE_TENORS[tenor]][-1] / 10000.0
+        return self._yield_curve.fetchwhere('date<={}'.format(d))[self.YIELD_CURVE_TENORS[tenor]][-1] / 10000.0
 
     def get_dividends(self, order_book_id):
         try:
@@ -127,26 +132,47 @@ class LocalDataSource(object):
         except KeyError:
             return pd.DataFrame()
 
-        dividends = self._dividend.fetchwhere('id=={}'.format(sid))
+        try:
+            dividends = self._dividend.fetchwhere('id=={}'.format(sid))
+        except StopIteration:
+            dividends = defaultdict(partial(np.zeros, 0))
         return pd.DataFrame({
-            'book_closure_date': pd.Index(pd.Timestamp(str(d)) for d in dividends.cols['closure_date']),
-            'ex_dividend_date': pd.Index(pd.Timestamp(str(d)) for d in dividends.cols['ex_date']),
-            'payable_date': pd.Index(pd.Timestamp(str(d)) for d in dividends.cols['payable_date']),
-            'dividend_cash_before_tax': dividends.cols['cash_before_tax'][:] / 10000.0,
-            'round_lot': dividends.cols['round_lot']
-        }, index=pd.Index(pd.Timestamp(str(d)) for d in dividends.cols['announcement_date']))
+            'book_closure_date': pd.Index(pd.Timestamp(str(d)) for d in dividends['closure_date']),
+            'ex_dividend_date': pd.Index(pd.Timestamp(str(d)) for d in dividends['ex_date']),
+            'payable_date': pd.Index(pd.Timestamp(str(d)) for d in dividends['payable_date']),
+            'dividend_cash_before_tax': dividends['cash_before_tax'] / 10000.0,
+            'round_lot': dividends['round_lot']
+        }, index=pd.Index(pd.Timestamp(str(d)) for d in dividends['announcement_date']))
 
     def get_all_bars(self, order_book_id):
         try:
-            sid = self._daily_table.attrs['id_map'][order_book_id]
+            # sid = self._daily_table.attrs['id_map'][order_book_id]
+            start, end = self._daily_table.attrs["line_map"][order_book_id]
         except KeyError:
             raise RuntimeError('No data for {}'.format(order_book_id))
 
-        bars = self._daily_table.fetchwhere('id=={}'.format(sid))
-        return pd.DataFrame({
-            'open': (bars.cols['open'][:] / self.PRICE_SCALE).round(2),
-            'close': (bars.cols['close'][:] / self.PRICE_SCALE).round(2),
-            'high': (bars.cols['high'][:] / self.PRICE_SCALE).round(2),
-            'low': (bars.cols['low'][:] / self.PRICE_SCALE).round(2),
-            'volume': bars.cols['volume'],
-        }, index=pd.Index(pd.Timestamp(str(d)) for d in bars.cols['date']))
+        # bars = self._daily_table.fetchwhere('id=={}'.format(sid))
+        # return pd.DataFrame({
+        #     'open': (bars['open'] / self.PRICE_SCALE).round(2),
+        #     'close': (bars['close'] / self.PRICE_SCALE).round(2),
+        #     'high': (bars['high'] / self.PRICE_SCALE).round(2),
+        #     'low': (bars['low'] / self.PRICE_SCALE).round(2),
+        #     'volume': bars['volume'],
+        # }, index=pd.Index(pd.Timestamp(str(d)) for d in bars['date']))
+
+        bars = self._daily_table[start:end]
+
+        bars = bars[["date", "open", "high", "low", "close", "volume"]]
+        bars = bars.astype([
+                ('date', 'uint64'), ('open', 'float64'),
+                ('high', 'float64'), ('low', 'float64'),
+                ('close', 'float64'), ('volume', 'float64'),
+            ])
+
+        date_col = bars["date"]
+        date_col[:] = 1000000 * date_col
+        for key in ["open", "high", "low", "close"]:
+            col = bars[key]
+            col[:] = np.round(1 / self.PRICE_SCALE * col, 2)
+
+        return bars

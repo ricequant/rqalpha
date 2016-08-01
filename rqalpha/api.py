@@ -380,6 +380,10 @@ def last(order_book_id, bar_count, frequency, field):
     executor = get_strategy_executor()
     data_proxy = get_data_proxy()
 
+    dt = ExecutionContext.get_current_dt().date()
+    if ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+        dt = get_last_date(ExecutionContext.get_trading_params().trading_calendar, dt)
+
     data = data_proxy.last(order_book_id, dt, bar_count, frequency, field)
     return data
 

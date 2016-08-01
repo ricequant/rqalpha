@@ -2,6 +2,7 @@
 
 from pprint import pprint
 
+import numpy as np
 from six import iteritems
 
 from rqalpha import StrategyExecutor
@@ -41,11 +42,13 @@ def test_strategy_load_data(trading_params, data_proxy):
         print("init", context)
         context.stock = "600099.XSHG"
         context.close = []
+        context.dates = []
 
     def before_trading(context, bar_dict):
         pass
 
     def handle_bar(context, bar_dict):
+        context.dates.append(context.now)
         context.close.append(bar_dict[context.stock].close)
 
     executor = StrategyExecutor(
@@ -60,8 +63,9 @@ def test_strategy_load_data(trading_params, data_proxy):
     perf = executor.execute()
 
     assert len(executor.strategy_context.close) == len(trading_params.trading_calendar)
-    assert executor.strategy_context.close[-1] == data_proxy.get_bar(executor.strategy_context.stock,
-                                                                     trading_params.trading_calendar[-1]).close
+    assert np.isclose(executor.strategy_context.close[-1],
+                      data_proxy.get_bar(executor.strategy_context.stock,
+                                         trading_params.trading_calendar[-1]).close)
 
 
 def test_strategy_portfolio(trading_params, data_proxy):

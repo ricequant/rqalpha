@@ -16,25 +16,25 @@
 
 
 class BarObject(object):
-    def __init__(self, instrument, series):
-        self._series = series
+    def __init__(self, instrument, data):
+        self._data = data
         self._instrument = instrument
 
     @property
     def open(self):
-        return self._series.open
+        return self._data["open"]
 
     @property
     def close(self):
-        return self._series.close
+        return self._data["close"]
 
     @property
     def low(self):
-        return self._series.low
+        return self._data["low"]
 
     @property
     def high(self):
-        return self.series.high
+        return self.data["high"]
 
     @property
     def last(self):
@@ -42,11 +42,11 @@ class BarObject(object):
 
     @property
     def volume(self):
-        return self._series.volume
+        return self._data["volume"]
 
     @property
     def datetime(self):
-        return self._series.name
+        return datetime.datetime.strptime(str(self._data["date"]), "%Y%m%d%H%M%S")
 
     @property
     def instrument(self):
@@ -62,7 +62,7 @@ class BarObject(object):
 
     @property
     def is_trading(self):
-        return self._series.volume > 0
+        return self.volume > 0
 
     def mavg(self, intervals, frequency="day"):
         """
