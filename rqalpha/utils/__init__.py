@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import division
+
+import datetime
 
 from six import iteritems
 import six
@@ -60,3 +63,11 @@ def convert_dt_to_int(dt):
     t = convert_date_to_int(dt)
     t += dt.hour * 10000 + dt.minute * 100 + dt.second
     return t
+
+
+def convert_int_to_date(dt_int):
+    dt_int = int(dt_int)
+    year = dt_int // 10000000000
+    month = (dt_int // 100000000) % 100
+    day = (dt_int // 1000000) % 100
+    return datetime.datetime(year, month, day)

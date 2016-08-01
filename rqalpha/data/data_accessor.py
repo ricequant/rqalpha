@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import division
+
 import abc
 import datetime
 
@@ -24,7 +26,7 @@ import numpy as np
 
 from .bar import BarObject
 from ..utils.context import ExecutionContext
-from ..utils import convert_date_to_int
+from ..utils import convert_date_to_int, convert_int_to_date
 from .data_source import LocalDataSource
 from ..const import EXECUTION_PHASE
 
@@ -164,7 +166,7 @@ class LocalDataProxy(DataProxy):
         left = i - bar_count + 1 if i >= bar_count else 0
         bars = bars[left:i + 1]
 
-        series = pd.Series(bars[field], index=[pd.Timestamp(str(t)) for t in bars["date"]])
+        series = pd.Series(bars[field], index=[convert_int_to_date(t) for t in bars["date"]])
 
         return series
 
