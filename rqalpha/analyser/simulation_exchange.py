@@ -315,6 +315,12 @@ class SimuExchange(object):
         cost_money = price * amount
         is_buy = amount > 0
 
+        # check whether is trading
+        if not bar.is_trading:
+            return False, _("Order Rejected: {order_book_id} is not trading.").format(
+                order_book_id=order_book_id,
+            )
+
         # handle limit order
         if self.trading_params.frequency == "1d":
             if isinstance(order.style, LimitOrder):
@@ -347,12 +353,6 @@ class SimuExchange(object):
                 order_book_id=order_book_id,
                 quantity=abs(order.quantity),
                 sellable=position.sellable,
-            )
-
-        # check whether is trading
-        if not bar.is_trading:
-            return False, _("Order Rejected: {order_book_id} is not trading.").format(
-                order_book_id=order_book_id,
             )
 
         # # TODO check whether is limit up or limit down
