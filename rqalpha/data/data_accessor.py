@@ -130,8 +130,10 @@ class LocalDataProxy(DataProxy):
         self._dividend_cache = {}
 
         self.trading_calendar = self.get_trading_dates("2005-01-01", datetime.date.today())
-        self.trading_calender_int = np.array(
+        trading_calender_int = np.array(
             [int(t.strftime("%Y%m%d000000")) for t in self.trading_calendar], dtype="<u8")
+        self.trading_calender_int = trading_calender_int[
+            trading_calender_int <= convert_date_to_int(datetime.date.today())]
 
     def get_bar(self, order_book_id, dt):
         try:
@@ -178,7 +180,9 @@ class LocalDataProxy(DataProxy):
             bars = self._origin_cache[order_book_id]
         except KeyError:
             bars = self._data_source.get_all_bars(order_book_id)
-            bars = bars[bars["volume"] > 0]
+            # volume bug in data bundle, so I have to skip it
+            if order_book_id not in ["000001.XSHG"]:
+                bars = bars[bars["volume"] > 0]
             self._origin_cache[order_book_id] = bars
 
         dt = convert_date_to_int(dt)
@@ -214,7 +218,6 @@ class LocalDataProxy(DataProxy):
 
     def _fill_all_bars(self, bars):
         trading_calender_int = self.trading_calender_int
-        trading_calender_int = trading_calender_int[trading_calender_int <= 20160728000000]
 
         # prepend
         prepend_date = trading_calender_int[:trading_calender_int.searchsorted(bars[0]["date"])]

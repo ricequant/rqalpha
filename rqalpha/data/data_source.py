@@ -152,6 +152,7 @@ class LocalDataSource(object):
             raise RuntimeError('No data for {}'.format(order_book_id))
 
         # bars = self._daily_table.fetchwhere('id=={}'.format(sid))
+
         # return pd.DataFrame({
         #     'open': (bars['open'] / self.PRICE_SCALE).round(2),
         #     'close': (bars['close'] / self.PRICE_SCALE).round(2),
@@ -159,6 +160,8 @@ class LocalDataSource(object):
         #     'low': (bars['low'] / self.PRICE_SCALE).round(2),
         #     'volume': bars['volume'],
         # }, index=pd.Index(pd.Timestamp(str(d)) for d in bars['date']))
+
+        # from ipdb import set_trace ; set_trace()
 
         bars = self._daily_table[start:end]
 

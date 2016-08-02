@@ -51,9 +51,6 @@ def get_last_date(trading_calendar, dt):
 
 
 def convert_date_to_int(dt):
-    if isinstance(dt, six.string_types):
-        dt = pd.Timestamp(dt)
-
     t = dt.year * 10000 + dt.month * 100 + dt.day
     t *= 1000000
     return t
