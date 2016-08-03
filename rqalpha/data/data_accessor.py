@@ -18,17 +18,14 @@ from __future__ import division
 
 import abc
 import datetime
-
-import six
-from six import with_metaclass, iteritems
 import pandas as pd
 import numpy as np
+from six import with_metaclass, string_types
 
 from .bar import BarObject
 from ..utils.context import ExecutionContext
 from ..utils import convert_date_to_int, convert_int_to_date
 from .data_source import LocalDataSource
-from ..const import EXECUTION_PHASE
 
 
 class DataProxy(with_metaclass(abc.ABCMeta)):
@@ -143,7 +140,7 @@ class LocalDataProxy(DataProxy):
             bars = self._fill_all_bars(bars)
             self._cache[order_book_id] = bars
 
-        if isinstance(dt, six.string_types):
+        if isinstance(dt, string_types):
             dt = pd.Timestamp(dt)
 
         instrument = self._data_source.instruments(order_book_id)

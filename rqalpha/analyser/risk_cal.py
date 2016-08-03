@@ -16,11 +16,10 @@
 
 
 from __future__ import division
-import copy
-from collections import OrderedDict
 
-import pandas as pd
+import copy
 import numpy as np
+from collections import OrderedDict
 
 from .risk import Risk
 from .. import const

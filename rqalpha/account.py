@@ -16,8 +16,7 @@
 
 
 import datetime
-import copy
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 from .analyser.portfolio import Portfolio
 from .analyser.commission import AStockCommission, BaseCommission

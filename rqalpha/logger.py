@@ -15,9 +15,7 @@
 # limitations under the License.
 
 
-import sys
-
-from logbook import Logger, StreamHandler, StderrHandler
+from logbook import Logger
 from logbook.more import ColorizedStderrHandler
 
 from .utils import ExecutionContext

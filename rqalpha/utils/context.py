@@ -16,7 +16,6 @@
 
 
 from functools import wraps
-
 from contextlib import contextmanager
 
 from ..i18n import gettext as _

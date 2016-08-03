@@ -15,8 +15,7 @@
 # limitations under the License.
 
 import abc
-
-from six import with_metaclass, iteritems
+from six import with_metaclass
 
 
 class BaseSlippageDecider(with_metaclass(abc.ABCMeta)):

@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+import six
+import pandas as pd
 from collections import defaultdict
 from functools import partial
 
-import numpy as np
-import pytz
-import six
-
-import pandas as pd
 from ..instruments import Instrument
 
 

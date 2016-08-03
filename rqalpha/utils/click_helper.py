@@ -15,8 +15,6 @@
 # limitations under the License.
 
 
-import datetime
-
 import click
 import pandas as pd
 

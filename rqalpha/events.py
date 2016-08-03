@@ -15,9 +15,6 @@
 # limitations under the License.
 
 
-import pytz
-from enum import Enum
-
 from .const import EVENT_TYPE
 
 

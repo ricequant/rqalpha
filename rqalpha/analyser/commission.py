@@ -16,8 +16,7 @@
 
 
 import abc
-
-from six import with_metaclass, iteritems
+from six import with_metaclass
 
 
 class BaseCommission(with_metaclass(abc.ABCMeta)):

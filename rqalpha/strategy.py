@@ -16,11 +16,8 @@
 
 
 import copy
-import sys
-
 import click
 import six
-from six import print_
 from six import iteritems
 import pandas as pd
 

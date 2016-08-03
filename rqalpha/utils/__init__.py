@@ -17,10 +17,7 @@
 from __future__ import division
 
 import datetime
-
 from six import iteritems
-import six
-import pandas as pd
 
 from .context import ExecutionContext
 
