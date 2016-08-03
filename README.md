@@ -37,7 +37,7 @@ pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com -U 
 ### For Windows用户
 如果出现缺失`cl.exe`，请访问[https://wiki.python.org/moin/WindowsCompilers](https://wiki.python.org/moin/WindowsCompilers)下载VC并且安装。
 
-如果在安装`bcloz`出现编译困难，可以从[http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz](http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz)下载`bcolz`安装，安装`bcloz`后，再安装`rqalpha`。
+如果在安装`bcolz`出现编译困难，可以从[http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz](http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz)下载`bcolz`安装，安装`bcolz`后，再安装`rqalpha`。
 
 ## 安装依赖
 
