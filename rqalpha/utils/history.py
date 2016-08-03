@@ -31,8 +31,8 @@ class HybridDataFrame(pd.DataFrame):
 
     def __getitem__(self, key):
         try:
-            return self._cache[key]
-            # return super(HybridDataFrame, self).__getitem__(key)
+            # return self._cache[key]
+            return super(HybridDataFrame, self).__getitem__(key)
         except KeyError as e:
             if not isinstance(key, str) or self.missing_handler is None:
                 raise
@@ -40,8 +40,8 @@ class HybridDataFrame(pd.DataFrame):
                 rv = self.missing_handler(key)
             except KeyError:
                 raise e
-            # self[key] = rv
-            self._cache[key] = rv
+            self[key] = rv
+            # self._cache[key] = rv
             return rv
 
 

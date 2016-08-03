@@ -226,14 +226,14 @@ class LocalDataProxy(DataProxy):
         dates[:] = prepend_date
 
         # append
-        append_date = trading_calender_int[trading_calender_int.searchsorted(bars[-1]["date"]):]
+        append_date = trading_calender_int[trading_calender_int.searchsorted(bars[-1]["date"]) + 1:]
         append_bars = np.zeros(len(append_date), dtype=bars.dtype)
         dates = append_bars["date"]
         dates[:] = append_date
 
         for key in ["open", "high", "low", "close"]:
             col = append_bars[key]
-            col[:] = bars[-1][key]
+            col[:] = bars[-1][key]  # fill with bars's last bar
 
         # fill bars
         new_bars = np.concatenate([prepend_bars, bars, append_bars])

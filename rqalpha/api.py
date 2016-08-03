@@ -29,10 +29,13 @@ from .utils.history import HybridDataFrame, missing_handler
 from .i18n import gettext as _
 from .scheduler import scheduler
 from .const import EXECUTION_PHASE
+from .analyser.order_style import MarketOrder, LimitOrder
 
 
 __all__ = [
-    'scheduler'
+    'scheduler',
+    'LimitOrder',
+    'MarketOrder',
 ]
 
 
@@ -364,7 +367,7 @@ def history(bar_count, frequency, field):
         dt = get_last_date(ExecutionContext.get_trading_params().trading_calendar, dt)
 
     # This make history slow
-    for order_book_id in list(executor.current_universe)[:1]:
+    for order_book_id in list(executor.current_universe):
         hist = data_proxy.history(order_book_id, dt, bar_count, frequency, field)
         results[order_book_id] = hist
 
