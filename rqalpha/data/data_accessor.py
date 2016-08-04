@@ -177,9 +177,7 @@ class LocalDataProxy(DataProxy):
             bars = self._origin_cache[order_book_id]
         except KeyError:
             bars = self._data_source.get_all_bars(order_book_id)
-            # volume bug in data bundle, so I have to skip it
-            if order_book_id not in ["000001.XSHG"]:
-                bars = bars[bars["volume"] > 0]
+            bars = bars[bars["volume"] > 0]
             self._origin_cache[order_book_id] = bars
 
         dt = convert_date_to_int(dt)

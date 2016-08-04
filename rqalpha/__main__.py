@@ -192,11 +192,12 @@ def run_strategy(source_code, strategy_filename, start_date, end_date,
         print_("data bundle might crash. Run `%s update_bundle` to redownload data bundle." % sys.argv[0])
         sys.exit()
 
-    dates = data_proxy.last("000001.XSHE", end_date, 10, "1d", "date")
+    # FIXME set end_date to latest data's date
+    dates = data_proxy.last("000001.XSHG", end_date, 10, "1d", "date")
     end_date = min(convert_int_to_date(dates[-1]), end_date)
 
     trading_cal = data_proxy.get_trading_dates(start_date, end_date)
-    Scheduler.set_trading_dates(data_proxy.get_trading_dates(start_date, datetime.date.today()))
+    Scheduler.set_trading_dates(data_proxy.get_trading_dates(start_date, end_date.date()))
     trading_params = TradingParams(trading_cal, start_date=start_date.date(), end_date=end_date.date(),
                                    init_cash=init_cash, show_progress=show_progress)
 
