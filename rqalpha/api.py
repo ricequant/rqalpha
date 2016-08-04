@@ -33,9 +33,9 @@ from .analyser.order_style import MarketOrder, LimitOrder
 
 
 __all__ = [
-    'scheduler',
-    'LimitOrder',
-    'MarketOrder',
+    scheduler.__name__,
+    LimitOrder.__name__,
+    MarketOrder.__name__
 ]
 
 
