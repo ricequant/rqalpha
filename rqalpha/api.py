@@ -24,7 +24,7 @@ import six
 
 from .instruments import Instrument
 from .logger import user_log
-from .utils import ExecutionContext
+from .utils import ExecutionContext, get_last_date
 from .utils.history import HybridDataFrame, missing_handler
 from .i18n import gettext as _
 from .scheduler import scheduler
@@ -135,7 +135,7 @@ def order_lots(id_or_ins, amount, style=None):
                                 EXECUTION_PHASE.SCHEDULED)
 def order_value(id_or_ins, cash_amount, style=None):
     """
-    Place ann order by specified value amount rather than specific number
+    Place an order by specified value amount rather than specific number
         of shares/lots. Negative cash_amount results in selling the given
         amount of value, if the cash_amount is larger than you current
         security’s position, then it will sell all shares of this security.
