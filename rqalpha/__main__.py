@@ -188,9 +188,10 @@ def run_strategy(source_code, strategy_filename, start_date, end_date,
 
     try:
         data_proxy = LocalDataProxy(data_bundle_path)
-    except FileNotFoundError:
-        print_("data bundle might crash. Run `%s update_bundle` to redownload data bundle." % sys.argv[0])
-        sys.exit()
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            print_("data bundle might crash. Run `%s update_bundle` to redownload data bundle." % sys.argv[0])
+            sys.exit()
 
     # FIXME set end_date to latest data's date
     dates = data_proxy.last("000001.XSHG", end_date, 10, "1d", "date")

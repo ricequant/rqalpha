@@ -112,7 +112,8 @@ Options:
 运行以下命令，将开始回测
 
 ```
-rqalpha run -f examples/multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot
+cd examples
+rqalpha run -f multi_rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot
 ```
 
 等待回测结束后，将显示您的收益率和Risk。
