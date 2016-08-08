@@ -944,6 +944,9 @@ source venv/bin/activate
 pip install -e .
 ```
 
+## 单步调试策略
+可以参考wiki，[使用PyCharm进行单步调试](https://github.com/ricequant/rqalpha/wiki/%E4%BD%BF%E7%94%A8PyCharm%E8%BF%9B%E8%A1%8C%E5%8D%95%E6%AD%A5%E8%B0%83%E8%AF%95)。
+
 ## 运行单元测试
 ```
 py.test

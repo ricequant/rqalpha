@@ -125,7 +125,7 @@ def examples(directory):
         shutil.copytree(source_dir, os.path.join(directory, "examples"))
     except OSError as e:
         if e.errno == errno.EEXIST:
-            print("Folder examples is exists.")
+            print_("Folder examples is exists.")
 
 
 @cli.command()
