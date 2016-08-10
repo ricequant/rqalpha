@@ -17,6 +17,7 @@ RQAlpha的逻辑也将会在[Ricequant](https://www.ricequant.com)的一些回�
 - 可以使用Python的统计、机器学习等科学计算库如matplotlib, scipy, statsmodels和sklearn等
 - 免费提供了Ricequant的日级别数据，可以通过互联网自己更新data bundle
 - 同时支持Python2.7和Python3
+- 目前仅支持A股股票，暂时不支持ETF、分级等数据
 
 ## 安装
 
