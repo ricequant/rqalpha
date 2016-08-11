@@ -96,7 +96,8 @@ def order_shares(id_or_ins, amount, style=None):
         ))
         return
 
-    amount = int(amount) // 100 * 100
+    round_lot = int(get_data_proxy().instrument(order_book_id).round_lot)
+    amount = int(amount) // round_lot * round_lot
 
     if not isinstance(id_or_ins, six.string_types):
         raise NotImplementedError
@@ -126,7 +127,9 @@ def order_lots(id_or_ins, amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    return order_shares(id_or_ins, amount * 100, style)
+    round_lot = int(get_data_proxy().instrument(order_book_id).round_lot)
+
+    return order_shares(id_or_ins, amount * round_lot, style)
 
 
 @check_is_trading
@@ -158,7 +161,8 @@ def order_value(id_or_ins, cash_amount, style=None):
     # TODO market order might be different
     bar_dict = ExecutionContext.get_current_bar_dict()
     price = bar_dict[order_book_id].close
-    amount = ((cash_amount // price) // 100) * 100
+    round_lot = int(get_data_proxy().instrument(order_book_id).round_lot)
+    amount = ((cash_amount // price) // round_lot) * round_lot
 
     # if the cash_amount is larger than you current security’s position,
     # then it will sell all shares of this security.

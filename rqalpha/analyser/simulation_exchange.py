@@ -327,7 +327,7 @@ class SimuExchange(object):
             raise NotImplementedError
 
         # check amount
-        if abs(amount) < 100:
+        if abs(amount) < int(self.data_proxy.instrument(order_book_id).round_lot):
             return False, _("Order Rejected: amount must over 100 for {order_book_id} ").format(
                 order_book_id=order_book_id,
             )
