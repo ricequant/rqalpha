@@ -21,7 +21,14 @@ from six import with_metaclass
 
 class BaseCommission(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
-    def get_commission(self, data_proxy, order):
+    def get_commission(self, order, trade):
+        """get commission
+
+        :param order:
+        :param trade:
+        :returns: commission for current trade
+        :rtype: float
+        """
         raise NotImplementedError
 
 
