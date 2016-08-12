@@ -127,9 +127,14 @@ def order_lots(id_or_ins, amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
+    if isinstance(id_or_ins, Instrument):
+        order_book_id = id_or_ins.order_book_id
+    else:
+        order_book_id = id_or_ins
+
     round_lot = int(get_data_proxy().instrument(order_book_id).round_lot)
 
-    return order_shares(id_or_ins, amount * round_lot, style)
+    return order_shares(order_book_id, amount * round_lot, style)
 
 
 @check_is_trading
@@ -171,7 +176,7 @@ def order_value(id_or_ins, cash_amount, style=None):
         if abs(amount) > position.sellable:
             amount = -position.sellable
 
-    return order_shares(id_or_ins, amount, style)
+    return order_shares(order_book_id, amount, style)
 
 
 @check_is_trading
