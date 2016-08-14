@@ -48,10 +48,8 @@ def check_is_trading(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         id_or_ins = args[0]
-        if isinstance(id_or_ins, Instrument):
-            order_book_id = id_or_ins.order_book_id
-        else:
-            order_book_id = id_or_ins
+
+        order_book_id = assure_order_book_id(id_or_ins)
 
         bar_dict = ExecutionContext.get_current_bar_dict()
         if not bar_dict[order_book_id].is_trading:
@@ -85,10 +83,7 @@ def order_shares(id_or_ins, amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
-    else:
-        order_book_id = id_or_ins
+    order_book_id = assure_order_book_id(id_or_ins)
 
     if amount == 0:
         user_log.error(_("order_shares {order_book_id} amount is 0.").format(
@@ -98,9 +93,6 @@ def order_shares(id_or_ins, amount, style=None):
 
     round_lot = int(get_data_proxy().instrument(order_book_id).round_lot)
     amount = int(amount) // round_lot * round_lot
-
-    if not isinstance(id_or_ins, six.string_types):
-        raise NotImplementedError
 
     bar_dict = ExecutionContext.get_current_bar_dict()
     order = get_simu_exchange().create_order(bar_dict, order_book_id, amount, style)
@@ -127,10 +119,7 @@ def order_lots(id_or_ins, amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
-    else:
-        order_book_id = id_or_ins
+    order_book_id = assure_order_book_id(id_or_ins)
 
     round_lot = int(get_data_proxy().instrument(order_book_id).round_lot)
 
@@ -158,10 +147,7 @@ def order_value(id_or_ins, cash_amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
-    else:
-        order_book_id = id_or_ins
+    order_book_id = assure_order_book_id(id_or_ins)
 
     # TODO market order might be different
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -229,10 +215,7 @@ def order_target_value(id_or_ins, cash_amount, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
-    else:
-        order_book_id = id_or_ins
+    order_book_id = assure_order_book_id(id_or_ins)
 
     # TODO market order might be different
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -270,10 +253,7 @@ def order_target_percent(id_or_ins, percent, style=None):
     :return:  A unique order id.
     :rtype: int
     """
-    if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
-    else:
-        order_book_id = id_or_ins
+    order_book_id = assure_order_book_id(id_or_ins)
 
     # TODO market order might be different
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -439,3 +419,14 @@ def get_current_dt():
 
 def get_data_proxy():
     return ExecutionContext.get_strategy_executor().data_proxy
+
+
+def assure_order_book_id(id_or_ins):
+    if isinstance(id_or_ins, Instrument):
+        order_book_id = id_or_ins.order_book_id
+    elif isinstance(id_or_ins, six.string_types):
+        order_book_id = id_or_ins
+    else:
+        raise NotImplementedError
+
+    return order_book_id
