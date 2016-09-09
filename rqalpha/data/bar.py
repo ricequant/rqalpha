@@ -36,7 +36,7 @@ class BarObject(object):
 
     @property
     def high(self):
-        return self.data["high"]
+        return self._data["high"]
 
     @property
     def last(self):
