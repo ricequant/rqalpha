@@ -95,7 +95,7 @@ class RiskCal(object):
         risk.volatility = self.cal_volatility()
         risk.max_drawdown = self.cal_max_drawdown()
         risk.tracking_error = self.cal_tracking_error()
-        risk.information_rate = self.cal_information_rate(risk.volatility)
+        risk.information_rate = self.cal_information_rate(risk.tracking_error)
         risk.downside_risk = self.cal_downside_risk()
         risk.beta = self.cal_beta()
         risk.alpha = self.cal_alpha()
@@ -123,16 +123,16 @@ class RiskCal(object):
         return ((diff * diff).sum() / len(diff)) ** 0.5 * const.DAYS_CNT.TRADING_DAYS_A_YEAR ** 0.5
 
     def cal_information_rate(self, volatility):
-        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
-        benchmark_rets = self.benchmark_current_daily_returns.sum() / len(self.benchmark_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        strategy_rets = self.strategy_current_annualized_returns[-1]
+        benchmark_rets = self.benchmark_current_annualized_returns[-1]
 
         return (strategy_rets - benchmark_rets) / volatility
 
     def cal_alpha(self):
         beta = self.risk.beta
 
-        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
-        benchmark_rets = self.benchmark_current_daily_returns.sum() / len(self.benchmark_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        strategy_rets = self.strategy_current_annualized_returns[-1]
+        benchmark_rets = self.benchmark_current_annualized_returns[-1]
 
         alpha = strategy_rets - (self.riskfree_total_returns + beta * (benchmark_rets - self.riskfree_total_returns))
         return alpha
@@ -150,14 +150,14 @@ class RiskCal(object):
 
     def cal_sharpe(self):
         volatility = self.risk.volatility
-        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        strategy_rets = self.strategy_current_annualized_returns[-1]
 
         sharpe = (strategy_rets - self.riskfree_total_returns) / volatility
 
         return sharpe
 
     def cal_sortino(self):
-        strategy_rets = self.strategy_current_daily_returns.sum() / len(self.strategy_current_daily_returns) * const.DAYS_CNT.TRADING_DAYS_A_YEAR
+        strategy_rets = self.strategy_current_annualized_returns[-1]
         downside_risk = self.risk.downside_risk
 
         sortino = (strategy_rets - self.riskfree_total_returns) / downside_risk

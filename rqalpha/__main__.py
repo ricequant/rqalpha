@@ -140,10 +140,13 @@ def plot(result_file):
 @cli.command()
 @click.argument('result', type=click.Path(exists=True), required=True)
 @click.argument('csv-file', type=click.Path(), required=True)
-def report(result, csv_file):
-    '''generate report from backtest output file
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
+def report(result, csv_file, data_bundle_path):
+    '''generate csv report from backtest output file
     '''
     result_df = pd.read_pickle(result)
+
+    data_proxy = LocalDataProxy(data_bundle_path)
 
     csv_txt = StringIO()
 
@@ -155,6 +158,9 @@ def report(result, csv_file):
         for t in trades:
             trade = dict(t.__dict__)
             trade.pop("order_id")
+            order_book_id = trade["order_book_id"]
+            instrument = data_proxy.instrument(order_book_id)
+            trade["order_book_id"] = "{}({})".format(order_book_id, instrument.symbol)
             trade["date"] = trade["date"].strftime("%Y-%m-%d %H:%M:%S")
             writer.writerow(trade)
 
@@ -165,9 +171,10 @@ def report(result, csv_file):
     for _dt, positions in result_df.positions.iteritems():
         dt = _dt.strftime("%Y-%m-%d %H:%M:%S")
         for order_book_id, position in iteritems(positions):
+            instrument = data_proxy.instrument(order_book_id)
             writer.writerow({
                 "date": dt,
-                "order_book_id": order_book_id,
+                "order_book_id": "{}({})".format(order_book_id, instrument.symbol),
                 "market_value": position.market_value,
                 "quantity": position.quantity,
             })
