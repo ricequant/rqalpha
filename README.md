@@ -8,7 +8,7 @@ RQAlpha是一个开源的Python算法交易和回测引擎，适合A股市场，
 
 RQAlpha的逻辑也将会在[Ricequant](https://www.ricequant.com)的一些回测部分使用，[Ricequant](https://www.ricequant.com)  - 是一个开放的量化算法交易社区，有免费的服务器资源给大家测试、实盘模拟您的交易算法，并且可以将交易信号通过微信和邮件实时推送给大家, 如果您想要更好的回测报告体验和实盘模拟交易功能可以把本地写好的策略复制黏贴到我们的网站上运行。
 
-如果您想参与和贡献进来这个项目，可以发邮件给 public@ricequant.com 联系，如果您有功能需求或者bug报告的话，都可以开一个issue：https://github.com/ricequant/rqalpha/issues
+如果您想参与和贡献进来这个项目，可以发邮件给 public@ricequant.com 联系，或者加入QQ群「487188429」，如果您有功能需求或者bug报告的话，都可以开一个issue：https://github.com/ricequant/rqalpha/issues
 
 ## 特色
 
