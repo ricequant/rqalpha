@@ -94,6 +94,10 @@ Extra
    :hidden:
 
    faq
+   history
 
 :doc:`faq`
     FAQ
+
+:doc:`history`
+    更新日志
