@@ -53,18 +53,10 @@ RQAlpha API
    :hidden:
 
    api/base_api
-   api/stock_api
-   api/future_api
    api/extend_api
 
 :doc:`api/base_api`
     基础API(期货股票公用API)
-
-:doc:`api/stock_api`
-    只适用于股票的API
-
-:doc:`api/future_api`
-    只适用于期货的API
 
 :doc:`api/extend_api`
     扩展API(开源版暂不支持，可以通过Ricequant平台或者商业版使用)
