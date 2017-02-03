@@ -1,10 +1,10 @@
 
 =================================
-RQAlpha documentation instruction
+RQAlpha Documentation Instruction
 =================================
 
 
-RQAlpha使用Sphinx进行文档编写。
+RQAlpha 使用 Sphinx 进行文档编写。
 
 
 Requirements
@@ -15,9 +15,9 @@ Requirements
 *   sphinx_rtd_theme
 
 
-```
-pip install Sphinx watchdog sphinx_rtd_theme
-```
+::
+
+    pip install Sphinx watchdog sphinx_rtd_theme
 
 Usage
 -----
