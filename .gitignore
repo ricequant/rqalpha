@@ -4,3 +4,17 @@ dist/
 .idea
 __pycache__
 algoengine.iml
+rqalpha.system.log
+*.bcolz
+*.pk
+*.h5
+.vscode
+.idea
+*.c
+*.so
+build/
+bundle/
+bundle
+persist/
+.coverage
+rqalpha_test_coverage_report/
