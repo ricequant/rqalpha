@@ -757,80 +757,658 @@ Order
     .. py:attribute:: order_id
 
         【int】唯一标识订单的id
-        
+
     .. py:attribute:: order_book_id
 
         【str】合约代码
-        
+
     .. py:attribute:: datetime
 
         【datetime.datetime】订单创建时间
-        
+
     .. py:attribute:: side
 
         【SIDE】订单方向
-        
+
     .. py:attribute:: price
 
         【float】订单价格，只有在订单类型为'限价单'的时候才有意义
-        
+
     .. py:attribute:: quantity
 
         【int】订单数量
-        
+
     .. py:attribute:: filled_quantity
 
         【int】订单已成交数量
-        
+
     .. py:attribute:: unfilled_quantity
 
         【int】订单未成交数量
-        
+
     .. py:attribute:: type
 
         【ORDER_TYPE】订单类型
-        
+
     .. py:attribute:: transaction_cost
 
         【float】费用
-        
+
     .. py:attribute:: avg_price
 
         【float】成交均价
-        
+
     .. py:attribute:: status
 
         【ORDER_STATUS】订单状态
-        
+
     .. py:attribute:: message
 
         【str】信息。比如拒单时候此处会提示拒单原因
-        
+
     .. py:attribute:: trading_datetime
 
         【datetime.datetime】订单的交易日期（对应期货夜盘）
-        
+
     .. py:attribute:: position_effect
 
         【POSITION_EFFECT】订单开平（期货专用）
-        
+
+MixedPortfolio
+------------------------------------------------------
+
+.. py:class:: MixedPortfolio
+
+    .. py:attribute:: starting_cash
+
+        【float】初始资金，为子组合初始资金的加总
+
+    .. py:attribute:: cash
+
+        【float】可用资金，为子组合可用资金的加总
+
+    .. py:attribute:: frozen_cash
+
+        【float】冻结资金
+
+    .. py:attribute:: total_returns
+
+        【float】投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
+
+    .. py:attribute:: daily_returns
+
+        【float】投资组合每日收益率
+
+    .. py:attribute:: daily_pnl
+
+        【float】当日盈亏，子组合当日盈亏的加总
+
+    .. py:attribute:: market_value
+
+        【float】投资组合当前的市场价值，为子组合市场价值的加总
+
+    .. py:attribute:: portfolio_value
+
+        【float】总权益，为子组合总权益加总
+
+    .. py:attribute:: transaction_cost
+
+        【float】总费用
+
+    .. py:attribute:: pnl
+
+        【float】当前投资组合的累计盈亏
+
+    .. py:attribute:: start_date
+
+        【datetime.datetime】策略投资组合的回测/实时模拟交易的开始日期
+
+    .. py:attribute:: annualized_returns
+
+        【float】投资组合的年化收益率
+
+    .. py:attribute:: positions
+
+        【dict】一个包含所有仓位的字典，以order_book_id作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
+
+StockPortfolio
+------------------------------------------------------
+
+.. py:class:: StockPortfolio
+
+    .. py:attribute:: starting_cash
+
+        【float】回测或实盘交易给算法策略设置的初始资金
+    
+    .. py:attribute:: cash
+
+        【float】可用资金
+    
+    .. py:attribute:: frozen_cash
+
+        【float】冻结资金
+    
+    .. py:attribute:: total_returns
+
+        【float】投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
+    
+    .. py:attribute:: daily_returns
+
+        【float】当前最新一天的每日收益
+    
+    .. py:attribute:: daily_pnl
+
+        【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
+    
+    .. py:attribute:: market_value
+
+        【float】投资组合当前所有证券仓位的市值的加总
+    
+    .. py:attribute:: portfolio_value
+
+        【float】总权益，包含市场价值和剩余现金
+    
+    .. py:attribute:: transaction_cost
+
+        【float】总费用
+    
+    .. py:attribute:: pnl
+
+        【float】当前投资组合的累计盈亏
+    
+    .. py:attribute:: start_date
+
+        【datetime.datetime】策略投资组合的回测/实时模拟交易的开始日期
+    
+    .. py:attribute:: annualized_returns
+
+        【float】投资组合的年化收益率
+    
+    .. py:attribute:: positions
+
+        【dict】一个包含股票子组合仓位的字典，以order_book_id作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
+    
+    .. py:attribute:: dividend_receivable
+
+        【float】投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
+
+FuturePortfolio
+------------------------------------------------------
+
+.. py:class:: FuturePortfolio
+
+    .. py:attribute:: starting_cash
+
+        【float】初始资金
+    
+    .. py:attribute:: cash
+
+        【float】可用资金
+    
+    .. py:attribute:: frozen_cash
+
+        【float】冻结资金
+    
+    .. py:attribute:: total_returns
+
+        【float】投资组合至今的累积收益率，当前总权益/初始资金
+    
+    .. py:attribute:: daily_returns
+
+        【float】当日收益率 = 当日收益 / 昨日总权益
+    
+    .. py:attribute:: market_value
+
+        【float】投资组合当前所有期货仓位的名义市值的加总
+    
+    .. py:attribute:: daily_pnl
+
+        【float】当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
+    
+    .. py:attribute:: daily_holding_pnl
+
+        【float】当日浮动盈亏
+    
+    .. py:attribute:: daily_realized_pnl
+
+        【float】当日平仓盈亏
+    
+    .. py:attribute:: portfolio_value
+
+        【float】总权益，昨日总权益+当日盈亏
+    
+    .. py:attribute:: transaction_cost
+
+        【float】总费用
+    
+    .. py:attribute:: pnl
+
+        【float】累计盈亏，当前投资组合总权益-初始资金
+    
+    .. py:attribute:: start_date
+
+        【Date】回测开始日期
+    
+    .. py:attribute:: annualized_returns
+
+        【float】投资组合的年化收益率
+    
+    .. py:attribute:: positions
+
+        【dict】一个包含期货子组合仓位的字典，以order_book_id作为键，position对象作为值
+    
+    .. py:attribute:: margin
+
+        【float】已占用保证金
+    
+    .. py:attribute:: buy_margin
+
+        【float】多头保证金
+    
+    .. py:attribute:: sell_margin
+
+        【float】空头保证金
+
+StockPosition
+------------------------------------------------------
+
+.. py:class:: StockPosition
+
+    .. py:attribute:: order_book_id
+
+        【str】合约代码
+    
+    .. py:attribute:: quantity
+
+        【int】当前持仓股数
+    
+    .. py:attribute:: pnl
+
+        【float】持仓累计盈亏
+    
+    .. py:attribute:: bought_quantity
+
+        【int】该证券的总买入股数，例如：如果你的投资组合并没有任何平安银行的成交，那么平安银行这个股票的仓位就是0
+    
+    .. py:attribute:: sold_quantity
+
+        【int】该证券的总卖出股数，例如：如果你的投资组合曾经买入过平安银行股票200股并且卖出过100股，那么这个属性会返回100
+    
+    .. py:attribute:: bought_value
+
+        【float】该证券的总买入的价值，等于每一个该证券的 买入成交价 * 买入股数 总和
+    
+    .. py:attribute:: sold_value
+
+        【float】该证券的总卖出价值，等于每一个该证券的 卖出成交价 * 卖出股数 总和
+    
+    .. py:attribute:: total_orders
+
+        【int】该仓位的总订单的次数
+    
+    .. py:attribute:: total_trades
+
+        【int】该仓位的总成交的次数
+    
+    .. py:attribute:: sellable
+
+        【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓-今日买入的仓位
+    
+    .. py:attribute:: avg_price
+
+        【float】获得该持仓的买入均价，计算方法为每次买入的数量做加权平均
+    
+    .. py:attribute:: market_value
+
+        【float】获得该持仓的实时市场价值
+    
+    .. py:attribute:: value_percent
+
+        【float】获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
+
+FuturePosition
+------------------------------------------------------
+
+.. py:class:: FuturePosition
+
+    .. py:attribute:: order_book_id
+
+        【str】合约代码
+
+    .. py:attribute:: pnl
+
+        【float】累计盈亏
+
+    .. py:attribute:: daily_pnl
+
+        【float】当日盈亏，当日浮动盈亏+当日平仓盈亏
+
+    .. py:attribute:: daily_holding_pnl
+
+        【float】当日持仓盈亏
+
+    .. py:attribute:: daily_realized_pnl
+
+        【float】当日平仓盈亏
+
+    .. py:attribute:: transaction_cost
+
+        【float】仓位交易费用
+
+    .. py:attribute:: margin
+
+        【float】仓位总保证金
+
+    .. py:attribute:: market_value
+
+        【float】当前仓位的名义价值。如果当前净持仓为空方向持仓，则名义价值为负
+
+    .. py:attribute:: buy_daily_pnl
+
+        【float】多头仓位当日盈亏
+
+    .. py:attribute:: buy_pnl
+
+        【float】多头仓位累计盈亏
+
+    .. py:attribute:: buy_transaction_cost
+
+        【float】多头费用
+
+    .. py:attribute:: closable_buy_quantity
+
+        【float】可平多头持仓
+
+    .. py:attribute:: buy_margin
+
+        【float】多头持仓占用保证金
+
+    .. py:attribute:: buy_today_quantity
+
+        【int】多头今仓
+
+    .. py:attribute:: buy_quantity
+
+        【int】多头持仓
+
+    .. py:attribute:: buy_avg_open_price
+
+        【float】多头开仓均价
+
+    .. py:attribute:: buy_avg_holding_price
+
+        【float】多头持仓均价
+
+    .. py:attribute:: sell_daily_pnl
+
+        【float】空头仓位当日盈亏
+
+    .. py:attribute:: sell_pnl
+
+        【float】空头仓位累计盈亏
+
+    .. py:attribute:: sell_transaction_cost
+
+        【float】空头费用
+
+    .. py:attribute:: closable_sell_quantity
+
+        【int】可平空头持仓
+
+    .. py:attribute:: sell_margin
+
+        【float】空头持仓占用保证金
+
+    .. py:attribute:: sell_today_quantity
+
+        【int】空头今仓
+
+    .. py:attribute:: sell_quantity
+
+        【int】空头持仓
+
+    .. py:attribute:: sell_avg_open_price
+
+        【float】空头开仓均价
+
+    .. py:attribute:: sell_avg_holding_price
+
+        【float】空头持仓均价
+
+StockInstrument
+------------------------------------------------------
+
+.. py:class:: StockInstrument
+
+    .. py:attribute:: order_book_id
+
+        【str】证券代码，证券的独特的标识符。应以'.XSHG'或'.XSHE'结尾，前者代表上证，后者代表深证
+    
+    .. py:attribute:: symbol
+
+        【str】证券的简称，例如'平安银行'
+    
+    .. py:attribute:: abbrev_symbol
+
+        【str】证券的名称缩写，在中国A股就是股票的拼音缩写。例如：'PAYH'就是平安银行股票的证券名缩写
+    
+    .. py:attribute:: round_lot
+
+        【int 一手对应多少股，中国A股一手是100股
+    
+    .. py:attribute:: sector_code
+
+        【str】板块缩写代码，全球通用标准定义
+    
+    .. py:attribute:: sector_code_name
+
+        【str】以当地语言为标准的板块代码名
+    
+    .. py:attribute:: industry_code
+
+        【str】国民经济行业分类代码，具体可参考下方“Industry列表”
+    
+    .. py:attribute:: industry_name
+
+        【str】国民经济行业分类名称
+    
+    .. py:attribute:: listed_date
+
+        【str】该证券上市日期
+    
+    .. py:attribute:: de_listed_date
+
+        【str】退市日期
+    
+    .. py:attribute:: type
+
+        【str】合约类型，目前支持的类型有: 'CS', 'INDX', 'LOF', 'ETF', 'FenjiMu', 'FenjiA', 'FenjiB', 'Future'
+    
+    .. py:attribute:: concept_names
+
+        【str】概念股分类，例如：'铁路基建'，'基金重仓'等
+    
+    .. py:attribute:: exchange
+
+        【str】交易所，'XSHE' - 深交所, 'XSHG' - 上交所
+    
+    .. py:attribute:: board_type
+
+        【str】板块类别，'MainBoard' - 主板,'GEM' - 创业板
+    
+    .. py:attribute:: status
+
+        【str】合约状态。'Active' - 正常上市, 'Delisted' - 终止上市, 'TemporarySuspended' - 暂停上市, 'PreIPO' - 发行配售期间, 'FailIPO' - 发行失败
+    
+    .. py:attribute:: special_type
+
+        【str】特别处理状态。'Normal' - 正常上市, 'ST' - ST处理, 'StarST' - *ST代表该股票正在接受退市警告, 'PT' - 代表该股票连续3年收入为负，将被暂停交易, 'Other' - 其他
+
+FutureInstrument
+------------------------------------------------------
+
+.. py:class:: StockInstrument
+
+    .. py:attribute:: order_book_id
+
+        【str】期货代码，期货的独特的标识符（郑商所期货合约数字部分进行了补齐。例如原有代码'ZC609'补齐之后变为'ZC1609'）。主力连续合约UnderlyingSymbol+88，例如'IF88' ；指数连续合约命名规则为UnderlyingSymbol+99
+    
+    .. py:attribute:: symbol
+
+        【str】期货的简称，例如'沪深1005'
+    
+    .. py:attribute:: abbrev_symbol
+
+        【str】期货的名称缩写，例如'HS1005'。主力连续合约与指数连续合约都为'null'
+    
+    .. py:attribute:: round_lot
+
+        【float】期货全部为1.0
+    
+    .. py:attribute:: listed_date
+
+        【str】期货的上市日期。主力连续合约与指数连续合约都为'0000-00-00'
+    
+    .. py:attribute:: type
+
+        【str】合约类型，'Future'
+    
+    .. py:attribute:: contract_multiplier
+
+        【float】合约乘数，例如沪深300股指期货的乘数为300.0
+    
+    .. py:attribute:: underlying_order_book_id
+
+        【str】合约标的代码，目前除股指期货(IH, IF, IC)之外的期货合约，这一字段全部为'null'
+    
+    .. py:attribute:: underlying_symbol
+
+        【str】合约标的名称，例如IF1005的合约标的名称为'IF'
+    
+    .. py:attribute:: maturity_date
+
+        【str】期货到期日。主力连续合约与指数连续合约都为'0000-00-00'
+    
+    .. py:attribute:: settlement_method
+
+        【str】交割方式，'CashSettlementRequired' - 现金交割, 'PhysicalSettlementRequired' - 实物交割
+    
+    .. py:attribute:: product
+
+        【str】产品类型，'Index' - 股指期货, 'Commodity' - 商品期货, 'Government' - 国债期货
+    
+    .. py:attribute:: exchange
+
+        【str】交易所，'DCE' - 大连商品交易所, 'SHFE' - 上海期货交易所，'CFFEX' - 中国金融期货交易所, 'CZCE'- 郑州商品交易所
+
+Instrument对象也支持如下方法：
+
+合约已上市天数。::
+
+    instruments(order_book_id).days_from_listed()
+
+如果合约首次上市交易，天数为0；如果合约尚未上市或已经退市，则天数值为-1
+
+合约距离到期天数。::
+
+    instruments(order_book_id).days_to_expire()
+
+如果策略已经退市，则天数值为-1
+
+枚举常量
+======================================================
+
+ORDER_STATUS - 订单状态
+------------------------------------------------------
+
+.. py:class:: ORDER_STATUS
+
+    .. py:attribute:: PENDING_NEW
+
+        待报
 
 
+    .. py:attribute:: ACTIVE
+
+        可撤
+
+    .. py:attribute:: FILLED
+
+        全成
+
+    .. py:attribute:: CANCELLED
 
 
+        已撤
 
+    .. py:attribute:: REJECTED
 
+        拒单
 
+SIDE - 买卖方向
+------------------------------------------------------
 
+.. py:class:: SIDE
 
+    .. py:attribute:: BUY
 
+        买
 
+    .. py:attribute:: SELL
 
+        卖
 
+POSITION_EFFECT - 开平
+------------------------------------------------------
 
+.. py:class:: POSITION_EFFECT
 
+    .. py:attribute:: OPEN
 
+        开仓
 
+    .. py:attribute:: CLOSE
+
+        平仓
+
+ORDER_TYPE - 订单类型
+------------------------------------------------------
+
+.. py:class:: ORDER_TYPE
+
+    .. py:attribute:: MARKET
+
+        市价单
+
+    .. py:attribute:: LIMIT
+
+        限价单
+
+RUN_TYPE - 策略运行类型
+------------------------------------------------------
+
+.. py:class:: RUN_TYPE
+
+    ..  py:attribute:: BACKTEST
+
+        回测
+
+    ..  py:attribute:: PAPER_TRADING
+
+        实盘模拟
+
+MATCHING_TYPE - 撮合方式
+------------------------------------------------------
+
+.. py:class:: MATCHING_TYPE
+
+    ..  py:attribute:: CURRENT_BAR_CLOSE
+
+        以当前bar收盘价撮合
+
+    ..  py:attribute:: NEXT_BAR_OPEN
+
+        以下一bar数据开盘价撮合
 
 
 
