@@ -599,6 +599,315 @@ time_rule - 定时间运行
 
             scheduler.run_daily(function, time_rule='before_trading')
 
+数据查询相关函数
+======================================================
+
+all_instruments - 所有合约基础信息
+------------------------------------------------------
+
+.. py:function:: all_instruments(type=None)
+
+    获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
+
+    :param str type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
+
+    :return: `pandas DataFrame` 所有合约的基本信息。
+
+    其中type参数传入的合约类型和对应的解释如下：
+
+    =========================   ===================================================
+    合约类型                      说明
+    =========================   ===================================================
+    CS                          Common Stock, 即股票
+    ETF                         Exchange Traded Fund, 即交易所交易基金
+    LOF                         Listed Open-Ended Fund，即上市型开放式基金
+    FenjiMu                     Fenji Mu Fund, 即分级母基金
+    FenjiA                      Fenji A Fund, 即分级A类基金
+    FenjiB                      Fenji B Funds, 即分级B类基金
+    INDX                        Index, 即指数
+    Future                      Futures，即期货，包含股指、国债和商品期货
+    hour                        int - option [1,4]
+    minute                      int - option [1,240]
+    =========================   ===================================================
+
+    示例:
+
+    获取中国市场所有分级基金的基础信息::
+
+        [In]all_instruments('FenjiA')
+        [Out]
+            abbrev_symbol    order_book_id    product    sector_code  symbol
+        0    CYGA    150303.XSHE    null    null    华安创业板50A
+        1    JY500A    150088.XSHE    null    null    金鹰500A
+        2    TD500A    150053.XSHE    null    null    泰达稳健
+        3    HS500A    150110.XSHE    null    null    华商500A
+        4    QSAJ    150235.XSHE    null    null    鹏华证券A
+        ...
+
+instruments - 合约详细信息
+------------------------------------------------------
+
+.. py:function:: instruments(order_book_id)
+
+    获取某个国家市场内一个或多个合约的详细信息。目前仅支持中国市场。
+
+    :param order_book_id: 合约代码或者合约代码列表
+    :type order_book_id: `str` | List[`str`]
+
+    :return: :class:`~StockInstrument` | :class:`~FutureInstrument`
+
+    目前系统并不支持跨国家市场的同时调用。传入 order_book_id list必须属于同一国家市场，不能混合着中美两个国家市场的order_book_id。
+
+    示例:
+
+    *   获取单一股票合约的详细信息::
+
+            [In]instruments('000001.XSHE')
+            [Out]
+            Instrument(order_book_id=000001.XSHE, symbol=平安银行, abbrev_symbol=PAYH, listed_date=19910403, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active)
+
+    *   获取多个股票合约的详细信息::
+
+            [In]instruments(['000001.XSHE', '000024.XSHE'])
+            [Out]
+            [Instrument(order_book_id=000001.XSHE, symbol=平安银行, abbrev_symbol=PAYH, listed_date=19910403, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active), Instrument(order_book_id=000024.XSHE, symbol=招商地产, abbrev_symbol=ZSDC, listed_date=19930607, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active)]
+
+    *   获取合约已上市天数::
+
+            instruments('000001.XSHE').days_from_listed()
+
+    *   获取合约距离到期天数::
+
+            instruments('IF1701').days_to_expire()
+
+history_bars - 某一合约历史数据
+------------------------------------------------------
+
+.. py:function:: history_bars(order_book_id, bar_count, frequency, fields)
+
+    获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
+
+    日回测获取分钟历史数据：不支持
+
+    日回测获取日历史数据
+
+    =========================   ===================================================
+    调用时间                      返回数据
+    =========================   ===================================================
+    T日before_trading            T-1日day bar
+    T日handle_bar                T日day bar
+    =========================   ===================================================
+
+    分钟回测获取日历史数据
+
+    =========================   ===================================================
+    调用时间                      返回数据
+    =========================   ===================================================
+    T日before_trading            T-1日day bar
+    T日handle_bar                T-1日day bar
+    =========================   ===================================================
+
+    分钟回测获取分钟历史数据
+
+    =========================   ===================================================
+    调用时间                      返回数据
+    =========================   ===================================================
+    T日before_trading            T-1日最后一个minute bar
+    T日handle_bar                T日当前minute bar
+    =========================   ===================================================
+
+    :param order_book_id: 合约代码或者合约代码列表
+    :type order_book_id: `str` | List[`str`]
+
+    :param int bar_count: 获取的历史数据数量，必填项
+
+    :param str frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
+
+    :param str fields: 返回数据字段。必填项。见下方列表。
+
+    =========================   ===================================================
+    fields                      字段名
+    =========================   ===================================================
+    datetime                    时间戳
+    open                        开盘价
+    high                        最高价
+    low                         最低价
+    close                       收盘价
+    volume                      成交量
+    total_turnover              成交额
+    datetime                    int类型时间戳
+    open_interest               持仓量（期货专用）
+    basis_spread                期现差（股指期货专用）
+    settlement                  结算价（期货日线专用）
+    prev_settlement             结算价（期货日线专用）
+    =========================   ===================================================
+
+    :return: `ndarray`, 方便直接与talib等计算库对接，效率较history返回的DataFrame更高。
+
+    示例:
+
+    获取最近5天的日线收盘价序列（策略当前日期为20160706）::
+
+        [In]
+        logger.info(history_bars('000002.XSHE', 5, '1d', 'close'))
+        [Out]
+        [ 8.69  8.7   8.71  8.81  8.81]
+
+current_snapshot - 当前快照数据
+------------------------------------------------------
+
+.. py:function:: current_snapshot(order_book_id)
+
+    获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。市场快照数据记录了每日从开盘到当前的数据信息，可以理解为一个动态的day bar数据。在目前分钟回测中，快照数据为当日所有分钟线累积而成，一般情况下，最后一个分钟线获取到的快照数据应当与当日的日线行情保持一致。需要注意，在实盘模拟中，该函数返回的是调用当时的市场快照情况，所以在同一个handle_bar中不同时点调用可能返回的数据不同。如果当日截止到调用时候对应股票没有任何成交，那么snapshot中的close, high, low, last几个价格水平都将以0表示。
+
+    :param str order_book_id: 合约代码或简称
+
+    :return: :class:`~Snapshot`
+
+    示例：
+
+    在handle_bar中调用该函数，假设策略当前时间是20160104 09:33::
+
+        [In]
+        logger.info(current_snapshot('000001.XSHE'))
+        [Out]
+        2016-01-04 09:33:00.00  INFO
+        Snapshot(order_book_id: '000001.XSHE', datetime: datetime.datetime(2016, 1, 4, 9, 33), open: 10.0, high: 10.025, low: 9.9667, last: 9.9917, volume: 2050320, total_turnover: 20485195, prev_close: 9.99)
+
+get_future_contracts - 期货可交易合约列表
+------------------------------------------------------
+
+.. py:function:: get_future_contracts(underlying_symbol)
+
+    获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
+
+    :param str underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
+
+    :return: list[`str`]
+
+    示例:
+
+    获取某一天的主力合约代码（策略当前日期是20161201）::
+
+        [In]
+        logger.info(get_future_contracts('IF'))
+        [Out]
+        ['IF1612', 'IF1701', 'IF1703', 'IF1706']
+
+get_trading_dates - 交易日列表
+------------------------------------------------------
+
+.. py:function:: get_trading_dates(start_date, end_date)
+
+    获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
+
+    :param start_date: 开始日期
+    :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
+
+    :param end_date: 结束如期
+    :type end_date: `str` | `date` | `datetime` | `pandas.Timestamp`
+
+    :return: list[`datetime.date`]
+
+    示例::
+
+        [In]get_trading_dates(start_date='2016-05-05', end_date='20160505')
+        [Out]
+        [datetime.date(2016, 5, 5)]
+
+get_previous_trading_date - 上一交易日
+------------------------------------------------------
+
+.. py:function:: get_previous_trading_date(date)
+
+    获取指定日期的上一交易日。
+
+    :param date: 指定日期
+    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
+
+    :return: `datetime.date`
+
+    示例::
+
+        [In]get_previous_trading_date(date='2016-05-02')
+        [Out]
+        [datetime.date(2016, 4, 29)]
+
+get_next_trading_date - 下一交易日
+------------------------------------------------------
+
+.. py:function:: get_next_trading_date(date)
+
+    获取指定日期的下一交易日
+
+    :param date: 指定日期
+    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
+
+    :return: `datetime.date`
+
+    示例::
+
+        [In]get_next_trading_date(date='2016-05-01')
+        [Out]
+        [datetime.date(2016, 5, 3)]
+
+get_yield_curve - 收益率曲线
+------------------------------------------------------
+
+.. py:function:: get_yield_curve(date=None, tenor=None)
+
+    获取某个国家市场指定日期的收益率曲线水平。
+
+    数据为2002年至今的中债国债收益率曲线，来源于中央国债登记结算有限责任公司。
+
+    :param date: 查询日期，默认为策略当前日期前一天
+    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
+
+    :param str tenor: 标准期限，'0S' - 隔夜，'1M' - 1个月，'1Y' - 1年，默认为全部期限
+
+    :return: `pandas.DataFrame` - 查询时间段内无风险收益率曲线
+
+    示例::
+
+        [In]
+        get_yield_curve('20130104')
+
+        [Out]
+                        0S      1M      2M      3M      6M      9M      1Y      2Y  \
+        2013-01-04  0.0196  0.0253  0.0288  0.0279  0.0280  0.0283  0.0292  0.0310
+
+                        3Y      4Y   ...        6Y      7Y      8Y      9Y     10Y  \
+        2013-01-04  0.0314  0.0318   ...    0.0342  0.0350  0.0353  0.0357  0.0361
+        ...
+
+is_suspended - 全天停牌判断
+------------------------------------------------------
+
+.. py:function:: is_suspended(order_book_id, count)
+
+    判断某只股票是否全天停牌。
+
+    :param str order_book_id: 某只股票的代码或股票代码列表，可传入单只股票的order_book_id, symbol
+
+    :param int count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+
+    :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
+
+is_st_stock - ST股判断
+------------------------------------------------------
+
+.. py:function:: is_st_stock(order_book_id, count=1)
+
+    判断一只或多只股票在一段时间内是否为ST股（包括ST与*ST）。
+
+    ST股是有退市风险因此风险比较大的股票，很多时候您也会希望判断自己使用的股票是否是'ST'股来避开这些风险大的股票。另外，我们目前的策略比赛也禁止了使用'ST'股。
+
+    :param str order_book_id: 某只股票的代码或股票代码列表，可传入单只股票的order_book_id, symbol
+
+    :param int count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+
+    :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
+
 其他方法
 ======================================================
 
@@ -1247,7 +1556,7 @@ StockInstrument
 FutureInstrument
 ------------------------------------------------------
 
-.. py:class:: StockInstrument
+.. py:class:: FutureInstrument
 
     .. py:attribute:: order_book_id
 
