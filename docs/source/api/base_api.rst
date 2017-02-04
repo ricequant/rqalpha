@@ -103,8 +103,7 @@ order_shares - 指定股数交易（股票专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
-    :type amount: `number`
+    :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -131,8 +130,7 @@ order_lots - 指定手数交易（股票专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
-    :type amount: `number`
+    :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -156,8 +154,7 @@ order_value - 指定价值交易（股票专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
-    :type cash_amount: `number`
+    :param float cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -181,8 +178,7 @@ order_percent - 一定比例下单（股票专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
-    :type percent: `float`
+    :param float percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -204,8 +200,7 @@ order_target_value - 目标价值下单（股票专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param percent: 最终的该证券的仓位目标价值。
-    :type percent: `float`
+    :param float percent: 最终的该证券的仓位目标价值。
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -238,8 +233,7 @@ order_target_percent - 目标比例下单（股票专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param percent: 仓位最终所占投资组合总价值的目标百分比。
-    :type percent: `float`
+    :param float percent: 仓位最终所占投资组合总价值的目标百分比。
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -261,8 +255,7 @@ buy_open - 买开（期货专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param amount: 下单手数
-    :type amount: `number`
+    :param int amount: 下单手数
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -284,8 +277,7 @@ sell_close - 平多仓（期货专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param amount: 下单手数
-    :type amount: `number`
+    :param int amount: 下单手数
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -302,8 +294,7 @@ sell_open - 卖开（期货专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param amount: 下单手数
-    :type amount: `number`
+    :param int amount: 下单手数
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -320,8 +311,7 @@ buy_close - 平空仓（期货专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param amount: 下单手数
-    :type amount: `number`
+    :param int amount: 下单手数
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -375,18 +365,18 @@ Context属性
         =========================   =========================   ==============================================================================
         属性                         类型                        注释
         =========================   =========================   ==============================================================================
-        run_id	                    str	                        标识策略每次运行的唯一id
-        run_type	                RUN_TYPE	                运行类型
-        start_date	                datetime.date	            策略的开始日期
-        end_date	                datetime.date	            策略的结束日期
-        frequency	                str	                        策略频率，'1d'或'1m'
-        stock_starting_cash	        float	                    股票账户初始资金
-        future_starting_cash	    float	                    期货账户初始资金
-        slippage	                float	                    滑点水平
-        margin_multiplier	        float	                    保证金倍率
-        commission_multiplier	    float	                    佣金倍率
-        benchmark	                str	                        基准合约代码
-        matching_type	            MATCHING_TYPE	            撮合方式
+        run_id                      str                         标识策略每次运行的唯一id
+        run_type                    RUN_TYPE                    运行类型
+        start_date                  datetime.date               策略的开始日期
+        end_date                    datetime.date               策略的结束日期
+        frequency                   str                         策略频率，'1d'或'1m'
+        stock_starting_cash         float                       股票账户初始资金
+        future_starting_cash        float                       期货账户初始资金
+        slippage                    float                       滑点水平
+        margin_multiplier           float                       保证金倍率
+        commission_multiplier       float                       佣金倍率
+        benchmark                   str                         基准合约代码
+        matching_type               MATCHING_TYPE               撮合方式
         =========================   =========================   ==============================================================================
 
     .. py:attribute:: portfolio
@@ -397,16 +387,16 @@ Context属性
         属性                         类型                        注释
         =========================   =========================   ==============================================================================
         starting_cash               float                       初始资金，为子组合初始资金的加总
-        cash	                    float	                    可用资金，为子组合可用资金的加总
-        total_returns	            float	                    投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
-        daily_returns	            float                       投资组合每日收益率
-        daily_pnl	                float	                    当日盈亏，子组合当日盈亏的加总
-        market_value	            float	                    投资组合当前的市场价值，为子组合市场价值的加总
-        portfolio_value	            float	                    总权益，为子组合总权益加总
-        pnl	                        float	                    当前投资组合的累计盈亏
-        start_date	                datetime.datetime	        策略投资组合的回测/实时模拟交易的开始日期
-        annualized_returns	        float	                    投资组合的年化收益率
-        positions	                dict	                    一个包含所有仓位的字典，以order_book_id作为键，position对象作为值
+        cash                        float                       可用资金，为子组合可用资金的加总
+        total_returns               float                       投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
+        daily_returns               float                       投资组合每日收益率
+        daily_pnl                   float                       当日盈亏，子组合当日盈亏的加总
+        market_value                float                       投资组合当前的市场价值，为子组合市场价值的加总
+        portfolio_value             float                       总权益，为子组合总权益加总
+        pnl                         float                       当前投资组合的累计盈亏
+        start_date                  datetime.datetime           策略投资组合的回测/实时模拟交易的开始日期
+        annualized_returns          float                       投资组合的年化收益率
+        positions                   dict                        一个包含所有仓位的字典，以order_book_id作为键，position对象作为值
         =========================   =========================   ==============================================================================
 
     .. py:attribute:: stock_portfolio
@@ -418,18 +408,18 @@ Context属性
         =========================   =========================   ==============================================================================
         属性                         类型                        注释
         =========================   =========================   ==============================================================================
-        starting_cash	            float	                    回测或实盘交易给算法策略设置的初始资金
-        cash	                    float	                    可用资金
-        total_returns	            float	                    投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
-        daily_returns	            float	                    当前最新一天的每日收益
-        daily_pnl	                float	                    当日盈亏，当日投资组合总权益-昨日投资组合总权益
-        market_value	            float	                    投资组合当前所有证券仓位的市值的加总
-        portfolio_value	            float	                    总权益，包含市场价值和剩余现金
-        pnl	                        float                       当前投资组合的累计盈亏
-        start_date	                datetime.datetime	        策略投资组合的回测/实时模拟交易的开始日期
-        annualized_returns	        float	                    投资组合的年化收益率
-        positions	                dict	                    一个包含所有证券仓位的字典，以order_book_id作为键，position对象作为值
-        dividend_receivable	        float	                    投资组合在分红现金收到账面之前的应收分红部分
+        starting_cash               float                       回测或实盘交易给算法策略设置的初始资金
+        cash                        float                       可用资金
+        total_returns               float                       投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
+        daily_returns               float                       当前最新一天的每日收益
+        daily_pnl                   float                       当日盈亏，当日投资组合总权益-昨日投资组合总权益
+        market_value                float                       投资组合当前所有证券仓位的市值的加总
+        portfolio_value             float                       总权益，包含市场价值和剩余现金
+        pnl                         float                       当前投资组合的累计盈亏
+        start_date                  datetime.datetime           策略投资组合的回测/实时模拟交易的开始日期
+        annualized_returns          float                       投资组合的年化收益率
+        positions                   dict                        一个包含所有证券仓位的字典，以order_book_id作为键，position对象作为值
+        dividend_receivable         float                       投资组合在分红现金收到账面之前的应收分红部分
         =========================   =========================   ==============================================================================
 
     .. py:attribute:: future_portfolio
@@ -441,26 +431,176 @@ Context属性
         =========================   =========================   ==============================================================================
         属性                         类型                        注释
         =========================   =========================   ==============================================================================
-        starting_cash	            float	                    初始资金
-        cash	                    float	                    可用资金
-        frozen_cash	                float	                    冻结资金
-        total_returns	            float	                    投资组合至今的累积收益率，当前总权益/初始资金
-        daily_returns	            float	                    当日收益率 = 当日收益 / 昨日总权益
-        market_value	            float	                    投资组合当前所有期货仓位的名义市值的加总
-        pnl	                        float	                    累计盈亏，当前投资组合总权益-初始资金
-        daily_pnl	                float	                    当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
-        daily_holding_pnl	        float	                    当日浮动盈亏
-        daily_realized_pnl	        float	                    当日平仓盈亏
-        portfolio_value	            float	                    总权益，昨日总权益+当日盈亏
-        transaction_cost	        float	                    总费用
-        start_date	                datetime.datetime	        回测开始日期
-        annualized_returns	        float	                    投资组合的年化收益率
-        positions	                dict	                    一个包含期货仓位的字典，以order_book_id作为键，position对象作为值
-        margin	                    float	                    已占用保证金
+        starting_cash               float                       初始资金
+        cash                        float                       可用资金
+        frozen_cash                 float                       冻结资金
+        total_returns               float                       投资组合至今的累积收益率，当前总权益/初始资金
+        daily_returns               float                       当日收益率 = 当日收益 / 昨日总权益
+        market_value                float                       投资组合当前所有期货仓位的名义市值的加总
+        pnl                         float                       累计盈亏，当前投资组合总权益-初始资金
+        daily_pnl                   float                       当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
+        daily_holding_pnl           float                       当日浮动盈亏
+        daily_realized_pnl          float                       当日平仓盈亏
+        portfolio_value             float                       总权益，昨日总权益+当日盈亏
+        transaction_cost            float                       总费用
+        start_date                  datetime.datetime           回测开始日期
+        annualized_returns          float                       投资组合的年化收益率
+        positions                   dict                        一个包含期货仓位的字典，以order_book_id作为键，position对象作为值
+        margin                      float                       已占用保证金
         =========================   =========================   ==============================================================================
 
+scheduler定时器
+======================================================
+
+scheduler.run_daily - 每天运行
+------------------------------------------------------
+
+.. py:function:: scheduler.run_daily(function)
+
+    每日运行一次指定的函数，只能在init内使用。
+
+    注意，schedule一定在其对应时间点的handle_bar之后执行。
+
+    :param func function: 使传入的function每日运行。注意，function函数一定要包含（并且只能包含）context, bar_dict两个输入参数
+
+    以下的范例代码片段是一个非常简单的例子，在每天交易后查询现在portfolio中剩下的cash的情况::
+
+        #scheduler调用的函数需要包括context, bar_dict两个输入参数
+        def log_cash(context, bar_dict):
+            logger.info("Remaning cash: %r" % context.portfolio.cash)
+
+        def init(context):
+            #...
+            # 每天运行一次
+            scheduler.run_daily(log_cash)
+
+scheduler.run_weekly - 每周运行
+------------------------------------------------------
+
+.. py:function:: scheduler.run_weekly(function, weekday=x, tradingday=t)
+
+    每周运行一次指定的函数，只能在init内使用。
+
+    注意：
+
+    *   tradingday中的负数表示倒数。
+    *   tradingday表示交易日。如某周只有四个交易日，则此周的tradingday=4与tradingday=-1表示同一天。
+    *   weekday和tradingday不能同时使用。
+
+    :param func function: 使传入的function每日交易开始前运行。注意，function函数一定要包含（并且只能包含）context, bar_dict两个输入参数。
+
+    :param int weekday: 1~5 分别代表周一至周五，用户必须指定
+
+    :param int tradingday: 范围为[-5,1],[1,5] 例如，1代表每周第一个交易日，-1代表每周倒数第一个交易日，用户可以不填写。
+
+    以下的代码片段非常简单，在每周二固定运行打印一下现在的portfolio剩余的资金::
+
+        #scheduler调用的函数需要包括context, bar_dict两个参数
+        def log_cash(context, bar_dict):
+            logger.info("Remaning cash: %r" % context.portfolio.cash)
+
+        def init(context):
+            #...
+            # 每周二打印一下剩余资金：
+            scheduler.run_weekly(log_cash, weekday=2)
+            # 每周第二个交易日打印剩余资金：
+            #scheduler.run_weekly(log_cash, tradingday=2)
+
+scheduler.run_monthly - 每月运行
+------------------------------------------------------
+
+.. py:function:: scheduler.run_monthly(function, tradingday=t)
+
+    每月运行一次指定的函数，只能在init内使用。
+
+    注意:
+
+    *   tradingday的负数表示倒数。
+    *   tradingday表示交易日，如某月只有三个交易日，则此月的tradingday=3与tradingday=-1表示同一。
+
+    :param func function: 使传入的function每日交易开始前运行。注意，function函数一定要包含（并且只能包含）context, bar_dict两个输入参数。
+
+    :param int tradingday: 范围为[-23,1], [1,23] ，例如，1代表每月第一个交易日，-1代表每月倒数第一个交易日，用户必须指定。
+
+    以下的代码片段非常简单的展示了每个月第一个交易日的时候我们进行一次财务数据查询，这样子会非常有用在一些根据财务数据来自动调节仓位股票组合的算法来说::
+
+        #scheduler调用的函数需要包括context, bar_dict两个参数
+        def query_fundamental(context, bar_dict):
+                # 查询revenue前十名的公司的股票并且他们的pe_ratio在25和30之间。打fundamentals的时候会有auto-complete方便写查询代码。
+            fundamental_df = get_fundamentals(
+                query(
+                    fundamentals.income_statement.revenue, fundamentals.eod_derivative_indicator.pe_ratio
+                ).filter(
+                    fundamentals.eod_derivative_indicator.pe_ratio > 25
+                ).filter(
+                    fundamentals.eod_derivative_indicator.pe_ratio < 30
+                ).order_by(
+                    fundamentals.income_statement.revenue.desc()
+                ).limit(
+                    10
+                )
+            )
+
+            # 将查询结果dataframe的fundamental_df存放在context里面以备后面只需：
+            context.fundamental_df = fundamental_df
+
+            # 实时打印日志看下查询结果，会有我们精心处理的数据表格显示：
+            logger.info(context.fundamental_df)
+            update_universe(context.fundamental_df.columns.values)
+
+         # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
+        def init(context):
+            # 每月的第一个交易日查询以下财务数据，以确保可以拿到最新更新的财务数据信息用来调整仓位
+            scheduler.run_monthly(query_fundamental, tradingday=1)
+
+time_rule - 定时间运行
+------------------------------------------------------
+
+    scheduler还可以用来做定时间运行，比如在每天开盘后的一小时后或一分钟后定时运行，这里有很多种组合可以让您达到各种自己想要达到的定时运行的目的。
+
+    使用的方法是和上面的 :func:`scheduler.run_daily` , :func:`scheduler.run_weekly` 和 :func:`scheduler.run_monthly` 进行组合加入time_rule来一起使用。
+
+    注意:
+
+    *   market_open与market_close都跟随中国A股交易时间进行设置，即09:31~15:00。
+    *   使用time_rule定时运行只会在分钟级别回测和实时模拟交易中有定义的效果，在日回测中只会默认依然在该天运行，并不能在固定的时间运行。
+    *   在分钟回测中如未指定time_rule,则默认在开盘后一分钟运行,即09:31分。
+    *   如果两个schedule，分别使用market_open 与market_close规则，但规则触发时间在同一时刻，则market_open的handle一定在market_close的handle前执行。
+    *   目前暂不支持开盘交易(即 09:30分交易) ,所以time_rule(minute=0) 和time_rule(hour=0) 将不会触发任何事件。
+    *   market_open(minute=120)将在11:30执行， market_open(minute=121)在13:01执行，中午休市的区间会被忽略。
+    *   time_rule='before_trading'表示在开市交易前运行scheduler函数。该函数运行时间将在before_trading函数运行完毕之后handle_bar运行之前。
+
+    :param str time_rule: 定时具体几点几分运行某个函数。time_rule='before_trading' 表示开始交易前运行；market_open(hour=x, minute=y)表示A股市场开市后x小时y分钟运行，market_close(hour=x, minute=y)表示A股市场收市前x小时y分钟运行。如果不设置time_rule默认的值是中国A股市场开市后一分钟运行。
+
+    market_open, market_close参数如下：
+
+    =========================   =========================   ==============================================================================
+    参数                         类型                        注释
+    =========================   =========================   ==============================================================================
+    hour                        int - option [1,4]          具体在market_open/market_close后/前第多少小时执行, 股票的交易时间为[9:31 - 11:30],[13:01 - 15:00]共240分钟，所以hour的范围为 [1,4]
+    minute                      int - option [1,240]        具体在market_open/market_close的后/前第多少分钟执行,同上，股票每天交易时间240分钟，所以minute的范围为 [1,240],中午休市的时间区间会被忽略。    
+    =========================   =========================   ==============================================================================
+
+    示例:
+
+    *   每天的开市后10分钟运行::
+
+            scheduler.run_daily(function, time_rule=market_open(minute=10))
+
+    *   每周的第t个交易日闭市前1小时运行::
+
+            scheduler.run_weekly(function, tradingday=t, time_rule=market_close(hour=1))
+
+    *   每月的第t个交易日开市后1小时运行::
+
+            scheduler.run_monthly(function, tradingday=t, time_rule=market_open(hour=1))
+
+    *   每天开始交易前运行::
+
+            scheduler.run_daily(function, time_rule='before_trading')
+
 其他方法
-=================
+======================================================
 
 update_universe
 ------------------------------------------------------
@@ -488,18 +628,192 @@ update_universe
     :param id_or_ins: 标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-.. py:function:: get_file()
+类
+======================================================
 
+Bar
+------------------------------------------------------
 
+.. py:class:: Bar
+    
+    .. py:attribute:: order_book_id
 
+        【str】交易标的代码
 
+    .. py:attribute:: symbol
 
+        【str】合约简称
 
+    .. py:attribute:: datetime
 
+        【datetime.datetime】 时间戳
 
+    .. py:attribute:: open
 
+        【float】开盘价
 
+    .. py:attribute:: close
 
+        【float】收盘价
+
+    .. py:attribute:: high
+
+        【float】最高价
+
+    .. py:attribute:: low
+
+        【float】最低价
+
+    .. py:attribute:: volume
+
+        【float】成交量
+
+    .. py:attribute:: total_turnover
+
+        【float】成交额
+
+    .. py:attribute:: prev_close
+
+        【float】昨日收盘价
+
+    .. py:attribute:: limit_up
+
+        【float】涨停价
+
+    .. py:attribute:: limit_down
+
+        【float】跌停价
+
+    .. py:attribute:: is_nan
+
+        【bool】当前bar数据是否有行情。例如，获取已经到期的合约数据，is_nan此时为True
+
+    .. py:attribute:: suspended
+
+        【bool】是否全天停牌
+
+    .. py:attribute:: prev_settlement
+
+        【float】昨结算（期货日线数据专用）
+
+    .. py:attribute:: settlement
+
+        【float】结算（期货日线数据专用）
+
+Snapshot
+------------------------------------------------------
+
+.. py:class:: Snapshot
+
+    .. py:attribute:: order_book_id
+        
+        【str】股票代码
+
+    .. py:attribute:: datetime
+        
+        【datetime.datetime】当前快照数据的时间戳
+
+    .. py:attribute:: open
+        
+        【float】当日开盘价
+
+    .. py:attribute:: last
+        
+        【float】当前最新价
+
+    .. py:attribute:: high
+        
+        【float】截止到当前的最高价
+
+    .. py:attribute:: low
+        
+        【float】截止到当前的最低价
+
+    .. py:attribute:: prev_close
+        
+        【float】昨日收盘价
+
+    .. py:attribute:: volume
+        
+        【float】截止到当前的成交量
+
+    .. py:attribute:: total_turnover
+        
+        【float】截止到当前的成交额
+
+    .. py:attribute:: open_interest
+        
+        【float】截止到当前的持仓量（期货专用）
+
+    .. py:attribute:: prev_settlement
+        
+        【float】昨日结算价（期货专用）
+
+Order
+------------------------------------------------------
+
+.. py:class:: Order
+
+    .. py:attribute:: order_id
+
+        【int】唯一标识订单的id
+        
+    .. py:attribute:: order_book_id
+
+        【str】合约代码
+        
+    .. py:attribute:: datetime
+
+        【datetime.datetime】订单创建时间
+        
+    .. py:attribute:: side
+
+        【SIDE】订单方向
+        
+    .. py:attribute:: price
+
+        【float】订单价格，只有在订单类型为'限价单'的时候才有意义
+        
+    .. py:attribute:: quantity
+
+        【int】订单数量
+        
+    .. py:attribute:: filled_quantity
+
+        【int】订单已成交数量
+        
+    .. py:attribute:: unfilled_quantity
+
+        【int】订单未成交数量
+        
+    .. py:attribute:: type
+
+        【ORDER_TYPE】订单类型
+        
+    .. py:attribute:: transaction_cost
+
+        【float】费用
+        
+    .. py:attribute:: avg_price
+
+        【float】成交均价
+        
+    .. py:attribute:: status
+
+        【ORDER_STATUS】订单状态
+        
+    .. py:attribute:: message
+
+        【str】信息。比如拒单时候此处会提示拒单原因
+        
+    .. py:attribute:: trading_datetime
+
+        【datetime.datetime】订单的交易日期（对应期货夜盘）
+        
+    .. py:attribute:: position_effect
+
+        【POSITION_EFFECT】订单开平（期货专用）
+        
 
 
 
