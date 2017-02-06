@@ -24,7 +24,7 @@ RQAlpha目前只支持 python 3.4 及以上，Python 2 暂不支持。
 
     $ pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com rqalpha
 
-查看 RQAlpha 是否安装通过可以通过如下方式::
+查看 RQAlpha 是否安装成功可以通过如下方式::
 
     $ rqalpha version
 
