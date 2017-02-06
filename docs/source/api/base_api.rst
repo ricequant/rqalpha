@@ -267,12 +267,12 @@ buy_open - 买开（期货专用）
         #以价格为3500的限价单开仓买入2张上期所AG1607合约：
         buy_open('AG1607', amount=2, style=LimitOrder(3500))
 
-sell_close - 平多仓（期货专用）
+sell_close - 平买仓（期货专用）
 ------------------------------------------------------
 
 .. py:function:: sell_close(id_or_ins, amount, style=MarketOrder())
 
-    平多仓
+    平买仓
 
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
@@ -301,12 +301,12 @@ sell_open - 卖开（期货专用）
 
     :return: :class:`~Order` object
 
-buy_close - 平空仓（期货专用）
+buy_close - 平卖仓（期货专用）
 ------------------------------------------------------
 
 .. py:function:: buy_close(id_or_ins, amount, style=MarketOrder())
 
-    平空仓
+    平卖仓
 
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
@@ -333,7 +333,7 @@ cancel_order - 撤单
     :param order: 需要撤销的order对象
     :type order: :class:`~Order` object
 
-get_open_orders - 拿到未成交订单信息
+get_open_orders - 获取未成交订单数据
 ------------------------------------------------------
 
 .. py:function:: get_open_orders()
@@ -643,6 +643,7 @@ all_instruments - 所有合约基础信息
         3    HS500A    150110.XSHE    null    null    华商500A
         4    QSAJ    150235.XSHE    null    null    鹏华证券A
         ...
+
 
 instruments - 合约详细信息
 ------------------------------------------------------

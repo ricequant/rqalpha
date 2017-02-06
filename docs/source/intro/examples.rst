@@ -39,6 +39,8 @@
             order_percent(context.s1, 1)
             context.fired = True
 
+.. _intro-examples-golden-cross:
+
 Golden Cross算法示例
 ------------------------------------------------------
 

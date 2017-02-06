@@ -55,6 +55,8 @@ RiceQuant 免费提供日级别的股票和期货数据供回测使用，可以�
 
 访问 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载 `bcolz` 安装，之后再安装rqalpha。
 
+.. _intro-install-talib:
+
 安装 `TA-Lib`
 ------------------
 
