@@ -4,7 +4,11 @@
 策略示例
 ==================
 
-在下面我们列举一些常用的算法范例，您可以通过RQAlpha运行，也可以直接登录 `Rciequant <https://www.ricequant.com/algorithms>`_ 在线进行回测或模拟交易。
+.. _Ricequant: https://www.ricequant.com/algorithms
+
+在下面我们列举一些常用的算法范例，您可以通过RQAlpha运行，也可以直接登录 `Ricequant`_ 在线进行回测或模拟交易。
+
+.. _intro-examples-buy-and-hold:
 
 第一个策略-买入&持有
 ------------------------------------------------------

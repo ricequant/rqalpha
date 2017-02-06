@@ -5,7 +5,9 @@ RQAlpha |version| Documentation
 
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。RQAlpha 具有灵活的配置方式，强大的扩展性，用户可以非常容易地定制专属于自己的程序化交易系统。
 
-RQAlpha 所有的策略都可以直接在 Ricequant 上进行回测和实盘模拟，并且可以通过微信和邮件实时推送您的交易信号。Ricequant 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。
+RQAlpha 所有的策略都可以直接在 `Ricequant`_ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘模拟，并且可以通过微信和邮件实时推送您的交易信号。Ricequant 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。
+ 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。
+
 
 
 Getting Help
@@ -16,9 +18,6 @@ Getting Help
 *   查看 :doc:`FAQ <faq>` 页面找寻常见问题及解答。
 *   可以通过 :ref:`genindex` 或者 :ref:`search` 来查找特定问题。
 *   在 `github issue page`_ 中提交issue。
-
-.. _github issue page: https://github.com/ricequant/rqalpha/issues
-
 
 Quick Guide
 ==================
@@ -52,8 +51,12 @@ RQAlpha API
    :caption: API
    :hidden:
 
+   api/config
    api/base_api
    api/extend_api
+
+:doc:`api/config`
+    启动 RQAlpha 参数配置
 
 :doc:`api/base_api`
     基础API(期货股票公用API)
@@ -93,4 +96,7 @@ Extra
 
 :doc:`history`
     更新日志
+
+.. _github issue page: https://github.com/ricequant/rqalpha/issues
+.. _Ricequant: https://www.ricequant.com/algorithms
 

@@ -4,24 +4,27 @@
 RQAlpha 介绍
 ====================
 
+.. _Ricequant: https://www.ricequant.com/algorithms
+.. _Ricequant 社区: https://www.ricequant.com/community
+
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。RQAlpha 具有灵活的配置方式，强大的扩展性，用户可以非常容易地定制专属于自己的程序化交易系统。
 
-RQAlpha 所有的策略都可以直接在 Ricequant 上进行回测和实盘模拟，并且可以通过微信和邮件实时推送您的交易信号。Ricequant 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。
+RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘模拟，并且可以通过微信和邮件实时推送您的交易信号。`Ricequant`_ 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。
 
 特点
 ==================
 
 *   易于使用: RQAlpha 让您集中于策略的开发，一行简单的命令就可以执行您的策略。
 *   完善的文档: 从API使用，到扩展开发，我们提供了详尽的文档来帮助您快速了解和学习RQAlpha，同时您也可以帮助我们一起来 `完善文档 <https://github.com/ricequant/rqalpha/tree/develop/docs>`_。
-*   活跃的社区: 您可以通过访问 `Ricequant 社区 <https://www.ricequant.com/community>`_ 获取和询问有关 RQAlpha 的问题，有很多优秀的童鞋会您解答。
-*   稳定的环境: 每天都有会大量的算法交易在 `Ricequant <https://www.ricequant.com/algorithms>`_ 上运行，无论是 RQAlpha，还是数据，我们能会做到问题秒处理，秒解决。
+*   活跃的社区: 您可以通过访问 `Ricequant 社区`_ 获取和询问有关 RQAlpha 的问题，有很多优秀的童鞋会您解答。
+*   稳定的环境: 每天都有会大量的算法交易在 `Ricequant`_ 上运行，无论是 RQAlpha，还是数据，我们能会做到问题秒处理，秒解决。
 *   灵活的配置: RQAlpha提供了一系列的配置选项，用户可以通过简单的配置来构建适合自己的交易系统。
 *   强大的扩展性: RQAlpha 定义了一系列的Mod Hook接口，开发者可以基于Mod的开发模式，扩展 RQAlpha，无论是做实时监控，还是归因分析，RQAlpha 都支持。
 
 限制
 ==================
 
-RQAlpha 本身支持不同周期的回测和实盘交易，但是目前只开放A股市场日线数据，如果用户需要做分钟回测或者更细级别的回测可以在 `Ricequant <https://www.ricequant.com/algorithms>`_ 上进行，也通过实现数据层接口函数来使用自己的数据。财务数据相关的API目前只能通过 `Ricequant <https://www.ricequant.com/algorithms>`_ 平台来获取。
+RQAlpha 本身支持不同周期的回测和实盘交易，但是目前只开放A股市场日线数据，如果用户需要做分钟回测或者更细级别的回测可以在 `Ricequant`_ 上进行，也通过实现数据层接口函数来使用自己的数据。财务数据相关的API目前只能通过 `Ricequant`_ 平台来获取。
 
 RQAlpha 只是我们的商业版的一部分，如果您是机构希望采用我们包含数据的一体化策略开发、研究、评估系统，请邮件联系我们: public@ricequant.com，或加QQ：「4848371」 咨询，我们也会提供咨询帮助和系统维护服务等。
 
@@ -124,4 +127,3 @@ RQAlpha可以输出一个DataFrame，其中包含了每天的Portfolio信息、R
     volatility                                                               0.275721
     Name: 2016-07-01 00:00:00, dtype: object
     '''
-

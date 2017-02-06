@@ -655,7 +655,7 @@ get_split - 拆分数据
 
     通过传入当前的利率规则拿到对应的分级A的order_book_id list
 
-    :param str interest_rule: 利率规则，例如："+3.5%", "+4%", "=7%", "*1.4+0.55%", "利差" etc. 您也可以在研究平台使用fenji.get_all来进行查询所有的组合可能。用户必须填写
+    :param str interest_rule: 利率规则，例如："+3.5%", "+4%", "=7%", "\*1.4+0.55%", "利差" etc. 您也可以在研究平台使用 :func:`fenji.get_all` 来进行查询所有的组合可能。用户必须填写
 
     :param bool listing: 该分级基金是否在交易所可交易，默认为True
 
