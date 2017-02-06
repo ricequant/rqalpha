@@ -1,7 +1,7 @@
 .. _api-extend-api:
 
 ==================
-Extend API
+扩展 API
 ==================
 
 扩展API 是Ricequant从众多的数据源中整理、归纳和维护的众多数据类型的API, RQAlpha中不支持相应数据的获取和查询，如果想要使用扩展API 可以在 `Ricequant <https://www.ricequant.com>`_ 中免费使用。或者联系我们获取全功能支持的机构版。

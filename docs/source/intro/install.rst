@@ -1,7 +1,7 @@
 .. _intro-install:
 
 ==================
-Installation Guide
+安装指南
 ==================
 
 兼容性
@@ -65,3 +65,4 @@ RiceQuant 免费提供日级别的股票和期货数据供回测使用，可以�
 如果发现无法通过 pip 安装，请访问 https://mrjbq7.github.io/ta-lib/install.html 解决。
 
 对于 Windows 用户，如果编译困难，可以根据您本地的Python版本下载指定的whl包，然后 `pip install TA_Lib-0.4.9-cp27-none-win_amd64.whl` 来完成安装。
+

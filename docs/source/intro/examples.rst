@@ -257,16 +257,16 @@ Golden Cross算法示例
 
     def handle_bar(context, bar_dict):
         portfolio_value = context.portfolio.portfolio_value
-        high_price = history(context.open_observe_time+1, '1d', 'high')[context.s]
-        low_price_for_atr = history(context.open_observe_time+1, '1d', 'low')[context.s]
-        low_price_for_extreme = history(context.close_observe_time+1, '1d', 'low')[context.s]
-        close_price = history(context.open_observe_time+2, '1d', 'close')[context.s]
+        high_price = history_bars(context.s, context.open_observe_time+1, '1d', 'high')
+        low_price_for_atr = history_bars(context.s, context.open_observe_time+1, '1d', 'low')
+        low_price_for_extreme = history_bars(context.s, context.close_observe_time+1, '1d', 'low')
+        close_price = history_bars(context.s, context.open_observe_time+2, '1d', 'close')
         close_price_for_atr = close_price[:-1]
 
-        atr_array = talib.ATR(high_price.values, low_price_for_atr.values, close_price_for_atr.values, timeperiod=context.atr_time)
+        atr_array = talib.ATR(high_price, low_price_for_atr, close_price_for_atr, timeperiod=context.atr_time)
 
-        maxx = get_extreme(high_price.values, low_price_for_extreme.values)[0]
-        minn = get_extreme(high_price.values, low_price_for_extreme.values)[1]
+        maxx = get_extreme(high_price, low_price_for_extreme)[0]
+        minn = get_extreme(high_price, low_price_for_extreme)[1]
         atr = atr_array[-2]
 
         if context.trading_signal != 'start':

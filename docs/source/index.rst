@@ -14,7 +14,7 @@ Getting Help
 关于RQAlpha的任何问题可以通过以下途径来获取帮助
 
 *   查看 :doc:`FAQ <faq>` 页面找寻常见问题及解答。
-*   可以通过 :ref:`genindex` 、 :ref:`modindex` 或者 :ref:`search` 来查找特定问题。
+*   可以通过 :ref:`genindex` 或者 :ref:`search` 来查找特定问题。
 *   在 `github issue page`_ 中提交issue。
 
 .. _github issue page: https://github.com/ricequant/rqalpha/issues
@@ -93,3 +93,4 @@ Extra
 
 :doc:`history`
     更新日志
+
