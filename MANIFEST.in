@@ -1,2 +1,3 @@
 include requirements.txt
+include rqalpha/VERSION.txt
 recursive-include rqalpha/resource *.png

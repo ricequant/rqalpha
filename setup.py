@@ -16,15 +16,22 @@
 # limitations under the License.
 
 
-from setuptools import setup, find_packages
-
+from os.path import dirname, join
 from pip.req import parse_requirements
 
+from setuptools import (
+    find_packages,
+    setup,
+)
+
+
+with open(join(dirname(__file__), 'rqalpha/VERSION.txt'), 'rb') as f:
+    version = f.read().decode('ascii').strip()
 
 setup(
     name='rqalpha',
-    version='0.0.72',
-    description='Ricequant Backtest Engine',
+    version=version,
+    description='Ricequant Algorithm Trading System',
     packages=find_packages(exclude=[]),
     author='ricequant',
     author_email='public@ricequant.com',
