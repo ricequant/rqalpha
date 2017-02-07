@@ -101,7 +101,7 @@ order_shares - 指定股数交易（股票专用）
     落指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
 
@@ -128,7 +128,7 @@ order_lots - 指定手数交易（股票专用）
     指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
 
@@ -152,7 +152,7 @@ order_value - 指定价值交易（股票专用）
     使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。当您提交一个卖单时，该方法代表的意义是您希望通过卖出该股票套现的金额。如果金额超出了您所持有股票的价值，那么您将卖出所有股票。需要注意，如果资金不足，该API将不会创建发送订单。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param float cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
 
@@ -176,7 +176,7 @@ order_percent - 一定比例下单（股票专用）
     发送一个等于目前投资组合价值（市场价值和目前现金的总和）一定百分比的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param float percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
 
@@ -200,7 +200,7 @@ order_target_value - 目标价值下单（股票专用）
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
 
-    :param float percent: 最终的该证券的仓位目标价值。
+    :param float cash_amount: 最终的该证券的仓位目标价值。
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
@@ -416,7 +416,7 @@ Context属性
         market_value                float                       投资组合当前所有证券仓位的市值的加总
         portfolio_value             float                       总权益，包含市场价值和剩余现金
         pnl                         float                       当前投资组合的累计盈亏
-        start_date                  datetime.datetime           策略投资组合的回测/实时模拟交易的开始日期
+        start_date                  date                        策略投资组合的回测/实时模拟交易的开始日期
         annualized_returns          float                       投资组合的年化收益率
         positions                   dict                        一个包含所有证券仓位的字典，以order_book_id作为键，position对象作为值
         dividend_receivable         float                       投资组合在分红现金收到账面之前的应收分红部分
@@ -443,7 +443,7 @@ Context属性
         daily_realized_pnl          float                       当日平仓盈亏
         portfolio_value             float                       总权益，昨日总权益+当日盈亏
         transaction_cost            float                       总费用
-        start_date                  datetime.datetime           回测开始日期
+        start_date                  date                        回测开始日期
         annualized_returns          float                       投资组合的年化收益率
         positions                   dict                        一个包含期货仓位的字典，以order_book_id作为键，position对象作为值
         margin                      float                       已占用保证金
@@ -570,7 +570,7 @@ time_rule - 定时间运行
     *   market_open(minute=120)将在11:30执行， market_open(minute=121)在13:01执行，中午休市的区间会被忽略。
     *   time_rule='before_trading'表示在开市交易前运行scheduler函数。该函数运行时间将在before_trading函数运行完毕之后handle_bar运行之前。
 
-    :param str time_rule: 定时具体几点几分运行某个函数。time_rule='before_trading' 表示开始交易前运行；market_open(hour=x, minute=y)表示A股市场开市后x小时y分钟运行，market_close(hour=x, minute=y)表示A股市场收市前x小时y分钟运行。如果不设置time_rule默认的值是中国A股市场开市后一分钟运行。
+    `time_rule`: 定时具体几点几分运行某个函数。time_rule='before_trading' 表示开始交易前运行；market_open(hour=x, minute=y)表示A股市场开市后x小时y分钟运行，market_close(hour=x, minute=y)表示A股市场收市前x小时y分钟运行。如果不设置time_rule默认的值是中国A股市场开市后一分钟运行。
 
     market_open, market_close参数如下：
 
@@ -578,7 +578,7 @@ time_rule - 定时间运行
     参数                         类型                        注释
     =========================   =========================   ==============================================================================
     hour                        int - option [1,4]          具体在market_open/market_close后/前第多少小时执行, 股票的交易时间为[9:31 - 11:30],[13:01 - 15:00]共240分钟，所以hour的范围为 [1,4]
-    minute                      int - option [1,240]        具体在market_open/market_close的后/前第多少分钟执行,同上，股票每天交易时间240分钟，所以minute的范围为 [1,240],中午休市的时间区间会被忽略。    
+    minute                      int - option [1,240]        具体在market_open/market_close的后/前第多少分钟执行,同上，股票每天交易时间240分钟，所以minute的范围为 [1,240],中午休市的时间区间会被忽略。
     =========================   =========================   ==============================================================================
 
     示例:
@@ -718,7 +718,7 @@ history_bars - 某一合约历史数据
     =========================   ===================================================
 
     :param order_book_id: 合约代码或者合约代码列表
-    :type order_book_id: `str` | List[`str`]
+    :type order_book_id: `str`
 
     :param int bar_count: 获取的历史数据数量，必填项
 
@@ -945,7 +945,7 @@ Bar
 ------------------------------------------------------
 
 .. py:class:: Bar
-    
+
     .. py:attribute:: order_book_id
 
         【str】交易标的代码
@@ -1016,47 +1016,47 @@ Snapshot
 .. py:class:: Snapshot
 
     .. py:attribute:: order_book_id
-        
+
         【str】股票代码
 
     .. py:attribute:: datetime
-        
+
         【datetime.datetime】当前快照数据的时间戳
 
     .. py:attribute:: open
-        
+
         【float】当日开盘价
 
     .. py:attribute:: last
-        
+
         【float】当前最新价
 
     .. py:attribute:: high
-        
+
         【float】截止到当前的最高价
 
     .. py:attribute:: low
-        
+
         【float】截止到当前的最低价
 
     .. py:attribute:: prev_close
-        
+
         【float】昨日收盘价
 
     .. py:attribute:: volume
-        
+
         【float】截止到当前的成交量
 
     .. py:attribute:: total_turnover
-        
+
         【float】截止到当前的成交额
 
     .. py:attribute:: open_interest
-        
+
         【float】截止到当前的持仓量（期货专用）
 
     .. py:attribute:: prev_settlement
-        
+
         【float】昨日结算价（期货专用）
 
 Order
@@ -1189,55 +1189,55 @@ StockPortfolio
     .. py:attribute:: starting_cash
 
         【float】回测或实盘交易给算法策略设置的初始资金
-    
+
     .. py:attribute:: cash
 
         【float】可用资金
-    
+
     .. py:attribute:: frozen_cash
 
         【float】冻结资金
-    
+
     .. py:attribute:: total_returns
 
         【float】投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
-    
+
     .. py:attribute:: daily_returns
 
         【float】当前最新一天的每日收益
-    
+
     .. py:attribute:: daily_pnl
 
         【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
-    
+
     .. py:attribute:: market_value
 
         【float】投资组合当前所有证券仓位的市值的加总
-    
+
     .. py:attribute:: portfolio_value
 
         【float】总权益，包含市场价值和剩余现金
-    
+
     .. py:attribute:: transaction_cost
 
         【float】总费用
-    
+
     .. py:attribute:: pnl
 
         【float】当前投资组合的累计盈亏
-    
+
     .. py:attribute:: start_date
 
         【datetime.datetime】策略投资组合的回测/实时模拟交易的开始日期
-    
+
     .. py:attribute:: annualized_returns
 
         【float】投资组合的年化收益率
-    
+
     .. py:attribute:: positions
 
         【dict】一个包含股票子组合仓位的字典，以order_book_id作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
-    
+
     .. py:attribute:: dividend_receivable
 
         【float】投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
@@ -1250,71 +1250,71 @@ FuturePortfolio
     .. py:attribute:: starting_cash
 
         【float】初始资金
-    
+
     .. py:attribute:: cash
 
         【float】可用资金
-    
+
     .. py:attribute:: frozen_cash
 
         【float】冻结资金
-    
+
     .. py:attribute:: total_returns
 
         【float】投资组合至今的累积收益率，当前总权益/初始资金
-    
+
     .. py:attribute:: daily_returns
 
         【float】当日收益率 = 当日收益 / 昨日总权益
-    
+
     .. py:attribute:: market_value
 
         【float】投资组合当前所有期货仓位的名义市值的加总
-    
+
     .. py:attribute:: daily_pnl
 
         【float】当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
-    
+
     .. py:attribute:: daily_holding_pnl
 
         【float】当日浮动盈亏
-    
+
     .. py:attribute:: daily_realized_pnl
 
         【float】当日平仓盈亏
-    
+
     .. py:attribute:: portfolio_value
 
         【float】总权益，昨日总权益+当日盈亏
-    
+
     .. py:attribute:: transaction_cost
 
         【float】总费用
-    
+
     .. py:attribute:: pnl
 
         【float】累计盈亏，当前投资组合总权益-初始资金
-    
+
     .. py:attribute:: start_date
 
         【Date】回测开始日期
-    
+
     .. py:attribute:: annualized_returns
 
         【float】投资组合的年化收益率
-    
+
     .. py:attribute:: positions
 
         【dict】一个包含期货子组合仓位的字典，以order_book_id作为键，position对象作为值
-    
+
     .. py:attribute:: margin
 
         【float】已占用保证金
-    
+
     .. py:attribute:: buy_margin
 
         【float】多头保证金
-    
+
     .. py:attribute:: sell_margin
 
         【float】空头保证金
@@ -1327,51 +1327,51 @@ StockPosition
     .. py:attribute:: order_book_id
 
         【str】合约代码
-    
+
     .. py:attribute:: quantity
 
         【int】当前持仓股数
-    
+
     .. py:attribute:: pnl
 
         【float】持仓累计盈亏
-    
+
     .. py:attribute:: bought_quantity
 
         【int】该证券的总买入股数，例如：如果你的投资组合并没有任何平安银行的成交，那么平安银行这个股票的仓位就是0
-    
+
     .. py:attribute:: sold_quantity
 
         【int】该证券的总卖出股数，例如：如果你的投资组合曾经买入过平安银行股票200股并且卖出过100股，那么这个属性会返回100
-    
+
     .. py:attribute:: bought_value
 
         【float】该证券的总买入的价值，等于每一个该证券的 买入成交价 * 买入股数 总和
-    
+
     .. py:attribute:: sold_value
 
         【float】该证券的总卖出价值，等于每一个该证券的 卖出成交价 * 卖出股数 总和
-    
+
     .. py:attribute:: total_orders
 
         【int】该仓位的总订单的次数
-    
+
     .. py:attribute:: total_trades
 
         【int】该仓位的总成交的次数
-    
+
     .. py:attribute:: sellable
 
         【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓-今日买入的仓位
-    
+
     .. py:attribute:: avg_price
 
         【float】获得该持仓的买入均价，计算方法为每次买入的数量做加权平均
-    
+
     .. py:attribute:: market_value
 
         【float】获得该持仓的实时市场价值
-    
+
     .. py:attribute:: value_percent
 
         【float】获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
@@ -1493,63 +1493,63 @@ StockInstrument
     .. py:attribute:: order_book_id
 
         【str】证券代码，证券的独特的标识符。应以'.XSHG'或'.XSHE'结尾，前者代表上证，后者代表深证
-    
+
     .. py:attribute:: symbol
 
         【str】证券的简称，例如'平安银行'
-    
+
     .. py:attribute:: abbrev_symbol
 
         【str】证券的名称缩写，在中国A股就是股票的拼音缩写。例如：'PAYH'就是平安银行股票的证券名缩写
-    
+
     .. py:attribute:: round_lot
 
         【int 一手对应多少股，中国A股一手是100股
-    
+
     .. py:attribute:: sector_code
 
         【str】板块缩写代码，全球通用标准定义
-    
+
     .. py:attribute:: sector_code_name
 
         【str】以当地语言为标准的板块代码名
-    
+
     .. py:attribute:: industry_code
 
         【str】国民经济行业分类代码，具体可参考下方“Industry列表”
-    
+
     .. py:attribute:: industry_name
 
         【str】国民经济行业分类名称
-    
+
     .. py:attribute:: listed_date
 
         【str】该证券上市日期
-    
+
     .. py:attribute:: de_listed_date
 
         【str】退市日期
-    
+
     .. py:attribute:: type
 
         【str】合约类型，目前支持的类型有: 'CS', 'INDX', 'LOF', 'ETF', 'FenjiMu', 'FenjiA', 'FenjiB', 'Future'
-    
+
     .. py:attribute:: concept_names
 
         【str】概念股分类，例如：'铁路基建'，'基金重仓'等
-    
+
     .. py:attribute:: exchange
 
         【str】交易所，'XSHE' - 深交所, 'XSHG' - 上交所
-    
+
     .. py:attribute:: board_type
 
         【str】板块类别，'MainBoard' - 主板,'GEM' - 创业板
-    
+
     .. py:attribute:: status
 
         【str】合约状态。'Active' - 正常上市, 'Delisted' - 终止上市, 'TemporarySuspended' - 暂停上市, 'PreIPO' - 发行配售期间, 'FailIPO' - 发行失败
-    
+
     .. py:attribute:: special_type
 
         【str】特别处理状态。'Normal' - 正常上市, 'ST' - ST处理, 'StarST' - \*ST代表该股票正在接受退市警告, 'PT' - 代表该股票连续3年收入为负，将被暂停交易, 'Other' - 其他
@@ -1562,51 +1562,51 @@ FutureInstrument
     .. py:attribute:: order_book_id
 
         【str】期货代码，期货的独特的标识符（郑商所期货合约数字部分进行了补齐。例如原有代码'ZC609'补齐之后变为'ZC1609'）。主力连续合约UnderlyingSymbol+88，例如'IF88' ；指数连续合约命名规则为UnderlyingSymbol+99
-    
+
     .. py:attribute:: symbol
 
         【str】期货的简称，例如'沪深1005'
-    
+
     .. py:attribute:: abbrev_symbol
 
         【str】期货的名称缩写，例如'HS1005'。主力连续合约与指数连续合约都为'null'
-    
+
     .. py:attribute:: round_lot
 
         【float】期货全部为1.0
-    
+
     .. py:attribute:: listed_date
 
         【str】期货的上市日期。主力连续合约与指数连续合约都为'0000-00-00'
-    
+
     .. py:attribute:: type
 
         【str】合约类型，'Future'
-    
+
     .. py:attribute:: contract_multiplier
 
         【float】合约乘数，例如沪深300股指期货的乘数为300.0
-    
+
     .. py:attribute:: underlying_order_book_id
 
         【str】合约标的代码，目前除股指期货(IH, IF, IC)之外的期货合约，这一字段全部为'null'
-    
+
     .. py:attribute:: underlying_symbol
 
         【str】合约标的名称，例如IF1005的合约标的名称为'IF'
-    
+
     .. py:attribute:: maturity_date
 
         【str】期货到期日。主力连续合约与指数连续合约都为'0000-00-00'
-    
+
     .. py:attribute:: settlement_method
 
         【str】交割方式，'CashSettlementRequired' - 现金交割, 'PhysicalSettlementRequired' - 实物交割
-    
+
     .. py:attribute:: product
 
         【str】产品类型，'Index' - 股指期货, 'Commodity' - 商品期货, 'Government' - 国债期货
-    
+
     .. py:attribute:: exchange
 
         【str】交易所，'DCE' - 大连商品交易所, 'SHFE' - 上海期货交易所，'CFFEX' - 中国金融期货交易所, 'CZCE'- 郑州商品交易所
@@ -1719,11 +1719,3 @@ MATCHING_TYPE - 撮合方式
     ..  py:attribute:: NEXT_BAR_OPEN
 
         以下一bar数据开盘价撮合
-
-
-
-
-
-
-
-
