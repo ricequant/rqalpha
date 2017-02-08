@@ -18,7 +18,7 @@ StrategyLoader
 ------------------
 
 ..  autoclass:: AbstractStrategyLoader
-   :members:
+    :members:
 
 
 EventSource
