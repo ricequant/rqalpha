@@ -32,7 +32,6 @@ class Environment:
         self._strategy_loader = None
         self._global_vars = None
         self._persist_provider = None
-        self._is_hold = False
         self._commission_initializer = init_commission
         self.system_log = system_log
         self.user_log = user_log
@@ -83,14 +82,14 @@ class Environment:
         self._global_vars = global_vars
 
     def set_hold_strategy(self):
-        self._is_hold = True
+        self.config.extra.is_hold = True
 
     def cancel_hold_strategy(self):
-        self._is_hold = False
+        self.config.extra.is_hold = False
 
     @property
     def is_strategy_hold(self):
-        return self._is_hold
+        return self.config.extra.is_hold
 
     def set_persist_provider(self, provider):
         self._persist_provider = provider
