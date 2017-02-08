@@ -27,7 +27,7 @@ from ..const import ACCOUNT_TYPE
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
 
-class EventSource(AbstractEventSource):
+class DefaultEventSource(AbstractEventSource):
     def __init__(self, data_proxy, account_list):
         self._data_proxy = data_proxy
         self._account_list = account_list

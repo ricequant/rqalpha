@@ -23,7 +23,7 @@ from ..environment import Environment
 from ..events import Events
 
 
-class BaseMatcher:
+class DefaultMatcher:
     def __init__(self,
                  deal_price_decider,
                  bar_limit=True,

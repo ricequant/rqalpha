@@ -28,8 +28,8 @@ from .api import helper as api_helper
 from . import const
 from .analyser.risk_cal import RiskCal
 from .core.default_broker import DefaultBroker
-from .core.default_event_source import EventSource
-from .core.strategy_loader import FileStrategyLoader
+from .core.default_event_source import DefaultEventSource
+from .core.default_strategy_loader import FileStrategyLoader
 from .core.strategy_universe import StrategyUniverse
 from .data.base_data_source import BaseDataSource
 from .data.data_proxy import DataProxy
@@ -146,7 +146,7 @@ def run(config):
 
         event_source = env.event_source
         if event_source is None:
-            event_source = EventSource(env.data_proxy, env.config.base.account_list)
+            event_source = DefaultEventSource(env.data_proxy, env.config.base.account_list)
 
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL, bar_dict)

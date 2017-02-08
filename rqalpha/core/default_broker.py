@@ -16,7 +16,7 @@
 
 import jsonpickle
 
-from .base_matcher import BaseMatcher
+from .default_matcher import DefaultMatcher
 from ..trader.account import init_accounts
 from ..interface import AbstractBroker, Persistable
 from ..utils import get_account_type
@@ -30,10 +30,10 @@ class DefaultBroker(AbstractBroker, Persistable):
     def __init__(self, env):
         self._env = env
         if env.config.base.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:
-            self._matcher = BaseMatcher(lambda bar: bar.close, env.config.validator.bar_limit)
+            self._matcher = DefaultMatcher(lambda bar: bar.close, env.config.validator.bar_limit)
             self._match_immediately = True
         else:
-            self._matcher = BaseMatcher(lambda bar: bar.open, env.config.validator.bar_limit)
+            self._matcher = DefaultMatcher(lambda bar: bar.open, env.config.validator.bar_limit)
             self._match_immediately = False
 
         self._accounts = None
