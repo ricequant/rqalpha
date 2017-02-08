@@ -52,7 +52,7 @@
 - 增加了数据下载
 - 修正了Risk计算
 - 增加了instrument
-- 增加了position的`market_value`和`value_percent`
+- 增加了position的 `market_value` 和 `value_percent`
 
 
 0.0.2

@@ -14,30 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import codecs
-import sys
-import os
+import locale
 import shutil
-import datetime
-import tempfile
-import tarfile
 import errno
 import csv
-
-import pandas as pd
+import os
 import click
-import requests
-from six import exec_, print_, StringIO, iteritems
+import pandas as pd
+from six import StringIO, iteritems
 
-from . import StrategyExecutor
-from . import api
-from .data import LocalDataProxy
-from .logger import user_log, user_print
-from .trading_params import TradingParams
+from .cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
-from .utils import dummy_func, convert_int_to_date
-from .scheduler import Scheduler
+from .utils.i18n import set_locale
+from .utils.config import parse_config
 
 
 @click.group()
@@ -52,253 +41,139 @@ def entry_point():
 
 
 @cli.command()
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
-def update_bundle(data_bundle_path):
-    """update data bundle, download if not found"""
-    day = datetime.date.today()
-    tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
+@click.option('-d', '--data-bundle-path', 'base__data_bundle_path', type=click.Path(exists=True))
+@click.option('-f', '--strategy-file', 'base__strategy_file', type=click.Path(exists=True))
+@click.option('-s', '--start-date', 'base__start_date', type=Date())
+@click.option('-e', '--end-date', 'base__end_date', type=Date())
+@click.option('-r', '--rid', 'base__run_id', type=click.STRING)
+@click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
+@click.option('--stock-starting-cash', 'base__stock_starting_cash', type=click.FLOAT)
+@click.option('--future-starting-cash', 'base__future_starting_cash', type=click.FLOAT)
+@click.option('--benchmark', 'base__benchmark', type=click.STRING, default=None)
+@click.option('--slippage', 'base__slippage', type=click.FLOAT)
+@click.option('--commission-multiplier', 'base__commission_multiplier', type=click.FLOAT)
+@click.option('--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
+@click.option('--kind', 'base__strategy_type', help="stock/future")
+@click.option('--frequency', 'base__frequency', type=click.Choice(['1d', '1m']), help="1d/1m")
+@click.option('--match-engine', 'base__matching_type', type=click.Choice(['current_bar', 'next_bar']), help="current_bar/next_bar")
+@click.option('--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b", help="b/p")
+@click.option('--resume', 'base__resume_mode', is_flag=True)
+@click.option('--name', 'base__runtime_name')
+@click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
+@click.option('--risk-grid/--no-risk-grid', 'base__cal_risk_grid', default=True)
+@click.option('--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info']), help="verbose/debug/info")
+@click.option('--plot/--no-plot', 'extra__plot', default=None, help="plot result")
+@click.option('-o', '--output-file', 'extra__output_file', type=click.Path(writable=True), help="output result pickle file")
+@click.option('--fast-match', 'validator__fast_match', is_flag=True)
+@click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
+@click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
+@click.option('--config', 'config_path', type=click.STRING, help="config file path")
+def run(**kwargs):
+    if kwargs.get('base__run_type') == 'p':
+        set_cache_policy(CachePolicy.MINIMUM)
 
-    while True:
-        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles/rqbundle_%04d%02d%02d.tar.bz2' % (day.year, day.month, day.day)
-        print_('try {} ...'.format(url))
-        r = requests.get(url, stream=True)
-        if r.status_code != 200:
-            day = day - datetime.timedelta(days=1)
-            continue
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+    locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
+    os.environ['TZ'] = 'Asia/Shanghai'
+    set_locale(["zh_Hans_CN"])
 
-        out = open(tmp, 'wb')
-        total_length = int(r.headers.get('content-length'))
+    config_path = kwargs.get('config_path', None)
+    if config_path is not None:
+        config_path = os.path.abspath(config_path)
 
-        with click.progressbar(length=total_length, label='downloading ...') as bar:
-            for data in r.iter_content(chunk_size=8192):
-                bar.update(len(data))
-                out.write(data)
-
-        out.close()
-        break
-
-    shutil.rmtree(data_bundle_path, ignore_errors=True)
-    os.mkdir(data_bundle_path)
-    tar = tarfile.open(tmp, 'r:bz2')
-    tar.extractall(data_bundle_path)
-    tar.close()
-    os.remove(tmp)
-
-
-@cli.command()
-@click.option('-f', '--strategy-file', type=click.Path(exists=True), required=True)
-@click.option('-s', '--start-date', type=Date(), required=True)
-@click.option('-e', '--end-date', type=Date(), required=True)
-@click.option('-o', '--output-file', type=click.Path(writable=True))
-@click.option('-i', '--init-cash', default=100000, type=click.INT)
-@click.option('--plot/--no-plot', default=os.name != "nt", help="plot result")
-@click.option('--progress/--no-progress', default=True, help="show progress bar")
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
-def run(strategy_file, start_date, end_date, output_file, plot, data_bundle_path, init_cash, progress):
-    '''run strategy from file
-    '''
-    if not os.path.exists(data_bundle_path):
-        print_("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
-        return
-
-    with codecs.open(strategy_file, encoding="utf-8") as f:
-        source_code = f.read()
-
-    results_df = run_strategy(source_code, strategy_file, start_date, end_date,
-                              init_cash, data_bundle_path, progress)
-
-    if output_file is not None:
-        results_df.to_pickle(output_file)
-
-    if plot:
-        show_draw_result(strategy_file, results_df)
+    from . import main
+    main.run(parse_config(kwargs, config_path))
 
 
 @cli.command()
 @click.option('-d', '--directory', default="./", type=click.Path(), required=True)
 def examples(directory):
-    '''generate example strategies to target folder
-    '''
+    """
+    generate example strategies to target folder
+    """
     source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
 
     try:
         shutil.copytree(source_dir, os.path.join(directory, "examples"))
     except OSError as e:
         if e.errno == errno.EEXIST:
-            print_("Folder examples is exists.")
+            print("Folder examples is exists.")
 
 
 @cli.command()
 @click.argument('result-file', type=click.Path(exists=True), required=True)
 def plot(result_file):
-    '''draw result DataFrame
-    '''
+    """
+    draw result DataFrame
+    """
     results_df = pd.read_pickle(result_file)
-    show_draw_result(result_file, results_df)
+    from .main import plot_result
+    plot_result(result_file, results_df)
 
 
 @cli.command()
-@click.argument('result', type=click.Path(exists=True), required=True)
-@click.argument('csv-file', type=click.Path(), required=True)
+@click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
+@click.argument('target_report_csv_file', type=click.Path(), required=True)
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
-def report(result, csv_file, data_bundle_path):
-    '''generate csv report from backtest output file
-    '''
-    result_df = pd.read_pickle(result)
+def report(result_pickle_file_path, target_report_csv_file, data_bundle_path):
+    """
+    generate report from backtest output file
+    """
+    from .data.base_data_source import BaseDataSource
+    from .data.data_proxy import DataProxy
+    data_proxy = DataProxy(BaseDataSource(data_bundle_path))
 
-    data_proxy = LocalDataProxy(data_bundle_path)
+    result_df = pd.read_pickle(result_pickle_file_path)
 
     csv_txt = StringIO()
 
-    csv_txt.write("Trades\n")
-    fieldnames = ['date', 'order_book_id', 'amount', 'price', "commission", "tax"]
+    # csv_txt.write('Trades\n')
+    fieldnames = ['dt', 'order_book_id', 'side', 'amount', 'price', 'cash_amount', 'commission', 'tax']
     writer = csv.DictWriter(csv_txt, fieldnames=fieldnames)
     writer.writeheader()
-    for dt, trades in result_df.trades.iteritems():
-        for t in trades:
-            trade = dict(t.__dict__)
-            trade.pop("order_id")
-            order_book_id = trade["order_book_id"]
-            instrument = data_proxy.instrument(order_book_id)
-            trade["order_book_id"] = "{}({})".format(order_book_id, instrument.symbol)
-            trade["date"] = trade["date"].strftime("%Y-%m-%d %H:%M:%S")
-            writer.writerow(trade)
+    # for dt, trades in result_df.trades.iteritems():
+    #     for trade in trades:
+    #         order = trade['order']
+    #         order_book_id = order['order_book_id']
+    #         trade['order_book_id'] = order_book_id
+    #         instrument = data_proxy.instruments(order_book_id)
+    #         trade["order_book_id"] = "{}({})".format(order_book_id, instrument.symbol)
+    #         trade['dt'] = trade['dt'].strftime('%Y-%m-%d %H:%M:%S')
+    #         trade['side'] = str(order['side']).split('.')[1]
+    #         trade['cash_amount'] = trade['price'] * trade['amount']
+    #         for key in ['amount', 'price', 'cash_amount', 'commission', 'tax']:
+    #             trade[key] = round(trade[key], 2)
+    #         trade.pop('order')
+    #         trade.pop('trade_id')
+    #         writer.writerow(trade)
 
-    csv_txt.write("\nPositions\n")
-    fieldnames = ['date', 'order_book_id', 'market_value', 'quantity']
+    csv_txt.write('\nPositions\n')
+    fieldnames = ['dt', 'order_book_id', 'market_value', 'quantity']
     writer = csv.DictWriter(csv_txt, fieldnames=fieldnames)
     writer.writeheader()
     for _dt, positions in result_df.positions.iteritems():
-        dt = _dt.strftime("%Y-%m-%d %H:%M:%S")
+        dt = _dt.strftime('%Y-%m-%d %H:%M:%S')
         for order_book_id, position in iteritems(positions):
-            instrument = data_proxy.instrument(order_book_id)
+            instrument = data_proxy.instruments(order_book_id)
             writer.writerow({
-                "date": dt,
+                'dt': dt,
                 "order_book_id": "{}({})".format(order_book_id, instrument.symbol),
-                "market_value": position.market_value,
-                "quantity": position.quantity,
+                'market_value': position.market_value,
+                'quantity': position.quantity,
             })
 
-    with open(csv_file, 'w') as csvfile:
+    with open(target_report_csv_file, 'w') as csvfile:
         csvfile.write(csv_txt.getvalue())
 
 
-def run_strategy(source_code, strategy_filename, start_date, end_date,
-                 init_cash, data_bundle_path, show_progress):
-    scope = {
-        "logger": user_log,
-        "print": user_print,
-    }
-    scope.update({export_name: getattr(api, export_name) for export_name in api.__all__})
-    code = compile(source_code, strategy_filename, 'exec')
-    exec_(code, scope)
-
-    try:
-        data_proxy = LocalDataProxy(data_bundle_path)
-    except OSError as e:
-        if e.errno == errno.EEXIST:
-            print_("data bundle might crash. Run `%s update_bundle` to redownload data bundle." % sys.argv[0])
-            sys.exit()
-
-    # FIXME set end_date to latest data's date
-    dates = data_proxy.last("000001.XSHG", end_date, 10, "1d", "date")
-    end_date = min(convert_int_to_date(dates[-1]), end_date)
-
-    trading_cal = data_proxy.get_trading_dates(start_date, end_date)
-    Scheduler.set_trading_dates(data_proxy.get_trading_dates(start_date, end_date.date()))
-    trading_params = TradingParams(trading_cal, start_date=start_date.date(), end_date=end_date.date(),
-                                   init_cash=init_cash, show_progress=show_progress)
-
-    executor = StrategyExecutor(
-        init=scope.get("init", dummy_func),
-        before_trading=scope.get("before_trading", dummy_func),
-        handle_bar=scope.get("handle_bar", dummy_func),
-
-        trading_params=trading_params,
-        data_proxy=data_proxy,
-    )
-
-    results_df = executor.execute()
-
-    return results_df
-
-
-def show_draw_result(title, results_df):
-    import matplotlib
-    from matplotlib import gridspec
-    import matplotlib.image as mpimg
-    import matplotlib.pyplot as plt
-    plt.style.use('ggplot')
-
-    red = "#aa4643"
-    blue = "#4572a7"
-    black = "#000000"
-
-    figsize = (18, 6)
-    f = plt.figure(title, figsize=figsize)
-    gs = gridspec.GridSpec(10, 8)
-
-    # draw logo
-    ax = plt.subplot(gs[:3, -1:])
-    ax.axis("off")
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "resource")
-    filename = os.path.join(filename, "ricequant-logo.png")
-    img = mpimg.imread(filename)
-    imgplot = ax.imshow(img, interpolation="nearest")
-    ax.autoscale_view()
-
-    # draw risk and portfolio
-    series = results_df.iloc[-1]
-
-    font_size = 12
-    value_font_size = 11
-    label_height, value_height = 0.8, 0.6
-    label_height2, value_height2 = 0.35, 0.15
-
-    fig_data = [
-        (0.00, label_height, value_height, "Total Returns", "{0:.3%}".format(series.total_returns), red, black),
-        (0.15, label_height, value_height, "Annual Returns", "{0:.3%}".format(series.annualized_returns), red, black),
-        (0.00, label_height2, value_height2, "Benchmark Total", "{0:.3%}".format(series.benchmark_total_returns), blue, black),
-        (0.15, label_height2, value_height2, "Benchmark Annual", "{0:.3%}".format(series.benchmark_annualized_returns), blue, black),
-
-        (0.30, label_height, value_height, "Alpha", "{0:.4}".format(series.alpha), black, black),
-        (0.40, label_height, value_height, "Beta", "{0:.4}".format(series.beta), black, black),
-        (0.55, label_height, value_height, "Sharpe", "{0:.4}".format(series.sharpe), black, black),
-        (0.70, label_height, value_height, "Sortino", "{0:.4}".format(series.sortino), black, black),
-        (0.85, label_height, value_height, "Information Ratio", "{0:.4}".format(series.information_rate), black, black),
-
-        (0.30, label_height2, value_height2, "Volatility", "{0:.4}".format(series.volatility), black, black),
-        (0.40, label_height2, value_height2, "MaxDrawdown", "{0:.3%}".format(series.max_drawdown), black, black),
-        (0.55, label_height2, value_height2, "Tracking Error", "{0:.4}".format(series.tracking_error), black, black),
-        (0.70, label_height2, value_height2, "Downside Risk", "{0:.4}".format(series.downside_risk), black, black),
-    ]
-
-    ax = plt.subplot(gs[:3, :-1])
-    ax.axis("off")
-    for x, y1, y2, label, value, label_color, value_color in fig_data:
-        ax.text(x, y1, label, color=label_color, fontsize=font_size)
-        ax.text(x, y2, value, color=value_color, fontsize=value_font_size)
-
-    # strategy vs benchmark
-    ax = plt.subplot(gs[4:, :])
-
-    ax.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-    ax.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-    ax.grid(b=True, which='minor', linewidth=.2)
-    ax.grid(b=True, which='major', linewidth=1)
-
-    ax.plot(results_df["benchmark_total_returns"], label="benchmark", alpha=1, linewidth=2, color=blue)
-    ax.plot(results_df["total_returns"], label="strategy", alpha=1, linewidth=2, color=red)
-
-    # manipulate
-    vals = ax.get_yticks()
-    ax.set_yticklabels(['{:3.2f}%'.format(x*100) for x in vals])
-
-    leg = plt.legend(loc="upper left")
-    leg.get_frame().set_alpha(0.5)
-
-    plt.show()
-
+@cli.command()
+@click.option('-v', '--verbose', is_flag=True)
+def version(**kwargs):
+    """
+    Output Version Info
+    """
+    from rqalpha import version_info
+    print("Current Version: ", version_info)
 
 if __name__ == '__main__':
     entry_point()

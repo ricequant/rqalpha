@@ -19,7 +19,6 @@ attrdict>=2.0.0
 protobuf>=3.0.0b3
 PyYAML>=3.12
 SQLAlchemy
-rqdatac
 
 # ipdb
 

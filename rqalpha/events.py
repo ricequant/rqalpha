@@ -14,29 +14,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 
-from .const import EVENT_TYPE
 
+class Events(Enum):
+    POST_SYSTEM_INIT = 'post_system_init'
+    POST_USER_INIT = 'post_user_init'
 
-class SimulatorAStockTradingEventSource(object):
-    def __init__(self, trading_param):
-        self.trading_param = trading_param
-        self.timezone = trading_param.timezone
-        self.generator = self.create_generator()
+    POST_UNIVERSE_CHANGED = 'post_universe_changed'
 
-    def create_generator(self):
-        for date in self.trading_param.trading_calendar:
-            yield date.replace(hour=9, minute=0), EVENT_TYPE.DAY_START
-            yield date.replace(hour=15, minute=0), EVENT_TYPE.HANDLE_BAR
-            yield date.replace(hour=16, minute=0), EVENT_TYPE.DAY_END
+    PRE_BEFORE_TRADING = 'pre_before_trading'
+    BEFORE_TRADING = 'before_trading'
+    POST_BEFORE_TRADING = 'post_before_trading'
 
-    def __iter__(self):
-        return self
+    PRE_BAR = 'pre_bar'
+    BAR = 'bar'
+    POST_BAR = 'post_bar'
 
-    def __next__(self):
-        for date, event in self.generator:
-            return date, event
+    PRE_TICK = 'pre_tick'
+    TICK = 'tick'
+    POST_TICK = 'post_tick'
 
-        raise StopIteration
+    PRE_SCHEDULED = 'pre_scheduled'
+    POST_SCHEDULED = 'post_scheduled'
 
-    next = __next__  # Python 2
+    PRE_AFTER_TRADING = 'pre_after_trading'
+    AFTER_TRADING = 'after_trading'
+    POST_AFTER_TRADING = 'post_after_trading'
+
+    PRE_SETTLEMENT = 'pre_settlement'
+    SETTLEMENT = 'settlement'
+    POST_SETTLEMENT = 'post_settlement'
+
+    ORDER_NEW = 'order_new'     # 新产生了一个 order
+    ORDER_CREATION_PASS = 'order_creation_pass'
+    ORDER_CREATION_REJECT = 'order_creation_reject'
+    ORDER_CANCELLATION_PASS = 'order_cancellation_pass'
+    ORDER_CANCELLATION_REJECT = 'order_cancellation_reject'
+    ORDER__UNSOLICITED_UPDATE = 'order_unsolicited_update'
+
+    TRADE = 'trade'
+
+    ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'

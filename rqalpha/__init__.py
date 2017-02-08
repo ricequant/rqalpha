@@ -14,4 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .strategy import StrategyContext, StrategyExecutor
+"""
+RQAlpha - a Algorithm Trading System
+"""
+
+import pkgutil
+
+__all__ = [
+    '__version__',
+    'version_info'
+]
+
+
+__version__ = pkgutil.get_data(__package__, 'VERSION.txt').decode('ascii').strip()
+
+version_info = tuple(int(v) if v.isdigit() else v
+                     for v in __version__.split('.'))
+
+del pkgutil
