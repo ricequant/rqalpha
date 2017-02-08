@@ -171,43 +171,6 @@ def sell_close(id_or_ins, amount, style=MarketOrder()) -> int:
     return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.CLOSE, style)
 
 
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
-@apply_rules(verify_that('id_or_symbols').are_valid_instruments())
-def subscribe(id_or_symbols) -> None:
-    current_universe = Environment.get_instance().universe
-    if isinstance(id_or_symbols, six.string_types):
-        order_book_id = instruments(id_or_symbols).order_book_id
-        current_universe.add(order_book_id)
-    elif isinstance(id_or_symbols, Instrument):
-        current_universe.add(id_or_symbols.order_book_id)
-    elif isinstance(id_or_symbols, Iterable):
-        for item in id_or_symbols:
-            current_universe.add(assure_order_book_id(item))
-    else:
-        raise patch_user_exc(KeyError(_("unsupported order_book_id type")))
-    Environment.get_instance().update_universe(current_universe)
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
-@apply_rules(verify_that('id_or_symbols').are_valid_instruments())
-def unsubscribe(id_or_symbols) -> None:
-    current_universe = Environment.get_instance().universe
-    if isinstance(id_or_symbols, six.string_types):
-        order_book_id = instruments(id_or_symbols).order_book_id
-        current_universe.discard(order_book_id)
-    elif isinstance(id_or_symbols, Instrument):
-        current_universe.discard(id_or_symbols.order_book_id)
-    elif isinstance(id_or_symbols, Iterable):
-        for item in id_or_symbols:
-            i = assure_order_book_id(item)
-            current_universe.discard(i)
-    else:
-        raise patch_user_exc(KeyError(_("unsupported order_book_id type")))
-
-    Environment.get_instance().update_universe(current_universe)
-
-
 def assure_future_order_book_id(id_or_symbols):
     if isinstance(id_or_symbols, Instrument):
         if id_or_symbols.type != "Future":
@@ -230,5 +193,23 @@ def assure_future_order_book_id(id_or_symbols):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
 def get_future_contracts(underlying_symbol: str) -> list:
+    """
+    获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
+
+    :param str underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
+
+    :return: list[`str`]
+
+    :example:
+
+    获取某一天的主力合约代码（策略当前日期是20161201）:
+
+        ..  code-block:: python
+
+            [In]
+            logger.info(get_future_contracts('IF'))
+            [Out]
+            ['IF1612', 'IF1701', 'IF1703', 'IF1706']
+    """
     dt = ExecutionContext.get_current_trading_dt()
     return ExecutionContext.data_proxy.get_future_contracts(underlying_symbol, dt)
