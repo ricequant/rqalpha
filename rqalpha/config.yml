@@ -56,6 +56,7 @@ extra:
   force_run_init_when_pt_resume: false
   # enable_profiler: 是否启动性能分析
   enable_profiler: false
+  is_hold: false
 
 validator:
   # fast_match: 快速撮合，开启后，不进行队列等待，直接撮合
