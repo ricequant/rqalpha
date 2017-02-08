@@ -73,6 +73,7 @@ Development
    :caption: Development
    :hidden:
 
+   development/make_contribute
    development/basic_concept
    development/mod
 
