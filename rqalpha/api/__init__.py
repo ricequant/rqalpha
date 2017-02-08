@@ -15,6 +15,6 @@
 # limitations under the License.
 
 
-# from rqalpha.api.api_base import *
-# from rqalpha.api.api_stock import *
-# from rqalpha.api.api_future import *
+from .api_base import *
+from .api_stock import *
+from .api_future import *

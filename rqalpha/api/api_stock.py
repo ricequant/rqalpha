@@ -63,20 +63,42 @@ def export_as_api(func):
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_shares(id_or_ins, amount, style=MarketOrder()) -> int:
     """
-    Place an order by specified number of shares. Order type is also
-        passed in as parameters if needed. If style is omitted, it fires a
-        market order by default.
-    :PARAM id_or_ins: the instrument to be ordered
-    :type id_or_ins: str or Instrument
-    :param float amount: Number of shares to order. Positive means buy,
-        negative means sell. It will be rounded down to the closest
-        integral multiple of the lot size
-    :param style: Order type and default is `MarketOrder()`. The
-        available order types are: `MarketOrder()` and
-        `LimitOrder(limit_price)`
-    :return:  A unique order id.
-    :rtype: int
+    落指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object
+
+    :example:
+
+    .. code-block:: python
+
+        #购买Buy 2000 股的平安银行股票，并以市价单发送：
+        order_shares('000001.XSHE', 2000)
+        #卖出2000股的平安银行股票，并以市价单发送：
+        order_shares('000001.XSHE', -2000)
+        #购买1000股的平安银行股票，并以限价单发送，价格为￥10：
+        order_shares('000001.XSHG', 1000, style=LimitOrder(10))
     """
+    # Place an order by specified number of shares. Order type is also
+    #     passed in as parameters if needed. If style is omitted, it fires a
+    #     market order by default.
+    # :PARAM id_or_ins: the instrument to be ordered
+    # :type id_or_ins: str or Instrument
+    # :param float amount: Number of shares to order. Positive means buy,
+    #     negative means sell. It will be rounded down to the closest
+    #     integral multiple of the lot size
+    # :param style: Order type and default is `MarketOrder()`. The
+    #     available order types are: `MarketOrder()` and
+    #     `LimitOrder(limit_price)`
+    # :return:  A unique order id.
+    # :rtype: int
     if not isinstance(style, OrderStyle):
         raise patch_user_exc(ValueError(_('style should be OrderStyle')))
     if isinstance(style, LimitOrder):
@@ -131,19 +153,40 @@ def order_shares(id_or_ins, amount, style=MarketOrder()) -> int:
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_lots(id_or_ins, amount, style=MarketOrder()) -> int:
     """
-    Place an order by specified number of lots. Order type is also passed
-        in as parameters if needed. If style is omitted, it fires a market
-        order by default.
-    :param id_or_ins: the instrument to be ordered
-    :type id_or_ins: str or Instrument
-    :param float amount: Number of lots to order. Positive means buy,
-        negative means sell.
-    :param style: Order type and default is `MarketOrder()`. The
-        available order types are: `MarketOrder()` and
-        `LimitOrder(limit_price)`
-    :return:  A unique order id.
-    :rtype: int
+    指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object
+
+    :example:
+
+    .. code-block:: python
+
+        #买入20手的平安银行股票，并且发送市价单：
+        order_lots('000001.XSHE', 20)
+        #买入10手平安银行股票，并且发送限价单，价格为￥10：
+        order_lots('000001.XSHE', 10, style=LimitOrder(10))
+
     """
+    # Place an order by specified number of lots. Order type is also passed
+    #     in as parameters if needed. If style is omitted, it fires a market
+    #     order by default.
+    # :param id_or_ins: the instrument to be ordered
+    # :type id_or_ins: str or Instrument
+    # :param float amount: Number of lots to order. Positive means buy,
+    #     negative means sell.
+    # :param style: Order type and default is `MarketOrder()`. The
+    #     available order types are: `MarketOrder()` and
+    #     `LimitOrder(limit_price)`
+    # :return:  A unique order id.
+    # :rtype: int
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
     round_lot = int(ExecutionContext.get_instrument(order_book_id).round_lot)
@@ -159,21 +202,42 @@ def order_lots(id_or_ins, amount, style=MarketOrder()) -> int:
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
     """
-    Place an order by specified value amount rather than specific number
-        of shares/lots. Negative cash_amount results in selling the given
-        amount of value, if the cash_amount is larger than you current
-        security’s position, then it will sell all shares of this security.
-        Orders are always truncated to whole lot shares.
-    :param id_or_ins: the instrument to be ordered
-    :type id_or_ins: str or Instrument
-    :param float cash_amount: Cash amount to buy / sell the given value of
-        securities. Positive means buy, negative means sell.
-    :param style: Order type and default is `MarketOrder()`. The
-        available order types are: `MarketOrder()` and
-        `LimitOrder(limit_price)`
-    :return:  A unique order id.
-    :rtype: int
+    使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。当您提交一个卖单时，该方法代表的意义是您希望通过卖出该股票套现的金额。如果金额超出了您所持有股票的价值，那么您将卖出所有股票。需要注意，如果资金不足，该API将不会创建发送订单。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param float cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object
+
+    :example:
+
+    .. code-block:: python
+
+        #买入价值￥10000的平安银行股票，并以市价单发送。如果现在平安银行股票的价格是￥7.5，那么下面的代码会买入1300股的平安银行，因为少于100股的数目将会被自动删除掉：
+        order_value('000001.XSHE', 10000)
+        #卖出价值￥10000的现在持有的平安银行：
+        order_value('000001.XSHE', -10000)
+
     """
+    # Place an order by specified value amount rather than specific number
+    #     of shares/lots. Negative cash_amount results in selling the given
+    #     amount of value, if the cash_amount is larger than you current
+    #     security’s position, then it will sell all shares of this security.
+    #     Orders are always truncated to whole lot shares.
+    # :param id_or_ins: the instrument to be ordered
+    # :type id_or_ins: str or Instrument
+    # :param float cash_amount: Cash amount to buy / sell the given value of
+    #     securities. Positive means buy, negative means sell.
+    # :param style: Order type and default is `MarketOrder()`. The
+    #     available order types are: `MarketOrder()` and
+    #     `LimitOrder(limit_price)`
+    # :return:  A unique order id.
+    # :rtype: int
     if not isinstance(style, OrderStyle):
         raise patch_user_exc(ValueError(_('style should be OrderStyle')))
     if isinstance(style, LimitOrder):
@@ -217,23 +281,41 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_percent(id_or_ins, percent, style=MarketOrder()) -> int:
     """
-    Place an order for a security for a given percent of the current
-        portfolio value, which is the sum of the positions value and
-        ending cash balance. A negative percent order will result in
-        selling given percent of current portfolio value. Orders are
-        always truncated to whole shares. Percent should be a decimal
-        number (0.50 means 50%), and its absolute value is <= 1.
-    :param id_or_ins: the instrument to be ordered
-    :type id_or_ins: str or Instrument
-    :param float percent: Percent of the current portfolio value. Positive
-        means buy, negative means selling give percent of the current
-        portfolio value. Orders are always truncated according to lot size.
-    :param style: Order type and default is `MarketOrder()`. The
-        available order types are: `MarketOrder()` and
-        `LimitOrder(limit_price)`
-    :return:  A unique order id.
-    :rtype: int
+    发送一个等于目前投资组合价值（市场价值和目前现金的总和）一定百分比的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param float percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object
+
+    :example:
+
+    .. code-block:: python
+
+        #买入等于现有投资组合50%价值的平安银行股票。如果现在平安银行的股价是￥10/股并且现在的投资组合总价值是￥2000，那么将会买入200股的平安银行股票。（不包含交易成本和滑点的损失）：
+        order_percent('000001.XSHG', 0.5)
     """
+    # Place an order for a security for a given percent of the current
+    #     portfolio value, which is the sum of the positions value and
+    #     ending cash balance. A negative percent order will result in
+    #     selling given percent of current portfolio value. Orders are
+    #     always truncated to whole shares. Percent should be a decimal
+    #     number (0.50 means 50%), and its absolute value is <= 1.
+    # :param id_or_ins: the instrument to be ordered
+    # :type id_or_ins: str or Instrument
+    # :param float percent: Percent of the current portfolio value. Positive
+    #     means buy, negative means selling give percent of the current
+    #     portfolio value. Orders are always truncated according to lot size.
+    # :param style: Order type and default is `MarketOrder()`. The
+    #     available order types are: `MarketOrder()` and
+    #     `LimitOrder(limit_price)`
+    # :return:  A unique order id.
+    # :rtype: int
     if percent < -1 or percent > 1:
         raise patch_user_exc(ValueError(_('percent should between -1 and 1')))
 
@@ -250,21 +332,39 @@ def order_percent(id_or_ins, percent, style=MarketOrder()) -> int:
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_target_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
     """
-    Place an order to adjust a position to a target value. If there is no
-        position for the security, an order is placed for the whole amount
-        of target value. If there is already a position for the security,
-        an order is placed for the difference between target value and
-        current position value.
-    :param id_or_ins: the instrument to be ordered
-    :type id_or_ins: str or Instrument
-    :param float cash_amount: Target cash value for the adjusted position
-        after placing order.
-    :param style: Order type and default is `MarketOrder()`. The
-        available order types are: `MarketOrder()` and
-        `LimitOrder(limit_price)`
-    :return:  A unique order id.
-    :rtype: int
+    买入/卖出并且自动调整该证券的仓位到一个目标价值。如果还没有任何该证券的仓位，那么会买入全部目标价值的证券。如果已经有了该证券的仓位，则会买入/卖出调整该证券的现在仓位和目标仓位的价值差值的数目的证券。需要注意，如果资金不足，该API将不会创建发送订单。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+
+    :param float cash_amount: 最终的该证券的仓位目标价值。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object
+
+    :example:
+
+    .. code-block:: python
+
+        #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位并且设置其目标价值为￥10000，以下代码范例会发送价值￥7000的平安银行的买单到市场。（向下调整到最接近每手股数即100的倍数的股数）：
+        order_target_value('000001.XSHE', 10000)
     """
+    # Place an order to adjust a position to a target value. If there is no
+    #     position for the security, an order is placed for the whole amount
+    #     of target value. If there is already a position for the security,
+    #     an order is placed for the difference between target value and
+    #     current position value.
+    # :param id_or_ins: the instrument to be ordered
+    # :type id_or_ins: str or Instrument
+    # :param float cash_amount: Target cash value for the adjusted position
+    #     after placing order.
+    # :param style: Order type and default is `MarketOrder()`. The
+    #     available order types are: `MarketOrder()` and
+    #     `LimitOrder(limit_price)`
+    # :return:  A unique order id.
+    # :rtype: int
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -286,26 +386,55 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_target_percent(id_or_ins, percent, style=MarketOrder()) -> int:
     """
-    Place an order to adjust position to a target percent of the portfolio
-        value, so that your final position value takes the percentage you
-        defined of your whole portfolio.
-        position_to_adjust = target_position - current_position
-        Portfolio value is calculated as sum of positions value and ending
-        cash balance. The order quantity will be rounded down to integral
-        multiple of lot size. Percent should be a decimal number (0.50
-        means 50%), and its absolute value is <= 1. If the
-        position_to_adjust calculated is positive, then it fires buy
-        orders, otherwise it fires sell orders.
-    :param id_or_ins: the instrument to be ordered
-    :type id_or_ins: str or Instrument
-    :param float percent: Number of percent to order. It will be rounded down
-        to the closest integral multiple of the lot size
-    :param style: Order type and default is `MarketOrder()`. The
-        available order types are: `MarketOrder()` and
-        `LimitOrder(limit_price)`
-    :return:  A unique order id.
-    :rtype: int
+    买入/卖出证券以自动调整该证券的仓位到占有一个指定的投资组合的目标百分比。
+
+    *   如果投资组合中没有任何该证券的仓位，那么会买入等于现在投资组合总价值的目标百分比的数目的证券。
+    *   如果投资组合中已经拥有该证券的仓位，那么会买入/卖出目标百分比和现有百分比的差额数目的证券，最终调整该证券的仓位占据投资组合的比例至目标百分比。
+
+    其实我们需要计算一个position_to_adjust (即应该调整的仓位)
+
+    `position_to_adjust = target_position - current_position`
+
+    投资组合价值等于所有已有仓位的价值和剩余现金的总和。买/卖单会被下舍入一手股数（A股是100的倍数）的倍数。目标百分比应该是一个小数，并且最大值应该<=1，比如0.5表示50%。
+
+    如果position_to_adjust 计算之后是正的，那么会买入该证券，否则会卖出该证券。 需要注意，如果资金不足，该API将不会创建发送订单。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+
+    :param float percent: 仓位最终所占投资组合总价值的目标百分比。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object
+
+    :example:
+
+    .. code-block:: python
+
+        #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会买入平安银行股票最终使其占据投资组合价值的15%：
+        order_target_percent('000001.XSHE', 0.15)
     """
+    # Place an order to adjust position to a target percent of the portfolio
+    #     value, so that your final position value takes the percentage you
+    #     defined of your whole portfolio.
+    #     position_to_adjust = target_position - current_position
+    #     Portfolio value is calculated as sum of positions value and ending
+    #     cash balance. The order quantity will be rounded down to integral
+    #     multiple of lot size. Percent should be a decimal number (0.50
+    #     means 50%), and its absolute value is <= 1. If the
+    #     position_to_adjust calculated is positive, then it fires buy
+    #     orders, otherwise it fires sell orders.
+    # :param id_or_ins: the instrument to be ordered
+    # :type id_or_ins: str or Instrument
+    # :param float percent: Number of percent to order. It will be rounded down
+    #     to the closest integral multiple of the lot size
+    # :param style: Order type and default is `MarketOrder()`. The
+    #     available order types are: `MarketOrder()` and
+    #     `LimitOrder(limit_price)`
+    # :return:  A unique order id.
+    # :rtype: int
     if percent < 0 or percent > 1:
         raise patch_user_exc(ValueError(_('percent should between 0 and 1')))
     order_book_id = assure_stock_order_book_id(id_or_ins)

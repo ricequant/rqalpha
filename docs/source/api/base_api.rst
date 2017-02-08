@@ -20,7 +20,9 @@ init
     :param context: 策略上下文
     :type context: :class:`~StrategyContext` object
 
-    示例如下::
+    :example:
+
+    .. code-block:: python
 
         def init(context):
             # cash_limit的属性是根据用户需求自己定义的，你可以定义无限多种自己随后需要的属性，ricequant的系统默认只是会占用context.portfolio的关键字来调用策略的投资组合信息
@@ -41,7 +43,9 @@ handle_bar
     :param bar_dict: key为order_book_id，value为bar数据。当前合约池内所有合约的bar数据信息都会更新在bar_dict里面
     :type bar_dict: :class:`~BarDict` object
 
-    示例如下::
+    :example:
+
+    .. code-block:: python
 
         def handle_bar(context, bar_dict):
             # put all your algorithm main logic here.
@@ -63,7 +67,9 @@ before_trading
     :param context: 策略上下文
     :type context: :class:`~StrategyContext` object
 
-    示例如下::
+    :example:
+
+    .. code-block:: python
 
         def before_trading(context, bar_dict):
             # 拿取财务数据的逻辑，自己构建SQLAlchemy query
@@ -92,253 +98,80 @@ after_trading
 交易相关函数
 =================
 
+.. module:: rqalpha.api
+    :synopsis: API
 
 order_shares - 指定股数交易（股票专用）
 ------------------------------------------------------
 
-.. py:function:: order_shares(id_or_ins, amount, style=MarketOrder())
+.. autofunction:: order_shares
 
-    落指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #购买Buy 2000 股的平安银行股票，并以市价单发送：
-        order_shares('000001.XSHE', 2000)
-        #卖出2000股的平安银行股票，并以市价单发送：
-        order_shares('000001.XSHE', -2000)
-        #购买1000股的平安银行股票，并以限价单发送，价格为￥10：
-        order_shares('000001.XSHG', 1000, style=LimitOrder(10))
 
 order_lots - 指定手数交易（股票专用）
 ------------------------------------------------------
 
-.. py:function:: order_lots(id_or_ins, amount, style=MarketOrder())
+.. autofunction:: order_lots
 
-
-    指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #买入20手的平安银行股票，并且发送市价单：
-        order_lots('000001.XSHE', 20)
-        #买入10手平安银行股票，并且发送限价单，价格为￥10：
-        order_lots('000001.XSHE', 10, style=LimitOrder(10))
 
 order_value - 指定价值交易（股票专用）
 ------------------------------------------------------
 
-.. py:function:: order_value(id_or_ins, cash_amount, style=MarketOrder())
+.. autofunction:: order_value
 
-    使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。当您提交一个卖单时，该方法代表的意义是您希望通过卖出该股票套现的金额。如果金额超出了您所持有股票的价值，那么您将卖出所有股票。需要注意，如果资金不足，该API将不会创建发送订单。
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param float cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #买入价值￥10000的平安银行股票，并以市价单发送。如果现在平安银行股票的价格是￥7.5，那么下面的代码会买入1300股的平安银行，因为少于100股的数目将会被自动删除掉：
-        order_value('000001.XSHE', 10000)
-        #卖出价值￥10000的现在持有的平安银行：
-        order_value('000001.XSHE', -10000)
 
 order_percent - 一定比例下单（股票专用）
 ------------------------------------------------------
 
-.. py:function:: order_percent(id_or_ins, percent, style=MarketOrder())
+.. autofunction:: order_percent
 
-    发送一个等于目前投资组合价值（市场价值和目前现金的总和）一定百分比的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param float percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #买入等于现有投资组合50%价值的平安银行股票。如果现在平安银行的股价是￥10/股并且现在的投资组合总价值是￥2000，那么将会买入200股的平安银行股票。（不包含交易成本和滑点的损失）：
-        order_percent('000001.XSHG', 0.5)
 
 order_target_value - 目标价值下单（股票专用）
 ------------------------------------------------------
 
-.. py:function:: order_target_value(id_or_ins, cash_amount, style=MarketOrder())
+.. autofunction:: order_target_value
 
-    买入/卖出并且自动调整该证券的仓位到一个目标价值。如果还没有任何该证券的仓位，那么会买入全部目标价值的证券。如果已经有了该证券的仓位，则会买入/卖出调整该证券的现在仓位和目标仓位的价值差值的数目的证券。需要注意，如果资金不足，该API将不会创建发送订单。
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
-
-    :param float cash_amount: 最终的该证券的仓位目标价值。
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位并且设置其目标价值为￥10000，以下代码范例会发送价值￥7000的平安银行的买单到市场。（向下调整到最接近每手股数即100的倍数的股数）：
-        order_target_value('000001.XSHE', 10000)
 
 order_target_percent - 目标比例下单（股票专用）
 ------------------------------------------------------
 
-.. py:function:: order_target_percent(id_or_ins, percent, style=MarketOrder())
+.. autofunction:: order_target_percent
 
-    买入/卖出证券以自动调整该证券的仓位到占有一个指定的投资组合的目标百分比。
-
-    *   如果投资组合中没有任何该证券的仓位，那么会买入等于现在投资组合总价值的目标百分比的数目的证券。
-    *   如果投资组合中已经拥有该证券的仓位，那么会买入/卖出目标百分比和现有百分比的差额数目的证券，最终调整该证券的仓位占据投资组合的比例至目标百分比。
-
-    其实我们需要计算一个position_to_adjust (即应该调整的仓位)
-
-    `position_to_adjust = target_position - current_position`
-
-    投资组合价值等于所有已有仓位的价值和剩余现金的总和。买/卖单会被下舍入一手股数（A股是100的倍数）的倍数。目标百分比应该是一个小数，并且最大值应该<=1，比如0.5表示50%。
-
-    如果position_to_adjust 计算之后是正的，那么会买入该证券，否则会卖出该证券。 需要注意，如果资金不足，该API将不会创建发送订单。
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
-
-    :param float percent: 仓位最终所占投资组合总价值的目标百分比。
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会买入平安银行股票最终使其占据投资组合价值的15%：
-        order_target_percent('000001.XSHE', 0.15)
 
 buy_open - 买开（期货专用）
 ------------------------------------------------------
 
-.. py:function:: buy_open(id_or_ins, amount, style=MarketOrder())
+.. autofunction:: buy_open
 
-    买入开仓。
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
-
-    :param int amount: 下单手数
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #以价格为3500的限价单开仓买入2张上期所AG1607合约：
-        buy_open('AG1607', amount=2, style=LimitOrder(3500))
 
 sell_close - 平买仓（期货专用）
 ------------------------------------------------------
 
-.. py:function:: sell_close(id_or_ins, amount, style=MarketOrder())
+.. autofunction:: sell_close
 
-    平买仓
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
-
-    :param int amount: 下单手数
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
 
 sell_open - 卖开（期货专用）
 ------------------------------------------------------
 
-.. py:function:: sell_open(id_or_ins, amount, style=MarketOrder())
+.. autofunction:: sell_open
 
-    卖出开仓
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
-
-    :param int amount: 下单手数
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
 
 buy_close - 平卖仓（期货专用）
 ------------------------------------------------------
 
-.. py:function:: buy_close(id_or_ins, amount, style=MarketOrder())
+.. autofunction:: buy_close
 
-    平卖仓
-
-    :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
-
-    :param int amount: 下单手数
-
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object
-
-    示例::
-
-        #市价单将现有IF1603空仓买入平仓2张：
-        buy_close('IF1603', 2)
 
 cancel_order - 撤单
 ------------------------------------------------------
 
-.. py:function:: cancel_order(order)
+.. autofunction:: cancel_order
 
-    撤单
-
-    :param order: 需要撤销的order对象
-    :type order: :class:`~Order` object
 
 get_open_orders - 获取未成交订单数据
 ------------------------------------------------------
 
-.. py:function:: get_open_orders()
+.. autofunction:: get_open_orders
 
-    :return: List[:class:`~Order` object]
 
 
 Context属性
@@ -463,7 +296,11 @@ scheduler.run_daily - 每天运行
 
     :param func function: 使传入的function每日运行。注意，function函数一定要包含（并且只能包含）context, bar_dict两个输入参数
 
-    以下的范例代码片段是一个非常简单的例子，在每天交易后查询现在portfolio中剩下的cash的情况::
+    :example:
+
+    以下的范例代码片段是一个非常简单的例子，在每天交易后查询现在portfolio中剩下的cash的情况:
+
+    .. code-block:: python
 
         #scheduler调用的函数需要包括context, bar_dict两个输入参数
         def log_cash(context, bar_dict):
@@ -493,7 +330,11 @@ scheduler.run_weekly - 每周运行
 
     :param int tradingday: 范围为[-5,1],[1,5] 例如，1代表每周第一个交易日，-1代表每周倒数第一个交易日，用户可以不填写。
 
-    以下的代码片段非常简单，在每周二固定运行打印一下现在的portfolio剩余的资金::
+    :example:
+
+    以下的代码片段非常简单，在每周二固定运行打印一下现在的portfolio剩余的资金:
+
+    .. code-block:: python
 
         #scheduler调用的函数需要包括context, bar_dict两个参数
         def log_cash(context, bar_dict):
@@ -522,7 +363,11 @@ scheduler.run_monthly - 每月运行
 
     :param int tradingday: 范围为[-23,1], [1,23] ，例如，1代表每月第一个交易日，-1代表每月倒数第一个交易日，用户必须指定。
 
-    以下的代码片段非常简单的展示了每个月第一个交易日的时候我们进行一次财务数据查询，这样子会非常有用在一些根据财务数据来自动调节仓位股票组合的算法来说::
+    :example:
+
+    以下的代码片段非常简单的展示了每个月第一个交易日的时候我们进行一次财务数据查询，这样子会非常有用在一些根据财务数据来自动调节仓位股票组合的算法来说:
+
+    .. code-block:: python
 
         #scheduler调用的函数需要包括context, bar_dict两个参数
         def query_fundamental(context, bar_dict):
@@ -581,21 +426,29 @@ time_rule - 定时间运行
     minute                      int - option [1,240]        具体在market_open/market_close的后/前第多少分钟执行,同上，股票每天交易时间240分钟，所以minute的范围为 [1,240],中午休市的时间区间会被忽略。
     =========================   =========================   ==============================================================================
 
-    示例:
+    :example:
 
-    *   每天的开市后10分钟运行::
+    *   每天的开市后10分钟运行:
+
+        .. code-block:: python
 
             scheduler.run_daily(function, time_rule=market_open(minute=10))
 
-    *   每周的第t个交易日闭市前1小时运行::
+    *   每周的第t个交易日闭市前1小时运行:
+
+        .. code-block:: python
 
             scheduler.run_weekly(function, tradingday=t, time_rule=market_close(hour=1))
 
-    *   每月的第t个交易日开市后1小时运行::
+    *   每月的第t个交易日开市后1小时运行:
+
+        .. code-block:: python
 
             scheduler.run_monthly(function, tradingday=t, time_rule=market_open(hour=1))
 
-    *   每天开始交易前运行::
+    *   每天开始交易前运行:
+
+        .. code-block:: python
 
             scheduler.run_daily(function, time_rule='before_trading')
 
@@ -630,19 +483,21 @@ all_instruments - 所有合约基础信息
     minute                      int - option [1,240]
     =========================   ===================================================
 
-    示例:
+    :example:
 
-    获取中国市场所有分级基金的基础信息::
+    获取中国市场所有分级基金的基础信息:
 
-        [In]all_instruments('FenjiA')
-        [Out]
-            abbrev_symbol    order_book_id    product    sector_code  symbol
-        0    CYGA    150303.XSHE    null    null    华安创业板50A
-        1    JY500A    150088.XSHE    null    null    金鹰500A
-        2    TD500A    150053.XSHE    null    null    泰达稳健
-        3    HS500A    150110.XSHE    null    null    华商500A
-        4    QSAJ    150235.XSHE    null    null    鹏华证券A
-        ...
+        .. code-block:: python
+
+            [In]all_instruments('FenjiA')
+            [Out]
+                abbrev_symbol    order_book_id    product    sector_code  symbol
+            0    CYGA    150303.XSHE    null    null    华安创业板50A
+            1    JY500A    150088.XSHE    null    null    金鹰500A
+            2    TD500A    150053.XSHE    null    null    泰达稳健
+            3    HS500A    150110.XSHE    null    null    华商500A
+            4    QSAJ    150235.XSHE    null    null    鹏华证券A
+            ...
 
 
 instruments - 合约详细信息
@@ -659,25 +514,33 @@ instruments - 合约详细信息
 
     目前系统并不支持跨国家市场的同时调用。传入 order_book_id list必须属于同一国家市场，不能混合着中美两个国家市场的order_book_id。
 
-    示例:
+    :example:
 
-    *   获取单一股票合约的详细信息::
+    *   获取单一股票合约的详细信息:
+
+        .. code-block:: python
 
             [In]instruments('000001.XSHE')
             [Out]
             Instrument(order_book_id=000001.XSHE, symbol=平安银行, abbrev_symbol=PAYH, listed_date=19910403, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active)
 
-    *   获取多个股票合约的详细信息::
+    *   获取多个股票合约的详细信息:
+
+        .. code-block:: python
 
             [In]instruments(['000001.XSHE', '000024.XSHE'])
             [Out]
             [Instrument(order_book_id=000001.XSHE, symbol=平安银行, abbrev_symbol=PAYH, listed_date=19910403, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active), Instrument(order_book_id=000024.XSHE, symbol=招商地产, abbrev_symbol=ZSDC, listed_date=19930607, de_listed_date=null, board_type=MainBoard, sector_code_name=金融, sector_code=Financials, round_lot=100, exchange=XSHE, special_type=Normal, status=Active)]
 
-    *   获取合约已上市天数::
+    *   获取合约已上市天数:
+
+        .. code-block:: python
 
             instruments('000001.XSHE').days_from_listed()
 
-    *   获取合约距离到期天数::
+    *   获取合约距离到期天数:
+
+        .. code-block:: python
 
             instruments('IF1701').days_to_expire()
 
@@ -745,14 +608,16 @@ history_bars - 某一合约历史数据
 
     :return: `ndarray`, 方便直接与talib等计算库对接，效率较history返回的DataFrame更高。
 
-    示例:
+    :example:
 
-    获取最近5天的日线收盘价序列（策略当前日期为20160706）::
+    获取最近5天的日线收盘价序列（策略当前日期为20160706）:
 
-        [In]
-        logger.info(history_bars('000002.XSHE', 5, '1d', 'close'))
-        [Out]
-        [ 8.69  8.7   8.71  8.81  8.81]
+        .. code-block:: python
+
+            [In]
+            logger.info(history_bars('000002.XSHE', 5, '1d', 'close'))
+            [Out]
+            [ 8.69  8.7   8.71  8.81  8.81]
 
 current_snapshot - 当前快照数据
 ------------------------------------------------------
@@ -765,15 +630,17 @@ current_snapshot - 当前快照数据
 
     :return: :class:`~Snapshot`
 
-    示例：
+    :example:
 
-    在handle_bar中调用该函数，假设策略当前时间是20160104 09:33::
+    在handle_bar中调用该函数，假设策略当前时间是20160104 09:33:
 
-        [In]
-        logger.info(current_snapshot('000001.XSHE'))
-        [Out]
-        2016-01-04 09:33:00.00  INFO
-        Snapshot(order_book_id: '000001.XSHE', datetime: datetime.datetime(2016, 1, 4, 9, 33), open: 10.0, high: 10.025, low: 9.9667, last: 9.9917, volume: 2050320, total_turnover: 20485195, prev_close: 9.99)
+        .. code-block:: python
+
+            [In]
+            logger.info(current_snapshot('000001.XSHE'))
+            [Out]
+            2016-01-04 09:33:00.00  INFO
+            Snapshot(order_book_id: '000001.XSHE', datetime: datetime.datetime(2016, 1, 4, 9, 33), open: 10.0, high: 10.025, low: 9.9667, last: 9.9917, volume: 2050320, total_turnover: 20485195, prev_close: 9.99)
 
 get_future_contracts - 期货可交易合约列表
 ------------------------------------------------------
@@ -786,14 +653,16 @@ get_future_contracts - 期货可交易合约列表
 
     :return: list[`str`]
 
-    示例:
+    :example:
 
-    获取某一天的主力合约代码（策略当前日期是20161201）::
+    获取某一天的主力合约代码（策略当前日期是20161201）:
 
-        [In]
-        logger.info(get_future_contracts('IF'))
-        [Out]
-        ['IF1612', 'IF1701', 'IF1703', 'IF1706']
+        .. code-block:: python
+
+            [In]
+            logger.info(get_future_contracts('IF'))
+            [Out]
+            ['IF1612', 'IF1701', 'IF1703', 'IF1706']
 
 get_trading_dates - 交易日列表
 ------------------------------------------------------
@@ -810,11 +679,13 @@ get_trading_dates - 交易日列表
 
     :return: list[`datetime.date`]
 
-    示例::
+    :example:
 
-        [In]get_trading_dates(start_date='2016-05-05', end_date='20160505')
-        [Out]
-        [datetime.date(2016, 5, 5)]
+        .. code-block:: python
+
+            [In]get_trading_dates(start_date='2016-05-05', end_date='20160505')
+            [Out]
+            [datetime.date(2016, 5, 5)]
 
 get_previous_trading_date - 上一交易日
 ------------------------------------------------------
@@ -828,11 +699,13 @@ get_previous_trading_date - 上一交易日
 
     :return: `datetime.date`
 
-    示例::
+    :example:
 
-        [In]get_previous_trading_date(date='2016-05-02')
-        [Out]
-        [datetime.date(2016, 4, 29)]
+        .. code-block:: python
+
+            [In]get_previous_trading_date(date='2016-05-02')
+            [Out]
+            [datetime.date(2016, 4, 29)]
 
 get_next_trading_date - 下一交易日
 ------------------------------------------------------
@@ -846,11 +719,13 @@ get_next_trading_date - 下一交易日
 
     :return: `datetime.date`
 
-    示例::
+    :example:
 
-        [In]get_next_trading_date(date='2016-05-01')
-        [Out]
-        [datetime.date(2016, 5, 3)]
+        .. code-block:: python
+
+            [In]get_next_trading_date(date='2016-05-01')
+            [Out]
+            [datetime.date(2016, 5, 3)]
 
 get_yield_curve - 收益率曲线
 ------------------------------------------------------
@@ -868,18 +743,20 @@ get_yield_curve - 收益率曲线
 
     :return: `pandas.DataFrame` - 查询时间段内无风险收益率曲线
 
-    示例::
+    :example:
 
-        [In]
-        get_yield_curve('20130104')
+        .. code-block:: python
 
-        [Out]
-                        0S      1M      2M      3M      6M      9M      1Y      2Y  \
-        2013-01-04  0.0196  0.0253  0.0288  0.0279  0.0280  0.0283  0.0292  0.0310
+            [In]
+            get_yield_curve('20130104')
 
-                        3Y      4Y   ...        6Y      7Y      8Y      9Y     10Y  \
-        2013-01-04  0.0314  0.0318   ...    0.0342  0.0350  0.0353  0.0357  0.0361
-        ...
+            [Out]
+                            0S      1M      2M      3M      6M      9M      1Y      2Y  \
+            2013-01-04  0.0196  0.0253  0.0288  0.0279  0.0280  0.0283  0.0292  0.0310
+
+                            3Y      4Y   ...        6Y      7Y      8Y      9Y     10Y  \
+            2013-01-04  0.0314  0.0318   ...    0.0342  0.0350  0.0353  0.0357  0.0361
+            ...
 
 is_suspended - 全天停牌判断
 ------------------------------------------------------
@@ -1613,15 +1490,19 @@ FutureInstrument
 
 Instrument对象也支持如下方法：
 
-合约已上市天数。::
+合约已上市天数。:
 
-    instruments(order_book_id).days_from_listed()
+    .. code-block:: python
+
+        instruments(order_book_id).days_from_listed()
 
 如果合约首次上市交易，天数为0；如果合约尚未上市或已经退市，则天数值为-1
 
-合约距离到期天数。::
+合约距离到期天数。:
 
-    instruments(order_book_id).days_to_expire()
+    .. code-block:: python
+
+        instruments(order_book_id).days_to_expire()
 
 如果策略已经退市，则天数值为-1
 

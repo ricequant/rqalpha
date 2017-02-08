@@ -137,6 +137,11 @@ def get_order(order_id) -> "[Deprecated]":
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 def get_open_orders() -> "Order[]":
+    """
+    获取当日未成交订单数据
+
+    :return: List[:class:`~Order` object]
+    """
     return ExecutionContext.account.get_open_orders()
 
 
@@ -145,8 +150,14 @@ def get_open_orders() -> "Order[]":
                                 EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-def cancel_order(order_id):
-    order = order_id if isinstance(order_id, Order) else get_order(order_id)
+def cancel_order(order):
+    """
+    撤单
+
+    :param order: 需要撤销的order对象
+    :type order: :class:`~Order` object
+    """
+    order = order if isinstance(order, Order) else get_order(order)
     if order is None:
         patch_user_exc(KeyError(_("Cancel order fail: invalid order id")))
     ExecutionContext.broker.cancel_order(order)
