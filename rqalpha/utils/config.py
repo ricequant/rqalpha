@@ -75,8 +75,11 @@ def parse_config(click_kargs, base_config_path=None):
     if base_config.margin_multiplier <= 0:
         raise patch_user_exc(ValueError(_("invalid margin multiplier value: value range is (0, +∞]")))
 
+    if base_config.data_bundle_path is None:
+        base_config.data_bundle_path = os.path.expanduser("~/.rqalpha")
+
     if not os.path.exists(base_config.data_bundle_path):
-        print("data bundle not found. Run `python3 {baseProject}/tools/create_bundle` to download data bundle.")
+        print("data bundle not found. Run `rqalpha update_bundle` to download data bundle.")
         # print("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
         return
 

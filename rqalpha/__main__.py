@@ -20,8 +20,12 @@ import errno
 import csv
 import os
 import click
+import tempfile
+import tarfile
+import datetime
+import requests
 import pandas as pd
-from six import StringIO, iteritems
+from six import StringIO, iteritems, print_
 
 from .cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
@@ -38,6 +42,41 @@ def cli(ctx, verbose):
 
 def entry_point():
     cli(obj={})
+
+
+@cli.command()
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
+def update_bundle(data_bundle_path):
+    """update data bundle, download if not found"""
+    day = datetime.date.today()
+    tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
+
+    while True:
+        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles/rqbundle_%04d%02d%02d.tar.bz2' % (
+        day.year, day.month, day.day)
+        print_('try {} ...'.format(url))
+        r = requests.get(url, stream=True)
+        if r.status_code != 200:
+            day = day - datetime.timedelta(days=1)
+            continue
+
+        out = open(tmp, 'wb')
+        total_length = int(r.headers.get('content-length'))
+
+        with click.progressbar(length=total_length, label='downloading ...') as bar:
+            for data in r.iter_content(chunk_size=8192):
+                bar.update(len(data))
+                out.write(data)
+
+        out.close()
+        break
+
+    shutil.rmtree(data_bundle_path, ignore_errors=True)
+    os.mkdir(data_bundle_path)
+    tar = tarfile.open(tmp, 'r:bz2')
+    tar.extractall(data_bundle_path)
+    tar.close()
+    os.remove(tmp)
 
 
 @cli.command()

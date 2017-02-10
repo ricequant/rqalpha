@@ -5,7 +5,7 @@ base:
   # 可以指定回测的唯一ID，用户区分多次回测的结果
   run_id: 9999
   # 数据源所存储的文件路径
-  data_bundle_path: ./bundle/
+  data_bundle_path: ~
   # 启动的策略文件路径
   strategy_file: ./rqalpha/examples/test.py
   # 回测起始日期
