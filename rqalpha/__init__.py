@@ -25,10 +25,16 @@ __all__ = [
     'version_info'
 ]
 
-
 __version__ = pkgutil.get_data(__package__, 'VERSION.txt').decode('ascii').strip()
 
 version_info = tuple(int(v) if v.isdigit() else v
                      for v in __version__.split('.'))
 
+import sys
+
+if sys.version_info < (3, 4):
+    print("Scrapy %s requires Python 3.4 above" % __version__)
+    sys.exit(1)
+
+del sys
 del pkgutil
