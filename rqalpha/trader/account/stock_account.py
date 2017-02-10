@@ -71,11 +71,13 @@ class StockAccount(BaseAccount):
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=de_listed_id))
             del positions[de_listed_id]
 
+    def settlement(self):
+        portfolio = self.portfolio
+        trading_date = ExecutionContext.get_current_trading_dt().date()
+
         self.portfolio_persist()
 
         portfolio._yesterday_portfolio_value = portfolio.portfolio_value
-
-        # store today portfolio
 
         self._handle_dividend_ex_dividend(trading_date)
 
