@@ -102,62 +102,107 @@ class Order:
 
     @property
     def order_id(self) -> int:
+        """
+        【int】唯一标识订单的id
+        """
         return self._order_id
 
     @property
     def trading_datetime(self) -> datetime.datetime:
+        """
+        【datetime.datetime】订单的交易日期（对应期货夜盘）
+        """
         return self._trading_dt
 
     @property
     def datetime(self) -> datetime.datetime:
+        """
+        【datetime.datetime】订单创建时间
+        """
         return self._calendar_dt
 
     @property
     def quantity(self) -> int:
+        """
+        【int】订单数量
+        """
         return self._quantity
 
     @property
     def unfilled_quantity(self) -> int:
+        """
+        【int】订单未成交数量
+        """
         return self._quantity - self._filled_quantity
 
     @property
     def order_book_id(self) -> str:
+        """
+        【str】合约代码
+        """
         return self._order_book_id
 
     @property
     def side(self) -> SIDE:
+        """
+        【SIDE】订单方向
+        """
         return self._side
 
     @property
     def position_effect(self) -> POSITION_EFFECT:
+        """
+        【POSITION_EFFECT】订单开平（期货专用）
+        """
         return self._position_effect
 
     @property
     def message(self) -> str:
+        """
+        【str】信息。比如拒单时候此处会提示拒单原因
+        """
         return self._message
 
     @property
     def filled_quantity(self) -> int:
+        """
+        【int】订单已成交数量
+        """
         return self._filled_quantity
 
     @property
     def status(self) -> ORDER_STATUS:
+        """
+        【ORDER_STATUS】订单状态
+        """
         return self._status
 
     @property
     def price(self) -> float:
+        """
+        【float】订单价格，只有在订单类型为'限价单'的时候才有意义
+        """
         return 0 if self.type == ORDER_TYPE.MARKET else self._frozen_price
 
     @property
     def type(self) -> ORDER_TYPE:
+        """
+        【ORDER_TYPE】订单类型
+        """
         return self._type
 
     @property
     def avg_price(self) -> float:
+        """
+        【float】成交均价
+        """
         return self._avg_price
 
     @property
     def transaction_cost(self) -> float:
+        """
+        【float】费用
+        """
         return self._transaction_cost
 
     def _is_final(self):

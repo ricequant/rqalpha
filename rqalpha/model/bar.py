@@ -47,6 +47,9 @@ class BarObject(object):
 
     @property
     def open(self):
+        """
+        【float】当日开盘价
+        """
         return self._data["open"]
 
     @property
@@ -55,10 +58,16 @@ class BarObject(object):
 
     @property
     def low(self):
+        """
+        【float】截止到当前的最低价
+        """
         return self._data["low"]
 
     @property
     def high(self):
+        """
+        【float】截止到当前的最高价
+        """
         return self._data["high"]
 
     @property
@@ -123,6 +132,9 @@ class BarObject(object):
 
     @property
     def prev_close(self):
+        """
+        【float】截止到当前的最低价
+        """
         try:
             return self._data['prev_close']
         except (ValueError, KeyError):
@@ -149,14 +161,23 @@ class BarObject(object):
 
     @property
     def last(self):
+        """
+        【float】当前最新价
+        """
         return self.close
 
     @property
     def volume(self):
+        """
+        【float】截止到当前的成交量
+        """
         return self._data["volume"]
 
     @property
     def total_turnover(self):
+        """
+        【float】截止到当前的成交额
+        """
         return self._data['total_turnover']
 
     @property
@@ -200,6 +221,9 @@ class BarObject(object):
 
     @property
     def prev_settlement(self):
+        """
+        【float】昨日结算价（期货专用）
+        """
         try:
             return self._data['prev_settlement']
         except (ValueError, KeyError):
@@ -213,6 +237,9 @@ class BarObject(object):
 
     @property
     def open_interest(self):
+        """
+        【float】截止到当前的持仓量（期货专用）
+        """
         return self._data['open_interest']
 
     @property
@@ -227,14 +254,23 @@ class BarObject(object):
 
     @property
     def order_book_id(self):
+        """
+        【str】交易标的代码
+        """
         return self._instrument.order_book_id
 
     @property
     def symbol(self):
+        """
+        【str】合约简称
+        """
         return self._instrument.symbol
 
     @property
     def is_trading(self):
+        """
+        【datetime.datetime】 时间戳
+        """
         return self._data['volume'] > 0
 
     @property

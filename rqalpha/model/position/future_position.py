@@ -69,25 +69,25 @@ FuturePersistMap = {
 
 
 class FuturePosition(BasePosition):
-    """
-    buy_open_order_value:       <float> 买开挂单总值
-    sell_open_order_value:      <float> 卖开挂单总值
-    buy_close_order_value:      <float> 买平挂单总值
-    sell_close_order_value:     <float> 卖平挂单总值
-    buy_open_order_quantity:    <float> 买开挂单量
-    sell_open_order_quantity:   <float> 卖开挂单量
-    buy_close_order_quantity:   <float> 买平挂单量
-    sell_close_order_quantity:  <float> 卖平挂单量
-    buy_open_trade_quantity:    <float> 买开成交量
-    sell_open_trade_quantity:   <float> 卖开成交量
-    buy_close_trade_quantity:   <float> 买平成交量
-    sell_close_trade_quantity:  <float> 买平成交量
-    daily_realized_pnl:         <float> 当日平仓盈亏
-    buy_settle_holding:         <Tuple(price, amount)> 买结算后昨仓
-    sell_settle_holding:        <Tuple(price, amount)> 卖结算后昨仓
-    buy_today_holding_list:     <List<Tuple(price, amount)>> 买当日持仓队列
-    sell_today_holding_list:    <List<Tuple(price, amount)>> 卖当日持仓队列
-    """
+
+    # buy_open_order_value:       <float> 买开挂单总值
+    # sell_open_order_value:      <float> 卖开挂单总值
+    # buy_close_order_value:      <float> 买平挂单总值
+    # sell_close_order_value:     <float> 卖平挂单总值
+    # buy_open_order_quantity:    <float> 买开挂单量
+    # sell_open_order_quantity:   <float> 卖开挂单量
+    # buy_close_order_quantity:   <float> 买平挂单量
+    # sell_close_order_quantity:  <float> 卖平挂单量
+    # buy_open_trade_quantity:    <float> 买开成交量
+    # sell_open_trade_quantity:   <float> 卖开成交量
+    # buy_close_trade_quantity:   <float> 买平成交量
+    # sell_close_trade_quantity:  <float> 买平成交量
+    # daily_realized_pnl:         <float> 当日平仓盈亏
+    # buy_settle_holding:         <Tuple(price, amount)> 买结算后昨仓
+    # sell_settle_holding:        <Tuple(price, amount)> 卖结算后昨仓
+    # buy_today_holding_list:     <List<Tuple(price, amount)>> 买当日持仓队列
+    # sell_today_holding_list:    <List<Tuple(price, amount)>> 卖当日持仓队列
+
 
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
@@ -147,30 +147,51 @@ class FuturePosition(BasePosition):
 
     @property
     def buy_open_order_quantity(self) -> int:
+        """
+        【int】买开挂单量
+        """
         return self._buy_open_order_quantity
 
     @property
     def sell_open_order_quantity(self) -> int:
+        """
+        【int】卖开挂单量
+        """
         return self._sell_open_order_quantity
 
     @property
     def buy_close_order_quantity(self) -> int:
+        """
+        【int】买平挂单量
+        """
         return self._buy_close_order_quantity
 
     @property
     def sell_close_order_quantity(self) -> int:
+        """
+        【int】卖平挂单量
+        """
         return self._sell_close_order_quantity
 
     @property
     def daily_realized_pnl(self) -> float:
+        """
+        【float】当日平仓盈亏
+        """
         return self._daily_realized_pnl
 
     @property
     def daily_pnl(self) -> float:
+        """
+        【float】当日盈亏，当日浮动盈亏+当日平仓盈亏
+        """
         return self.daily_realized_pnl + self.daily_holding_pnl
 
     @property
     def daily_holding_pnl(self) -> float:
+        """
+        【float】当日持仓盈亏
+        """
         # daily_holding_pnl: < float > 当日持仓盈亏
         return self._market_value + self._sell_holding_cost - self._buy_holding_cost
 
@@ -184,26 +205,41 @@ class FuturePosition(BasePosition):
 
     @property
     def buy_daily_pnl(self) -> float:
+        """
+        【float】多头仓位当日盈亏
+        """
         return self._buy_daily_holding_pnl + self._buy_daily_realized_pnl
 
     @property
     def sell_daily_pnl(self) -> float:
+        """
+        【float】空头仓位当日盈亏
+        """
         return self._sell_daily_holding_pnl + self._sell_daily_realized_pnl
 
     @property
     def margin(self) -> float:
+        """
+        【float】仓位总保证金
+        """
         # 总保证金
         # TODO 这里之后需要进行修改,需要考虑单向大边的情况
         return self.buy_margin + self.sell_margin
 
     @property
     def buy_margin(self) -> float:
+        """
+        【float】多头持仓占用保证金
+        """
         # buy_margin: < float > 买保证金
         margin_decider = Environment.get_instance().accounts[ACCOUNT_TYPE.FUTURE].margin_decider
         return margin_decider.cal_margin(self.order_book_id, SIDE.BUY, self._buy_holding_cost)
 
     @property
     def sell_margin(self) -> float:
+        """
+        【float】空头持仓占用保证金
+        """
         # sell_margin: < float > 卖保证金
         margin_decider = Environment.get_instance().accounts[ACCOUNT_TYPE.FUTURE].margin_decider
         return margin_decider.cal_margin(self.order_book_id, SIDE.SELL, self._sell_holding_cost)
@@ -226,20 +262,32 @@ class FuturePosition(BasePosition):
 
     @property
     def buy_quantity(self) -> int:
+        """
+        【int】多头持仓
+        """
         # 买方向总持仓
         return self._buy_old_holding_quantity + self._buy_today_holding_quantity
 
     @property
     def sell_quantity(self) -> int:
+        """
+        【int】空头持仓
+        """
         # 卖方向总持仓
         return self._sell_old_holding_quantity + self._sell_today_holding_quantity
 
     @property
     def buy_avg_holding_price(self) -> float:
+        """
+        【float】多头持仓均价
+        """
         return 0 if self.buy_quantity == 0 else self._buy_holding_cost / self.buy_quantity / self._contract_multiplier
 
     @property
     def sell_avg_holding_price(self) -> float:
+        """
+        【float】空头持仓均价
+        """
         return 0 if self.sell_quantity == 0 else self._sell_holding_cost / self.sell_quantity / self._contract_multiplier
 
     @property
@@ -254,10 +302,16 @@ class FuturePosition(BasePosition):
 
     @property
     def closable_buy_quantity(self) -> int:
+        """
+        【float】可平多头持仓
+        """
         return self._buy_closable_quantity
 
     @property
     def closable_sell_quantity(self) -> int:
+        """
+        【int】可平空头持仓
+        """
         return self._sell_closable_quantity
 
     @property
@@ -295,11 +349,17 @@ class FuturePosition(BasePosition):
 
     @property
     def buy_today_quantity(self) -> int:
+        """
+        【int】多头今仓
+        """
         # Buy今仓
         return sum(amount for (price, amount) in self._buy_today_holding_list)
 
     @property
     def sell_today_quantity(self) -> int:
+        """
+        【int】空头今仓
+        """
         # Sell今仓
         return sum(amount for (price, amount) in self._sell_today_holding_list)
 
@@ -313,20 +373,32 @@ class FuturePosition(BasePosition):
 
     @property
     def buy_pnl(self) -> float:
+        """
+        【float】多头仓位累计盈亏
+        """
         return self._sell_close_trade_value - self._buy_open_trade_value + \
                self.buy_quantity * self._last_price * self._contract_multiplier
 
     @property
     def sell_pnl(self) -> float:
+        """
+        【float】空头仓位累计盈亏
+        """
         return self._sell_open_trade_value - self._buy_close_trade_value - \
                self.sell_quantity * self._last_price * self._contract_multiplier
 
     @property
     def buy_daily_pnl(self) -> float:
+        """
+        【float】多头仓位当日盈亏
+        """
         return self._buy_daily_holding_pnl + self._buy_daily_realized_pnl
 
     @property
     def sell_daily_pnl(self) -> float:
+        """
+        【float】空头仓位当日盈亏
+        """
         return self._sell_daily_holding_pnl + self._sell_daily_realized_pnl
 
     @property
@@ -339,30 +411,51 @@ class FuturePosition(BasePosition):
 
     @property
     def buy_avg_open_price(self) -> float:
+        """
+        【float】多头持仓均价
+        """
         return self._buy_avg_open_price
 
     @property
     def sell_avg_open_price(self) -> float:
+        """
+        【float】空头开仓均价
+        """
         return self._sell_avg_open_price
 
     @property
     def buy_transaction_cost(self) -> float:
+        """
+        【float】多头费用
+        """
         return self._buy_open_transaction_cost + self._sell_close_transaction_cost
 
     @property
     def sell_transaction_cost(self) -> float:
+        """
+        【float】空头费用
+        """
         return self._sell_open_transaction_cost + self._buy_close_transaction_cost
 
     @property
     def transaction_cost(self) -> float:
+        """
+        【float】仓位交易费用
+        """
         return self.buy_transaction_cost + self.sell_transaction_cost
 
     @property
     def buy_market_value(self) -> float:
+        """
+        【float】多头仓位市值加总
+        """
         return self._buy_market_value
 
     @property
     def sell_market_value(self) -> float:
+        """
+        【float】空头仓位市值加总
+        """
         return self._sell_market_value
 
     def _cal_close_today_amount(self, trade_amount, trade_side):

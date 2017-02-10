@@ -79,18 +79,30 @@ class StockPortfolio(BasePortfolio):
 
     @property
     def cash(self) -> float:
+        """
+        【float】可用资金
+        """
         return self._cash
 
     @property
     def positions(self) -> "StockPosition[]":
+        """
+        【dict】一个包含股票子组合仓位的字典，以order_book_id作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
+        """
         return self._positions
 
     @property
     def daily_pnl(self) -> float:
+        """
+        【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
+        """
         return self.portfolio_value - self._yesterday_portfolio_value
 
     @property
     def portfolio_value(self) -> float:
+        """
+        【float】总权益，包含市场价值和剩余现金
+        """
         if self._portfolio_value is None:
             # 总资金 + Sum(position._position_value)
             self._portfolio_value = self.cash + self.frozen_cash + sum(
@@ -100,6 +112,9 @@ class StockPortfolio(BasePortfolio):
 
     @property
     def dividend_receivable(self) -> float:
+        """
+        【float】投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
+        """
         return self._dividend_receivable
 
     def _clone(self):

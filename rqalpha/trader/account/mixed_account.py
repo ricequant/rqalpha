@@ -64,57 +64,96 @@ class MixedPortfolio:
 
     @property
     def daily_returns(self):
+        """
+        【float】投资组合每日收益率
+        """
         return self.daily_pnl / self._yesterday_portfolio_value
 
     @property
     def starting_cash(self):
+        """
+        【float】初始资金，为子组合初始资金的加总
+        """
         return sum(portfolio.starting_cash for portfolio in self._portfolio_list)
 
     @property
     def start_date(self):
+        """
+        【datetime.datetime】策略投资组合的回测/实时模拟交易的开始日期
+        """
         for portfolio in self._portfolio_list:
             return portfolio.start_date
 
     @property
     def frozen_cash(self):
+        """
+        【float】冻结资金
+        """
         return sum(portfolio.frozen_cash for portfolio in self._portfolio_list)
 
     @property
     def cash(self):
+        """
+        【float】可用资金，为子组合可用资金的加总
+        """
         return sum(portfolio.cash for portfolio in self._portfolio_list)
 
     @property
     def portfolio_value(self):
+        """
+        【float】总权益，为子组合总权益加总
+        """
         return sum(portfolio.portfolio_value for portfolio in self._portfolio_list)
 
     @property
     def positions(self) -> "MixedPositions[]":
+        """
+        【dict】一个包含所有仓位的字典，以order_book_id作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
+        """
         return MixedPositions(self._portfolio_list)
 
     @property
     def daily_pnl(self):
+        """
+        【float】当日盈亏，子组合当日盈亏的加总
+        """
         return sum(portfolio.daily_pnl for portfolio in self._portfolio_list)
 
     @property
     def market_value(self):
+        """
+        【float】投资组合当前的市场价值，为子组合市场价值的加总
+        """
         return sum(portfolio.market_value for portfolio in self._portfolio_list)
 
     @property
     def pnl(self):
+        """
+        【float】当前投资组合的累计盈亏
+        """
         return self.portfolio_value - self.starting_cash
 
     @property
     def total_returns(self):
+        """
+        【float】投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
+        """
         return self.pnl / self.starting_cash
 
     @property
     def annualized_returns(self):
+        """
+        【float】投资组合的年化收益率
+        """
         current_date = self._portfolio_list[0]._current_date
         return (1 + self.total_returns) ** (
             DAYS_CNT.DAYS_A_YEAR / float((current_date - self.start_date).days + 1)) - 1
 
     @property
     def transaction_cost(self):
+        """
+        【float】总费用
+        """
         return sum(portfolio.transaction_cost for portfolio in self._portfolio_list)
 
 

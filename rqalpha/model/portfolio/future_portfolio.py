@@ -77,14 +77,23 @@ class FuturePortfolio(BasePortfolio):
 
     @property
     def positions(self) -> "FuturePosition[]":
+        """
+        【dict】一个包含期货子组合仓位的字典，以order_book_id作为键，position对象作为值
+        """
         return self._positions
 
     @property
     def cash(self) -> float:
+        """
+        【float】可用资金
+        """
         return self.portfolio_value - self.margin - self.daily_holding_pnl - self.frozen_cash
 
     @property
     def portfolio_value(self) -> float:
+        """
+        【float】总权益，昨日总权益+当日盈亏
+        """
         if self._portfolio_value is None:
             self._portfolio_value = self._yesterday_portfolio_value + self.daily_pnl
 
@@ -98,6 +107,9 @@ class FuturePortfolio(BasePortfolio):
 
     @property
     def buy_margin(self) -> float:
+        """
+        【float】多头保证金
+        """
         # 买保证金
         # TODO 这里需要考虑 T TF 这种跨合约单向大边的情况
         # TODO 这里需要考虑 同一个合约跨期单向大边的情况
@@ -105,26 +117,41 @@ class FuturePortfolio(BasePortfolio):
 
     @property
     def sell_margin(self) -> float:
+        """
+        【float】空头保证金
+        """
         # 卖保证金
         return sum(position.sell_margin for position in itervalues(self.positions))
 
     @property
     def margin(self) -> float:
+        """
+        【float】已占用保证金
+        """
         # 总保证金
         return sum(position.margin for position in itervalues(self.positions))
 
     @property
     def daily_holding_pnl(self) -> float:
+        """
+        【float】当日浮动盈亏
+        """
         # 当日持仓盈亏
         return sum(position.daily_holding_pnl for position in itervalues(self.positions))
 
     @property
     def daily_realized_pnl(self) -> float:
+        """
+        【float】当日平仓盈亏
+        """
         # 当日平仓盈亏
         return sum(position.daily_realized_pnl for position in itervalues(self.positions))
 
     @property
     def daily_pnl(self) -> float:
+        """
+        【float】当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
+        """
         # 当日盈亏
         return self.daily_realized_pnl + self.daily_holding_pnl - self._daily_transaction_cost
 

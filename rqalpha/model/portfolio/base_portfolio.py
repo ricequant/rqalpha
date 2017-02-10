@@ -50,18 +50,30 @@ class BasePortfolio:
 
     @property
     def daily_returns(self) -> float:
+        """
+        【float】当前最新一天的每日收益
+        """
         return 0 if self._yesterday_portfolio_value == 0 else self.daily_pnl / self._yesterday_portfolio_value
 
     @property
     def starting_cash(self) -> float:
+        """
+        【float】回测或实盘交易给算法策略设置的初始资金
+        """
         return self._starting_cash
 
     @property
     def start_date(self) -> datetime.date:
+        """
+        【datetime.datetime】策略投资组合的回测/实时模拟交易的开始日期
+        """
         return self._start_date
 
     @property
     def frozen_cash(self) -> float:
+        """
+        【float】冻结资金
+        """
         return self._frozen_cash
 
     @property
@@ -71,6 +83,9 @@ class BasePortfolio:
 
     @property
     def portfolio_value(self) -> float:
+        """
+        【float】总权益，包含市场价值和剩余现金
+        """
         # 投资组合总值
         raise NotImplementedError
 
@@ -81,30 +96,48 @@ class BasePortfolio:
 
     @property
     def daily_pnl(self) -> float:
+        """
+        【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
+        """
         # 当日盈亏
         raise NotImplementedError
 
     @property
     def market_value(self) -> float:
+        """
+        【float】投资组合当前所有证券仓位的市值的加总
+        """
         return sum(position.market_value for position in itervalues(self.positions))
 
     @property
     def pnl(self) -> float:
+        """
+        【float】当前投资组合的累计盈亏
+        """
         # 总盈亏
         return self.portfolio_value - self.starting_cash
 
     @property
     def total_returns(self) -> float:
+        """
+        【float】投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
+        """
         # 总收益率
         return 0 if self.starting_cash == 0 else self.pnl / self.starting_cash
 
     @property
     def annualized_returns(self) -> float:
+        """
+        【float】投资组合的年化收益率
+        """
         # 年化收益率
         return (1 + self.total_returns) ** (
             DAYS_CNT.DAYS_A_YEAR / float((self._current_date - self.start_date).days + 1)) - 1
 
     @property
     def transaction_cost(self) -> float:
+        """
+        【float】总费用
+        """
         # 总费用
         return self._total_commission + self._total_tax
