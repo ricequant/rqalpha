@@ -1,4 +1,4 @@
-![rqalpha](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/srouce/_static/logo.jpg)
+![rqalpha](https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/source/_static/logo.jpg)
 
 # RQAlpha
 
