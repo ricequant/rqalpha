@@ -25,6 +25,7 @@ from ..interface import AbstractDataSource
 from .converter import StockBarConverter, IndexBarConverter
 from .converter import FutureDayBarConverter, FundDayBarConverter
 from .daybar_store import DayBarStore
+from .date_set import DateSet
 from .dividend_store import DividendStore
 from .instrument_store import InstrumentStore
 from .trading_dates_store import TradingDatesStore
@@ -49,6 +50,9 @@ class BaseDataSource(AbstractDataSource):
         self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
         self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
 
+        self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
+        self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
 
@@ -66,6 +70,12 @@ class BaseDataSource(AbstractDataSource):
 
     def get_all_instruments(self):
         return self._instruments.get_all_instruments()
+
+    def is_suspended(self, order_book_id, dt):
+        return self._suspend_days.contains(order_book_id, dt)
+
+    def is_st_stock(self, order_book_id, dt):
+        return self._st_stock_days.contains(order_book_id, dt)
 
     INSTRUMENT_TYPE_MAP = {
         'CS': 0,
