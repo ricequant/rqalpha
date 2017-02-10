@@ -52,7 +52,7 @@ def update_bundle(data_bundle_path):
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
 
     while True:
-        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles/rqbundle_%04d%02d%02d.tar.bz2' % (
+        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
         day.year, day.month, day.day)
         print_('try {} ...'.format(url))
         r = requests.get(url, stream=True)
