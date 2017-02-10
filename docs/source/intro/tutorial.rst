@@ -49,17 +49,10 @@
 
     In [1]: import pandas as pd
 
-    In [2]: df = pd.read_pickle('result.pkl')
+    In [2]: result_dict = pd.read_pickle('result.pkl')
 
-    In [3]: df.columns
-    Out[3]:
-    Index(['alpha', 'annualized_returns', 'benchmark_annualized_returns',
-           'benchmark_daily_returns', 'benchmark_total_returns', 'beta', 'cash',
-           'daily_pnl', 'daily_returns', 'downside_risk', 'information_ratio',
-           'market_value', 'max_drawdown', 'portfolio_value', 'positions',
-           'sharpe', 'sortino', 'total_returns', 'tracking_error', 'trades',
-           'volatility'],
-          dtype='object')
+    In [3]: result_dict.keys()
+    Out[3]: dict_keys(['total_portfolios', 'summary', 'benchmark_portfolios', 'benchmark_positions', 'stock_positions', 'trades', 'stock_portfolios'])
 
 更多参数配置请查看 :ref:`api-config`
 
@@ -249,10 +242,3 @@ Ricequant 金融、财务、合约历史数据等数据接口，详情请查看 
     # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
     def after_trading(context):
         pass
-
-
-
-
-
-
-
