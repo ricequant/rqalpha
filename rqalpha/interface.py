@@ -29,6 +29,8 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def load(self, strategy, scope):
         """
+        【Required】
+
         load 函数负责组装策略代码和策略代码所在的域，并输出最终组装好的可执行域
 
         :param str strategy: 策略相关参数，可以是路径，也可以是源码本身，
@@ -49,6 +51,8 @@ class AbstractEventSource:
     """
     def events(self, start_date, end_date, frequency):
         """
+        【Required】
+
         扩展 EventSource 必须实现 events 函数。
 
         events 是一个 event generator, 在相应事件的时候需要以如下格式来传递事件
@@ -240,25 +244,95 @@ class AbstractDataSource:
 
 
 class AbstractBroker:
+    """
+    RQAlpha 中将 Broker 作为虚拟券商的一个代理。
+
+    比如作为回测，通过AbstractBroker扩展了default_broker(相当于BackTestBroker)
+    该 Broker 接受 `submit_order` 和 `cancel_order`，然后连接撮合引擎，进行撮合，再通过event_bus来讲下单之后的相应返回给RQAlpha。
+
+    AbstractBroker 的存在，意味着实现自定义Broker成为了可能，RQAlpha 可以通过实现任何交易接口对接RQAlpha的Broker来对其进行支持。
+    """
+
     def submit_order(self, order):
+        """
+        【Required】
+
+        扩展的 Broker 需要实现下单函数，RQAlpha 会根据用户调用的下单 API 自定生成一个 :class:`~Order` 的对象作为参数传入。
+
+        注意：订单处理的返回不是通过该函数的返回值，而是需要触发对应的事件， 如下所示:
+
+        ..  code-block:: python3
+            :linenos:
+
+            Environment.get_instance().event_bus.publish_event(Events.TRADE, account, trade)
+
+        :type order: :class:`~Order`
+        """
         raise NotImplementedError
 
     def cancel_order(self, order):
+        """
+        【Required】
+
+        扩展的 Broker 需要实现撤单函数，其他与submit_order类似
+
+        :param order: 订单
+        :type order: :class:`~Order`
+        """
         raise NotImplementedError
 
     def before_trading(self):
+        """
+        【Optional】
+
+        Broker 很多场景下需要接收到 :class:`~AbstractEventSource` 触发的 `before_trading` 事件进行一些交易前处理。
+
+        自定义 Broker 如果有需要的话，可以实现该函数
+        """
         raise NotImplementedError
 
     def after_trading(self):
+        """
+        【Optional】
+
+        与 before_trading类似，可以通过实现该函数，在交易结束后进行相关的处理。
+        """
         raise NotImplementedError
 
     def get_open_orders(self):
+        """
+        【Required】
+
+        RQAlpha 需要获取当天的订单数据，
+
+        :return: list[:class:`~Order`]
+        """
         raise NotImplementedError
 
     def get_accounts(self):
+        """
+        [Required]
+
+        程序启动后，RQAlpha 会从 Broker 查询账户信息。
+
+        Broker 定义为虚拟券商的代理，RQAlpha默认是支持混合策略的(比如包含股票、期货、期权)，因此Broker生成的的账户需要支持混合策略结构，可以参考 RQAlpha 的 DefaultBroker具体账户的定义和实现。
+
+        :return: dict[:class:`Account`]
+        """
         raise NotImplementedError
 
     def update(self, calendar_dt, trading_dt, bar_dict):
+        """
+        【Optional】
+
+        data source 在数据和时间更新后，RQAlpha 会调用 Broker 的 `update` 函数，来传入对应的时间和数据。
+
+        Broker 根据自己的业务场景来选择是否实现，比如说自带撮合引擎的Broker，会通过 `update` 函数来触发撮合。
+
+        :param calendar_dt: 实际时间
+        :param trading_dt: 交易时间
+        :param bar_dict: dict[:class:`~BarObject`]
+        """
         raise NotImplementedError
 
 
