@@ -36,7 +36,7 @@ Windows 环境下编译安装 bcolz 需要使用Visual C++ Compiler，需要自�
 
 如果执行 `pip install` 安装依赖库网络速度比较慢的话，推荐使用国内镜像来进行加速::
 
-    $ pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com rqalpha
+    $ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple rqalpha
 
 查看 RQAlpha 是否安装成功可以通过如下方式::
 
