@@ -106,6 +106,7 @@ def update_bundle(data_bundle_path):
 @click.option('--fast-match', 'validator__fast_match', is_flag=True)
 @click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
+@click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 @click.help_option('-h', '--help')
 def run(**kwargs):
