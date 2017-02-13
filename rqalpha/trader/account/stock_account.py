@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import pandas as pd
-from six import iteritems
 
 from .base_account import BaseAccount
 from ...model.dividend import Dividend
@@ -87,7 +87,7 @@ class StockAccount(BaseAccount):
         portfolio._portfolio_value = None
         positions = portfolio.positions
 
-        for order_book_id, position in iteritems(positions):
+        for order_book_id, position in six.iteritems(positions):
             bar = bar_dict[order_book_id]
             if not bar.isnan:
                 position._market_value = position._quantity * bar.close
@@ -194,7 +194,7 @@ class StockAccount(BaseAccount):
 
     def _handle_split(self, trading_date):
         import rqdatac
-        for order_book_id, position in iteritems(self.portfolio.positions):
+        for order_book_id, position in six.iteritems(self.portfolio.positions):
             split_df = rqdatac.get_split(order_book_id, start_date="2005-01-01", end_date="2099-01-01")
             if split_df is None:
                 system_log.warn("no split data {}", order_book_id)
@@ -229,7 +229,7 @@ class StockAccount(BaseAccount):
         """handle dividend payable before trading
         """
         to_delete_dividend = []
-        for order_book_id, dividend_info in iteritems(self.portfolio._dividend_info):
+        for order_book_id, dividend_info in six.iteritems(self.portfolio._dividend_info):
             dividend_series_dict = dividend_info.dividend_series_dict
 
             if pd.Timestamp(trading_date) == pd.Timestamp(dividend_series_dict['payable_date']):
@@ -249,7 +249,7 @@ class StockAccount(BaseAccount):
 
     def _handle_dividend_ex_dividend(self, trading_date):
         data_proxy = ExecutionContext.get_data_proxy()
-        for order_book_id, position in iteritems(self.portfolio.positions):
+        for order_book_id, position in six.iteritems(self.portfolio.positions):
             dividend_series = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend_series is None:
                 continue

@@ -14,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict, defaultdict
-
+import six
 import pandas as pd
-from six import iteritems
+from collections import OrderedDict, defaultdict
 
 from ..events import Events
 from ..const import ACCOUNT_TYPE
@@ -64,7 +63,7 @@ class ResultAggregator:
         tmp = self._risk_cal.risk
 
         # 单独分账号保存自己的
-        for account_type, account in iteritems(self._env.accounts):
+        for account_type, account in six.iteritems(self._env.accounts):
             self._portfolios_dict[account_type][date] = account.get_portfolio(date)
 
     def get_result_dict(self, strategy_name):
@@ -95,7 +94,7 @@ class ResultAggregator:
             return not key.startswith("_") and not key.endswith("_") and key not in blacklist
 
         # summary
-        date, latest_portfolio = list((key, value) for key, value in iteritems(self._portfolios))[-1]
+        date, latest_portfolio = list((key, value) for key, value in six.iteritems(self._portfolios))[-1]
         risk = self._risk_cal.daily_risks[date]
         risk_keys = [
             "volatility", "max_drawdown",
@@ -107,13 +106,13 @@ class ResultAggregator:
         summary = {
             "strategy_name": strategy_name,
         }
-        for key, value in iteritems(self._env.config.base.__dict__):
+        for key, value in six.iteritems(self._env.config.base.__dict__):
             if key not in ["trading_calendar", "account_list", "timezone", "persist_mode",
                            "resume_mode", "data_bundle_path", "handle_split", "persist", "cal_risk_grid"]:
                 summary[key] = safe_convert(value, 2)
         for key in risk_keys:
             summary[key] = safe_convert(getattr(risk, key), 3)
-        for key, value in iteritems(properties(latest_portfolio)):
+        for key, value in six.iteritems(properties(latest_portfolio)):
             if key not in ["positions", "daily_returns", "daily_pnl"]:
                 summary[key] = safe_convert(value, 3)
         # summary["start_date"] = summary["start_date"].strftime("%Y-%m-%d")
@@ -121,7 +120,7 @@ class ResultAggregator:
 
         # add benchmark
         if ACCOUNT_TYPE.BENCHMARK in self._portfolios_dict:
-            _, latest_benchmark_portfolio = list((key, value) for key, value in iteritems(self._portfolios_dict[ACCOUNT_TYPE.BENCHMARK]))[-1]
+            _, latest_benchmark_portfolio = list((key, value) for key, value in six.iteritems(self._portfolios_dict[ACCOUNT_TYPE.BENCHMARK]))[-1]
             for key in ["total_returns", "annualized_returns"]:
                 summary["benchmark_{}".format(key)] = getattr(latest_benchmark_portfolio, key)
 
@@ -132,36 +131,36 @@ class ResultAggregator:
         portfolio_blacklist = ["positions", "start_date", "starting_cash"]
 
         # total portfolios
-        for date, portfolio in iteritems(self._portfolios):
+        for date, portfolio in six.iteritems(self._portfolios):
             # portfolio
             # dict_data = {"date": date.strftime("%Y-%m-%d")}
             dict_data = {"date": date}
-            for key, value in iteritems(properties(portfolio)):
+            for key, value in six.iteritems(properties(portfolio)):
                 if filter_keys(key, portfolio_blacklist):
                     dict_data[key] = safe_convert(value, 3)
             total_portfolios_list.append(dict_data)
 
         # stock/future portfolio
-        for account_type, portfolio_order_dict in iteritems(self._portfolios_dict):
+        for account_type, portfolio_order_dict in six.iteritems(self._portfolios_dict):
             positions_list = positions_list_dict[account_type]
             portfolios_list = portfolios_list_dict[account_type]
 
-            for date, portfolio in iteritems(portfolio_order_dict):
+            for date, portfolio in six.iteritems(portfolio_order_dict):
                 # portfolio
                 # dict_data = {"date": date.strftime("%Y-%m-%d")}
                 dict_data = {"date": date}
-                for key, value in iteritems(portfolio.__dict__):
+                for key, value in six.iteritems(portfolio.__dict__):
                     if filter_keys(key, portfolio_blacklist):
                         dict_data[key] = safe_convert(value, 3)
                 portfolios_list.append(dict_data)
 
                 # positions
-                for order_book_id, position in iteritems(portfolio.positions):
+                for order_book_id, position in six.iteritems(portfolio.positions):
                     dict_data = {
                         # "date": date.strftime("%Y-%m-%d"),
                         "date": date,
                     }
-                    for key, value in iteritems(position.__dict__):
+                    for key, value in six.iteritems(position.__dict__):
                         if filter_keys(key):
                             dict_data[key] = safe_convert(value, 3)
                     dict_data["order_book_id"] = order_book_id
@@ -169,12 +168,12 @@ class ResultAggregator:
                     positions_list.append(dict_data)
 
         # trades
-        for date, _ in iteritems(self._portfolios):
+        for date, _ in six.iteritems(self._portfolios):
             for trade in self._trades[date]:
                 dict_data = {
                     "side": safe_convert(trade.order.side),
                 }
-                for key, value in iteritems(properties(trade)):
+                for key, value in six.iteritems(properties(trade)):
                     if filter_keys(key, ["order"]):
                         dict_data[key] = safe_convert(value, 3)
                 dict_data["order_book_id"] = trade.order.order_book_id
@@ -202,18 +201,18 @@ class ResultAggregator:
         if ExecutionContext.plots is not None:
             plots = ExecutionContext.plots.get_plots()
             plots_items = defaultdict(dict)
-            for series_name, value_dict in iteritems(plots):
-                for date, value in iteritems(value_dict):
+            for series_name, value_dict in six.iteritems(plots):
+                for date, value in six.iteritems(value_dict):
                     plots_items[date][series_name] = value
                     plots_items[date]["date"] = date
 
-            df = pd.DataFrame([dict_data for date, dict_data in iteritems(plots_items)])
+            df = pd.DataFrame([dict_data for date, dict_data in six.iteritems(plots_items)])
             df["date"] = pd.to_datetime(df["date"])
             df = df.set_index("date").sort_index()
             result_dict["plots"] = df
 
         # extra
-        for account_type, account in iteritems(self._env.accounts):
+        for account_type, account in six.iteritems(self._env.accounts):
             account_name = str(account_type).split(".")[1].lower()
             portfolios_list = portfolios_list_dict[account_type]
             df = pd.DataFrame(portfolios_list)
@@ -252,7 +251,7 @@ class ResultAggregator:
         ]
 
         data = []
-        for date, portfolio in iteritems(self._portfolios):
+        for date, portfolio in six.iteritems(self._portfolios):
             # print(date, portfolio)
             # portfolio
             items = {"date": pd.Timestamp(date)}

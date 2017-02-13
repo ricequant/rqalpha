@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import time
-from six import iteritems
 
 from ..const import ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE
 from ..utils import id_gen
@@ -89,13 +89,13 @@ class Order:
     @classmethod
     def __from_dict__(cls, order_dict):
         order = cls()
-        for persist_key, origin_key in iteritems(OrderPersistMap):
+        for persist_key, origin_key in six.iteritems(OrderPersistMap):
             setattr(order, origin_key, order_dict[persist_key])
         return order
 
     def __to_dict__(self):
         order_dict = {}
-        for persist_key, origin_key in iteritems(OrderPersistMap):
+        for persist_key, origin_key in six.iteritems(OrderPersistMap):
             order_dict[persist_key] = getattr(self, origin_key)
         return order_dict
 

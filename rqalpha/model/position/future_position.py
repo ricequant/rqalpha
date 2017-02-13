@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six import iteritems
+import six
 
 from .base_position import BasePosition
 from ...execution_context import ExecutionContext
@@ -134,13 +134,13 @@ class FuturePosition(BasePosition):
     @classmethod
     def __from_dict__(cls, position_dict):
         position = cls(position_dict["_order_book_id"])
-        for persist_key, origin_key in iteritems(FuturePersistMap):
+        for persist_key, origin_key in six.iteritems(FuturePersistMap):
             setattr(position, origin_key, position_dict[persist_key])
         return position
 
     def __to_dict__(self):
         p_dict = {}
-        for persist_key, origin_key in iteritems(FuturePersistMap):
+        for persist_key, origin_key in six.iteritems(FuturePersistMap):
             p_dict[persist_key] = getattr(self, origin_key)
         return p_dict
 

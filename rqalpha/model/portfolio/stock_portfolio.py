@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six import iteritems, itervalues
+import six
 
 from .base_portfolio import BasePortfolio
 from ..dividend import Dividend
@@ -54,25 +54,25 @@ class StockPortfolio(BasePortfolio):
         self._start_date = portfolio_dict['_start_date']
         self._positions.clear()
         self._dividend_info.clear()
-        for persist_key, origin_key in iteritems(StockPersistMap):
+        for persist_key, origin_key in six.iteritems(StockPersistMap):
             if persist_key == "_dividend_info":
                 tmp = {}
-                for order_book_id, dividend_dict in iteritems(portfolio_dict[persist_key]):
+                for order_book_id, dividend_dict in six.iteritems(portfolio_dict[persist_key]):
                     tmp[order_book_id] = Dividend.__from_dict__(dividend_dict)
                 setattr(self, origin_key, tmp)
             elif persist_key == "_positions":
-                for order_book_id, position_dict in iteritems(portfolio_dict[persist_key]):
+                for order_book_id, position_dict in six.iteritems(portfolio_dict[persist_key]):
                     self._positions[order_book_id] = StockPosition.__from_dict__(position_dict)
             else:
                 setattr(self, origin_key, portfolio_dict[persist_key])
 
     def __to_dict__(self):
         p_dict = {}
-        for persist_key, origin_key in iteritems(StockPersistMap):
+        for persist_key, origin_key in six.iteritems(StockPersistMap):
             if persist_key == "_dividend_info":
-                p_dict[persist_key] = {oid: dividend.__to_dict__() for oid, dividend in iteritems(getattr(self, origin_key))}
+                p_dict[persist_key] = {oid: dividend.__to_dict__() for oid, dividend in six.iteritems(getattr(self, origin_key))}
             elif persist_key == "_positions":
-                p_dict[persist_key] = {oid: position.__to_dict__() for oid, position in iteritems(getattr(self, origin_key))}
+                p_dict[persist_key] = {oid: position.__to_dict__() for oid, position in six.iteritems(getattr(self, origin_key))}
             else:
                 p_dict[persist_key] = getattr(self, origin_key)
         return p_dict
@@ -106,7 +106,7 @@ class StockPortfolio(BasePortfolio):
         if self._portfolio_value is None:
             # 总资金 + Sum(position._position_value)
             self._portfolio_value = self.cash + self.frozen_cash + sum(
-                position._position_value for position in itervalues(self.positions))
+                position._position_value for position in six.itervalues(self.positions))
 
         return self._portfolio_value
 

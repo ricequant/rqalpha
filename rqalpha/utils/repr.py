@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six import iteritems
+import six
 
 from .cached_property import CachedProperty
 
@@ -32,7 +32,7 @@ def slots_repr(inst):
 def dict_repr(inst):
     # return pformat(inst.__dict__)
     return "%s(%s)" % (
-        inst.__class__.__name__, {k: v for k, v in iteritems(inst.__dict__) if k[0] != "_"})
+        inst.__class__.__name__, {k: v for k, v in six.iteritems(inst.__dict__) if k[0] != "_"})
 
 
 def properties(inst):

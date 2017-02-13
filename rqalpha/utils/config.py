@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import os
 import yaml
 import datetime
 import logbook
-from six import exec_, iteritems, string_types
 from pprint import pformat
 import codecs
 
@@ -42,7 +42,7 @@ def parse_config(click_kargs, base_config_path=None):
         config_file = f.read()
 
     config = yaml.load(config_file)
-    for key, value in iteritems(click_kargs):
+    for key, value in six.iteritems(click_kargs):
         if click_kargs[key] is not None:
             keys = key.split("__")
             keys.reverse()
@@ -62,11 +62,11 @@ def parse_config(click_kargs, base_config_path=None):
     base_config = config.base
     extra_config = config.extra
 
-    if isinstance(base_config.start_date, string_types):
+    if isinstance(base_config.start_date, six.string_types):
         base_config.start_date = datetime.datetime.strptime(base_config.start_date, "%Y-%m-%d")
     if isinstance(base_config.start_date, datetime.datetime):
         base_config.start_date = base_config.start_date.date()
-    if isinstance(base_config.end_date, string_types):
+    if isinstance(base_config.end_date, six.string_types):
         base_config.end_date = datetime.datetime.strptime(base_config.end_date, "%Y-%m-%d")
     if isinstance(base_config.end_date, datetime.datetime):
         base_config.end_date = base_config.end_date.date()
@@ -128,14 +128,14 @@ def parse_user_config(config):
         scope = {}
 
         code = compile(source_code, config["base"]["strategy_file"], 'exec')
-        exec_(code, scope)
+        six.exec_(code, scope)
 
         __config__ = scope.get("__config__", {})
 
-        for sub_key, sub_dict in iteritems(__config__):
+        for sub_key, sub_dict in six.iteritems(__config__):
             if sub_key not in config["whitelist"]:
                 continue
-            for key, value in iteritems(sub_dict):
+            for key, value in six.iteritems(sub_dict):
                 if isinstance(config[sub_key][key], dict):
                     config[sub_key][key].update(value)
                 else:
@@ -148,13 +148,13 @@ def parse_user_config(config):
 
 
 def gen_account_list(account_list_str):
-    assert isinstance(account_list_str, string_types)
+    assert isinstance(account_list_str, six.string_types)
     account_list = account_list_str.split("_")
     return [parse_account_type(account_str) for account_str in account_list]
 
 
 def parse_account_type(account_type_str):
-    assert isinstance(account_type_str, string_types)
+    assert isinstance(account_type_str, six.string_types)
     if account_type_str == "stock":
         return ACCOUNT_TYPE.STOCK
     elif account_type_str == "future":
@@ -162,7 +162,7 @@ def parse_account_type(account_type_str):
 
 
 def parse_matching_type(me_str):
-    assert isinstance(me_str, string_types)
+    assert isinstance(me_str, six.string_types)
     if me_str == "current_bar":
         return MATCHING_TYPE.CURRENT_BAR_CLOSE
     elif me_str == "next_bar":
@@ -172,7 +172,7 @@ def parse_matching_type(me_str):
 
 
 def parse_run_type(rt_str):
-    assert isinstance(rt_str, string_types)
+    assert isinstance(rt_str, six.string_types)
     if rt_str == "b":
         return RUN_TYPE.BACKTEST
     elif rt_str == "p":
@@ -184,7 +184,7 @@ def parse_run_type(rt_str):
 
 
 def parse_persist_mode(persist_mode):
-    assert isinstance(persist_mode, string_types)
+    assert isinstance(persist_mode, six.string_types)
     if persist_mode == 'real_time':
         return PERSIST_MODE.REAL_TIME
     elif persist_mode == 'on_crash':

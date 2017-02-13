@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import os
 import sys
 from datetime import datetime
@@ -21,7 +22,6 @@ import pickle
 
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import pytz
-from six import iteritems
 
 from .core.strategy import Strategy
 from .api import helper as api_helper
@@ -184,7 +184,7 @@ def run(config):
                 user_strategy.init()
 
         if config.extra.context_vars:
-            for k, v in iteritems(config.extra.context_vars):
+            for k, v in six.iteritems(config.extra.context_vars):
                 setattr(ucontext, k, v)
 
         if config.base.persist:
@@ -196,9 +196,9 @@ def run(config):
             persist_helper.register('universe', env._universe)
             if isinstance(event_source, Persistable):
                 persist_helper.register('event_source', event_source)
-            for k, v in iteritems(accounts):
+            for k, v in six.iteritems(accounts):
                 persist_helper.register('{}_account'.format(k.name.lower()), v)
-            for name, module in iteritems(env.mod_dict):
+            for name, module in six.iteritems(env.mod_dict):
                 if isinstance(module, Persistable):
                     persist_helper.register('mod_{}'.format(name), module)
             # broker will restore open orders from account
@@ -310,7 +310,7 @@ def enable_profiler(env, scope):
         if inspect.isfunction(obj):
             scope[name] = profile_deco(obj)
         if inspect.isclass(obj):
-            for key, val in iteritems(obj.__dict__):
+            for key, val in six.iteritems(obj.__dict__):
                 if inspect.isfunction(val):
                     setattr(obj, key, profile_deco(val))
 
@@ -360,7 +360,7 @@ def generate_report(result_dict, target_report_csv_path):
     # summary.csv
     csv_txt = StringIO()
     summary = result_dict["summary"]
-    csv_txt.write("\n".join(sorted("{},{}".format(key, value) for key, value in iteritems(summary))))
+    csv_txt.write("\n".join(sorted("{},{}".format(key, value) for key, value in six.iteritems(summary))))
     df = pd.DataFrame(data=[{"val": val} for val in summary.values()], index=summary.keys()).sort_index()
     df.to_excel(xlsx_writer, sheet_name="summary")
 

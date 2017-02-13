@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six import iteritems
+import six
 
 DividendPersistMap = {
     "order_book_id": "order_book_id",
@@ -35,6 +35,6 @@ class Dividend(object):
 
     def __to_dict__(self):
         dividend_dict = {}
-        for persist_key, origin_key in iteritems(DividendPersistMap):
+        for persist_key, origin_key in six.iteritems(DividendPersistMap):
             dividend_dict[persist_key] = getattr(self, origin_key)
         return dividend_dict

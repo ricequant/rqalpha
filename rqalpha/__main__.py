@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import locale
 import shutil
 import errno
@@ -25,7 +26,6 @@ import tarfile
 import datetime
 import requests
 import pandas as pd
-from six import StringIO, iteritems, print_
 
 from .cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
@@ -54,7 +54,7 @@ def update_bundle(data_bundle_path):
     while True:
         url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
         day.year, day.month, day.day)
-        print_('try {} ...'.format(url))
+        six.print_('try {} ...'.format(url))
         r = requests.get(url, stream=True)
         if r.status_code != 200:
             day = day - datetime.timedelta(days=1)
@@ -164,7 +164,7 @@ def report(result_pickle_file_path, target_report_csv_file, data_bundle_path):
 
     result_df = pd.read_pickle(result_pickle_file_path)
 
-    csv_txt = StringIO()
+    csv_txt = six.StringIO()
 
     # csv_txt.write('Trades\n')
     fieldnames = ['dt', 'order_book_id', 'side', 'amount', 'price', 'cash_amount', 'commission', 'tax']
@@ -190,9 +190,9 @@ def report(result_pickle_file_path, target_report_csv_file, data_bundle_path):
     fieldnames = ['dt', 'order_book_id', 'market_value', 'quantity']
     writer = csv.DictWriter(csv_txt, fieldnames=fieldnames)
     writer.writeheader()
-    for _dt, positions in iteritems(result_df.positions):
+    for _dt, positions in six.iteritems(result_df.positions):
         dt = _dt.strftime('%Y-%m-%d %H:%M:%S')
-        for order_book_id, position in iteritems(positions):
+        for order_book_id, position in six.iteritems(positions):
             instrument = data_proxy.instruments(order_book_id)
             writer.writerow({
                 'dt': dt,

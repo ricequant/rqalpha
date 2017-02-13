@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six import iteritems
+import six
 from collections import OrderedDict
 
 from ...environment import Environment
@@ -50,7 +50,7 @@ class BaseAccount(Persistable):
         self.daily_orders.clear()
         self.daily_trades.clear()
 
-        for order_id, order_dict in iteritems(persist_dict["daily_orders"]):
+        for order_id, order_dict in six.iteritems(persist_dict["daily_orders"]):
             self.daily_orders[order_id] = Order.__from_dict__(order_dict)
 
         for trade_dict in persist_dict["daily_trades"]:
@@ -63,7 +63,7 @@ class BaseAccount(Persistable):
     def __to_dict__(self):
         account_dict = {
             "portfolio": self.portfolio.__to_dict__(),
-            "daily_orders": {order_id: order.__to_dict__() for order_id, order in iteritems(self.daily_orders)},
+            "daily_orders": {order_id: order.__to_dict__() for order_id, order in six.iteritems(self.daily_orders)},
             "daily_trades": [trade.__to_dict__() for trade in self.daily_trades],
         }
         return account_dict
@@ -89,7 +89,7 @@ class BaseAccount(Persistable):
 
     def before_trading(self):
         open_orders = {}
-        for k, order in iteritems(self.daily_orders):
+        for k, order in six.iteritems(self.daily_orders):
             if not order._is_final():
                 open_orders[k] = order
 

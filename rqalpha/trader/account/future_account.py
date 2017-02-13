@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from six import iteritems
+import six
 
 from .base_account import BaseAccount
 from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
@@ -51,7 +51,7 @@ class FutureAccount(BaseAccount):
         data_proxy = ExecutionContext.get_data_proxy()
         trading_date = ExecutionContext.get_current_trading_dt().date()
 
-        for order_book_id, position in iteritems(positions):
+        for order_book_id, position in six.iteritems(positions):
             settle_price = data_proxy.get_settle_price(order_book_id, trading_date)
             position._last_price = settle_price
             self._update_market_value(position, settle_price)
@@ -61,7 +61,7 @@ class FutureAccount(BaseAccount):
         portfolio._yesterday_portfolio_value = portfolio.portfolio_value
 
         de_listed_id_list = []
-        for order_book_id, position in iteritems(positions):
+        for order_book_id, position in six.iteritems(positions):
             # 检查合约是否到期,如果到期,则按照结算价来进行平仓操作
             if position._de_listed_date is not None and trading_date >= position._de_listed_date.date():
                 de_listed_id_list.append(order_book_id)
@@ -84,7 +84,7 @@ class FutureAccount(BaseAccount):
         portfolio._portfolio_value = None
         positions = portfolio.positions
 
-        for order_book_id, position in iteritems(positions):
+        for order_book_id, position in six.iteritems(positions):
             bar = bar_dict[order_book_id]
             if not bar.isnan:
                 position._last_price = bar.close

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import division
-from six import iteritems
+import six
 from collections import OrderedDict
 import numpy as np
 import pandas as pd
@@ -246,7 +246,7 @@ class RiskCal(object):
 
     def to_json(self):
         blacklist = ["trading_index"]
-        data = {key: value for key, value in iteritems(self.__dict__) if key not in blacklist}
+        data = {key: value for key, value in six.iteritems(self.__dict__) if key not in blacklist}
         data["trading_index"] = self.trading_index.tolist()
         json_str = jsonpickle.encode(data)
         return json_str

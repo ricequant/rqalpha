@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import pandas as pd
 import numpy as np
-from six import iteritems
 
 from .base_account import BaseAccount
 from ...model.dividend import Dividend
@@ -64,7 +64,7 @@ class BenchmarkAccount(BaseAccount):
         """handle dividend payable before trading
         """
         to_delete_dividend = []
-        for order_book_id, dividend_info in iteritems(self.portfolio._dividend_info):
+        for order_book_id, dividend_info in six.iteritems(self.portfolio._dividend_info):
             dividend_series_dict = dividend_info.dividend_series_dict
 
             if pd.Timestamp(trading_date) == pd.Timestamp(dividend_series_dict['payable_date']):
@@ -84,7 +84,7 @@ class BenchmarkAccount(BaseAccount):
 
     def _handle_dividend_ex_dividend(self, trading_date):
         data_proxy = ExecutionContext.get_data_proxy()
-        for order_book_id, position in iteritems(self.portfolio.positions):
+        for order_book_id, position in six.iteritems(self.portfolio.positions):
             dividend_series = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend_series is None:
                 continue
