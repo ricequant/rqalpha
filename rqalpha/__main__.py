@@ -86,27 +86,28 @@ def update_bundle(data_bundle_path):
 @click.option('-e', '--end-date', 'base__end_date', type=Date())
 @click.option('-r', '--rid', 'base__run_id', type=click.STRING)
 @click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
-@click.option('--stock-starting-cash', 'base__stock_starting_cash', type=click.FLOAT)
-@click.option('--future-starting-cash', 'base__future_starting_cash', type=click.FLOAT)
-@click.option('--benchmark', 'base__benchmark', type=click.STRING, default=None)
-@click.option('--slippage', 'base__slippage', type=click.FLOAT)
-@click.option('--commission-multiplier', 'base__commission_multiplier', type=click.FLOAT)
-@click.option('--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
-@click.option('--kind', 'base__strategy_type', help="stock/future")
-@click.option('--frequency', 'base__frequency', type=click.Choice(['1d', '1m']), help="1d/1m")
-@click.option('--match-engine', 'base__matching_type', type=click.Choice(['current_bar', 'next_bar']), help="current_bar/next_bar")
-@click.option('--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b", help="b/p")
+@click.option('-sc', '--stock-starting-cash', 'base__stock_starting_cash', type=click.FLOAT)
+@click.option('-fc', '--future-starting-cash', 'base__future_starting_cash', type=click.FLOAT)
+@click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
+@click.option('-sp', '--slippage', 'base__slippage', type=click.FLOAT)
+@click.option('-cm', '--commission-multiplier', 'base__commission_multiplier', type=click.FLOAT)
+@click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
+@click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
+@click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m']))
+@click.option('-me', '--match-engine', 'base__matching_type', type=click.Choice(['current_bar', 'next_bar']))
+@click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--name', 'base__runtime_name')
 @click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 @click.option('--risk-grid/--no-risk-grid', 'base__cal_risk_grid', default=True)
-@click.option('--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info']), help="verbose/debug/info")
-@click.option('--plot/--no-plot', 'extra__plot', default=None, help="plot result")
+@click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error']))
+@click.option('-p', '--plot/--no-plot', 'extra__plot', default=None, help="plot result")
 @click.option('-o', '--output-file', 'extra__output_file', type=click.Path(writable=True), help="output result pickle file")
 @click.option('--fast-match', 'validator__fast_match', is_flag=True)
 @click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
+@click.help_option('-h', '--help')
 def run(**kwargs):
     if kwargs.get('base__run_type') == 'p':
         set_cache_policy(CachePolicy.MINIMUM)
@@ -140,69 +141,36 @@ def examples(directory):
 
 
 @cli.command()
-@click.argument('result-file', type=click.Path(exists=True), required=True)
-def plot(result_file):
+@click.argument('result_dict_file', type=click.Path(exists=True), required=True)
+@click.option('--show/--hide', 'is_show', default=True)
+@click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
+def plot(result_dict_file, is_show, plot_save_file):
     """
     draw result DataFrame
     """
-    results_df = pd.read_pickle(result_file)
-    from .main import plot_result
-    plot_result(result_file, results_df)
+    import pandas as pd
+    from rqalpha.plot import plot_result
+
+    result_dict = pd.read_pickle(result_dict_file)
+    if is_show:
+        plot_result(result_dict)
+    if plot_save_file:
+        plot_result(result_dict, show_windows=False, savefile=plot_save_file)
 
 
 @cli.command()
 @click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
-@click.argument('target_report_csv_file', type=click.Path(), required=True)
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
-def report(result_pickle_file_path, target_report_csv_file, data_bundle_path):
+@click.argument('target_report_csv_path', type=click.Path(exists=True, writable=True), required=True)
+def report(result_pickle_file_path, target_report_csv_path):
     """
     generate report from backtest output file
     """
-    from .data.base_data_source import BaseDataSource
-    from .data.data_proxy import DataProxy
-    data_proxy = DataProxy(BaseDataSource(data_bundle_path))
+    import pandas as pd
+    result_dict = pd.read_pickle(result_pickle_file_path)
 
-    result_df = pd.read_pickle(result_pickle_file_path)
+    from rqalpha import main
 
-    csv_txt = StringIO()
-
-    # csv_txt.write('Trades\n')
-    fieldnames = ['dt', 'order_book_id', 'side', 'amount', 'price', 'cash_amount', 'commission', 'tax']
-    writer = csv.DictWriter(csv_txt, fieldnames=fieldnames)
-    writer.writeheader()
-    # for dt, trades in result_df.trades.iteritems():
-    #     for trade in trades:
-    #         order = trade['order']
-    #         order_book_id = order['order_book_id']
-    #         trade['order_book_id'] = order_book_id
-    #         instrument = data_proxy.instruments(order_book_id)
-    #         trade["order_book_id"] = "{}({})".format(order_book_id, instrument.symbol)
-    #         trade['dt'] = trade['dt'].strftime('%Y-%m-%d %H:%M:%S')
-    #         trade['side'] = str(order['side']).split('.')[1]
-    #         trade['cash_amount'] = trade['price'] * trade['amount']
-    #         for key in ['amount', 'price', 'cash_amount', 'commission', 'tax']:
-    #             trade[key] = round(trade[key], 2)
-    #         trade.pop('order')
-    #         trade.pop('trade_id')
-    #         writer.writerow(trade)
-
-    csv_txt.write('\nPositions\n')
-    fieldnames = ['dt', 'order_book_id', 'market_value', 'quantity']
-    writer = csv.DictWriter(csv_txt, fieldnames=fieldnames)
-    writer.writeheader()
-    for _dt, positions in result_df.positions.iteritems():
-        dt = _dt.strftime('%Y-%m-%d %H:%M:%S')
-        for order_book_id, position in iteritems(positions):
-            instrument = data_proxy.instruments(order_book_id)
-            writer.writerow({
-                'dt': dt,
-                "order_book_id": "{}({})".format(order_book_id, instrument.symbol),
-                'market_value': position.market_value,
-                'quantity': position.quantity,
-            })
-
-    with open(target_report_csv_file, 'w') as csvfile:
-        csvfile.write(csv_txt.getvalue())
+    main.generate_report(result_dict, target_report_csv_path)
 
 
 @cli.command()
@@ -213,6 +181,7 @@ def version(**kwargs):
     """
     from rqalpha import version_info
     print("Current Version: ", version_info)
+
 
 if __name__ == '__main__':
     entry_point()
