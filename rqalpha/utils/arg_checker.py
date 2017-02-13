@@ -46,7 +46,7 @@ class RQTypeError(RQUserError):
     pass
 
 
-class ArgumentChecker:
+class ArgumentChecker(object):
     def __init__(self, arg_name):
         self._arg_name = arg_name
         self._rules = []

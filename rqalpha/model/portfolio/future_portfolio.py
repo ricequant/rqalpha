@@ -38,7 +38,7 @@ FuturePersistMap = {
 }
 
 
-class FuturePortfolioClone:
+class FuturePortfolioClone(object):
     __repr__ = dict_repr
 
 

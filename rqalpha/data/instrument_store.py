@@ -19,7 +19,7 @@ import pickle
 from ..model.instrument import Instrument
 
 
-class InstrumentStore():
+class InstrumentStore(object):
     def __init__(self, f):
         with open(f, 'rb') as store:
             d = pickle.load(store)

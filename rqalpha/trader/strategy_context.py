@@ -25,7 +25,7 @@ from ..utils.repr import property_repr
 from ..proxy import PortfolioProxy
 
 
-class RunInfo:
+class RunInfo(object):
     """
     策略运行信息
     """
@@ -130,7 +130,7 @@ class RunInfo:
         return self._run_type
 
 
-class StrategyContext:
+class StrategyContext(object):
     def __repr__(self):
         items = ("%s = %r" % (k, v)
                  for k, v in six.iteritems(self.__dict__)

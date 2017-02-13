@@ -17,7 +17,7 @@
 from collections import defaultdict
 
 
-class PlotStore:
+class PlotStore(object):
     def __init__(self):
         self._plots = defaultdict(dict)
 

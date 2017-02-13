@@ -45,7 +45,7 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class AbstractEventSource:
+class AbstractEventSource(object):
     """
     事件生成模块，RQAlpha 会使用该模块来实现完整的事件触发
     """
@@ -76,7 +76,7 @@ class AbstractEventSource:
         raise NotImplementedError
 
 
-class AbstractDataSource:
+class AbstractDataSource(object):
     """
     数据源模块，RQAlpha 支持自定义数据源，也可以基于已有默认数据源模块进行扩展，
     因为 RQAlpha 内部使用了一些数据，所以必须实现对应的接口函数。
@@ -243,7 +243,7 @@ class AbstractDataSource:
         raise NotImplementedError
 
 
-class AbstractBroker:
+class AbstractBroker(object):
     """
     RQAlpha 中将 Broker 作为虚拟券商的一个代理。
 
@@ -336,7 +336,7 @@ class AbstractBroker:
         raise NotImplementedError
 
 
-class AbstractMod:
+class AbstractMod(object):
     def start_up(self, env, mod_config):
         raise NotImplementedError
 
@@ -344,7 +344,7 @@ class AbstractMod:
         raise NotImplementedError
 
 
-class AbstractPersistProvider:
+class AbstractPersistProvider(object):
     def store(self, key, value):
         raise NotImplementedError
 

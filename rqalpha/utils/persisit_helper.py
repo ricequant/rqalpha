@@ -25,7 +25,7 @@ from .logger import system_log
 from ..const import PERSIST_MODE
 
 
-class CoreObjectsPersistProxy:
+class CoreObjectsPersistProxy(object):
     def __init__(self, scheduler):
         self._objects = {'scheduler': scheduler}
 
@@ -47,7 +47,7 @@ class CoreObjectsPersistProxy:
                 system_log.warn('core object state for {} ignored'.format(key))
 
 
-class PersistHelper:
+class PersistHelper(object):
     def __init__(self, persist_provider, event_bus, persist_mode):
         self._objects = OrderedDict()
         self._last_state = {}

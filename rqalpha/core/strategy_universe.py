@@ -23,7 +23,7 @@ from ..environment import Environment
 from ..model.instrument import Instrument
 
 
-class StrategyUniverse:
+class StrategyUniverse(object):
     def __init__(self):
         self._set = set()
         Environment.get_instance().event_bus.add_listener(Events.AFTER_TRADING, self._clear_de_listed)

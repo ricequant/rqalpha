@@ -24,7 +24,7 @@ from ..const import EXECUTION_PHASE, EXC_TYPE
 from ..environment import Environment
 
 
-class Strategy:
+class Strategy(object):
     def __init__(self, event_bus, scope, ucontext):
         self._user_context = ucontext
         self._current_universe = set()

@@ -41,7 +41,7 @@ OrderPersistMap = {
 }
 
 
-class Order:
+class Order(object):
 
     order_id_gen = id_gen(int(time.time()))
 

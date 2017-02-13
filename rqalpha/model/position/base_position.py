@@ -17,14 +17,14 @@
 from ...utils.repr import property_repr, dict_repr
 
 
-class PositionClone:
+class PositionClone(object):
     __repr__ = dict_repr
 
     def __simple_object__(self):
         return self.__dict__
 
 
-class BasePosition:
+class BasePosition(object):
 
     __repr__ = property_repr
 

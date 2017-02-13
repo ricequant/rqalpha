@@ -17,7 +17,7 @@
 from ..utils.repr import dict_repr
 
 
-class Risk:
+class Risk(object):
 
     __repr__ = dict_repr
 

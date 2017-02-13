@@ -20,7 +20,7 @@ from .events import Events
 from .model.commission import init_commission
 
 
-class Environment:
+class Environment(object):
     _env = None
 
     def __init__(self, config):

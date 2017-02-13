@@ -38,7 +38,7 @@ StockPersistMap = {
 
 
 # ET：如果这里修改的话，记得提醒我修改pickle那里，多谢
-class StockPortfolioClone:
+class StockPortfolioClone(object):
     __repr__ = dict_repr
 
 

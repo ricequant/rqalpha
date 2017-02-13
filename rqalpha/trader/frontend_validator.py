@@ -19,7 +19,7 @@ from ..utils.i18n import gettext as _
 from ..execution_context import ExecutionContext
 
 
-class FrontendValidator:
+class FrontendValidator(object):
     def __init__(self, config):
         self.config = config.validator
 

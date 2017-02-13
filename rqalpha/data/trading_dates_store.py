@@ -18,7 +18,7 @@ import bcolz
 import pandas as pd
 
 
-class TradingDatesStore:
+class TradingDatesStore(object):
     def __init__(self, f):
         self._dates = pd.Index(pd.Timestamp(str(d)) for d in bcolz.open(f, 'r'))
 

@@ -21,7 +21,7 @@ import numpy as np
 Rule = namedtuple('Rule', ['dtype', 'multiplier', 'round'])
 
 
-class Converter:
+class Converter(object):
     def __init__(self, rules):
         self._rules = rules
 

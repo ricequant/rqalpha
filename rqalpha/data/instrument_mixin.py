@@ -18,7 +18,7 @@ import pandas as pd
 import six
 
 
-class InstrumentMixin:
+class InstrumentMixin(object):
     def __init__(self, instruments):
         self._instruments = {i.order_book_id: i for i in instruments}
         self._sym_id_map = {i.symbol: k for k, i in six.iteritems(self._instruments)

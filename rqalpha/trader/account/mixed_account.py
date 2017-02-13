@@ -19,7 +19,7 @@ from ...utils import merge_dicts, exclude_benchmark_generator, get_account_type
 from ...utils.repr import dict_repr
 
 
-class MixedAccount:
+class MixedAccount(object):
     def __init__(self, accounts):
         self._accounts = exclude_benchmark_generator(accounts)
         self._portfolio = MixedPortfolio([account.portfolio for account in self._accounts.values()])
@@ -44,7 +44,7 @@ class MixedAccount:
         return self._portfolio
 
 
-class MixedPortfolio:
+class MixedPortfolio(object):
     __repr__ = dict_repr
 
     def __init__(self, portfolio_list):

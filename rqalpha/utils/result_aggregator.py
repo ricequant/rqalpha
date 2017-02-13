@@ -25,7 +25,7 @@ from ..utils import safe_round
 from ..execution_context import ExecutionContext
 
 
-class ResultAggregator:
+class ResultAggregator(object):
     def __init__(self, env, risk_cal):
         env.event_bus.add_listener(Events.POST_SETTLEMENT, self._collect_daily)
         env.event_bus.add_listener(Events.TRADE, self._collect_trade)

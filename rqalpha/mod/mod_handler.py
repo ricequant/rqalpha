@@ -19,7 +19,7 @@ from importlib import import_module
 from collections import OrderedDict
 
 
-class ModHandler:
+class ModHandler(object):
     def __init__(self, environment):
         self._env = environment
         self._mod_list = []

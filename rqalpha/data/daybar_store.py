@@ -18,7 +18,7 @@ import bcolz
 import numpy as np
 
 
-class DayBarStore:
+class DayBarStore(object):
     def __init__(self, main, converter):
         self._table = bcolz.open(main, 'r')
         self._index = self._table.attrs['line_map']

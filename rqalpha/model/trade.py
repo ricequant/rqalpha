@@ -33,7 +33,7 @@ TradePersistMap = {
 }
 
 
-class Trade:
+class Trade(object):
     __slots__ = ["_calendar_dt", "_trading_dt", "_price", "_amount", "_order", "_commission", "_tax", "_trade_id",
                  "_close_today_amount"]
 

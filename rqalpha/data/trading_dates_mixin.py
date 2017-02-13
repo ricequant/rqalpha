@@ -25,7 +25,7 @@ except Exception as e:
 from .. import cache_control
 
 
-class TradingDatesMixin:
+class TradingDatesMixin(object):
     def __init__(self, dates):
         self._dates = dates
 

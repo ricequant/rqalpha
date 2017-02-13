@@ -21,7 +21,7 @@ import numpy as np
 from . import risk_free_helper
 
 
-class YieldCurveStore:
+class YieldCurveStore(object):
     def __init__(self, f):
         self._table = bcolz.open(f, 'r')
         self._dates = self._table.cols['date'][:]

@@ -20,7 +20,7 @@ from ...const import DAYS_CNT
 from ...utils.repr import property_repr
 
 
-class BasePortfolio:
+class BasePortfolio(object):
 
     __repr__ = property_repr
 

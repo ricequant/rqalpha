@@ -44,7 +44,7 @@ def _annual_factor(period):
             period, ", ".join(ANNUALIZATION_FACTORS.keys())))
 
 
-class Risk:
+class Risk(object):
     def __init__(self, daily_returns, benchmark_daily_returns, risk_free_rate, days, period=DAILY):
         assert(len(daily_returns) == len(benchmark_daily_returns))
 

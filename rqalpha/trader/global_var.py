@@ -19,7 +19,7 @@ import pickle
 from ..utils.logger import user_log, system_log, user_detail_log
 
 
-class GlobalVars:
+class GlobalVars(object):
     def get_state(self):
         dict_data = {}
         for key, value in six.iteritems(self.__dict__):

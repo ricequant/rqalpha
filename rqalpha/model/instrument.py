@@ -75,7 +75,7 @@ class Instrument(object):
         return -1 if days < 0 else days
 
 
-class SectorCodeItem:
+class SectorCodeItem(object):
     def __init__(self, cn, en, name):
         self.__cn = cn
         self.__en = en
@@ -97,7 +97,7 @@ class SectorCodeItem:
         return "{}: {}, {}".format(self.__name, self.__en, self.__cn)
 
 
-class SectorCode:
+class SectorCode(object):
     Energy = SectorCodeItem("能源", "energy", 'Energy')
     Materials = SectorCodeItem("原材料", "materials", 'Materials')
     ConsumerDiscretionary = SectorCodeItem("非必需消费品", "consumer discretionary", 'ConsumerDiscretionary')
@@ -110,7 +110,7 @@ class SectorCode:
     Industrials = SectorCodeItem("工业", "industrials", "Industrials")
 
 
-class IndustryCodeItem:
+class IndustryCodeItem(object):
     def __init__(self, code, name):
         self.__code = code
         self.__name = name
@@ -127,7 +127,7 @@ class IndustryCodeItem:
         return "{0}:{1}".format(self.__code,self.__name)
 
 
-class IndustryCode:
+class IndustryCode(object):
     A01 = IndustryCodeItem("A01", "农业")
     A02 = IndustryCodeItem("A02", "林业")
     A03 = IndustryCodeItem("A03", "畜牧业")

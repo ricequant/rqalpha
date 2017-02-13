@@ -17,7 +17,7 @@
 from ..execution_context import ExecutionContext
 
 
-class Margin:
+class Margin(object):
     def __init__(self, multiplier):
         self.multiplier = multiplier
 

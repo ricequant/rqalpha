@@ -25,7 +25,7 @@ except Exception as e:
 from .. import cache_control
 
 
-class DividendStore:
+class DividendStore(object):
     def __init__(self, f):
         self._table = bcolz.open(f, 'r')
         self._index = self._table.attrs['line_map']

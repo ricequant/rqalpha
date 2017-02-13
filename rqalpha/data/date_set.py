@@ -25,7 +25,7 @@ except Exception as e:
 from .. import cache_control
 
 
-class DateSet:
+class DateSet(object):
     def __init__(self, f):
         self._dates = bcolz.open(f, 'r')
         self._index = self._dates.attrs['line_map']

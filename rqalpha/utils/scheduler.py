@@ -66,7 +66,7 @@ def _verify_function(name, func):
             'scheduler.{}: func should take exactly 2 arguments (context, bar_dict)'.format(name)))
 
 
-class Scheduler:
+class Scheduler(object):
     _TRADING_DATES = None
 
     @classmethod
