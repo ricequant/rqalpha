@@ -347,7 +347,7 @@ def output_generated_results(env, result_dict):
 
 def generate_report(result_dict, target_report_csv_path):
     import pandas as pd
-    from io import StringIO
+    from six import StringIO
 
     output_path = os.path.join(target_report_csv_path, result_dict["summary"]["strategy_name"])
     try:
@@ -360,7 +360,7 @@ def generate_report(result_dict, target_report_csv_path):
     # summary.csv
     csv_txt = StringIO()
     summary = result_dict["summary"]
-    csv_txt.write("\n".join(sorted("{},{}".format(key, value) for key, value in six.iteritems(summary))))
+    csv_txt.write(u"\n".join(sorted("{},{}".format(key, value) for key, value in six.iteritems(summary))))
     df = pd.DataFrame(data=[{"val": val} for val in summary.values()], index=summary.keys()).sort_index()
     df.to_excel(xlsx_writer, sheet_name="summary")
 
@@ -381,7 +381,7 @@ def generate_report(result_dict, target_report_csv_path):
             df = df.set_index("date")
 
         csv_txt = StringIO()
-        csv_txt.write(df.to_csv())
+        csv_txt.write(df.to_csv(encoding='utf-8'))
 
         df.to_excel(xlsx_writer, sheet_name=name)
 

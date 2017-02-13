@@ -36,7 +36,7 @@ class CustomError(object):
     def set_msg(self, msg):
         self.msg = msg
 
-    def add_stack_info(self, filename, lineno, func_name, code, local_variables):
+    def add_stack_info(self, filename, lineno, func_name, code, local_variables={}):
         self.stacks.append((filename, lineno, func_name, code, local_variables))
 
     @property
@@ -112,4 +112,3 @@ class ModifyExceptionFromType(object):
 class RQUserError(Exception):
     ricequant_exc = const.EXC_TYPE.USER_EXC
     pass
-
