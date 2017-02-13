@@ -30,23 +30,23 @@
 -r            `- -` rid                       可以指定回测的唯一ID，用户区分多次回测的结果
 -i            `- -` init-cash                 [Deprecated]股票起始资金，不建议使用该参数，使用 `--stock-starting-cash` 代替。
 -o            `- -` output-file               指定回测结束时将回测数据输出到指定文件中
-N/A           `- -` stock-starting-cash       股票起始资金，默认为0
-N/A           `- -` future-starting-cash      期货起始资金，默认为0
-N/A           `- -` benchmark                 Benchmark，如果不设置，默认没有基准参照
-N/A           `- -` slippage                  设置滑点
-N/A           `- -` commission-multiplier     设置手续费乘数，默认为1
-N/A           `- -` margin-multiplier         设置保证金乘数，默认为1
-N/A           `- -` kind                      设置策略类型，目前支持 `stock` (股票策略)、`future` (期货策略)及 `stock_future` (混合策略)
-N/A           `- -` frequency                 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的
-N/A           `- -` match-engine              启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
-N/A           `- -` run-type                  运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易
+-sc           `- -` stock-starting-cash       股票起始资金，默认为0
+-fc           `- -` future-starting-cash      期货起始资金，默认为0
+-bm           `- -` benchmark                 Benchmark，如果不设置，默认没有基准参照
+-sp           `- -` slippage                  设置滑点
+-cm           `- -` commission-multiplier     设置手续费乘数，默认为1
+-mm           `- -` margin-multiplier         设置保证金乘数，默认为1
+-k            `- -` kind                      设置策略类型，目前支持 `stock` (股票策略)、`future` (期货策略)及 `stock_future` (混合策略)
+-fq           `- -` frequency                 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的
+-me           `- -` match-engine              启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
+-rt           `- -` run-type                  运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易
 N/A           `- -` resume                    在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
 N/A           `- -` handle-split              开启自动处理, 默认不开启
 N/A           `- -` not-handle-split          不开启自动处理, 默认不开启
 N/A           `- -` risk-grid                 开启Alpha/Beta 等风险指标的实时计算，默认开启
 N/A           `- -` no-risk-grid              不开启Alpha/Beta 等风险指标的实时计算，默认开启
-N/A           `- -` log-level                 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，或者设置 `error` 只查看错误级别的日志输出
-N/A           `- -` plot                      在回测结束后，查看图形化的收益曲线
+-l            `- -` log-level                 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，或者设置 `error` 只查看错误级别的日志输出
+-p            `- -` plot                      在回测结束后，查看图形化的收益曲线
 N/A           `- -` no-plot                   在回测结束后，不查看图形化的收益曲线
 N/A           `- -` fast-match                默认关闭，如果当前撮合引擎为 `current_bar` 开启该选项会立刻进行撮合，不会等到当前bar结束
 N/A           `- -` progress                  开启命令行显示回测进度条
@@ -207,7 +207,3 @@ N/A           `- -` config                    设置配置文件路径
 如果用户不指定 `config.yml`, RQAlpha 会使用默认的 `config.yml` 来配置所有参数的默认项，指定了配置文件，则不再使用默认配置文件，所以相对来说，`config.yml` 的配置方式优先级是最低的。
 
 策略代码中配置优先级 > 启动策略命令行传参 > 指定 `config.yml` 文件 > 默认 `config.yml` 文件
-
-
-
-

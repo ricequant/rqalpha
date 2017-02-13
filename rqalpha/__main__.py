@@ -97,7 +97,6 @@ def update_bundle(data_bundle_path):
 @click.option('-me', '--match-engine', 'base__matching_type', type=click.Choice(['current_bar', 'next_bar']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
-@click.option('--name', 'base__runtime_name')
 @click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 @click.option('--risk-grid/--no-risk-grid', 'base__cal_risk_grid', default=True)
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error']))
