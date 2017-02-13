@@ -210,7 +210,7 @@ class ArgumentChecker:
 
             raise RQInvalidArgument(
                 _('function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})').format(
-                    func_name, self._arg_name, repr(valid_fields), type(valid_fields)
+                    func_name, self._arg_name, repr(fields), type(fields)
                 ))
         self._rules.append(check_are_valid_fields)
         return self
