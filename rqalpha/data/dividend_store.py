@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import lru_cache
-
 import bcolz
 import pandas as pd
+try:
+    # For Python 2 兼容
+    from functools import lru_cache
+except Exception as e:
+    from fastcache import lru_cache
 
 from .. import cache_control
 

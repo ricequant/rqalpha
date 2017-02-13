@@ -48,84 +48,84 @@ class RunInfo:
         self._run_type = config.base.run_type
 
     @property
-    def run_id(self) -> int:
+    def run_id(self):
         """
         :property getter: 标识策略每次运行的唯一id
         """
         return self._run_id
 
     @property
-    def start_date(self) -> datetime.date:
+    def start_date(self):
         """
         :property getter: 策略的开始日期
         """
         return self._start_date
 
     @property
-    def end_date(self) -> datetime.date:
+    def end_date(self):
         """
         :property getter: 策略的结束日期
         """
         return self._end_date
 
     @property
-    def frequency(self) -> str:
+    def frequency(self):
         """
         :property getter: 策略频率，'1d'或'1m'
         """
         return self._frequency
 
     @property
-    def stock_starting_cash(self) -> float:
+    def stock_starting_cash(self):
         """
         :property getter: 股票账户初始资金
         """
         return self._stock_starting_cash
 
     @property
-    def future_starting_cash(self) -> float:
+    def future_starting_cash(self):
         """
         :property getter: 期货账户初始资金
         """
         return self._future_starting_cash
 
     @property
-    def slippage(self) -> float:
+    def slippage(self):
         """
         :property getter: 滑点水平
         """
         return self._slippage
 
     @property
-    def benchmark(self) -> str:
+    def benchmark(self):
         """
         :property getter: 基准合约代码
         """
         return self._benchmark
 
     @property
-    def matching_type(self) -> MATCHING_TYPE:
+    def matching_type(self):
         """
         :property getter: 撮合方式
         """
         return self._matching_type
 
     @property
-    def commission_multiplier(self) -> float:
+    def commission_multiplier(self):
         """
         :property getter: 手续费倍率
         """
         return self._commission_multiplier
 
     @property
-    def margin_multiplier(self) -> float:
+    def margin_multiplier(self):
         """
         :property getter: 保证金倍率
         """
         return self._margin_multiplier
 
     @property
-    def run_type(self) -> RUN_TYPE:
+    def run_type(self):
         """
         :property getter: 运行类型
         """
@@ -149,7 +149,7 @@ class StrategyContext:
             if key.startswith("_"):
                 continue
             try:
-                # system_log.debug("persist {} -> {}", key, value)
+                # system_log.debug("persist {})
                 dict_data[key] = pickle.dumps(value)
             except Exception as e:
                 user_log.warn("context.{} can not pickle", key)
@@ -165,7 +165,7 @@ class StrategyContext:
                 user_log.warn('context.{} can not restore', key)
 
     @property
-    def universe(self) -> list:
+    def universe(self):
         """
         在运行 :func:`update_universe`, :func:`subscribe` 或者 :func:`unsubscribe` 的时候，合约池会被更新。
 
@@ -176,14 +176,14 @@ class StrategyContext:
         return Environment.get_instance().universe
 
     @property
-    def now(self) -> datetime.datetime:
+    def now(self):
         """
         使用以上的方式就可以在handle_bar中拿到当前的bar的时间，比如day bar的话就是那天的时间，minute bar的话就是这一分钟的时间点。
         """
         return Environment.get_instance().calendar_dt
 
     @property
-    def run_info(self) -> "RunInfo":
+    def run_info(self):
         """
         :property getter: :class:`~RunInfo`
         """
@@ -191,7 +191,7 @@ class StrategyContext:
         return RunInfo(config)
 
     @property
-    def portfolio(self) -> "Portfolio":
+    def portfolio(self):
         """
         该投资组合在单一股票或期货策略中分别为股票投资组合和期货投资组合。在股票+期货的混合策略中代表汇总之后的总投资组合。
 
@@ -223,7 +223,7 @@ class StrategyContext:
         return Environment.get_instance().account.portfolio
 
     @property
-    def stock_portfolio(self) -> "StockPortfolio":
+    def stock_portfolio(self):
         """
         获取股票投资组合信息。
 
@@ -255,7 +255,7 @@ class StrategyContext:
         return self._proxy_portfolio_dict[ACCOUNT_TYPE.STOCK]
 
     @property
-    def future_portfolio(self) -> "FuturePortfolio":
+    def future_portfolio(self):
         """
         获取期货投资组合信息。
 
@@ -291,23 +291,23 @@ class StrategyContext:
         return self._proxy_portfolio_dict[ACCOUNT_TYPE.FUTURE]
 
     @property
-    def slippage(self) -> "[Deprecated]":
+    def slippage(self):
         raise NotImplementedError
 
     @property
-    def benchmark(self) -> "[Deprecated]":
+    def benchmark(self):
         raise NotImplementedError
 
     @property
-    def margin_rate(self) -> "[Deprecated]":
+    def margin_rate(self):
         raise NotImplementedError
 
     @property
-    def commission(self) -> "[Deprecated]":
+    def commission(self):
         raise NotImplementedError
 
     @property
-    def short_selling_allowed(self) -> "[Deprecated]":
+    def short_selling_allowed(self):
         raise NotImplementedError
 
     @slippage.setter

@@ -67,78 +67,78 @@ class StockPosition(BasePosition):
         return p_dict
 
     @property
-    def _position_value(self) -> float:
+    def _position_value(self):
         return self._market_value
 
     @property
-    def quantity(self) -> int:
+    def quantity(self):
         """
         【int】当前持仓股数
         """
         return self._quantity
 
     @property
-    def bought_quantity(self) -> int:
+    def bought_quantity(self):
         """
         【int】该证券的总买入股数，例如：如果你的投资组合并没有任何平安银行的成交，那么平安银行这个股票的仓位就是0
         """
         return self._buy_trade_quantity
 
     @property
-    def sold_quantity(self) -> int:
+    def sold_quantity(self):
         """
         【int】该证券的总卖出股数，例如：如果你的投资组合曾经买入过平安银行股票200股并且卖出过100股，那么这个属性会返回100
         """
         return self._sell_trade_quantity
 
     @property
-    def bought_value(self) -> float:
+    def bought_value(self):
         """
         【float】该证券的总买入的价值，等于每一个该证券的 买入成交价 * 买入股数 总和
         """
         return self._buy_trade_value
 
     @property
-    def sold_value(self) -> float:
+    def sold_value(self):
         """
         【float】该证券的总卖出价值，等于每一个该证券的 卖出成交价 * 卖出股数 总和
         """
         return self._sell_trade_value
 
     @property
-    def average_cost(self) -> float:
+    def average_cost(self):
         """
         【已弃用】请使用 avg_price 获取持仓买入均价
         """
         return self._avg_price
 
     @property
-    def avg_price(self) -> float:
+    def avg_price(self):
         """
         【float】获得该持仓的买入均价，计算方法为每次买入的数量做加权平均
         """
         return self._avg_price
 
     @property
-    def sellable(self) -> int:
+    def sellable(self):
         """
         【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓-今日买入的仓位
         """
         return self._quantity - self._buy_today_holding_quantity - self._sell_order_quantity
 
     @property
-    def _quantity(self) -> int:
+    def _quantity(self):
         return self._buy_trade_quantity - self._sell_trade_quantity
 
     @property
-    def transaction_cost(self) -> float:
+    def transaction_cost(self):
         """
         【float】总费用
         """
         return self._transaction_cost
 
     @property
-    def value_percent(self) -> float:
+    def value_percent(self):
         """
         【float】获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
         """

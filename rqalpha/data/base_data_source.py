@@ -15,12 +15,15 @@
 # limitations under the License.
 
 import os
-from functools import lru_cache
-
 import numpy as np
+try:
+    # For Python 2 兼容
+    from functools import lru_cache
+except Exception as e:
+    from fastcache import lru_cache
 
 from .. import cache_control
-from ..utils.datetime import convert_date_to_int, convert_int_to_date
+from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
 from ..interface import AbstractDataSource
 from .converter import StockBarConverter, IndexBarConverter
 from .converter import FutureDayBarConverter, FundDayBarConverter

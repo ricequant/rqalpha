@@ -61,7 +61,7 @@ def export_as_api(func):
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
-def order_shares(id_or_ins, amount, style=MarketOrder()) -> int:
+def order_shares(id_or_ins, amount, style=MarketOrder()):
     """
     落指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
@@ -151,7 +151,7 @@ def order_shares(id_or_ins, amount, style=MarketOrder()) -> int:
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
-def order_lots(id_or_ins, amount, style=MarketOrder()) -> int:
+def order_lots(id_or_ins, amount, style=MarketOrder()):
     """
     指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
@@ -200,7 +200,7 @@ def order_lots(id_or_ins, amount, style=MarketOrder()) -> int:
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
-def order_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
+def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     """
     使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。当您提交一个卖单时，该方法代表的意义是您希望通过卖出该股票套现的金额。如果金额超出了您所持有股票的价值，那么您将卖出所有股票。需要注意，如果资金不足，该API将不会创建发送订单。
 
@@ -279,7 +279,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_than(-1).is_less_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
-def order_percent(id_or_ins, percent, style=MarketOrder()) -> int:
+def order_percent(id_or_ins, percent, style=MarketOrder()):
     """
     发送一个等于目前投资组合价值（市场价值和目前现金的总和）一定百分比的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
 
@@ -330,7 +330,7 @@ def order_percent(id_or_ins, percent, style=MarketOrder()) -> int:
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
-def order_target_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
+def order_target_value(id_or_ins, cash_amount, style=MarketOrder()):
     """
     买入/卖出并且自动调整该证券的仓位到一个目标价值。如果还没有任何该证券的仓位，那么会买入全部目标价值的证券。如果已经有了该证券的仓位，则会买入/卖出调整该证券的现在仓位和目标仓位的价值差值的数目的证券。需要注意，如果资金不足，该API将不会创建发送订单。
 
@@ -384,7 +384,7 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()) -> int:
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_than(0).is_less_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
-def order_target_percent(id_or_ins, percent, style=MarketOrder()) -> int:
+def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     """
     买入/卖出证券以自动调整该证券的仓位到占有一个指定的投资组合的目标百分比。
 

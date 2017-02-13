@@ -18,7 +18,7 @@ import numpy as np
 
 from ..environment import Environment
 from ..const import RUN_TYPE
-from ..utils.datetime import convert_int_to_datetime
+from ..utils.datetime_func import convert_int_to_datetime
 from ..utils.i18n import gettext as _
 from ..utils.logger import system_log
 from ..utils.exception import patch_user_exc

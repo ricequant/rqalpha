@@ -125,7 +125,7 @@ def assure_order_book_id(id_or_ins):
                                 EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-def get_order(order_id) -> "[Deprecated]":
+def get_order(order_id):
     if isinstance(order_id, Order):
         return order_id
     else:
@@ -137,7 +137,7 @@ def get_order(order_id) -> "[Deprecated]":
                                 EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-def get_open_orders() -> "[Order]":
+def get_open_orders():
     """
     获取当日未成交订单数据
 
@@ -171,7 +171,7 @@ def cancel_order(order):
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbols').are_valid_instruments())
-def update_universe(id_or_symbols) -> None:
+def update_universe(id_or_symbols):
     """
     该方法用于更新现在关注的证券的集合（e.g.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为['000001.XSHE', '000024.XSHE']然后调用了update_universe(['000030.XSHE'])之后，股票池就会变成000030.XSHE一个股票了，随后的数据更新也只会跟踪000030.XSHE这一个股票了。
 
@@ -192,7 +192,7 @@ def update_universe(id_or_symbols) -> None:
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbols').are_valid_instruments())
-def subscribe(id_or_symbols) -> None:
+def subscribe(id_or_symbols):
     """
     订阅合约行情。该操作会导致合约池内合约的增加，从而影响handle_bar中处理bar数据的数量。
 
@@ -222,7 +222,7 @@ def subscribe(id_or_symbols) -> None:
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbols').are_valid_instruments())
-def unsubscribe(id_or_symbols) -> None:
+def unsubscribe(id_or_symbols):
     """
     取消订阅合约行情。取消订阅会导致合约池内合约的减少，如果当前合约池中没有任何合约，则策略直接退出。
 
@@ -253,7 +253,7 @@ def unsubscribe(id_or_symbols) -> None:
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True),
              verify_that('tenor').is_in(names.VALID_TENORS, ignore_none=True))
-def get_yield_curve(date=None, tenor=None) -> "Float | Series":
+def get_yield_curve(date=None, tenor=None):
     """
     获取某个国家市场指定日期的收益率曲线水平。
 
@@ -307,7 +307,7 @@ def get_yield_curve(date=None, tenor=None) -> "Float | Series":
              verify_that('frequency').is_in(('1m', '1d')),
              verify_that('fields').are_valid_fields(names.VALID_HISTORY_FIELDS, ignore_none=True),
              verify_that('skip_suspended').is_instance_of(bool))
-def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True) -> "NDArray":
+def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True):
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
 
@@ -402,7 +402,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('type').is_in(names.VALID_INSTRUMENT_TYPES, ignore_none=True))
-def all_instruments(type=None) -> pd.DataFrame:
+def all_instruments(type=None):
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
@@ -510,7 +510,7 @@ def instruments(id_or_symbols):
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('code').is_instance_of((str, SectorCodeItem)))
-def sector(code) -> List[str]:
+def sector(code):
     if not isinstance(code, str):
         code = code.name
     else:
@@ -526,7 +526,7 @@ def sector(code) -> List[str]:
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('code').is_instance_of((str, IndustryCodeItem)))
-def industry(code) -> List[str]:
+def industry(code):
     if not isinstance(code, str):
         code = code.code
     else:
@@ -541,7 +541,7 @@ def industry(code) -> List[str]:
                                 EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-def concept(*concept_names) -> List[str]:
+def concept(*concept_names):
     return ExecutionContext.data_proxy.concept(*concept_names)
 
 
@@ -553,7 +553,7 @@ def concept(*concept_names) -> List[str]:
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('start_date').is_valid_date(ignore_none=False))
 @apply_rules(verify_that('end_date').is_valid_date(ignore_none=False))
-def get_trading_dates(start_date, end_date) -> List[datetime.datetime]:
+def get_trading_dates(start_date, end_date):
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
 
@@ -584,7 +584,7 @@ def get_trading_dates(start_date, end_date) -> List[datetime.datetime]:
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=False))
-def get_previous_trading_date(date) -> datetime.datetime:
+def get_previous_trading_date(date):
     """
     获取指定日期的上一交易日。
 
@@ -612,7 +612,7 @@ def get_previous_trading_date(date) -> datetime.datetime:
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=False))
-def get_next_trading_date(date) -> datetime.datetime:
+def get_next_trading_date(date):
     """
     获取指定日期的下一交易日
 
@@ -655,7 +655,7 @@ def to_date(date):
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
              verify_that('start_date').is_valid_date(ignore_none=False),
              verify_that('adjusted').is_instance_of(bool))
-def get_dividend(order_book_id, start_date, adjusted=True) -> pd.DataFrame:
+def get_dividend(order_book_id, start_date, adjusted=True):
     dt = ExecutionContext.get_current_trading_dt().date() - datetime.timedelta(days=1)
     start_date = to_date(start_date)
     if start_date > dt:
@@ -673,7 +673,7 @@ def get_dividend(order_book_id, start_date, adjusted=True) -> pd.DataFrame:
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('series_name').is_instance_of(str),
              verify_that('value').is_number())
-def plot(series_name, value) -> None:
+def plot(series_name, value):
     """
     Add a point to custom series.
     :param str series_name: the name of custom series
@@ -691,7 +691,7 @@ def plot(series_name, value) -> None:
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbol').is_valid_instrument())
-def current_snapshot(id_or_symbol) -> SnapshotObject:
+def current_snapshot(id_or_symbol):
     """
     获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。市场快照数据记录了每日从开盘到当前的数据信息，可以理解为一个动态的day bar数据。在目前分钟回测中，快照数据为当日所有分钟线累积而成，一般情况下，最后一个分钟线获取到的快照数据应当与当日的日线行情保持一致。需要注意，在实盘模拟中，该函数返回的是调用当时的市场快照情况，所以在同一个handle_bar中不同时点调用可能返回的数据不同。如果当日截止到调用时候对应股票没有任何成交，那么snapshot中的close, high, low, last几个价格水平都将以0表示。
 

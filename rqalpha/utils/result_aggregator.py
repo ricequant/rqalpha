@@ -20,7 +20,6 @@ import pandas as pd
 from six import iteritems
 
 from ..events import Events
-from ..environment import Environment
 from ..const import ACCOUNT_TYPE
 from ..utils.repr import properties
 from ..utils import safe_round
@@ -28,7 +27,7 @@ from ..execution_context import ExecutionContext
 
 
 class ResultAggregator:
-    def __init__(self, env: Environment, risk_cal):
+    def __init__(self, env, risk_cal):
         env.event_bus.add_listener(Events.POST_SETTLEMENT, self._collect_daily)
         env.event_bus.add_listener(Events.TRADE, self._collect_trade)
         env.event_bus.add_listener(Events.ORDER_CREATION_PASS, self._collect_order)

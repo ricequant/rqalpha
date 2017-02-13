@@ -15,7 +15,6 @@
 # limitations under the License.
 
 from __future__ import division
-import traceback
 import pprint
 import re
 
@@ -23,7 +22,7 @@ from contextlib import contextmanager
 
 from .exception import CustomError, CustomException
 from ..const import EXC_TYPE, INSTRUMENT_TYPE, ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
-from ..utils.datetime import TimeRange
+from ..utils.datetime_func import TimeRange
 from ..utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
 
 

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from datetime import time
-from .datetime import TimeRange
+from .datetime_func import TimeRange
 from ..const import COMMISSION_TYPE, MARGIN_TYPE
 
 NIGHT_UNDERLYING_SYMBOL = ["CU", "AL", "ZN", "PB", "SN", "NI", "RB", "HC", "BU", "RU", "AU", "AG", "Y", "M", "A", "B",

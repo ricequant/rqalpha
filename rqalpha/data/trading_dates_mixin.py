@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-from functools import lru_cache
-
 import pandas as pd
+import datetime
+try:
+    # For Python 2 兼容
+    from functools import lru_cache
+except Exception as e:
+    from fastcache import lru_cache
 
 from .. import cache_control
 

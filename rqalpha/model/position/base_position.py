@@ -48,39 +48,39 @@ class BasePosition:
         self._is_traded = False
 
     @property
-    def market_value(self) -> float:
+    def market_value(self):
         """
         【float】投资组合当前所有证券仓位的市值的加总
         """
         return self._market_value
 
     @property
-    def order_book_id(self) -> str:
+    def order_book_id(self):
         """
         【str】合约代码
         """
         return self._order_book_id
 
     @property
-    def total_orders(self) -> int:
+    def total_orders(self):
         """
         【int】该仓位的总订单的次数
         """
         return self._total_orders
 
     @property
-    def total_trades(self) -> int:
+    def total_trades(self):
         """
         【int】该仓位的总成交的次数
         """
         return self._total_trades
 
     @property
-    def _position_value(self) -> float:
+    def _position_value(self):
         raise NotImplementedError
 
     @property
-    def pnl(self) -> float:
+    def pnl(self):
         """
         【float】持仓累计盈亏
         """

@@ -35,7 +35,7 @@ def init_commission(account_type, multiplier):
 
 class BaseCommission(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
-    def get_commission(self, trade) -> float:
+    def get_commission(self, trade):
         raise NotImplementedError
 
 
@@ -46,7 +46,7 @@ class StockCommission(BaseCommission):
         self.commission_map = defaultdict(lambda: min_commission)
         self.min_commission = min_commission
 
-    def get_commission(self, trade) -> float:
+    def get_commission(self, trade):
         """
         计算手续费这个逻辑比较复杂，按照如下算法来计算：
         1.  定义一个剩余手续费的概念，根据order_id存储在commission_map中，默认为min_commission
@@ -85,7 +85,7 @@ class FutureCommission(BaseCommission):
         self.multiplier = multiplier
         self.hedge_type = hedge_type
 
-    def get_commission(self, trade) -> float:
+    def get_commission(self, trade):
         order = trade.order
         order_book_id = order.order_book_id
         underlying_symbol = get_upper_underlying_symbol(order_book_id)

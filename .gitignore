@@ -12,6 +12,7 @@ rqalpha.system.log
 .idea
 *.c
 *.so
+*.pyc
 build/
 bundle/
 bundle

@@ -76,21 +76,21 @@ class FuturePortfolio(BasePortfolio):
         return p_dict
 
     @property
-    def positions(self) -> "FuturePosition[]":
+    def positions(self):
         """
         【dict】一个包含期货子组合仓位的字典，以order_book_id作为键，position对象作为值
         """
         return self._positions
 
     @property
-    def cash(self) -> float:
+    def cash(self):
         """
         【float】可用资金
         """
         return self.portfolio_value - self.margin - self.daily_holding_pnl - self.frozen_cash
 
     @property
-    def portfolio_value(self) -> float:
+    def portfolio_value(self):
         """
         【float】总权益，昨日总权益+当日盈亏
         """
@@ -100,13 +100,13 @@ class FuturePortfolio(BasePortfolio):
         return self._portfolio_value
 
     # @property
-    # def _risk_cash(self) -> float:
+    # def _risk_cash(self):
     #     # 风控资金
     #     risk_cash = self.cash if self.daily_holding_pnl > 0 else self.cash + self.daily_holding_pnl
     #     return risk_cash
 
     @property
-    def buy_margin(self) -> float:
+    def buy_margin(self):
         """
         【float】多头保证金
         """
@@ -116,7 +116,7 @@ class FuturePortfolio(BasePortfolio):
         return sum(position.buy_margin for position in itervalues(self.positions))
 
     @property
-    def sell_margin(self) -> float:
+    def sell_margin(self):
         """
         【float】空头保证金
         """
@@ -124,7 +124,7 @@ class FuturePortfolio(BasePortfolio):
         return sum(position.sell_margin for position in itervalues(self.positions))
 
     @property
-    def margin(self) -> float:
+    def margin(self):
         """
         【float】已占用保证金
         """
@@ -132,7 +132,7 @@ class FuturePortfolio(BasePortfolio):
         return sum(position.margin for position in itervalues(self.positions))
 
     @property
-    def daily_holding_pnl(self) -> float:
+    def daily_holding_pnl(self):
         """
         【float】当日浮动盈亏
         """
@@ -140,7 +140,7 @@ class FuturePortfolio(BasePortfolio):
         return sum(position.daily_holding_pnl for position in itervalues(self.positions))
 
     @property
-    def daily_realized_pnl(self) -> float:
+    def daily_realized_pnl(self):
         """
         【float】当日平仓盈亏
         """
@@ -148,7 +148,7 @@ class FuturePortfolio(BasePortfolio):
         return sum(position.daily_realized_pnl for position in itervalues(self.positions))
 
     @property
-    def daily_pnl(self) -> float:
+    def daily_pnl(self):
         """
         【float】当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
         """

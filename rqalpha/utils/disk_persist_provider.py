@@ -33,5 +33,5 @@ class DiskPersistProvider(AbstractPersistProvider):
         try:
             with open(os.path.join(self._path, key), "rb") as f:
                 return f.read()
-        except FileNotFoundError:
+        except IOError as e:
             return None

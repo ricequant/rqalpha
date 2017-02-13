@@ -106,7 +106,7 @@ class MixedPortfolio:
         return sum(portfolio.portfolio_value for portfolio in self._portfolio_list)
 
     @property
-    def positions(self) -> "MixedPositions[]":
+    def positions(self):
         """
         【dict】一个包含所有仓位的字典，以order_book_id作为键，position对象作为值，关于position的更多的信息可以在下面的部分找到。
         """

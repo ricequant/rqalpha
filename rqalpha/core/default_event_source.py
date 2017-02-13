@@ -21,7 +21,7 @@ from ..events import Events
 from ..environment import Environment
 from ..utils import get_account_type
 from ..utils.exception import CustomException, CustomError, patch_user_exc
-from ..utils.datetime import convert_int_to_datetime
+from ..utils.datetime_func import convert_int_to_datetime
 from ..const import ACCOUNT_TYPE
 
 ONE_MINUTE = datetime.timedelta(minutes=1)

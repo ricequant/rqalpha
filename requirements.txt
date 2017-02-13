@@ -37,3 +37,4 @@ dill==0.2.5
 XlsxWriter>=0.9.6
 
 line-profiler==1.0
+fastcache>=1.0.2

@@ -54,7 +54,7 @@ def export_as_api(func):
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
              verify_that('style').is_instance_of((LimitOrder, MarketOrder)))
-def order(id_or_ins, amount, side, position_effect, style) -> int:
+def order(id_or_ins, amount, side, position_effect, style):
     if not isinstance(style, OrderStyle):
         raise RuntimeError
     if amount <= 0:
@@ -86,7 +86,7 @@ def order(id_or_ins, amount, side, position_effect, style) -> int:
 
 
 @export_as_api
-def buy_open(id_or_ins, amount, style=MarketOrder()) -> int:
+def buy_open(id_or_ins, amount, style=MarketOrder()):
     """
     买入开仓。
 
@@ -111,7 +111,7 @@ def buy_open(id_or_ins, amount, style=MarketOrder()) -> int:
 
 
 @export_as_api
-def buy_close(id_or_ins, amount, style=MarketOrder()) -> int:
+def buy_close(id_or_ins, amount, style=MarketOrder()):
     """
     平卖仓
 
@@ -136,7 +136,7 @@ def buy_close(id_or_ins, amount, style=MarketOrder()) -> int:
 
 
 @export_as_api
-def sell_open(id_or_ins, amount, style=MarketOrder()) -> int:
+def sell_open(id_or_ins, amount, style=MarketOrder()):
     """
     卖出开仓
 
@@ -154,7 +154,7 @@ def sell_open(id_or_ins, amount, style=MarketOrder()) -> int:
 
 
 @export_as_api
-def sell_close(id_or_ins, amount, style=MarketOrder()) -> int:
+def sell_close(id_or_ins, amount, style=MarketOrder()):
     """
     平买仓
 
@@ -192,7 +192,7 @@ def assure_future_order_book_id(id_or_symbols):
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
-def get_future_contracts(underlying_symbol: str) -> list:
+def get_future_contracts(underlying_symbol):
     """
     获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
 

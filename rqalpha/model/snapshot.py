@@ -18,7 +18,7 @@ import datetime
 
 import numpy as np
 
-from ..utils.datetime import convert_int_to_datetime
+from ..utils.datetime_func import convert_int_to_datetime
 
 
 class SnapshotObject(object):

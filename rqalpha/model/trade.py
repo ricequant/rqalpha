@@ -88,11 +88,11 @@ class Trade:
         return trade_dict
 
     @property
-    def trading_datetime(self) -> datetime.datetime:
+    def trading_datetime(self):
         return self._trading_dt
 
     @property
-    def datetime(self) -> datetime.datetime:
+    def datetime(self):
         return self._calendar_dt
 
     @property

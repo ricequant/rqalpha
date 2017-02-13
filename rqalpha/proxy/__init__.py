@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-class PositionsProxy:
+class PositionsProxy(object):
     def __init__(self, postions):
         self._postions = postions
         self.__class__.__repr__ = postions.__repr__
@@ -44,10 +44,10 @@ class PositionsProxy:
     def __setattr__(self, name, value):
         if name not in ["_postions"]:
             raise AttributeError("{} can not modify to {}".format(name, value))
-        super().__setattr__(name, value)
+        super(PositionsProxy, self).__setattr__(name, value)
 
 
-class PortfolioProxy:
+class PortfolioProxy(object):
     def __init__(self, portfolio):
         self._portfolio = portfolio
         self.__class__.__repr__ = portfolio.__repr__
@@ -60,4 +60,4 @@ class PortfolioProxy:
     def __setattr__(self, name, value):
         if name not in ["_portfolio", "_positions_proxy", "positions"]:
             raise AttributeError("{} can not modify to {}".format(name, value))
-        super().__setattr__(name, value)
+        super(PortfolioProxy, self).__setattr__(name, value)

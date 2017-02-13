@@ -14,11 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from functools import lru_cache
-
 import numpy as np
 import pandas as pd
+try:
+    # For Python 2 兼容
+    from functools import lru_cache
+except Exception as e:
+    from fastcache import lru_cache
 
 from . import risk_free_helper
 from .instrument_mixin import InstrumentMixin
@@ -26,12 +28,11 @@ from .trading_dates_mixin import TradingDatesMixin
 from .. import cache_control
 from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
-from ..utils.datetime import convert_int_to_datetime
-from ..interface import AbstractDataSource
+from ..utils.datetime_func import convert_int_to_datetime
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):
-    def __init__(self, data_source: AbstractDataSource):
+    def __init__(self, data_source):
         self._data_source = data_source
         try:
             self.get_risk_free_rate = data_source.get_risk_free_rate

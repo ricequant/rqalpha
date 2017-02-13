@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import time
-import datetime
 from six import iteritems
 
 from ..const import ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE
@@ -101,105 +100,105 @@ class Order:
         return order_dict
 
     @property
-    def order_id(self) -> int:
+    def order_id(self):
         """
         【int】唯一标识订单的id
         """
         return self._order_id
 
     @property
-    def trading_datetime(self) -> datetime.datetime:
+    def trading_datetime(self):
         """
         【datetime.datetime】订单的交易日期（对应期货夜盘）
         """
         return self._trading_dt
 
     @property
-    def datetime(self) -> datetime.datetime:
+    def datetime(self):
         """
         【datetime.datetime】订单创建时间
         """
         return self._calendar_dt
 
     @property
-    def quantity(self) -> int:
+    def quantity(self):
         """
         【int】订单数量
         """
         return self._quantity
 
     @property
-    def unfilled_quantity(self) -> int:
+    def unfilled_quantity(self):
         """
         【int】订单未成交数量
         """
         return self._quantity - self._filled_quantity
 
     @property
-    def order_book_id(self) -> str:
+    def order_book_id(self):
         """
         【str】合约代码
         """
         return self._order_book_id
 
     @property
-    def side(self) -> SIDE:
+    def side(self):
         """
         【SIDE】订单方向
         """
         return self._side
 
     @property
-    def position_effect(self) -> POSITION_EFFECT:
+    def position_effect(self):
         """
         【POSITION_EFFECT】订单开平（期货专用）
         """
         return self._position_effect
 
     @property
-    def message(self) -> str:
+    def message(self):
         """
         【str】信息。比如拒单时候此处会提示拒单原因
         """
         return self._message
 
     @property
-    def filled_quantity(self) -> int:
+    def filled_quantity(self):
         """
         【int】订单已成交数量
         """
         return self._filled_quantity
 
     @property
-    def status(self) -> ORDER_STATUS:
+    def status(self):
         """
         【ORDER_STATUS】订单状态
         """
         return self._status
 
     @property
-    def price(self) -> float:
+    def price(self):
         """
         【float】订单价格，只有在订单类型为'限价单'的时候才有意义
         """
         return 0 if self.type == ORDER_TYPE.MARKET else self._frozen_price
 
     @property
-    def type(self) -> ORDER_TYPE:
+    def type(self):
         """
         【ORDER_TYPE】订单类型
         """
         return self._type
 
     @property
-    def avg_price(self) -> float:
+    def avg_price(self):
         """
         【float】成交均价
         """
         return self._avg_price
 
     @property
-    def transaction_cost(self) -> float:
+    def transaction_cost(self):
         """
         【float】费用
         """
@@ -252,7 +251,7 @@ class OrderStyle:
 class MarketOrder(OrderStyle):
     __repr__ = ORDER_TYPE.MARKET.__repr__
 
-    def get_limit_price(self) -> None:
+    def get_limit_price(self):
         return None
 
 
@@ -262,5 +261,5 @@ class LimitOrder(OrderStyle):
     def __init__(self, limit_price):
         self.limit_price = float(limit_price)
 
-    def get_limit_price(self) -> float:
+    def get_limit_price(self):
         return self.limit_price
