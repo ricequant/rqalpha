@@ -89,7 +89,7 @@ class BaseAccount(Persistable):
 
     def before_trading(self):
         open_orders = {}
-        for k, order in self.daily_orders.items():
+        for k, order in iteritems(self.daily_orders):
             if not order._is_final():
                 open_orders[k] = order
 

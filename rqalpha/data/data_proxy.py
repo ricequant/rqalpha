@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import numpy as np
 import pandas as pd
 try:
@@ -50,7 +51,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return [] if minutes is None else minutes
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
-        if isinstance(tenor, str):
+        if isinstance(tenor, six.string_types):
             tenor = [tenor]
         return self._data_source.get_yield_curve(start_date, end_date, tenor)
 

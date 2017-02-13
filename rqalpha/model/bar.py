@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import numpy as np
 
 from ..environment import Environment
@@ -337,7 +338,7 @@ class BarObject(object):
 
         if isinstance(self._data, dict):
             # in pt
-            base.extend((k, v) for k, v in self._data.items() if k != 'datetime')
+            base.extend((k, v) for k, v in six.iteritems(self._data) if k != 'datetime')
         else:
             base.extend((n, self._data[n]) for n in self._data.dtype.names if n != 'datetime')
         return "Bar({0})".format(', '.join('{0}: {1}'.format(k, v) for k, v in base))
@@ -373,7 +374,7 @@ class BarMap(object):
         return len(Environment.get_instance().universe)
 
     def __getitem__(self, key):
-        if not isinstance(key, str):
+        if not isinstance(key, six.string_types):
             raise patch_user_exc(ValueError('invalid key {} (use order_book_id please)'.format(key)))
 
         instrument = self._data_proxy.instruments(key)

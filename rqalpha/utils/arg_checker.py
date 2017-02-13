@@ -189,7 +189,7 @@ class ArgumentChecker:
         valid_fields = set(valid_fields)
 
         def check_are_valid_fields(func_name, fields):
-            if isinstance(fields, str):
+            if isinstance(fields, six.string_types):
                 if fields not in valid_fields:
                     raise RQInvalidArgument(
                         _('function {}: invalid {} argument, valid fields are {}, got {} (type: {})').format(
@@ -240,7 +240,7 @@ class ArgumentChecker:
                 return None
             if isinstance(value, (datetime.date, pd.Timestamp)):
                 return
-            if isinstance(value, str):
+            if isinstance(value, six.string_types):
                 try:
                     v = parse_date(value)
                 except ValueError:
@@ -279,7 +279,7 @@ class ArgumentChecker:
         return self
 
     def _is_valid_interval(self, func_name, value):
-        valid = isinstance(value, str) and value[-1] in {'d', 'm', 'q', 'y'}
+        valid = isinstance(value, six.string_types) and value[-1] in {'d', 'm', 'q', 'y'}
         if valid:
             try:
                 valid = int(value[:-1]) > 0
@@ -311,7 +311,7 @@ class ArgumentChecker:
         return self
 
     def _is_valid_frequency(self, func_name, value):
-        valid = isinstance(value, str) and value[-1] in ('d', 'm')
+        valid = isinstance(value, six.string_types) and value[-1] in ('d', 'm')
         if valid:
             try:
                 valid = int(value[:-1]) > 0

@@ -17,6 +17,7 @@
 from __future__ import division
 import pprint
 import re
+import six
 
 from contextlib import contextmanager
 
@@ -49,7 +50,7 @@ class RqAttrDict(object):
     def __init__(self, d=None):
         self.__dict__ = d if d is not None else dict()
 
-        for k, v in list(self.__dict__.items()):
+        for k, v in list(six.iteritems(self.__dict__)):
             if isinstance(v, dict):
                 self.__dict__[k] = RqAttrDict(v)
 
@@ -82,7 +83,7 @@ class Nop(object):
 def to_sector_name(s):
     from ..model.instrument import SectorCode, SectorCodeItem
 
-    for _, v in SectorCode.__dict__.items():
+    for _, v in six.iteritems(SectorCode.__dict__):
         if isinstance(v, SectorCodeItem):
             if v.cn == s or v.en == s or v.name == s:
                 return v.name
@@ -93,7 +94,7 @@ def to_sector_name(s):
 def to_industry_code(s):
     from ..model.instrument import IndustryCode, IndustryCodeItem
 
-    for _, v in IndustryCode.__dict__.items():
+    for _, v in six.iteritems(IndustryCode.__dict__):
         if isinstance(v, IndustryCodeItem):
             if v.name == s:
                 return v.code
@@ -193,7 +194,7 @@ def get_account_type(order_book_id):
 
 
 def exclude_benchmark_generator(accounts):
-    return {k: v for k, v in accounts.items() if k != ACCOUNT_TYPE.BENCHMARK}
+    return {k: v for k, v in six.iteritems(accounts) if k != ACCOUNT_TYPE.BENCHMARK}
 
 
 def get_upper_underlying_symbol(order_book_id):

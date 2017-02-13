@@ -190,7 +190,7 @@ def report(result_pickle_file_path, target_report_csv_file, data_bundle_path):
     fieldnames = ['dt', 'order_book_id', 'market_value', 'quantity']
     writer = csv.DictWriter(csv_txt, fieldnames=fieldnames)
     writer.writeheader()
-    for _dt, positions in result_df.positions.iteritems():
+    for _dt, positions in iteritems(result_df.positions):
         dt = _dt.strftime('%Y-%m-%d %H:%M:%S')
         for order_book_id, position in iteritems(positions):
             instrument = data_proxy.instruments(order_book_id)

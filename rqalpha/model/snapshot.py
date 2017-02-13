@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import datetime
-
 import numpy as np
 
 from ..utils.datetime_func import convert_int_to_datetime
@@ -165,7 +165,7 @@ class SnapshotObject(object):
 
         if isinstance(self._data, dict):
             # in pt
-            base.extend([k, v] for k, v in self._data.items() if k != 'datetime')
+            base.extend([k, v] for k, v in six.iteritems(self._data) if k != 'datetime')
         else:
             base.extend((n, self._data[n]) for n in self._data.dtype.names if n != 'datetime')
         return "Snapshot({0})".format(', '.join('{0}: {1}'.format(k, v) for k, v in base))

@@ -511,7 +511,7 @@ def instruments(id_or_symbols):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('code').is_instance_of((str, SectorCodeItem)))
 def sector(code):
-    if not isinstance(code, str):
+    if not isinstance(code, six.string_types):
         code = code.name
     else:
         code = to_sector_name(code)
@@ -527,7 +527,7 @@ def sector(code):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('code').is_instance_of((str, IndustryCodeItem)))
 def industry(code):
-    if not isinstance(code, str):
+    if not isinstance(code, six.string_types):
         code = code.code
     else:
         code = to_industry_code(code)
@@ -634,7 +634,7 @@ def get_next_trading_date(date):
 
 
 def to_date(date):
-    if isinstance(date, str):
+    if isinstance(date, six.string_types):
         return parse(date).date()
 
     if isinstance(date, datetime.date):

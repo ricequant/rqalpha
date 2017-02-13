@@ -15,12 +15,13 @@
 # limitations under the License.
 
 import pandas as pd
+import six
 
 
 class InstrumentMixin:
     def __init__(self, instruments):
         self._instruments = {i.order_book_id: i for i in instruments}
-        self._sym_id_map = {i.symbol: k for k, i in self._instruments.items()
+        self._sym_id_map = {i.symbol: k for k, i in six.iteritems(self._instruments)
                             # 过滤掉 CSI300, SSE50, CSI500, SSE180
                             if not i.order_book_id.endswith('INDX')}
         # 沪深300 中证500 固定使用上证的
@@ -63,13 +64,13 @@ class InstrumentMixin:
                 return None
 
     def instruments(self, sym_or_ids):
-        if isinstance(sym_or_ids, str):
+        if isinstance(sym_or_ids, six.string_types):
             return self._instrument(sym_or_ids)
 
         return [i for i in [self._instrument(sid) for sid in sym_or_ids] if i is not None]
 
     def get_future_contracts(self, underlying, date):
-        futures = [v for o, v in self._instruments.items()
+        futures = [v for o, v in six.iteritems(self._instruments)
                    if v.type == 'Future' and v.underlying_symbol == underlying and
                    not o.endswith('88') and not o.endswith('99')]
         if not futures:

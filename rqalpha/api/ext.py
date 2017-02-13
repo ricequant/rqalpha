@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 from ..execution_context import ExecutionContext
 from .api_base import instruments
 
@@ -29,7 +31,7 @@ def price_change(stock):
 
 
 def symbol(order_book_id, split=", "):
-    if isinstance(order_book_id, str):
+    if isinstance(order_book_id, six.string_types):
         return "{}[{}]".format(order_book_id, instruments(order_book_id).symbol)
     else:
         s = split.join(symbol(item) for item in order_book_id)

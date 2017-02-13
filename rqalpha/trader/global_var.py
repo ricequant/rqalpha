@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import pickle
 from ..utils.logger import user_log, system_log, user_detail_log
 
@@ -21,7 +22,7 @@ from ..utils.logger import user_log, system_log, user_detail_log
 class GlobalVars:
     def get_state(self):
         dict_data = {}
-        for key, value in self.__dict__.items():
+        for key, value in six.iteritems(self.__dict__):
             try:
                 dict_data[key] = pickle.dumps(value)
             except Exception as e:
@@ -31,7 +32,7 @@ class GlobalVars:
 
     def set_state(self, state):
         dict_data = pickle.loads(state)
-        for key, value in dict_data.items():
+        for key, value in six.iteritems(dict_data):
             try:
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore g.{} {}", key, type(self.__dict__[key]))

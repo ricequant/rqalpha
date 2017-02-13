@@ -184,7 +184,7 @@ def run(config):
                 user_strategy.init()
 
         if config.extra.context_vars:
-            for k, v in config.extra.context_vars.items():
+            for k, v in iteritems(config.extra.context_vars):
                 setattr(ucontext, k, v)
 
         if config.base.persist:
@@ -196,9 +196,9 @@ def run(config):
             persist_helper.register('universe', env._universe)
             if isinstance(event_source, Persistable):
                 persist_helper.register('event_source', event_source)
-            for k, v in accounts.items():
+            for k, v in iteritems(accounts):
                 persist_helper.register('{}_account'.format(k.name.lower()), v)
-            for name, module in env.mod_dict.items():
+            for name, module in iteritems(env.mod_dict):
                 if isinstance(module, Persistable):
                     persist_helper.register('mod_{}'.format(name), module)
             # broker will restore open orders from account
@@ -310,7 +310,7 @@ def enable_profiler(env, scope):
         if inspect.isfunction(obj):
             scope[name] = profile_deco(obj)
         if inspect.isclass(obj):
-            for key, val in obj.__dict__.items():
+            for key, val in iteritems(obj.__dict__):
                 if inspect.isfunction(val):
                     setattr(obj, key, profile_deco(val))
 

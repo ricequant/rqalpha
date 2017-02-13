@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 from .. import const
 
 
@@ -49,7 +51,7 @@ class CustomError(object):
         for filename, lineno, func_name, code, local_variables in self.stacks:
             content.append('  File %s, line %s in %s' % (filename, lineno, func_name))
             content.append('    %s' % (code, ))
-            for k, v in local_variables.items():
+            for k, v in six.iteritems(local_variables):
                 content.append('    --> %s = %s' % (k, repr(v)))
             content.append('')
         content.append("%s: %s" % (self.exc_type.__name__, self.msg))

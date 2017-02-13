@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 
 class PositionsProxy(object):
     def __init__(self, postions):
@@ -35,7 +37,7 @@ class PositionsProxy(object):
         return len(self._postions)
 
     def items(self):
-        for key, value in sorted(self._postions.items()):
+        for key, value in sorted(six.iteritems(self._postions)):
             yield key, value._clone()
 
     def keys(self):

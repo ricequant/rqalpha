@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import datetime
 
 from ..execution_context import ExecutionContext
@@ -43,7 +44,7 @@ class Instrument(object):
     def __repr__(self):
         return "{}({})".format(type(self).__name__,
                                ", ".join(["{}={}".format(k, repr(v))
-                                          for k, v in self.__dict__.items()]))
+                                          for k, v in six.iteritems(self.__dict__)]))
 
     @property
     def listing(self):

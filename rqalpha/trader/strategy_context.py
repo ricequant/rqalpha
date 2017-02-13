@@ -14,16 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import pickle
-import datetime
 
 from ..const import ACCOUNT_TYPE
 from ..environment import Environment
-from ..model.portfolio import StockPortfolio, FuturePortfolio
 from ..utils.logger import user_log, system_log
 from ..utils.i18n import gettext as _
 from ..utils.repr import property_repr
-from ..const import MATCHING_TYPE, RUN_TYPE
 from ..proxy import PortfolioProxy
 
 
@@ -135,7 +133,7 @@ class RunInfo:
 class StrategyContext:
     def __repr__(self):
         items = ("%s = %r" % (k, v)
-                 for k, v in self.__dict__.items()
+                 for k, v in six.iteritems(self.__dict__)
                  if not callable(v) and not k.startswith("_"))
         return "Context({%s})" % (', '.join(items),)
 
@@ -145,7 +143,7 @@ class StrategyContext:
 
     def get_state(self):
         dict_data = {}
-        for key, value in self.__dict__.items():
+        for key, value in six.iteritems(self.__dict__):
             if key.startswith("_"):
                 continue
             try:
@@ -157,7 +155,7 @@ class StrategyContext:
 
     def set_state(self, state):
         dict_data = pickle.loads(state)
-        for key, value in dict_data.items():
+        for key, value in six.iteritems(dict_data):
             try:
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore context.{} {}", key, type(self.__dict__[key]))

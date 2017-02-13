@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import os
 import numpy as np
 try:
@@ -130,7 +131,7 @@ class BaseDataSource(AbstractDataSource):
     def _are_fields_valid(fields, valid_fields):
         if fields is None:
             return True
-        if isinstance(fields, str):
+        if isinstance(fields, six.string_types):
             return fields in valid_fields
         for field in fields:
             if field not in valid_fields:
