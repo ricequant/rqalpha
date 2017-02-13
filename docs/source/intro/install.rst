@@ -25,6 +25,10 @@ Windows 环境下编译安装 bcolz 需要使用Visual C++ Compiler，需要自�
 
     $ pip install -U pip setuptools
 
+安装 cython 库::
+
+    $ pip install cython
+
 安装 RQAlpha ::
 
     $ pip install rqalpha
