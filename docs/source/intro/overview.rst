@@ -69,22 +69,22 @@ RQAlpha 安装
 
 RQAlpha可以输出一个 pickle 文件，里面为一个 dict 。keys 包括
 
-* summary
-* stock_portfolios
-* future_portfolios
-* total_portfolios
-* benchmark_portfolios
-* stock_positions
-* future_positions
-* benchmark_positions
-* trades
-* plots
+* summary               回测摘要
+* stock_portfolios      股票帐号的市值
+* future_portfolios     期货帐号的市值
+* total_portfolios      总账号的的市值
+* benchmark_portfolios  基准帐号的市值
+* stock_positions       股票持仓
+* future_positions      期货仓位
+* benchmark_positions   基准仓位
+* trades                交易详情（交割单）
+* plots                 调用plot画图时，记录的值
 
 ::
 
     In [1]: import pickle
 
-    In [2]: result_dict = pickle.load(open("/tmp/alpha.pkl", "rb"))
+    In [2]: result_dict = pickle.load(open("/tmp/alpha.pkl", "rb"))   # 从输出pickle中读取数据
 
     In [3]: result_dict.keys()
     Out[3]: dict_keys(['stock_portfolios', 'total_portfolios', 'stock_positions', 'benchmark_portfolios', 'plots', 'summary', 'trades', 'benchmark_positions'])
