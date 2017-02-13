@@ -25,19 +25,23 @@ Quick Guide
 ==================
 
 .. toctree::
-   :caption: Quick Guide
-   :hidden:
+    :caption: Quick Guide
+    :hidden:
 
-   intro/overview
-   intro/install
-   intro/tutorial
-   intro/examples
+    intro/overview
+    intro/install
+    intro/detail_install
+    intro/tutorial
+    intro/examples
 
 :doc:`intro/overview`
     了解RQAlpha
 
 :doc:`intro/install`
     安装RQAlpha
+
+:doc:`intro/detail_install`
+    如果对Python并不熟悉的话，我们提供了整套开发环境的详细安装教程
 
 :doc:`intro/tutorial`
     使用RQAlpha
@@ -50,12 +54,12 @@ RQAlpha API
 ==================
 
 .. toctree::
-   :caption: API
-   :hidden:
+    :caption: API
+    :hidden:
 
-   api/config
-   api/base_api
-   api/extend_api
+    api/config
+    api/base_api
+    api/extend_api
 
 :doc:`api/config`
     启动 RQAlpha 参数配置
@@ -71,12 +75,12 @@ Development
 ==================
 
 .. toctree::
-   :caption: Development
-   :hidden:
+    :caption: Development
+    :hidden:
 
-   development/make_contribute
-   development/basic_concept
-   development/mod
+    development/make_contribute
+    development/basic_concept
+    development/mod
 
 :doc:`development/make_contribute`
     如何加入 RQAlpha 的开发
@@ -91,11 +95,11 @@ Extra
 ==================
 
 .. toctree::
-   :caption: Extra
-   :hidden:
+    :caption: Extra
+    :hidden:
 
-   faq
-   history
+    faq
+    history
 
 :doc:`faq`
     FAQ

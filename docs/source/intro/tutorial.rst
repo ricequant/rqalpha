@@ -115,7 +115,7 @@ Ricequant 金融、财务、合约历史数据等数据接口，详情请查看 
 
 *   bar_dict: 在 :func:`handle_bar` 中我们可以使用 `bar_dict` 来获取相应的 :class:`Bar` 数据，`bar_dict` 是一个字典类型变量，直接通过传 `key` 的方式就可以获取到对应的 :class:`Bar` 数据。
 
-*   我们可以引用第三方库来帮我们生成相应的指标序列，比如使用 `TA-Lib`_ 来获取移动平均线序列。`TA-Lib`_ 的安装可以参考 :ref:`intro-install-talib` 相应文档。
+*   我们可以引用第三方库来帮我们生成相应的指标序列，比如使用 `TA-Lib`_ 来获取移动平均线序列。`TA-Lib`_ 的安装可以参考 :ref:`intro-detail-install-talib` 相应文档。
 
 .. _TA-Lib: https://github.com/mrjbq7/ta-lib
 
