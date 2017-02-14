@@ -25,7 +25,6 @@ import tempfile
 
 import six
 import requests
-import pandas as pd
 
 from .cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
