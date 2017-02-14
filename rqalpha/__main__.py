@@ -14,16 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-import locale
-import shutil
-import errno
-import csv
-import os
 import click
-import tempfile
-import tarfile
 import datetime
+import errno
+import locale
+import os
+import shutil
+import tarfile
+import tempfile
+
+import six
 import requests
 import pandas as pd
 
@@ -53,7 +53,7 @@ def update_bundle(data_bundle_path):
 
     while True:
         url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
-        day.year, day.month, day.day)
+            day.year, day.month, day.day)
         six.print_('try {} ...'.format(url))
         r = requests.get(url, stream=True)
         if r.status_code != 200:
@@ -112,10 +112,14 @@ def run(**kwargs):
     if kwargs.get('base__run_type') == 'p':
         set_cache_policy(CachePolicy.MINIMUM)
 
-    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
-    locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
-    os.environ['TZ'] = 'Asia/Shanghai'
-    set_locale(["zh_Hans_CN"])
+    try:
+        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+        locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
+        os.environ['TZ'] = 'Asia/Shanghai'
+        set_locale(["zh_Hans_CN"])
+    except Exception as e:
+        if os.name != 'nt':
+            raise
 
     config_path = kwargs.get('config_path', None)
     if config_path is not None:
