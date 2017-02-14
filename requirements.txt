@@ -13,7 +13,7 @@ enum34>=1.1.6
 logbook==1.0.0
 click>=6.6
 matplotlib>=1.5.1
-bcolz==1.1.0
+bcolz>=1.1.0
 
 attrdict>=2.0.0
 protobuf>=3.0.0b3
