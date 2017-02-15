@@ -82,7 +82,10 @@ def parse_config(config_args, base_config_path=None, click_type=True):
     if base_config.data_bundle_path is None:
         base_config.data_bundle_path = os.path.expanduser("~/.rqalpha")
 
-    base_config.data_bundle_path = os.path.abspath(os.path.join(base_config.data_bundle_path, './bundle/'))
+    base_config.data_bundle_path = os.path.abspath(base_config.data_bundle_path)
+
+    if os.path.basename(base_config.data_bundle_path) != "bundle":
+        base_config.data_bundle_path = os.path.join(base_config.data_bundle_path, "./bundle")
 
     if not os.path.exists(base_config.data_bundle_path):
         print("data bundle not found. Run `rqalpha update_bundle` to download data bundle.")
