@@ -20,7 +20,6 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     from matplotlib import rcParams
     rcParams['font.family'] = 'sans-serif'
     rcParams['font.sans-serif'] = [
-        u'SimHei',
         u'Microsoft Yahei',
         u'Heiti SC',
         u'Heiti TC',
@@ -28,6 +27,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         u'WenQuanYi Zen Hei',
         u'WenQuanYi Micro Hei',
         u"文泉驿微米黑",
+        u'SimHei',
     ] + rcParams['font.sans-serif']
     rcParams['axes.unicode_minus'] = False
     import numpy as np
