@@ -21,24 +21,34 @@ Windows 环境下编译安装 bcolz 需要使用Visual C++ Compiler，需要自�
 安装
 ==================
 
-为了避免一些安装问题，建议您先升级您的 pip 和 setuptools ::
+为了避免一些安装问题，建议您先升级您的 pip 和 setuptools :
+
+.. code-block:: bash
 
     $ pip install -U pip setuptools
 
-因为 bcolz 对于一些用户可能会安装困难，可能需要重试多次，所以建议先安装 cython / bcolz 库::
+因为 bcolz 对于一些用户可能会安装困难，可能需要重试多次，所以建议先安装 cython / bcolz 库:
+
+.. code-block:: bash
 
     $ pip install cython
     $ pip install bcolz==1.1.0
 
-安装 RQAlpha ::
+安装 RQAlpha :
+
+.. code-block:: bash
 
     $ pip install rqalpha
 
-如果执行 `pip install` 安装依赖库网络速度比较慢的话，推荐使用国内镜像来进行加速::
+如果执行 `pip install` 安装依赖库网络速度比较慢的话，推荐使用国内镜像来进行加速:
+
+.. code-block:: bash
 
     $ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple rqalpha
 
-查看 RQAlpha 是否安装成功可以通过如下方式::
+查看 RQAlpha 是否安装成功可以通过如下方式:
+
+.. code-block:: bash
 
     $ rqalpha version
 
@@ -47,11 +57,13 @@ Windows 环境下编译安装 bcolz 需要使用Visual C++ Compiler，需要自�
 获取回测数据
 ==================
 
-RiceQuant 免费提供日级别的股票和期货数据供回测使用，可以通过以下命令来进行每日数据的增量更新::
+RiceQuant 免费提供日级别的股票和期货数据供回测使用，可以通过以下命令来进行每日数据的增量更新:
+
+.. code-block:: bash
 
     $ rqalpha update_bundle
 
-bundle 文件默认存放在 `~/.rqalpha` 下，您也可以指定 bundle 文件的存放位置，
+bundle 默认存放在 `~/.rqalpha` 下，您也可以指定 bundle 的存放位置，
 
 .. code-block:: bash
 

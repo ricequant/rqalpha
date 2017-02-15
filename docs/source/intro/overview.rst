@@ -41,7 +41,9 @@ RQAlpha 安装
 生成样例策略
 ==================
 
-运行以下命令，将会在指定目录生成一个examples文件夹，其中包含几个有趣的样例策略::
+运行以下命令，将会在指定目录生成一个examples文件夹，其中包含几个有趣的样例策略:
+
+.. code-bock:: bash
 
     $ rqalpha examples -d ./
 
@@ -50,7 +52,9 @@ RQAlpha 安装
 
 运行 RQAlpha 需要传递一些参数，可以通过命令 `rqalpha help` 查看，或者查看文档 :ref: `intro-config` 来获取相关信息。
 
-运行如下命令::
+运行如下命令:
+
+.. code-bock:: bash
 
     $ cd examples
     $ rqalpha run -f rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot --progress --stock-starting-cash 100000
@@ -60,7 +64,9 @@ RQAlpha 安装
 绘制回测结果
 ==================
 
-如果运行完回测后，还需要再次绘制回测结果，可以运行以下命令::
+如果运行完回测后，还需要再次绘制回测结果，可以运行以下命令:
+
+.. code-bock:: bash
 
     $ rqalpha plot result.pkl
 
@@ -80,7 +86,7 @@ RQAlpha可以输出一个 pickle 文件，里面为一个 dict 。keys 包括
 * trades                交易详情（交割单）
 * plots                 调用plot画图时，记录的值
 
-::
+.. code-bock:: python3
 
     In [1]: import pickle
 

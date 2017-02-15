@@ -35,6 +35,7 @@ setup(
     packages=find_packages(exclude=[]),
     author='ricequant',
     author_email='public@ricequant.com',
+    license='Apache License v2',
     package_data={'': ['*.*']},
     url='https://github.com/ricequant/rqalpha',
     install_requires=[str(ir.req) for ir in parse_requirements("requirements.txt", session=False)],
