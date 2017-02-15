@@ -33,3 +33,29 @@ version_info = tuple(int(v) if v.isdigit() else v
 __main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
 
 del pkgutil
+
+
+def run(config):
+    import locale
+    import os
+    from .cache_control import set_cache_policy, CachePolicy
+    from .utils.i18n import localization
+    from .utils.config import parse_config
+    from . import main
+
+    try:
+        if config["base"]["run_type"] == "p":
+            set_cache_policy(CachePolicy.MINIMUM)
+    except Exception as e:
+        pass
+
+    try:
+        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+        locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
+        os.environ['TZ'] = 'Asia/Shanghai'
+        localization.set_locale(["zh_Hans_CN"])
+    except Exception as e:
+        if os.name != 'nt':
+            raise
+
+    main.run(parse_config(config, None, False))

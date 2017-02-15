@@ -75,14 +75,7 @@ before_trading
         :linenos:
 
         def before_trading(context, bar_dict):
-            # 拿取财务数据的逻辑，自己构建SQLAlchemy query
-            fundamental_df = get_fundamentals(your_own_query)
-
-            # 把查询到的财务数据保存到conext对象中
-            context.fundamental_df = fundamental_df
-
-            # 手动更新股票池
-            update_universe(context.fundamental_df.columns.values)
+            logger.info("This is before trading")
 
 after_trading
 ------------------

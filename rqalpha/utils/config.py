@@ -27,9 +27,10 @@ from .exception import patch_user_exc
 from .logger import user_log, system_log, std_log, user_std_handler
 from ..const import ACCOUNT_TYPE, MATCHING_TYPE, RUN_TYPE, PERSIST_MODE
 from ..utils.i18n import gettext as _
+from ..utils.dict_func import deep_update
 
 
-def parse_config(click_kargs, base_config_path=None):
+def parse_config(config_args, base_config_path=None, click_type=True):
     if base_config_path is None:
         config_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config.yml"))
     else:
@@ -42,19 +43,22 @@ def parse_config(click_kargs, base_config_path=None):
         config_file = f.read()
 
     config = yaml.load(config_file)
-    for key, value in six.iteritems(click_kargs):
-        if click_kargs[key] is not None:
-            keys = key.split("__")
-            keys.reverse()
-            sub_config = config[keys.pop()]
-            while True:
-                if len(keys) == 0:
-                    break
-                k = keys.pop()
-                if len(keys) == 0:
-                    sub_config[k] = value
-                else:
-                    sub_config = sub_config[k]
+    if click_type:
+        for key, value in six.iteritems(config_args):
+            if config_args[key] is not None:
+                keys = key.split("__")
+                keys.reverse()
+                sub_config = config[keys.pop()]
+                while True:
+                    if len(keys) == 0:
+                        break
+                    k = keys.pop()
+                    if len(keys) == 0:
+                        sub_config[k] = value
+                    else:
+                        sub_config = sub_config[k]
+    else:
+        deep_update(config_args, config)
 
     config = parse_user_config(config)
 
@@ -134,14 +138,12 @@ def parse_user_config(config):
 
         __config__ = scope.get("__config__", {})
 
+        deep_update(__config__, config)
+
         for sub_key, sub_dict in six.iteritems(__config__):
             if sub_key not in config["whitelist"]:
                 continue
-            for key, value in six.iteritems(sub_dict):
-                if isinstance(config[sub_key][key], dict):
-                    config[sub_key][key].update(value)
-                else:
-                    config[sub_key][key] = value
+            deep_update(sub_dict, config[sub_key])
 
     except Exception as e:
         print('in parse_user_config, exception: ', e)
