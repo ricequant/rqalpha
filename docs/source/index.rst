@@ -7,7 +7,11 @@ RQAlpha |version| Documentation
     :target: http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable
     :alt: Documentation Status
 
-..  image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+..  image:: https://img.shields.io/pypi/v/rqalpha.svg
+    :target: https://pypi.python.org/pypi/rqalpha
+    :alt: PyPI Version
+
+..  image:: https://img.shields.io/pypi/l/rqalpha.svg
     :target: https://opensource.org/licenses/Apache-2.0
     :alt: License
 
