@@ -47,7 +47,8 @@ def entry_point():
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path(file_okay=False))
 def update_bundle(data_bundle_path):
     data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
-    if (os.path.exists(data_bundle_path) and data_bundle_path != os.path.expanduser("~/.rqalpha/bundle/") and
+    default_bundle_path = os.path.abspath(os.path.expanduser("~/.rqalpha/bundle/"))
+    if (os.path.exists(data_bundle_path) and data_bundle_path != default_bundle_path and
             os.listdir(data_bundle_path)):
         click.confirm('[WARNING] Target bundle path {} is not empty. The content of this folder will be REMOVED before '
                       'updating. Are you sure to continue?'.format(data_bundle_path), abort=True)
