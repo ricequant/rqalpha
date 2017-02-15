@@ -36,8 +36,7 @@ RQAlpha 是 [Ricequnat](https://www.ricequant.com) 开发并维护的开源产�
 ## RQAlpha API
 
 *   [参数配置](http://rqalpha.readthedocs.io/zh_CN/latest/api/config.html): 启动 RQAlpha 参数配置
-*   [基础 API](http://rqalpha.readthedocs.io/zh_CN/latest/api/base_api.html): 基础API(期货股票公用API)
-*   [扩展 API](http://rqalpha.readthedocs.io/zh_CN/latest/api/extend_api.html): 扩展API(开源版暂不支持，可以通过Ricequant平台或者商业版使用)
+*   [API](http://rqalpha.readthedocs.io/zh_CN/latest/api/base_api.html): RQAlpha API 文档
 
 ## Development
 

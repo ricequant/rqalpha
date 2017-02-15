@@ -8,6 +8,8 @@
 
 未来我们可能会考虑以接口和授权的方式来开放数据源的获取，届时Extend API 将可以在RQAlpha中被调用。
 
+您也可以通过按照接口规范来进行 API 的扩展。
+
 get_fundamentals - 查询财务数据
 ------------------------------------------------------
 
@@ -26,48 +28,54 @@ get_fundamentals - 查询财务数据
 
     :return: `pandas.DataPanel` 如果查询结果为空，返回空 `pandas.DataFrame` 如果给定间隔为1d, 1m, 1q, 1y，返回 `pandas.DataFrame`
 
-    示例:
+    :example:
 
-    *   获取财务数据中的pe_ration和revenue指标::
+    *   获取财务数据中的pe_ration和revenue指标:
 
-            # 并且通过filter过滤掉得到符合一定范围的pe_ration的结果
-            # 最后只拿到按照降序排序之后的前10个
-            fundamental_df = get_fundamentals(
-                 query(
-                            fundamentals.income_statement.revenue, fundamentals.eod_derivative_indicator.pe_ratio
-                        ).filter(
-                            fundamentals.eod_derivative_indicator.pe_ratio > 25
-                        ).filter(
-                            fundamentals.eod_derivative_indicator.pe_ratio < 30
-                        ).order_by(
-                            fundamentals.income_statement.revenue.desc()
-                        ).limit(
-                            10
-                        )
-                )
-            context.stocks = fundamental_df.columns.values
-            update_universe(context.stocks)
+    ..  code-block:: python3
+        :linenos:
 
-    *   获取某些指定股票的财务数据::
-
-            def init(context):
-                context.stocks = industry('A01')
-                logger.info("industry stocks: " + str(context.stocks))
-
-                #每个表都有一个stockcode在用来方便通过股票代码来过滤掉查询的数据，比如次数是只查询'A01'板块的revenue 和 pe_ratio
-                context.fundamental_df = get_fundamentals(
-                    query(
-                        fundamentals.income_statement.revenue,      fundamentals.eod_derivative_indicator.pe_ratio
+        # 并且通过filter过滤掉得到符合一定范围的pe_ration的结果
+        # 最后只拿到按照降序排序之后的前10个
+        fundamental_df = get_fundamentals(
+             query(
+                        fundamentals.income_statement.revenue, fundamentals.eod_derivative_indicator.pe_ratio
                     ).filter(
-                        fundamentals.eod_derivative_indicator.pe_ratio > 5
+                        fundamentals.eod_derivative_indicator.pe_ratio > 25
                     ).filter(
-                        fundamentals.eod_derivative_indicator.pe_ratio < 300
-                    ).filter(
-                        fundamentals.income_statement.stockcode.in_(context.stocks)
-                        )
-                )
-                logger.info(context.fundamental_df)
-                update_universe(context.fundamental_df.columns.values)
+                        fundamentals.eod_derivative_indicator.pe_ratio < 30
+                    ).order_by(
+                        fundamentals.income_statement.revenue.desc()
+                    ).limit(
+                        10
+                    )
+            )
+        context.stocks = fundamental_df.columns.values
+        update_universe(context.stocks)
+
+    *   获取某些指定股票的财务数据:
+
+    ..  code-block:: python3
+        :linenos:
+
+        def init(context):
+            context.stocks = industry('A01')
+            logger.info("industry stocks: " + str(context.stocks))
+
+            #每个表都有一个stockcode在用来方便通过股票代码来过滤掉查询的数据，比如次数是只查询'A01'板块的revenue 和 pe_ratio
+            context.fundamental_df = get_fundamentals(
+                query(
+                    fundamentals.income_statement.revenue,      fundamentals.eod_derivative_indicator.pe_ratio
+                ).filter(
+                    fundamentals.eod_derivative_indicator.pe_ratio > 5
+                ).filter(
+                    fundamentals.eod_derivative_indicator.pe_ratio < 300
+                ).filter(
+                    fundamentals.income_statement.stockcode.in_(context.stocks)
+                    )
+            )
+            logger.info(context.fundamental_df)
+            update_universe(context.fundamental_df.columns.values)
 
 get_price - 合约历史数据
 ------------------------------------------------------
@@ -122,9 +130,12 @@ get_price - 合约历史数据
         trading_date                pandas.TimeStamp             交易日期（仅限期货分钟线数据），对应期货夜盘的情况
         =========================   =========================   ==============================================================================
 
-    示例:
+    :example:
 
-    获取单一股票历史日线行情::
+    获取单一股票历史日线行情:
+
+    ..  code-block:: python3
+        :linenos:
 
         [In]get_price('000001.XSHE', start_date='2015-04-01', end_date='2015-04-12')
         [Out]
@@ -147,12 +158,14 @@ get_dominant_future - 期货主力合约
 
     :param str underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
 
-    示例:
+    :example:
 
-    获取某一天的主力合约代码（策略当前日期是20160801）::
+    获取某一天的主力合约代码（策略当前日期是20160801）:
 
-        [In]
-        get_dominant_future('IF')
+    ..  code-block:: python3
+        :linenos:
+
+        [In]get_dominant_future('IF')
         [Out]
         'IF1608'
 
@@ -191,54 +204,62 @@ get_securities_margin - 融资融券信息
         *   单个order_book_id，单个field返回Series
         *   多个order_book_id，多个fields的时候返回DataPanel Items axis为fields Major_axis axis为时间戳 Minor_axis axis为order_book_id
 
-    示例:
+    :example:
 
-    *   获取沪深两个市场一段时间内的融资余额::
+    *   获取沪深两个市场一段时间内的融资余额:
 
-            [In]
-            logger.info(get_securities_margin('510050.XSHG', count=5))
-            [Out]
-            margin_balance    buy_on_margin_value    short_sell_quantity    margin_repayment    short_balance_quantity    short_repayment_quantity    short_balance    total_balance
-            2016-08-01    7.811396e+09    50012306.0    3597600.0    41652042.0    15020600.0    1645576.0    NaN    NaN
-            2016-08-02    7.826381e+09    34518238.0    2375700.0    19532586.0    14154000.0    3242300.0    NaN    NaN
-            2016-08-03    7.733306e+09    17967333.0    4719700.0    111043009.0    16235600.0    2638100.0    NaN    NaN
-            2016-08-04    7.741497e+09    30259359.0    6488600.0    22068637.0    17499000.0    5225200.0    NaN    NaN
-            2016-08-05    7.726343e+09    25270756.0    2865863.0    40423859.0    14252363.0    6112500.0    NaN    NaN
+    ..  code-block:: python3
+        :linenos:
 
-    *   获取沪深两个市场一段时间内的融资余额::
+        [In]logger.info(get_securities_margin('510050.XSHG', count=5))
+        [Out]
+        margin_balance    buy_on_margin_value    short_sell_quantity    margin_repayment    short_balance_quantity    short_repayment_quantity    short_balance    total_balance
+        2016-08-01    7.811396e+09    50012306.0    3597600.0    41652042.0    15020600.0    1645576.0    NaN    NaN
+        2016-08-02    7.826381e+09    34518238.0    2375700.0    19532586.0    14154000.0    3242300.0    NaN    NaN
+        2016-08-03    7.733306e+09    17967333.0    4719700.0    111043009.0    16235600.0    2638100.0    NaN    NaN
+        2016-08-04    7.741497e+09    30259359.0    6488600.0    22068637.0    17499000.0    5225200.0    NaN    NaN
+        2016-08-05    7.726343e+09    25270756.0    2865863.0    40423859.0    14252363.0    6112500.0    NaN    NaN
 
-            [In]
-            logger.info(get_securities_margin(['XSHE', 'XSHG'], count=5, fields='margin_balance'))
-            [Out]
-                    XSHE        XSHG
-            2016-08-01    3.837627e+11    4.763557e+11
-            2016-08-02    3.828923e+11    4.763931e+11
-            2016-08-03    3.823545e+11    4.769321e+11
-            2016-08-04    3.833260e+11    4.776380e+11
-            2016-08-05    3.812751e+11    4.766928e+11
+    *   获取沪深两个市场一段时间内的融资余额:
 
-    *   获取上证个股以及整个上证市场融资融券情况::
+    ..  code-block:: python3
+        :linenos:
 
-            [In]
-            logger.info(get_securities_margin(['XSHG', '601988.XSHG', '510050.XSHG'], count=5))
-            [Out]
-            <class 'pandas.core.panel.Panel'>
-            Dimensions: 8 (items) x 5 (major_axis) x 3 (minor_axis)
-            Items axis: margin_balance to total_balance
-            Major_axis axis: 2016-08-01 00:00:00 to 2016-08-05 00:00:00
-            Minor_axis axis: XSHG to 510050.XSHG
+        [In]logger.info(get_securities_margin(['XSHE', 'XSHG'], count=5, fields='margin_balance'))
+        [Out]
+                XSHE        XSHG
+        2016-08-01    3.837627e+11    4.763557e+11
+        2016-08-02    3.828923e+11    4.763931e+11
+        2016-08-03    3.823545e+11    4.769321e+11
+        2016-08-04    3.833260e+11    4.776380e+11
+        2016-08-05    3.812751e+11    4.766928e+11
+
+    *   获取上证个股以及整个上证市场融资融券情况:
+
+    ..  code-block:: python3
+        :linenos:
+
+        [In]logger.info(get_securities_margin(['XSHG', '601988.XSHG', '510050.XSHG'], count=5))
+        [Out]
+        <class 'pandas.core.panel.Panel'>
+        Dimensions: 8 (items) x 5 (major_axis) x 3 (minor_axis)
+        Items axis: margin_balance to total_balance
+        Major_axis axis: 2016-08-01 00:00:00 to 2016-08-05 00:00:00
+        Minor_axis axis: XSHG to 510050.XSHG
 
     *   获取50ETF融资偿还额情况
 
-            [In]
-            logger.info(get_securities_margin('510050.XSHG', count=5, fields='margin_repayment'))
-            [Out]
-            2016-08-01     41652042.0
-            2016-08-02     19532586.0
-            2016-08-03    111043009.0
-            2016-08-04     22068637.0
-            2016-08-05     40423859.0
-            Name: margin_repayment, dtype: float64
+    ..  code-block:: python3
+        :linenos:
+
+        [In]logger.info(get_securities_margin('510050.XSHG', count=5, fields='margin_repayment'))
+        [Out]
+        2016-08-01     41652042.0
+        2016-08-02     19532586.0
+        2016-08-03    111043009.0
+        2016-08-04     22068637.0
+        2016-08-05     40423859.0
+        Name: margin_repayment, dtype: float64
 
 get_shares - 流通股信息
 ------------------------------------------------------
@@ -263,12 +284,14 @@ get_shares - 流通股信息
 
     :return: `pandas.DateFrame` 查询时间段内某个股票的流通情况。 当fields指定为单一字段的情况时返回 `pandas.Series`
 
-    示例:
+    :example:
 
-    获取平安银行总股本数据::
+    获取平安银行总股本数据:
 
-        [In]
-        logger.info(get_shares('000001.XSHE', count=5, fields='total'))
+    ..  code-block:: python3
+        :linenos:
+
+        [In]logger.info(get_shares('000001.XSHE', count=5, fields='total'))
         [Out]
         2016-08-01    1.717041e+10
         2016-08-02    1.717041e+10
@@ -308,12 +331,14 @@ get_turnover_rate - 历史换手率
         *   如果传入order_book_id list，并指定单个field，函数会返回一个 `pandas.DataFrame`
         *   如果传入order_book_id list，并指定多个fields，函数会返回一个 `pandas.Panel`
 
-    示例:
+    :example:
 
-    获取平安银行历史换手率情况::
+    获取平安银行历史换手率情况:
 
-        [In]
-        logger.info(get_turnover_rate('000001.XSHE', count=5))
+   ..  code-block:: python3
+        :linenos:
+
+        [In]logger.info(get_turnover_rate('000001.XSHE', count=5))
         [Out]
                    today    week   month  three_month  six_month    year  \
         2016-08-01  0.5190  0.4478  0.3213       0.2877     0.3442  0.5027
@@ -437,7 +462,10 @@ industry - 行业股票列表
     S90                         综合
     =========================   ===================================================
 
-    示例::
+    :example:
+
+   ..  code-block:: python3
+        :linenos:
 
         def init(context):
             stock_list = industry('A01')
@@ -474,7 +502,10 @@ sector - 板块股票列表
     Industrials                 工业                         industrials
     =========================   =========================   ==============================================================================
 
-    示例::
+    :example:
+
+   ..  code-block:: python3
+        :linenos:
 
         def init(context):
             ids1 = sector("consumer discretionary")
@@ -516,26 +547,32 @@ concept - 概念股票列表
         整体上市        草甘膦        创投概念        超级细菌        信息安全        生物燃料        武汉规划        节能环保        成渝特区        军工航天
         地热能        上海本地        生物育种        燃料电池        海水淡化
 
-    示例
+    :example:
 
-    *   得到一个概念的股票列表::
+    *   得到一个概念的股票列表:
 
-            [In]concept('民营医院')
-            [Out]
-            ['600105.XSHG',
-            '002550.XSHE',
-            '002004.XSHE',
-            '002424.XSHE',
-            ...]
+   ..  code-block:: python3
+        :linenos:
 
-    *   得到某几个概念的股票列表::
+        [In]concept('民营医院')
+        [Out]
+        ['600105.XSHG',
+        '002550.XSHE',
+        '002004.XSHE',
+        '002424.XSHE',
+        ...]
 
-            [In]concept('民营医院', '国企改革')
-            [Out]
-            ['601607.XSHG',
-            '600748.XSHG',
-            '600630.XSHG',
-            ...]
+    *   得到某几个概念的股票列表:
+
+   ..  code-block:: python3
+        :linenos:
+
+        [In]concept('民营医院', '国企改革')
+        [Out]
+        ['601607.XSHG',
+        '600748.XSHG',
+        '600630.XSHG',
+        ...]
 
 index_components - 指数成分股
 ------------------------------------------------------
@@ -551,9 +588,12 @@ index_components - 指数成分股
 
     :return: list[`order_book_id`] 构成该指数股票
 
-    示例
+    :example:
 
-    得到上证指数在策略当前日期的构成股票的列表::
+    得到上证指数在策略当前日期的构成股票的列表:
+
+   ..  code-block:: python3
+        :linenos:
 
         [In]index_components('000001.XSHG')
         [Out]['600000.XSHG', '600004.XSHG', ...]
@@ -579,13 +619,14 @@ get_dividend - 分红数据
         *   payable_date: 分红到帐日，这一天最终分红的现金会到账
         *   round_lot: 分红最小单位，例如：10代表每10股派发dividend_cash_before_tax单位的税前现金
 
-    示例
+    :example:
 
-    获取平安银行2013-01-04 到策略当前日期前一天的分红数据::
+    获取平安银行2013-01-04 到策略当前日期前一天的分红数据:
 
-        [In]
-        get_dividend('000001.XSHE', start_date='20130104')
+   ..  code-block:: python3
+        :linenos:
 
+        [In]get_dividend('000001.XSHE', start_date='20130104')
         [Out]
                                       book_closure_date  dividend_cash_before_tax  \
         declaration_announcement_date
@@ -616,10 +657,12 @@ get_split - 拆分数据
 
         例如：每10股转增2股，则split_coefficient_from = 10, split_coefficient_to = 12.
 
-    示例::
+    :example:
 
-        [In]
-        get_split('000001.XSHE', start_date='2010-01-04')
+    ..  code-block:: python3
+        :linenos:
+
+        [In]get_split('000001.XSHE', start_date='2010-01-04')
 
         [Out]
                          book_closure_date payable_date  split_coefficient_from  \
@@ -643,9 +686,12 @@ get_split - 拆分数据
 
     :return: 符合当前利率水平的分级A基金的order_book_id list；如果无符合内容，则返回空列表。
 
-    示例
+    :example:
 
-    拿到当前收益率为4的A基的代码列表::
+    拿到当前收益率为4的A基的代码列表:
+
+    ..  code-block:: python3
+        :linenos:
 
         [In] fenji.get_a_by_yield(4)
         [Out]
@@ -661,9 +707,12 @@ get_split - 拆分数据
 
     :return: 符合当前利率规则的分级A基金的order_book_id list
 
-    示例
+    :example:
 
-    拿到符合利率规则“+3%”的A基的代码列表::
+    拿到符合利率规则“+3%”的A基的代码列表:
+
+    ..  code-block:: python3
+        :linenos:
 
         [In] fenji.get_a_by_interest_rule("+3%")
         [Out]
@@ -697,24 +746,30 @@ get_split - 拆分数据
     track_index_symbol          跟踪指数
     =========================   ===================================================
 
-    示例
+    :example:
 
-    *   拿到所有的分级基金的信息::
+    *   拿到所有的分级基金的信息:
 
-            [In] fenji.get_all()
-            [Out]
-            a_b_propotion    conversion_date    creation_date    current_yield    expire_date    fenji_a_order_book_id    fenji_a_symbol    fenji_b_order_book_id    fenji_b_symbol    fenji_mu_orderbook_id    fenji_mu_symbol    interest_rule    next_yield    track_index_symbol
-            0    7:3    2016-11-19    2014-05-22    2.5    NaN    161828    永益A    150162.XSHE    永益B    161827    银华永益    +1%    NaN    综合指数
-            1    1:1    2017-01-04    2015-03-17    5    NaN    150213.XSHE    成长A级    150214.XSHE    成长B级    161223    国投成长    +3.5%    5    创业成长
-            2    1:1    2016-12-15    2015-07-01    5.5    NaN    150335.XSHE    军工股A    150336.XSHE    军工股B    161628    融通军工    +4%    5.5    中证军工
+    ..  code-block:: python3
+        :linenos:
 
-    *   拿到只有2个字段的所有分级基金的信息::
+        [In] fenji.get_all()
+        [Out]
+        a_b_propotion    conversion_date    creation_date    current_yield    expire_date    fenji_a_order_book_id    fenji_a_symbol    fenji_b_order_book_id    fenji_b_symbol    fenji_mu_orderbook_id    fenji_mu_symbol    interest_rule    next_yield    track_index_symbol
+        0    7:3    2016-11-19    2014-05-22    2.5    NaN    161828    永益A    150162.XSHE    永益B    161827    银华永益    +1%    NaN    综合指数
+        1    1:1    2017-01-04    2015-03-17    5    NaN    150213.XSHE    成长A级    150214.XSHE    成长B级    161223    国投成长    +3.5%    5    创业成长
+        2    1:1    2016-12-15    2015-07-01    5.5    NaN    150335.XSHE    军工股A    150336.XSHE    军工股B    161628    融通军工    +4%    5.5    中证军工
 
-            [In] fenji.get_all(field_list = ['fenji_a_order_book_id', 'current_yield'])
-            [Out]
-            current_yield    fenji_a_order_book_id
-            0    2.5    161828
-            1    5    150213.XSHE
+    *   拿到只有2个字段的所有分级基金的信息:
+
+    ..  code-block:: python3
+        :linenos:
+
+        [In] fenji.get_all(field_list = ['fenji_a_order_book_id', 'current_yield'])
+        [Out]
+        current_yield    fenji_a_order_book_id
+        0    2.5    161828
+        1    5    150213.XSHE
             2    5.5    150335.XSHE
 
 雪球舆论数据
@@ -735,28 +790,13 @@ get_split - 拆分数据
 
     :return: `pandas.DataFrame` 各项舆情数据
 
-    示例
+    :example:
 
-    获取前一天的新增留言最多的10支股票::
+    获取前一天的新增留言最多的10支股票:
+
+    ..  code-block:: python3
+        :linenos:
 
         a= xueqiu.top_stocks('new_comments')
         logger.info ("获取按new_comments排序的当天的----------------")
         logger.info (a)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -24,13 +24,13 @@
 
 那么我们通过如下命令来运行回测
 
-::
+..  code-block:: bash
 
     rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG
 
 如果我们想要以图形的方式查看回测的结果， 则增加 `--plot` 参数
 
-::
+..  code-block:: bash
 
     rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG --plot
 
@@ -38,21 +38,22 @@
 
 如果想把回测的数据保存下来，可以通过 `-o` 参数将结果保存成 `pkl` 文件。
 
-::
+..  code-block:: bash
 
     rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG --plot -o result.pkl
 
 
 等回测结束后可以通过 `pandas.read_pickle` 函数来读取数据进行之后的数据分析。
 
-::
+..  code-block:: python3
+    :linenos:
 
-    In [1]: import pandas as pd
+    import pandas as pd
 
-    In [2]: result_dict = pd.read_pickle('result.pkl')
+    result_dict = pd.read_pickle('result.pkl')
 
-    In [3]: result_dict.keys()
-    Out[3]: dict_keys(['total_portfolios', 'summary', 'benchmark_portfolios', 'benchmark_positions', 'stock_positions', 'trades', 'stock_portfolios'])
+    result_dict.keys()
+    # [out]dict_keys(['total_portfolios', 'summary', 'benchmark_portfolios', 'benchmark_positions', 'stock_positions', 'trades', 'stock_portfolios'])
 
 更多参数配置请查看 :ref:`api-config`
 
@@ -70,7 +71,8 @@ RQAlpha 的 API 主要分为三类：约定函数、数据查询和交易接口�
     *   :func:`before_trading`: 会在每天策略交易开始前调用 
     *   :func:`after_trading`: 会在每天交易结束后调用
 
-::
+..  code-block:: python3
+    :linenos:
 
     # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
     def init(context):
@@ -119,7 +121,8 @@ Ricequant 金融、财务、合约历史数据等数据接口，详情请查看 
 
 .. _TA-Lib: https://github.com/mrjbq7/ta-lib
 
-::
+..  code-block:: python3
+    :linenos:
 
     import talib
 
@@ -193,7 +196,8 @@ Ricequant 金融、财务、合约历史数据等数据接口，详情请查看 
 
 我们分别使用 :func:`order_target_value` 和 :func:`order_shares` 进行平仓和开仓的操作，顺便把日志相关的代码删除，就是一个完整的 :ref:`intro-examples-golden-cross` 了。
 
-::
+..  code-block:: python3
+    :linenos:
 
     import talib
 

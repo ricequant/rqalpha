@@ -15,17 +15,28 @@
 
 万事开头难，这是一个最简单的策略：在回测开始的第一天买入资金量的100%的平安银行并且一直持有。
 
-::
+..  code-block:: python3
+    :linenos:
 
     # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
     def init(context):
+        logger.info("init")
         context.s1 = "000001.XSHE"
+        update_universe(context.s1)
         # 是否已发送了order
         context.fired = False
+        context.cnt = 1
+
+
+    def before_trading(context, bar_dict):
+        logger.info("Before Trading", context.cnt)
+        context.cnt += 1
 
 
     # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
     def handle_bar(context, bar_dict):
+        context.cnt += 1
+        logger.info("handle_bar", context.cnt)
         # 开始编写你的主要的算法逻辑
 
         # bar_dict[order_book_id] 可以拿到某个证券的bar信息
@@ -46,7 +57,8 @@ Golden Cross算法示例
 
 以下是一个我们使用TALib编写的golden cross算法的示例，使用了simple moving average方法：
 
-::
+..  code-block:: python3
+    :linenos:
 
     import talib
 
@@ -101,7 +113,8 @@ Golden Cross算法示例
 
 以下是一个我们使用TALib编写的单股票MACD算法示例，使用了TALib的MACD方法：
 
-::
+..  code-block:: python3
+    :linenos:
 
     import talib
 
@@ -159,7 +172,8 @@ Golden Cross算法示例
 
 以下是一个我们使用TALib编写的多股票RSI算法示例，使用了TALib的RSI方法：
 
-::
+..  code-block:: python3
+    :linenos:
 
     import talib
 
@@ -217,7 +231,8 @@ Golden Cross算法示例
 
 海龟交易系统也是非常经典的一种策略，我们也放出了范例代码如下，而关于海龟交易系统的介绍也可以参照 `这篇帖子 <https://www.ricequant.com/community/topic/62/%E8%B6%8B%E5%8A%BF%E7%AD%96%E7%95%A5%E5%B0%8F%E8%AF%95%E7%89%9B%E5%88%80-%E6%B5%B7%E9%BE%9F%E4%BA%A4%E6%98%93%E4%BD%93%E7%B3%BB%E7%9A%84%E6%9E%84%E5%BB%BA>`_ 。
 
-::
+..  code-block:: python3
+    :linenos:
 
     import numpy as np
     import talib
@@ -339,7 +354,8 @@ Golden Cross算法示例
 
 以下是一个使用TALib进行股指期货主力合约日级别回测MACD算法示例：
 
-::
+..  code-block:: python3
+    :linenos:
 
     # 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等
     import talib
@@ -394,7 +410,8 @@ Golden Cross算法示例
 
 策略中的移动窗口选择为60分钟，即在每天开盘60分钟内不做任何交易，积累数据计算移动平均值。当然，这一移动窗口也可以根据自身需要进行灵活选择。下面例子中使用了黄金与白银两种商品期货进行配对交易。简单起见，例子中期货的价格并未做对数差处理。
 
-::
+..  code-block:: python3
+    :linenos:
 
     import numpy as np
 
