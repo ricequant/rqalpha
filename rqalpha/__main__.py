@@ -44,9 +44,13 @@ def entry_point():
 
 
 @cli.command()
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path())
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path(file_okay=False))
 def update_bundle(data_bundle_path):
-    """update data bundle, download if not found"""
+    if (os.path.exists(data_bundle_path) and data_bundle_path != os.path.expanduser("~/.rqalpha") and
+            os.listdir(data_bundle_path)):
+        click.confirm('Target bundle path {} is not empty. The content of this folder will be REMOVED before '
+                      'updating. Are you sure to continue?'.format(data_bundle_path), abort=True)
+
     day = datetime.date.today()
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
 
