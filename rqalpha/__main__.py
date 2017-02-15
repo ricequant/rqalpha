@@ -46,9 +46,10 @@ def entry_point():
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path(file_okay=False))
 def update_bundle(data_bundle_path):
-    if (os.path.exists(data_bundle_path) and data_bundle_path != os.path.expanduser("~/.rqalpha") and
+    data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
+    if (os.path.exists(data_bundle_path) and data_bundle_path != os.path.expanduser("~/.rqalpha/bundle/") and
             os.listdir(data_bundle_path)):
-        click.confirm('Target bundle path {} is not empty. The content of this folder will be REMOVED before '
+        click.confirm('[WARNING] Target bundle path {} is not empty. The content of this folder will be REMOVED before '
                       'updating. Are you sure to continue?'.format(data_bundle_path), abort=True)
 
     day = datetime.date.today()
@@ -75,7 +76,7 @@ def update_bundle(data_bundle_path):
         break
 
     shutil.rmtree(data_bundle_path, ignore_errors=True)
-    os.mkdir(data_bundle_path)
+    os.makedirs(data_bundle_path)
     tar = tarfile.open(tmp, 'r:bz2')
     tar.extractall(data_bundle_path)
     tar.close()
