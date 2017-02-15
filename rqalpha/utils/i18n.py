@@ -18,30 +18,35 @@ import os.path
 from gettext import NullTranslations, translation
 from .logger import system_log
 
-translation_dir = os.path.join(
-    os.path.dirname(
-        os.path.abspath(
-            __file__,
-        ),
-    ),
-    "translations"
-)
-current_translation = NullTranslations()
+
+class Localization(object):
+
+    def __init__(self, trans=None):
+        self.trans = NullTranslations() if trans is None else trans
+
+    def set_locale(self, locales, trans_dir=None):
+        try:
+            if trans_dir is None:
+                trans_dir = os.path.join(
+                    os.path.dirname(
+                        os.path.abspath(
+                            __file__,
+                        ),
+                    ),
+                    "translations"
+                )
+            self.trans = translation(
+                domain="messages",
+                localedir=trans_dir,
+                languages=locales,
+            )
+        except Exception as e:
+            system_log.debug(e)
+            self.trans = NullTranslations()
 
 
-def set_locale(locales, trans_dir=translation_dir):
-    global current_translation
-
-    try:
-        current_translation = translation(
-            domain="messages",
-            localedir=trans_dir,
-            languages=locales,
-        )
-    except Exception as e:
-        system_log.debug(e)
-        current_translation = NullTranslations()
+localization = Localization()
 
 
 def gettext(message):
-    return current_translation.gettext(message)
+    return localization.trans.gettext(message)

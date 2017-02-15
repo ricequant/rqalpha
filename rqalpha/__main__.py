@@ -28,7 +28,7 @@ import requests
 
 from .cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
-from .utils.i18n import set_locale
+from .utils.i18n import localization
 from .utils.config import parse_config
 
 
@@ -119,7 +119,7 @@ def run(**kwargs):
         locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
         locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
         os.environ['TZ'] = 'Asia/Shanghai'
-        set_locale(["zh_Hans_CN"])
+        localization.set_locale(["zh_Hans_CN"])
     except Exception as e:
         if os.name != 'nt':
             raise
