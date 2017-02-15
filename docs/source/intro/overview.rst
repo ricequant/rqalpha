@@ -43,7 +43,7 @@ RQAlpha 安装
 
 运行以下命令，将会在指定目录生成一个examples文件夹，其中包含几个有趣的样例策略:
 
-.. code-bock:: bash
+.. code-block:: bash
 
     $ rqalpha examples -d ./
 
@@ -54,7 +54,7 @@ RQAlpha 安装
 
 运行如下命令:
 
-.. code-bock:: bash
+.. code-block:: bash
 
     $ cd examples
     $ rqalpha run -f rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot --progress --stock-starting-cash 100000
@@ -66,7 +66,7 @@ RQAlpha 安装
 
 如果运行完回测后，还需要再次绘制回测结果，可以运行以下命令:
 
-.. code-bock:: bash
+.. code-block:: bash
 
     $ rqalpha plot result.pkl
 
@@ -86,110 +86,106 @@ RQAlpha可以输出一个 pickle 文件，里面为一个 dict 。keys 包括
 * trades                交易详情（交割单）
 * plots                 调用plot画图时，记录的值
 
-.. code-bock:: python3
+.. code-block:: python3
 
-    In [1]: import pickle
+    import pickle
 
-    In [2]: result_dict = pickle.load(open("/tmp/alpha.pkl", "rb"))   # 从输出pickle中读取数据
+    result_dict = pickle.load(open("/tmp/alpha.pkl", "rb"))   # 从输出pickle中读取数据
 
-    In [3]: result_dict.keys()
-    Out[3]: dict_keys(['stock_portfolios', 'total_portfolios', 'stock_positions', 'benchmark_portfolios', 'plots', 'summary', 'trades', 'benchmark_positions'])
+    result_dict.keys()
+    #Out: dict_keys(['stock_portfolios', 'total_portfolios', 'stock_positions', 'benchmark_portfolios', 'plots', 'summary', 'trades', 'benchmark_positions'])
 
-    In [4]: result_dict["summary"]
-    Out[4]:
-    {'alpha': 0.027,
-     'annualized_returns': 0.025000000000000001,
-     'benchmark': '000001.XSHG',
-     'benchmark_annualized_returns': -0.057285289949864038,
-     'benchmark_total_returns': -0.059871893424000011,
-     'beta': 0.314,
-     'cash': -617.64200000000005,
-     'commission_multiplier': 1,
-     'dividend_receivable': 0.0,
-     'downside_risk': 0.14299999999999999,
-     'end_date': datetime.date(2017, 1, 19),
-     'frequency': '1d',
-     'frozen_cash': 0.0,
-     'future_starting_cash': 0,
-     'information_ratio': 0.45700000000000002,
-     'margin_multiplier': 1,
-     'market_value': 1027242.0,
-     'matching_type': 'CURRENT_BAR_CLOSE',
-     'max_drawdown': 0.087999999999999995,
-     'pnl': 26624.358,
-     'portfolio_value': 1026624.358,
-     'run_id': 9999,
-     'run_type': 'BACKTEST',
-     'sharpe': 0.016,
-     'slippage': 0,
-     'sortino': 0.014,
-     'start_date': datetime.date(2016, 1, 4),
-     'starting_cash': 1000000.0,
-     'stock_starting_cash': 1000000.0,
-     'strategy_file': 'rqalpha/examples/simple_macd.py',
-     'strategy_name': 'simple_macd',
-     'strategy_type': 'stock',
-     'total_returns': 0.027,
-     'tracking_error': 0.18099999999999999,
-     'transaction_cost': 27467.462,
-     'volatility': 0.125}
+    result_dict["summary"]
+    #Out:
+    #{'alpha': 0.027,
+    # 'annualized_returns': 0.025000000000000001,
+    # 'benchmark': '000001.XSHG',
+    # 'benchmark_annualized_returns': -0.057285289949864038,
+    # 'benchmark_total_returns': -0.059871893424000011,
+    # 'beta': 0.314,
+    # 'cash': -617.64200000000005,
+    # 'commission_multiplier': 1,
+    # 'dividend_receivable': 0.0,
+    # 'downside_risk': 0.14299999999999999,
+    # 'end_date': datetime.date(2017, 1, 19),
+    # 'frequency': '1d',
+    # 'frozen_cash': 0.0,
+    # 'future_starting_cash': 0,
+    # 'information_ratio': 0.45700000000000002,
+    # 'margin_multiplier': 1,
+    # 'market_value': 1027242.0,
+    # 'matching_type': 'CURRENT_BAR_CLOSE',
+    # 'max_drawdown': 0.087999999999999995,
+    # 'pnl': 26624.358,
+    # 'portfolio_value': 1026624.358,
+    # 'run_id': 9999,
+    # 'run_type': 'BACKTEST',
+    # 'sharpe': 0.016,
+    # 'slippage': 0,
+    # 'sortino': 0.014,
+    # 'start_date': datetime.date(2016, 1, 4),
+    # 'starting_cash': 1000000.0,
+    # 'stock_starting_cash': 1000000.0,
+    # 'strategy_file': 'rqalpha/examples/simple_macd.py',
+    # 'strategy_name': 'simple_macd',
+    # 'strategy_type': 'stock',
+    # 'total_returns': 0.027,
+    # 'tracking_error': 0.18099999999999999,
+    # 'transaction_cost': 27467.462,
+    # 'volatility': 0.125}
 
-    In [5]: result_dict["total_portfolios"][-5:]
-    Out[5]:
-                annualized_returns     cash  daily_pnl  daily_returns  \
-    date
-    2017-01-13               0.024 -617.642     1119.0          0.001
-    2017-01-16               0.021 -617.642    -2238.0         -0.002
-    2017-01-17               0.022 -617.642     1119.0          0.001
-    2017-01-18               0.024 -617.642     2238.0          0.002
-    2017-01-19               0.025 -617.642     1119.0          0.001
+    result_dict["total_portfolios"][-5:]
+    #Out:
+    #            annualized_returns     cash  daily_pnl  daily_returns  \
+    #date
+    #2017-01-13               0.024 -617.642     1119.0          0.001
+    #2017-01-16               0.021 -617.642    -2238.0         -0.002
+    #2017-01-17               0.022 -617.642     1119.0          0.001
+    #2017-01-18               0.024 -617.642     2238.0          0.002
+    #2017-01-19               0.025 -617.642     1119.0          0.001
+    #            dividend_receivable  frozen_cash  market_value        pnl  \
+    #date
+    #2017-01-13                  0.0          0.0     1025004.0  24386.358
+    #2017-01-16                  0.0          0.0     1022766.0  22148.358
+    #2017-01-17                  0.0          0.0     1023885.0  23267.358
+    #2017-01-18                  0.0          0.0     1026123.0  25505.358
+    #2017-01-19                  0.0          0.0     1027242.0  26624.358
+    #            portfolio_value  total_returns  transaction_cost
+    #date
+    #2017-01-13      1024386.358          0.024         27467.462
+    #2017-01-16      1022148.358          0.022         27467.462
+    #2017-01-17      1023267.358          0.023         27467.462
+    #2017-01-18      1025505.358          0.026         27467.462
+    #2017-01-19      1026624.358          0.027         27467.462
 
-                dividend_receivable  frozen_cash  market_value        pnl  \
-    date
-    2017-01-13                  0.0          0.0     1025004.0  24386.358
-    2017-01-16                  0.0          0.0     1022766.0  22148.358
-    2017-01-17                  0.0          0.0     1023885.0  23267.358
-    2017-01-18                  0.0          0.0     1026123.0  25505.358
-    2017-01-19                  0.0          0.0     1027242.0  26624.358
+    result_dict["stock_positions"][-5:]
+    #Out[6]:
+    #            average_cost  avg_price  bought_quantity  bought_value  \
+    #date
+    #2017-01-13          9.15       9.15           111900     1023885.0
+    #2017-01-16          9.15       9.15           111900     1023885.0
+    #2017-01-17          9.15       9.15           111900     1023885.0
+    #2017-01-18          9.15       9.15           111900     1023885.0
+    #2017-01-19          9.15       9.15           111900     1023885.0
+    #            market_value order_book_id     pnl  quantity  sellable  \
+    #date
+    #2017-01-13     1025004.0   000001.XSHE  1119.0    111900    111900
+    #2017-01-16     1022766.0   000001.XSHE -1119.0    111900    111900
+    #2017-01-17     1023885.0   000001.XSHE     0.0    111900    111900
+    #2017-01-18     1026123.0   000001.XSHE  2238.0    111900    111900
+    #2017-01-19     1027242.0   000001.XSHE  3357.0    111900    111900
+    #            sold_quantity  sold_value symbol  total_orders  total_trades  \
+    #date
+    #2017-01-13              0         0.0   平安银行             1             1
+    #2017-01-16              0         0.0   平安银行             1             1
+    #2017-01-17              0         0.0   平安银行             1             1
+    #2017-01-18              0         0.0   平安银行             1             1
+    #2017-01-19              0         0.0   平安银行             1             1
+    #            transaction_cost  value_percent
+    #date
+    #2017-01-13           819.108          1.001
+    #2017-01-16           819.108          1.001
+    #2017-01-17           819.108          1.001
+    #2017-01-18           819.108          1.001
+    #2017-01-19           819.108          1.001
 
-                portfolio_value  total_returns  transaction_cost
-    date
-    2017-01-13      1024386.358          0.024         27467.462
-    2017-01-16      1022148.358          0.022         27467.462
-    2017-01-17      1023267.358          0.023         27467.462
-    2017-01-18      1025505.358          0.026         27467.462
-    2017-01-19      1026624.358          0.027         27467.462
-
-    In [6]: result_dict["stock_positions"][-5:]
-    Out[6]:
-                average_cost  avg_price  bought_quantity  bought_value  \
-    date
-    2017-01-13          9.15       9.15           111900     1023885.0
-    2017-01-16          9.15       9.15           111900     1023885.0
-    2017-01-17          9.15       9.15           111900     1023885.0
-    2017-01-18          9.15       9.15           111900     1023885.0
-    2017-01-19          9.15       9.15           111900     1023885.0
-
-                market_value order_book_id     pnl  quantity  sellable  \
-    date
-    2017-01-13     1025004.0   000001.XSHE  1119.0    111900    111900
-    2017-01-16     1022766.0   000001.XSHE -1119.0    111900    111900
-    2017-01-17     1023885.0   000001.XSHE     0.0    111900    111900
-    2017-01-18     1026123.0   000001.XSHE  2238.0    111900    111900
-    2017-01-19     1027242.0   000001.XSHE  3357.0    111900    111900
-
-                sold_quantity  sold_value symbol  total_orders  total_trades  \
-    date
-    2017-01-13              0         0.0   平安银行             1             1
-    2017-01-16              0         0.0   平安银行             1             1
-    2017-01-17              0         0.0   平安银行             1             1
-    2017-01-18              0         0.0   平安银行             1             1
-    2017-01-19              0         0.0   平安银行             1             1
-
-                transaction_cost  value_percent
-    date
-    2017-01-13           819.108          1.001
-    2017-01-16           819.108          1.001
-    2017-01-17           819.108          1.001
-    2017-01-18           819.108          1.001
-    2017-01-19           819.108          1.001

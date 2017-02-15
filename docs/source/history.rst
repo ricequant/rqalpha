@@ -102,7 +102,7 @@ History
 - 增加了分红处理
 - 运行参数如下:
 
-.. code-bock:: python3
+.. code-block:: python3
 
   # 生成sample策略
   rqalpha generate_examples -d ./

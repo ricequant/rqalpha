@@ -149,7 +149,7 @@ RQAlpha 的相关安装 请参考 :ref:`intro-install`
 
 您可以使用PyPI安装:
 
-.. clode-block:: bash
+.. code-block:: bash
 
     $ pip install TA-Lib
 

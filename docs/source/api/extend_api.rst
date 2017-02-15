@@ -137,17 +137,17 @@ get_price - 合约历史数据
     ..  code-block:: python3
         :linenos:
 
-        [In]get_price('000001.XSHE', start_date='2015-04-01', end_date='2015-04-12')
-        [Out]
-        open    close    high    low    total_turnover    volume    limit_up    limit_down
-        2015-04-01    10.7300    10.8249    10.9470    10.5469    2.608977e+09    236637563.0    11.7542    9.6177
-        2015-04-02    10.9131    10.7164    10.9470    10.5943    2.222671e+09    202440588.0    11.9102    9.7397
-        2015-04-03    10.6486    10.7503    10.8114    10.5876    2.262844e+09    206631550.0    11.7881    9.6448
-        2015-04-07    10.9538    11.4015    11.5032    10.9538    4.898119e+09    426308008.0    11.8288    9.6787
-        2015-04-08    11.4829    12.1543    12.2628    11.2929    5.784459e+09    485517069.0    12.5409    10.2620
-        2015-04-09    12.1747    12.2086    12.9208    12.0255    5.794632e+09    456921108.0    13.3684    10.9403
-        2015-04-10    12.2086    13.4294    13.4294    12.1069    6.339649e+09    480990210.0    13.4294    10.9877
-        ...
+        get_price('000001.XSHE', start_date='2015-04-01', end_date='2015-04-12')
+        #[Out]
+        #open    close    high    low    total_turnover    volume    limit_up    limit_down
+        #2015-04-01    10.7300    10.8249    10.9470    10.5469    2.608977e+09    236637563.0    11.7542    9.6177
+        #2015-04-02    10.9131    10.7164    10.9470    10.5943    2.222671e+09    202440588.0    11.9102    9.7397
+        #2015-04-03    10.6486    10.7503    10.8114    10.5876    2.262844e+09    206631550.0    11.7881    9.6448
+        #2015-04-07    10.9538    11.4015    11.5032    10.9538    4.898119e+09    426308008.0    11.8288    9.6787
+        #2015-04-08    11.4829    12.1543    12.2628    11.2929    5.784459e+09    485517069.0    12.5409    10.2620
+        #2015-04-09    12.1747    12.2086    12.9208    12.0255    5.794632e+09    456921108.0    13.3684    10.9403
+        #2015-04-10    12.2086    13.4294    13.4294    12.1069    6.339649e+09    480990210.0    13.4294    10.9877
+        #...
 
 get_dominant_future - 期货主力合约
 ------------------------------------------------------
@@ -165,9 +165,9 @@ get_dominant_future - 期货主力合约
     ..  code-block:: python3
         :linenos:
 
-        [In]get_dominant_future('IF')
-        [Out]
-        'IF1608'
+        get_dominant_future('IF')
+        #[Out]
+        #'IF1608'
 
 get_securities_margin - 融资融券信息
 ------------------------------------------------------
@@ -211,55 +211,55 @@ get_securities_margin - 融资融券信息
     ..  code-block:: python3
         :linenos:
 
-        [In]logger.info(get_securities_margin('510050.XSHG', count=5))
-        [Out]
-        margin_balance    buy_on_margin_value    short_sell_quantity    margin_repayment    short_balance_quantity    short_repayment_quantity    short_balance    total_balance
-        2016-08-01    7.811396e+09    50012306.0    3597600.0    41652042.0    15020600.0    1645576.0    NaN    NaN
-        2016-08-02    7.826381e+09    34518238.0    2375700.0    19532586.0    14154000.0    3242300.0    NaN    NaN
-        2016-08-03    7.733306e+09    17967333.0    4719700.0    111043009.0    16235600.0    2638100.0    NaN    NaN
-        2016-08-04    7.741497e+09    30259359.0    6488600.0    22068637.0    17499000.0    5225200.0    NaN    NaN
-        2016-08-05    7.726343e+09    25270756.0    2865863.0    40423859.0    14252363.0    6112500.0    NaN    NaN
+        logger.info(get_securities_margin('510050.XSHG', count=5))
+        #[Out]
+        #margin_balance    buy_on_margin_value    short_sell_quantity    margin_repayment    short_balance_quantity    short_repayment_quantity    short_balance    total_balance
+        #2016-08-01    7.811396e+09    50012306.0    3597600.0    41652042.0    15020600.0    1645576.0    NaN    NaN
+        #2016-08-02    7.826381e+09    34518238.0    2375700.0    19532586.0    14154000.0    3242300.0    NaN    NaN
+        #2016-08-03    7.733306e+09    17967333.0    4719700.0    111043009.0    16235600.0    2638100.0    NaN    NaN
+        #2016-08-04    7.741497e+09    30259359.0    6488600.0    22068637.0    17499000.0    5225200.0    NaN    NaN
+        #2016-08-05    7.726343e+09    25270756.0    2865863.0    40423859.0    14252363.0    6112500.0    NaN    NaN
 
     *   获取沪深两个市场一段时间内的融资余额:
 
     ..  code-block:: python3
         :linenos:
 
-        [In]logger.info(get_securities_margin(['XSHE', 'XSHG'], count=5, fields='margin_balance'))
-        [Out]
-                XSHE        XSHG
-        2016-08-01    3.837627e+11    4.763557e+11
-        2016-08-02    3.828923e+11    4.763931e+11
-        2016-08-03    3.823545e+11    4.769321e+11
-        2016-08-04    3.833260e+11    4.776380e+11
-        2016-08-05    3.812751e+11    4.766928e+11
+        logger.info(get_securities_margin(['XSHE', 'XSHG'], count=5, fields='margin_balance'))
+        #[Out]
+        #        XSHE        XSHG
+        #2016-08-01    3.837627e+11    4.763557e+11
+        #2016-08-02    3.828923e+11    4.763931e+11
+        #2016-08-03    3.823545e+11    4.769321e+11
+        #2016-08-04    3.833260e+11    4.776380e+11
+        #2016-08-05    3.812751e+11    4.766928e+11
 
     *   获取上证个股以及整个上证市场融资融券情况:
 
     ..  code-block:: python3
         :linenos:
 
-        [In]logger.info(get_securities_margin(['XSHG', '601988.XSHG', '510050.XSHG'], count=5))
-        [Out]
-        <class 'pandas.core.panel.Panel'>
-        Dimensions: 8 (items) x 5 (major_axis) x 3 (minor_axis)
-        Items axis: margin_balance to total_balance
-        Major_axis axis: 2016-08-01 00:00:00 to 2016-08-05 00:00:00
-        Minor_axis axis: XSHG to 510050.XSHG
+        logger.info(get_securities_margin(['XSHG', '601988.XSHG', '510050.XSHG'], count=5))
+        #[Out]
+        #<class 'pandas.core.panel.Panel'>
+        #Dimensions: 8 (items) x 5 (major_axis) x 3 (minor_axis)
+        #Items axis: margin_balance to total_balance
+        #Major_axis axis: 2016-08-01 00:00:00 to 2016-08-05 00:00:00
+        #Minor_axis axis: XSHG to 510050.XSHG
 
     *   获取50ETF融资偿还额情况
 
     ..  code-block:: python3
         :linenos:
 
-        [In]logger.info(get_securities_margin('510050.XSHG', count=5, fields='margin_repayment'))
-        [Out]
-        2016-08-01     41652042.0
-        2016-08-02     19532586.0
-        2016-08-03    111043009.0
-        2016-08-04     22068637.0
-        2016-08-05     40423859.0
-        Name: margin_repayment, dtype: float64
+        logger.info(get_securities_margin('510050.XSHG', count=5, fields='margin_repayment'))
+        #[Out]
+        #2016-08-01     41652042.0
+        #2016-08-02     19532586.0
+        #2016-08-03    111043009.0
+        #2016-08-04     22068637.0
+        #2016-08-05     40423859.0
+        #Name: margin_repayment, dtype: float64
 
 get_shares - 流通股信息
 ------------------------------------------------------
@@ -291,14 +291,14 @@ get_shares - 流通股信息
     ..  code-block:: python3
         :linenos:
 
-        [In]logger.info(get_shares('000001.XSHE', count=5, fields='total'))
-        [Out]
-        2016-08-01    1.717041e+10
-        2016-08-02    1.717041e+10
-        2016-08-03    1.717041e+10
-        2016-08-04    1.717041e+10
-        2016-08-05    1.717041e+10
-        Name: total, dtype: float64
+        logger.info(get_shares('000001.XSHE', count=5, fields='total'))
+        #[Out]
+        #2016-08-01    1.717041e+10
+        #2016-08-02    1.717041e+10
+        #2016-08-03    1.717041e+10
+        #2016-08-04    1.717041e+10
+        #2016-08-05    1.717041e+10
+        #Name: total, dtype: float64
 
 get_turnover_rate - 历史换手率
 ------------------------------------------------------
@@ -338,21 +338,21 @@ get_turnover_rate - 历史换手率
    ..  code-block:: python3
         :linenos:
 
-        [In]logger.info(get_turnover_rate('000001.XSHE', count=5))
-        [Out]
-                   today    week   month  three_month  six_month    year  \
-        2016-08-01  0.5190  0.4478  0.3213       0.2877     0.3442  0.5027
-        2016-08-02  0.3070  0.4134  0.3112       0.2843     0.3427  0.5019
-        2016-08-03  0.2902  0.3460  0.3102       0.2823     0.3432  0.4982
-        2016-08-04  0.9189  0.4938  0.3331       0.2914     0.3482  0.4992
-        2016-08-05  0.4962  0.5031  0.3426       0.2960     0.3504  0.4994
+        logger.info(get_turnover_rate('000001.XSHE', count=5))
+        #[Out]
+        #           today    week   month  three_month  six_month    year  \
+        #2016-08-01  0.5190  0.4478  0.3213       0.2877     0.3442  0.5027
+        #2016-08-02  0.3070  0.4134  0.3112       0.2843     0.3427  0.5019
+        #2016-08-03  0.2902  0.3460  0.3102       0.2823     0.3432  0.4982
+        #2016-08-04  0.9189  0.4938  0.3331       0.2914     0.3482  0.4992
+        #2016-08-05  0.4962  0.5031  0.3426       0.2960     0.3504  0.4994
 
-                  current_year   total
-        2016-08-01        0.3585  1.1341
-        2016-08-02        0.3570  1.1341
-        2016-08-03        0.3565  1.1339
-        2016-08-04        0.3604  1.1339
-        2016-08-05        0.3613  1.1338
+        #          current_year   total
+        #2016-08-01        0.3585  1.1341
+        #2016-08-02        0.3570  1.1341
+        #2016-08-03        0.3565  1.1339
+        #2016-08-04        0.3604  1.1339
+        #2016-08-05        0.3613  1.1338
 
 industry - 行业股票列表
 ------------------------------------------------------
@@ -471,7 +471,7 @@ industry - 行业股票列表
             stock_list = industry('A01')
             logger.info("农业股票列表：" + str(stock_list))
 
-        INITINFO 农业股票列表：['600354.XSHG', '601118.XSHG', '002772.XSHE', '600371.XSHG', '600313.XSHG', '600672.XSHG', '600359.XSHG', '300143.XSHE', '002041.XSHE', '600762.XSHG', '600540.XSHG', '300189.XSHE', '600108.XSHG', '300087.XSHE', '600598.XSHG', '000998.XSHE', '600506.XSHG']
+        #INITINFO 农业股票列表：['600354.XSHG', '601118.XSHG', '002772.XSHE', '600371.XSHG', '600313.XSHG', '600672.XSHG', '600359.XSHG', '300143.XSHE', '002041.XSHE', '600762.XSHG', '600540.XSHG', '300189.XSHE', '600108.XSHG', '300087.XSHE', '600598.XSHG', '000998.XSHE', '600506.XSHG']
 
 sector - 板块股票列表
 ------------------------------------------------------
@@ -513,8 +513,8 @@ sector - 板块股票列表
             ids3 = sector("ConsumerDiscretionary")
             assert ids1 == ids2 and ids1 == ids3
             logger.info(ids1)
-        INIT INFO
-        ['002045.XSHE', '603099.XSHG', '002486.XSHE', '002536.XSHE', '300100.XSHE', '600633.XSHG', '002291.XSHE', ..., '600233.XSHG']
+        #INIT INFO
+        #['002045.XSHE', '603099.XSHG', '002486.XSHE', '002536.XSHE', '300100.XSHE', '600633.XSHG', '002291.XSHE', ..., '600233.XSHG']
 
 concept - 概念股票列表
 ------------------------------------------------------
@@ -551,28 +551,28 @@ concept - 概念股票列表
 
     *   得到一个概念的股票列表:
 
-   ..  code-block:: python3
+    ..   code-block:: python3
         :linenos:
 
-        [In]concept('民营医院')
-        [Out]
-        ['600105.XSHG',
-        '002550.XSHE',
-        '002004.XSHE',
-        '002424.XSHE',
-        ...]
+        concept('民营医院')
+        #[Out]
+        #['600105.XSHG',
+        #'002550.XSHE',
+        #'002004.XSHE',
+        #'002424.XSHE',
+        #...]
 
     *   得到某几个概念的股票列表:
 
-   ..  code-block:: python3
+    ..   code-block:: python3
         :linenos:
 
-        [In]concept('民营医院', '国企改革')
-        [Out]
-        ['601607.XSHG',
-        '600748.XSHG',
-        '600630.XSHG',
-        ...]
+        concept('民营医院', '国企改革')
+        #[Out]
+        #['601607.XSHG',
+        #'600748.XSHG',
+        #'600630.XSHG',
+        #...]
 
 index_components - 指数成分股
 ------------------------------------------------------
@@ -592,11 +592,11 @@ index_components - 指数成分股
 
     得到上证指数在策略当前日期的构成股票的列表:
 
-   ..  code-block:: python3
+    ..  code-block:: python3
         :linenos:
 
-        [In]index_components('000001.XSHG')
-        [Out]['600000.XSHG', '600004.XSHG', ...]
+        index_components('000001.XSHG')
+        #[Out]['600000.XSHG', '600004.XSHG', ...]
 
 get_dividend - 分红数据
 ------------------------------------------------------
@@ -623,18 +623,17 @@ get_dividend - 分红数据
 
     获取平安银行2013-01-04 到策略当前日期前一天的分红数据:
 
-   ..  code-block:: python3
+    ..  code-block:: python3
         :linenos:
 
-        [In]get_dividend('000001.XSHE', start_date='20130104')
-        [Out]
-                                      book_closure_date  dividend_cash_before_tax  \
-        declaration_announcement_date
-        2013-06-14                           2013-06-19                    0.9838
-
-                                      ex_dividend_date payable_date  round_lot
-        declaration_announcement_date
-        2013-06-14                          2013-06-20   2013-06-20       10.0
+        get_dividend('000001.XSHE', start_date='20130104')
+        #[Out]
+        #                              book_closure_date  dividend_cash_before_tax  \
+        #declaration_announcement_date
+        #2013-06-14                           2013-06-19                    0.9838
+        #                              ex_dividend_date payable_date  round_lot
+        #declaration_announcement_date
+        #2013-06-14                          2013-06-20   2013-06-20       10.0
 
 get_split - 拆分数据
 ------------------------------------------------------
@@ -662,16 +661,14 @@ get_split - 拆分数据
     ..  code-block:: python3
         :linenos:
 
-        [In]get_split('000001.XSHE', start_date='2010-01-04')
-
-        [Out]
-                         book_closure_date payable_date  split_coefficient_from  \
-        ex_dividend_date
-        2013-06-20              2013-06-19   2013-06-20                      10
-
-                          split_coefficient_to
-        ex_dividend_date
-        2013-06-20                        16.0
+        get_split('000001.XSHE', start_date='2010-01-04')
+        #[Out]
+        #                 book_closure_date payable_date  split_coefficient_from  \
+        #ex_dividend_date
+        #2013-06-20              2013-06-19   2013-06-20                      10
+        #                  split_coefficient_to
+        #ex_dividend_date
+        #2013-06-20                        16.0
 
 分级基金数据
 ------------------------------------------------------
@@ -693,9 +690,9 @@ get_split - 拆分数据
     ..  code-block:: python3
         :linenos:
 
-        [In] fenji.get_a_by_yield(4)
-        [Out]
-        ['150039.XSHE']
+        fenji.get_a_by_yield(4)
+        #[Out]
+        #['150039.XSHE']
 
 .. py:function:: fenji.get_a_by_interest_rule(interest_rule)
 
@@ -714,9 +711,9 @@ get_split - 拆分数据
     ..  code-block:: python3
         :linenos:
 
-        [In] fenji.get_a_by_interest_rule("+3%")
-        [Out]
-        ['502011.XSHG', '150215.XSHE', '150181.XSHE', '150269.XSHE', '150173.XSHE', '150217.XSHE', '502027.XSHG', '150255.XSHE', '150257.XSHE', '150237.XSHE', '150100.XSHE', '150177.XSHE', '502017.XSHG', '150279.XSHE', '150271.XSHE', '150051.XSHE', '150245.XSHE', '150233.XSHE', '502004.XSHG', '150200.XSHE', '150205.XSHE', '150184.XSHE', '502049.XSHG', '150207.XSHE', '150313.XSHE', '150243.XSHE', '150239.XSHE', '150273.XSHE', '150227.XSHE', '150076.XSHE', '150203.XSHE', '150209.XSHE', '150259.XSHE', '150315.XSHE', '150283.XSHE', '150241.XSHE', '150229.XSHE', '150307.XSHE', '150186.XSHE', '150231.XSHE', '502024.XSHG', '502007.XSHG', '150305.XSHE', '150018.XSHE', '150309.XSHE', '150311.XSHE', '150235.XSHE', '150143.XSHE', '150249.XSHE', '150329.XSHE', '150251.XSHE', '150169.XSHE', '150357.XSHE', '150194.XSHE', '150179.XSHE', '150164.XSHE', '150192.XSHE', '150171.XSHE', '150022.XSHE', '150275.XSHE', '150092.XSHE', '150277.XSHE']
+        fenji.get_a_by_interest_rule("+3%")
+        #[Out]
+        #['502011.XSHG', '150215.XSHE', '150181.XSHE', '150269.XSHE', '150173.XSHE', '150217.XSHE', '502027.XSHG', '150255.XSHE', '150257.XSHE', '150237.XSHE', '150100.XSHE', '150177.XSHE', '502017.XSHG', '150279.XSHE', '150271.XSHE', '150051.XSHE', '150245.XSHE', '150233.XSHE', '502004.XSHG', '150200.XSHE', '150205.XSHE', '150184.XSHE', '502049.XSHG', '150207.XSHE', '150313.XSHE', '150243.XSHE', '150239.XSHE', '150273.XSHE', '150227.XSHE', '150076.XSHE', '150203.XSHE', '150209.XSHE', '150259.XSHE', '150315.XSHE', '150283.XSHE', '150241.XSHE', '150229.XSHE', '150307.XSHE', '150186.XSHE', '150231.XSHE', '502024.XSHG', '502007.XSHG', '150305.XSHE', '150018.XSHE', '150309.XSHE', '150311.XSHE', '150235.XSHE', '150143.XSHE', '150249.XSHE', '150329.XSHE', '150251.XSHE', '150169.XSHE', '150357.XSHE', '150194.XSHE', '150179.XSHE', '150164.XSHE', '150192.XSHE', '150171.XSHE', '150022.XSHE', '150275.XSHE', '150092.XSHE', '150277.XSHE']
 
 .. py:function:: fenji.get_all(field_list)
 
@@ -753,24 +750,24 @@ get_split - 拆分数据
     ..  code-block:: python3
         :linenos:
 
-        [In] fenji.get_all()
-        [Out]
-        a_b_propotion    conversion_date    creation_date    current_yield    expire_date    fenji_a_order_book_id    fenji_a_symbol    fenji_b_order_book_id    fenji_b_symbol    fenji_mu_orderbook_id    fenji_mu_symbol    interest_rule    next_yield    track_index_symbol
-        0    7:3    2016-11-19    2014-05-22    2.5    NaN    161828    永益A    150162.XSHE    永益B    161827    银华永益    +1%    NaN    综合指数
-        1    1:1    2017-01-04    2015-03-17    5    NaN    150213.XSHE    成长A级    150214.XSHE    成长B级    161223    国投成长    +3.5%    5    创业成长
-        2    1:1    2016-12-15    2015-07-01    5.5    NaN    150335.XSHE    军工股A    150336.XSHE    军工股B    161628    融通军工    +4%    5.5    中证军工
+        fenji.get_all()
+        #[Out]
+        #a_b_propotion    conversion_date    creation_date    current_yield    expire_date    fenji_a_order_book_id    fenji_a_symbol    fenji_b_order_book_id    fenji_b_symbol    fenji_mu_orderbook_id    fenji_mu_symbol    interest_rule    next_yield    track_index_symbol
+        #0    7:3    2016-11-19    2014-05-22    2.5    NaN    161828    永益A    150162.XSHE    永益B    161827    银华永益    +1%    NaN    综合指数
+        #1    1:1    2017-01-04    2015-03-17    5    NaN    150213.XSHE    成长A级    150214.XSHE    成长B级    161223    国投成长    +3.5%    5    创业成长
+        #2    1:1    2016-12-15    2015-07-01    5.5    NaN    150335.XSHE    军工股A    150336.XSHE    军工股B    161628    融通军工    +4%    5.5    中证军工
 
     *   拿到只有2个字段的所有分级基金的信息:
 
     ..  code-block:: python3
         :linenos:
 
-        [In] fenji.get_all(field_list = ['fenji_a_order_book_id', 'current_yield'])
-        [Out]
-        current_yield    fenji_a_order_book_id
-        0    2.5    161828
-        1    5    150213.XSHE
-            2    5.5    150335.XSHE
+        fenji.get_all(field_list = ['fenji_a_order_book_id', 'current_yield'])
+        #[Out]
+        #current_yield    fenji_a_order_book_id
+        #0    2.5    161828
+        #1    5    150213.XSHE
+        #2    5.5    150335.XSHE
 
 雪球舆论数据
 ------------------------------------------------------
@@ -800,3 +797,4 @@ get_split - 拆分数据
         a= xueqiu.top_stocks('new_comments')
         logger.info ("获取按new_comments排序的当天的----------------")
         logger.info (a)
+
