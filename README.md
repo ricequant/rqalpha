@@ -2,6 +2,9 @@
 
 # RQAlpha
 
+[![Documentation Status](https://readthedocs.org/projects/rqalpha/badge/?version=stable)](http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable) 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。依据其灵活的配置方式，强大的扩展性，用户可以非常容易地定制专属于自己的程序化交易系统。
 
 RQAlpha 是 [Ricequnat](https://www.ricequant.com) 开发并维护的开源产品，[Ricequant](https://www.ricequant.com) 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。RQAlpha 所有的策略都可以直接在 [Ricequant](https://www.ricequant.com) 上进行回测和实盘模拟，并且可以通过微信和邮件实时推送您的交易信号。
