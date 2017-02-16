@@ -45,10 +45,11 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class AbstractEventSource(object):
+class AbstractEventSource(with_metaclass(abc.ABCMeta)):
     """
     事件生成模块，RQAlpha 会使用该模块来实现完整的事件触发
     """
+    @abc.abstractmethod
     def events(self, start_date, end_date, frequency):
         """
         【Required】
@@ -375,5 +376,3 @@ class Persistable(with_metaclass(abc.ABCMeta)):
                     any("set_state" in B.__dict__ for B in C.__mro__)):
                 return True
         return NotImplemented
-
-
