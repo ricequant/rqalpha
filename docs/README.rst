@@ -15,7 +15,7 @@ Requirements
 *   sphinx_rtd_theme
 
 
-::
+.. code-block:: bash
 
     pip install Sphinx watchdog sphinx_rtd_theme
 
