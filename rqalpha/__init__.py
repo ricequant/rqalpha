@@ -58,4 +58,4 @@ def run(config, source_code=None):
         if os.name != 'nt':
             raise
 
-    return main.run(parse_config(config, click_type=False, source_code=source_code))
+    return main.run(parse_config(config, click_type=False, source_code=source_code), source_code=source_code)
