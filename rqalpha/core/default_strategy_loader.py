@@ -26,3 +26,8 @@ class FileStrategyLoader(AbstractStrategyLoader):
             source_code = f.read()
 
         return compile_strategy(source_code, strategy, scope)
+
+
+class SourceCodeStrategyLoader(AbstractStrategyLoader):
+    def load(self, strategy, scope):
+        return compile_strategy(strategy, "strategy.py", scope)

@@ -29,7 +29,7 @@ from . import const
 from .analyser.risk_cal import RiskCal
 from .core.default_broker import DefaultBroker
 from .core.default_event_source import DefaultEventSource
-from .core.default_strategy_loader import FileStrategyLoader
+from .core.default_strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader
 from .core.strategy_universe import StrategyUniverse
 from .data.base_data_source import BaseDataSource
 from .data.data_proxy import DataProxy
@@ -109,13 +109,16 @@ def create_base_scope():
     return scope
 
 
-def run(config):
+def run(config, source_code=None):
     env = Environment(config)
     persist_helper = None
     init_succeed = False
 
     try:
-        env.set_strategy_loader(FileStrategyLoader())
+        if source_code is None:
+            env.set_strategy_loader(FileStrategyLoader())
+        else:
+            env.set_strategy_loader(SourceCodeStrategyLoader())
         env.set_global_vars(GlobalVars())
         mod_handler = ModHandler(env)
         mod_handler.start_up()
@@ -167,7 +170,10 @@ def run(config):
         apis = api_helper.get_apis(config.base.account_list)
         scope.update(apis)
 
-        scope = env.strategy_loader.load(env.config.base.strategy_file, scope)
+        if source_code is None:
+            scope = env.strategy_loader.load(env.config.base.strategy_file, scope)
+        else:
+            scope = env.strategy_loader.load(source_code, scope)
 
         if env.config.extra.enable_profiler:
             enable_profiler(env, scope)

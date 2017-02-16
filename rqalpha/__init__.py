@@ -35,7 +35,7 @@ __main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
 del pkgutil
 
 
-def run(config):
+def run(config, source_code=None):
     import locale
     import os
     from .cache_control import set_cache_policy, CachePolicy
@@ -58,4 +58,4 @@ def run(config):
         if os.name != 'nt':
             raise
 
-    main.run(parse_config(config, None, False))
+    main.run(parse_config(config, click_type=False, source_code=source_code))

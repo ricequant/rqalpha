@@ -30,7 +30,7 @@ from ..utils.i18n import gettext as _
 from ..utils.dict_func import deep_update
 
 
-def parse_config(config_args, base_config_path=None, click_type=True):
+def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):
     if base_config_path is None:
         config_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config.yml"))
     else:
@@ -60,7 +60,7 @@ def parse_config(config_args, base_config_path=None, click_type=True):
     else:
         deep_update(config_args, config)
 
-    config = parse_user_config(config)
+    config = parse_user_config(config, source_code)
 
     config = RqAttrDict(config)
     base_config = config.base
@@ -129,10 +129,11 @@ def parse_config(config_args, base_config_path=None, click_type=True):
     return config
 
 
-def parse_user_config(config):
+def parse_user_config(config, source_code=None):
     try:
-        with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
-            source_code = f.read()
+        if source_code is None:
+            with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
+                source_code = f.read()
 
         scope = {}
 
