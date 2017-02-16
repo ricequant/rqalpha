@@ -16,6 +16,10 @@
 
 import datetime
 import time
+import threading
+from threading import Thread
+
+from six.moves.queue import Queue
 
 from rqalpha.interface import AbstractEventSource
 from rqalpha.environment import Environment
@@ -26,15 +30,32 @@ from rqalpha.events import Events
 class RealtimeEventSource(AbstractEventSource):
     def __init__(self):
         self._env = Environment.get_instance()
+        self.fps = 3
+        self.event_queue = Queue()
+        self.clock_engine_thread = Thread(target=self.clock_worker)
+        self.clock_engine_thread.daemon = True
+        self.clock_engine_thread.start()
+
+    def clock_worker(self):
+        while True:
+            time.sleep(self.fps)
+            dt = datetime.datetime.now()
+            system_log.debug("put event {}", dt)
+            self.event_queue.put(dt)
 
     def events(self, start_date, end_date, frequency):
         running = True
         count = 0
+
         while running:
             count += 1
-            dt = datetime.datetime.now()
-            system_log.info("dt {}", dt)
+
+            real_dt = datetime.datetime.now()
+            dt = self.event_queue.get()
+
+            system_log.debug("real_dt {}, dt {}", real_dt, dt)
             yield dt, dt, Events.BAR
+
             if count % 10 == 0:
                 yield dt, dt, Events.AFTER_TRADING
 
