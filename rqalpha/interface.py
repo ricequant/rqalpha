@@ -25,7 +25,7 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     """
     策略加载器，其主要作用是加载策略，并将策略运行所需要的域环境传递给策略执行代码。
 
-    在扩展模块中，可以通过调用 `env.set_strategy_loader` 来替换默认的策略加载器。
+    在扩展模块中，可以通过调用 ``env.set_strategy_loader`` 来替换默认的策略加载器。
     """
     @abc.abstractmethod
     def load(self, strategy, scope):
@@ -34,11 +34,11 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
 
         load 函数负责组装策略代码和策略代码所在的域，并输出最终组装好的可执行域。
 
-        :param str strategy: 策略标识符，对应 `config.base.strategy_file`，相应的命令行参数为 `-f`。
+        :param str strategy: 策略标识符，对应 ``config.base.strategy_file``，相应的命令行参数为 ``-f``。
         :param dict scope: 策略代码运行环境，在传入时，包含了所有基础API。
             通过在 scope 中添加函数可以实现自定义API；通过覆盖 scope 中相应的函数，可以覆盖原API。
 
-        :return: scope，其中应包含策略相应函数，如 `init`, `before_trading` 等
+        :return: scope，其中应包含策略相应函数，如 ``init``, ``before_trading`` 等
         """
         raise NotImplementedError
 
@@ -47,7 +47,7 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
     """
     事件源接口。RQAlpha 从此对象中获取事件，驱动整个事件循环。
 
-    在扩展模块中，可以通过调用 `env.set_event_source` 来替换默认的事件源。
+    在扩展模块中，可以通过调用 ``env.set_event_source`` 来替换默认的事件源。
     """
     @abc.abstractmethod
     def events(self, start_date, end_date, frequency):
@@ -79,7 +79,7 @@ class AbstractDataSource(object):
     """
     数据源接口。RQAlpha 中通过 :class:`DataProxy` 进一步进行了封装，向上层提供更易用的接口。
 
-    在扩展模块中，可以通过调用 `env.set_data_source` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
+    在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
     """
     def get_all_instruments(self):
         """
@@ -243,9 +243,9 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
     券商接口。
 
     RQAlpha 将产生的订单提交给此对象，此对象负责对订单进行撮合（不论是自行撮合还是委托给外部的真实交易所），
-    并通过 `Events.ORDER_*` 及 `Events.TRADE` 事件将撮合结果反馈进入 RQAlpha。
+    并通过 ``Events.ORDER_*`` 及 ``Events.TRADE`` 事件将撮合结果反馈进入 RQAlpha。
 
-    在扩展模块中，可以通过调用 `env.set_broker` 来替换默认的 Broker。
+    在扩展模块中，可以通过调用 ``env.set_broker`` 来替换默认的 Broker。
     """
     @abc.abstractmethod
     def get_accounts(self):
@@ -254,10 +254,10 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
         获取账号信息。系统初始化时，RQAlpha 会调用此接口，获取账户信息。
 
-        RQAlpha 支持混合策略，因此返回的账户信息为一个字典(dict)，key 为账户类型（见 `rqalpha.const.ACCOUNT_TYPE`)，
-        value 为对应的 :class:`~Account`对象。
+        RQAlpha 支持混合策略，因此返回的账户信息为一个字典(dict)，key 为账户类型（``rqalpha.const.ACCOUNT_TYPE``)，
+        value 为对应的 :class:`~Account` 对象。
 
-        :return: dict of `ACCOUNT_TYPE`: :class:`~Account`
+        :return: dict
         """
         raise NotImplementedError
 
@@ -355,7 +355,7 @@ class AbstractPersistProvider(with_metaclass(abc.ABCMeta)):
     """
     持久化服务提供者接口。
 
-    扩展模块可以通过调用 `env.set_persist_provider` 接口来替换默认的持久化方案。
+    扩展模块可以通过调用 ``env.set_persist_provider`` 接口来替换默认的持久化方案。
     """
     @abc.abstractmethod
     def store(self, key, value):
