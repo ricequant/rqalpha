@@ -24,30 +24,30 @@ from six import with_metaclass
 class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     """
     策略加载器，其主要作用是加载策略，并将策略运行所需要的域环境传递给策略执行代码。
-    """
 
+    在扩展模块中，可以通过调用 `env.set_strategy_loader` 来替换默认的策略加载器。
+    """
     @abc.abstractmethod
     def load(self, strategy, scope):
         """
         【Required】
 
-        load 函数负责组装策略代码和策略代码所在的域，并输出最终组装好的可执行域
+        load 函数负责组装策略代码和策略代码所在的域，并输出最终组装好的可执行域。
 
-        :param str strategy: 策略相关参数，可以是路径，也可以是源码本身，
-            原则就是根据strategy可以获取到源码，
-            系统会将 `config.base.strategy_file` 作为参数传递给load函数。
+        :param str strategy: 策略标识符，对应 `config.base.strategy_file`，相应的命令行参数为 `-f`。
+        :param dict scope: 策略代码运行环境，在传入时，包含了所有基础API。
+            通过在 scope 中添加函数可以实现自定义API；通过覆盖 scope 中相应的函数，可以覆盖原API。
 
-        :param dict scope: 域，系统会将默认的API函数等内容加载到scope中，这样函数就可以直接调用对应的API了，
-            通过自定义load函数，可以更改scope，来增加自定义API 等功能。
-
-        :return: scope
+        :return: scope，其中应包含策略相应函数，如 `init`, `before_trading` 等
         """
         raise NotImplementedError
 
 
 class AbstractEventSource(with_metaclass(abc.ABCMeta)):
     """
-    事件生成模块，RQAlpha 会使用该模块来实现完整的事件触发
+    事件源接口。RQAlpha 从此对象中获取事件，驱动整个事件循环。
+
+    在扩展模块中，可以通过调用 `env.set_event_source` 来替换默认的事件源。
     """
     @abc.abstractmethod
     def events(self, start_date, end_date, frequency):
@@ -67,9 +67,7 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
         EventEnum 为 :class:`~Events`
 
         :param datetime.date start_date: 起始日期, 系统会将 `config.base.start_date` 传递 events 函数
-
         :param datetime.date end_date: 结束日期，系统会将 `config.base.end_date` 传递给 events 函数
-
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
 
         :return: None
@@ -79,14 +77,15 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
 
 class AbstractDataSource(object):
     """
-    数据源模块，RQAlpha 支持自定义数据源，也可以基于已有默认数据源模块进行扩展，
-    因为 RQAlpha 内部使用了一些数据，所以必须实现对应的接口函数。
+    数据源接口。RQAlpha 中通过 :class:`DataProxy` 进一步进行了封装，向上层提供更易用的接口。
+
+    在扩展模块中，可以通过调用 `env.set_data_source` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
     """
     def get_all_instruments(self):
         """
         获取所有Instrument。
 
-        :return: list[:class:`~StockInstrument` | :class:`~FutureInstrument`]
+        :return: list[:class:`~Instrument`]
         """
         raise NotImplementedError
 
@@ -103,10 +102,8 @@ class AbstractDataSource(object):
         获取国债利率
 
         :param pandas.Timestamp str start_date: 开始日期
-
         :param pandas.Timestamp end_date: 结束日期
-
-        :param bool tenor: 利率期限
+        :param str tenor: 利率期限
 
         :return: pandas.DataFrame, [start_date, end_date]
         """
@@ -135,10 +132,10 @@ class AbstractDataSource(object):
 
     def get_bar(self, instrument, dt, frequency):
         """
-        根据 dt 来获取 对应的Bar 数据
+        根据 dt 来获取对应的 Bar 数据
 
         :param instrument: 合约对象
-        :type instrument: :class:`~StockInstrument` | :class:`~FutureInstrument`
+        :type instrument: :class:`~Instrument`
 
         :param datetime.datetime dt: calendar_datetime
 
@@ -150,10 +147,10 @@ class AbstractDataSource(object):
 
     def get_settle_price(self, instrument, date):
         """
-        获取期货品种在date的结算价
+        获取期货品种在 date 的结算价
 
         :param instrument: 合约对象
-        :type instrument: :class:`~StockInstrument` | :class:`~FutureInstrument`
+        :type instrument: :class:`~Instrument`
 
         :param datetime.date date: 结算日期
 
@@ -166,12 +163,10 @@ class AbstractDataSource(object):
         获取历史数据
 
         :param instrument: 合约对象
-        :type instrument: :class:`~StockInstrument` | :class:`~FutureInstrument`
+        :type instrument: :class:`~Instrument`
 
         :param int bar_count: 获取的历史数据数量
-
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
-
         :param str fields: 返回数据字段
 
         =========================   ===================================================
@@ -209,10 +204,9 @@ class AbstractDataSource(object):
         如果当日截止到调用时候对应股票没有任何成交，那么snapshot中的close, high, low, last几个价格水平都将以0表示。
 
         :param instrument: 合约对象
-        :type instrument: :class:`~StockInstrument` | :class:`~FutureInstrument`
+        :type instrument: :class:`~Instrument`
 
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
-
         :param datetime.datetime dt: 时间
 
         :return: :class:`~Snapshot`
@@ -225,7 +219,7 @@ class AbstractDataSource(object):
         获取证券某天的交易时段，用于期货回测
 
         :param instrument: 合约对象
-        :type instrument: :class:`~StockInstrument` | :class:`~FutureInstrument`
+        :type instrument: :class:`~Instrument`
 
         :param datetime.datetime trading_dt: 交易日。注意期货夜盘所属交易日规则。
 
@@ -244,41 +238,59 @@ class AbstractDataSource(object):
         raise NotImplementedError
 
 
-class AbstractBroker(object):
+class AbstractBroker(with_metaclass(abc.ABCMeta)):
     """
-    RQAlpha 中将 Broker 作为虚拟券商的一个代理。
+    券商接口。
 
-    比如作为回测，通过AbstractBroker扩展了default_broker(相当于BackTestBroker)
-    该 Broker 接受 `submit_order` 和 `cancel_order`，然后连接撮合引擎，进行撮合，再通过event_bus来讲下单之后的相应返回给RQAlpha。
+    RQAlpha 将产生的订单提交给此对象，此对象负责对订单进行撮合（不论是自行撮合还是委托给外部的真实交易所），
+    并通过 `Events.ORDER_*` 及 `Events.TRADE` 事件将撮合结果反馈进入 RQAlpha。
 
-    AbstractBroker 的存在，意味着实现自定义Broker成为了可能，RQAlpha 可以通过实现任何交易接口对接RQAlpha的Broker来对其进行支持。
+    在扩展模块中，可以通过调用 `env.set_broker` 来替换默认的 Broker。
     """
+    @abc.abstractmethod
+    def get_accounts(self):
+        """
+        [Required]
 
+        获取账号信息。系统初始化时，RQAlpha 会调用此接口，获取账户信息。
+
+        RQAlpha 支持混合策略，因此返回的账户信息为一个字典(dict)，key 为账户类型（见 `rqalpha.const.ACCOUNT_TYPE`)，
+        value 为对应的 :class:`~Account`对象。
+
+        :return: dict of `ACCOUNT_TYPE`: :class:`~Account`
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def submit_order(self, order):
         """
         【Required】
 
-        扩展的 Broker 需要实现下单函数，RQAlpha 会根据用户调用的下单 API 自定生成一个 :class:`~Order` 的对象作为参数传入。
-
-        注意：订单处理的返回不是通过该函数的返回值，而是需要触发对应的事件， 如下所示:
-
-        ..  code-block:: python3
-            :linenos:
-
-            Environment.get_instance().event_bus.publish_event(Events.TRADE, account, trade)
-
-        :type order: :class:`~Order`
+        提交订单。在当前版本，RQAlpha 会生成 :class:`~Order` 对象，再通过此接口提交到 Broker。
+        TBD: 由 Broker 对象生成 Order 并返回？
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def cancel_order(self, order):
         """
         【Required】
 
-        扩展的 Broker 需要实现撤单函数，其他与submit_order类似
+        撤单。
 
         :param order: 订单
         :type order: :class:`~Order`
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_open_orders(self):
+        """
+        【Required】
+
+        获得当前未完成的订单。
+
+        :return: list[:class:`~Order`]
         """
         raise NotImplementedError
 
@@ -286,47 +298,23 @@ class AbstractBroker(object):
         """
         【Optional】
 
-        Broker 很多场景下需要接收到 :class:`~AbstractEventSource` 触发的 `before_trading` 事件进行一些交易前处理。
-
-        自定义 Broker 如果有需要的话，可以实现该函数
+        RQAlpha 会在 `Events.BEFORE_TRADING` 事件被触发前调用此接口。
         """
-        raise NotImplementedError
+        pass
 
     def after_trading(self):
         """
         【Optional】
 
-        与 before_trading类似，可以通过实现该函数，在交易结束后进行相关的处理。
+        RQAlpha 会在 `Events.AFTER_TRADING` 事件被触发前调用此接口。
         """
-        raise NotImplementedError
-
-    def get_open_orders(self):
-        """
-        【Required】
-
-        RQAlpha 需要获取当天的订单数据，
-
-        :return: list[:class:`~Order`]
-        """
-        raise NotImplementedError
-
-    def get_accounts(self):
-        """
-        [Required]
-
-        程序启动后，RQAlpha 会从 Broker 查询账户信息。
-
-        Broker 定义为虚拟券商的代理，RQAlpha默认是支持混合策略的(比如包含股票、期货、期权)，因此Broker生成的的账户需要支持混合策略结构，可以参考 RQAlpha 的 DefaultBroker具体账户的定义和实现。
-
-        :return: dict[:class:`Account`]
-        """
-        raise NotImplementedError
+        pass
 
     def update(self, calendar_dt, trading_dt, bar_dict):
         """
         【Optional】
 
-        data source 在数据和时间更新后，RQAlpha 会调用 Broker 的 `update` 函数，来传入对应的时间和数据。
+        RQAlpha 会在 `Events.BAR` 事件被出发前调用此接口。
 
         Broker 根据自己的业务场景来选择是否实现，比如说自带撮合引擎的Broker，会通过 `update` 函数来触发撮合。
 
@@ -334,22 +322,58 @@ class AbstractBroker(object):
         :param trading_dt: 交易时间
         :param bar_dict: dict[:class:`~BarObject`]
         """
-        raise NotImplementedError
+        pass
 
 
-class AbstractMod(object):
+class AbstractMod(with_metaclass(abc.ABCMeta)):
+    """
+    扩展模块接口。
+    """
+    @abc.abstractmethod
     def start_up(self, env, mod_config):
+        """
+        RQAlpha 在系统启动时会调用此接口；在此接口中，可以通过调用 ``env`` 的相应方法来覆盖系统默认组件。
+
+        :param env: 系统环境
+        :type env: :class:`~Environment`
+        :param mod_config: 模块配置参数
+        """
         raise NotImplementedError
 
     def tear_down(self, code, exception=None):
+        """
+        RQAlpha 在系统退出前会调用此接口。
+
+        :param code: 退出代码
+        :type code: rqalpha.const.EXIT_CODE
+        :param exception: 如果在策略执行过程中出现错误，此对象为相应的异常对象
+        """
         raise NotImplementedError
 
 
-class AbstractPersistProvider(object):
+class AbstractPersistProvider(with_metaclass(abc.ABCMeta)):
+    """
+    持久化服务提供者接口。
+
+    扩展模块可以通过调用 `env.set_persist_provider` 接口来替换默认的持久化方案。
+    """
+    @abc.abstractmethod
     def store(self, key, value):
+        """
+        store
+
+        :param str key:
+        :param bytes value:
+        :return:
+        """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def load(self, key):
+        """
+        :param str key:
+        :return: bytes 如果没有对应的值，返回 None
+        """
         raise NotImplementedError
 
 
