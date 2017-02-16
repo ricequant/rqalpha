@@ -212,7 +212,7 @@ def run(config):
         # we should run `init` after restore persist data
         if config.extra.force_run_init_when_pt_resume:
             assert config.base.resume_mode == True
-            with run_with_user_log_disabled():
+            with run_with_user_log_disabled(disabled=False):
                 user_strategy.init()
 
         for calendar_dt, trading_dt, event in event_source.events(config.base.start_date,
