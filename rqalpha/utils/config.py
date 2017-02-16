@@ -45,6 +45,8 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     config = yaml.load(config_file)
     if click_type:
         for key, value in six.iteritems(config_args):
+            if key in ["config_path"]:
+                continue
             if config_args[key] is not None:
                 keys = key.split("__")
                 keys.reverse()

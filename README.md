@@ -29,7 +29,6 @@ RQAlpha 是 [Ricequnat](https://www.ricequant.com) 开发并维护的开源产�
 
 ## Quick Guide
 
-
 *   [RQAlpha 介绍](http://rqalpha.readthedocs.io/zh_CN/latest/intro/overview.html)
 *   [安装指南](http://rqalpha.readthedocs.io/zh_CN/latest/intro/install.html)
 *   [10分钟学会 RQAlpha](http://rqalpha.readthedocs.io/zh_CN/latest/intro/tutorial.html)
