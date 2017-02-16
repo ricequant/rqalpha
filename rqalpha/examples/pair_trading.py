@@ -1,3 +1,5 @@
+from rqalpha.api import *
+
 import numpy as np
 
 

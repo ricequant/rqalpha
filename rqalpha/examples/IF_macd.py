@@ -1,4 +1,5 @@
-# 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等
+from rqalpha.api import *
+
 import talib
 
 
