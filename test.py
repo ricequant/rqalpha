@@ -75,7 +75,7 @@ def run_test(filename):
             "strategy_file": os.path.join(TEST_DIR, filename)
         }
     }
-    print("开始测试策略: " + str(config["base"]["strategy_file"]))
+    print("Start test: " + str(config["base"]["strategy_file"]))
     result_dict = run(config)
     df = result_dict["total_portfolios"]
     # del df['positions']
@@ -120,6 +120,13 @@ def run_test(filename):
             del old_df['daily_pnl']
             del old_df['daily_returns']
             del old_df['dividend_receivable']
+            del old_df['strategy_file']
+            del df['strategy_file']
+        except:
+            pass
+        try:
+            del old_df['strategy_file']
+            del df['strategy_file']
         except:
             pass
         result = df.eq(old_df)
