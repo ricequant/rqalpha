@@ -7,19 +7,15 @@ RQAlpha
 ..  image:: https://img.shields.io/travis/ricequant/rqalpha/master.svg
     :target: https://travis-ci.org/ricequant/rqalpha/branches
     :alt: Build
-
 ..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=stable
     :target: http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable
     :alt: Documentation Status
-
 ..  image:: https://img.shields.io/pypi/v/rqalpha.svg
     :target: https://pypi.python.org/pypi/rqalpha
     :alt: PyPI Version
-
 ..  image:: https://img.shields.io/pypi/l/rqalpha.svg
     :target: https://opensource.org/licenses/Apache-2.0
     :alt: License
-
 ..  image:: https://img.shields.io/pypi/pyversions/rqalpha.svg
     :alt: Python Version Support
 
@@ -40,7 +36,7 @@ Feature
 *   灵活的配置: RQAlpha 提供了一系列的配置选项，用户可以通过简单的配置来构建适合自己的交易系统。
 *   强大的扩展性: RQAlpha 定义了一系列的 Mod Hook 接口，开发者可以基于 Mod 的开发模式，扩展 RQAlpha，无论是做实时监控，还是归因分析，RQAlpha 都可以通过扩展来实现。
 
-## Getting Help
+Getting Help
 ============================
 
 关于RQAlpha的任何问题可以通过以下途径来获取帮助
@@ -50,7 +46,7 @@ Feature
 *  在 `Github Issue`_ 中提交issue。
 *  如果想参与到 RQAlpha 的开发中，您可以加入QQ群「487188429」，
 
-## Quick Guide
+Quick Guide
 ============================
 
 *   `RQAlpha 介绍`_
@@ -58,20 +54,20 @@ Feature
 *   `10分钟学会 RQAlpha`_
 *   `策略示例`_
 
-## RQAlpha API
+RQAlpha API
 ============================
 
 *   `参数配置`_ : 启动 RQAlpha 参数配置
 *   `API`_ : RQAlpha API 文档
 
-## Development
+Development
 ============================
 
 *   `How To Contribute`_ : 如何加入 RQAlpha 的开发
 *   `Basic Concept`_ : 基本概念
 *   `RQAlpha Mod`_ : 基于Mod来开发和扩展RQAlpha
 
-## Extra
+Extra
 ============================
 
 *   `FAQ`_
