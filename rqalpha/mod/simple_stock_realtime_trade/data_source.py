@@ -20,10 +20,7 @@ import tushare as ts
 
 from rqalpha.utils.datetime_func import convert_int_to_date
 from rqalpha.data.base_data_source import BaseDataSource
-
-
-def code_convert(order_book_id):
-    return order_book_id.split(".")[0]
+from .utils import code_convert
 
 
 class DataSource(BaseDataSource):

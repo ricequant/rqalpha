@@ -29,14 +29,26 @@ from rqalpha.events import Events
 class RealtimeEventSource(AbstractEventSource):
     def __init__(self):
         self._env = Environment.get_instance()
-        self.fps = 3
+        self.fps = 60
         self.event_queue = Queue()
+
         self.clock_engine_thread = Thread(target=self.clock_worker)
         self.clock_engine_thread.daemon = True
         self.clock_engine_thread.start()
+
+        self.quotation_engine_thread = Thread(target=self.quotation_worker)
+        self.quotation_engine_thread.daemon = True
+        self.quotation_engine_thread.start()
+
         # need to be persist
         self.before_trading_fire_date = datetime.date(2000, 1, 1)
         self.after_trading_fire_date = datetime.date(2000, 1, 1)
+
+    def quotation_worker(self):
+        while True:
+            dt = datetime.datetime.now()
+
+            time.sleep(1)
 
     def clock_worker(self):
         while True:
@@ -56,11 +68,8 @@ class RealtimeEventSource(AbstractEventSource):
 
     def events(self, start_date, end_date, frequency):
         running = True
-        count = 0
 
         while running:
-            count += 1
-
             real_dt = datetime.datetime.now()
             dt, event = self.event_queue.get()
 
