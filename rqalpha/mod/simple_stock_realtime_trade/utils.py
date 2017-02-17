@@ -12,14 +12,10 @@ except Exception as e:
     from fastcache import lru_cache
 
 import tushare as ts
-from tushare.util import dateu
 from six.moves import reduce
 
 from rqalpha.environment import Environment
-
-
-def code_convert(order_book_id):
-    return order_book_id.split(".")[0]
+from rqalpha.utils.datetime_func import convert_dt_to_int
 
 
 def is_holiday_today():
@@ -33,6 +29,33 @@ def is_tradetime_now():
     if (9, 15, 0) <= now <= (11, 30, 0) or (13, 0, 0) <= now <= (15, 0, 0):
         return True
     return False
+
+
+TUSHARE_CODE_MAPPING = {
+    "sh": "000001.XSHG",
+    "sz": "399001.XSHE",
+    "sz50": "000016.XSHG",
+    "hs300": "000300.XSHG",
+    "sz500": "000905.XSHG",
+    "zxb": "399005.XSHE",
+    "cyb": "399006.XSHE",
+}
+
+
+def tushare_code_2_order_book_id(code):
+    try:
+        return TUSHARE_CODE_MAPPING[code]
+    except KeyError:
+        if code.startswith("6"):
+            return "{}.XSHG".format(code)
+        elif code[0] in ["3", "0"]:
+            return "{}.XSHE".format(code)
+        else:
+            raise RuntimeError("Unknown code")
+
+
+def order_book_id_2_tushare_code(order_book_id):
+    return order_book_id.split(".")[0]
 
 
 def get_realtime_quotes(code_list, open_only=False):
@@ -59,7 +82,11 @@ def get_realtime_quotes(code_list, open_only=False):
 
     total_df["chg"] = total_df["price"] / total_df["pre_close"] - 1
 
-    total_df = total_df.reset_index()
+    total_df["order_book_id"] = total_df.index
+    total_df["order_book_id"] = total_df["order_book_id"].apply(tushare_code_2_order_book_id)
+
+    total_df["datetime"] = total_df["date"] + " " + total_df["time"]
+    total_df["datetime"] = total_df["datetime"].apply(lambda x: convert_dt_to_int(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")))
 
     if open_only:
         total_df = total_df[total_df.open > 0]
