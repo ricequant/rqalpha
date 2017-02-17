@@ -34,6 +34,7 @@ install:
 script:
   - rqalpha update_bundle
   - python test.py
+  - python test.py module
 cache:
   directories:
     - $HOME/.cache/pip
