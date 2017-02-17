@@ -28,14 +28,20 @@ install:
 
   # Install Test Deps
   - pip install TA-Lib
-  - pip install coverage
+  - pip install coveralls
   - pip install -U setuptools
   - pip install .
 script:
-  - rqalpha update_bundle
-  - python test.py
-  - python test.py module
+  - ls $HOME/.rqalpha/bundle/
+  - |
+      if [ ! -d ~/.rqalpha/bundle/done ]; then
+        rqalpha update_bundle
+      fi
+  - coverage run --source=rqalpha test.py
+  - coverage run --source=rqalpha test.py module
 cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.rqalpha
+after_success:
+  coveralls
