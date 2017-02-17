@@ -38,7 +38,6 @@ script:
         rqalpha update_bundle
       fi
   - coverage run --source=rqalpha test.py
-  - coverage run --source=rqalpha test.py module
 cache:
   directories:
     - $HOME/.cache/pip
