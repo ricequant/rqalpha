@@ -7,6 +7,10 @@ RQAlpha |version| Documentation
     :target: https://travis-ci.org/ricequant/rqalpha/branches
     :alt: Build
 
+..  image:: https://img.shields.io/coveralls/ricequant/rqalpha.svg
+    :target: https://coveralls.io/github/ricequant/rqalpha
+    :lat: Coveralls
+
 ..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=stable
     :target: http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable
     :alt: Documentation Status
@@ -22,7 +26,6 @@ RQAlpha |version| Documentation
 ..  image:: https://img.shields.io/pypi/pyversions/rqalpha.svg
     :target: https://pypi.python.org/pypi/rqalpha
     :alt: Python Version Support
-
 
 
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。RQAlpha 具有灵活的配置方式，强大的扩展性，用户可以非常容易地定制专属于自己的程序化交易系统。
