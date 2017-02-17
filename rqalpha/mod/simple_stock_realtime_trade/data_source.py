@@ -18,7 +18,6 @@ import datetime
 
 import pandas as pd
 
-from rqalpha.utils.datetime_func import convert_int_to_date
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
 from rqalpha.model.snapshot import SnapshotObject
@@ -45,10 +44,4 @@ class DataSource(BaseDataSource):
         return SnapshotObject(instrument, snapshot_dict)
 
     def available_data_range(self, frequency):
-        if frequency == '1d':
-            s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
-            return convert_int_to_date(s).date(), convert_int_to_date(e).date()
-
-        if frequency == '1m':
-            # FIXME
-            return datetime.date(2016, 1, 1), datetime.date(2017, 2, 15)
+        return datetime.date(2017, 1, 1), datetime.date.max
