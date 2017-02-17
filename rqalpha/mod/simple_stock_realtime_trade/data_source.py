@@ -34,7 +34,7 @@ class DataSource(BaseDataSource):
         if frequency == '1d':
             return super(DataSource, self).get_bar(instrument, dt, frequency)
 
-        # FIXME
+        # FIXME: 目前这样仅仅给撮合引擎用，不是定义的bar
         bar = self.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
 
         return bar

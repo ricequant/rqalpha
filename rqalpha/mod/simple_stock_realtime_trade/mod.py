@@ -16,7 +16,8 @@
 
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.logger import system_log
-from rqalpha.const import RUN_TYPE
+from rqalpha.utils.disk_persist_provider import DiskPersistProvider
+from rqalpha.const import RUN_TYPE, PERSIST_MODE
 
 from .data_source import DataSource
 from .event_source import RealtimeEventSource
@@ -30,9 +31,13 @@ class RealtimeTradeMod(AbstractMod):
 
         if env.config.base.run_type == RUN_TYPE.PAPER_TRADING:
             env.set_data_source(DataSource(env.config.base.data_bundle_path))
-            env.set_event_source(RealtimeEventSource())
+            env.set_event_source(RealtimeEventSource(mod_config.fps))
 
-        # ExecutionContext.data_proxy.all_instruments("CS")
+            persist_provider = DiskPersistProvider(mod_config.persist_path)
+            env.set_persist_provider(persist_provider)
+
+            env.config.base.persist = True
+            env.config.base.persist_mode = PERSIST_MODE.REAL_TIME
 
     def tear_down(self, code, exception=None):
         pass

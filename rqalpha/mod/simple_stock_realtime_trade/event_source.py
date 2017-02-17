@@ -25,14 +25,19 @@ from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
 from rqalpha.events import Events
 from rqalpha.execution_context import ExecutionContext
+from rqalpha.utils import json as json_utils
 from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
 
 
 class RealtimeEventSource(AbstractEventSource):
-    def __init__(self):
+
+    def __init__(self, fps):
         self._env = Environment.get_instance()
-        self.fps = 3
+        self.fps = fps
         self.event_queue = Queue()
+
+        self.before_trading_fire_date = datetime.date(2000, 1, 1)
+        self.after_trading_fire_date = datetime.date(2000, 1, 1)
 
         self.clock_engine_thread = Thread(target=self.clock_worker)
         self.clock_engine_thread.daemon = True
@@ -40,9 +45,16 @@ class RealtimeEventSource(AbstractEventSource):
         self.quotation_engine_thread = Thread(target=self.quotation_worker)
         self.quotation_engine_thread.daemon = True
 
-        # need to be persist
-        self.before_trading_fire_date = datetime.date(2000, 1, 1)
-        self.after_trading_fire_date = datetime.date(2000, 1, 1)
+    def set_state(self, state):
+        persist_dict = json_utils.convert_json_to_dict(state.decode('utf-8'))
+        self.before_trading_fire_date = persist_dict['before_trading_fire_date']
+        self.after_trading_fire_date = persist_dict['after_trading_fire_date']
+
+    def get_state(self):
+        return json_utils.convert_dict_to_json({
+            "before_trading_fire_date": self.before_trading_fire_date,
+            "after_trading_fire_date": self.after_trading_fire_date,
+        }).encode('utf-8')
 
     def quotation_worker(self):
         while True:
@@ -55,6 +67,12 @@ class RealtimeEventSource(AbstractEventSource):
             time.sleep(1)
 
     def clock_worker(self):
+        while True:
+            # wait for the first data ready
+            if self._env.data_source.realtime_quotes_df.empty:
+                break
+            time.sleep(0.1)
+
         while True:
             time.sleep(self.fps)
 
