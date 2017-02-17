@@ -88,6 +88,8 @@ def get_realtime_quotes(code_list, open_only=False):
     total_df["datetime"] = total_df["date"] + " " + total_df["time"]
     total_df["datetime"] = total_df["datetime"].apply(lambda x: convert_dt_to_int(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")))
 
+    total_df["close"] = total_df["price"]
+
     if open_only:
         total_df = total_df[total_df.open > 0]
 

@@ -33,25 +33,16 @@ class DataSource(BaseDataSource):
         self.realtime_quotes_df = pd.DataFrame()
 
     def get_bar(self, instrument, dt, frequency):
-        bar = ts.get_realtime_quotes(order_book_id_2_tushare_code(instrument.order_book_id)).iloc[0].to_dict()
-        dt = int(bar["date"].replace("-", "")) * 1000000 + int(bar["time"].replace(":", ""))
-        bar["datetime"] = dt
+        if frequency == '1d':
+            return super(DataSource, self).get_bar(instrument, dt, frequency)
 
-        for item in ["date", "time", "code", "name"]:
-            bar.pop(item, None)
-
-        for item in set(bar.keys()) - set(["datetime"]):
-            bar[item] = float(bar[item])
-
-        bar["close"] = bar["price"]
+        bar = self.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
 
         return bar
 
     def current_snapshot(self, instrument, frequency, dt):
         snapshot_dict = self.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         snapshot_dict["last"] = snapshot_dict["price"]
-        print("snapshot_dict", snapshot_dict)
-        # snapshot_dict = self._redis_store.get_snapshot(instrument.order_book_id)
         return SnapshotObject(instrument, snapshot_dict)
 
     def available_data_range(self, frequency):
@@ -60,4 +51,5 @@ class DataSource(BaseDataSource):
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
         if frequency == '1m':
+            # FIXME
             return datetime.date(2016, 1, 1), datetime.date(2017, 2, 15)
