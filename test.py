@@ -254,6 +254,9 @@ def test_api():
     run(future_api_config, test_sell_close_code_new)
 
 
+def test_strategy():
+    get_test_files()
+
 if __name__ == '__main__':
     if is_enable_coverage():
         print("enable coverage")
@@ -262,14 +265,21 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     if len(sys.argv) >= 2:
-        if sys.argv[1] == 'module':
+        if sys.argv[1] == 'mod':
             test_api()
             end_time = datetime.now()
+
+        elif sys.argv[1] == 'strategy':
+            test_strategy()
+            end_time = datetime.now()
+
         else:
             target_file = sys.argv[1]
             get_test_files(target_file)
             end_time = datetime.now()
+
     else:
+        test_api()
         error_count = get_test_files()
         end_time = datetime.now()
         if error_count == 0:
