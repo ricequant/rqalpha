@@ -2,7 +2,7 @@
 
 # RQAlpha
 
-[![Documentation Status](https://readthedocs.org/projects/rqalpha/badge/?version=stable)](http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable) [![PyPI Version](https://img.shields.io/pypi/v/rqalpha.svg)](https://pypi.python.org/pypi/rqalpha) [![License](https://img.shields.io/pypi/l/rqalpha.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build](https://img.shields.io/travis/ricequant/rqalpha/master.svg)](https://travis-ci.org/ricequant/rqalpha/branches) [![Documentation Status](https://readthedocs.org/projects/rqalpha/badge/?version=stable)](http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable) [![PyPI Version](https://img.shields.io/pypi/v/rqalpha.svg)](https://pypi.python.org/pypi/rqalpha) [![License](https://img.shields.io/pypi/l/rqalpha.svg)](https://opensource.org/licenses/Apache-2.0)
 
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。依据其灵活的配置方式，强大的扩展性，用户可以非常容易地定制专属于自己的程序化交易系统。
 
