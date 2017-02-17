@@ -9,7 +9,7 @@ RQAlpha |version| Documentation
 
 ..  image:: https://img.shields.io/coveralls/ricequant/rqalpha.svg
     :target: https://coveralls.io/github/ricequant/rqalpha
-    :lat: Coveralls
+    :alt: Coveralls
 
 ..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=stable
     :target: http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable
