@@ -1,3 +1,10 @@
+0.3.6
+==================
+
+- support auto test with Travis [python 2.7 3.4 3.5 3.6]
+- `rqalpha.run` 现在支持直接传入 `source_code` 了
+- 支持 `rqalpha.update_bundle` 函数
+
 0.3.5
 ==================
 
