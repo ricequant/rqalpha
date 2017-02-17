@@ -15,16 +15,10 @@
 # limitations under the License.
 
 import click
-import datetime
 import errno
 import locale
 import os
 import shutil
-import tarfile
-import tempfile
-
-import six
-import requests
 
 from .cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
@@ -46,42 +40,8 @@ def entry_point():
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path(file_okay=False))
 def update_bundle(data_bundle_path):
-    data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
-    default_bundle_path = os.path.abspath(os.path.expanduser("~/.rqalpha/bundle/"))
-    if (os.path.exists(data_bundle_path) and data_bundle_path != default_bundle_path and
-            os.listdir(data_bundle_path)):
-        click.confirm('[WARNING] Target bundle path {} is not empty. The content of this folder will be REMOVED before '
-                      'updating. Are you sure to continue?'.format(data_bundle_path), abort=True)
-
-    day = datetime.date.today()
-    tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
-
-    while True:
-        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
-            day.year, day.month, day.day)
-        six.print_('try {} ...'.format(url))
-        r = requests.get(url, stream=True)
-        if r.status_code != 200:
-            day = day - datetime.timedelta(days=1)
-            continue
-
-        out = open(tmp, 'wb')
-        total_length = int(r.headers.get('content-length'))
-
-        with click.progressbar(length=total_length, label='downloading ...') as bar:
-            for data in r.iter_content(chunk_size=8192):
-                bar.update(len(data))
-                out.write(data)
-
-        out.close()
-        break
-
-    shutil.rmtree(data_bundle_path, ignore_errors=True)
-    os.makedirs(data_bundle_path)
-    tar = tarfile.open(tmp, 'r:bz2')
-    tar.extractall(data_bundle_path)
-    tar.close()
-    os.remove(tmp)
+    from . import main
+    main.update_bundle(data_bundle_path)
 
 
 @cli.command()

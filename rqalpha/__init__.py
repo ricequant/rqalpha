@@ -59,3 +59,8 @@ def run(config, source_code=None):
             raise
 
     return main.run(parse_config(config, click_type=False, source_code=source_code), source_code=source_code)
+
+
+def update_bundle(data_bundle_path=None, confirm=True):
+    from . import main
+    main.update_bundle(data_bundle_path, confirm)
