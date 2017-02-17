@@ -7,16 +7,21 @@ RQAlpha
 ..  image:: https://img.shields.io/travis/ricequant/rqalpha/master.svg
     :target: https://travis-ci.org/ricequant/rqalpha/branches
     :alt: Build
+
 ..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=stable
     :target: http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable
     :alt: Documentation Status
+
 ..  image:: https://img.shields.io/pypi/v/rqalpha.svg
     :target: https://pypi.python.org/pypi/rqalpha
     :alt: PyPI Version
+
 ..  image:: https://img.shields.io/pypi/l/rqalpha.svg
     :target: https://opensource.org/licenses/Apache-2.0
     :alt: License
+
 ..  image:: https://img.shields.io/pypi/pyversions/rqalpha.svg
+    :target: https://pypi.python.org/pypi/rqalpha
     :alt: Python Version Support
 
 
@@ -93,4 +98,4 @@ Extra
 .. _How To Contribute: http://rqalpha.readthedocs.io/zh_CN/stable/development/make_contribute.html
 .. _Basic Concept: http://rqalpha.readthedocs.io/zh_CN/stable/development/basic_concept.html
 .. _RQAlpha Mod: http://rqalpha.readthedocs.io/zh_CN/stable/development/mod.html
-
+.. _History: http://rqalpha.readthedocs.io/zh_CN/stable/history.html
