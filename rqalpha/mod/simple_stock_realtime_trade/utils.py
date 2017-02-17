@@ -22,7 +22,6 @@ try:
 except Exception as e:
     from fastcache import lru_cache
 
-import tushare as ts
 from six.moves import reduce
 
 from rqalpha.environment import Environment
@@ -72,6 +71,8 @@ def order_book_id_2_tushare_code(order_book_id):
 
 
 def get_realtime_quotes(code_list, open_only=False):
+    import tushare as ts
+
     max_len = 800
     loop_cnt = int(math.ceil(float(len(code_list)) / max_len))
 
