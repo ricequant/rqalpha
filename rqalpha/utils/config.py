@@ -94,7 +94,7 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
         # print("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
         return
 
-    if not os.path.exists(base_config.strategy_file):
+    if source_code is None and not os.path.exists(base_config.strategy_file):
         print("strategy file not found: ", base_config.strategy_file)
         return
 
