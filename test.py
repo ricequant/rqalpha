@@ -140,6 +140,120 @@ def is_enable_coverage():
     return os.environ.get('COVERAGE') == "enabled"
 
 
+def test_api():
+    from rqalpha import run
+
+    from tests.api.test_api_base import test_get_order_code_new, test_get_open_order_code_new, \
+        test_cancel_order_code_new, \
+        test_update_universe_code_new, test_subscribe_code_new, test_unsubscribe_code_new, \
+        test_get_yield_curve_code_new, \
+        test_history_bars_code_new, test_all_instruments_code_new, test_instruments_code_new, test_sector_code_new, \
+        test_concept_code_new, test_industry_code_new, test_get_trading_dates_code_new, \
+        test_get_previous_trading_date_code_new, test_get_next_trading_date_code_new, test_get_dividend_code_new
+
+    from tests.api.test_api_stock import test_order_shares_code_new, test_order_lots_code_new, \
+        test_order_value_code_new, \
+        test_order_percent_code_new, test_order_target_value_code_new
+
+    from tests.api.test_api_future import test_buy_open_code_new, test_sell_open_code_new, test_buy_close_code_new, \
+        test_sell_close_code_new
+
+    base_api_config = {
+        "base": {
+            "strategy_type": "stock",
+            "start_date": "2016-12-01",
+            "end_date": "2016-12-31",
+            "frequency": "1d",
+            "matching_type": "next_bar",
+            "stock_starting_cash": 1000000,
+            "strategy_file": 'rqalpha/__init__.py'
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+        "mod": {
+            "progress": {
+                "enabled": False,
+                "priority": 400,
+            },
+        },
+    }
+
+    stock_api_config = {
+        "base": {
+            "strategy_type": "stock",
+            "start_date": "2016-03-07",
+            "end_date": "2016-03-08",
+            "frequency": "1d",
+            "matching_type": "next_bar",
+            "stock_starting_cash": 100000000,
+            "strategy_file": 'rqalpha/__init__.py'
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+        "mod": {
+            "progress": {
+                "enabled": False,
+                "priority": 400,
+            },
+        },
+    }
+
+    future_api_config = {
+        "base": {
+            "strategy_type": "future",
+            "start_date": "2016-03-07",
+            "end_date": "2016-03-08",
+            "frequency": "1d",
+            "matching_type": "next_bar",
+            "future_starting_cash": 10000000000,
+            "strategy_file": 'rqalpha/__init__.py'
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+        "mod": {
+            "progress": {
+                "enabled": False,
+                "priority": 400,
+            },
+        },
+    }
+
+    # =================== Test Base API ===================
+    run(base_api_config, test_get_order_code_new)
+    run(base_api_config, test_get_open_order_code_new)
+    run(base_api_config, test_cancel_order_code_new)
+    run(base_api_config, test_update_universe_code_new)
+    run(base_api_config, test_subscribe_code_new)
+    run(base_api_config, test_unsubscribe_code_new)
+    run(base_api_config, test_get_yield_curve_code_new)
+    run(base_api_config, test_history_bars_code_new)
+    run(base_api_config, test_all_instruments_code_new)
+    run(base_api_config, test_instruments_code_new)
+    run(base_api_config, test_sector_code_new)
+    run(base_api_config, test_industry_code_new)
+    run(base_api_config, test_concept_code_new)
+    run(base_api_config, test_get_trading_dates_code_new)
+    run(base_api_config, test_get_previous_trading_date_code_new)
+    run(base_api_config, test_get_next_trading_date_code_new)
+    run(base_api_config, test_get_dividend_code_new)
+
+    # =================== Test Stock API ===================
+    run(stock_api_config, test_order_shares_code_new)
+    run(stock_api_config, test_order_lots_code_new)
+    run(stock_api_config, test_order_value_code_new)
+    run(stock_api_config, test_order_percent_code_new)
+    run(stock_api_config, test_order_target_value_code_new)
+
+    # =================== Test Future API ===================
+    run(future_api_config, test_buy_open_code_new)
+    run(future_api_config, test_sell_open_code_new)
+    run(future_api_config, test_buy_close_code_new)
+    run(future_api_config, test_sell_close_code_new)
+
+
 if __name__ == '__main__':
     if is_enable_coverage():
         print("enable coverage")
@@ -148,9 +262,13 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     if len(sys.argv) >= 2:
-        target_file = sys.argv[1]
-        get_test_files(target_file)
-        end_time = datetime.now()
+        if sys.argv[1] == 'module':
+            test_api()
+            end_time = datetime.now()
+        else:
+            target_file = sys.argv[1]
+            get_test_files(target_file)
+            end_time = datetime.now()
     else:
         error_count = get_test_files()
         end_time = datetime.now()
