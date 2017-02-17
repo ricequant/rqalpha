@@ -17,13 +17,11 @@
 import datetime
 
 import pandas as pd
-import tushare as ts
 
 from rqalpha.utils.datetime_func import convert_int_to_date
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
 from rqalpha.model.snapshot import SnapshotObject
-from .utils import order_book_id_2_tushare_code
 
 
 class DataSource(BaseDataSource):
@@ -36,6 +34,7 @@ class DataSource(BaseDataSource):
         if frequency == '1d':
             return super(DataSource, self).get_bar(instrument, dt, frequency)
 
+        # FIXME
         bar = self.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
 
         return bar

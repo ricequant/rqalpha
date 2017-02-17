@@ -16,6 +16,7 @@
 
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.logger import system_log
+from rqalpha.const import RUN_TYPE
 
 from .data_source import DataSource
 from .event_source import RealtimeEventSource
@@ -27,8 +28,9 @@ class RealtimeTradeMod(AbstractMod):
         self._env = env
         self._mod_config = mod_config
 
-        env.set_data_source(DataSource(env.config.base.data_bundle_path))
-        env.set_event_source(RealtimeEventSource())
+        if env.config.base.run_type == RUN_TYPE.PAPER_TRADING:
+            env.set_data_source(DataSource(env.config.base.data_bundle_path))
+            env.set_event_source(RealtimeEventSource())
 
         # ExecutionContext.data_proxy.all_instruments("CS")
 

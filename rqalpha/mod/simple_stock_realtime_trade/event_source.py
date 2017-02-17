@@ -25,7 +25,7 @@ from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
 from rqalpha.events import Events
 from rqalpha.execution_context import ExecutionContext
-from .utils import get_realtime_quotes, order_book_id_2_tushare_code
+from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
 
 
 class RealtimeEventSource(AbstractEventSource):
@@ -46,28 +46,33 @@ class RealtimeEventSource(AbstractEventSource):
 
     def quotation_worker(self):
         while True:
-            order_book_id_list = sorted(ExecutionContext.data_proxy.all_instruments("CS").order_book_id.tolist())
-            code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
-            # FIXME tell DataSource the new data
-            self._env.data_source.realtime_quotes_df = get_realtime_quotes(code_list)
+            if not is_holiday_today() and is_tradetime_now():
+                order_book_id_list = sorted(ExecutionContext.data_proxy.all_instruments("CS").order_book_id.tolist())
+                code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
+
+                self._env.data_source.realtime_quotes_df = get_realtime_quotes(code_list)
 
             time.sleep(1)
 
     def clock_worker(self):
         while True:
             time.sleep(self.fps)
+
+            if is_holiday_today():
+                time.sleep(60)
+                continue
+
             dt = datetime.datetime.now()
 
             if dt.strftime("%H:%M:%S") >= "08:30:00" and dt.date() > self.before_trading_fire_date:
-                event = Events.BEFORE_TRADING
+                self.event_queue.put((dt, Events.BEFORE_TRADING))
                 self.before_trading_fire_date = dt.date()
             elif dt.strftime("%H:%M:%S") >= "15:10:00" and dt.date() > self.after_trading_fire_date:
-                event = Events.AFTER_TRADING
+                self.event_queue.put((dt, Events.AFTER_TRADING))
                 self.after_trading_fire_date = dt.date()
-            else:
-                event = Events.BAR
 
-            self.event_queue.put((dt, event))
+            if is_tradetime_now():
+                self.event_queue.put((dt, Events.BAR))
 
     def events(self, start_date, end_date, frequency):
         running = True

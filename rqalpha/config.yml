@@ -84,3 +84,7 @@ mod:
     lib: 'rqalpha.mod.progress'
     enabled: false
     priority: 400
+  simple_stock_realtime_trade:
+    lib: 'rqalpha.mod.simple_stock_realtime_trade'
+    enabled: true
+    priority: 500
