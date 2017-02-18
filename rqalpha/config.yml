@@ -94,6 +94,6 @@ mod:
     priority: 500
   progressive_output_csv:
     lib: 'rqalpha.mod.progressive_output_csv'
-    enabled: true
+    enabled: false
     output_path: "./"
     priority: 600
