@@ -62,7 +62,11 @@ class RealtimeEventSource(AbstractEventSource):
                 order_book_id_list = sorted(ExecutionContext.data_proxy.all_instruments("CS").order_book_id.tolist())
                 code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
 
-                self._env.data_source.realtime_quotes_df = get_realtime_quotes(code_list)
+                try:
+                    self._env.data_source.realtime_quotes_df = get_realtime_quotes(code_list)
+                except OSError as e:
+                    system_log.exception("get_realtime_quotes fail")
+                    continue
 
             time.sleep(1)
 
