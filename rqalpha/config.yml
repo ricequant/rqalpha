@@ -90,7 +90,7 @@ mod:
     lib: 'rqalpha.mod.simple_stock_realtime_trade'
     persist_path: "./persist"
     fps: 3
-    enabled: true
+    enabled: false
     priority: 500
   progressive_output_csv:
     lib: 'rqalpha.mod.progressive_output_csv'
