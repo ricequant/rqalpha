@@ -8,18 +8,14 @@ def init(context):
     update_universe(context.s1)
     # 是否已发送了order
     context.fired = False
-    context.cnt = 1
 
 
 def before_trading(context, bar_dict):
-    logger.info("Before Trading", context.cnt)
-    context.cnt += 1
+    pass
 
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
-    context.cnt += 1
-    logger.info("handle_bar", context.cnt)
     # 开始编写你的主要的算法逻辑
 
     # bar_dict[order_book_id] 可以拿到某个证券的bar信息
