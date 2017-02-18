@@ -123,12 +123,16 @@ Extra
 
     faq
     history
+    todo
 
 :doc:`faq`
     FAQ
 
 :doc:`history`
     更新日志
+
+:doc:`todo`
+    TODO
 
 .. _github issue page: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
