@@ -15,11 +15,11 @@
 # limitations under the License.
 
 import os
+import csv
 
 from six import StringIO
 
 from rqalpha.interface import AbstractMod
-from rqalpha.utils.logger import system_log
 from rqalpha.events import Events
 
 
@@ -35,20 +35,30 @@ class ProgressiveOutputCSVMod(AbstractMod):
         self._csv_txt = StringIO()
         output_path = mod_config.output_path
 
-        self.csv_file = open(os.path.join(output_path, "feeds.csv"), 'a')
+        filename = os.path.join(output_path, "portfolio.csv")
+        new_file = False
+        if not os.path.exists(filename):
+            new_file = True
+        self.csv_file = open(filename, 'a')
+        fieldnames = ["datetime", "portfolio_value", "market_value", "total_returns"]
+        self.csv_writer = csv.DictWriter(self.csv_file, fieldnames)
+        if new_file:
+            self.csv_writer.writeheader()
 
     def _output_trade(self, account, trade):
         pass
 
     def _output_feeds(self, *args, **kwargs):
         misc_account = self._env.account
-        # trading_date = self._env.trading_dt.date()
         calendar_date = self._env.calendar_dt.date()
         portfolio = misc_account.portfolio
-        # daily_return = portfolio.daily_returns
 
-        output_txt = "{} {}\n".format(calendar_date, portfolio)
-        self.csv_file.write(output_txt)
+        self.csv_writer.writerow({
+            "datetime": calendar_date,
+            "total_returns": portfolio.total_returns,
+            "portfolio_value": portfolio.portfolio_value,
+            "market_value": portfolio.market_value,
+        })
         self.csv_file.flush()
 
     def tear_down(self, code, exception=None):
