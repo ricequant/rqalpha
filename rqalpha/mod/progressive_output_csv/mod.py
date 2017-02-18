@@ -17,8 +17,6 @@
 import os
 import csv
 
-from six import StringIO
-
 from rqalpha.interface import AbstractMod
 from rqalpha.events import Events
 
@@ -29,10 +27,8 @@ class ProgressiveOutputCSVMod(AbstractMod):
         self._env = env
         self._mod_config = mod_config
 
-        env.event_bus.add_listener(Events.TRADE, self._output_trade)
         env.event_bus.add_listener(Events.POST_BAR, self._output_feeds)
 
-        self._csv_txt = StringIO()
         output_path = mod_config.output_path
 
         filename = os.path.join(output_path, "portfolio.csv")
@@ -44,9 +40,6 @@ class ProgressiveOutputCSVMod(AbstractMod):
         self.csv_writer = csv.DictWriter(self.csv_file, fieldnames)
         if new_file:
             self.csv_writer.writeheader()
-
-    def _output_trade(self, account, trade):
-        pass
 
     def _output_feeds(self, *args, **kwargs):
         misc_account = self._env.account
