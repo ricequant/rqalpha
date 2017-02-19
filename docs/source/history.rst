@@ -8,24 +8,24 @@ History
 ==================
 
 - support auto test with Travis [python 2.7 3.4 3.5 3.6]
-- `rqalpha.run` 现在支持直接传入 `source_code` 了
-- 支持 `rqalpha.update_bundle` 函数
+- :code:`rqalpha.run` 现在支持直接传入 :code:`source_code` 了
+- 支持 :code:`rqalpha.update_bundle` 函数
 
 0.3.5
 ==================
 
-- 增加 `from rqalpha import run` 接口，现在可以很方便的直接在程序中调用RQAlpha 回测了。
+- 增加 :code:`from rqalpha import run` 接口，现在可以很方便的直接在程序中调用RQAlpha 回测了。
 
 0.3.4
 ==================
 
 - 本地化模块更具有扩展性
-- 修改 `rqalpha update_bundle` 的目录结构，现在是在指定目录下生成一个 bundle 文件，而不再会直接删除当前文件夹内容了。
+- 修改 :code:`rqalpha update_bundle` 的目录结构，现在是在指定目录下生成一个 bundle 文件，而不再会直接删除当前文件夹内容了。
 
 0.3.3
 ==================
 
-- 解决 `rqalpha examples -d .` 无样例策略生成的问题
+- 解决 :code:`rqalpha examples -d .` 无样例策略生成的问题
 
 0.3.2
 ==================
