@@ -101,6 +101,11 @@ def api_exc_patch(func):
     return func
 
 
+def register_api(name, func):
+    globals()[name] = func
+    __all__.append(name)
+
+
 def export_as_api(func):
     __all__.append(func.__name__)
 

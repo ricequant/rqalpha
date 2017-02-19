@@ -81,17 +81,24 @@ validator:
   bar_limit: true
 
 mod:
+  # 技术分析API
+  funcat_api:
+    lib: 'rqalpha.mod.funcat_api'
+    enabled: true
+    priority: 100
   # 开启该选项，可以在命令行查看回测进度
   progress:
     lib: 'rqalpha.mod.progress'
     enabled: false
     priority: 400
+  # 接受实时行情运行
   simple_stock_realtime_trade:
     lib: 'rqalpha.mod.simple_stock_realtime_trade'
     persist_path: "./persist"
     fps: 3
     enabled: false
     priority: 500
+  # 渐进式输出运行结果
   progressive_output_csv:
     lib: 'rqalpha.mod.progressive_output_csv'
     enabled: false

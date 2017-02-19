@@ -132,7 +132,7 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
         logger.DATETIME_FORMAT = "%Y-%m-%d"
         config.validator.fast_match = True
 
-    system_log.debug(pformat(config))
+    system_log.debug("\n" + pformat(config))
 
     return config
 

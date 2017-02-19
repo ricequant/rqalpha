@@ -14,9 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 from importlib import import_module
 from collections import OrderedDict
+
+import six
+
+from rqalpha.utils.logger import system_log
 
 
 class ModHandler(object):
@@ -35,7 +38,7 @@ class ModHandler(object):
 
         self._mod_list.sort(key=lambda item: item[1].priority)
         for mod_name, mod_config in self._mod_list:
-            print('loading', mod_name)
+            system_log.debug('loading mod {}', mod_name)
             mod_module = import_module(mod_config.lib)
             mod = mod_module.load_mod()
             self._mod_dict[mod_name] = mod
