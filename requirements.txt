@@ -39,4 +39,4 @@ XlsxWriter>=0.9.6
 line-profiler>=2.0
 fastcache>=1.0.2
 
-funcat>=0.0.12
+funcat>=0.0.13
