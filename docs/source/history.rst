@@ -46,14 +46,14 @@ History
 - 支持混合策略(股票和期货混合)
 - 支持多种参数配置方式
 - 抽离接口层，数据源、事件源、撮合引擎、下单模块全部可以替换或扩展。
-- 完善事件定义，采取pub/sub模式，可以非常简答的在RQAlpha中添加hook。
-- 增加Mod机制，极大的增加了RQAlpha的扩展性，使其可以轻松完成程序化交易过程中所产生的的特定需求。
+- 完善事件定义，采取 pub/sub 模式，可以非常简答的在 RQAlpha 中添加 hook。
+- 增加 Mod 机制，极大的增加了 RQAlpha 的扩展性，使其可以轻松完成程序化交易过程中所产生的的特定需求。
 
 0.0.53
 ==================
 
 - 完善了回测结果显示
-- 修正了Risk计算和Benchmark计算
+- 修正了 Risk 计算和 Benchmark 计算
 
 
 0.0.20
@@ -65,7 +65,7 @@ History
 0.0.19
 ==================
 
-- 在handle_bar前用当前的数据更新portfolio和position，因为ricequant.com是这样做的。
+- 在 :code:`handle_bar` 前用当前的数据更新 portfolio 和 position，因为 ricequant.com 是这样做的。
 
 0.0.18
 ==================
@@ -75,35 +75,35 @@ History
 0.0.16
 ==================
 
-- 用户可以通过context设置slippage/commission/benchmark
-- 增加了scheduler
+- 用户可以通过 context 设置 slippage/commission/benchmark
+- 增加了 scheduler
 
 0.0.15
 ==================
 
-- 修复history在before_trading调用
-- 增加api的phase检查
+- 修复 history 在 before_trading 调用
+- 增加 api 的 phase 检查
 
 0.0.14
 ==================
 
-- 修改支持python2
+- 修改支持 python2
 
 0.0.12
 ==================
 
-- 修正了Risk计算，使用合理的年化收益计算方法
-- 格式化代码符合pep8
-- 更新requirements.txt
+- 修正了 Risk 计算，使用合理的年化收益计算方法
+- 格式化代码符合 pep8
+- 更新 requirements.txt
 
 
 0.0.9
 ==================
 
 - 增加了数据下载
-- 修正了Risk计算
-- 增加了instrument
-- 增加了position的`market_value`和`value_percent`
+- 修正了 Risk 计算
+- 增加了 instrument
+- 增加了 position 的 :code:`market_value` 和 :code:`value_percent`
 
 
 0.0.2
@@ -125,4 +125,4 @@ History
 0.0.1
 ==================
 
-- 搭建基本的框架，增加基本的unittest
+- 搭建基本的框架，增加基本的 unittest

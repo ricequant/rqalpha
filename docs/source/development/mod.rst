@@ -51,7 +51,7 @@ Hello World
 
 扩展 RQAlpha API
 ================
-如果你想为 RQAlpha 创建自己的 API，你也可以通过 Mod 来注册新的 API。在内建的 mod 中，有一个 FuncatAPIMod ，其中扩展了 RQAlpha 的 API。
+如果你想为 RQAlpha 创建自己的 API，你也可以通过 Mod 来注册新的 API。在内建的 mod 中，有一个 FuncatAPIMod ，将通达信、同花顺的公式表达能力移植到 Python 中，扩展了 RQAlpha 的 API。
 
 其中的关键点，是通过了 :code:`register_api` 来注册 API。
 
