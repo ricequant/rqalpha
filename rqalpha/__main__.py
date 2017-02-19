@@ -72,6 +72,7 @@ def update_bundle(data_bundle_path):
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
+@click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
 @click.help_option('-h', '--help')
 def run(**kwargs):
     if kwargs.get('base__run_type') == 'p':

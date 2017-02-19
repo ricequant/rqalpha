@@ -28,6 +28,7 @@ from .logger import user_log, system_log, std_log, user_std_handler
 from ..const import ACCOUNT_TYPE, MATCHING_TYPE, RUN_TYPE, PERSIST_MODE
 from ..utils.i18n import gettext as _
 from ..utils.dict_func import deep_update
+from ..mod.utils import mod_config_value_parse
 
 
 def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):
@@ -41,6 +42,11 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
 
     with codecs.open(config_path, encoding="utf-8") as f:
         config_file = f.read()
+
+    mod_configs = config_args.pop("mod_configs")
+    for cfg, value in mod_configs:
+        key = "mod__{}".format(cfg.replace(".", "__"))
+        config_args[key] = mod_config_value_parse(value)
 
     config = yaml.load(config_file)
     if click_type:
