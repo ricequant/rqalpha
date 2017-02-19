@@ -84,7 +84,7 @@ mod:
   # 技术分析API
   funcat_api:
     lib: 'rqalpha.mod.funcat_api'
-    enabled: true
+    enabled: false
     priority: 100
   # 开启该选项，可以在命令行查看回测进度
   progress:
@@ -94,7 +94,7 @@ mod:
   # 接受实时行情运行
   simple_stock_realtime_trade:
     lib: 'rqalpha.mod.simple_stock_realtime_trade'
-    persist_path: "./persist"
+    persist_path: "./persist/strategy/"
     fps: 3
     enabled: false
     priority: 500

@@ -1,3 +1,4 @@
+# rqalpha run -f rqalpha/examples/golden_cross_new_api.py -sc 100000 -p -bm 000001.XSHE -mc funcat_api.enabled True
 from rqalpha.api import *
 
 

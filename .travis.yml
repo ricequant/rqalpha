@@ -30,6 +30,7 @@ install:
   - pip install TA-Lib
   - pip install coveralls
   - pip install -U setuptools
+  - pip install funcat
   - pip install .
 script:
   - ls $HOME/.rqalpha/bundle/
