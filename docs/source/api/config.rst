@@ -223,7 +223,7 @@ N/A           `- -` config                    设置配置文件路径
           "start_date": "2016-06-01",
           "end_date": "2016-12-01",
           "stock_starting_cash": 100000,
-          "benchmakr": "000300.XSHG",
+          "benchmark": "000300.XSHG",
       },
       "extra": {
           "log_level": "verbose",

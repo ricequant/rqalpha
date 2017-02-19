@@ -43,7 +43,7 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     with codecs.open(config_path, encoding="utf-8") as f:
         config_file = f.read()
 
-    mod_configs = config_args.pop("mod_configs")
+    mod_configs = config_args.pop("mod_configs", [])
     for cfg, value in mod_configs:
         key = "mod__{}".format(cfg.replace(".", "__"))
         config_args[key] = mod_config_value_parse(value)
