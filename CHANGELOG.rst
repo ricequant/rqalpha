@@ -1,3 +1,11 @@
+0.3.7
+==================
+
+- 增加 :code:`-mc` / :code:`--mod-config` 参数来传递参数到 mod 中
+- 增加了 simple_stock_realtime_trade, progressive_output_csv，funcat_api 几个 DEMO mod 供开发者参考开发自己的 mod
+- :code:`update_bundle` 移到 :code:`main.py` 中，方便直接从代码中调用 :code:`update_bundle`
+- 增加了一些自动化的测试用例
+
 0.3.6
 ==================
 
