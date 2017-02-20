@@ -1,4 +1,4 @@
-# rqalpha run -f rqalpha/examples/technical_analysis/ama.py -sc 100000 -p -bm 000300.XSHG -mc funcat_api.enabled True
+# rqalpha run -f rqalpha/examples/technical_analysis/dma.py -sc 100000 -p -bm 000300.XSHG -mc funcat_api.enabled True
 from rqalpha.api import *
 
 
@@ -8,7 +8,7 @@ def init(context):
 
 
 def handle_bar(context, bar_dict):
-    # 自己实现 AMA 指标
+    # 自己实现 DMA指标（Different of Moving Average）
     M1 = 5
     M2 = 89
     M3 = 36
