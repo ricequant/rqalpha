@@ -47,8 +47,8 @@ class BaseAccount(Persistable):
         persist_dict = json_utils.convert_json_to_dict(state.decode('utf-8'))
         self.portfolio.restore_from_dict_(persist_dict['portfolio'])
 
+        del self.daily_trades[:]
         self.daily_orders.clear()
-        self.daily_trades.clear()
 
         for order_id, order_dict in six.iteritems(persist_dict["daily_orders"]):
             self.daily_orders[order_id] = Order.__from_dict__(order_dict)

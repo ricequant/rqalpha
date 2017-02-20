@@ -64,7 +64,7 @@ class RealtimeEventSource(AbstractEventSource):
 
                 try:
                     self._env.data_source.realtime_quotes_df = get_realtime_quotes(code_list)
-                except OSError as e:
+                except Exception as e:
                     system_log.exception("get_realtime_quotes fail")
                     continue
 
@@ -73,7 +73,7 @@ class RealtimeEventSource(AbstractEventSource):
     def clock_worker(self):
         while True:
             # wait for the first data ready
-            if self._env.data_source.realtime_quotes_df.empty:
+            if not self._env.data_source.realtime_quotes_df.empty:
                 break
             time.sleep(0.1)
 

@@ -1,4 +1,4 @@
-# rqalpha run -f rqalpha/examples/golden_cross_new_api.py -sc 100000 -p -bm 000001.XSHE -mc funcat_api.enabled True
+# rqalpha run -f rqalpha/examples/technical_analysis/golden_cross.py -sc 100000 -p -bm 000001.XSHE -mc funcat_api.enabled True
 from rqalpha.api import *
 
 
@@ -26,11 +26,11 @@ def handle_bar(context, bar_dict):
     cur_position = context.portfolio.positions[context.s1].quantity
 
     # 如果短均线从上往下跌破长均线，也就是在目前的bar短线平均值低于长线平均值，而上一个bar的短线平均值高于长线平均值
-    if short_ma < long_ma and short_ma[1] > long_ma[1] and cur_position > 0:
+    if cross(long_ma, short_ma) and cur_position > 0:
         # 进行清仓
-        order_target_value(context.s1, 0)
+        order_target_percent(context.s1, 0)
 
     # 如果短均线从下往上突破长均线，为入场信号
-    if short_ma > long_ma and short_ma[1] < long_ma[1]:
+    if cross(short_ma, long_ma):
         # 满仓入股
         order_target_percent(context.s1, 1)

@@ -9,7 +9,7 @@ base:
   # 启动的策略文件路径
   strategy_file: strategy.py
   # 回测起始日期
-  start_date: 2016-06-01
+  start_date: 2015-06-01
   # 回测结束日期(如果是实盘，则忽略该配置)
   end_date: 2050-01-01
   # 股票起始资金，默认为0

@@ -22,7 +22,10 @@ from ..interface import AbstractPersistProvider
 class DiskPersistProvider(AbstractPersistProvider):
     def __init__(self, path="./persist"):
         self._path = path
-        os.makedirs(self._path, exist_ok=True)
+        try:
+            os.makedirs(self._path)
+        except:
+            pass
 
     def store(self, key, value):
         assert isinstance(value, bytes), "value must be bytes"

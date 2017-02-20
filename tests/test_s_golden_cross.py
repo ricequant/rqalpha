@@ -1,4 +1,4 @@
-# rqalpha run -f rqalpha/examples/golden_cross_new_api.py -sc 100000 -p -bm 000001.XSHE -mc funcat_api.enabled True
+# rqalpha run -f rqalpha/examples/technical_analysis/golden_cross.py -sc 100000 -p -bm 000001.XSHE -mc funcat_api.enabled True
 from rqalpha.api import *
 
 
@@ -9,8 +9,7 @@ def init(context):
     # S 为 set_current_stock 的简写。等价于 set_current_stock(context.s1)
     S(context.s1)
 
-    # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，
-    # 我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
+    # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
     context.SHORTPERIOD = 20
     context.LONGPERIOD = 120
 
@@ -27,12 +26,12 @@ def handle_bar(context, bar_dict):
     cur_position = context.portfolio.positions[context.s1].quantity
 
     # 如果短均线从上往下跌破长均线，也就是在目前的bar短线平均值低于长线平均值，而上一个bar的短线平均值高于长线平均值
-    if short_ma < long_ma and short_ma[1] > long_ma[1] and cur_position > 0:
+    if cross(long_ma, short_ma) and cur_position > 0:
         # 进行清仓
-        order_target_value(context.s1, 0)
+        order_target_percent(context.s1, 0)
 
     # 如果短均线从下往上突破长均线，为入场信号
-    if short_ma > long_ma and short_ma[1] < long_ma[1]:
+    if cross(short_ma, long_ma):
         # 满仓入股
         order_target_percent(context.s1, 1)
 
@@ -41,7 +40,7 @@ __config__ = {
     "base": {
         "strategy_type": "stock",
         "start_date": "2008-07-01",
-        "end_date": "2014-09-01",
+        "end_date": "2017-01-01",
         "frequency": "1d",
         "matching_type": "current_bar",
         "stock_starting_cash": 100000,
