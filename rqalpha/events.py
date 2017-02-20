@@ -51,7 +51,7 @@ class Events(Enum):
     ORDER_CREATION_REJECT = 'order_creation_reject'
     ORDER_CANCELLATION_PASS = 'order_cancellation_pass'
     ORDER_CANCELLATION_REJECT = 'order_cancellation_reject'
-    ORDER__UNSOLICITED_UPDATE = 'order_unsolicited_update'
+    ORDER_UNSOLICITED_UPDATE = 'order_unsolicited_update'
 
     TRADE = 'trade'
 
