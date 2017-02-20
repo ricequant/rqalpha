@@ -40,4 +40,4 @@ line-profiler>=2.0
 fastcache>=1.0.2
 
 # This requires TA-Lib will cause read the docs build fail
-# funcat>=0.0.13
+# funcat>=0.0.14

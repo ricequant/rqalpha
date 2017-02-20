@@ -9,7 +9,8 @@ def init(context):
     # S 为 set_current_stock 的简写。等价于 set_current_stock(context.s1)
     S(context.s1)
 
-    # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
+    # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，
+    # 我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
     context.SHORTPERIOD = 20
     context.LONGPERIOD = 120
 
@@ -34,3 +35,29 @@ def handle_bar(context, bar_dict):
     if short_ma > long_ma and short_ma[1] < long_ma[1]:
         # 满仓入股
         order_target_percent(context.s1, 1)
+
+
+__config__ = {
+    "base": {
+        "strategy_type": "stock",
+        "start_date": "2008-07-01",
+        "end_date": "2014-09-01",
+        "frequency": "1d",
+        "matching_type": "current_bar",
+        "stock_starting_cash": 100000,
+        "benchmark": "000001.XSHE",
+        "slippage": 0.00123,
+    },
+    "extra": {
+        "log_level": "error",
+    },
+    "mod": {
+        "progress": {
+            "enabled": True,
+            "priority": 400,
+        },
+        "funcat_api": {
+            "enabled": True,
+        }
+    },
+}
