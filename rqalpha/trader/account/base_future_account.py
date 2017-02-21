@@ -16,9 +16,13 @@
 
 
 from .base_account import BaseAccount
+from ...const import ACCOUNT_TYPE
 
 
 class BaseFutureAccount(BaseAccount):
+    def __init__(self, config, init_cash, start_date):
+        super(BaseFutureAccount, self).__init__(config, init_cash, start_date, ACCOUNT_TYPE.FUTURE)
+
     @property
     def margin_decider(self):
         raise NotImplementedError
