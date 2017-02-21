@@ -214,8 +214,9 @@ class AnalyserMod(AbstractMod):
 
         self._result = result_dict
 
-        with open(self._mod_config.output_file, 'wb') as f:
-            pickle.dump(result_dict, f)
+        if self._mod_config.output_file:
+            with open(self._mod_config.output_file, 'wb') as f:
+                pickle.dump(result_dict, f)
 
         if self._mod_config.plot:
             from rqalpha.plot import plot_result
