@@ -104,3 +104,11 @@ mod:
     enabled: false
     output_path: "./"
     priority: 600
+  analyser:
+    priority: 100
+    enabled: true
+    lib: 'rqalpha.mod.analyser'
+    output_file: ~
+    plot: ~
+    plot_save_file: ~
+    report_save_path: ~

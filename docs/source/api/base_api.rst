@@ -900,7 +900,6 @@ ORDER_STATUS - 订单状态
 
     ..  py:attribute:: CANCELLED
 
-
         已撤
 
     ..  py:attribute:: REJECTED

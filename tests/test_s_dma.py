@@ -50,6 +50,9 @@ __config__ = {
         },
         "funcat_api": {
             "enabled": True,
-        }
+        },
+        "analyser": {
+            "output_file": '.tmp.pkl',
+        },
     },
 }
