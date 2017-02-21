@@ -17,7 +17,7 @@
 import six
 import pandas as pd
 
-from rqalpha.trader.account.base_account import BaseAccount
+from rqalpha.trader.account.base_stock_account import BaseStockAccount
 from rqalpha.model.dividend import Dividend
 from rqalpha.const import SIDE, ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
@@ -25,7 +25,7 @@ from rqalpha.utils.logger import user_log, system_log
 from rqalpha.execution_context import ExecutionContext
 
 
-class StockAccount(BaseAccount):
+class StockAccount(BaseStockAccount):
     def __init__(self, config, init_cash, start_date):
         super(StockAccount, self).__init__(config, init_cash, start_date, ACCOUNT_TYPE.STOCK)
 
