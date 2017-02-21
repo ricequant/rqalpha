@@ -184,7 +184,6 @@ def run(config, source_code=None):
 
         _validate_benchmark(env.config, env.data_proxy)
 
-        env.event_bus.publish_event(Events.CREATE_BROKER)
         broker = env.broker
         assert broker is not None
         env.accounts = accounts = broker.get_accounts()

@@ -24,14 +24,9 @@ from .simulation_event_source import SimulationEventSource
 class SimulationMod(AbstractMod):
     def start_up(self, env, mod_config):
         self._env = env
-        env.event_bus.add_listener(Events.CREATE_BROKER, self.on_broker_create)
-
-    def on_broker_create(self, *args, **kwargs):
-        env = self._env
-
         self._env.set_broker(SimulationBroker(self._env))
 
-        event_source = SimulationEventSource(env.data_proxy, env.config.base.account_list)
+        event_source = SimulationEventSource(env, env.config.base.account_list)
         env.set_event_source(event_source)
 
     def tear_down(self, code, exception=None):

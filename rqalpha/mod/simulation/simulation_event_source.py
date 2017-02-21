@@ -28,8 +28,8 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 
 class SimulationEventSource(AbstractEventSource):
-    def __init__(self, data_proxy, account_list):
-        self._data_proxy = data_proxy
+    def __init__(self, env, account_list):
+        self._env = env
         self._account_list = account_list
         self._universe_changed = False
         Environment.get_instance().event_bus.add_listener(Events.POST_UNIVERSE_CHANGED, self._on_universe_changed)
@@ -69,7 +69,7 @@ class SimulationEventSource(AbstractEventSource):
         for order_book_id in universe:
             if get_account_type(order_book_id) == ACCOUNT_TYPE.STOCK:
                 continue
-            trading_minutes.update(self._data_proxy.get_trading_minutes_for(order_book_id, trading_date))
+            trading_minutes.update(self._env.data_proxy.get_trading_minutes_for(order_book_id, trading_date))
         return set([convert_int_to_datetime(minute) for minute in trading_minutes])
 
     def _get_trading_minutes(self, trading_date):
@@ -83,7 +83,7 @@ class SimulationEventSource(AbstractEventSource):
 
     def events(self, start_date, end_date, frequency):
         if frequency == "1d":
-            for day in self._data_proxy.get_trading_dates(start_date, end_date):
+            for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 date = day.to_pydatetime()
                 dt_before_trading = date.replace(hour=0, minute=0)
                 dt_bar = date.replace(hour=15, minute=0)
@@ -95,7 +95,7 @@ class SimulationEventSource(AbstractEventSource):
                 yield dt_after_trading, dt_after_trading, Events.AFTER_TRADING
                 yield dt_settlement, dt_settlement, Events.SETTLEMENT
         else:
-            for day in self._data_proxy.get_trading_dates(start_date, end_date):
+            for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
                 date = day.to_pydatetime()
                 last_dt = None
