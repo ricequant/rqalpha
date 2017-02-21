@@ -28,23 +28,24 @@ from .stock_account import StockAccount
 from .future_account import FutureAccount
 
 
-def init_accounts(config):
+def init_accounts(env):
     accounts = {}
+    config = env.config
     start_date = config.base.start_date
     total_cash = 0
     for account_type in config.base.account_list:
         if account_type == ACCOUNT_TYPE.STOCK:
             stock_starting_cash = config.base.stock_starting_cash
-            accounts[ACCOUNT_TYPE.STOCK] = StockAccount(config, stock_starting_cash, start_date)
+            accounts[ACCOUNT_TYPE.STOCK] = StockAccount(env, stock_starting_cash, start_date)
             total_cash += stock_starting_cash
         elif account_type == ACCOUNT_TYPE.FUTURE:
             future_starting_cash = config.base.future_starting_cash
-            accounts[ACCOUNT_TYPE.FUTURE] = FutureAccount(config, future_starting_cash, start_date)
+            accounts[ACCOUNT_TYPE.FUTURE] = FutureAccount(env, future_starting_cash, start_date)
             total_cash += future_starting_cash
         else:
             raise NotImplementedError
     if config.base.benchmark is not None:
-        accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(config, total_cash, start_date)
+        accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(env, total_cash, start_date)
 
     return accounts
 
@@ -66,9 +67,18 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._delayed_orders = []
         self._frontend_validator = {}
 
+        # 该事件会触发策略的before_trading函数
+        self._env.event_bus.add_listener(Events.BEFORE_TRADING, self.before_trading)
+        # 该事件会触发策略的handle_bar函数
+        self._env.event_bus.add_listener(Events.BAR, self.bar)
+        # 该事件会触发策略的handel_tick函数
+        self._env.event_bus.add_listener(Events.TICK, self.tick)
+        # 该事件会触发策略的after_trading函数
+        self._env.event_bus.add_listener(Events.AFTER_TRADING, self.after_trading)
+
     def get_accounts(self):
         if self._accounts is None:
-            self._accounts = init_accounts(self._env.config)
+            self._accounts = init_accounts(self._env)
         return self._accounts
 
     def get_open_orders(self):
@@ -100,7 +110,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         if order._is_final():
             return
 
-        account.on_order_creating(order)
+        # account.on_order_creating(order)
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
@@ -113,9 +123,15 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def cancel_order(self, order):
         account = self._get_account_for(order.order_book_id)
-        account.on_order_cancelling(order)
+
+        self._env.event_bus.publish_event(Events.ORDER_PENDING_CANCEL, account, order)
+
+        # account.on_order_cancelling(order)
         order._mark_cancelled(_("{order_id} order has been cancelled by user.").format(order_id=order.order_id))
-        account.on_order_cancellation_pass(order)
+
+        self._env.event_bus.publish_event(Events.ORDER_CANCELLATION_PASS, account, order)
+
+        # account.on_order_cancellation_pass(order)
         try:
             self._open_orders.remove((account, order))
         except ValueError:
@@ -134,13 +150,16 @@ class SimulationBroker(AbstractBroker, Persistable):
             order._mark_rejected(_("Order Rejected: {order_book_id} can not match. Market close.").format(
                 order_book_id=order.order_book_id
             ))
-            account.on_unsolicited_order_update(order)
+            self._env.event_bus.publish_event(Events.ORDER_UNSOLICITED_UPDATE, account, order)
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
 
-    def update(self, calendar_dt, trading_dt, bar_dict):
+    def bar(self, bar_dict, calendar_dt, trading_dt):
         self._matcher.update(calendar_dt, trading_dt, bar_dict)
         self._match()
+
+    def tick(self):
+        pass
 
     def _match(self):
         self._matcher.match(self._open_orders)
@@ -149,6 +168,6 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         for account, order in final_orders:
             if order.status == ORDER_STATUS.REJECTED:
-                account.on_unsolicited_order_update(order)
+                self._env.event_bus.publish_event(Events.ORDER_UNSOLICITED_UPDATE, account, order)
             elif order.status == ORDER_STATUS.CANCELLED:
-                account.on_order_cancellation_pass(order)
+                self._env.event_bus.publish_event(Events.ORDER_CANCELLATION_PASS, account, order)

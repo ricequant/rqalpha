@@ -17,7 +17,6 @@
 import six
 from collections import OrderedDict
 
-from ...environment import Environment
 from ...execution_context import ExecutionContext
 from ...interface import Persistable
 from ...model.portfolio import init_portfolio
@@ -26,22 +25,52 @@ from ...model.tax import init_tax
 from ...utils import json as json_utils
 from ...model.trade import Trade
 from ...model.order import Order
+from ...events import Events
 
 
 class BaseAccount(Persistable):
-    def __init__(self, config, init_cash, start_date, account_type):
+    def __init__(self, env, init_cash, start_date, account_type):
         self._account_type = account_type
-        self.config = config
+        self._env = env
+        self.config = env.config
 
         self.portfolio = init_portfolio(init_cash, start_date, account_type)
-        self.slippage_decider = init_slippage(config.base.slippage)
-        commission_initializer = Environment.get_instance()._commission_initializer
-        self.commission_decider = commission_initializer(self._account_type, config.base.commission_multiplier)
+        self.slippage_decider = init_slippage(env.config.base.slippage)
+        commission_initializer = env._commission_initializer
+        self.commission_decider = commission_initializer(self._account_type, env.config.base.commission_multiplier)
         self.tax_decider = init_tax(self._account_type)
 
         self.all_portfolios = OrderedDict()
         self.daily_orders = {}
         self.daily_trades = []
+
+        # 该事件会触发策略的before_trading函数
+        self._env.event_bus.add_listener(Events.BEFORE_TRADING, self.before_trading)
+        # 该事件会触发策略的handle_bar函数
+        self._env.event_bus.add_listener(Events.BAR, self.bar)
+        # 该事件会触发策略的handel_tick函数
+        self._env.event_bus.add_listener(Events.TICK, self.tick)
+        # 该事件会触发策略的after_trading函数
+        self._env.event_bus.add_listener(Events.AFTER_TRADING, self.after_trading)
+        # 触发结算事件
+        self._env.event_bus.add_listener(Events.SETTLEMENT, self.settlement)
+
+        # 创建订单
+        self._env.event_bus.add_listener(Events.ORDER_PENDING_NEW, self.order_pending_new)
+        # 创建订单成功
+        self._env.event_bus.add_listener(Events.ORDER_CREATION_PASS, self.order_creation_pass)
+        # 创建订单失败
+        self._env.event_bus.add_listener(Events.ORDER_CREATION_REJECT, self.order_creation_reject)
+        # 创建撤单
+        self._env.event_bus.add_listener(Events.ORDER_PENDING_CANCEL, self.order_pending_cancel)
+        # 撤销订单成功
+        self._env.event_bus.add_listener(Events.ORDER_CANCELLATION_PASS, self.order_cancellation_pass)
+        # 撤销订单失败
+        self._env.event_bus.add_listener(Events.ORDER_CANCELLATION_REJECT, self.order_cancellation_reject)
+        # 订单状态更新
+        self._env.event_bus.add_listener(Events.ORDER_UNSOLICITED_UPDATE, self.order_unsolicited_update)
+        # 成交
+        self._env.event_bus.add_listener(Events.TRADE, self.trade)
 
     def set_state(self, state):
         persist_dict = json_utils.convert_json_to_dict(state.decode('utf-8'))
@@ -96,35 +125,38 @@ class BaseAccount(Persistable):
         self.daily_orders = open_orders
         self.daily_trades = []
 
+    def bar(self, bar_dict, calendar_dt, trading_dt):
+        pass
+
+    def tick(self):
+        pass
+
     def after_trading(self):
         pass
 
     def settlement(self):
         pass
 
-    def on_bar(self, bar_dict):
+    def order_pending_new(self, account, order):
         pass
 
-    def on_order_creating(self, order):
+    def order_creation_pass(self, account, order):
         pass
 
-    def on_order_creation_pass(self, order):
+    def order_creation_reject(self, account, order):
         pass
 
-    def on_order_creation_reject(self, order):
+    def order_pending_cancel(self, account, order):
         pass
 
-    def on_order_cancelling(self, order):
+    def order_cancellation_pass(self, account, order):
         pass
 
-    def on_order_cancellation_pass(self, order):
+    def order_cancellation_reject(self, account, order):
         pass
 
-    def on_order_cancellation_reject(self, order):
+    def order_unsolicited_update(self, account, order):
         pass
 
-    def on_order_trade(self, trade, bar_dict):
-        pass
-
-    def on_unsolicited_order_update(self, order):
+    def trade(self, account, trade):
         pass

@@ -32,7 +32,7 @@ class RiskManagerMod(AbstractMod):
     def start_up(self, env, mod_config):
         self._env = env
         self.mod_config = mod_config
-        self._env.event_bus.add_listener(Events.ORDER_PENDING_NEW, self._frontend_validate)
+        self._env.event_bus.prepend_listener(Events.ORDER_PENDING_NEW, self._frontend_validate)
 
     def tear_down(self, code, exception=None):
         pass

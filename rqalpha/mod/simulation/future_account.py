@@ -25,9 +25,9 @@ from rqalpha.model.margin import Margin
 
 
 class FutureAccount(BaseFutureAccount):
-    def __init__(self, config, init_cash, start_date):
-        super(FutureAccount, self).__init__(config, init_cash, start_date)
-        self._margin_decider = Margin(config.base.margin_multiplier)
+    def __init__(self, env, init_cash, start_date):
+        super(FutureAccount, self).__init__(env, init_cash, start_date)
+        self._margin_decider = Margin(env.config.base.margin_multiplier)
 
     @property
     def margin_decider(self):
@@ -83,7 +83,7 @@ class FutureAccount(BaseFutureAccount):
 
         portfolio._daily_transaction_cost = 0
 
-    def on_bar(self, bar_dict):
+    def bar(self, bar_dict, calendar_dt, trading_dt):
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         positions = portfolio.positions
@@ -94,7 +94,11 @@ class FutureAccount(BaseFutureAccount):
                 position._last_price = bar.close
                 self._update_market_value(position, bar.close)
 
-    def on_order_creating(self, order):
+    def order_pending_new(self, account, order):
+        if self != account:
+            return
+        if order._is_final():
+            return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
         position._total_orders += 1
@@ -104,10 +108,12 @@ class FutureAccount(BaseFutureAccount):
         self._update_order_data(position, order, created_quantity, created_value)
         self._update_frozen_cash(order, frozen_margin)
 
-    def on_order_creation_pass(self, order):
+    def on_order_creation_pass(self, account, order):
         pass
 
-    def on_order_creation_reject(self, order):
+    def order_creation_reject(self, account, order):
+        if self != account:
+            return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
         cancel_quantity = order.unfilled_quantity
@@ -116,10 +122,12 @@ class FutureAccount(BaseFutureAccount):
         self._update_order_data(position, order, -cancel_quantity, cancel_value)
         self._update_frozen_cash(order, frozen_margin)
 
-    def on_order_cancelling(self, order):
+    def order_pending_cancel(self, account, order):
         pass
 
-    def on_order_cancellation_pass(self, order):
+    def order_cancellation_pass(self, account, order):
+        if self != account:
+            return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
         canceled_quantity = order.unfilled_quantity
@@ -128,12 +136,15 @@ class FutureAccount(BaseFutureAccount):
         self._update_order_data(position, order, -canceled_quantity, canceled_value)
         self._update_frozen_cash(order, frozen_margin)
 
-    def on_order_cancellation_reject(self, order):
+    def order_cancellation_reject(self, account, order):
         pass
 
-    def on_order_trade(self, trade, bar_dict):
+    def trade(self, account, trade):
+        if self != account:
+            return
         order = trade.order
         order_book_id = order.order_book_id
+        bar_dict = ExecutionContext.get_current_bar_dict()
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         position = portfolio.positions[order_book_id]
@@ -164,7 +175,9 @@ class FutureAccount(BaseFutureAccount):
 
         self._update_market_value(position, bar_dict[order_book_id].close)
 
-    def on_unsolicited_order_update(self, order):
+    def order_unsolicited_update(self, account, order):
+        if self != account:
+            return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order.order_book_id]
         rejected_quantity = order.unfilled_quantity

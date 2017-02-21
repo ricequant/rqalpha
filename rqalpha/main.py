@@ -279,9 +279,6 @@ def run(config, source_code=None):
 
             if event == Events.BEFORE_TRADING:
                 env.event_bus.publish_event(Events.PRE_BEFORE_TRADING)
-                broker.before_trading()
-                for account in accounts.values():
-                    account.before_trading()
                 scheduler.next_day_(trading_dt)
                 env.event_bus.publish_event(Events.BEFORE_TRADING)
                 with ExecutionContext(const.EXECUTION_PHASE.BEFORE_TRADING):
@@ -289,11 +286,8 @@ def run(config, source_code=None):
                 env.event_bus.publish_event(Events.POST_BEFORE_TRADING)
             elif event == Events.BAR:
                 bar_dict.update_dt(calendar_dt)
-                broker.update(calendar_dt, trading_dt, bar_dict)
-                for account in accounts.values():
-                    account.on_bar(bar_dict)
                 env.event_bus.publish_event(Events.PRE_BAR)
-                env.event_bus.publish_event(Events.BAR, bar_dict)
+                env.event_bus.publish_event(Events.BAR, bar_dict, calendar_dt, trading_dt)
                 with ExecutionContext(const.EXECUTION_PHASE.SCHEDULED, bar_dict):
                     scheduler.next_bar_(ucontext, bar_dict)
                 env.event_bus.publish_event(Events.POST_BAR)
@@ -303,15 +297,10 @@ def run(config, source_code=None):
                 env.event_bus.publish_event(Events.POST_TICK)
             elif event == Events.AFTER_TRADING:
                 env.event_bus.publish_event(Events.PRE_AFTER_TRADING)
-                broker.after_trading()
-                for account in accounts.values():
-                    account.after_trading()
                 env.event_bus.publish_event(Events.AFTER_TRADING)
                 env.event_bus.publish_event(Events.POST_AFTER_TRADING)
             elif event == Events.SETTLEMENT:
                 env.event_bus.publish_event(Events.PRE_SETTLEMENT)
-                for account in accounts.values():
-                    account.settlement()
                 env.event_bus.publish_event(Events.SETTLEMENT)
                 env.event_bus.publish_event(Events.POST_SETTLEMENT)
             else:

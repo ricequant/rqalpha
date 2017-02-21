@@ -133,8 +133,7 @@ class DefaultMatcher(object):
             trade._tax = tax_decider.get_tax(trade)
             order._fill(trade)
             self._turnover[order.order_book_id] += fill
-            account.on_order_trade(trade, self._board)
-            # FIXME ugly here
+
             Environment.get_instance().event_bus.publish_event(Events.TRADE, account, trade)
 
             if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:

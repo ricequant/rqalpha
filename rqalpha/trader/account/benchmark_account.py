@@ -25,9 +25,9 @@ from ...const import ACCOUNT_TYPE
 
 
 class BenchmarkAccount(BaseAccount):
-    def __init__(self, config, init_cash, start_date):
-        super(BenchmarkAccount, self).__init__(config, init_cash, start_date, ACCOUNT_TYPE.BENCHMARK)
-        self.benchmark = config.base.benchmark
+    def __init__(self, env, init_cash, start_date):
+        super(BenchmarkAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.BENCHMARK)
+        self.benchmark = env.config.base.benchmark
 
     def before_trading(self):
         portfolio = self.portfolio
@@ -35,7 +35,7 @@ class BenchmarkAccount(BaseAccount):
         trading_date = ExecutionContext.get_current_trading_dt().date()
         self._handle_dividend_payable(trading_date)
 
-    def on_bar(self, bar_dict):
+    def bar(self, bar_dict, calendar_dt, trading_dt):
         price = bar_dict[self.config.base.benchmark].close
         if np.isnan(price):
             return

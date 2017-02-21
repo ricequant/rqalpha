@@ -26,8 +26,8 @@ from rqalpha.execution_context import ExecutionContext
 
 
 class StockAccount(BaseStockAccount):
-    def __init__(self, config, init_cash, start_date):
-        super(StockAccount, self).__init__(config, init_cash, start_date, ACCOUNT_TYPE.STOCK)
+    def __init__(self, env, init_cash, start_date):
+        super(StockAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.STOCK)
 
     def before_trading(self):
         super(StockAccount, self).before_trading()
@@ -81,7 +81,7 @@ class StockAccount(BaseStockAccount):
 
         self._handle_dividend_ex_dividend(trading_date)
 
-    def on_bar(self, bar_dict):
+    def bar(self, bar_dict, calendar_dt, trading_dt):
         portfolio = self.portfolio
         # invalidate cache
         portfolio._portfolio_value = None
@@ -93,7 +93,11 @@ class StockAccount(BaseStockAccount):
                 position._market_value = position._quantity * bar.close
                 position._last_price = bar.close
 
-    def on_order_creating(self, order):
+    def order_pending_new(self, account, order):
+        if self != account:
+            return
+        if order._is_final():
+            return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
         position._total_orders += 1
@@ -103,10 +107,12 @@ class StockAccount(BaseStockAccount):
         self._update_order_data(order, create_quantity, create_value)
         self._update_frozen_cash(order, create_value)
 
-    def on_order_creation_pass(self, order):
+    def order_creation_pass(self, account, order):
         pass
 
-    def on_order_creation_reject(self, order):
+    def order_creation_reject(self, account, order):
+        if self != account:
+            return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
         position._total_orders += 1
@@ -115,22 +121,27 @@ class StockAccount(BaseStockAccount):
         self._update_order_data(order, cancel_quantity, cancel_value)
         self._update_frozen_cash(order, -cancel_value)
 
-    def on_order_cancelling(self, order):
+    def order_pending_cancel(self, account, order):
         pass
 
-    def on_order_cancellation_pass(self, order):
+    def order_cancellation_pass(self, account, order):
+        if self != account:
+            return
         canceled_quantity = order.unfilled_quantity
         canceled_value = order._frozen_price * canceled_quantity
         self._update_order_data(order, -canceled_quantity, -canceled_value)
         self._update_frozen_cash(order, -canceled_value)
 
-    def on_order_cancellation_reject(self, order):
+    def order_cancellation_reject(self, account, order):
         pass
 
-    def on_order_trade(self, trade, bar_dict):
+    def trade(self, account, trade):
+        if self != account:
+            return
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         order = trade.order
+        bar_dict = ExecutionContext.get_current_bar_dict()
         order_book_id = order.order_book_id
         position = portfolio.positions[order.order_book_id]
         position._is_traded = True
@@ -161,7 +172,9 @@ class StockAccount(BaseStockAccount):
         else:
             portfolio._cash += trade_value
 
-    def on_unsolicited_order_update(self, order):
+    def order_unsolicited_update(self, account, order):
+        if self != account:
+            return
         rejected_quantity = order.unfilled_quantity
         rejected_value = order._frozen_price * rejected_quantity
         self._update_order_data(order, -rejected_quantity, -rejected_value)
