@@ -37,6 +37,7 @@ class Environment(object):
         self.user_log = user_log
         self.user_detail_log = user_detail_log
         self.event_bus = EventBus()
+        self._broker = None
         self.account = None
         self.accounts = None
         self.calendar_dt = None
@@ -104,6 +105,13 @@ class Environment(object):
     @property
     def event_source(self):
         return self._event_source
+
+    @property
+    def broker(self):
+        return self._broker
+
+    def set_broker(self, broker):
+        self._broker = broker
 
     @property
     def universe(self):

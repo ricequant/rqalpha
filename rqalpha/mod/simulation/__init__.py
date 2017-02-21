@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .benchmark_account import BenchmarkAccount
-from .mixed_account import MixedAccount
+from .mod import SimulationMod
 
 
+def load_mod():
+    return SimulationMod()

@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .benchmark_account import BenchmarkAccount
-from .mixed_account import MixedAccount
+
+from .base_account import BaseAccount
 
 
+class BaseStockAccount(BaseAccount):
+    pass

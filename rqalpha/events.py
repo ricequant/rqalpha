@@ -21,6 +21,8 @@ class Events(Enum):
     POST_SYSTEM_INIT = 'post_system_init'
     POST_USER_INIT = 'post_user_init'
 
+    CREATE_BROKER = "create_broker"
+
     POST_UNIVERSE_CHANGED = 'post_universe_changed'
 
     PRE_BEFORE_TRADING = 'pre_before_trading'

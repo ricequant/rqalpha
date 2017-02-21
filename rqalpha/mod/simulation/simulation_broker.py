@@ -16,17 +16,41 @@
 
 import jsonpickle
 
-from .default_matcher import DefaultMatcher
-from ..trader.account import init_accounts
-from ..interface import AbstractBroker, Persistable
-from ..utils import get_account_type
-from ..utils.i18n import gettext as _
-from ..events import Events
-from ..const import MATCHING_TYPE, ORDER_STATUS, ACCOUNT_TYPE
-from ..trader.frontend_validator import StockFrontendValidator, FutureFrontendValidator
+from rqalpha.core.default_matcher import DefaultMatcher
+from rqalpha.interface import AbstractBroker, Persistable
+from rqalpha.utils import get_account_type
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.events import Events
+from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, ACCOUNT_TYPE
+from rqalpha.trader.frontend_validator import StockFrontendValidator, FutureFrontendValidator
+from rqalpha.trader.account.benchmark_account import BenchmarkAccount
+from rqalpha.const import ACCOUNT_TYPE
+from .stock_account import StockAccount
+from .future_account import FutureAccount
 
 
-class DefaultBroker(AbstractBroker, Persistable):
+def init_accounts(config):
+    accounts = {}
+    start_date = config.base.start_date
+    total_cash = 0
+    for account_type in config.base.account_list:
+        if account_type == ACCOUNT_TYPE.STOCK:
+            stock_starting_cash = config.base.stock_starting_cash
+            accounts[ACCOUNT_TYPE.STOCK] = StockAccount(config, stock_starting_cash, start_date)
+            total_cash += stock_starting_cash
+        elif account_type == ACCOUNT_TYPE.FUTURE:
+            future_starting_cash = config.base.future_starting_cash
+            accounts[ACCOUNT_TYPE.FUTURE] = FutureAccount(config, future_starting_cash, start_date)
+            total_cash += future_starting_cash
+        else:
+            raise NotImplementedError
+    if config.base.benchmark is not None:
+        accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(config, total_cash, start_date)
+
+    return accounts
+
+
+class SimulationBroker(AbstractBroker, Persistable):
     def __init__(self, env):
         self._env = env
         if env.config.base.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:

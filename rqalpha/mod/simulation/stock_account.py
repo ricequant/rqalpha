@@ -17,12 +17,12 @@
 import six
 import pandas as pd
 
-from .base_account import BaseAccount
-from ...model.dividend import Dividend
-from ...const import SIDE, ACCOUNT_TYPE
-from ...utils.i18n import gettext as _
-from ...utils.logger import user_log, system_log
-from ...execution_context import ExecutionContext
+from rqalpha.trader.account.base_account import BaseAccount
+from rqalpha.model.dividend import Dividend
+from rqalpha.const import SIDE, ACCOUNT_TYPE
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_log, system_log
+from rqalpha.execution_context import ExecutionContext
 
 
 class StockAccount(BaseAccount):

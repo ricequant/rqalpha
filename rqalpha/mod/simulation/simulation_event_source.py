@@ -16,18 +16,18 @@
 
 import datetime
 
-from ..interface import AbstractEventSource
-from ..events import Events
-from ..environment import Environment
-from ..utils import get_account_type
-from ..utils.exception import CustomException, CustomError, patch_user_exc
-from ..utils.datetime_func import convert_int_to_datetime
-from ..const import ACCOUNT_TYPE
+from rqalpha.interface import AbstractEventSource
+from rqalpha.events import Events
+from rqalpha.environment import Environment
+from rqalpha.utils import get_account_type
+from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
+from rqalpha.utils.datetime_func import convert_int_to_datetime
+from rqalpha.const import ACCOUNT_TYPE
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
 
-class DefaultEventSource(AbstractEventSource):
+class SimulationEventSource(AbstractEventSource):
     def __init__(self, data_proxy, account_list):
         self._data_proxy = data_proxy
         self._account_list = account_list

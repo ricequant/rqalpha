@@ -16,12 +16,12 @@
 
 import six
 
-from .base_account import BaseAccount
-from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
-from ...utils.i18n import gettext as _
-from ...utils.logger import user_log
-from ...execution_context import ExecutionContext
-from ...model.margin import Margin
+from rqalpha.trader.account.base_account import BaseAccount
+from rqalpha.const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_log
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.model.margin import Margin
 
 
 class FutureAccount(BaseAccount):
