@@ -19,9 +19,16 @@ import os
 import pickle
 import shutil
 import sys
+import six
+import sys
 import tarfile
 import tempfile
 
+import requests
+from datetime import datetime
+
+import pytz
+import shutil
 import click
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import pytz
@@ -53,8 +60,9 @@ from .utils.exception import CustomException, is_user_exc, patch_user_exc
 from .utils.i18n import gettext as _
 from .utils.logger import user_log, system_log, user_print, user_detail_log
 from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
-from .utils.result_aggregator import ResultAggregator
 from .utils.scheduler import Scheduler
+from .utils import scheduler as mod_scheduler
+
 
 jsonpickle_numpy.register_handlers()
 
@@ -224,10 +232,6 @@ def run(config, source_code=None):
         if env.config.extra.enable_profiler:
             enable_profiler(env, scope)
 
-        risk_cal = RiskCal()
-        risk_cal.init(config.base.trading_calendar, is_annualized=True, save_daily_risk=True)
-        result_aggregator = ResultAggregator(env, risk_cal)
-
         ucontext = StrategyContext()
         user_strategy = Strategy(env.event_bus, scope, ucontext)
 
@@ -306,14 +310,15 @@ def run(config, source_code=None):
             else:
                 raise RuntimeError('unknown event from event source: {}'.format(event))
 
-        strategy_name = os.path.basename(env.config.base.strategy_file).split(".")[0]
-        result_dict = result_aggregator.get_result_dict(strategy_name)
-
-        output_generated_results(env, result_dict)
+        if env.profile_deco:
+            output_profile_result(env)
 
         mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug("strategy run successfully, normal exit")
-        return result_dict
+
+        # FIXME
+        if 'analyser' in env.mod_dict:
+            return env.mod_dict['analyser']._result
     except CustomException as e:
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
@@ -356,78 +361,11 @@ def enable_profiler(env, scope):
                     setattr(obj, key, profile_deco(val))
 
 
-def output_generated_results(env, result_dict):
-    # output pickle file
-    if env.config.extra.output_file is not None:
-        pickle.dump(result_dict, open(env.config.extra.output_file, "wb"))
-
-    # plot
-    if env.config.extra.plot:
-        plot_result(result_dict, show_windows=env.config.extra.plot)
-
-    # save plot as image file
-    if env.config.extra.plot_save_file:
-        plot_result(result_dict, show_windows=False,
-                    savefile=env.config.extra.plot_save_file)
-
-    # generate report
-    if env.config.extra.report_save_path:
-        generate_report(result_dict, env.config.extra.report_save_path)
-
-    # output line profiler result
-    if env.profile_deco:  # config.extra.enable_profiler:
-        from six import StringIO
-        # profile_deco.dump_stats("{}.lprof".format(strategy_name))
-        stdout_trap = StringIO()
-        env.profile_deco.print_stats(stdout_trap)
-        profile_output = stdout_trap.getvalue()
-        profile_output = profile_output.rstrip()
-        print(profile_output)
-        env.event_bus.publish_event(Events.ON_LINE_PROFILER_RESULT, profile_output)
-
-
-def generate_report(result_dict, target_report_csv_path):
-    import pandas as pd
+def output_profile_result(env):
     from six import StringIO
-
-    output_path = os.path.join(target_report_csv_path, result_dict["summary"]["strategy_name"])
-    try:
-        os.mkdir(output_path)
-    except:
-        pass
-
-    xlsx_writer = pd.ExcelWriter(os.path.join(output_path, "report.xlsx"), engine='xlsxwriter')
-
-    # summary.csv
-    csv_txt = StringIO()
-    summary = result_dict["summary"]
-    csv_txt.write(u"\n".join(sorted("{},{}".format(key, value) for key, value in six.iteritems(summary))))
-    df = pd.DataFrame(data=[{"val": val} for val in summary.values()], index=summary.keys()).sort_index()
-    df.to_excel(xlsx_writer, sheet_name="summary")
-
-    with open(os.path.join(output_path, "summary.csv"), 'w') as csvfile:
-        csvfile.write(csv_txt.getvalue())
-
-    for name in ["total_portfolios", "stock_portfolios", "future_portfolios",
-                 "stock_positions", "future_positions", "trades"]:
-        try:
-            df = result_dict[name]
-        except KeyError:
-            continue
-
-        # replace all date in dataframe as string
-        if df.index.name == "date":
-            df = df.reset_index()
-            df["date"] = df["date"].apply(lambda x: x.strftime("%Y-%m-%d"))
-            df = df.set_index("date")
-
-        csv_txt = StringIO()
-        csv_txt.write(df.to_csv(encoding='utf-8'))
-
-        df.to_excel(xlsx_writer, sheet_name=name)
-
-        with open(os.path.join(output_path, "{}.csv".format(name)), 'w') as csvfile:
-            csvfile.write(csv_txt.getvalue())
-
-    # report.xls <--- 所有sheet的汇总
-    xlsx_writer.save()
+    stdout_trap = StringIO()
+    env.profile_deco.print_stats(stdout_trap)
+    profile_output = stdout_trap.getvalue()
+    profile_output = profile_output.rstrip()
+    print(profile_output)
+    env.event_bus.publish_event(Events.ON_LINE_PROFILER_RESULT, profile_output)

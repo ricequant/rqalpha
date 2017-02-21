@@ -24,7 +24,7 @@ def handle_bar(context, bar_dict):
     if DDD < AMA and cur_position > 0:
         order_target_percent(context.s1, 0)
 
-    if (HHV(MAX(O, H), 50) / LLV(MIN(O, H), 50) < 2
+    if (HHV(MAX(O, C), 50) / LLV(MIN(O, C), 50) < 2
         and cross(DDD, AMA) and cur_position == 0):
         order_target_percent(context.s1, 1)
 
@@ -50,6 +50,9 @@ __config__ = {
         },
         "funcat_api": {
             "enabled": True,
-        }
+        },
+        "analyser": {
+            "output_file": '.tmp.pkl',
+        },
     },
 }

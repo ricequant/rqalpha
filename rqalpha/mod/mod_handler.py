@@ -50,5 +50,5 @@ class ModHandler(object):
             self._mod_dict[mod_name].start_up(self._env, mod_config)
 
     def tear_down(self, *args):
-        for _, module in six.iteritems(self._mod_dict):
-            module.tear_down(*args)
+        for mod_name, _ in reversed(self._mod_list):
+            self._mod_dict[mod_name].tear_down(*args)

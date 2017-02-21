@@ -65,12 +65,16 @@ def update_bundle(data_bundle_path):
 @click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 @click.option('--risk-grid/--no-risk-grid', 'base__cal_risk_grid', default=True)
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error']))
-@click.option('-p', '--plot/--no-plot', 'extra__plot', default=None, help="plot result")
-@click.option('-o', '--output-file', 'extra__output_file', type=click.Path(writable=True), help="output result pickle file")
+@click.option('-p', '--plot/--no-plot', 'mod__analyser__plot', default=None, help="plot result")
+@click.option('--plot-save', 'mod__analyser__plot_save_file', default=None, help="save plot to file")
+@click.option('--report', 'mod__analyser__')
+@click.option('-o', '--output-file', 'mod__analyser__output_file', type=click.Path(writable=True),
+              help="output result pickle file")
 @click.option('--fast-match', 'validator__fast_match', is_flag=True)
 @click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
-@click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
+@click.option("--enable-profiler", "extra__enable_profiler", is_flag=True,
+              help="add line profiler to profile your strategy")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
 @click.help_option('-h', '--help')
@@ -138,9 +142,8 @@ def report(result_pickle_file_path, target_report_csv_path):
     import pandas as pd
     result_dict = pd.read_pickle(result_pickle_file_path)
 
-    from rqalpha import main
-
-    main.generate_report(result_dict, target_report_csv_path)
+    from rqalpha.utils.report import generate_report
+    generate_report(result_dict, target_report_csv_path)
 
 
 @cli.command()
