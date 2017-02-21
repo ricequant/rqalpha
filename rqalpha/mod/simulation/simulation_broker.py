@@ -21,8 +21,7 @@ from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils import get_account_type
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import Events
-from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, ACCOUNT_TYPE
-from rqalpha.trader.frontend_validator import StockFrontendValidator, FutureFrontendValidator
+from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.trader.account.benchmark_account import BenchmarkAccount
 from rqalpha.const import ACCOUNT_TYPE
 from .stock_account import StockAccount
@@ -92,26 +91,13 @@ class SimulationBroker(AbstractBroker, Persistable):
         account_type = get_account_type(order_book_id)
         return self._accounts[account_type]
 
-    def _get_frontend_validator_for(self, order_book_id):
-        account_type = get_account_type(order_book_id)
-        try:
-            return self._frontend_validator[account_type]
-        except KeyError:
-            if account_type == ACCOUNT_TYPE.STOCK:
-                validator = StockFrontendValidator(self._env.config)
-            elif account_type == ACCOUNT_TYPE.FUTURE:
-                validator = FutureFrontendValidator(self._env.config)
-            else:
-                raise RuntimeError('account type {} not supported yet'.format(account_type))
-            self._frontend_validator[account_type] = validator
-            return validator
-
     def submit_order(self, order):
         account = self._get_account_for(order.order_book_id)
-        frontend_validator = self._get_frontend_validator_for(order.order_book_id)
-        validate_result = frontend_validator.order_pipeline(account, order)
+
+        self._env.event_bus.publish_event(Events.ORDER_PENDING_NEW, account, order)
+
         account.append_order(order)
-        if not validate_result:
+        if order._is_final():
             return
 
         account.on_order_creating(order)

@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..const import SIDE, POSITION_EFFECT
-from ..utils.i18n import gettext as _
-from ..execution_context import ExecutionContext
+from ...const import SIDE, POSITION_EFFECT
+from ...utils.i18n import gettext as _
+from ...execution_context import ExecutionContext
 
 
 class FrontendValidator(object):
     def __init__(self, config):
-        self.config = config.validator
+        self.config = config
 
     def order_pipeline(self, account, order):
         order_book_id = order.order_book_id

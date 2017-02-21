@@ -61,24 +61,13 @@ extra:
   is_hold: false
 
 validator:
-  # fast_match: 快速撮合，开启后，不进行队列等待，直接撮合
-  fast_match: false
   # cash_return_by_stock_delisted: 开启该项，当持仓股票退市时，按照退市价格返还现金
   cash_return_by_stock_delisted: false
-  # on_matching: 事中风控，默认开启
-  on_matching: true
-  # limit_order: 对LimitOrder进行撮合验证，主要验证其价格是否合理，默认开启
-  limit_order: true
-  # volume: 对volume进行撮合验证，默认开启
-  volume: true
-  # available_cash: 查可用资金是否充足，默认开启
-  available_cash: true
-  # available_position: 检查可平仓位是否充足，默认开启
-  available_position: true
   # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
   close_amount: true
   # bar_limit: 在处于涨跌停时，无法买进/卖出，默认开启
   bar_limit: true
+
 
 mod:
   # 回测 / 模拟交易 支持 Mod
@@ -109,3 +98,12 @@ mod:
     enabled: false
     output_path: "./"
     priority: 600
+  risk_manager:
+    lib: 'rqalpha.mod.risk_manager'
+    enabled: true
+    priority: 700
+    # available_cash: 查可用资金是否充足，默认开启
+    available_cash: true
+    # available_position: 检查可平仓位是否充足，默认开启
+    available_position: true
+

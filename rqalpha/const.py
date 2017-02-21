@@ -68,6 +68,7 @@ ORDER_STATUS = CustomEnum("ORDER_STATUS", [
     "ACTIVE",
     "FILLED",
     "REJECTED",
+    "PENDING_CANCEL",
     "CANCELLED",
 ])
 
