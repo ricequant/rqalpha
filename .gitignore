@@ -20,3 +20,4 @@ persist/
 .coverage
 .tox
 rqalpha_test_coverage_report/
+.tmp.pkl
