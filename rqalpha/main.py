@@ -14,20 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
 import os
-import pickle
-import shutil
-import sys
-import six
 import sys
 import tarfile
 import tempfile
+import datetime
 
-import requests
-from datetime import datetime
-
-import pytz
 import shutil
 import click
 import jsonpickle.ext.numpy as jsonpickle_numpy
@@ -35,9 +27,7 @@ import pytz
 import requests
 import six
 
-from rqalpha.mod.simulation.simulation_event_source import SimulationEventSource
 from . import const
-from .analyser.risk_cal import RiskCal
 from .api import helper as api_helper
 from .core.default_strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader
 from .core.strategy import Strategy
@@ -50,12 +40,10 @@ from .execution_context import ExecutionContext
 from .interface import Persistable
 from .mod.mod_handler import ModHandler
 from .model.bar import BarMap
-from .plot import plot_result
 from .trader.account import MixedAccount
 from .trader.global_var import GlobalVars
 from .trader.strategy_context import StrategyContext
 from .utils import create_custom_exception, run_with_user_log_disabled
-from .utils import scheduler as mod_scheduler
 from .utils.exception import CustomException, is_user_exc, patch_user_exc
 from .utils.i18n import gettext as _
 from .utils.logger import user_log, system_log, user_print, user_detail_log
