@@ -88,6 +88,16 @@ class AnalyserMod(AbstractMod):
         data['date'] = date
         return data
 
+    def _to_portfolio_record2(self, date, portfolio):
+        data = {
+            k: self._safe_convert(v, 3) for k, v in six.iteritems(portfolio.__dict__)
+            if not k.startswith('_') and not k.endswith('_') and k not in {
+                "positions", "start_date", "starting_cash"
+            }
+            }
+        data['date'] = date
+        return data
+
     def _to_position_record(self, date, order_book_id, position):
         data = {
             k: self._safe_convert(v, 3) for k, v in six.iteritems(properties(position))
@@ -161,7 +171,7 @@ class AnalyserMod(AbstractMod):
             portfolios_list = portfolios_list_dict[account_type]
 
             for date, portfolio in six.iteritems(portfolio_order_dict):
-                portfolios_list.append(self._to_portfolio_record(date, portfolio))
+                portfolios_list.append(self._to_portfolio_record2(date, portfolio))
 
                 for order_book_id, position in six.iteritems(portfolio.positions):
                     positions_list.append(self._to_position_record(date, order_book_id, position))
@@ -198,7 +208,7 @@ class AnalyserMod(AbstractMod):
             result_dict["plots"] = df
 
         for account_type, account in six.iteritems(self._env.accounts):
-            account_name = account_type.name
+            account_name = account_type.name.lower()
             portfolios_list = portfolios_list_dict[account_type]
             df = pd.DataFrame(portfolios_list)
             df["date"] = pd.to_datetime(df["date"])
