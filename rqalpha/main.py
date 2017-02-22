@@ -157,11 +157,7 @@ def run(config, source_code=None):
     mod_handler = ModHandler()
 
     try:
-        if source_code is None:
-            env.set_strategy_loader(FileStrategyLoader())
-        else:
-            env.set_strategy_loader(SourceCodeStrategyLoader())
-
+        env.set_strategy_loader(FileStrategyLoader() if source_code is None else SourceCodeStrategyLoader())
         env.set_global_vars(GlobalVars())
         mod_handler.set_env(env)
         mod_handler.start_up()
@@ -213,10 +209,7 @@ def run(config, source_code=None):
         apis = api_helper.get_apis(config.base.account_list)
         scope.update(apis)
 
-        if source_code is None:
-            scope = env.strategy_loader.load(env.config.base.strategy_file, scope)
-        else:
-            scope = env.strategy_loader.load(source_code, scope)
+        scope = env.strategy_loader.load(env.config.base.strategy_file if source_code is None else source_code, scope)
 
         if env.config.extra.enable_profiler:
             enable_profiler(env, scope)
