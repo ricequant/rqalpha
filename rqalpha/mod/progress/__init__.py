@@ -17,7 +17,7 @@
 import click
 
 from rqalpha.interface import AbstractMod
-from rqalpha.events import Events
+from rqalpha.events import EVENT
 
 
 class ProgressMod(AbstractMod):
@@ -27,8 +27,8 @@ class ProgressMod(AbstractMod):
 
     def start_up(self, env, mod_config):
         self._env = env
-        env.event_bus.add_listener(Events.POST_AFTER_TRADING, self._tick)
-        env.event_bus.add_listener(Events.POST_SYSTEM_INIT, self._init)
+        env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._tick)
+        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._init)
 
     def _init(self):
         trading_length = len(self._env.config.base.trading_calendar)

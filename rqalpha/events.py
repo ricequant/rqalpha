@@ -15,9 +15,35 @@
 # limitations under the License.
 
 from enum import Enum
+from collections import defaultdict
 
 
-class Events(Enum):
+class Event(object):
+    def __init__(self, event_type, calendar_dt, trading_dt, data={}):
+        self.event_type = event_type
+        self.calendar_dt = calendar_dt
+        self.trading_dt = trading_dt
+        self.data = data
+
+
+class EventBus(object):
+    def __init__(self):
+        self._listeners = defaultdict(list)
+
+    def add_listener(self, event, listener):
+        self._listeners[event].append(listener)
+
+    def prepend_listener(self, event, listener):
+        self._listeners[event].insert(0, listener)
+
+    def publish_event(self, event, *args, **kwargs):
+        for l in self._listeners[event]:
+            # 如果返回 True ，那么消息不再传递下去
+            if l(*args, **kwargs):
+                break
+
+
+class EVENT(Enum):
     # 系统初始化后触发
     # post_system_init()
     POST_SYSTEM_INIT = 'post_system_init'
@@ -50,6 +76,8 @@ class Events(Enum):
 
     # 预定义事件，支持handle_tick后使用
     PRE_TICK = 'pre_tick'
+    # 该事件会触发策略的handle_tick函数
+    # tick(tick)
     TICK = 'tick'
     POST_TICK = 'post_tick'
 

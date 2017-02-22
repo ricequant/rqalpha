@@ -243,7 +243,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
     券商接口。
 
     RQAlpha 将产生的订单提交给此对象，此对象负责对订单进行撮合（不论是自行撮合还是委托给外部的真实交易所），
-    并通过 ``Events.ORDER_*`` 及 ``Events.TRADE`` 事件将撮合结果反馈进入 RQAlpha。
+    并通过 ``EVENT.ORDER_*`` 及 ``EVENT.TRADE`` 事件将撮合结果反馈进入 RQAlpha。
 
     在扩展模块中，可以通过调用 ``env.set_broker`` 来替换默认的 Broker。
     """
@@ -298,7 +298,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         """
         【Optional】
 
-        RQAlpha 会在 `Events.BEFORE_TRADING` 事件被触发前调用此接口。
+        RQAlpha 会在 `EVENT.BEFORE_TRADING` 事件被触发前调用此接口。
         """
         pass
 
@@ -306,7 +306,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         """
         【Optional】
 
-        RQAlpha 会在 `Events.AFTER_TRADING` 事件被触发前调用此接口。
+        RQAlpha 会在 `EVENT.AFTER_TRADING` 事件被触发前调用此接口。
         """
         pass
 
@@ -314,7 +314,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         """
         【Optional】
 
-        RQAlpha 会在 `Events.BAR` 事件被出发前调用此接口。
+        RQAlpha 会在 `EVENT.BAR` 事件被出发前调用此接口。
 
         Broker 根据自己的业务场景来选择是否实现，比如说自带撮合引擎的Broker，会通过 `update` 函数来触发撮合。
 

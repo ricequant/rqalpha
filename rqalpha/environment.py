@@ -15,8 +15,7 @@
 # limitations under the License.
 
 from .utils.logger import system_log, user_log, user_detail_log
-from .event_bus import EventBus
-from .events import Events
+from .events import EVENT, EventBus
 from .model.commission import init_commission
 
 
@@ -119,4 +118,4 @@ class Environment(object):
 
     def update_universe(self, universe):
         self._universe.update(universe)
-        self.event_bus.publish_event(Events.POST_UNIVERSE_CHANGED, universe)
+        self.event_bus.publish_event(EVENT.POST_UNIVERSE_CHANGED, universe)

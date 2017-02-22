@@ -20,7 +20,7 @@ from collections import OrderedDict
 
 import jsonpickle
 
-from ..events import Events
+from ..events import EVENT
 from .logger import system_log
 from ..const import PERSIST_MODE
 
@@ -53,10 +53,10 @@ class PersistHelper(object):
         self._last_state = {}
         self._persist_provider = persist_provider
         if persist_mode == PERSIST_MODE.REAL_TIME:
-            event_bus.add_listener(Events.POST_BEFORE_TRADING, self.persist)
-            event_bus.add_listener(Events.POST_AFTER_TRADING, self.persist)
-            event_bus.add_listener(Events.POST_BAR, self.persist)
-            event_bus.add_listener(Events.POST_SETTLEMENT, self.persist)
+            event_bus.add_listener(EVENT.POST_BEFORE_TRADING, self.persist)
+            event_bus.add_listener(EVENT.POST_AFTER_TRADING, self.persist)
+            event_bus.add_listener(EVENT.POST_BAR, self.persist)
+            event_bus.add_listener(EVENT.POST_SETTLEMENT, self.persist)
 
     def persist(self, *args, **kwargs):
         for key, obj in six.iteritems(self._objects):

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from rqalpha.interface import AbstractMod
-from rqalpha.events import Events
+from rqalpha.events import EVENT
 from rqalpha.utils import get_account_type
 from rqalpha.const import ACCOUNT_TYPE
 
@@ -32,7 +32,7 @@ class RiskManagerMod(AbstractMod):
     def start_up(self, env, mod_config):
         self._env = env
         self.mod_config = mod_config
-        self._env.event_bus.prepend_listener(Events.ORDER_PENDING_NEW, self._frontend_validate)
+        self._env.event_bus.prepend_listener(EVENT.ORDER_PENDING_NEW, self._frontend_validate)
 
     def tear_down(self, code, exception=None):
         pass

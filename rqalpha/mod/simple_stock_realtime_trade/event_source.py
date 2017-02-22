@@ -23,7 +23,7 @@ from six.moves.queue import Queue
 from rqalpha.interface import AbstractEventSource
 from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
-from rqalpha.events import Events
+from rqalpha.events import Event, EVENT
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.utils import json as json_utils
 from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
@@ -87,14 +87,14 @@ class RealtimeEventSource(AbstractEventSource):
             dt = datetime.datetime.now()
 
             if dt.strftime("%H:%M:%S") >= "08:30:00" and dt.date() > self.before_trading_fire_date:
-                self.event_queue.put((dt, Events.BEFORE_TRADING))
+                self.event_queue.put((dt, EVENT.BEFORE_TRADING))
                 self.before_trading_fire_date = dt.date()
             elif dt.strftime("%H:%M:%S") >= "15:10:00" and dt.date() > self.after_trading_fire_date:
-                self.event_queue.put((dt, Events.AFTER_TRADING))
+                self.event_queue.put((dt, EVENT.AFTER_TRADING))
                 self.after_trading_fire_date = dt.date()
 
             if is_tradetime_now():
-                self.event_queue.put((dt, Events.BAR))
+                self.event_queue.put((dt, EVENT.BAR))
 
     def events(self, start_date, end_date, frequency):
         running = True
@@ -104,7 +104,7 @@ class RealtimeEventSource(AbstractEventSource):
 
         while running:
             real_dt = datetime.datetime.now()
-            dt, event = self.event_queue.get()
+            dt, event_type = self.event_queue.get()
 
-            system_log.debug("real_dt {}, dt {}, event {}", real_dt, dt, event)
-            yield dt, dt, event
+            system_log.debug("real_dt {}, dt {}, event {}", real_dt, dt, event_type)
+            yield Event(event_type, real_dt, dt)

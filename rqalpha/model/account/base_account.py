@@ -25,7 +25,7 @@ from ..order import Order
 from ...execution_context import ExecutionContext
 from ...interface import Persistable
 from ...utils import json as json_utils
-from ...events import Events
+from ...events import EVENT
 
 
 class BaseAccount(Persistable):
@@ -45,32 +45,32 @@ class BaseAccount(Persistable):
         self.daily_trades = []
 
         # 该事件会触发策略的before_trading函数
-        self._env.event_bus.add_listener(Events.BEFORE_TRADING, self.before_trading)
+        self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
         # 该事件会触发策略的handle_bar函数
-        self._env.event_bus.add_listener(Events.BAR, self.bar)
+        self._env.event_bus.add_listener(EVENT.BAR, self.bar)
         # 该事件会触发策略的handel_tick函数
-        self._env.event_bus.add_listener(Events.TICK, self.tick)
+        self._env.event_bus.add_listener(EVENT.TICK, self.tick)
         # 该事件会触发策略的after_trading函数
-        self._env.event_bus.add_listener(Events.AFTER_TRADING, self.after_trading)
+        self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
         # 触发结算事件
-        self._env.event_bus.add_listener(Events.SETTLEMENT, self.settlement)
+        self._env.event_bus.add_listener(EVENT.SETTLEMENT, self.settlement)
 
         # 创建订单
-        self._env.event_bus.add_listener(Events.ORDER_PENDING_NEW, self.order_pending_new)
+        self._env.event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self.order_pending_new)
         # 创建订单成功
-        self._env.event_bus.add_listener(Events.ORDER_CREATION_PASS, self.order_creation_pass)
+        self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self.order_creation_pass)
         # 创建订单失败
-        self._env.event_bus.add_listener(Events.ORDER_CREATION_REJECT, self.order_creation_reject)
+        self._env.event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self.order_creation_reject)
         # 创建撤单
-        self._env.event_bus.add_listener(Events.ORDER_PENDING_CANCEL, self.order_pending_cancel)
+        self._env.event_bus.add_listener(EVENT.ORDER_PENDING_CANCEL, self.order_pending_cancel)
         # 撤销订单成功
-        self._env.event_bus.add_listener(Events.ORDER_CANCELLATION_PASS, self.order_cancellation_pass)
+        self._env.event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self.order_cancellation_pass)
         # 撤销订单失败
-        self._env.event_bus.add_listener(Events.ORDER_CANCELLATION_REJECT, self.order_cancellation_reject)
+        self._env.event_bus.add_listener(EVENT.ORDER_CANCELLATION_REJECT, self.order_cancellation_reject)
         # 订单状态更新
-        self._env.event_bus.add_listener(Events.ORDER_UNSOLICITED_UPDATE, self.order_unsolicited_update)
+        self._env.event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self.order_unsolicited_update)
         # 成交
-        self._env.event_bus.add_listener(Events.TRADE, self.trade)
+        self._env.event_bus.add_listener(EVENT.TRADE, self.trade)
 
     def set_state(self, state):
         persist_dict = json_utils.convert_json_to_dict(state.decode('utf-8'))
@@ -128,7 +128,7 @@ class BaseAccount(Persistable):
     def bar(self, bar_dict):
         pass
 
-    def tick(self):
+    def tick(self, tick):
         pass
 
     def after_trading(self):

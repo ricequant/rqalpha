@@ -17,7 +17,7 @@
 import datetime
 
 from rqalpha.interface import AbstractEventSource
-from rqalpha.events import Events
+from rqalpha.events import Event, EVENT
 from rqalpha.environment import Environment
 from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
@@ -32,7 +32,7 @@ class SimulationEventSource(AbstractEventSource):
         self._env = env
         self._account_list = account_list
         self._universe_changed = False
-        Environment.get_instance().event_bus.add_listener(Events.POST_UNIVERSE_CHANGED, self._on_universe_changed)
+        Environment.get_instance().event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
 
     def _on_universe_changed(self, universe):
         self._universe_changed = True
@@ -89,11 +89,11 @@ class SimulationEventSource(AbstractEventSource):
                 dt_bar = date.replace(hour=15, minute=0)
                 dt_after_trading = date.replace(hour=15, minute=30)
                 dt_settlement = date.replace(hour=17, minute=0)
-                yield dt_before_trading, dt_before_trading, Events.BEFORE_TRADING
-                yield dt_bar, dt_bar, Events.BAR
+                yield Event(EVENT.BEFORE_TRADING, dt_before_trading, dt_before_trading)
+                yield Event(EVENT.BAR, dt_bar, dt_bar)
 
-                yield dt_after_trading, dt_after_trading, Events.AFTER_TRADING
-                yield dt_settlement, dt_settlement, Events.SETTLEMENT
+                yield Event(EVENT.AFTER_TRADING, dt_after_trading, dt_after_trading)
+                yield Event(EVENT.SETTLEMENT, dt_settlement, dt_settlement)
         else:
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
@@ -120,19 +120,19 @@ class SimulationEventSource(AbstractEventSource):
                             trading_dt = calendar_dt
                         if before_trading_flag:
                             before_trading_flag = False
-                            yield trading_dt, trading_dt, Events.BEFORE_TRADING
+                            yield Event(EVENT.BEFORE_TRADING, trading_dt, trading_dt)
                         if self._universe_changed:
                             self._universe_changed = False
                             last_dt = calendar_dt
                             exit_loop = False
                             break
                         # yield handle bar
-                        yield calendar_dt, trading_dt, Events.BAR
+                        yield Event(EVENT.BAR, calendar_dt, trading_dt)
                     if exit_loop:
                         done = True
 
                 dt = date.replace(hour=15, minute=30)
-                yield dt, dt, Events.AFTER_TRADING
+                yield Event(EVENT.AFTER_TRADING, dt, dt)
 
                 dt = date.replace(hour=17, minute=0)
-                yield dt, dt, Events.SETTLEMENT
+                yield Event(EVENT.SETTLEMENT, dt, dt)

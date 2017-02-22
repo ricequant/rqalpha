@@ -18,7 +18,7 @@ import os
 import csv
 
 from rqalpha.interface import AbstractMod
-from rqalpha.events import Events
+from rqalpha.events import EVENT
 
 
 class ProgressiveOutputCSVMod(AbstractMod):
@@ -27,7 +27,7 @@ class ProgressiveOutputCSVMod(AbstractMod):
         self._env = env
         self._mod_config = mod_config
 
-        env.event_bus.add_listener(Events.POST_BAR, self._output_feeds)
+        env.event_bus.add_listener(EVENT.POST_BAR, self._output_feeds)
 
         output_path = mod_config.output_path
 

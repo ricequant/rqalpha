@@ -28,6 +28,7 @@ class EXECUTION_PHASE(CustomEnum):
     ON_INIT = "[程序初始化]"
     BEFORE_TRADING = "[日内交易前]"
     ON_BAR = "[盘中 handle_bar 函数]"
+    ON_TICK = "[盘中 handle_tick 函数]"
     AFTER_TRADING = "[日内交易后]"
     FINALIZED = "[程序结束]"
     SCHEDULED = "[scheduler函数内]"

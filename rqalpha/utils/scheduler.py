@@ -24,7 +24,7 @@ from ..execution_context import ExecutionContext
 from ..utils.exception import patch_user_exc, ModifyExceptionFromType
 from ..const import EXC_TYPE, EXECUTION_PHASE
 from ..environment import Environment
-from ..events import Events
+from ..events import EVENT
 
 
 def market_close(hour=0, minute=0):
@@ -87,9 +87,9 @@ class Scheduler(object):
         self._frequency = frequency
 
         event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(Events.PRE_BEFORE_TRADING, self.next_day_)
-        event_bus.add_listener(Events.BEFORE_TRADING, self.before_trading_)
-        event_bus.add_listener(Events.BAR, self.next_bar_)
+        event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.next_day_)
+        event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading_)
+        event_bus.add_listener(EVENT.BAR, self.next_bar_)
 
     def set_user_context(self, ucontext):
         self._ucontext = ucontext

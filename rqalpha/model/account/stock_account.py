@@ -93,6 +93,15 @@ class StockAccount(BaseAccount):
                 position._market_value = position._quantity * bar.close
                 position._last_price = bar.close
 
+    def tick(self, tick):
+        portfolio = self.portfolio
+        # invalidate cache
+        portfolio._portfolio_value = None
+        position = portfolio.positions[tick.order_book_id]
+
+        position._market_value = position._quantity * tick.last_price
+        position._last_price = tick.last_price
+
     def order_pending_new(self, account, order):
         if self != account:
             return
