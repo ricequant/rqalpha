@@ -83,7 +83,7 @@ class FutureAccount(BaseFutureAccount):
 
         portfolio._daily_transaction_cost = 0
 
-    def bar(self, bar_dict, calendar_dt, trading_dt):
+    def bar(self, bar_dict):
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         positions = portfolio.positions

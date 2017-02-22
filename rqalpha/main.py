@@ -222,6 +222,7 @@ def run(config, source_code=None):
 
         ucontext = StrategyContext()
         user_strategy = Strategy(env.event_bus, scope, ucontext)
+        scheduler.set_user_context(ucontext)
 
         if not config.extra.force_run_init_when_pt_resume:
             with run_with_user_log_disabled(disabled=config.base.resume_mode):
@@ -271,17 +272,12 @@ def run(config, source_code=None):
 
             if event == Events.BEFORE_TRADING:
                 env.event_bus.publish_event(Events.PRE_BEFORE_TRADING)
-                scheduler.next_day_(trading_dt)
                 env.event_bus.publish_event(Events.BEFORE_TRADING)
-                with ExecutionContext(const.EXECUTION_PHASE.BEFORE_TRADING):
-                    scheduler.before_trading_(ucontext)
                 env.event_bus.publish_event(Events.POST_BEFORE_TRADING)
             elif event == Events.BAR:
                 bar_dict.update_dt(calendar_dt)
                 env.event_bus.publish_event(Events.PRE_BAR)
-                env.event_bus.publish_event(Events.BAR, bar_dict, calendar_dt, trading_dt)
-                with ExecutionContext(const.EXECUTION_PHASE.SCHEDULED, bar_dict):
-                    scheduler.next_bar_(ucontext, bar_dict)
+                env.event_bus.publish_event(Events.BAR, bar_dict)
                 env.event_bus.publish_event(Events.POST_BAR)
             elif event == Events.TICK:
                 env.event_bus.publish_event(Events.PRE_TICK)

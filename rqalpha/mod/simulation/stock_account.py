@@ -81,7 +81,7 @@ class StockAccount(BaseStockAccount):
 
         self._handle_dividend_ex_dividend(trading_date)
 
-    def bar(self, bar_dict, calendar_dt, trading_dt):
+    def bar(self, bar_dict):
         portfolio = self.portfolio
         # invalidate cache
         portfolio._portfolio_value = None
