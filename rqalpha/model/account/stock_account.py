@@ -17,15 +17,15 @@
 import six
 import pandas as pd
 
-from rqalpha.trader.account.base_stock_account import BaseStockAccount
-from rqalpha.model.dividend import Dividend
-from rqalpha.const import SIDE, ACCOUNT_TYPE
-from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_log, system_log
-from rqalpha.execution_context import ExecutionContext
+from .base_account import BaseAccount
+from ..dividend import Dividend
+from ...const import SIDE, ACCOUNT_TYPE
+from ...utils.i18n import gettext as _
+from ...utils.logger import user_log, system_log
+from ...execution_context import ExecutionContext
 
 
-class StockAccount(BaseStockAccount):
+class StockAccount(BaseAccount):
     def __init__(self, env, init_cash, start_date):
         super(StockAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.STOCK)
 

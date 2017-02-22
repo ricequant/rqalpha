@@ -21,12 +21,10 @@ from rqalpha.utils import get_account_type
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import Events
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
-from rqalpha.trader.account.benchmark_account import BenchmarkAccount
 from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.environment import Environment
+from rqalpha.model.account import BenchmarkAccount, StockAccount, FutureAccount
 
-from .stock_account import StockAccount
-from .future_account import FutureAccount
 from .matcher import Matcher
 
 

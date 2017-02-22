@@ -19,7 +19,7 @@ import pandas as pd
 import numpy as np
 
 from .base_account import BaseAccount
-from ...model.dividend import Dividend
+from ..dividend import Dividend
 from ...execution_context import ExecutionContext
 from ...const import ACCOUNT_TYPE
 

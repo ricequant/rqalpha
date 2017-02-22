@@ -40,7 +40,7 @@ from .execution_context import ExecutionContext
 from .interface import Persistable
 from .mod.mod_handler import ModHandler
 from .model.bar import BarMap
-from .trader.account import MixedAccount
+from .model.account import MixedAccount
 from .trader.global_var import GlobalVars
 from .trader.strategy_context import StrategyContext
 from .utils import create_custom_exception, run_with_user_log_disabled

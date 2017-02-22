@@ -16,17 +16,18 @@
 
 import six
 
-from rqalpha.trader.account.base_future_account import BaseFutureAccount
-from rqalpha.const import SIDE, POSITION_EFFECT
-from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_log
-from rqalpha.execution_context import ExecutionContext
-from rqalpha.model.margin import Margin
+from ..margin import Margin
+from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
+from ...utils.i18n import gettext as _
+from ...utils.logger import user_log
+from ...execution_context import ExecutionContext
+
+from .base_account import BaseAccount
 
 
-class FutureAccount(BaseFutureAccount):
+class FutureAccount(BaseAccount):
     def __init__(self, env, init_cash, start_date):
-        super(FutureAccount, self).__init__(env, init_cash, start_date)
+        super(FutureAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.FUTURE)
         self._margin_decider = Margin(env.config.base.margin_multiplier)
 
     @property

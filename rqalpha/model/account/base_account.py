@@ -17,14 +17,14 @@
 import six
 from collections import OrderedDict
 
+from ..portfolio import init_portfolio
+from ..slippage import init_slippage
+from ..tax import init_tax
+from ..trade import Trade
+from ..order import Order
 from ...execution_context import ExecutionContext
 from ...interface import Persistable
-from ...model.portfolio import init_portfolio
-from ...model.slippage import init_slippage
-from ...model.tax import init_tax
 from ...utils import json as json_utils
-from ...model.trade import Trade
-from ...model.order import Order
 from ...events import Events
 
 
