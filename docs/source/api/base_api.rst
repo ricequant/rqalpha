@@ -679,7 +679,7 @@ unsubscribe
 Context属性
 =================
 
-..  module:: rqalpha.trader.strategy_context
+..  module:: rqalpha.core.strategy_context
 
 ..  autoclass:: RunInfo
     :members:
@@ -719,7 +719,7 @@ Order
 
 MixedPortfolio
 ------------------------------------------------------
-..  module:: rqalpha.trader.account.mixed_account
+..  module:: rqalpha.model.account.mixed_account
 
 ..  autoclass:: MixedPortfolio
     :members:
