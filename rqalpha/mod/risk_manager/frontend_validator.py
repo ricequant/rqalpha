@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ...const import SIDE, POSITION_EFFECT
-from ...utils.i18n import gettext as _
-from ...execution_context import ExecutionContext
+from rqalpha.const import SIDE, POSITION_EFFECT
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.execution_context import ExecutionContext
 
 
 class FrontendValidator(object):

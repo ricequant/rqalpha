@@ -16,11 +16,11 @@
 
 from collections import defaultdict
 
-from ...utils.i18n import gettext as _
-from ...const import ORDER_TYPE, SIDE, BAR_STATUS
-from ...model.trade import Trade
-from ...environment import Environment
-from ...events import Events
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import ORDER_TYPE, SIDE, BAR_STATUS
+from rqalpha.model.trade import Trade
+from rqalpha.environment import Environment
+from rqalpha.events import Events
 
 
 class Matcher(object):

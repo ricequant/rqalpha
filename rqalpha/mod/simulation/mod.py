@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from rqalpha.interface import AbstractMod
+
 from .simulation_broker import SimulationBroker
 from .simulation_event_source import SimulationEventSource
 

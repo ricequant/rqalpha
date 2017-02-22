@@ -16,8 +16,8 @@
 
 import click
 
-from ...interface import AbstractMod
-from ...events import Events
+from rqalpha.interface import AbstractMod
+from rqalpha.events import Events
 
 
 class ProgressMod(AbstractMod):

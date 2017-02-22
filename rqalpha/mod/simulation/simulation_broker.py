@@ -24,6 +24,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.trader.account.benchmark_account import BenchmarkAccount
 from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.environment import Environment
+
 from .stock_account import StockAccount
 from .future_account import FutureAccount
 from .matcher import Matcher
