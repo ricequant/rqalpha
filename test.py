@@ -141,7 +141,7 @@ def is_enable_coverage():
 
 
 def test_api():
-    print('Testing API....')
+    print("Testing API......")
     from rqalpha import run
 
     from tests.api.test_api_base import test_get_order_code_new, test_get_open_order_code_new, \
@@ -254,7 +254,8 @@ def test_api():
     run(future_api_config, test_buy_close_code_new)
     run(future_api_config, test_sell_close_code_new)
 
-    print('API test ends.')
+    print("API test ends.")
+
 
 def test_strategy():
     get_test_files()
