@@ -22,7 +22,7 @@ try:
 except Exception as e:
     from fastcache import lru_cache
 
-from .. import cache_control
+from ..utils import cache_control
 
 
 class DividendStore(object):

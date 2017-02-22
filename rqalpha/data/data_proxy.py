@@ -26,10 +26,10 @@ except Exception as e:
 from . import risk_free_helper
 from .instrument_mixin import InstrumentMixin
 from .trading_dates_mixin import TradingDatesMixin
-from .. import cache_control
 from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
 from ..utils.datetime_func import convert_int_to_datetime
+from ..utils import cache_control
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):

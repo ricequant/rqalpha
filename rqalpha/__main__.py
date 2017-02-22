@@ -20,7 +20,7 @@ import locale
 import os
 import shutil
 
-from .cache_control import set_cache_policy, CachePolicy
+from .utils.cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
 from .utils.i18n import localization
 from .utils.config import parse_config

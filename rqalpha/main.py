@@ -29,7 +29,7 @@ import six
 
 from . import const
 from .api import helper as api_helper
-from .core.default_strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader
+from .core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader
 from .core.strategy import Strategy
 from .core.strategy_universe import StrategyUniverse
 from .core.global_var import GlobalVars
@@ -37,7 +37,7 @@ from .core.strategy_context import StrategyContext
 from .data.base_data_source import BaseDataSource
 from .data.data_proxy import DataProxy
 from .environment import Environment
-from .events import Event, EVENT
+from .events import EVENT
 from .execution_context import ExecutionContext
 from .interface import Persistable
 from .mod.mod_handler import ModHandler
