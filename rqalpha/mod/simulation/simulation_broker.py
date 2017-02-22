@@ -24,6 +24,7 @@ from rqalpha.events import Events
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.trader.account.benchmark_account import BenchmarkAccount
 from rqalpha.const import ACCOUNT_TYPE
+from rqalpha.environment import Environment
 from .stock_account import StockAccount
 from .future_account import FutureAccount
 
@@ -154,8 +155,9 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
 
-    def bar(self, bar_dict, calendar_dt, trading_dt):
-        self._matcher.update(calendar_dt, trading_dt, bar_dict)
+    def bar(self, bar_dict):
+        env = Environment.get_instance()
+        self._matcher.update(env.calendar_dt, env.trading_dt, bar_dict)
         self._match()
 
     def tick(self):

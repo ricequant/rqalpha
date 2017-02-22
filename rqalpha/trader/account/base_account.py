@@ -125,7 +125,7 @@ class BaseAccount(Persistable):
         self.daily_orders = open_orders
         self.daily_trades = []
 
-    def bar(self, bar_dict, calendar_dt, trading_dt):
+    def bar(self, bar_dict):
         pass
 
     def tick(self):

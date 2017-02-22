@@ -154,15 +154,12 @@ def run(config, source_code=None):
     env = Environment(config)
     persist_helper = None
     init_succeed = False
+    mod_handler = ModHandler()
 
     try:
-        if source_code is None:
-            env.set_strategy_loader(FileStrategyLoader())
-        else:
-            env.set_strategy_loader(SourceCodeStrategyLoader())
-
+        env.set_strategy_loader(FileStrategyLoader() if source_code is None else SourceCodeStrategyLoader())
         env.set_global_vars(GlobalVars())
-        mod_handler = ModHandler(env)
+        mod_handler.set_env(env)
         mod_handler.start_up()
 
         if not env.data_source:
@@ -212,16 +209,14 @@ def run(config, source_code=None):
         apis = api_helper.get_apis(config.base.account_list)
         scope.update(apis)
 
-        if source_code is None:
-            scope = env.strategy_loader.load(env.config.base.strategy_file, scope)
-        else:
-            scope = env.strategy_loader.load(source_code, scope)
+        scope = env.strategy_loader.load(env.config.base.strategy_file if source_code is None else source_code, scope)
 
         if env.config.extra.enable_profiler:
             enable_profiler(env, scope)
 
         ucontext = StrategyContext()
         user_strategy = Strategy(env.event_bus, scope, ucontext)
+        scheduler.set_user_context(ucontext)
 
         if not config.extra.force_run_init_when_pt_resume:
             with run_with_user_log_disabled(disabled=config.base.resume_mode):
@@ -271,17 +266,12 @@ def run(config, source_code=None):
 
             if event == Events.BEFORE_TRADING:
                 env.event_bus.publish_event(Events.PRE_BEFORE_TRADING)
-                scheduler.next_day_(trading_dt)
                 env.event_bus.publish_event(Events.BEFORE_TRADING)
-                with ExecutionContext(const.EXECUTION_PHASE.BEFORE_TRADING):
-                    scheduler.before_trading_(ucontext)
                 env.event_bus.publish_event(Events.POST_BEFORE_TRADING)
             elif event == Events.BAR:
                 bar_dict.update_dt(calendar_dt)
                 env.event_bus.publish_event(Events.PRE_BAR)
-                env.event_bus.publish_event(Events.BAR, bar_dict, calendar_dt, trading_dt)
-                with ExecutionContext(const.EXECUTION_PHASE.SCHEDULED, bar_dict):
-                    scheduler.next_bar_(ucontext, bar_dict)
+                env.event_bus.publish_event(Events.BAR, bar_dict)
                 env.event_bus.publish_event(Events.POST_BAR)
             elif event == Events.TICK:
                 env.event_bus.publish_event(Events.PRE_TICK)

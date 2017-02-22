@@ -35,7 +35,7 @@ class BenchmarkAccount(BaseAccount):
         trading_date = ExecutionContext.get_current_trading_dt().date()
         self._handle_dividend_payable(trading_date)
 
-    def bar(self, bar_dict, calendar_dt, trading_dt):
+    def bar(self, bar_dict):
         price = bar_dict[self.config.base.benchmark].close
         if np.isnan(price):
             return

@@ -310,7 +310,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         """
         pass
 
-    def bar(self, bar_dict, calendar_dt, trading_dt):
+    def bar(self, bar_dict):
         """
         【Optional】
 

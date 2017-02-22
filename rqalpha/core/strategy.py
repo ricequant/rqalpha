@@ -74,7 +74,7 @@ class Strategy(object):
                 self._before_trading(self._user_context)
 
     @run_when_strategy_not_hold
-    def handle_bar(self, bar_dict, calendar_dt, trading_dt):
+    def handle_bar(self, bar_dict):
         with ExecutionContext(EXECUTION_PHASE.ON_BAR, bar_dict):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._handle_bar(self._user_context, bar_dict)
