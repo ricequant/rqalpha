@@ -16,7 +16,6 @@
 
 import jsonpickle
 
-from rqalpha.core.default_matcher import DefaultMatcher
 from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils import get_account_type
 from rqalpha.utils.i18n import gettext as _
@@ -27,6 +26,7 @@ from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.environment import Environment
 from .stock_account import StockAccount
 from .future_account import FutureAccount
+from .matcher import Matcher
 
 
 def init_accounts(env):
@@ -55,10 +55,10 @@ class SimulationBroker(AbstractBroker, Persistable):
     def __init__(self, env):
         self._env = env
         if env.config.base.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:
-            self._matcher = DefaultMatcher(lambda bar: bar.close, env.config.validator.bar_limit)
+            self._matcher = Matcher(lambda bar: bar.close, env.config.validator.bar_limit)
             self._match_immediately = True
         else:
-            self._matcher = DefaultMatcher(lambda bar: bar.open, env.config.validator.bar_limit)
+            self._matcher = Matcher(lambda bar: bar.open, env.config.validator.bar_limit)
             self._match_immediately = False
 
         self._accounts = None

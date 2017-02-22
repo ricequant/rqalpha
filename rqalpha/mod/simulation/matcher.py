@@ -16,14 +16,14 @@
 
 from collections import defaultdict
 
-from ..utils.i18n import gettext as _
-from ..const import ORDER_TYPE, SIDE, BAR_STATUS
-from ..model.trade import Trade
-from ..environment import Environment
-from ..events import Events
+from ...utils.i18n import gettext as _
+from ...const import ORDER_TYPE, SIDE, BAR_STATUS
+from ...model.trade import Trade
+from ...environment import Environment
+from ...events import Events
 
 
-class DefaultMatcher(object):
+class Matcher(object):
     def __init__(self,
                  deal_price_decider,
                  bar_limit=True,

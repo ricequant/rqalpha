@@ -21,9 +21,8 @@ https://www.ricequant.com/api/python/chn
 
 from __future__ import division
 import six
-from collections import Iterable
 
-from .api_base import assure_order_book_id, decorate_api_exc, instruments
+from .api_base import decorate_api_exc, instruments
 from ..execution_context import ExecutionContext
 from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from ..const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE
@@ -32,7 +31,6 @@ from ..utils.exception import patch_user_exc
 from ..utils.logger import user_log
 from ..utils.i18n import gettext as _
 from ..utils.arg_checker import apply_rules, verify_that
-from ..environment import Environment
 
 
 __all__ = [

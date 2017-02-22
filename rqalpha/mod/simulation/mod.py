@@ -14,14 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from rqalpha.interface import AbstractMod
-from rqalpha.events import Events
 from .simulation_broker import SimulationBroker
 from .simulation_event_source import SimulationEventSource
 
 
 class SimulationMod(AbstractMod):
+    def __init__(self):
+        self._env = None
+
     def start_up(self, env, mod_config):
         self._env = env
         self._env.set_broker(SimulationBroker(self._env))
