@@ -17,16 +17,17 @@
 from importlib import import_module
 from collections import OrderedDict
 
-import six
-
 from rqalpha.utils.logger import system_log
 
 
 class ModHandler(object):
-    def __init__(self, environment):
-        self._env = environment
+    def __init__(self):
+        self._env = None
         self._mod_list = []
         self._mod_dict = OrderedDict()
+
+    def set_env(self, environment):
+        self._env = environment
 
         config = environment.config
 

@@ -154,6 +154,7 @@ def run(config, source_code=None):
     env = Environment(config)
     persist_helper = None
     init_succeed = False
+    mod_handler = ModHandler()
 
     try:
         if source_code is None:
@@ -162,7 +163,7 @@ def run(config, source_code=None):
             env.set_strategy_loader(SourceCodeStrategyLoader())
 
         env.set_global_vars(GlobalVars())
-        mod_handler = ModHandler(env)
+        mod_handler.set_env(env)
         mod_handler.start_up()
 
         if not env.data_source:
