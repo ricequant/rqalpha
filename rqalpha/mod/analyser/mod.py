@@ -49,7 +49,7 @@ class AnalyserMod(AbstractMod):
     def start_up(self, env, mod_config):
         self._env = env
         self._mod_config = mod_config
-        self._enabled = (self._mod_config.plot or self._mod_config.output_file or
+        self._enabled = (self._mod_config.record or self._mod_config.plot or self._mod_config.output_file or
                          self._mod_config.plot_save_file or self._mod_config.report_save_path)
 
         if self._enabled:

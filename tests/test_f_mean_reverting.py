@@ -138,9 +138,6 @@ __config__ = {
             "enabled": True,
             "priority": 400,
         },
-        "analyser": {
-            "output_file": '.tmp.pkl',
-        },
     },
     "validator": {
         "bar_limit": True,

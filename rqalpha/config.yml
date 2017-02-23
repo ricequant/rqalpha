@@ -110,6 +110,7 @@ mod:
     priority: 100
     enabled: true
     lib: 'rqalpha.mod.analyser'
+    record: true
     output_file: ~
     plot: ~
     plot_save_file: ~
