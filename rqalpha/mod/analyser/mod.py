@@ -39,7 +39,7 @@ class AnalyserMod(AbstractMod):
         self._result = None
 
         self._orders = defaultdict(list)
-        self._trades = defaultdict(list)
+        self._trades = []
         self._portfolios = OrderedDict()
         self._portfolios_dict = defaultdict(OrderedDict)
 
@@ -58,7 +58,7 @@ class AnalyserMod(AbstractMod):
             env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
 
     def _collect_trade(self, account, trade):
-        self._trades[trade.trading_datetime.date()].append(trade)
+        self._trades.append(self._to_trade_record(trade))
 
     def _collect_order(self, account, order):
         self._orders[order.trading_datetime.date()].append(order)
@@ -191,11 +191,7 @@ class AnalyserMod(AbstractMod):
                 for order_book_id, position in six.iteritems(portfolio.positions):
                     positions_list.append(self._to_position_record(date, order_book_id, position))
 
-        trades_list = []
-        for date in six.iterkeys(self._portfolios):
-            for trade in self._trades[date]:
-                trades_list.append(self._to_trade_record(trade))
-        trades = pd.DataFrame(trades_list)
+        trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
             trades = trades.set_index('datetime')
 
