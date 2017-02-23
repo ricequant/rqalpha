@@ -76,3 +76,15 @@ bundle 默认存放在 `~/.rqalpha` 下，您也可以指定 bundle 的存放位
     $ rqalpha run -d target_bundle_path .....
 
 详细参数配置请查看 :ref:`api-config`
+
+获取配置文件
+==================
+
+如果运行 RQAlpha 时不指定配置文件，会在 `~/.rqalpha/` 文件夹下创建 `config.yml` 文件作为默认配置文件。
+
+如果您想要直接获得一份配置文件，也可以通过如下命令来获得。
+
+.. code-block:: bash
+
+    $ rqalpha generate_config
+

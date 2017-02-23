@@ -33,7 +33,13 @@ from ..mod.utils import mod_config_value_parse
 
 def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):
     if base_config_path is None:
-        config_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config.yml"))
+        config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
+        if not os.path.exists(config_path):
+            dir_path = os.path.dirname(config_path)
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
+            default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config.yml")
+            open(config_path, "wb").write(open(default_config_path, "rb").read())
     else:
         config_path = base_config_path
     if not os.path.exists(config_path):

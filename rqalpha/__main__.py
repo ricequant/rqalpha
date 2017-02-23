@@ -40,6 +40,9 @@ def entry_point():
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path(file_okay=False))
 def update_bundle(data_bundle_path):
+    """
+    Sync Data Bundle
+    """
     from . import main
     main.update_bundle(data_bundle_path)
 
@@ -58,6 +61,7 @@ def update_bundle(data_bundle_path):
 @click.option('-cm', '--commission-multiplier', 'base__commission_multiplier', type=click.FLOAT)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
 @click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
+@click.option('-st', '--strategy-type', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m']))
 @click.option('-me', '--match-engine', 'base__matching_type', type=click.Choice(['current_bar', 'next_bar']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
@@ -70,7 +74,6 @@ def update_bundle(data_bundle_path):
 @click.option('--report', 'mod__analyser__report_save_path', type=click.Path(writable=True), help="save report")
 @click.option('-o', '--output-file', 'mod__analyser__output_file', type=click.Path(writable=True),
               help="output result pickle file")
-@click.option('--fast-match', 'validator__fast_match', is_flag=True)
 @click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option("--enable-profiler", "extra__enable_profiler", is_flag=True,
@@ -79,6 +82,9 @@ def update_bundle(data_bundle_path):
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
 @click.help_option('-h', '--help')
 def run(**kwargs):
+    """
+    Start to run a strategy
+    """
     if kwargs.get('base__run_type') == 'p':
         set_cache_policy(CachePolicy.MINIMUM)
 
@@ -103,7 +109,7 @@ def run(**kwargs):
 @click.option('-d', '--directory', default="./", type=click.Path(), required=True)
 def examples(directory):
     """
-    generate example strategies to target folder
+    Generate example strategies to target folder
     """
     source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples")
 
@@ -120,7 +126,7 @@ def examples(directory):
 @click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
 def plot(result_dict_file, is_show, plot_save_file):
     """
-    draw result DataFrame
+    Draw result DataFrame
     """
     import pandas as pd
     from rqalpha.plot import plot_result
@@ -137,7 +143,7 @@ def plot(result_dict_file, is_show, plot_save_file):
 @click.argument('target_report_csv_path', type=click.Path(exists=True, writable=True), required=True)
 def report(result_pickle_file_path, target_report_csv_path):
     """
-    generate report from backtest output file
+    Generate report from backtest output file
     """
     import pandas as pd
     result_dict = pd.read_pickle(result_pickle_file_path)
@@ -155,6 +161,17 @@ def version(**kwargs):
     from rqalpha import version_info
     print("Current Version: ", version_info)
 
+
+@cli.command()
+@click.option('-d', '--directory', default="./", type=click.Path(), required=True)
+def generate_config(directory):
+    """
+    Generate default config file
+    """
+    default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.yml")
+    target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
+    shutil.copy(default_config, target_config_path)
+    print("Config file has been generated in", target_config_path)
 
 if __name__ == '__main__':
     entry_point()

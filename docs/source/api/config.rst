@@ -36,7 +36,7 @@
 -sp           `- -` slippage                  设置滑点
 -cm           `- -` commission-multiplier     设置手续费乘数，默认为1
 -mm           `- -` margin-multiplier         设置保证金乘数，默认为1
--k            `- -` kind                      设置策略类型，目前支持 :code:`stock` (股票策略)、:code:`future` (期货策略)及 :code:`stock_future` (混合策略)
+-st           `- -` strategy-type             设置策略类型，目前支持 :code:`stock` (股票策略)、:code:`future` (期货策略)及 :code:`stock_future` (混合策略)
 -fq           `- -` frequency                 目前支持 :code:`1d` (日线回测) 和 :code:`1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的
 -me           `- -` match-engine              启用的回测引擎，目前支持 :code:`current_bar` (当前Bar收盘价撮合) 和 :code:`next_bar` (下一个Bar开盘价撮合)
 -rt           `- -` run-type                  运行类型，:code:`b` 为回测，:code:`p` 为模拟交易, :code:`r` 为实盘交易
@@ -45,10 +45,10 @@ N/A           `- -` handle-split              开启自动处理, 默认不开�
 N/A           `- -` not-handle-split          不开启自动处理, 默认不开启
 N/A           `- -` risk-grid                 开启Alpha/Beta 等风险指标的实时计算，默认开启
 N/A           `- -` no-risk-grid              不开启Alpha/Beta 等风险指标的实时计算，默认开启
+N/A           `- -` disable-user-system-log   关闭用户策略产生的系统日志(比如订单未成交等提示)
 -l            `- -` log-level                 选择日期的输出等级，有 :code:`verbose` | :code:`info` | :code:`warning` | :code:`error` 等选项，您可以通过设置 :code:`verbose` 来查看最详细的日志，或者设置 :code:`error` 只查看错误级别的日志输出
 -p            `- -` plot                      在回测结束后，查看图形化的收益曲线
 N/A           `- -` no-plot                   在回测结束后，不查看图形化的收益曲线
-N/A           `- -` fast-match                默认关闭，如果当前撮合引擎为 :code:`current_bar` 开启该选项会立刻进行撮合，不会等到当前bar结束
 N/A           `- -` progress                  开启命令行显示回测进度条
 N/A           `- -` no-progress               关闭命令行查看回测进度
 N/A           `- -` enable-profiler           启动策略逐行性能分析，启动后，在回测结束，会打印策略的运行性能分析报告，可以看到每一行消耗的时间
@@ -71,6 +71,8 @@ N/A           `- -` config                    设置配置文件路径
 ------------------------------------------------------
 
 除了在启动策略的时候传入参数，还可以通过指定配置文件的方式来进行参数的配置, 配置文件的配置信息优先级低于启动参数，也就是说启动参数会覆盖配置文件的配置项，配置文件的格式如下:
+
+注: 如果没有指定 `config.yml`， RQAlpha 在运行时会自动在 `~/.rqalpha/` 文件夹下创建 `config.yml` 文件作为默认配置文件。您也可以使用 `$ rqalpha generate_config` 来生成一份默认的配置文件。
 
 ..  code-block:: bash
     :linenos:
