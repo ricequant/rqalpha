@@ -1,15 +1,15 @@
 0.3.9
 ==================
 
-- 增加 `--disable-user-system-log` 参数，可以独立关闭回测过程中因策略而产生的系统日志
-- `--log-level` 现在可以正确区分不同类型的日志，同时增加 `none` 类型，用来关闭全部日志信息。
-- 在不指定配置文件的情况下，默认会调用 `~/.rqalpha/config.yml` 文件
-- 支持 `$ rqalpha generate_config` 命令来获取默认配置文件
-- 指定策略类型不再使用 `--kind` 参数，替换为 `--strategy-type` 和配置文件呼应
-- 重构 `events.py`，现在可以更好的支持基于事件的模块编写了
-- 将风险指标计算独立成 `analyser` mod
-- 将事前风控相关内容独立成 `risk_manager` mod
-- 将 `回测` 和 `实盘模拟` 相关功能独立成 `simulation` mod
+- 增加 :code:`--disable-user-system-log` 参数，可以独立关闭回测过程中因策略而产生的系统日志
+- :code:`--log-level` 现在可以正确区分不同类型的日志，同时增加 :code:`none` 类型，用来关闭全部日志信息。
+- 在不指定配置文件的情况下，默认会调用 :code:`~/.rqalpha/config.yml` 文件
+- 支持 :code:`rqalpha generate_config` 命令来获取默认配置文件
+- 指定策略类型不再使用 :code:`--kind` 参数，替换为 :code:`--strategy-type` 和配置文件呼应
+- 重构 :code:`events.py`，现在可以更好的支持基于事件的模块编写了
+- 将风险指标计算独立成 :code:`analyser` Mod
+- 将事前风控相关内容独立成 :code:`risk_manager` Mod
+- 将 `回测` 和 `实盘模拟` 相关功能独立成 :code:`simulation` Mod
 
 0.3.8
 ==================
