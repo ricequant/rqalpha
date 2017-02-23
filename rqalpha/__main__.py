@@ -63,7 +63,6 @@ def update_bundle(data_bundle_path):
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
-@click.option('--risk-grid/--no-risk-grid', 'base__cal_risk_grid', default=True)
 @click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log')
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('-p', '--plot/--no-plot', 'mod__analyser__plot', default=None, help="plot result")

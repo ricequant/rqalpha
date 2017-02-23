@@ -40,21 +40,14 @@ base:
   persist_mode: real_time
   # 选择是否开启自动处理, 默认不开启
   handle_split: false
-  # 选择是否开启Alpha/Beta 等风险指标的实时计算，默认开启
-  cal_risk_grid: true
 
 extra:
-  # 指定回测结束时将回测数据输出到指定文件中
-  output_file: ~
   # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
   # 或者设置 `error` 只查看错误级别的日志输出
   log_level: info
   user_system_log_disabled: false
   # 在回测结束后，选择是否查看图形化的收益曲线
-  plot: false
   context_vars: ~
-  plot_save_file: ~
-  report_save_path:  ~
   # force_run_init_when_pt_resume: 在PT的resume模式时，是否强制执行用户init。主要用于用户改代码。
   force_run_init_when_pt_resume: false
   # enable_profiler: 是否启动性能分析
