@@ -85,7 +85,7 @@ def run_test(filename):
     if not os.path.exists(old_pickle_file):
         if not os.path.exists(TEST_OUT):
             os.makedirs(TEST_OUT)
-        pickle.dump(result_dict, open(old_pickle_file, "wb"))
+        pickle.dump(result_dict, open(old_pickle_file, "wb"), protocol=2)
         return None, None
     else:
         old_result_dict = pd.read_pickle(old_pickle_file)
