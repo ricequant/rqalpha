@@ -38,7 +38,7 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
             dir_path = os.path.dirname(config_path)
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
-            default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config.yml")
+            default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
             open(config_path, "wb").write(open(default_config_path, "rb").read())
     else:
         config_path = base_config_path
