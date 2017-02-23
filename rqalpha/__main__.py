@@ -68,7 +68,7 @@ def update_bundle(data_bundle_path):
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('-p', '--plot/--no-plot', 'mod__analyser__plot', default=None, help="plot result")
 @click.option('--plot-save', 'mod__analyser__plot_save_file', default=None, help="save plot to file")
-@click.option('--report', 'mod__analyser__')
+@click.option('--report', 'mod__analyser__report_save_path', type=click.Path(writable=True), help="save report")
 @click.option('-o', '--output-file', 'mod__analyser__output_file', type=click.Path(writable=True),
               help="output result pickle file")
 @click.option('--fast-match', 'validator__fast_match', is_flag=True)
