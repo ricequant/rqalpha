@@ -28,7 +28,7 @@ from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from ..const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE
 from ..model.instrument import Instrument
 from ..utils.exception import patch_user_exc
-from ..utils.logger import user_log
+from ..utils.logger import user_system_log
 from ..utils.i18n import gettext as _
 from ..utils.arg_checker import apply_rules, verify_that
 
@@ -72,7 +72,7 @@ def order(id_or_ins, amount, side, position_effect, style):
     r_order = Order.__from_create__(calendar_dt, trading_dt, order_book_id, amount, side, style, position_effect)
 
     if bar.isnan or price == 0:
-        user_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 

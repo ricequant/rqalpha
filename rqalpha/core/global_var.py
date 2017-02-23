@@ -16,7 +16,7 @@
 
 import six
 import pickle
-from ..utils.logger import user_log, system_log, user_detail_log
+from ..utils.logger import user_system_log, system_log, user_detail_log
 
 
 class GlobalVars(object):
@@ -27,7 +27,7 @@ class GlobalVars(object):
                 dict_data[key] = pickle.dumps(value)
             except Exception as e:
                 user_detail_log.exception("g.{} can not pickle", key)
-                user_log.warn("g.{} can not pickle", key)
+                user_system_log.warn("g.{} can not pickle", key)
         return pickle.dumps(dict_data)
 
     def set_state(self, state):
@@ -38,4 +38,4 @@ class GlobalVars(object):
                 system_log.debug("restore g.{} {}", key, type(self.__dict__[key]))
             except Exception as e:
                 user_detail_log.exception("g.{} can not restore", key)
-                user_log.warn("g.{} can not restore", key)
+                user_system_log.warn("g.{} can not restore", key)

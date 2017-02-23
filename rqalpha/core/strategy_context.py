@@ -19,7 +19,7 @@ import pickle
 
 from ..const import ACCOUNT_TYPE
 from ..environment import Environment
-from ..utils.logger import user_log, system_log
+from ..utils.logger import user_system_log, system_log
 from ..utils.i18n import gettext as _
 from ..utils.repr import property_repr
 from ..utils.proxy import PortfolioProxy
@@ -150,7 +150,7 @@ class StrategyContext(object):
                 # system_log.debug("persist {})
                 dict_data[key] = pickle.dumps(value)
             except Exception as e:
-                user_log.warn("context.{} can not pickle", key)
+                user_system_log.warn("context.{} can not pickle", key)
         return pickle.dumps(dict_data)
 
     def set_state(self, state):
@@ -160,7 +160,7 @@ class StrategyContext(object):
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore context.{} {}", key, type(self.__dict__[key]))
             except Exception as e:
-                user_log.warn('context.{} can not restore', key)
+                user_system_log.warn('context.{} can not restore', key)
 
     @property
     def universe(self):
@@ -310,21 +310,20 @@ class StrategyContext(object):
 
     @slippage.setter
     def slippage(self, value):
-        user_log.warn(_("[deprecated] {} is no longer used.").format('context.slippage'))
+        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.slippage'))
 
     @benchmark.setter
     def benchmark(self, value):
-        user_log.warn(_("[deprecated] {} is no longer used.").format('context.benchmark'))
+        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.benchmark'))
 
     @margin_rate.setter
     def margin_rate(self, value):
-        user_log.warn(_("[deprecated] {} is no longer used.").format('context.margin_rate'))
+        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.margin_rate'))
 
     @commission.setter
     def commission(self, value):
-        user_log.warn(_("[deprecated] {} is no longer used.").format('context.commission'))
+        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.commission'))
 
     @short_selling_allowed.setter
     def short_selling_allowed(self, value):
-        user_log.warn(_("[deprecated] {} is no longer used.").format('context.short_selling_allowed'))
-
+        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.short_selling_allowed'))

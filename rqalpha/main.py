@@ -46,7 +46,7 @@ from .model.account import MixedAccount
 from .utils import create_custom_exception, run_with_user_log_disabled
 from .utils.exception import CustomException, is_user_exc, patch_user_exc
 from .utils.i18n import gettext as _
-from .utils.logger import user_log, system_log, user_print, user_detail_log
+from .utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log
 from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from .utils.scheduler import Scheduler
 from .utils import scheduler as mod_scheduler
@@ -303,7 +303,7 @@ def run(config, source_code=None):
             persist_helper.persist()
 
         user_detail_log.exception("strategy execute exception")
-        user_log.error(e.error)
+        user_system_log.error(e.error)
         mod_handler.tear_down(const.EXIT_CODE.EXIT_USER_ERROR, e)
     except Exception as e:
         if init_succeed and env.config.base.persist and persist_helper:
@@ -312,7 +312,7 @@ def run(config, source_code=None):
         exc_type, exc_val, exc_tb = sys.exc_info()
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, config.base.strategy_file)
 
-        user_log.error(user_exc.error)
+        user_system_log.error(user_exc.error)
         code = const.EXIT_CODE.EXIT_USER_ERROR
         if not is_user_exc(exc_val):
             system_log.exception("strategy execute exception")

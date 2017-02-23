@@ -20,7 +20,7 @@ import time
 from ..const import ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE
 from ..utils import id_gen
 from ..utils.repr import property_repr, properties
-from ..utils.logger import user_log
+from ..utils.logger import user_system_log
 
 
 OrderPersistMap = {
@@ -230,14 +230,14 @@ class Order(object):
         if not self._is_final():
             self._message = reject_reason
             self._status = ORDER_STATUS.REJECTED
-            user_log.warn(reject_reason)
+            user_system_log.warn(reject_reason)
 
     def _mark_cancelled(self, cancelled_reason, user_warn=True):
         if not self._is_final():
             self._message = cancelled_reason
             self._status = ORDER_STATUS.CANCELLED
             if user_warn:
-                user_log.warn(cancelled_reason)
+                user_system_log.warn(cancelled_reason)
 
     def __simple_object__(self):
         return properties(self)

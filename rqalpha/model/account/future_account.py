@@ -19,7 +19,7 @@ import six
 from ..margin import Margin
 from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
 from ...utils.i18n import gettext as _
-from ...utils.logger import user_log
+from ...utils.logger import user_system_log
 from ...execution_context import ExecutionContext
 
 from .base_account import BaseAccount
@@ -78,7 +78,7 @@ class FutureAccount(BaseAccount):
                 position._sell_daily_realized_pnl = 0
         for de_listed_id in de_listed_id_list:
             if positions[de_listed_id]._quantity != 0:
-                user_log.warn(
+                user_system_log.warn(
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=de_listed_id))
             del positions[de_listed_id]
 

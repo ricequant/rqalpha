@@ -21,7 +21,7 @@ from .base_account import BaseAccount
 from ..dividend import Dividend
 from ...const import SIDE, ACCOUNT_TYPE
 from ...utils.i18n import gettext as _
-from ...utils.logger import user_log, system_log
+from ...utils.logger import user_system_log, system_log
 from ...execution_context import ExecutionContext
 
 
@@ -67,7 +67,7 @@ class StockAccount(BaseAccount):
             if self.config.validator.cash_return_by_stock_delisted:
                 portfolio._cash += position.market_value
             if position._quantity != 0:
-                user_log.warn(
+                user_system_log.warn(
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=de_listed_id))
             del positions[de_listed_id]
 
@@ -228,7 +228,7 @@ class StockAccount(BaseAccount):
 
             # 处理拆股
 
-            user_log.info(_("split {order_book_id}, {position}").format(
+            user_system_log.info(_("split {order_book_id}, {position}").format(
                 order_book_id=order_book_id,
                 position=position,
             ))
@@ -237,12 +237,12 @@ class StockAccount(BaseAccount):
             for key in ["_buy_order_quantity", "_sell_order_quantity", "_buy_trade_quantity", "_sell_trade_quantity"]:
                 setattr(position, key, getattr(position, key) * ratio)
 
-            user_log.info(_("split {order_book_id}, {position}").format(
+            user_system_log.info(_("split {order_book_id}, {position}").format(
                 order_book_id=order_book_id,
                 position=position,
             ))
 
-            user_log.info(_("split {order_book_id}, {series}").format(
+            user_system_log.info(_("split {order_book_id}, {series}").format(
                 order_book_id=order_book_id,
                 series=series,
             ))
@@ -260,7 +260,7 @@ class StockAccount(BaseAccount):
                     dividend_cash = dividend_per_share * dividend_info.quantity
                     self.portfolio._dividend_receivable -= dividend_cash
                     self.portfolio._cash += dividend_cash
-                    # user_log.info(_("get dividend {dividend} for {order_book_id}").format(
+                    # user_system_log.info(_("get dividend {dividend} for {order_book_id}").format(
                     #     dividend=dividend_cash,
                     #     order_book_id=order_book_id,
                     # ))

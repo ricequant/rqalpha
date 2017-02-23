@@ -33,7 +33,7 @@ from ..model.order import Order, OrderStyle, MarketOrder, LimitOrder
 from ..utils.arg_checker import apply_rules, verify_that
 from ..utils.exception import patch_user_exc
 from ..utils.i18n import gettext as _
-from ..utils.logger import user_log
+from ..utils.logger import user_system_log
 from ..utils.scheduler import market_close, market_open
 from ..utils import scheduler
 
@@ -128,7 +128,7 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     r_order = Order.__from_create__(calendar_dt, trading_dt, order_book_id, amount, side, style, None)
 
     if bar.isnan or price == 0:
-        user_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 

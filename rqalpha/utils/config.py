@@ -24,7 +24,7 @@ import codecs
 
 from . import RqAttrDict, logger
 from .exception import patch_user_exc
-from .logger import user_log, system_log, std_log, user_std_handler
+from .logger import user_log, user_system_log, system_log, std_log, user_std_handler
 from ..const import ACCOUNT_TYPE, MATCHING_TYPE, RUN_TYPE, PERSIST_MODE
 from ..utils.i18n import gettext as _
 from ..utils.dict_func import deep_update
@@ -109,8 +109,11 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     base_config.matching_type = parse_matching_type(base_config.matching_type)
     base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
 
-    if extra_config.log_level == "verbose":
+    if extra_config.log_level.upper() != "NONE":
         user_log.handlers.append(user_std_handler)
+        if not extra_config.user_system_log_disabled:
+            user_system_log.handlers.append(user_std_handler)
+
     if extra_config.context_vars:
         import base64
         import json
@@ -127,6 +130,8 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
 
     system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
     std_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
+    user_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
+    user_system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
 
     if base_config.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
