@@ -39,10 +39,10 @@ Getting Help
 
 关于RQAlpha的任何问题可以通过以下途径来获取帮助
 
-*  查看 :doc:`FAQ <faq>` 页面找寻常见问题及解答。
-*  可以通过 :ref:`genindex` 或者 :ref:`search` 来查找特定问题。
-*  在 `github issue page`_ 中提交issue。
-*  如果想参与到 RQAlpha 的开发中，您可以加入QQ群「487188429」，
+*  查看 :doc:`FAQ <faq>` 页面找寻常见问题及解答
+*  可以通过 :ref:`genindex` 或者 :ref:`search` 来查找特定问题
+*  在 `github issue page`_ 中提交issue
+*  RQAlpha 交流群「487188429」
 
 Quick Guide
 ==================

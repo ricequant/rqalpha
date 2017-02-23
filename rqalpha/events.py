@@ -74,11 +74,12 @@ class EVENT(Enum):
     # post_bar()
     POST_BAR = 'post_bar'
 
-    # 预定义事件，支持handle_tick后使用
+    # 执行handle_tick前触发
     PRE_TICK = 'pre_tick'
     # 该事件会触发策略的handle_tick函数
     # tick(tick)
     TICK = 'tick'
+    # 执行handle_tick后触发
     POST_TICK = 'post_tick'
 
     # 在scheduler执行前触发
