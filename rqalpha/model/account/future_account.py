@@ -99,8 +99,8 @@ class FutureAccount(BaseAccount):
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         position = portfolio.positions[tick.order_book_id]
-        position._last_price = tick.last_price
-        self._update_market_value(position, tick.last_price)
+        position._last_price = tick.last
+        self._update_market_value(position, tick.last)
 
     def order_pending_new(self, account, order):
         if self != account:

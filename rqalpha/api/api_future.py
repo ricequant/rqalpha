@@ -46,6 +46,7 @@ def export_as_api(func):
 
 
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_future(),
              verify_that('amount').is_greater_than(0),
@@ -187,6 +188,7 @@ def assure_future_order_book_id(id_or_symbols):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))

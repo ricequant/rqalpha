@@ -57,6 +57,10 @@ class RqAttrDict(object):
     def __repr__(self):
         return pprint.pformat(self.__dict__)
 
+    def __iter__(self):
+        for k, v in six.iteritems(self.__dict__):
+            yield k, v
+
 
 def dummy_func(*args, **kwargs):
     return None

@@ -128,6 +128,7 @@ def assure_order_book_id(id_or_ins):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 def get_order(order_id):
@@ -140,6 +141,7 @@ def get_order(order_id):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 def get_open_orders():
@@ -154,6 +156,7 @@ def get_open_orders():
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 def cancel_order(order):
@@ -173,6 +176,7 @@ def cancel_order(order):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbols').are_valid_instruments())
@@ -194,6 +198,7 @@ def update_universe(id_or_symbols):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbols').are_valid_instruments())
@@ -224,6 +229,7 @@ def subscribe(id_or_symbols):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbols').are_valid_instruments())
@@ -254,6 +260,7 @@ def unsubscribe(id_or_symbols):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True),
@@ -305,6 +312,7 @@ def get_yield_curve(date=None, tenor=None):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
@@ -404,6 +412,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('type').is_in(names.VALID_INSTRUMENT_TYPES, ignore_none=True))
@@ -457,6 +466,7 @@ def all_instruments(type=None):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbols').is_instance_of((str, Iterable)))
@@ -512,6 +522,7 @@ def instruments(id_or_symbols):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('code').is_instance_of((str, SectorCodeItem)))
@@ -528,6 +539,7 @@ def sector(code):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('code').is_instance_of((str, IndustryCodeItem)))
@@ -544,6 +556,7 @@ def industry(code):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 def concept(*concept_names):
@@ -554,6 +567,7 @@ def concept(*concept_names):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('start_date').is_valid_date(ignore_none=False))
@@ -586,6 +600,7 @@ def get_trading_dates(start_date, end_date):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=False))
@@ -614,6 +629,7 @@ def get_previous_trading_date(date):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=False))
@@ -655,6 +671,7 @@ def to_date(date):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
@@ -675,6 +692,7 @@ def get_dividend(order_book_id, start_date, adjusted=True):
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('series_name').is_instance_of(str),
              verify_that('value').is_number())
@@ -694,6 +712,7 @@ def plot(series_name, value):
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_symbol').is_valid_instrument())
 def current_snapshot(id_or_symbol):

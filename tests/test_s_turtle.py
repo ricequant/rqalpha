@@ -11,8 +11,8 @@ def get_extreme(array_high_price_result, array_low_price_result):
     return [max_result, min_result]
 
 
-def  get_atr_and_unit( atr_array_result,  atr_length_result, portfolio_value_result):
-    atr =  atr_array_result[ atr_length_result-1]
+def get_atr_and_unit( atr_array_result,  atr_length_result, portfolio_value_result):
+    atr = atr_array_result[ atr_length_result-1]
     unit = math.floor(portfolio_value_result * .01 / atr)
     return [atr, unit]
 
