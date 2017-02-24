@@ -47,12 +47,12 @@ For CentOS
 .. code-block:: bash
 
     Welcome to Anaconda3 4.2.0 (by Continuum Analytics, Inc.)
-     
-     
+
+
     In order to continue the installation process, please review the license
-     
+
     agreement.
-     
+
     Please, press ENTER to continue
     >>>
 
@@ -74,13 +74,13 @@ For CentOS
 
 echo "backend: Agg" > ~/.config/matplotlib/matplotlibrc
 
-安装中文字体: 将 WenQuanYi Micro Hei.ttf 放到 /usr/share/fonts/chinese 
+安装中文字体: 将 WenQuanYi Micro Hei.ttf 放到 /usr/share/fonts/chinese
 
 .. code-block:: bash
 
     mkdir /usr/share/fonts/chinese
     cd /usr/share/fonts/chinese
-    wget https://static.ricequant.com/assets/data/WenQuanYi%20Micro%20Hei.ttf
+    wget https://static.ricequant.com/data/WenQuanYi%20Micro%20Hei.ttf
     fc-cache -fv
     fc-list
     rm -rf ~/.cache/matplotlib
@@ -117,7 +117,7 @@ conda 虚拟环境
 
 .. code-block:: bash
 
-    conda create --name env_name python=3.5 
+    conda create --name env_name python=3.5
 
 *   使用 conda 虚拟环境
 
@@ -156,4 +156,3 @@ RQAlpha 的相关安装 请参考 :ref:`intro-install`
 如果发现无法通过 pip 安装，请访问 https://mrjbq7.github.io/ta-lib/install.html 解决。
 
 对于 Windows 用户，如果编译困难，可以根据您本地的Python版本下载指定的whl包，然后 `pip install TA_Lib-0.4.9-cp27-none-win_amd64.whl` 来完成安装。
-
