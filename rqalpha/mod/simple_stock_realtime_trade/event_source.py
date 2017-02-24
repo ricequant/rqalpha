@@ -18,7 +18,7 @@ import datetime
 import time
 from threading import Thread
 
-from six.moves.queue import Queue
+from six.moves.queue import Queue, Empty
 
 from rqalpha.interface import AbstractEventSource
 from rqalpha.environment import Environment
@@ -104,7 +104,12 @@ class RealtimeEventSource(AbstractEventSource):
 
         while running:
             real_dt = datetime.datetime.now()
-            dt, event_type = self.event_queue.get()
+            while True:
+                try:
+                    dt, event_type = self.event_queue.get(timeout=1)
+                    break
+                except Empty:
+                    continue
 
             system_log.debug("real_dt {}, dt {}, event {}", real_dt, dt, event_type)
             yield Event(event_type, real_dt, dt)
