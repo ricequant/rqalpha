@@ -265,3 +265,13 @@ def run_with_user_log_disabled(disabled=True):
     finally:
         if disabled:
             user_log.enable()
+
+
+def unwrapper(func):
+    f2 = func
+    while True:
+        f = f2
+        f2 = getattr(f2, "__wrapped__", None)
+        if f2 is None:
+            break
+    return f

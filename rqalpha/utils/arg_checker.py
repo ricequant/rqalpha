@@ -29,7 +29,7 @@ from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
 from ..environment import Environment
 from ..const import INSTRUMENT_TYPE, RUN_TYPE
-from ..utils import INST_TYPE_IN_STOCK_ACCOUNT
+from ..utils import unwrapper, INST_TYPE_IN_STOCK_ACCOUNT
 from ..utils.i18n import gettext as _
 from ..utils.logger import user_system_log
 
@@ -353,7 +353,7 @@ def apply_rules(*rules):
                 t, v, tb = exc_info
 
                 try:
-                    call_args = inspect.getcallargs(inspect.unwrap(func), *args, **kwargs)
+                    call_args = inspect.getcallargs(unwrapper(func), *args, **kwargs)
                 except TypeError as e:
                     raise RQTypeError(*e.args).with_traceback(tb)
 

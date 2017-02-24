@@ -36,7 +36,7 @@ from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCo
 from ..model.instrument import SectorCodeItem, IndustryCodeItem
 from ..execution_context import ExecutionContext
 from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
-from ..utils import to_industry_code, to_sector_name
+from ..utils import to_industry_code, to_sector_name, unwrapper
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME
 from ..utils.i18n import gettext as _
 from ..model.snapshot import SnapshotObject
@@ -87,7 +87,7 @@ def api_exc_patch(func):
                 if isinstance(e, TypeError):
                     exc_info = sys.exc_info()
                     try:
-                        ret = inspect.getcallargs(inspect.unwrap(func), *args, **kwargs)
+                        ret = inspect.getcallargs(unwrapper(func), *args, **kwargs)
                     except TypeError:
                         t, v, tb = exc_info
                         raise patch_user_exc(v.with_traceback(tb))
