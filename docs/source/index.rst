@@ -34,21 +34,11 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
 `Ricequant`_ 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。
 
 
-Getting Help
-==================
-
-关于RQAlpha的任何问题可以通过以下途径来获取帮助
-
-*  查看 :doc:`FAQ <faq>` 页面找寻常见问题及解答
-*  可以通过 :ref:`genindex` 或者 :ref:`search` 来查找特定问题
-*  在 `github issue page`_ 中提交issue
-*  RQAlpha 交流群「487188429」
-
-Quick Guide
+快速指引
 ==================
 
 .. toctree::
-    :caption: Quick Guide
+    :caption: 快速指引
     :hidden:
 
     intro/overview
@@ -94,7 +84,7 @@ RQAlpha API
     扩展API(开源版暂不支持，可以通过Ricequant平台或者商业版使用)
 
 
-Development
+扩展 RQAlpha
 ==================
 
 .. toctree::
@@ -114,7 +104,7 @@ Development
 :doc:`development/mod`
     基于Mod来开发和扩展RQAlpha
 
-Extra
+其他
 ==================
 
 .. toctree::
@@ -133,6 +123,17 @@ Extra
 
 :doc:`todo`
     TODO
+
+
+获取帮助
+==================
+
+关于RQAlpha的任何问题可以通过以下途径来获取帮助
+
+*  查看 :doc:`FAQ <faq>` 页面找寻常见问题及解答
+*  可以通过 :ref:`genindex` 或者 :ref:`search` 来查找特定问题
+*  在 `github issue page`_ 中提交issue
+*  RQAlpha 交流群「487188429」
 
 .. _github issue page: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
