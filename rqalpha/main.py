@@ -76,12 +76,12 @@ def _validate_benchmark(config, data_proxy):
     if benchmark is None:
         return
     instrument = data_proxy.instruments(benchmark)
+    if instrument is None:
+        raise patch_user_exc(ValueError(_('invalid benchmark {}').format(benchmark)))
+
     if instrument.order_book_id == "000300.XSHG":
         # 000300.XSHG 数据进行了补齐，因此认为只要benchmark设置了000300.XSHG，就存在数据，不受限于上市日期。
         return
-    if not instrument:
-        raise patch_user_exc(ValueError(_('invalid benchmark {}').format(benchmark)))
-
     config = Environment.get_instance().config
     start_date = config.base.start_date
     end_date = config.base.end_date
