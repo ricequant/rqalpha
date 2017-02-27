@@ -84,11 +84,11 @@ N/A           `- -` config                    设置配置文件路径
       # 可以指定回测的唯一ID，用户区分多次回测的结果
       run_id: 9999
       # 数据源所存储的文件路径
-      data_bundle_path: ./bundle/
+      data_bundle_path: ~
       # 启动的策略文件路径
-      strategy_file: ./rqalpha/examples/test.py
+      strategy_file: strategy.py
       # 回测起始日期
-      start_date: 2016-06-01
+      start_date: 2015-06-01
       # 回测结束日期(如果是实盘，则忽略该配置)
       end_date: 2050-01-01
       # 股票起始资金，默认为0
@@ -113,68 +113,52 @@ N/A           `- -` config                    设置配置文件路径
       margin_multiplier: 1
       # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
       resume_mode: false
-      # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
+      # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，
+      # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
       persist: false
       persist_mode: real_time
       # 选择是否开启自动处理, 默认不开启
       handle_split: false
-      # 选择是否开启Alpha/Beta 等风险指标的实时计算，默认开启
-      cal_risk_grid: true
 
     extra:
-      # 指定回测结束时将回测数据输出到指定文件中
-      output_file: ~
-      # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，或者设置 `error` 只查看错误级别的日志输出
+      # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
+      # 或者设置 `error` 只查看错误级别的日志输出
       log_level: info
+      user_system_log_disabled: false
       # 在回测结束后，选择是否查看图形化的收益曲线
-      plot: false
       context_vars: ~
-      plot_save_file: ~
-      report_save_path:  ~
       # force_run_init_when_pt_resume: 在PT的resume模式时，是否强制执行用户init。主要用于用户改代码。
       force_run_init_when_pt_resume: false
       # enable_profiler: 是否启动性能分析
       enable_profiler: false
       is_hold: false
 
-    service:
-      username: rqalpha@ricequant.com
-
     validator:
-      # fast_match: 快速撮合，开启后，不进行队列等待，直接撮合
-      fast_match: false
       # cash_return_by_stock_delisted: 开启该项，当持仓股票退市时，按照退市价格返还现金
       cash_return_by_stock_delisted: false
-      # on_matching: 事中风控，默认开启
-      on_matching: true
-      # limit_order: 对LimitOrder进行撮合验证，主要验证其价格是否合理，默认开启
-      limit_order: true
-      # volume: 对volume进行撮合验证，默认开启
-      volume: true
-      # available_cash: 查可用资金是否充足，默认开启
-      available_cash: true
-      # available_position: 检查可平仓位是否充足，默认开启
-      available_position: true
       # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
       close_amount: true
       # bar_limit: 在处于涨跌停时，无法买进/卖出，默认开启
       bar_limit: true
 
-    warning:
-      before_trading: true
 
     mod:
+      # 回测 / 模拟交易 支持 Mod
+      simulation:
+        lib: 'rqalpha.mod.simulation'
+        enabled: true
+        priority: 100
       # 技术分析API
       funcat_api:
         lib: 'rqalpha.mod.funcat_api'
         enabled: false
-        priority: 100
+        priority: 200
       # 开启该选项，可以在命令行查看回测进度
       progress:
         lib: 'rqalpha.mod.progress'
         enabled: false
         priority: 400
-      # 接受实时行情运行
+      # 接收实时行情运行
       simple_stock_realtime_trade:
         lib: 'rqalpha.mod.simple_stock_realtime_trade'
         persist_path: "./persist/strategy/"
@@ -187,6 +171,24 @@ N/A           `- -` config                    设置配置文件路径
         enabled: false
         output_path: "./"
         priority: 600
+      risk_manager:
+        lib: 'rqalpha.mod.risk_manager'
+        enabled: true
+        priority: 700
+        # available_cash: 查可用资金是否充足，默认开启
+        available_cash: true
+        # available_position: 检查可平仓位是否充足，默认开启
+        available_position: true
+      analyser:
+        priority: 100
+        enabled: true
+        lib: 'rqalpha.mod.analyser'
+        record: true
+        output_file: ~
+        plot: ~
+        plot_save_file: ~
+        report_save_path: ~
+
 
 通过策略代码的方式
 ------------------------------------------------------

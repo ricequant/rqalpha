@@ -20,7 +20,7 @@
 *   起始资金
 *   Benchmark
 
-假如我们的策略存放在了 `./rqalpha/examples/buy_and_hold.py` 路径下， 数据源存放在 `./rqalpha/bundle/` 路径下，回测的起始时间为 `2016-06-01`, 结束时间为 `2016-12-01`，我们给策略分配的起始资金为 `100000`, Benchmark 设置为 `000300.XSHG`
+假如我们的策略存放在了 :code:`./rqalpha/examples/buy_and_hold.py` 路径下， 数据源存放在 :code:`./rqalpha/bundle/` 路径下，回测的起始时间为 :code:`2016-06-01`, 结束时间为 :code:`2016-12-01`，我们给策略分配的起始资金为 :code:`100000`, Benchmark 设置为 :code:`000300.XSHG`
 
 那么我们通过如下命令来运行回测
 
@@ -28,7 +28,7 @@
 
     rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG
 
-如果我们想要以图形的方式查看回测的结果， 则增加 `--plot` 参数
+如果我们想要以图形的方式查看回测的结果， 则增加 :code:`--plot` 参数
 
 ..  code-block:: bash
 
@@ -36,14 +36,14 @@
 
 .. image:: ../_static/buy_and_hold.png
 
-如果想把回测的数据保存下来，可以通过 `-o` 参数将结果保存成 `pkl` 文件。
+如果想把回测的数据保存下来，可以通过 :code:`-o` 参数将结果保存成 :code:`pkl` 文件。
 
 ..  code-block:: bash
 
     rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG --plot -o result.pkl
 
 
-等回测结束后可以通过 `pandas.read_pickle` 函数来读取数据进行之后的数据分析。
+等回测结束后可以通过 :code:`pandas.read_pickle` 函数来读取数据进行之后的数据分析。
 
 ..  code-block:: python3
     :linenos:

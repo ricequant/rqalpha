@@ -14,9 +14,9 @@ RQAlpha目前只支持 python 3.4+ && Python 2.7+
 
 我们强烈建议您在安装 RQAlpha 前，首先单独安装 bcolz 库，因为其编译时间较长，并且中间比较容易失败，单独安装好以后再继续安装RQAlpha。
 
-Windows 环境下编译安装 bcolz 需要使用Visual C++ Compiler，需要自行下载并安装 visual-cpp-build-tools，
+Windows 环境下编译安装 bcolz 需要使用 :code:`Visual C++ Compiler`，需要自行下载并安装 visual-cpp-build-tools，
 
-如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 bcolz wheel 包，直接安装编译后的 bcolz 版本。
+如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 :code:`bcolz wheel` 包，直接安装编译后的 bcolz 版本。
 
 安装
 ==================
@@ -40,7 +40,7 @@ Windows 环境下编译安装 bcolz 需要使用Visual C++ Compiler，需要自�
 
     $ pip install rqalpha
 
-如果执行 `pip install` 安装依赖库网络速度比较慢的话，推荐使用国内镜像来进行加速:
+如果执行 :code:`pip install` 安装依赖库网络速度比较慢的话，推荐使用国内镜像来进行加速:
 
 .. code-block:: bash
 
@@ -63,7 +63,7 @@ RiceQuant 免费提供日级别的股票和期货数据供回测使用，可以�
 
     $ rqalpha update_bundle
 
-bundle 默认存放在 `~/.rqalpha` 下，您也可以指定 bundle 的存放位置，
+bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存放位置，
 
 .. code-block:: bash
 
@@ -80,7 +80,7 @@ bundle 默认存放在 `~/.rqalpha` 下，您也可以指定 bundle 的存放位
 获取配置文件
 ==================
 
-如果运行 RQAlpha 时不指定配置文件，会在 `~/.rqalpha/` 文件夹下创建 `config.yml` 文件作为默认配置文件。
+如果运行 RQAlpha 时不指定配置文件，会在 :code:`~/.rqalpha/` 文件夹下创建 :code:`config.yml` 文件作为默认配置文件。
 
 如果您想要直接获得一份配置文件，也可以通过如下命令来获得。
 
