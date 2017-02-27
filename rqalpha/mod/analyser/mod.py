@@ -94,7 +94,7 @@ class AnalyserMod(AbstractMod):
         if isinstance(value, Enum):
             return value.name
 
-        if isinstance(value, (float, np.float64, np.float32, np.float16, np.float128)):
+        if isinstance(value, (float, np.float64, np.float32, np.float16, np.float)):
             return round(value, ndigits)
 
         return value
