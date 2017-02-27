@@ -83,6 +83,7 @@ class SimulationEventSource(AbstractEventSource):
 
     def events(self, start_date, end_date, frequency):
         if frequency == "1d":
+            # 根据起始日期和结束日期，获取所有的交易日，然后再循环获取每一个交易日
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 date = day.to_pydatetime()
                 dt_before_trading = date.replace(hour=0, minute=0)

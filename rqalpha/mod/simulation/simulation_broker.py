@@ -159,10 +159,12 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._matcher.update(env.calendar_dt, env.trading_dt, bar_dict)
         self._match()
 
-    def tick(self):
-        env = Environment.get_instance()
-        self._matcher.update(env.calendar_dt, env.trading_dt, bar_dict)
-        self._match()
+    def tick(self, tick):
+        # TODO support tick matching
+        pass
+        # env = Environment.get_instance()
+        # self._matcher.update(env.calendar_dt, env.trading_dt, tick)
+        # self._match()
 
     def _match(self):
         self._matcher.match(self._open_orders)

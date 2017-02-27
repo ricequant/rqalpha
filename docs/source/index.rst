@@ -94,6 +94,7 @@ RQAlpha API
     development/make_contribute
     development/basic_concept
     development/mod
+    development/event_source
 
 :doc:`development/make_contribute`
     如何加入 RQAlpha 的开发
@@ -103,6 +104,9 @@ RQAlpha API
 
 :doc:`development/mod`
     基于Mod来开发和扩展RQAlpha
+
+:doc:`development/event_source`
+    扩展事件源
 
 其他
 ==================
