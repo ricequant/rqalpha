@@ -21,6 +21,7 @@ import datetime
 import logbook
 from pprint import pformat
 import codecs
+import shutil
 
 from . import RqAttrDict, logger
 from .exception import patch_user_exc
@@ -32,13 +33,17 @@ from ..mod.utils import mod_config_value_parse
 
 
 def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):
+    default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
+    with codecs.open(default_config_path, encoding="utf-8") as f:
+        default_config = f.read()
+    default_config = yaml.load(default_config)
+
     if base_config_path is None:
         config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
         if not os.path.exists(config_path):
             dir_path = os.path.dirname(config_path)
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
-            default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
             open(config_path, "wb").write(open(default_config_path, "rb").read())
     else:
         config_path = base_config_path
@@ -55,6 +60,20 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
         config_args[key] = mod_config_value_parse(value)
 
     config = yaml.load(config_file)
+    config_version = config.get("version", None)
+    if config_version is None or config_version != default_config["version"]:
+        config_file_path = os.path.abspath(config_path)
+        back_config_file_path = config_file_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
+        shutil.move(config_file_path, back_config_file_path)
+        shutil.copy(default_config_path, config_file_path)
+
+        system_log.warning("""
+您使用的配置文件 {config_file_path} 版本过久，可能会导致RQAlpha运行错误。
+已为您替换为新的配置文件，
+旧的配置文件备份存储于 {back_config_file_path}
+        """.format(config_file_path=config_file_path, back_config_file_path=back_config_file_path))
+        config = default_config
+
     if click_type:
         for key, value in six.iteritems(config_args):
             if key in ["config_path"]:

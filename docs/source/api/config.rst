@@ -77,6 +77,8 @@ N/A           `- -` config                    设置配置文件路径
 ..  code-block:: bash
     :linenos:
 
+    version: 0.1.0
+
     # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
     whitelist: [base, extra, validator, mod]
 
