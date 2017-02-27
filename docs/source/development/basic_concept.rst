@@ -1,10 +1,10 @@
 .. _development-basic-concept:
 
 ==================
-Basic Concept
+基本概念
 ==================
 
-Interface
+接口
 ==================
 
 ..  module:: rqalpha.interface

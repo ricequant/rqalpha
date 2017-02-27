@@ -34,7 +34,7 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
 
 `Ricequant`_ 是一个开放的量化算法交易社区，为程序化交易者提供免费的回测和实盘模拟环境，并且会不间断举行实盘资金投入的量化比赛。
 
-Feature
+特点
 ============================
 
 *   易于使用: RQAlpha让您集中于策略的开发，一行简单的命令就可以执行您的策略。
@@ -44,17 +44,7 @@ Feature
 *   灵活的配置: RQAlpha 提供了一系列的配置选项，用户可以通过简单的配置来构建适合自己的交易系统。
 *   强大的扩展性: RQAlpha 定义了一系列的 Mod Hook 接口，开发者可以基于 Mod 的开发模式，扩展 RQAlpha，无论是做实时监控，还是归因分析，RQAlpha 都可以通过扩展来实现。
 
-Getting Help
-============================
-
-关于RQAlpha的任何问题可以通过以下途径来获取帮助
-
-*  查看 `FAQ`_ 页面找寻常见问题及解答
-*  可以通过 `索引`_ 或者 `搜索`_ 来查找特定问题
-*  在 `Github Issue`_ 中提交issue
-*  RQAlpha 交流群「487188429」
-
-Quick Guide
+快速指引
 ============================
 
 *   `RQAlpha 介绍`_
@@ -68,19 +58,44 @@ RQAlpha API
 *   `参数配置`_ : 启动 RQAlpha 参数配置
 *   `API`_ : RQAlpha API 文档
 
-Development
+机构版
 ============================
 
-*   `How To Contribute`_ : 如何加入 RQAlpha 的开发
-*   `Basic Concept`_ : 基本概念
-*   `RQAlpha Mod`_ : 基于Mod来开发和扩展RQAlpha
+目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以联系我们的机构端产品销售获得机构端产品功能支持。「销售电话」：0755-33967716 「QQ」：4848371
 
-Extra
+机构端产品功能：
+
+*   可以本地部署，使用pycharm、anaconda等工具做本地策略研发、模拟以及实盘交易，效率大大加强，本地管理自己的策略提高保密性
+*   极速调取经过清洗处理的历史数据接口服务，包括了：400多项指标的财务数据，股票、期货、ETF、LOF、分级基金等等10年+的日和分钟、tick级别的历史数据以及每日更新，股票、期货的实时数据支持，指数以及构成，板块分类，股本、换手率、融资融券等，天猫等电商销量数据，公募基金数据，舆情、公告类
+*   股票、期货的实盘交易订单管理系统以及实盘下单支持，从回测到实盘交易的一条龙系统以及服务支持
+*   策略的管理以及实盘的收益、风险计算等
+*   交易数据的保存以及提取分析
+*   业绩分析和风险管理系统
+*   技术支持及定制化开发
+
+加入开发
+============================
+
+*   `如何贡献代码`_
+*   `基本概念`_
+*   `RQAlpha 基于 Mod 进行扩展`_
+
+其他
 ============================
 
 *   `FAQ`_
 *   `History`_
 *   `TODO`_
+
+获取帮助
+============================
+
+关于RQAlpha的任何问题可以通过以下途径来获取帮助
+
+*  查看 `FAQ`_ 页面找寻常见问题及解答
+*  可以通过 `索引`_ 或者 `搜索`_ 来查找特定问题
+*  在 `Github Issue`_ 中提交issue
+*  RQAlpha 交流群「487188429」
 
 
 .. _Github Issue: https://github.com/ricequant/rqalpha/issues
@@ -99,9 +114,9 @@ Extra
 .. _参数配置: http://rqalpha.readthedocs.io/zh_CN/stable/api/config.html
 .. _API: http://rqalpha.readthedocs.io/zh_CN/stable/api/base_api.html
 
-.. _How To Contribute: http://rqalpha.readthedocs.io/zh_CN/stable/development/make_contribute.html
-.. _Basic Concept: http://rqalpha.readthedocs.io/zh_CN/stable/development/basic_concept.html
-.. _RQAlpha Mod: http://rqalpha.readthedocs.io/zh_CN/stable/development/mod.html
+.. _如何贡献代码: http://rqalpha.readthedocs.io/zh_CN/stable/development/make_contribute.html
+.. _基本概念: http://rqalpha.readthedocs.io/zh_CN/stable/development/basic_concept.html
+.. _RQAlpha 基于 Mod 进行扩展: http://rqalpha.readthedocs.io/zh_CN/stable/development/mod.html
 .. _History: http://rqalpha.readthedocs.io/zh_CN/stable/history.html
 .. _TODO: http://rqalpha.readthedocs.io/zh_CN/stable/todo.html
 

@@ -1,7 +1,7 @@
 .. _development-make-contribute:
 
 ==================
-How To Contribute
+如何贡献代码
 ==================
 
 .. _Ricequant: https://www.ricequant.com/algorithms
@@ -16,7 +16,7 @@ RQAlpha 所有的开发工作都将会在 `RQAlpha Github`_ 上进行，无论�
 
 .. _development-make-contribute-branch-management:
 
-Branch Management
+分支管理
 --------------------------
 
 `master 分支`_ 为最新稳定版本，只有团队成员在发布新版本时才会将充分测试的 `develop 分支`_ 合并到 `master 分支`_ 中。
