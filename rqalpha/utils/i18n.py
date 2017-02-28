@@ -25,9 +25,11 @@ class Localization(object):
         self.trans = NullTranslations() if trans is None else trans
 
     def set_locale(self, locales, trans_dir=None):
-        if "en" in locales:
+        if "en" in locales[0].lower():
             self.trans = NullTranslations()
             return
+        if "cn" in locales[0].lower():
+            locales = ["zh_Hans_CN"]
         try:
             if trans_dir is None:
                 trans_dir = os.path.join(

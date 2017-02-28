@@ -4,6 +4,14 @@
 History
 ==================
 
+0.3.11
+==================
+
+- 更新本地化翻译，修改系统提示，支持多语言
+- 增加 :code:`--locale` 默认为 :code:`cn` (中文), 支持 :code:`cn | en` (中文 | 英文)
+- 修复 :code:`main.run` 返回值中 :code:`stock_position` 为 :code:`None` 的问题
+- 修复 Windows Python 2.7 下中文显示乱码的问题
+
 0.3.10
 ==================
 
