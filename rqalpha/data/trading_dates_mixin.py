@@ -22,8 +22,6 @@ try:
 except Exception as e:
     from fastcache import lru_cache
 
-from ..utils import cache_control
-
 
 class TradingDatesMixin(object):
     def __init__(self, dates):

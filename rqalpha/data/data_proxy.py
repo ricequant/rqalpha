@@ -29,7 +29,6 @@ from .trading_dates_mixin import TradingDatesMixin
 from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
 from ..utils.datetime_func import convert_int_to_datetime
-from ..utils import cache_control
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):

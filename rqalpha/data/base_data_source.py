@@ -23,7 +23,6 @@ try:
 except Exception as e:
     from fastcache import lru_cache
 
-from ..utils import cache_control
 from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
 from ..interface import AbstractDataSource
 from .converter import StockBarConverter, IndexBarConverter
