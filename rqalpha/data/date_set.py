@@ -30,7 +30,7 @@ class DateSet(object):
         self._dates = bcolz.open(f, 'r')
         self._index = self._dates.attrs['line_map']
 
-    @lru_cache(cache_control.get_entry_count(None))
+    @lru_cache(None)
     def _get_set(self, s, e):
         return set(self._dates[s:e])
 

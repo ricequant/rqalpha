@@ -20,7 +20,6 @@ import locale
 import os
 import shutil
 
-from .utils.cache_control import set_cache_policy, CachePolicy
 from .utils.click_helper import Date
 from .utils.i18n import localization
 from .utils.config import parse_config
@@ -69,6 +68,7 @@ def update_bundle(data_bundle_path):
 @click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 @click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log')
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
+@click.option('--locale', 'extra__locale', type=click.STRING, default="zh_Hans_CN")
 @click.option('-p', '--plot/--no-plot', 'mod__analyser__plot', default=None, help="plot result")
 @click.option('--plot-save', 'mod__analyser__plot_save_file', default=None, help="save plot to file")
 @click.option('--report', 'mod__analyser__report_save_path', type=click.Path(writable=True), help="save report")
@@ -85,10 +85,8 @@ def run(**kwargs):
     """
     Start to run a strategy
     """
-    if kwargs.get('base__run_type') == 'p':
-        set_cache_policy(CachePolicy.MINIMUM)
-
     try:
+        # FIXME: It should depends on the system and locale config
         locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
         locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
         os.environ['TZ'] = 'Asia/Shanghai'

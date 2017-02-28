@@ -41,7 +41,7 @@ class TradingDatesMixin(object):
         date = pd.Timestamp(date).replace(hour=0, minute=0, second=0)
         return self._get_previous_trading_date(date)
 
-    @lru_cache(cache_control.get_entry_count(128))
+    @lru_cache(128)
     def _get_previous_trading_date(self, date):
         pos = self._dates.searchsorted(date)
         if pos > 0:
@@ -54,7 +54,7 @@ class TradingDatesMixin(object):
         pos = self._dates.searchsorted(date, side='right')
         return self._dates[pos]
 
-    @lru_cache(cache_control.get_entry_count(512))
+    @lru_cache(512)
     def _get_future_trading_date(self, dt):
         dt1 = dt - datetime.timedelta(hours=4)
         td = pd.Timestamp(dt1.date())

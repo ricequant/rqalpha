@@ -95,12 +95,12 @@ class BaseDataSource(AbstractDataSource):
     def _index_of(self, instrument):
         return self.INSTRUMENT_TYPE_MAP[instrument.type]
 
-    @lru_cache(cache_control.get_entry_count(None))
+    @lru_cache(None)
     def _all_day_bars_of(self, instrument):
         i = self._index_of(instrument)
         return self._day_bars[i].get_bars(instrument.order_book_id, fields=None)
 
-    @lru_cache(cache_control.get_entry_count(None))
+    @lru_cache(None)
     def _filtered_day_bars(self, instrument):
         bars = self._all_day_bars_of(instrument)
         if bars is None:
