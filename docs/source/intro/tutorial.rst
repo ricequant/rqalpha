@@ -93,7 +93,7 @@ RQAlpha 的 API 主要分为三类：约定函数、数据查询和交易接口�
 
     # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
     def after_trading(context):
-        logger.info("开盘前执行after_trading函数")
+        logger.info("收盘后执行after_trading函数")
 
 至此，我们写出了一个“完整”的策略，但是该策略实际上什么也没有做。
 
@@ -113,7 +113,7 @@ RQAlpha 的 API 主要分为三类：约定函数、数据查询和交易接口�
     *   :func:`is_suspended` : 判断某股票当天是否停牌
     *   :func:`is_st_stock` : 判断某股票是否为 \*st
 
-Ricequant 金融、财务、合约历史数据等数据接口，详情请查看 :ref:`api-extend-api`
+Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api-extend-api`
 
 *   bar_dict: 在 :func:`handle_bar` 中我们可以使用 `bar_dict` 来获取相应的 :class:`Bar` 数据，`bar_dict` 是一个字典类型变量，直接通过传 `key` 的方式就可以获取到对应的 :class:`Bar` 数据。
 

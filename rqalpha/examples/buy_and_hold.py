@@ -10,7 +10,7 @@ def init(context):
     context.fired = False
 
 
-def before_trading(context, bar_dict):
+def before_trading(context):
     pass
 
 

@@ -12,7 +12,7 @@ RQAlpha 大部分的组件是以 :code:`add_listener` 的方式进行事件的�
 *   当订单成交，则会触发 :code:`EVENT.TRADE` 事件，那么系统的账户模块因为注册了该事件，就可以立即计算成交以后的收益和资金变化。
 *   当订单下单，则会触发 :code:`EVENT.ORDER_PENDING_NEW` 事件，前端风控模块注册了该事件，则可以立即对该订单进行审核，如果不满足风控要求，则直接指定执行 :code:`order._cancel(some_reason)` 来保证有问题的订单不会进入实际下单环节。
 
-程序化交易中很多需求，都可以以注册事件无缝插入到 RQAlpha 中的方式来满足和扩展。
+程序化交易中很多需求，都可以通过注册事件的方式无缝插入到 RQAlpha 中进行扩展。
 
 事件源分类
 ==================
@@ -23,7 +23,7 @@ RQAlpha 大部分的组件是以 :code:`add_listener` 的方式进行事件的�
     *   POST_USER_INIT: 策略的 :code:`init` 函数执行后触发
 
 *   MarketEvent: 市场及数据事件源
-    
+
     *   POST_UNIVERSE_CHANGED: 策略证券池发生变化后触发
     *   PRE_BEFORE_TRADING: 执行 :code:`before_trading` 函数前触发
     *   BEFORE_TRADING: 该事件会触发策略的 :code:`before_trading` 函数
@@ -57,11 +57,16 @@ RQAlpha 大部分的组件是以 :code:`add_listener` 的方式进行事件的�
 事件源的订阅及使用
 ==================
 
-我们可以订阅我们需要的事件源，从而在该事件发生时实现我们的特定的需求。
+我们可以订阅需要的事件源，从而在该事件发生时实现指定需求。
 
-下面以最简单的 Mod - ProgressMod 为例，介绍以下事件源的订阅和使用。 ProgressMod 需要实现的需求非常的简单：在命令行输出目前回测的进度条。
+下面以最简单的 Mod - ProgressMod 为例，介绍事件源的订阅和使用。
 
-首先我们定义一个 ProgressMod 类，继承与接口类 :class:`~AbstractMod` 
+ProgressMod 需要实现的需求非常的简单：在命令行输出目前回测的进度条。
+
+.. image:: ../_static/progress_bar.png
+
+
+首先定义一个 ProgressMod 类，继承与接口类 :class:`~AbstractMod`
 
 .. code-block:: python3
 
