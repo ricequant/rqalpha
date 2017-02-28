@@ -21,7 +21,6 @@ import os
 import shutil
 
 from .utils.click_helper import Date
-from .utils.i18n import localization
 from .utils.config import parse_config
 
 
@@ -85,16 +84,6 @@ def run(**kwargs):
     """
     Start to run a strategy
     """
-    try:
-        # FIXME: It should depends on the system and locale config
-        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
-        locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
-        os.environ['TZ'] = 'Asia/Shanghai'
-        localization.set_locale(["zh_Hans_CN"])
-    except Exception as e:
-        if os.name != 'nt':
-            raise
-
     config_path = kwargs.get('config_path', None)
     if config_path is not None:
         config_path = os.path.abspath(config_path)

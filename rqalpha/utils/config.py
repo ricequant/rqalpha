@@ -19,6 +19,7 @@ import os
 import yaml
 import datetime
 import logbook
+import locale
 from pprint import pformat
 import codecs
 import shutil
@@ -27,12 +28,33 @@ from . import RqAttrDict, logger
 from .exception import patch_user_exc
 from .logger import user_log, user_system_log, system_log, std_log, user_std_handler
 from ..const import ACCOUNT_TYPE, MATCHING_TYPE, RUN_TYPE, PERSIST_MODE
-from ..utils.i18n import gettext as _
+from ..utils.i18n import gettext as _, localization
 from ..utils.dict_func import deep_update
 from ..mod.utils import mod_config_value_parse
 
 
+def set_locale(lc):
+    # FIXME: It should depends on the system and locale config
+    try:
+        # FIXME: It should depends on the system and locale config
+        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+        locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
+        os.environ['TZ'] = 'Asia/Shanghai'
+        localization.set_locale([lc])
+    except Exception as e:
+        if os.name != 'nt':
+            raise
+
+
 def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):
+
+    mod_configs = config_args.pop("mod_configs", [])
+    for cfg, value in mod_configs:
+        key = "mod__{}".format(cfg.replace(".", "__"))
+        config_args[key] = mod_config_value_parse(value)
+
+    set_locale(config_args["extra__locale"])
+
     default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
     with codecs.open(default_config_path, encoding="utf-8") as f:
         default_config = f.read()
@@ -54,13 +76,9 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     with codecs.open(config_path, encoding="utf-8") as f:
         config_file = f.read()
 
-    mod_configs = config_args.pop("mod_configs", [])
-    for cfg, value in mod_configs:
-        key = "mod__{}".format(cfg.replace(".", "__"))
-        config_args[key] = mod_config_value_parse(value)
-
     config = yaml.load(config_file)
     config_version = config.get("version", None)
+
     if config_version is None or config_version != default_config["version"]:
         config_file_path = os.path.abspath(config_path)
         back_config_file_path = config_file_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
@@ -96,8 +114,11 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     config = parse_user_config(config, source_code)
 
     config = RqAttrDict(config)
+
     base_config = config.base
     extra_config = config.extra
+
+    set_locale(extra_config.locale)
 
     if isinstance(base_config.start_date, six.string_types):
         base_config.start_date = datetime.datetime.strptime(base_config.start_date, "%Y-%m-%d")
