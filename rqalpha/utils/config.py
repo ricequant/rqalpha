@@ -36,7 +36,6 @@ from ..mod.utils import mod_config_value_parse
 def set_locale(lc):
     # FIXME: It should depends on the system and locale config
     try:
-        # FIXME: It should depends on the system and locale config
         locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
         locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
         os.environ['TZ'] = 'Asia/Shanghai'
@@ -47,13 +46,12 @@ def set_locale(lc):
 
 
 def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):
-
     mod_configs = config_args.pop("mod_configs", [])
     for cfg, value in mod_configs:
         key = "mod__{}".format(cfg.replace(".", "__"))
         config_args[key] = mod_config_value_parse(value)
 
-    set_locale(config_args["extra__locale"])
+    set_locale(config_args.get("extra__locale", None))
 
     default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
     with codecs.open(default_config_path, encoding="utf-8") as f:
@@ -70,7 +68,7 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     else:
         config_path = base_config_path
     if not os.path.exists(config_path):
-        print("config.yaml not found in", os.getcwd())
+        print(_("config.yaml not found in {config_path}").format(config_path))
         return
 
     with codecs.open(config_path, encoding="utf-8") as f:
@@ -85,11 +83,17 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
         shutil.move(config_file_path, back_config_file_path)
         shutil.copy(default_config_path, config_file_path)
 
-        system_log.warning("""
+        """
 您使用的配置文件 {config_file_path} 版本过久，可能会导致RQAlpha运行错误。
 已为您替换为新的配置文件，
 旧的配置文件备份存储于 {back_config_file_path}
-        """.format(config_file_path=config_file_path, back_config_file_path=back_config_file_path))
+        """
+
+        system_log.warning(_("""
+Your current config file {config_file_path} is too old and may cause RQAlpha running error.
+RQAlpha has replaced the config file with the newest one.
+the backup config file has been saved in {back_config_file_path}.
+        """).format(config_file_path=config_file_path, back_config_file_path=back_config_file_path))
         config = default_config
 
     if click_type:
@@ -118,7 +122,7 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     base_config = config.base
     extra_config = config.extra
 
-    set_locale(extra_config.locale)
+    set_locale(extra_config)
 
     if isinstance(base_config.start_date, six.string_types):
         base_config.start_date = datetime.datetime.strptime(base_config.start_date, "%Y-%m-%d")
@@ -142,12 +146,14 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
         base_config.data_bundle_path = os.path.join(base_config.data_bundle_path, "./bundle")
 
     if not os.path.exists(base_config.data_bundle_path):
-        print("data bundle not found. Run `rqalpha update_bundle` to download data bundle.")
-        # print("data bundle not found. Run `%s update_bundle` to download data bundle." % sys.argv[0])
+        system_log.error(
+            _("data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
+                bundle_path=base_config.data_bundle_path))
         return
 
     if source_code is None and not os.path.exists(base_config.strategy_file):
-        print("strategy file not found: ", base_config.strategy_file)
+        system_log.error(
+            _("strategy file not found in {strategy_file}").format(strategy_file=base_config.strategy_file))
         return
 
     base_config.run_type = parse_run_type(base_config.run_type)
@@ -209,7 +215,7 @@ def parse_user_config(config, source_code=None):
             deep_update(sub_dict, config[sub_key])
 
     except Exception as e:
-        print('in parse_user_config, exception: ', e)
+        system_log.error(_('in parse_user_config, exception: {e}').format(e=e))
     finally:
         return config
 
@@ -257,4 +263,4 @@ def parse_persist_mode(persist_mode):
     elif persist_mode == 'on_crash':
         return PERSIST_MODE.ON_CRASH
     else:
-        raise RuntimeError('unknown persist mode: {}'.format(persist_mode))
+        raise RuntimeError(_('unknown persist mode: {}').format(persist_mode))
