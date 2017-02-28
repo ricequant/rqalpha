@@ -35,7 +35,7 @@ install:
 script:
   - ls $HOME/.rqalpha/bundle/
   - |
-      if [ ! -d ~/.rqalpha/bundle/done ]; then
+      if [ ! -d ~/.rqalpha/config.yml ]; then
         rqalpha update_bundle
       fi
   - coverage run --source=rqalpha test.py
