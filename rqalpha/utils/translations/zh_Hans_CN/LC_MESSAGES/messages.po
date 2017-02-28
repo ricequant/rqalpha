@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-02-28 15:07+0800\n"
+"POT-Creation-Date: 2017-02-28 15:22+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -41,43 +41,41 @@ msgstr "benchmark {benchmark} 在 {start_date} 还未上市。请重新选择起
 msgid "benchmark {benchmark} has been de_listed on {end_date}"
 msgstr "benchmark {benchmark} 在 {end_date} 已退市。请重新选择结束日期或benchmark。"
 
-#: rqalpha/main.py:124
+#: rqalpha/main.py:119
 msgid ""
 "\n"
 "[WARNING]\n"
 "Target bundle path {data_bundle_path} is not empty.\n"
 "The content of this folder will be REMOVED before updating.\n"
-"Are you sure to continue?\n"
-"        "
+"Are you sure to continue?"
 msgstr ""
 "\n"
 "[WARNING]\n"
 "目标数据源路径 {data_bundle_path} 不为空\n"
 "更新操作首先会清空该文件件下所有内容\n"
 "您确定要继续吗？\n"
-"        "
 
-#: rqalpha/main.py:132
+#: rqalpha/main.py:131
 msgid "try {} ..."
 msgstr "尝试 {} ..."
 
-#: rqalpha/main.py:141
+#: rqalpha/main.py:140
 msgid "downloading ..."
 msgstr "下载中 ..."
 
-#: rqalpha/main.py:155
+#: rqalpha/main.py:154
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr "数据下载成功: {bundle_path}"
 
-#: rqalpha/main.py:295
+#: rqalpha/main.py:294
 msgid "unknown event from event source: {}"
 msgstr "从 event source 中获取的无效事件: {}"
 
-#: rqalpha/main.py:301
+#: rqalpha/main.py:300
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:310 rqalpha/main.py:323 rqalpha/main.py:326
+#: rqalpha/main.py:309 rqalpha/main.py:322 rqalpha/main.py:325
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 

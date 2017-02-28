@@ -43,13 +43,13 @@ from .interface import Persistable
 from .mod.mod_handler import ModHandler
 from .model.bar import BarMap
 from .model.account import MixedAccount
-from .utils import create_custom_exception, run_with_user_log_disabled
+from .utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from .utils.exception import CustomException, is_user_exc, patch_user_exc
 from .utils.i18n import gettext as _
 from .utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log
 from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from .utils.scheduler import Scheduler
-from .utils import scheduler as mod_scheduler
+from .utils.config import set_locale
 
 
 jsonpickle_numpy.register_handlers()
@@ -108,7 +108,8 @@ def create_base_scope():
     return scope
 
 
-def update_bundle(data_bundle_path=None, confirm=True):
+def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
+    set_locale(locale)
     default_bundle_path = os.path.abspath(os.path.expanduser("~/.rqalpha/bundle/"))
     if data_bundle_path is None:
         data_bundle_path = default_bundle_path
@@ -120,8 +121,7 @@ def update_bundle(data_bundle_path=None, confirm=True):
 [WARNING]
 Target bundle path {data_bundle_path} is not empty.
 The content of this folder will be REMOVED before updating.
-Are you sure to continue?
-        """.format(data_bundle_path=data_bundle_path)), abort=True)
+Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=True)
 
     day = datetime.date.today()
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')

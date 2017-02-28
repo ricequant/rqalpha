@@ -36,12 +36,13 @@ def entry_point():
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path(file_okay=False))
-def update_bundle(data_bundle_path):
+@click.option('--locale', 'locale', type=click.STRING, default="zh_Hans_CN")
+def update_bundle(data_bundle_path, locale):
     """
     Sync Data Bundle
     """
     from . import main
-    main.update_bundle(data_bundle_path)
+    main.update_bundle(data_bundle_path, locale)
 
 
 @cli.command()
