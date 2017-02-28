@@ -25,6 +25,9 @@ class Localization(object):
         self.trans = NullTranslations() if trans is None else trans
 
     def set_locale(self, locales, trans_dir=None):
+        if "en" in locales:
+            self.trans = NullTranslations()
+            return
         try:
             if trans_dir is None:
                 trans_dir = os.path.join(
