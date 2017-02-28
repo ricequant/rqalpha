@@ -121,12 +121,13 @@ class AnalyserMod(AbstractMod):
 
     def _to_position_record(self, date, order_book_id, position):
         data = {
-            k: self._safe_convert(v, 3) for k, v in six.iteritems(properties(position))
+            k: self._safe_convert(v, 3) for k, v in six.iteritems(position.__dict__)
             if not k.startswith('_') and not k.endswith('_')
             }
         data['order_book_id'] = order_book_id
         data['symbol'] = self._symbol(order_book_id)
         data['date'] = date
+        return data
 
     def _to_trade_record(self, trade):
         data = {
