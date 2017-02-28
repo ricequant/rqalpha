@@ -68,7 +68,7 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
     else:
         config_path = base_config_path
     if not os.path.exists(config_path):
-        print(_("config.yaml not found in {config_path}").format(config_path))
+        system_log.error(_("config.yml not found in {config_path}").format(config_path))
         return
 
     with codecs.open(config_path, encoding="utf-8") as f:
@@ -122,7 +122,7 @@ the backup config file has been saved in {back_config_file_path}.
     base_config = config.base
     extra_config = config.extra
 
-    set_locale(extra_config)
+    set_locale(extra_config.locale)
 
     if isinstance(base_config.start_date, six.string_types):
         base_config.start_date = datetime.datetime.strptime(base_config.start_date, "%Y-%m-%d")
@@ -263,4 +263,4 @@ def parse_persist_mode(persist_mode):
     elif persist_mode == 'on_crash':
         return PERSIST_MODE.ON_CRASH
     else:
-        raise RuntimeError(_('unknown persist mode: {}').format(persist_mode))
+        raise RuntimeError(_('unknown persist mode: {persist_mode}').format(persist_mode=persist_mode))

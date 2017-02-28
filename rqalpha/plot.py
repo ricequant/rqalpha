@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rqalpha.utils.logger import system_log
+from .utils.logger import system_log
+from .utils.i18n import gettext
 
 
 def plot_result(result_dict, show_windows=True, savefile=None):
@@ -108,23 +109,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     label_height, value_height = 0.8, 0.6
     label_height2, value_height2 = 0.35, 0.15
 
-    transaltion = {
-        "strategy": u"策略",
-        "benchmark": u"基准",
-        "Total Returns": u"回测收益",
-        "Annual Returns": u"回测年化收益",
-        "Benchmark Returns": u"基准收益",
-        "Benchmark Annual": u"基准年化收益",
-        "MaxDrawdown": u"最大回撤",
-        "MaxDD/MaxDDD": u"最大回撤/最大回撤持续期",
-        "MaxDDD": u"最大回撤持续期",
-    }
-
     def _(txt):
-        try:
-            return transaltion[txt] if use_chinese_fonts else txt
-        except:
-            return txt
+        print(use_chinese_fonts, gettext(txt))
+        return gettext(txt) if use_chinese_fonts else txt
 
     fig_data = [
         (0.00, label_height, value_height, _("Total Returns"), "{0:.3%}".format(summary["total_returns"]), red, black),
