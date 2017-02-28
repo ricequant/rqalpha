@@ -25,6 +25,7 @@ from .exception import CustomError, CustomException
 from ..const import EXC_TYPE, INSTRUMENT_TYPE, ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
 from ..utils.datetime_func import TimeRange
 from ..utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
+from ..utils.i18n import gettext as _
 
 
 def safe_round(value, ndigits=3):
@@ -146,7 +147,7 @@ def run_when_strategy_not_hold(func):
         if not Environment.get_instance().is_strategy_hold:
             return func(*args, **kwargs)
         else:
-            system_log.debug("not run {}({}, {}) because strategy is hold", func, args, kwargs)
+            system_log.debug(_("not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
 
     return wrapper
 

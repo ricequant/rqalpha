@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-02-28 11:22+0800\n"
+"POT-Creation-Date: 2017-02-28 15:07+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,6 +36,40 @@ msgstr ""
 
 #: rqalpha/main.py:94
 msgid "benchmark {benchmark} has been de_listed on {end_date}"
+msgstr ""
+
+#: rqalpha/main.py:124
+msgid ""
+"\n"
+"[WARNING]\n"
+"Target bundle path {data_bundle_path} is not empty.\n"
+"The content of this folder will be REMOVED before updating.\n"
+"Are you sure to continue?\n"
+"        "
+msgstr ""
+
+#: rqalpha/main.py:132
+msgid "try {} ..."
+msgstr ""
+
+#: rqalpha/main.py:141
+msgid "downloading ..."
+msgstr ""
+
+#: rqalpha/main.py:155
+msgid "Data bundle download successfully in {bundle_path}"
+msgstr ""
+
+#: rqalpha/main.py:295
+msgid "unknown event from event source: {}"
+msgstr ""
+
+#: rqalpha/main.py:301
+msgid "strategy run successfully, normal exit"
+msgstr ""
+
+#: rqalpha/main.py:310 rqalpha/main.py:323 rqalpha/main.py:326
+msgid "strategy execute exception"
 msgstr ""
 
 #: rqalpha/plot.py:116
@@ -166,10 +200,14 @@ msgid ""
 "instead."
 msgstr ""
 
-#: rqalpha/core/strategy_context.py:313 rqalpha/core/strategy_context.py:317
-#: rqalpha/core/strategy_context.py:321 rqalpha/core/strategy_context.py:325
-#: rqalpha/core/strategy_context.py:329
+#: rqalpha/core/strategy_context.py:312 rqalpha/core/strategy_context.py:316
+#: rqalpha/core/strategy_context.py:320 rqalpha/core/strategy_context.py:324
+#: rqalpha/core/strategy_context.py:328
 msgid "[deprecated] {} is no longer used."
+msgstr ""
+
+#: rqalpha/mod/mod_handler.py:43
+msgid "loading mod {}"
 msgstr ""
 
 #: rqalpha/mod/risk_manager/frontend_validator.py:51
@@ -277,6 +315,10 @@ msgstr ""
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
+#: rqalpha/model/account/stock_account.py:222
+msgid "no split data {}"
+msgstr ""
+
 #: rqalpha/model/account/stock_account.py:231
 #: rqalpha/model/account/stock_account.py:240
 msgid "split {order_book_id}, {position}"
@@ -284,6 +326,10 @@ msgstr ""
 
 #: rqalpha/model/account/stock_account.py:245
 msgid "split {order_book_id}, {series}"
+msgstr ""
+
+#: rqalpha/utils/__init__.py:150
+msgid "not run {}({}, {}) because strategy is hold"
 msgstr ""
 
 #: rqalpha/utils/arg_checker.py:58

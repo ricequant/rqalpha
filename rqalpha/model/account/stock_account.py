@@ -219,7 +219,7 @@ class StockAccount(BaseAccount):
         for order_book_id, position in six.iteritems(self.portfolio.positions):
             split_df = rqdatac.get_split(order_book_id, start_date="2005-01-01", end_date="2099-01-01")
             if split_df is None:
-                system_log.warn("no split data {}", order_book_id)
+                system_log.warn(_("no split data {}").foramt(order_book_id))
                 continue
             try:
                 series = split_df.loc[trading_date]
@@ -260,10 +260,6 @@ class StockAccount(BaseAccount):
                     dividend_cash = dividend_per_share * dividend_info.quantity
                     self.portfolio._dividend_receivable -= dividend_cash
                     self.portfolio._cash += dividend_cash
-                    # user_system_log.info(_("get dividend {dividend} for {order_book_id}").format(
-                    #     dividend=dividend_cash,
-                    #     order_book_id=order_book_id,
-                    # ))
                     to_delete_dividend.append(order_book_id)
 
         for order_book_id in to_delete_dividend:

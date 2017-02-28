@@ -147,7 +147,6 @@ class StrategyContext(object):
             if key.startswith("_"):
                 continue
             try:
-                # system_log.debug("persist {})
                 dict_data[key] = pickle.dumps(value)
             except Exception as e:
                 user_system_log.warn("context.{} can not pickle", key)

@@ -49,4 +49,8 @@ localization = Localization()
 
 
 def gettext(message):
-    return localization.trans.gettext(message)
+    trans_txt = localization.trans.gettext(message)
+    try:
+        return trans_txt.decode('utf-8')
+    except AttributeError:
+        return trans_txt

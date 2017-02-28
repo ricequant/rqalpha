@@ -116,8 +116,12 @@ def update_bundle(data_bundle_path=None, confirm=True):
         data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
     if (confirm and os.path.exists(data_bundle_path) and data_bundle_path != default_bundle_path and
             os.listdir(data_bundle_path)):
-        click.confirm('[WARNING] Target bundle path {} is not empty. The content of this folder will be REMOVED before '
-                      'updating. Are you sure to continue?'.format(data_bundle_path), abort=True)
+        click.confirm(_("""
+[WARNING]
+Target bundle path {data_bundle_path} is not empty.
+The content of this folder will be REMOVED before updating.
+Are you sure to continue?
+        """.format(data_bundle_path=data_bundle_path)), abort=True)
 
     day = datetime.date.today()
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
@@ -125,7 +129,7 @@ def update_bundle(data_bundle_path=None, confirm=True):
     while True:
         url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
             day.year, day.month, day.day)
-        six.print_('try {} ...'.format(url))
+        six.print_(_('try {} ...').format(url))
         r = requests.get(url, stream=True)
         if r.status_code != 200:
             day = day - datetime.timedelta(days=1)
@@ -134,7 +138,7 @@ def update_bundle(data_bundle_path=None, confirm=True):
         out = open(tmp, 'wb')
         total_length = int(r.headers.get('content-length'))
 
-        with click.progressbar(length=total_length, label='downloading ...') as bar:
+        with click.progressbar(length=total_length, label=_('downloading ...')) as bar:
             for data in r.iter_content(chunk_size=8192):
                 bar.update(len(data))
                 out.write(data)
@@ -148,6 +152,7 @@ def update_bundle(data_bundle_path=None, confirm=True):
     tar.extractall(data_bundle_path)
     tar.close()
     os.remove(tmp)
+    six.print_(_("Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
 def run(config, source_code=None):
@@ -287,13 +292,13 @@ def run(config, source_code=None):
                 env.event_bus.publish_event(EVENT.SETTLEMENT)
                 env.event_bus.publish_event(EVENT.POST_SETTLEMENT)
             else:
-                raise RuntimeError('unknown event from event source: {}'.format(event))
+                raise RuntimeError(_('unknown event from event source: {}').format(event))
 
         if env.profile_deco:
             output_profile_result(env)
 
         mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
-        system_log.debug("strategy run successfully, normal exit")
+        system_log.debug(_("strategy run successfully, normal exit"))
 
         # FIXME
         if 'analyser' in env.mod_dict:
@@ -302,7 +307,7 @@ def run(config, source_code=None):
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
 
-        user_detail_log.exception("strategy execute exception")
+        user_detail_log.exception(_("strategy execute exception"))
         user_system_log.error(e.error)
         mod_handler.tear_down(const.EXIT_CODE.EXIT_USER_ERROR, e)
     except Exception as e:
@@ -315,10 +320,10 @@ def run(config, source_code=None):
         user_system_log.error(user_exc.error)
         code = const.EXIT_CODE.EXIT_USER_ERROR
         if not is_user_exc(exc_val):
-            system_log.exception("strategy execute exception")
+            system_log.exception(_("strategy execute exception"))
             code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
         else:
-            user_detail_log.exception("strategy execute exception")
+            user_detail_log.exception(_("strategy execute exception"))
 
         mod_handler.tear_down(code, user_exc)
 

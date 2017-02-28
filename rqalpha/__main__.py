@@ -16,7 +16,6 @@
 
 import click
 import errno
-import locale
 import os
 import shutil
 

@@ -39,10 +39,10 @@ def set_locale(lc):
         locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
         locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
         os.environ['TZ'] = 'Asia/Shanghai'
-        localization.set_locale([lc])
     except Exception as e:
         if os.name != 'nt':
             raise
+    localization.set_locale([lc])
 
 
 def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):

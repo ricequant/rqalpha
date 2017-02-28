@@ -18,6 +18,7 @@ from importlib import import_module
 from collections import OrderedDict
 
 from rqalpha.utils.logger import system_log
+from rqalpha.utils.i18n import gettext as _
 
 
 class ModHandler(object):
@@ -39,7 +40,7 @@ class ModHandler(object):
 
         self._mod_list.sort(key=lambda item: item[1].priority)
         for mod_name, mod_config in self._mod_list:
-            system_log.debug('loading mod {}', mod_name)
+            system_log.debug(_('loading mod {}').format(mod_name))
             mod_module = import_module(mod_config.lib)
             mod = mod_module.load_mod()
             self._mod_dict[mod_name] = mod
