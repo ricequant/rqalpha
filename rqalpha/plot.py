@@ -110,7 +110,6 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     label_height2, value_height2 = 0.35, 0.15
 
     def _(txt):
-        print(use_chinese_fonts, gettext(txt))
         return gettext(txt) if use_chinese_fonts else txt
 
     fig_data = [
