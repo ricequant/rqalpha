@@ -136,6 +136,7 @@ class AnalyserMod(AbstractMod):
         }
         data['order_book_id'] = trade.order.order_book_id
         data['symbol'] = self._symbol(trade.order.order_book_id)
+        data['side'] = self._safe_convert(trade.order.side)
         data['datetime'] = data['datetime'].strftime("%Y-%m-%d %H:%M:%S")
         data['trading_datetime'] = data['trading_datetime'].strftime("%Y-%m-%d %H:%M:%S")
         return data
