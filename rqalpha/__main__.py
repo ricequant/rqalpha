@@ -46,19 +46,18 @@ def update_bundle(data_bundle_path, locale):
 
 
 @cli.command()
+@click.help_option('-h', '--help')
 @click.option('-d', '--data-bundle-path', 'base__data_bundle_path', type=click.Path(exists=True))
 @click.option('-f', '--strategy-file', 'base__strategy_file', type=click.Path(exists=True))
 @click.option('-s', '--start-date', 'base__start_date', type=Date())
 @click.option('-e', '--end-date', 'base__end_date', type=Date())
 @click.option('-r', '--rid', 'base__run_id', type=click.STRING)
-@click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
 @click.option('-sc', '--stock-starting-cash', 'base__stock_starting_cash', type=click.FLOAT)
 @click.option('-fc', '--future-starting-cash', 'base__future_starting_cash', type=click.FLOAT)
 @click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-sp', '--slippage', 'base__slippage', type=click.FLOAT)
 @click.option('-cm', '--commission-multiplier', 'base__commission_multiplier', type=click.FLOAT)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
-@click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
 @click.option('-st', '--strategy-type', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m']))
 @click.option('-me', '--match-engine', 'base__matching_type', type=click.Choice(['current_bar', 'next_bar']))
@@ -79,7 +78,10 @@ def update_bundle(data_bundle_path, locale):
               help="add line profiler to profile your strategy")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
-@click.help_option('-h', '--help')
+# -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 1.0.0
+@click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
+@click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
+# -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 1.0.0
 def run(**kwargs):
     """
     Start to run a strategy
