@@ -27,10 +27,10 @@ class BasePortfolio(object):
     def __init__(self, cash, start_date, account_type):
         self._account_type = account_type
         self._yesterday_portfolio_value = cash
-        self._yesterday_shares = cash
+        self._yesterday_units = cash
         self._cash = cash
         self._starting_cash = cash
-        self._shares = cash
+        self._units = cash
         self._start_date = start_date
         self._current_date = start_date
 
@@ -54,23 +54,23 @@ class BasePortfolio(object):
         """
         【float】当前最新一天的每日收益
         """
-        return 0 if self.yesterday_nav == 0 else self.nav / self.yesterday_nav - 1
+        return 0 if self.yesterday_unit_net_value == 0 else self.unit_net_value / self.yesterday_unit_net_value - 1
 
     @property
-    def yesterday_nav(self):
-        return 0 if self._yesterday_shares == 0 else self._yesterday_portfolio_value / self._yesterday_shares
+    def yesterday_unit_net_value(self):
+        return 0 if self._yesterday_units == 0 else self._yesterday_portfolio_value / self._yesterday_units
 
     @property
-    def nav(self):
-        return 0 if self._shares == 0 else self.portfolio_value / self._shares
+    def unit_net_value(self):
+        return 0 if self._units == 0 else self.portfolio_value / self._units
 
     @property
-    def yesterday_shares(self):
-        return self._yesterday_shares
+    def yesterday_units(self):
+        return self._yesterday_units
 
     @property
-    def shares(self):
-        return self._shares
+    def units(self):
+        return self._units
 
     @property
     def starting_cash(self):
