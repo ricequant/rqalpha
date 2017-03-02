@@ -124,6 +124,7 @@ class FutureAccount(BaseAccount):
             return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
+        position._total_orders -= 1
         cancel_quantity = order.unfilled_quantity
         cancel_value = -order._frozen_price * cancel_quantity * position._contract_multiplier
         frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, cancel_value)
@@ -182,6 +183,7 @@ class FutureAccount(BaseAccount):
         self._update_trade_data(position, trade, trade_quantity, trade_value)
 
         self._update_market_value(position, bar_dict[order_book_id].close)
+        self._last_trade_id = trade.exec_id
 
     def order_unsolicited_update(self, account, order):
         if self != account:

@@ -124,7 +124,7 @@ class StockAccount(BaseAccount):
             return
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
-        position._total_orders += 1
+        position._total_orders -= 1
         cancel_quantity = order.unfilled_quantity
         cancel_value = order._frozen_price * cancel_quantity
         self._update_order_data(order, cancel_quantity, cancel_value)
@@ -180,6 +180,8 @@ class StockAccount(BaseAccount):
             portfolio._cash -= trade_value
         else:
             portfolio._cash += trade_value
+
+        self._last_trade_id = trade.exec_id
 
     def order_unsolicited_update(self, account, order):
         if self != account:

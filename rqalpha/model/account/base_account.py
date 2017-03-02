@@ -43,6 +43,7 @@ class BaseAccount(Persistable):
         self.all_portfolios = OrderedDict()
         self.daily_orders = {}
         self.daily_trades = []
+        self._last_trade_id = 0
 
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
@@ -86,12 +87,16 @@ class BaseAccount(Persistable):
             trade = Trade.__from_dict__(trade_dict, self.daily_orders[str(trade_dict["_order_id"])])
             self.daily_trades.append(trade)
 
+        if 'last_trade_id' in persist_dict:
+            self._last_trade_id = persist_dict['last_trade_id']
+
     def get_state(self):
         return json_utils.convert_dict_to_json(self.__to_dict__()).encode('utf-8')
 
     def __to_dict__(self):
         account_dict = {
             "portfolio": self.portfolio.__to_dict__(),
+            'last_trade_id': self._last_trade_id,
             "daily_orders": {order_id: order.__to_dict__() for order_id, order in six.iteritems(self.daily_orders)},
             "daily_trades": [trade.__to_dict__() for trade in self.daily_trades],
         }
@@ -124,6 +129,9 @@ class BaseAccount(Persistable):
 
         self.daily_orders = open_orders
         self.daily_trades = []
+
+    def last_trade_id(self):
+        return self._last_trade_id
 
     def bar(self, bar_dict):
         pass
