@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import datetime
-import inspect
 import json
 
 from dateutil.parser import parse
@@ -25,6 +24,11 @@ from ..utils.exception import patch_user_exc, ModifyExceptionFromType
 from ..const import EXC_TYPE, EXECUTION_PHASE
 from ..environment import Environment
 from ..events import EVENT
+
+try:
+    from inspect import signature
+except ImportError:
+    from funcsigs import signature
 
 
 def market_close(hour=0, minute=0):
@@ -62,7 +66,7 @@ def run_monthly(func, tradingday=None, time_rule=None, **kwargs):
 def _verify_function(name, func):
     if not callable(func):
         raise patch_user_exc(ValueError('scheduler.{}: func should be callable'.format(name)))
-    signature = inspect.signature(func)
+    signature = signature(func)
     if len(signature.parameters) != 2:
         raise patch_user_exc(TypeError(
             'scheduler.{}: func should take exactly 2 arguments (context, bar_dict)'.format(name)))
