@@ -249,6 +249,7 @@ def run(config, source_code=None):
             persist_helper.register('broker', broker)
 
             persist_helper.restore()
+            env.event_bus.publish_event(EVENT.POST_SYSTEM_RESTORED)
 
         init_succeed = True
 

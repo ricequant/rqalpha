@@ -47,6 +47,10 @@ class EVENT(Enum):
     # 系统初始化后触发
     # post_system_init()
     POST_SYSTEM_INIT = 'post_system_init'
+
+    # 在实盘时，你可能需要在此事件后根据其他信息源对系统状态进行调整
+    POST_SYSTEM_RESTORED = 'post_system_restored'
+
     # 策略执行完init函数后触发
     # post_user_init()
     POST_USER_INIT = 'post_user_init'
