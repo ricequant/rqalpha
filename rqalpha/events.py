@@ -134,3 +134,7 @@ class EVENT(Enum):
     TRADE = 'trade'
 
     ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'
+
+
+def parse_event(event_str):
+    return EVENT.__members__.get(event_str.upper(), None)
