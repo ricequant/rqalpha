@@ -38,12 +38,12 @@ install_requirements = [
     'click>=6.6',
     'bcolz>=1.1.0',
     'matplotlib>=1.5.1',
-    'PyYAML>=3.12',
     'jsonpickle==0.9.4',
     'simplejson>=3.10.0',
     'dill==0.2.5',
     'XlsxWriter>=0.9.6',
     'line-profiler>=2.0',
+    'ruamel.yaml>=0.13.14',
 ]
 
 if sys.version_info.major < 3:
