@@ -16,7 +16,7 @@
 
 import six
 import os
-import yaml
+import ruamel.yaml as yaml
 import datetime
 import logbook
 import locale
@@ -33,6 +33,36 @@ from ..utils.dict_func import deep_update
 from ..mod.utils import mod_config_value_parse
 
 
+def get_default_config_path():
+    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
+    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
+    if not os.path.exists(default_config_path):
+        dir_path = os.path.dirname(default_config_path)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        shutil.copy(config_template_path, default_config_path)
+    return default_config_path
+
+
+def config_version_verify(config, config_path):
+    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
+    with codecs.open(config_template_path, encoding="utf-8") as steam:
+        default_config = yaml.load(steam, yaml.Loader)
+    config_version = config.get("version", None)
+    if config_version != default_config["version"]:
+        back_config_file_path = config_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
+        shutil.move(config_path, back_config_file_path)
+        shutil.copy(config_template_path, config_path)
+
+        system_log.warning(_("""
+Your current config file {config_file_path} is too old and may cause RQAlpha running error.
+RQAlpha has replaced the config file with the newest one.
+the backup config file has been saved in {back_config_file_path}.
+        """).format(config_file_path=config_path, back_config_file_path=back_config_file_path))
+        config = default_config
+    return config
+
+
 def set_locale(lc):
     # FIXME: It should depends on the system and locale config
     try:
@@ -45,7 +75,7 @@ def set_locale(lc):
     localization.set_locale([lc])
 
 
-def parse_config(config_args, base_config_path=None, click_type=True, source_code=None):
+def parse_config(config_args, config_path=None, click_type=True, source_code=None):
     mod_configs = config_args.pop("mod_configs", [])
     for cfg, value in mod_configs:
         key = "mod__{}".format(cfg.replace(".", "__"))
@@ -53,48 +83,16 @@ def parse_config(config_args, base_config_path=None, click_type=True, source_cod
 
     set_locale(config_args.get("extra__locale", None))
 
-    default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
-    with codecs.open(default_config_path, encoding="utf-8") as f:
-        default_config = f.read()
-    default_config = yaml.load(default_config)
+    config_path = get_default_config_path() if config_path is None else os.path.abspath(config_path)
 
-    if base_config_path is None:
-        config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
-        if not os.path.exists(config_path):
-            dir_path = os.path.dirname(config_path)
-            if not os.path.exists(dir_path):
-                os.makedirs(dir_path)
-            open(config_path, "wb").write(open(default_config_path, "rb").read())
-    else:
-        config_path = base_config_path
     if not os.path.exists(config_path):
         system_log.error(_("config.yml not found in {config_path}").format(config_path))
         return
 
-    with codecs.open(config_path, encoding="utf-8") as f:
-        config_file = f.read()
+    with codecs.open(config_path, encoding="utf-8") as stream:
+        config = yaml.load(stream, yaml.Loader)
 
-    config = yaml.load(config_file)
-    config_version = config.get("version", None)
-
-    if config_version is None or config_version != default_config["version"]:
-        config_file_path = os.path.abspath(config_path)
-        back_config_file_path = config_file_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
-        shutil.move(config_file_path, back_config_file_path)
-        shutil.copy(default_config_path, config_file_path)
-
-        """
-您使用的配置文件 {config_file_path} 版本过久，可能会导致RQAlpha运行错误。
-已为您替换为新的配置文件，
-旧的配置文件备份存储于 {back_config_file_path}
-        """
-
-        system_log.warning(_("""
-Your current config file {config_file_path} is too old and may cause RQAlpha running error.
-RQAlpha has replaced the config file with the newest one.
-the backup config file has been saved in {back_config_file_path}.
-        """).format(config_file_path=config_file_path, back_config_file_path=back_config_file_path))
-        config = default_config
+    config = config_version_verify(config, config_path)
 
     if click_type:
         for key, value in six.iteritems(config_args):
@@ -187,7 +185,6 @@ the backup config file has been saved in {back_config_file_path}.
 
     if base_config.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
-        config.validator.fast_match = True
 
     system_log.debug("\n" + pformat(config))
 
