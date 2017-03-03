@@ -21,6 +21,7 @@ RQAlpha 大部分的组件是以 :code:`add_listener` 的方式进行事件的�
 
     *   POST_SYSTEM_INIT: 系统初始化后触发
     *   POST_USER_INIT: 策略的 :code:`init` 函数执行后触发
+    *   POST_SYSTEM_RESTORED: 在实盘时，你可能需要在此事件后根据其他信息源对系统状态进行调整
 
 *   MarketEvent: 市场及数据事件源
 

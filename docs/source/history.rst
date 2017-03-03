@@ -4,6 +4,17 @@
 History
 ==================
 
+0.3.12
+==================
+
+- 优化 `setup.py` 脚本，只有在 python 2 环境下才安装兼容性依赖库
+- 增加 :code:`rqalpha install/uninstall/list/enable/disable` 命令
+- 增加 :code:`EVENT.POST_SYSTEM_RESTORED` 事件
+- 增加 净值和份额的支持，现在的收益和Analyser的计算都是基于净值了。
+- 在 AnalyserMod 输出的 Trade 中增加 :code:`side` 和 :code:`position_effect`
+- 修复 :code:`total_orders` 计算错误
+- 修复 :code:`inpsect.signature` 在 python 2.x 报错的问题。
+
 0.3.11
 ==================
 
