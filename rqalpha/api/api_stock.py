@@ -31,7 +31,7 @@ from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
 from ..model.order import Order, OrderStyle, MarketOrder, LimitOrder
 from ..utils.arg_checker import apply_rules, verify_that
-from ..utils.exception import patch_user_exc
+from ..utils.exception import patch_user_exc, RQInvalidArgument
 from ..utils.i18n import gettext as _
 from ..utils.logger import user_system_log
 from ..utils.scheduler import market_close, market_open
@@ -100,10 +100,10 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     # :return:  A unique order id.
     # :rtype: int
     if not isinstance(style, OrderStyle):
-        raise patch_user_exc(ValueError(_('style should be OrderStyle')))
+        raise RQInvalidArgument(_('style should be OrderStyle'))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
-            raise patch_user_exc(ValueError(_("Limit order price should be positive")))
+            raise RQInvalidArgument(_("Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -239,10 +239,10 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     # :return:  A unique order id.
     # :rtype: int
     if not isinstance(style, OrderStyle):
-        raise patch_user_exc(ValueError(_('style should be OrderStyle')))
+        raise RQInvalidArgument(_('style should be OrderStyle'))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
-            raise patch_user_exc(ValueError(_("Limit order price should be positive")))
+            raise RQInvalidArgument(_("Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
@@ -317,7 +317,7 @@ def order_percent(id_or_ins, percent, style=MarketOrder()):
     # :return:  A unique order id.
     # :rtype: int
     if percent < -1 or percent > 1:
-        raise patch_user_exc(ValueError(_('percent should between -1 and 1')))
+        raise RQInvalidArgument(_('percent should between -1 and 1'))
 
     account = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK]
     portfolio_value = account.portfolio.portfolio_value
@@ -436,7 +436,7 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     # :return:  A unique order id.
     # :rtype: int
     if percent < 0 or percent > 1:
-        raise patch_user_exc(ValueError(_('percent should between 0 and 1')))
+        raise RQInvalidArgument(_('percent should between 0 and 1'))
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
     bar_dict = ExecutionContext.get_current_bar_dict()
@@ -461,13 +461,13 @@ def assure_stock_order_book_id(id_or_symbols):
         if "XSHG" in order_book_id or "XSHE" in order_book_id:
             return order_book_id
         else:
-            raise patch_user_exc(
-                ValueError(_("{order_book_id} is not supported in current strategy type").format(
-                    order_book_id=order_book_id)))
+            raise RQInvalidArgument(
+                _("{order_book_id} is not supported in current strategy type").format(
+                    order_book_id=order_book_id))
     elif isinstance(id_or_symbols, six.string_types):
         return assure_stock_order_book_id(instruments(id_or_symbols))
     else:
-        raise patch_user_exc(KeyError(_("unsupported order_book_id type")))
+        raise RQInvalidArgument(_("unsupported order_book_id type"))
 
 
 def downsize_amount(amount, position):

@@ -112,3 +112,11 @@ class ModifyExceptionFromType(object):
 class RQUserError(Exception):
     ricequant_exc = const.EXC_TYPE.USER_EXC
     pass
+
+
+class RQInvalidArgument(RQUserError):
+    pass
+
+
+class RQTypeError(RQUserError):
+    pass
