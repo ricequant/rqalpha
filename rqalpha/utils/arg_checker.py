@@ -22,7 +22,6 @@ import pandas as pd
 from functools import wraps
 
 from dateutil.parser import parse as parse_date
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from .exception import RQUserError
 from ..execution_context import ExecutionContext
@@ -298,6 +297,7 @@ class ArgumentChecker(object):
         return self
 
     def _are_valid_query_entities(self, func_name, entities):
+        from sqlalchemy.orm.attributes import InstrumentedAttribute
         for e in entities:
             if not isinstance(e, InstrumentedAttribute):
                 raise RQInvalidArgument(
