@@ -181,6 +181,9 @@ system_mod = [
 @cli.command()
 @click.argument('mod_name')
 def install(mod_name):
+    """
+    Install third-party Mod
+    """
     if mod_name in system_mod:
         print('System Mod can not be installed or uninstalled')
         return
@@ -208,6 +211,9 @@ def install(mod_name):
 @cli.command()
 @click.argument('mod_name')
 def uninstall(mod_name):
+    """
+    Uninstall third-party Mod
+    """
     if mod_name in system_mod:
         print('System Mod can not be installed or uninstalled')
         return
@@ -225,6 +231,9 @@ def uninstall(mod_name):
 
 @cli.command()
 def list():
+    """
+    List all mod configuration
+    """
     config_path = get_default_config_path()
     config = load_config(config_path, loader=yaml.RoundTripLoader)
 
@@ -234,6 +243,9 @@ def list():
 @cli.command()
 @click.argument('mod_name')
 def enable(mod_name):
+    """
+    enable mod
+    """
     if mod_name not in system_mod and "rqalpha_mod_" in mod_name:
         mod_name = mod_name.replace("rqalpha_mod_", "")
 
@@ -250,6 +262,9 @@ def enable(mod_name):
 @cli.command()
 @click.argument('mod_name')
 def disable(mod_name):
+    """
+    disable mod
+    """
     if mod_name not in system_mod and "rqalpha_mod_" in mod_name:
         mod_name = mod_name.replace("rqalpha_mod_", "")
 
