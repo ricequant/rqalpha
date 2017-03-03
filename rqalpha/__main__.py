@@ -18,9 +18,11 @@ import click
 import errno
 import os
 import shutil
+import ruamel.yaml as yaml
+from importlib import import_module
 
 from .utils.click_helper import Date
-from .utils.config import parse_config
+from .utils.config import parse_config, get_default_config_path, load_config, dump_config
 
 
 @click.group()
@@ -161,6 +163,105 @@ def generate_config(directory):
     target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
     shutil.copy(default_config, target_config_path)
     print("Config file has been generated in", target_config_path)
+
+
+# For Mod Cli
+
+system_mod = [
+    'simulation',
+    'funcat_api',
+    'progress',
+    'simple_stock_realtime_trade',
+    'progressive_output_csv',
+    'risk_manager',
+    'analyser',
+]
+
+
+@cli.command()
+@click.argument('mod_name')
+def install(mod_name):
+    if mod_name in system_mod:
+        print('System Mod can not be installed or uninstalled')
+        return
+    if "rqalpha_mod_" in mod_name:
+        lib_name = mod_name
+        mod_name = lib_name.replace("rqalpha_mod_", "")
+    else:
+        lib_name = "rqalpha_mod_" + mod_name
+
+    config_path = get_default_config_path()
+    config = load_config(config_path, loader=yaml.RoundTripLoader)
+
+    mod = import_module("rqalpha_mod_" + mod_name)
+
+    mod_config = yaml.load(mod.__mod_config__, yaml.RoundTripLoader)
+
+    config['mod'][mod_name] = mod_config
+    config['mod'][mod_name]['lib'] = lib_name
+    config['mod'][mod_name]['enabled'] = False
+    config['mod'][mod_name]['priority'] = 1000
+
+    dump_config(config_path, config)
+
+
+@cli.command()
+@click.argument('mod_name')
+def uninstall(mod_name):
+    if mod_name in system_mod:
+        print('System Mod can not be installed or uninstalled')
+        return
+
+    if "rqalpha_mod_" in mod_name:
+        mod_name = mod_name.replace("rqalpha_mod_", "")
+
+    config_path = get_default_config_path()
+    config = load_config(config_path, loader=yaml.RoundTripLoader)
+
+    del config['mod'][mod_name]
+
+    dump_config(config_path, config)
+
+
+@cli.command()
+def list():
+    config_path = get_default_config_path()
+    config = load_config(config_path, loader=yaml.RoundTripLoader)
+
+    print(yaml.dump(config['mod'], Dumper=yaml.RoundTripDumper))
+
+
+@cli.command()
+@click.argument('mod_name')
+def enable(mod_name):
+    if mod_name not in system_mod and "rqalpha_mod_" in mod_name:
+        mod_name = mod_name.replace("rqalpha_mod_", "")
+
+    config_path = get_default_config_path()
+    config = load_config(config_path, loader=yaml.RoundTripLoader)
+
+    try:
+        config['mod'][mod_name]['enabled'] = True
+        dump_config(config_path, config)
+    except Exception as e:
+        pass
+
+
+@cli.command()
+@click.argument('mod_name')
+def disable(mod_name):
+    if mod_name not in system_mod and "rqalpha_mod_" in mod_name:
+        mod_name = mod_name.replace("rqalpha_mod_", "")
+
+    config_path = get_default_config_path()
+    config = load_config(config_path, loader=yaml.RoundTripLoader)
+
+    try:
+        config['mod'][mod_name]['enabled'] = False
+        dump_config(config_path, config)
+    except Exception as e:
+        pass
+
 
 if __name__ == '__main__':
     entry_point()
