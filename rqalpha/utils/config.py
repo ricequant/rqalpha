@@ -33,6 +33,22 @@ from ..utils.dict_func import deep_update
 from ..mod.utils import mod_config_value_parse
 
 
+def load_config(config_path, loader=yaml.Loader, verify_version=True):
+    if not os.path.exists(config_path):
+        system_log.error(_("config.yml not found in {config_path}").format(config_path))
+        return False
+    with codecs.open(config_path, encoding="utf-8") as stream:
+        config = yaml.load(stream, loader)
+    if verify_version:
+        config = config_version_verify(config, config_path)
+    return config
+
+
+def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
+    with codecs.open(config_path, mode='w', encoding='utf-8') as file:
+        file.write(yaml.dump(config, Dumper=dumper))
+
+
 def get_default_config_path():
     config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
     default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
@@ -46,8 +62,7 @@ def get_default_config_path():
 
 def config_version_verify(config, config_path):
     config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
-    with codecs.open(config_template_path, encoding="utf-8") as steam:
-        default_config = yaml.load(steam, yaml.Loader)
+    default_config = load_config(config_template_path, verify_version=False)
     config_version = config.get("version", None)
     if config_version != default_config["version"]:
         back_config_file_path = config_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
@@ -85,14 +100,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     config_path = get_default_config_path() if config_path is None else os.path.abspath(config_path)
 
-    if not os.path.exists(config_path):
-        system_log.error(_("config.yml not found in {config_path}").format(config_path))
-        return
-
-    with codecs.open(config_path, encoding="utf-8") as stream:
-        config = yaml.load(stream, yaml.Loader)
-
-    config = config_version_verify(config, config_path)
+    config = load_config(config_path)
 
     if click_type:
         for key, value in six.iteritems(config_args):
