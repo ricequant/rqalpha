@@ -21,6 +21,7 @@ https://www.ricequant.com/api/python/chn
 
 from __future__ import division
 import six
+import numpy as np
 
 from .api_base import decorate_api_exc, instruments
 from ..execution_context import ExecutionContext
@@ -62,9 +63,8 @@ def order(id_or_ins, amount, side, position_effect, style):
         raise RQInvalidArgument(_("Limit order price should be positive"))
 
     order_book_id = assure_future_order_book_id(id_or_ins)
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = bar.close
+
+    price = ExecutionContext.get_current_close_price(order_book_id)
 
     amount = int(amount)
 
@@ -72,7 +72,7 @@ def order(id_or_ins, amount, side, position_effect, style):
     trading_dt = ExecutionContext.get_current_trading_dt()
     r_order = Order.__from_create__(calendar_dt, trading_dt, order_book_id, amount, side, style, position_effect)
 
-    if bar.isnan or price == 0:
+    if np.isnan(price) or price == 0:
         user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
