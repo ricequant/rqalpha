@@ -19,6 +19,8 @@ from contextlib import contextmanager
 
 from .utils.i18n import gettext as _
 from .utils.exception import CustomException, patch_user_exc
+from .utils import get_upper_underlying_symbol
+from .utils.default_future_info import DEFAULT_FUTURE_INFO
 
 
 class ContextStack(object):
@@ -142,3 +144,30 @@ class ExecutionContext(object):
                 return func(*args, **kwargs)
             return wrapper
         return decorator
+
+    @classmethod
+    def get_current_close_price(cls, order_book_id):
+        return ExecutionContext.data_proxy.current_snapshot(
+            order_book_id,
+            ExecutionContext.config.base.frequency,
+            ExecutionContext.calendar_dt
+        ).last
+
+    @classmethod
+    def get_future_commission_info(cls, order_book_id, hedge_type):
+        try:
+            return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)
+        except NotImplementedError:
+            underlying_symbol = get_upper_underlying_symbol(order_book_id)
+            return DEFAULT_FUTURE_INFO[underlying_symbol][hedge_type.value]
+
+    @classmethod
+    def get_future_margin(cls, order_book_id):
+        try:
+            return ExecutionContext.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
+        except NotImplementedError:
+            return ExecutionContext.data_proxy.instruments(order_book_id).margin_rate
+
+    @classmethod
+    def get_future_info(cls, order_book_id, hedge_type):
+        return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)

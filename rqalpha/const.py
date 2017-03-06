@@ -81,6 +81,7 @@ SIDE = CustomEnum("SIDE", [
 POSITION_EFFECT = CustomEnum("POSITION_EFFECT", [
     "OPEN",
     "CLOSE",
+    "CLOSE_TODAY",
 ])
 
 EXC_TYPE = CustomEnum("EXC_TYPE", [

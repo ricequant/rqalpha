@@ -1,4 +1,4 @@
-version: 0.1.1
+version: 0.1.2
 
 # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
 whitelist: [base, extra, validator, mod]
@@ -103,6 +103,8 @@ mod:
     available_cash: true
     # available_position: 检查可平仓位是否充足，默认开启
     available_position: true
+    # short_stock: 允许裸卖空
+    short_stock: false
   analyser:
     priority: 100
     enabled: true

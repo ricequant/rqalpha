@@ -37,7 +37,7 @@ from ..model.instrument import SectorCodeItem, IndustryCodeItem
 from ..execution_context import ExecutionContext
 from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
 from ..utils import to_industry_code, to_sector_name, unwrapper
-from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME
+from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _
 from ..model.snapshot import SnapshotObject
 from ..model.order import Order, MarketOrder, LimitOrder
@@ -83,6 +83,8 @@ def api_exc_patch(func):
         def deco(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
+            except RQInvalidArgument:
+                raise
             except Exception as e:
                 if isinstance(e, TypeError):
                     exc_info = sys.exc_info()
@@ -120,7 +122,7 @@ def assure_order_book_id(id_or_ins):
     elif isinstance(id_or_ins, six.string_types):
         order_book_id = instruments(id_or_ins).order_book_id
     else:
-        raise patch_user_exc(KeyError(_("unsupported order_book_id type")))
+        raise RQInvalidArgument(_("unsupported order_book_id type"))
 
     return order_book_id
 
@@ -221,7 +223,8 @@ def subscribe(id_or_symbols):
         for item in id_or_symbols:
             current_universe.add(assure_order_book_id(item))
     else:
-        raise patch_user_exc(KeyError(_("unsupported order_book_id type")))
+        raise RQInvalidArgument(_("unsupported order_book_id type"))
+    verify_that('id_or_symbols')._are_valid_instruments("subscribe", id_or_symbols)
     Environment.get_instance().update_universe(current_universe)
 
 
@@ -251,7 +254,7 @@ def unsubscribe(id_or_symbols):
             i = assure_order_book_id(item)
             current_universe.discard(i)
     else:
-        raise patch_user_exc(KeyError(_("unsupported order_book_id type")))
+        raise RQInvalidArgument(_("unsupported order_book_id type"))
 
     Environment.get_instance().update_universe(current_universe)
 
@@ -304,7 +307,7 @@ def get_yield_curve(date=None, tenor=None):
     else:
         date = pd.Timestamp(date)
         if date > yesterday:
-            raise patch_user_exc(RuntimeError('get_yield_curve: {} >= now({})'.format(date, yesterday)))
+            raise RQInvalidArgument('get_yield_curve: {} >= now({})'.format(date, yesterday))
 
     return data_proxy.get_yield_curve(start_date=date, end_date=date, tenor=tenor)
 
@@ -398,7 +401,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     dt = ExecutionContext.get_current_calendar_dt()
 
     if frequency == '1m' and Environment.get_instance().config.base.frequency == '1d':
-        raise patch_user_exc(ValueError('can not get minute history in day back test'))
+        raise RQInvalidArgument('can not get minute history in day back test')
 
     if (Environment.get_instance().config.base.frequency == '1m' and frequency == '1d') or \
             (frequency == '1d' and ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING):
@@ -663,8 +666,8 @@ def to_date(date):
             return date.date()
         except AttributeError:
             return date
-
-    raise patch_user_exc(ValueError('unknown date value: {}'.format(date)))
+    
+    raise RQInvalidArgument('unknown date value: {}'.format(date))
 
 
 @export_as_api
@@ -681,10 +684,10 @@ def get_dividend(order_book_id, start_date, adjusted=True):
     dt = ExecutionContext.get_current_trading_dt().date() - datetime.timedelta(days=1)
     start_date = to_date(start_date)
     if start_date > dt:
-        raise patch_user_exc(
-            ValueError(_('in get_dividend, start_date {} is later than the previous test day {}').format(
+        raise RQInvalidArgument(
+            _('in get_dividend, start_date {} is later than the previous test day {}').format(
                 start_date, dt
-            )))
+            ))
     order_book_id = assure_order_book_id(order_book_id)
     df = ExecutionContext.data_proxy.get_dividend(order_book_id, adjusted)
     return df[start_date:dt]

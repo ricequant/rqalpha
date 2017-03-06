@@ -49,6 +49,7 @@ def update_bundle(data_bundle_path, locale):
 
 @cli.command()
 @click.help_option('-h', '--help')
+# -- Base Configuration
 @click.option('-d', '--data-bundle-path', 'base__data_bundle_path', type=click.Path(exists=True))
 @click.option('-f', '--strategy-file', 'base__strategy_file', type=click.Path(exists=True))
 @click.option('-s', '--start-date', 'base__start_date', type=Date())
@@ -65,25 +66,27 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-me', '--match-engine', 'base__matching_type', type=click.Choice(['current_bar', 'next_bar']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
+@click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
+# -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
-@click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 @click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log')
+@click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
+@click.option("--enable-profiler", "extra__enable_profiler", is_flag=True,
+              help="add line profiler to profile your strategy")
+@click.option('--config', 'config_path', type=click.STRING, help="config file path")
+# -- Mod Configuration
+@click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
 @click.option('-p', '--plot/--no-plot', 'mod__analyser__plot', default=None, help="plot result")
 @click.option('--plot-save', 'mod__analyser__plot_save_file', default=None, help="save plot to file")
 @click.option('--report', 'mod__analyser__report_save_path', type=click.Path(writable=True), help="save report")
 @click.option('-o', '--output-file', 'mod__analyser__output_file', type=click.Path(writable=True),
               help="output result pickle file")
 @click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
-@click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
-@click.option("--enable-profiler", "extra__enable_profiler", is_flag=True,
-              help="add line profiler to profile your strategy")
-@click.option('--config', 'config_path', type=click.STRING, help="config file path")
-@click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
+@click.option('--short-stock', 'mod__risk_manager__short_stock', is_flag=True, help="enable stock shorting")
 # -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 1.0.0
 @click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
 @click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
-# -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 1.0.0
 def run(**kwargs):
     """
     Start to run a strategy

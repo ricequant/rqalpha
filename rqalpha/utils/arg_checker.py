@@ -23,7 +23,7 @@ from functools import wraps
 
 from dateutil.parser import parse as parse_date
 
-from .exception import RQUserError
+from .exception import RQInvalidArgument, RQTypeError
 from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
 from ..environment import Environment
@@ -35,14 +35,6 @@ from ..utils.logger import user_system_log
 
 main_contract_warning_flag = True
 index_contract_warning_flag = True
-
-
-class RQInvalidArgument(RQUserError):
-    pass
-
-
-class RQTypeError(RQUserError):
-    pass
 
 
 class ArgumentChecker(object):
@@ -348,6 +340,8 @@ def apply_rules(*rules):
         def api_rule_check_wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
+            except RQInvalidArgument:
+                raise
             except Exception:
                 exc_info = sys.exc_info()
                 t, v, tb = exc_info

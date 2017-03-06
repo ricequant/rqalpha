@@ -21,13 +21,14 @@ https://www.ricequant.com/api/python/chn
 
 from __future__ import division
 import six
+import numpy as np
 
 from .api_base import decorate_api_exc, instruments
 from ..execution_context import ExecutionContext
 from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from ..const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE
 from ..model.instrument import Instrument
-from ..utils.exception import patch_user_exc
+from ..utils.exception import patch_user_exc, RQInvalidArgument
 from ..utils.logger import user_system_log
 from ..utils.i18n import gettext as _
 from ..utils.arg_checker import apply_rules, verify_that
@@ -59,12 +60,11 @@ def order(id_or_ins, amount, side, position_effect, style):
     if amount <= 0:
         raise RuntimeError
     if isinstance(style, LimitOrder) and style.get_limit_price() <= 0:
-        raise patch_user_exc(ValueError(_("Limit order price should be positive")))
+        raise RQInvalidArgument(_("Limit order price should be positive"))
 
     order_book_id = assure_future_order_book_id(id_or_ins)
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = bar.close
+
+    price = ExecutionContext.get_current_close_price(order_book_id)
 
     amount = int(amount)
 
@@ -72,7 +72,7 @@ def order(id_or_ins, amount, side, position_effect, style):
     trading_dt = ExecutionContext.get_current_trading_dt()
     r_order = Order.__from_create__(calendar_dt, trading_dt, order_book_id, amount, side, style, position_effect)
 
-    if bar.isnan or price == 0:
+    if np.isnan(price) or price == 0:
         user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
@@ -173,15 +173,15 @@ def sell_close(id_or_ins, amount, style=MarketOrder()):
 def assure_future_order_book_id(id_or_symbols):
     if isinstance(id_or_symbols, Instrument):
         if id_or_symbols.type != "Future":
-            raise patch_user_exc(
-                ValueError(_("{order_book_id} is not supported in current strategy type").format(
-                    order_book_id=id_or_symbols.order_book_id)))
+            raise RQInvalidArgument(
+                _("{order_book_id} is not supported in current strategy type").format(
+                    order_book_id=id_or_symbols.order_book_id))
         else:
             return id_or_symbols.order_book_id
     elif isinstance(id_or_symbols, six.string_types):
         return assure_future_order_book_id(instruments(id_or_symbols))
     else:
-        raise patch_user_exc(KeyError(_("unsupported order_book_id type")))
+        raise RQInvalidArgument(_("unsupported order_book_id type"))
 
 
 @export_as_api

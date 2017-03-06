@@ -29,6 +29,7 @@ from .trading_dates_mixin import TradingDatesMixin
 from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
 from ..utils.datetime_func import convert_int_to_datetime
+from ..const import HEDGE_TYPE
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):
@@ -146,3 +147,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     def available_data_range(self, frequency):
         return self._data_source.available_data_range(frequency)
+
+    def get_future_info(self, order_book_id, hedge_type=HEDGE_TYPE.SPECULATION):
+        return self._data_source.get_future_info(order_book_id, hedge_type)

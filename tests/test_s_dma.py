@@ -25,7 +25,7 @@ def handle_bar(context, bar_dict):
         order_target_percent(context.s1, 0)
 
     if (HHV(MAX(O, C), 50) / LLV(MIN(O, C), 50) < 2
-        and cross(DDD, AMA) and cur_position == 0):
+        and CROSS(DDD, AMA) and cur_position == 0):
         order_target_percent(context.s1, 1)
 
 
