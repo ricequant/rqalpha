@@ -224,6 +224,7 @@ def subscribe(id_or_symbols):
             current_universe.add(assure_order_book_id(item))
     else:
         raise RQInvalidArgument(_("unsupported order_book_id type"))
+    verify_that('id_or_symbols')._are_valid_instruments("subscribe", id_or_symbols)
     Environment.get_instance().update_universe(current_universe)
 
 
