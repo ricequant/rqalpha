@@ -34,6 +34,9 @@ class FrontendValidator(object):
             return False
         if not self.validate_available_cash(order, account, bar):
             return False
+        if self.config.short_stock:
+            # 如果开启做空，则不验证仓位是否足够
+            return True
         if not self.validate_available_position(order, position):
             return False
         return True
