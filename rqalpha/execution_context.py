@@ -142,3 +142,11 @@ class ExecutionContext(object):
                 return func(*args, **kwargs)
             return wrapper
         return decorator
+
+    @classmethod
+    def get_current_close_price(cls, order_book_id):
+        return ExecutionContext.data_proxy.current_snapshot(
+            order_book_id,
+            ExecutionContext.config.base.frequency,
+            ExecutionContext.calendar_dt
+        ).last
