@@ -65,6 +65,8 @@ FuturePersistMap = {
     "_sell_close_transaction_cost": "_sell_close_transaction_cost",
     "_buy_daily_realized_pnl": "_buy_daily_realized_pnl",
     "_sell_daily_realized_pnl": "_sell_daily_realized_pnl",
+    "_buy_avg_open_price": "_buy_avg_open_price",
+    "_sell_avg_open_price": "_sell_avg_open_price",
 }
 
 
@@ -135,7 +137,14 @@ class FuturePosition(BasePosition):
     def __from_dict__(cls, position_dict):
         position = cls(position_dict["_order_book_id"])
         for persist_key, origin_key in six.iteritems(FuturePersistMap):
-            setattr(position, origin_key, position_dict[persist_key])
+            try:
+                setattr(position, origin_key, position_dict[persist_key])
+            except KeyError as e:
+                if persist_key in ["_buy_avg_open_price", "_sell_avg_open_price"]:
+                    # FIXME 对于已有 persist_key 做暂时error handling 处理。
+                    setattr(position, origin_key, 0.)
+                else:
+                    raise e
         return position
 
     def __to_dict__(self):

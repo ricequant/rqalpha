@@ -24,8 +24,10 @@ from ...utils.repr import dict_repr
 
 StockPersistMap = {
     "_yesterday_portfolio_value": "_yesterday_portfolio_value",
+    "_yesterday_units": "_yesterday_units",
     "_cash": "_cash",
     "_starting_cash": "_starting_cash",
+    "_units": "_units",
     "_start_date": "_start_date",
     "_current_date": "_current_date",
     "_frozen_cash": "_frozen_cash",
@@ -64,7 +66,14 @@ class StockPortfolio(BasePortfolio):
                 for order_book_id, position_dict in six.iteritems(portfolio_dict[persist_key]):
                     self._positions[order_book_id] = StockPosition.__from_dict__(position_dict)
             else:
-                setattr(self, origin_key, portfolio_dict[persist_key])
+                try:
+                    setattr(self, origin_key, portfolio_dict[persist_key])
+                except KeyError as e:
+                    if persist_key in ["_yesterday_units", "_units"]:
+                        # FIXME 对于已有 persist_key 做暂时error handling 处理。
+                        setattr(self, origin_key, portfolio_dict["_starting_cash"])
+                    else:
+                        raise e
 
     def __to_dict__(self):
         p_dict = {}
