@@ -134,15 +134,21 @@ class StockAccount(BaseAccount):
         pass
 
     def order_cancellation_pass(self, account, order):
-        if self != account:
-            return
-        canceled_quantity = order.unfilled_quantity
-        canceled_value = order._frozen_price * canceled_quantity
-        self._update_order_data(order, -canceled_quantity, -canceled_value)
-        self._update_frozen_cash(order, -canceled_value)
+        self._cancel_order_cal(account, order)
 
     def order_cancellation_reject(self, account, order):
         pass
+
+    def order_unsolicited_update(self, account, order):
+        self._cancel_order_cal(account, order)
+
+    def _cancel_order_cal(self, account, order):
+        if self != account:
+            return
+        rejected_quantity = order.unfilled_quantity
+        rejected_value = order._frozen_price * rejected_quantity
+        self._update_order_data(order, -rejected_quantity, -rejected_value)
+        self._update_frozen_cash(order, -rejected_value)
 
     def trade(self, account, trade):
         if self != account:
@@ -182,14 +188,6 @@ class StockAccount(BaseAccount):
             portfolio._cash += trade_value
 
         self._last_trade_id = trade.exec_id
-
-    def order_unsolicited_update(self, account, order):
-        if self != account:
-            return
-        rejected_quantity = order.unfilled_quantity
-        rejected_value = order._frozen_price * rejected_quantity
-        self._update_order_data(order, -rejected_quantity, -rejected_value)
-        self._update_frozen_cash(order, -rejected_value)
 
     def _update_order_data(self, order, inc_order_quantity, inc_order_value):
         position = self.portfolio.positions[order.order_book_id]

@@ -172,7 +172,5 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_orders = [(a, o) for a, o in self._open_orders if not o._is_final()]
 
         for account, order in final_orders:
-            if order.status == ORDER_STATUS.REJECTED:
+            if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:
                 self._env.event_bus.publish_event(EVENT.ORDER_UNSOLICITED_UPDATE, account, order)
-            elif order.status == ORDER_STATUS.CANCELLED:
-                self._env.event_bus.publish_event(EVENT.ORDER_CANCELLATION_PASS, account, order)

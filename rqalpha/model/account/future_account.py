@@ -135,18 +135,24 @@ class FutureAccount(BaseAccount):
         pass
 
     def order_cancellation_pass(self, account, order):
-        if self != account:
-            return
-        order_book_id = order.order_book_id
-        position = self.portfolio.positions[order_book_id]
-        canceled_quantity = order.unfilled_quantity
-        canceled_value = -order._frozen_price * canceled_quantity * position._contract_multiplier
-        frozen_margin = self.margin_decider.cal_margin(order_book_id, order.order_book_id, canceled_value)
-        self._update_order_data(position, order, -canceled_quantity, canceled_value)
-        self._update_frozen_cash(order, frozen_margin)
+        self._cancel_order_cal(account, order)
 
     def order_cancellation_reject(self, account, order):
         pass
+
+    def order_unsolicited_update(self, account, order):
+        self._cancel_order_cal(account, order)
+
+    def _cancel_order_cal(self, account, order):
+        if self != account:
+            return
+        order_book_id = order.order_book_id
+        position = self.portfolio.positions[order.order_book_id]
+        rejected_quantity = order.unfilled_quantity
+        rejected_value = -order._frozen_price * rejected_quantity * position._contract_multiplier
+        frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, rejected_value)
+        self._update_order_data(position, order, -rejected_quantity, rejected_value)
+        self._update_frozen_cash(order, frozen_margin)
 
     def trade(self, account, trade):
         if self != account:
@@ -184,17 +190,6 @@ class FutureAccount(BaseAccount):
 
         self._update_market_value(position, bar_dict[order_book_id].close)
         self._last_trade_id = trade.exec_id
-
-    def order_unsolicited_update(self, account, order):
-        if self != account:
-            return
-        order_book_id = order.order_book_id
-        position = self.portfolio.positions[order.order_book_id]
-        rejected_quantity = order.unfilled_quantity
-        rejected_value = -order._frozen_price * rejected_quantity * position._contract_multiplier
-        frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, rejected_value)
-        self._update_order_data(position, order, -rejected_quantity, rejected_value)
-        self._update_frozen_cash(order, frozen_margin)
 
     @staticmethod
     def _update_holding_by_settle(position, settle_price):
