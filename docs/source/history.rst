@@ -4,6 +4,17 @@
 History
 ==================
 
+0.3.13
+==================
+
+- 增加股票裸做空的配置参数 :code:`--short-stock`
+- :code:`POSITION_EFFECT` 增加 :code:`CLOSE_TODAY`
+- :code:`ExecutionContext` 增加 :code:`get_current_close_price` :code:`get_future_commission_info`  :code:`get_future_margin` :code:`get_future_info` 函数
+- 增加 :code:`RQInvalidArgument` 来处理用户策略代码异常的问题
+- 现在可以正确提示期货主力连续合约和指数连续合约在回测和模拟中的报错信息了
+- 现在以 :code:`handle_tick(context, tick)` 的方式支持tick级别的API支持(未来可能会修改)
+- 现在回测时的 :code:`before_trading` 函数输出的时间提前到开盘前半小时
+
 0.3.12
 ==================
 
