@@ -22,5 +22,5 @@ class Margin(object):
         self.multiplier = multiplier
 
     def cal_margin(self, order_book_id, side, value):
-        instrument = ExecutionContext.get_instrument(order_book_id)
-        return self.multiplier * value * instrument.margin_rate
+        margin_rate = ExecutionContext.get_future_margin(order_book_id)
+        return self.multiplier * value * margin_rate
