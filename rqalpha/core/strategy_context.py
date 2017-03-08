@@ -138,7 +138,6 @@ class StrategyContext(object):
         return "Context({%s})" % (', '.join(items),)
 
     def __init__(self):
-        self._proxy_portfolio_dict = None
         self._config = None
 
     def get_state(self):
@@ -245,11 +244,7 @@ class StrategyContext(object):
 
         :property getter: :class:`~StockPortfolio`
         """
-        if getattr(self, "_proxy_portfolio_dict", None) is None:
-            self._proxy_portfolio_dict = {}
-        self._proxy_portfolio_dict[ACCOUNT_TYPE.STOCK] = PortfolioProxy(
-            Environment.get_instance().accounts[ACCOUNT_TYPE.STOCK].portfolio)
-        return self._proxy_portfolio_dict[ACCOUNT_TYPE.STOCK]
+        return Environment.get_instance().accounts[ACCOUNT_TYPE.STOCK].portfolio
 
     @property
     def future_portfolio(self):
@@ -281,11 +276,7 @@ class StrategyContext(object):
 
         :property getter: :class:`~FuturePortfolio`
         """
-        if getattr(self, "_proxy_portfolio_dict", None) is None:
-            self._proxy_portfolio_dict = {}
-        self._proxy_portfolio_dict[ACCOUNT_TYPE.FUTURE] = PortfolioProxy(
-            Environment.get_instance().accounts[ACCOUNT_TYPE.FUTURE].portfolio)
-        return self._proxy_portfolio_dict[ACCOUNT_TYPE.FUTURE]
+        return Environment.get_instance().accounts[ACCOUNT_TYPE.FUTURE].portfolio
 
     @property
     def slippage(self):
