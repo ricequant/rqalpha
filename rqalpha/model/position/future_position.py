@@ -27,31 +27,15 @@ FuturePersistMap = {
     "_order_book_id": "_order_book_id",
     "_last_price": "_last_price",
     "_market_value": "_market_value",
-    "_buy_market_value": "_buy_market_value",
-    "_sell_market_value": "_sell_market_value",
-    "_buy_trade_value": "_buy_trade_value",
-    "_sell_trade_value": "_sell_trade_value",
-    "_buy_order_value": "_buy_order_value",
-    "_sell_order_value": "_sell_order_value",
     "_buy_order_quantity": "_buy_order_quantity",
     "_sell_order_quantity": "_sell_order_quantity",
-    "_buy_trade_quantity": "_buy_trade_quantity",
-    "_sell_trade_quantity": "_sell_trade_quantity",
     "_total_orders": "_total_orders",
     "_total_trades": "_total_trades",
     "_is_traded": "_is_traded",
-    "_buy_open_order_value": "_buy_open_order_value",
-    "_sell_open_order_value": "_sell_open_order_value",
-    "_buy_close_order_value": "_buy_close_order_value",
-    "_sell_close_order_value": "_sell_close_order_value",
     "_buy_open_order_quantity": "_buy_open_order_quantity",
     "_sell_open_order_quantity": "_sell_open_order_quantity",
     "_buy_close_order_quantity": "_buy_close_order_quantity",
     "_sell_close_order_quantity": "_sell_close_order_quantity",
-    "_buy_open_trade_quantity": "_buy_open_trade_quantity",
-    "_sell_open_trade_quantity": "_sell_open_trade_quantity",
-    "_buy_close_trade_quantity": "_buy_close_trade_quantity",
-    "_sell_close_trade_quantity": "_sell_close_trade_quantity",
     "_daily_realized_pnl": "_daily_realized_pnl",
     "_prev_settle_price": "_prev_settle_price",
     "_buy_old_holding_list": "_buy_old_holding_list",
@@ -60,10 +44,8 @@ FuturePersistMap = {
     "_sell_today_holding_list": "_sell_today_holding_list",
     "_contract_multiplier": "_contract_multiplier",
     "_de_listed_date": "_de_listed_date",
-    "_buy_open_transaction_cost": "_buy_open_transaction_cost",
-    "_buy_close_transaction_cost": "_buy_close_transaction_cost",
-    "_sell_open_transaction_cost": "_sell_open_transaction_cost",
-    "_sell_close_transaction_cost": "_sell_close_transaction_cost",
+    "_buy_transaction_cost": "_buy_transaction_cost",
+    "_sell_transaction_cost": "_sell_transaction_cost",
     "_buy_daily_realized_pnl": "_buy_daily_realized_pnl",
     "_sell_daily_realized_pnl": "_sell_daily_realized_pnl",
     "_buy_avg_open_price": "_buy_avg_open_price",
@@ -73,18 +55,11 @@ FuturePersistMap = {
 
 class FuturePosition(BasePosition):
 
-    # buy_open_order_value:       <float> 买开挂单总值
-    # sell_open_order_value:      <float> 卖开挂单总值
-    # buy_close_order_value:      <float> 买平挂单总值
-    # sell_close_order_value:     <float> 卖平挂单总值
     # buy_open_order_quantity:    <float> 买开挂单量
     # sell_open_order_quantity:   <float> 卖开挂单量
     # buy_close_order_quantity:   <float> 买平挂单量
     # sell_close_order_quantity:  <float> 卖平挂单量
-    # buy_open_trade_quantity:    <float> 买开成交量
-    # sell_open_trade_quantity:   <float> 卖开成交量
-    # buy_close_trade_quantity:   <float> 买平成交量
-    # sell_close_trade_quantity:  <float> 买平成交量
+
     # daily_realized_pnl:         <float> 当日平仓盈亏
     # buy_settle_holding:         <Tuple(price, amount)> 买结算后昨仓
     # sell_settle_holding:        <Tuple(price, amount)> 卖结算后昨仓
@@ -94,22 +69,11 @@ class FuturePosition(BasePosition):
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
 
-        # self._buy_open_order_value = 0.
-        # self._sell_open_order_value = 0.
-        # self._buy_close_order_value = 0.
-        # self._sell_close_order_value = 0.
         self._buy_open_order_quantity = 0
         self._sell_open_order_quantity = 0
         self._buy_close_order_quantity = 0  # sell_frozen_quantity
         self._sell_close_order_quantity = 0
-        # self._buy_open_trade_quantity = 0
-        # self._buy_open_trade_value = 0
-        # self._sell_open_trade_quantity = 0
-        # self._sell_open_trade_value = 0
-        # self._buy_close_trade_quantity = 0
-        # self._buy_close_trade_value = 0
-        # self._sell_close_trade_quantity = 0
-        # self._sell_close_trade_value = 0
+
         self._daily_realized_pnl = 0.
         self._prev_settle_price = 0.
         self._buy_old_holding_list = []         # [(price, amount)]
@@ -126,16 +90,10 @@ class FuturePosition(BasePosition):
 
         self._buy_transaction_cost = 0.
         self._sell_transaction_cost = 0.
-        # self._buy_open_transaction_cost = 0.
-        # self._buy_close_transaction_cost = 0.
-        # self._sell_open_transaction_cost = 0.
-        # self._sell_close_transaction_cost = 0.
         self._buy_daily_realized_pnl = 0.
         self._sell_daily_realized_pnl = 0.
         self._buy_avg_open_price = 0.
         self._sell_avg_open_price = 0.
-        # self._buy_market_value = 0.
-        # self._sell_market_value = 0.
 
     @classmethod
     def __from_dict__(cls, position_dict):
@@ -468,8 +426,6 @@ class FuturePosition(BasePosition):
         【float】多头仓位累计盈亏
         """
         return (self._last_price - self._buy_avg_open_price) * self.buy_quantity * self._contract_multiplier
-        # return self._sell_close_trade_value - self._buy_open_trade_value + \
-        #        self.buy_quantity * self._last_price * self._contract_multiplier
 
     @property
     def sell_pnl(self):
@@ -477,8 +433,6 @@ class FuturePosition(BasePosition):
         【float】空头仓位累计盈亏
         """
         return (self._last_price - self._sell_avg_open_price) * self.sell_quantity * self._contract_multiplier
-        # return self._sell_open_trade_value - self._buy_close_trade_value - \
-        #        self.sell_quantity * self._last_price * self._contract_multiplier
 
     @property
     def buy_daily_pnl(self):
@@ -522,7 +476,6 @@ class FuturePosition(BasePosition):
         【float】多头费用
         """
         return self._buy_transaction_cost
-        # return self._buy_open_transaction_cost + self._sell_close_transaction_cost
 
     @property
     def sell_transaction_cost(self):
@@ -530,7 +483,6 @@ class FuturePosition(BasePosition):
         【float】空头费用
         """
         return self._sell_transaction_cost
-        # return self._sell_open_transaction_cost + self._buy_close_transaction_cost
 
     @property
     def transaction_cost(self):
@@ -538,20 +490,6 @@ class FuturePosition(BasePosition):
         【float】仓位交易费用
         """
         return self.buy_transaction_cost + self.sell_transaction_cost
-
-    # @property
-    # def buy_market_value(self):
-    #     """
-    #     【float】多头仓位市值加总
-    #     """
-    #     return self._buy_market_value
-    #
-    # @property
-    # def sell_market_value(self):
-    #     """
-    #     【float】空头仓位市值加总
-    #     """
-    #     return self._sell_market_value
 
     def _cal_close_today_amount(self, trade_amount, trade_side):
         if trade_side == SIDE.SELL:
