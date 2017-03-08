@@ -59,7 +59,7 @@ class FutureAccount(BaseAccount):
         for order_book_id, position in six.iteritems(positions):
             settle_price = data_proxy.get_settle_price(order_book_id, trading_date)
             position._last_price = settle_price
-            self._update_market_value(position, settle_price)
+            # self._update_market_value(position, settle_price)
 
         self.portfolio_persist()
 
@@ -93,14 +93,14 @@ class FutureAccount(BaseAccount):
             bar = bar_dict[order_book_id]
             if not bar.isnan:
                 position._last_price = bar.close
-                self._update_market_value(position, bar.close)
+                # self._update_market_value(position, bar.close)
 
     def tick(self, tick):
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         position = portfolio.positions[tick.order_book_id]
         position._last_price = tick.last
-        self._update_market_value(position, tick.last)
+        # self._update_market_value(position, tick.last)
 
     def order_pending_new(self, account, order):
         if self != account:
@@ -188,7 +188,7 @@ class FutureAccount(BaseAccount):
         self._update_order_data(position, order, -trade_quantity, minus_value_by_trade)
         self._update_trade_data(position, trade, trade_quantity, trade_value)
 
-        self._update_market_value(position, bar_dict[order_book_id].close)
+        # self._update_market_value(position, bar_dict[order_book_id].close)
         self._last_trade_id = trade.exec_id
 
     @staticmethod
@@ -213,13 +213,13 @@ class FutureAccount(BaseAccount):
 
         if order.side == SIDE.BUY:
             if order.position_effect == POSITION_EFFECT.OPEN:
-                position._buy_open_trade_quantity += trade_quantity
-                position._buy_open_trade_value += trade_value
+                # position._buy_open_trade_quantity += trade_quantity
+                # position._buy_open_trade_value += trade_value
                 position._buy_open_transaction_cost += trade.commission
                 position._buy_today_holding_list.insert(0, (trade.last_price, trade_quantity))
             else:
-                position._buy_close_trade_quantity += trade_quantity
-                position._buy_close_trade_value += trade_value
+                # position._buy_close_trade_quantity += trade_quantity
+                # position._buy_close_trade_value += trade_value
                 position._buy_close_transaction_cost += trade.commission
                 delta_daily_realized_pnl = self._update_holding_by_close_action(trade)
                 position._daily_realized_pnl += delta_daily_realized_pnl
@@ -228,13 +228,13 @@ class FutureAccount(BaseAccount):
             position._buy_trade_value += trade_value
         else:
             if order.position_effect == POSITION_EFFECT.OPEN:
-                position._sell_open_trade_quantity += trade_quantity
-                position._sell_open_trade_value += trade_value
+                # position._sell_open_trade_quantity += trade_quantity
+                # position._sell_open_trade_value += trade_value
                 position._sell_open_transaction_cost += trade.commission
                 position._sell_today_holding_list.insert(0, (trade.last_price, trade_quantity))
             else:
-                position._sell_close_trade_quantity += trade_quantity
-                position._sell_close_trade_value += trade_value
+                # position._sell_close_trade_quantity += trade_quantity
+                # position._sell_close_trade_value += trade_value
                 position._sell_close_transaction_cost += trade.commission
                 delta_daily_realized_pnl = self._update_holding_by_close_action(trade)
                 position._daily_realized_pnl += delta_daily_realized_pnl
@@ -247,17 +247,18 @@ class FutureAccount(BaseAccount):
         if order.side == SIDE.BUY:
             if order.position_effect == POSITION_EFFECT.OPEN:
                 position._buy_open_order_quantity += inc_order_quantity
-                position._buy_open_order_value += inc_order_value
+                # position._buy_open_order_value += inc_order_value
             else:
                 position._buy_close_order_quantity += inc_order_quantity
-                position._buy_close_order_value += inc_order_value
+                # position._buy_close_order_value += inc_order_value
         else:
             if order.position_effect == POSITION_EFFECT.OPEN:
+                pass
                 position._sell_open_order_quantity += inc_order_quantity
-                position._sell_open_order_value += inc_order_value
+                # position._sell_open_order_value += inc_order_value
             else:
                 position._sell_close_order_quantity += inc_order_quantity
-                position._sell_close_order_value += inc_order_value
+                # position._sell_close_order_value += inc_order_value
 
     def _update_frozen_cash(self, order, inc_order_value):
         if order.position_effect == POSITION_EFFECT.OPEN:
@@ -327,20 +328,20 @@ class FutureAccount(BaseAccount):
                 delta_daily_realized_pnl += self._cal_daily_realized_pnl(trade, oldest_price, consumed_quantity)
         return delta_daily_realized_pnl
 
-    @staticmethod
-    def _update_market_value(position, price):
-        """
-        计算 market_value
-        计算 pnl
-        计算 daily_holding_pnl
-        """
-        botq = position._buy_open_trade_quantity
-        sctq = position._sell_close_trade_quantity
-        bctq = position._buy_close_trade_quantity
-        sotq = position._sell_open_trade_quantity
-        position._buy_market_value = (botq - sctq) * price * position._contract_multiplier
-        position._sell_market_value = (bctq - sotq) * price * position._contract_multiplier
-        position._market_value = position._buy_market_value + position._sell_market_value
+    # @staticmethod
+    # def _update_market_value(position, price):
+    #     """
+    #     计算 market_value
+    #     计算 pnl
+    #     计算 daily_holding_pnl
+    #     """
+    #     botq = position._buy_open_trade_quantity
+    #     sctq = position._sell_close_trade_quantity
+    #     bctq = position._buy_close_trade_quantity
+    #     sotq = position._sell_open_trade_quantity
+    #     position._buy_market_value = (botq - sctq) * price * position._contract_multiplier
+    #     position._sell_market_value = (bctq - sotq) * price * position._contract_multiplier
+    #     position._market_value = position._buy_market_value + position._sell_market_value
 
     def _cal_daily_realized_pnl(self, trade, cost_price, consumed_quantity):
         order = trade.order
