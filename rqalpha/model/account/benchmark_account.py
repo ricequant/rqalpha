@@ -29,14 +29,14 @@ class BenchmarkAccount(BaseAccount):
         super(BenchmarkAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.BENCHMARK)
         self.benchmark = env.config.base.benchmark
 
-    def before_trading(self):
+    def before_trading(self, event):
         portfolio = self.portfolio
         portfolio._yesterday_portfolio_value = portfolio.portfolio_value
         trading_date = ExecutionContext.get_current_trading_dt().date()
         self._handle_dividend_payable(trading_date)
 
-    def bar(self, bar_dict):
-        price = bar_dict[self.config.base.benchmark].close
+    def bar(self, event):
+        price = event.bar_dict[self.config.base.benchmark].close
         if np.isnan(price):
             return
         portfolio = self.portfolio
@@ -55,7 +55,7 @@ class BenchmarkAccount(BaseAccount):
         else:
             position._market_value = position._buy_trade_quantity * price
 
-    def after_trading(self):
+    def after_trading(self, event):
         trading_date = ExecutionContext.get_current_trading_dt().date()
         self.portfolio_persist()
         self._handle_dividend_ex_dividend(trading_date)

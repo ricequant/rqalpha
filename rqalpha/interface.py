@@ -303,36 +303,6 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
-    def before_trading(self):
-        """
-        【Optional】
-
-        RQAlpha 会在 `EVENT.BEFORE_TRADING` 事件被触发前调用此接口。
-        """
-        pass
-
-    def after_trading(self):
-        """
-        【Optional】
-
-        RQAlpha 会在 `EVENT.AFTER_TRADING` 事件被触发前调用此接口。
-        """
-        pass
-
-    def bar(self, bar_dict):
-        """
-        【Optional】
-
-        RQAlpha 会在 `EVENT.BAR` 事件被出发前调用此接口。
-
-        Broker 根据自己的业务场景来选择是否实现，比如说自带撮合引擎的Broker，会通过 `update` 函数来触发撮合。
-
-        :param calendar_dt: 实际时间
-        :param trading_dt: 交易时间
-        :param bar_dict: dict[:class:`~BarObject`]
-        """
-        pass
-
 
 class AbstractMod(with_metaclass(abc.ABCMeta)):
     """

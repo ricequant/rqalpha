@@ -34,8 +34,8 @@ class FutureAccount(BaseAccount):
     def margin_decider(self):
         return self._margin_decider
 
-    def before_trading(self):
-        super(FutureAccount, self).before_trading()
+    def before_trading(self, event):
+        super(FutureAccount, self).before_trading(event)
         positions = self.portfolio.positions
         removing_ids = []
         for order_book_id in positions.keys():
@@ -46,10 +46,10 @@ class FutureAccount(BaseAccount):
         for order_book_id in removing_ids:
             positions.pop(order_book_id, None)
 
-    def after_trading(self):
+    def after_trading(self, event):
         pass
 
-    def settlement(self):
+    def settlement(self, event):
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         positions = portfolio.positions
@@ -84,7 +84,8 @@ class FutureAccount(BaseAccount):
 
         portfolio._daily_transaction_cost = 0
 
-    def bar(self, bar_dict):
+    def bar(self, event):
+        bar_dict = event.bar_dict
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         positions = portfolio.positions
@@ -95,16 +96,18 @@ class FutureAccount(BaseAccount):
                 position._last_price = bar.close
                 self._update_market_value(position, bar.close)
 
-    def tick(self, tick):
+    def tick(self, event):
+        tick = event.tick
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         position = portfolio.positions[tick.order_book_id]
         position._last_price = tick.last
         self._update_market_value(position, tick.last)
 
-    def order_pending_new(self, account, order):
-        if self != account:
+    def order_pending_new(self, event):
+        if self != event.account:
             return
+        order = event.order
         if order._is_final():
             return
         order_book_id = order.order_book_id
@@ -116,12 +119,13 @@ class FutureAccount(BaseAccount):
         self._update_order_data(position, order, created_quantity, created_value)
         self._update_frozen_cash(order, frozen_margin)
 
-    def on_order_creation_pass(self, account, order):
+    def order_creation_pass(self, event):
         pass
 
-    def order_creation_reject(self, account, order):
-        if self != account:
+    def order_creation_reject(self, event):
+        if self != event.account:
             return
+        order = event.order
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
         position._total_orders -= 1
@@ -131,21 +135,23 @@ class FutureAccount(BaseAccount):
         self._update_order_data(position, order, -cancel_quantity, cancel_value)
         self._update_frozen_cash(order, frozen_margin)
 
-    def order_pending_cancel(self, account, order):
+    def order_pending_cancel(self, event):
         pass
 
-    def order_cancellation_pass(self, account, order):
-        self._cancel_order_cal(account, order)
-
-    def order_cancellation_reject(self, account, order):
-        pass
-
-    def order_unsolicited_update(self, account, order):
-        self._cancel_order_cal(account, order)
-
-    def _cancel_order_cal(self, account, order):
-        if self != account:
+    def order_cancellation_pass(self, event):
+        if self != event.account:
             return
+        self._cancel_order_cal(event.order)
+
+    def order_cancellation_reject(self, event):
+        pass
+
+    def order_unsolicited_update(self, event):
+        if self != event.account:
+            return
+        self._cancel_order_cal(event.order)
+
+    def _cancel_order_cal(self, order):
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order.order_book_id]
         rejected_quantity = order.unfilled_quantity
@@ -154,9 +160,10 @@ class FutureAccount(BaseAccount):
         self._update_order_data(position, order, -rejected_quantity, rejected_value)
         self._update_frozen_cash(order, frozen_margin)
 
-    def trade(self, account, trade):
-        if self != account:
+    def trade(self, event):
+        if self != event.account:
             return
+        trade = event.trade
         order = trade.order
         order_book_id = order.order_book_id
         bar_dict = ExecutionContext.get_current_bar_dict()

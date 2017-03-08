@@ -37,9 +37,9 @@ class RiskManagerMod(AbstractMod):
     def tear_down(self, code, exception=None):
         pass
 
-    def _frontend_validate(self, account, order):
-        frontend_validator = self._get_frontend_validator_for(order.order_book_id)
-        frontend_validator.order_pipeline(account, order)
+    def _frontend_validate(self, event):
+        frontend_validator = self._get_frontend_validator_for(event.order.order_book_id)
+        frontend_validator.order_pipeline(event.account, event.order)
 
     def _get_frontend_validator_for(self, order_book_id):
         account_type = get_account_type(order_book_id)

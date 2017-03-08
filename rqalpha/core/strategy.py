@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..events import EVENT
+from ..events import EVENT, Event
 from ..utils import run_when_strategy_not_hold
 from ..utils.logger import user_system_log
 from ..utils.i18n import gettext as _
@@ -68,28 +68,30 @@ class Strategy(object):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._init(self._user_context)
 
-        Environment.get_instance().event_bus.publish_event(EVENT.POST_USER_INIT)
+        Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_INIT))
 
     @run_when_strategy_not_hold
-    def before_trading(self):
+    def before_trading(self, event):
         with ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._before_trading(self._user_context)
 
     @run_when_strategy_not_hold
-    def handle_bar(self, bar_dict):
+    def handle_bar(self, event):
+        bar_dict = event.bar_dict
         with ExecutionContext(EXECUTION_PHASE.ON_BAR, bar_dict):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._handle_bar(self._user_context, bar_dict)
 
     @run_when_strategy_not_hold
-    def handle_tick(self, tick):
+    def handle_tick(self, event):
+        tick = event.tick
         with ExecutionContext(EXECUTION_PHASE.ON_TICK, tick):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._handle_tick(self._user_context, tick)
 
     @run_when_strategy_not_hold
-    def after_trading(self):
+    def after_trading(self, event):
         with ExecutionContext(EXECUTION_PHASE.AFTER_TRADING):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._after_trading(self._user_context)
