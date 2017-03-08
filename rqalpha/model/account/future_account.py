@@ -215,12 +215,14 @@ class FutureAccount(BaseAccount):
             if order.position_effect == POSITION_EFFECT.OPEN:
                 # position._buy_open_trade_quantity += trade_quantity
                 # position._buy_open_trade_value += trade_value
-                position._buy_open_transaction_cost += trade.commission
+                # position._buy_open_transaction_cost += trade.commission
+                position._buy_transaction_cost += trade.commission
                 position._buy_today_holding_list.insert(0, (trade.last_price, trade_quantity))
             else:
                 # position._buy_close_trade_quantity += trade_quantity
                 # position._buy_close_trade_value += trade_value
-                position._buy_close_transaction_cost += trade.commission
+                # position._buy_close_transaction_cost += trade.commission
+                position._sell_transaction_cost += trade.commission
                 delta_daily_realized_pnl = self._update_holding_by_close_action(trade)
                 position._daily_realized_pnl += delta_daily_realized_pnl
                 position._sell_daily_realized_pnl += delta_daily_realized_pnl
@@ -230,12 +232,14 @@ class FutureAccount(BaseAccount):
             if order.position_effect == POSITION_EFFECT.OPEN:
                 # position._sell_open_trade_quantity += trade_quantity
                 # position._sell_open_trade_value += trade_value
-                position._sell_open_transaction_cost += trade.commission
+                # position._sell_open_transaction_cost += trade.commission
+                position._sell_transaction_cost += trade.commission
                 position._sell_today_holding_list.insert(0, (trade.last_price, trade_quantity))
             else:
                 # position._sell_close_trade_quantity += trade_quantity
                 # position._sell_close_trade_value += trade_value
-                position._sell_close_transaction_cost += trade.commission
+                # position._sell_close_transaction_cost += trade.commission
+                position._buy_transaction_cost += trade.commission
                 delta_daily_realized_pnl = self._update_holding_by_close_action(trade)
                 position._daily_realized_pnl += delta_daily_realized_pnl
                 position._buy_daily_realized_pnl += delta_daily_realized_pnl
