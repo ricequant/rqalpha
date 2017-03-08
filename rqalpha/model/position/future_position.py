@@ -20,7 +20,6 @@ from .base_position import BasePosition
 from ...execution_context import ExecutionContext
 from ...environment import Environment
 from ...const import ACCOUNT_TYPE, SIDE, POSITION_EFFECT
-from ...utils import RqAttrDict
 
 
 FuturePersistMap = {
@@ -110,9 +109,9 @@ class FuturePosition(BasePosition):
         return position
 
     @classmethod
-    def from_recovery(cls, order_book_id, position_data, orders, trades):
+    def from_recovery(cls, order_book_id, position_dict, orders, trades):
         """
-        position_data = RqAttrDict({
+        position_dict = {
             'buy_quantity': None,
             'sell_quantity': None,
             'buy_today_quantity': None,
@@ -124,11 +123,9 @@ class FuturePosition(BasePosition):
             'buy_daily_realized_pnl': None,
             'sell_daily_realized_pnl': None,
             'prev_settle_price': None,
-        })
+        }
         """
         position = cls(order_book_id)
-        orders = sorted(orders, key=lambda o: o.datetime)
-        trades = sorted(trades, key=lambda t: t.datetime)
 
         for order in orders:
             if order.side == SIDE.BUY:
@@ -143,12 +140,12 @@ class FuturePosition(BasePosition):
                 else:
                     position._sell_close_order_quantity += order.unfilled_quantity
 
-        position._prev_settle_price = position_data.prev_settle_price
+        position._prev_settle_price = position_dict['prev_settle_price']
 
-        buy_old_quantity = position_data.buy_quantity - position_data.buy_today_quantity
+        buy_old_quantity = position_dict['buy_quantity'] - position_dict['buy_today_quantity']
         position._buy_old_holding_list = [(position._prev_settle_price, buy_old_quantity)]
 
-        sell_old_quantity = position_data.sell_quantity - position_data.sell_today_quantity
+        sell_old_quantity = position_dict['sell_quantity'] - position_dict['sell_today_quantity']
         position._sell_old_holding_list = [(position._prev_settle_price, sell_old_quantity)]
 
         accum_buy_open_quantity = 0.
@@ -159,9 +156,9 @@ class FuturePosition(BasePosition):
             if order.side == SIDE.BUY:
                 if order.position_effect == POSITION_EFFECT.OPEN:
                     accum_buy_open_quantity += trade.last_quantity
-                    if accum_buy_open_quantity == position_data.buy_today_quantity:
+                    if accum_buy_open_quantity == position_dict['buy_today_quantity']:
                         break
-                    if accum_buy_open_quantity > position_data.buy_today_quantity:
+                    if accum_buy_open_quantity > position_dict['buy_today_quantity']:
                         position._buy_today_holding_list.append((
                             trade.last_price,
                             position.buy_today_quantity - accum_buy_open_quantity + trade.last_quantity
@@ -171,22 +168,23 @@ class FuturePosition(BasePosition):
             else:
                 if order.position_effect == POSITION_EFFECT.OPEN:
                     accum_sell_open_quantity += trade.last_quantity
-                    if accum_sell_open_quantity == position_data.sell_today_quantity:
+                    if accum_sell_open_quantity == position_dict['sell_today_quantity']:
                         break
-                    if accum_sell_open_quantity > position_data.sell_today_quantity:
+                    if accum_sell_open_quantity > position_dict['sell_today_quantity']:
                         position._sell_today_holding_list.append((
                             trade.last_price,
                             position.sell_today_quantity - accum_sell_open_quantity + trade.last_quantity
                         ))
                         break
                     position._sell_today_holding_list.append((trade.last_price, trade.last_quantity))
-        position._buy_transaction_cost = position_data.buy_transaction_cost
-        position._sell_transaction_cost = position_data.sell_transaction_cost
-        position._buy_daily_realized_pnl = position_data.buy_daily_realized_pnl
-        position._sell_daily_realized_pnl = position_data.sell_daily_realized_pnl
+        position._buy_transaction_cost = position_dict['buy_transaction_cost']
+        position._sell_transaction_cost = position_dict['sell_transaction_cost']
+        position._buy_daily_realized_pnl = position_dict['buy_daily_realized_pnl']
+        position._sell_daily_realized_pnl = position_dict['sell_daily_realized_pnl']
         position._daily_realized_pnl = position._buy_daily_realized_pnl + position._sell_daily_realized_pnl
-        position._buy_avg_open_price = position_data.buy_avg_open_price
-        position._sell_avg_open_price = position_data.sell_avg_open_price
+        position._buy_avg_open_price = position_dict['buy_avg_open_price']
+        position._sell_avg_open_price = position_dict['sell_avg_open_price']
+        return position
 
     def __to_dict__(self):
         p_dict = {}
