@@ -22,7 +22,6 @@ from ..environment import Environment
 from ..utils.logger import user_system_log, system_log
 from ..utils.i18n import gettext as _
 from ..utils.repr import property_repr
-from ..utils.proxy import PortfolioProxy
 
 
 class RunInfo(object):
