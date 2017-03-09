@@ -78,8 +78,7 @@ def order(id_or_ins, amount, side, position_effect, style):
         return r_order
 
     if r_order.type == ORDER_TYPE.MARKET:
-        bar_dict = ExecutionContext.get_current_bar_dict()
-        r_order._frozen_price = bar_dict[order_book_id].close
+        r_order._frozen_price = ExecutionContext.get_current_close_price(order_book_id)
     ExecutionContext.broker.submit_order(r_order)
     return r_order
 
