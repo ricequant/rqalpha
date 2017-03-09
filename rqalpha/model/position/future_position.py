@@ -140,17 +140,26 @@ class FuturePosition(BasePosition):
                 else:
                     position._sell_close_order_quantity += order.unfilled_quantity
 
-        position._prev_settle_price = position_dict['prev_settle_price']
+        if 'prev_settle_price':
+            position._prev_settle_price = position_dict['prev_settle_price']
 
-        buy_old_quantity = position_dict['buy_quantity'] - position_dict['buy_today_quantity']
-        position._buy_old_holding_list = [(position._prev_settle_price, buy_old_quantity)]
+        if 'buy_today_quantity' not in position_dict:
+            position_dict['buy_today_quantity'] = 0
 
-        sell_old_quantity = position_dict['sell_quantity'] - position_dict['sell_today_quantity']
-        position._sell_old_holding_list = [(position._prev_settle_price, sell_old_quantity)]
+        if 'sell_today_quantity' not in position_dict:
+            position_dict['sell_today_quantity'] = 0
+
+        if 'buy_quantity' in position_dict:
+            buy_old_quantity = position_dict['buy_quantity'] - position_dict['buy_today_quantity']
+            position._buy_old_holding_list = [(position._prev_settle_price, buy_old_quantity)]
+
+        if 'sell_quantity' in position_dict:
+            sell_old_quantity = position_dict['sell_quantity'] - position_dict['sell_today_quantity']
+            position._sell_old_holding_list = [(position._prev_settle_price, sell_old_quantity)]
 
         accum_buy_open_quantity = 0.
         accum_sell_open_quantity = 0.
-        trades = sorted(trades, key=lambda t: t.datetime, reversed=True)
+        trades = sorted(trades, key=lambda t: t.datetime, reverse=True)
         for trade in trades:
             order = trade.order
             if order.side == SIDE.BUY:
@@ -177,13 +186,21 @@ class FuturePosition(BasePosition):
                         ))
                         break
                     position._sell_today_holding_list.append((trade.last_price, trade.last_quantity))
-        position._buy_transaction_cost = position_dict['buy_transaction_cost']
-        position._sell_transaction_cost = position_dict['sell_transaction_cost']
-        position._buy_daily_realized_pnl = position_dict['buy_daily_realized_pnl']
-        position._sell_daily_realized_pnl = position_dict['sell_daily_realized_pnl']
+
+        if 'buy_transaction_cost' in position_dict:
+            position._buy_transaction_cost = position_dict['buy_transaction_cost']
+        if 'sell_transaction_cost' in position_dict:
+            position._sell_transaction_cost = position_dict['sell_transaction_cost']
+        if 'buy_daily_realized_pnl' in position_dict:
+            position._buy_daily_realized_pnl = position_dict['buy_daily_realized_pnl']
+        if 'sell_daily_realized_pnl' in position_dict:
+            position._sell_daily_realized_pnl = position_dict['sell_daily_realized_pnl']
         position._daily_realized_pnl = position._buy_daily_realized_pnl + position._sell_daily_realized_pnl
-        position._buy_avg_open_price = position_dict['buy_avg_open_price']
-        position._sell_avg_open_price = position_dict['sell_avg_open_price']
+
+        if 'buy_avg_open_price' in position_dict:
+            position._buy_avg_open_price = position_dict['buy_avg_open_price']
+        if 'sell_avg_open_price' in position_dict:
+            position._sell_avg_open_price = position_dict['sell_avg_open_price']
         return position
 
     def __to_dict__(self):

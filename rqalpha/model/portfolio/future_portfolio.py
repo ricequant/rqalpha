@@ -57,14 +57,14 @@ class FuturePortfolio(BasePortfolio):
         portfolio_dict = {
             'total_cash': None,
             'units': None,
-            'yesterday_unites': None,
+            'yesterday_units': None,
             'positions': []
         }
         """
         portfolio = cls(0, start_date, account_type)
 
         portfolio._units = portfolio_dict['units']
-        portfolio._yesterday_units = portfolio_dict['yesterday_unites']
+        portfolio._yesterday_units = portfolio_dict['yesterday_units']
 
         orders_dict = {}
         trades_dict = {}
