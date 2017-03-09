@@ -67,7 +67,7 @@ class FuturePortfolio(BasePortfolio):
         start_date = portfolio_dict['start_date']
         account_type = portfolio_dict['account_type']
 
-        portfolio = cls(cash, start_date, account_type)
+        portfolio = cls(0, start_date, account_type)
 
         portfolio._units = portfolio_dict['units']
         portfolio._yesterday_units = portfolio_dict['yesterday_unites']
@@ -78,7 +78,6 @@ class FuturePortfolio(BasePortfolio):
             if order.order_book_id not in orders_dict:
                 orders_dict[order.order_book_id] = []
             orders_dict[order.order_book_id].append(order)
-            margin
 
         for trade in trades:
             order = trade.order
