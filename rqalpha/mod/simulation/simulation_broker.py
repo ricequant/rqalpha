@@ -17,37 +17,14 @@
 import jsonpickle
 
 from rqalpha.interface import AbstractBroker, Persistable
-from rqalpha.utils import get_account_type
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
-from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.environment import Environment
-from rqalpha.model.account import BenchmarkAccount, StockAccount, FutureAccount
+from rqalpha.execution_context import ExecutionContext
 
 from .matcher import Matcher
-
-
-def init_accounts(env):
-    accounts = {}
-    config = env.config
-    start_date = config.base.start_date
-    total_cash = 0
-    for account_type in config.base.account_list:
-        if account_type == ACCOUNT_TYPE.STOCK:
-            stock_starting_cash = config.base.stock_starting_cash
-            accounts[ACCOUNT_TYPE.STOCK] = StockAccount(env, stock_starting_cash, start_date)
-            total_cash += stock_starting_cash
-        elif account_type == ACCOUNT_TYPE.FUTURE:
-            future_starting_cash = config.base.future_starting_cash
-            accounts[ACCOUNT_TYPE.FUTURE] = FutureAccount(env, future_starting_cash, start_date)
-            total_cash += future_starting_cash
-        else:
-            raise NotImplementedError
-    if config.base.benchmark is not None:
-        accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(env, total_cash, start_date)
-
-    return accounts
+from .utils import init_accounts
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -97,12 +74,8 @@ class SimulationBroker(AbstractBroker, Persistable):
                     else:
                         self._open_orders.append((account, o))
 
-    def _get_account_for(self, order_book_id):
-        account_type = get_account_type(order_book_id)
-        return self._accounts[account_type]
-
     def submit_order(self, order):
-        account = self._get_account_for(order.order_book_id)
+        account = ExecutionContext.get_account(order.order_book_id)
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
 
@@ -122,7 +95,7 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._match()
 
     def cancel_order(self, order):
-        account = self._get_account_for(order.order_book_id)
+        account = ExecutionContext.get_account(order.order_book_id)
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 

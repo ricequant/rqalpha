@@ -84,6 +84,7 @@ def update_bundle(data_bundle_path, locale):
               help="output result pickle file")
 @click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
 @click.option('--short-stock', 'mod__risk_manager__short_stock', is_flag=True, help="enable stock shorting")
+@click.option('--signal', 'mod__simulation__signal', is_flag=True, help="exclude match engine")
 # -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 1.0.0
 @click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
 @click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))

@@ -15,9 +15,10 @@
 # limitations under the License.
 
 from rqalpha.interface import AbstractMod
-from rqalpha.events import EVENT
+from rqalpha.events import EVENT, Event
 from rqalpha.utils import get_account_type
 from rqalpha.const import ACCOUNT_TYPE
+from rqalpha.execution_context import ExecutionContext
 
 from .frontend_validator import StockFrontendValidator, FutureFrontendValidator
 
@@ -39,7 +40,10 @@ class RiskManagerMod(AbstractMod):
 
     def _frontend_validate(self, event):
         frontend_validator = self._get_frontend_validator_for(event.order.order_book_id)
-        frontend_validator.order_pipeline(event.account, event.order)
+        validation_pass = frontend_validator.order_pipeline(event.account, event.order)
+        if not validation_pass:
+            account = ExecutionContext.get_account(event.order.order_book_id)
+            self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, account=account, order=event.order))
 
     def _get_frontend_validator_for(self, order_book_id):
         account_type = get_account_type(order_book_id)
