@@ -58,7 +58,7 @@ class PersistHelper(object):
             event_bus.add_listener(EVENT.POST_BAR, self.persist)
             event_bus.add_listener(EVENT.POST_SETTLEMENT, self.persist)
 
-    def persist(self, *args, **kwargs):
+    def persist(self, event):
         for key, obj in six.iteritems(self._objects):
             state = obj.get_state()
             if not state:

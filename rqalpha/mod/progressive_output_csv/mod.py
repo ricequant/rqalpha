@@ -41,7 +41,7 @@ class ProgressiveOutputCSVMod(AbstractMod):
         if new_file:
             self.csv_writer.writeheader()
 
-    def _output_feeds(self, *args, **kwargs):
+    def _output_feeds(self, event):
         misc_account = self._env.account
         calendar_date = self._env.calendar_dt.date()
         portfolio = misc_account.portfolio

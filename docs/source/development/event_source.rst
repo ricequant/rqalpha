@@ -131,10 +131,10 @@ ProgressMod 需要实现的需求非常的简单：在命令行输出目前回�
         def tear_down(self, success, exception=None):
             pass
 
-        def _init(self):
+        def _init(self, event):
             pass
 
-        def _tick():
+        def _tick(event):
             pass
 
 在 :code:`_init` 函数中，初始化 :code:`progressBar`，进度条的长度为回测的总时长
@@ -149,7 +149,7 @@ ProgressMod 需要实现的需求非常的简单：在命令行输出目前回�
 
 .. code-block:: python
 
-    def _tick(self):
+    def _tick(self, event):
         self.progress_bar.update(1)
 
 在 :code:`tear_down` 函数中，终止进度条
@@ -179,11 +179,11 @@ ProgressMod 需要实现的需求非常的简单：在命令行输出目前回�
             env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._tick)
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._init)
 
-        def _init(self):
+        def _init(self, event):
             trading_length = len(self._env.config.base.trading_calendar)
             self.progress_bar = click.progressbar(length=trading_length, show_eta=False)
 
-        def _tick(self):
+        def _tick(self, event):
             self.progress_bar.update(1)
 
         def tear_down(self, success, exception=None):
@@ -209,11 +209,11 @@ ProgressMod 需要实现的需求非常的简单：在命令行输出目前回�
             env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._tick)
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._init)
 
-        def _init(self):
+        def _init(self, event):
             trading_length = len(self._env.config.base.trading_calendar)
             self.progress_bar = click.progressbar(length=trading_length, show_eta=False)
 
-        def _tick(self):
+        def _tick(self, event):
             self.progress_bar.update(1)
 
         def tear_down(self, success, exception=None):
@@ -248,11 +248,11 @@ RQAlpha 整个回测模块是通过 :code:`SimulationMod` 实现的，其中定�
                 dt_after_trading = date.replace(hour=15, minute=30)
                 dt_settlement = date.replace(hour=17, minute=0)
 
-                yield Event(EVENT.BEFORE_TRADING, dt_before_trading, dt_before_trading)
-                yield Event(EVENT.BAR, dt_bar, dt_bar)
+                yield Event(EVENT.BEFORE_TRADING, calendar_dt=dt_before_trading, trading_dt=dt_before_trading)
+                yield Event(EVENT.BAR, calendar_dt=dt_bar, trading_dt=dt_bar)
 
-                yield Event(EVENT.AFTER_TRADING, dt_after_trading, dt_after_trading)
-                yield Event(EVENT.SETTLEMENT, dt_settlement, dt_settlement)
+                yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
+                yield Event(EVENT.SETTLEMENT, calendar_dt=dt_settlement, trading_dt=dt_settlement)
 
 :code:`event` 函数是一个generator, 在 SimulationMod 中主要返回 :code:`BEFORE_TRADING`, :code:`BAR`, :code:`AFTER_TRADING` 和 :code:`SETTLEMENT` 事件。RQAlpha 在接受到对应的事件后，会自动的进行相应的 `publish_event` 操作，并且会自动 publish 相关的 `PRE_` 和 `POST_` 事件。
 
@@ -265,12 +265,11 @@ RQAlpha 整个回测模块是通过 :code:`SimulationMod` 实现的，其中定�
         def cancel_order(self, order):
             account = self._get_account_for(order.order_book_id)
 
-            self._env.event_bus.publish_event(EVENT.ORDER_PENDING_CANCEL, account, order)
+            self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 
-            # account.on_order_cancelling(order)
             order._mark_cancelled(_("{order_id} order has been cancelled by user.").format(order_id=order.order_id))
 
-            self._env.event_bus.publish_event(EVENT.ORDER_CANCELLATION_PASS, account, order)
+            self._env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_PASS, account=account, order=order))
 
             # account.on_order_cancellation_pass(order)
             try:

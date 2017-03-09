@@ -34,7 +34,7 @@ class SimulationEventSource(AbstractEventSource):
         self._universe_changed = False
         Environment.get_instance().event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
 
-    def _on_universe_changed(self, universe):
+    def _on_universe_changed(self, event):
         self._universe_changed = True
 
     def _get_universe(self):
@@ -90,11 +90,11 @@ class SimulationEventSource(AbstractEventSource):
                 dt_bar = date.replace(hour=15, minute=0)
                 dt_after_trading = date.replace(hour=15, minute=30)
                 dt_settlement = date.replace(hour=17, minute=0)
-                yield Event(EVENT.BEFORE_TRADING, dt_before_trading, dt_before_trading)
-                yield Event(EVENT.BAR, dt_bar, dt_bar)
+                yield Event(EVENT.BEFORE_TRADING, calendar_dt=dt_before_trading, trading_dt=dt_before_trading)
+                yield Event(EVENT.BAR, calendar_dt=dt_bar, trading_dt=dt_bar)
 
-                yield Event(EVENT.AFTER_TRADING, dt_after_trading, dt_after_trading)
-                yield Event(EVENT.SETTLEMENT, dt_settlement, dt_settlement)
+                yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
+                yield Event(EVENT.SETTLEMENT, calendar_dt=dt_settlement, trading_dt=dt_settlement)
         else:
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
@@ -122,19 +122,20 @@ class SimulationEventSource(AbstractEventSource):
                         if before_trading_flag:
                             before_trading_flag = False
                             before_trading_dt = trading_dt - datetime.timedelta(minutes=30)
-                            yield Event(EVENT.BEFORE_TRADING, before_trading_dt, before_trading_dt)
+                            yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
+                                        trading_dt=before_trading_dt)
                         if self._universe_changed:
                             self._universe_changed = False
                             last_dt = calendar_dt
                             exit_loop = False
                             break
                         # yield handle bar
-                        yield Event(EVENT.BAR, calendar_dt, trading_dt)
+                        yield Event(EVENT.BAR, calendar_dt=calendar_dt, trading_dt=trading_dt)
                     if exit_loop:
                         done = True
 
                 dt = date.replace(hour=15, minute=30)
-                yield Event(EVENT.AFTER_TRADING, dt, dt)
+                yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
 
                 dt = date.replace(hour=17, minute=0)
-                yield Event(EVENT.SETTLEMENT, dt, dt)
+                yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)

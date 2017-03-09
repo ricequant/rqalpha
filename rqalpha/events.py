@@ -19,11 +19,10 @@ from collections import defaultdict
 
 
 class Event(object):
-    def __init__(self, event_type, calendar_dt, trading_dt, data={}):
+    def __init__(self, event_type, **kwargs):
         self.event_type = event_type
-        self.calendar_dt = calendar_dt
-        self.trading_dt = trading_dt
-        self.data = data
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 class EventBus(object):
@@ -36,10 +35,10 @@ class EventBus(object):
     def prepend_listener(self, event, listener):
         self._listeners[event].insert(0, listener)
 
-    def publish_event(self, event, *args, **kwargs):
-        for l in self._listeners[event]:
+    def publish_event(self, event):
+        for l in self._listeners[event.event_type]:
             # 如果返回 True ，那么消息不再传递下去
-            if l(*args, **kwargs):
+            if l(event):
                 break
 
 
@@ -138,6 +137,8 @@ class EVENT(Enum):
     TRADE = 'trade'
 
     ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'
+
+
 
 
 def parse_event(event_str):

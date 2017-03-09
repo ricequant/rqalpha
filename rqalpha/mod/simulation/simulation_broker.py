@@ -19,7 +19,7 @@ import jsonpickle
 from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils import get_account_type
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.events import EVENT
+from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.environment import Environment
@@ -104,7 +104,7 @@ class SimulationBroker(AbstractBroker, Persistable):
     def submit_order(self, order):
         account = self._get_account_for(order.order_book_id)
 
-        self._env.event_bus.publish_event(EVENT.ORDER_PENDING_NEW, account, order)
+        self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
 
         account.append_order(order)
         if order._is_final():
@@ -117,19 +117,19 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._open_orders.append((account, order))
         order._active()
-        self._env.event_bus.publish_event(EVENT.ORDER_CREATION_PASS, account, order)
+        self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         if self._match_immediately:
             self._match()
 
     def cancel_order(self, order):
         account = self._get_account_for(order.order_book_id)
 
-        self._env.event_bus.publish_event(EVENT.ORDER_PENDING_CANCEL, account, order)
+        self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 
         # account.on_order_cancelling(order)
         order._mark_cancelled(_("{order_id} order has been cancelled by user.").format(order_id=order.order_id))
 
-        self._env.event_bus.publish_event(EVENT.ORDER_CANCELLATION_PASS, account, order)
+        self._env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_PASS, account=account, order=order))
 
         # account.on_order_cancellation_pass(order)
         try:
@@ -140,26 +140,27 @@ class SimulationBroker(AbstractBroker, Persistable):
             except ValueError:
                 pass
 
-    def before_trading(self):
+    def before_trading(self, event):
         for account, order in self._open_orders:
             order._active()
-            self._env.event_bus.publish_event(EVENT.ORDER_CREATION_PASS, account, order)
+            self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
 
-    def after_trading(self):
+    def after_trading(self, event):
         for account, order in self._open_orders:
             order._mark_rejected(_("Order Rejected: {order_book_id} can not match. Market close.").format(
                 order_book_id=order.order_book_id
             ))
-            self._env.event_bus.publish_event(EVENT.ORDER_UNSOLICITED_UPDATE, account, order)
+            self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
 
-    def bar(self, bar_dict):
+    def bar(self, event):
+        bar_dict = event.bar_dict
         env = Environment.get_instance()
         self._matcher.update(env.calendar_dt, env.trading_dt, bar_dict)
         self._match()
 
-    def tick(self, tick):
+    def tick(self, event):
         # TODO support tick matching
         pass
         # env = Environment.get_instance()
@@ -173,4 +174,4 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         for account, order in final_orders:
             if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:
-                self._env.event_bus.publish_event(EVENT.ORDER_UNSOLICITED_UPDATE, account, order)
+                self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))

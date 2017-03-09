@@ -30,11 +30,11 @@ class ProgressMod(AbstractMod):
         env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._tick)
         env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._init)
 
-    def _init(self):
+    def _init(self, event):
         trading_length = len(self._env.config.base.trading_calendar)
         self.progress_bar = click.progressbar(length=trading_length, show_eta=False)
 
-    def _tick(self):
+    def _tick(self, event):
         self.progress_bar.update(1)
 
     def tear_down(self, success, exception=None):
