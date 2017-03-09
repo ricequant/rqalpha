@@ -51,6 +51,55 @@ class FuturePortfolio(BasePortfolio):
         self._positions = Positions(FuturePosition)
         self._portfolio_value = None
 
+    @classmethod
+    def from_recovery(cls, account, portfolio_dict, orders, trades):
+        """
+        portfolio_dict = {
+            'total_cash': None,
+            'start_date': None,
+            'account_type': None,
+            'units': None,
+            'yesterday_unites': None,
+            'positions': []
+        }
+        """
+
+        start_date = portfolio_dict['start_date']
+        account_type = portfolio_dict['account_type']
+
+        portfolio = cls(cash, start_date, account_type)
+
+        portfolio._units = portfolio_dict['units']
+        portfolio._yesterday_units = portfolio_dict['yesterday_unites']
+
+        orders_dict = {}
+        trades_dict = {}
+        for order in orders:
+            if order.order_book_id not in orders_dict:
+                orders_dict[order.order_book_id] = []
+            orders_dict[order.order_book_id].append(order)
+            margin
+
+        for trade in trades:
+            order = trade.order
+            if order.order_book_id not in trades_dict:
+                trades_dict[order.order_book_id] = []
+            trades_dict[order.order_book_id].append(trade)
+
+        for order_book_id, position_dict in six.iteritems(portfolio_dict['positions']):
+            orders = orders_dict[order_book_id] if order_book_id in orders_dict else []
+            trades = trades_dict[order_book_id] if order_book_id in trades_dict else []
+            position = FuturePosition.from_recovery(order_book_id, position_dict, orders, trades)
+            portfolio._positions[order_book_id] = position
+            portfolio._daily_transaction_cost += position.transaction_cost
+
+            for order in orders:
+                value = order._frozen_price * order.unfilled_quantity * position._contract_multiplier
+                portfolio._frozen_cash += account.margin_decider.cal_margin(order_book_id, order.side, value)
+
+            portfolio._cash = portfolio_dict['total_cash'] - portfolio._frozen_cash
+            return portfolio
+
     def restore_from_dict_(self, portfolio_dict):
         self._cash = portfolio_dict['_cash']
         self._start_date = portfolio_dict['_start_date']
@@ -104,7 +153,8 @@ class FuturePortfolio(BasePortfolio):
         【float】总权益，昨日总权益+当日盈亏
         """
         if self._portfolio_value is None:
-            self._portfolio_value = self._yesterday_portfolio_value + self.daily_pnl
+            self._portfolio_value = self._cash + self._frozen_cash + self.daily_holding_pnl + self.margin
+            # self._portfolio_value = self._yesterday_portfolio_value + self.daily_pnl
 
         return self._portfolio_value
 
