@@ -51,8 +51,8 @@ class Risk(object):
         self._portfolio = daily_returns
         self._benchmark = benchmark_daily_returns
         self._risk_free_rate = risk_free_rate
-        self._daily_risk_free_rate = self._risk_free_rate / 244
         self._annual_factor = _annual_factor(period)
+        self._daily_risk_free_rate = self._risk_free_rate / self._annual_factor
 
         self._alpha = None
         self._beta = None
