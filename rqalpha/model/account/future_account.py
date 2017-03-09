@@ -17,6 +17,7 @@
 import six
 
 from ..margin import Margin
+from ..portfolio.future_portfolio import FuturePortfolio
 from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
 from ...utils.i18n import gettext as _
 from ...utils.logger import user_system_log
@@ -33,6 +34,17 @@ class FutureAccount(BaseAccount):
     @property
     def margin_decider(self):
         return self._margin_decider
+
+    @classmethod
+    def from_recovery(cls, env, init_cash, start_date, account_dict):
+        account = cls(env, init_cash, start_date)
+        orders = account_dict['orders']
+        trades = account_dictp['trades']
+        portfolio_dict = account_dict['portfolio']
+        account.portfolio = FuturePortfolio.from_recovery(account, start_date, portfolio_dict, orders, trades)
+        account.daily_orders = orders
+        account.daily_trades = trades
+        return account
 
     def before_trading(self):
         super(FutureAccount, self).before_trading()

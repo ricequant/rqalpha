@@ -52,11 +52,10 @@ class FuturePortfolio(BasePortfolio):
         self._portfolio_value = None
 
     @classmethod
-    def from_recovery(cls, account, portfolio_dict, orders, trades):
+    def from_recovery(cls, account, start_date, portfolio_dict, orders, trades):
         """
         portfolio_dict = {
             'total_cash': None,
-            'start_date': None,
             'account_type': None,
             'units': None,
             'yesterday_unites': None,
@@ -64,7 +63,6 @@ class FuturePortfolio(BasePortfolio):
         }
         """
 
-        start_date = portfolio_dict['start_date']
         account_type = portfolio_dict['account_type']
 
         portfolio = cls(0, start_date, account_type)
