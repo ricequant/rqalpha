@@ -66,8 +66,8 @@ def run_monthly(func, tradingday=None, time_rule=None, **kwargs):
 def _verify_function(name, func):
     if not callable(func):
         raise patch_user_exc(ValueError('scheduler.{}: func should be callable'.format(name)))
-    signature = signature(func)
-    if len(signature.parameters) != 2:
+    sig = signature(func)
+    if len(sig.parameters) != 2:
         raise patch_user_exc(TypeError(
             'scheduler.{}: func should take exactly 2 arguments (context, bar_dict)'.format(name)))
 
