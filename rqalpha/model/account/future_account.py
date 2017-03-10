@@ -35,8 +35,6 @@ class FutureAccount(BaseAccount):
     def margin_decider(self):
         return self._margin_decider
 
-    def before_trading(self, event):
-        super(FutureAccount, self).before_trading(event)
     @classmethod
     def from_recovery(cls, env, init_cash, start_date, account_dict):
         """
@@ -55,14 +53,14 @@ class FutureAccount(BaseAccount):
         account.daily_trades = trades
         return account
 
-    def before_trading(self):
-        super(FutureAccount, self).before_trading()
+    def before_trading(self, event):
+        super(FutureAccount, self).before_trading(event)
         positions = self.portfolio.positions
         removing_ids = []
         for order_book_id in positions.keys():
             position = positions[order_book_id]
-            if position._quantity == 0 and position._buy_open_order_quantity == 0 \
-                    and position._sell_open_order_quantity == 0:
+            if position._quantity == 0 and position.buy_open_order_quantity == 0 \
+                    and position.sell_open_order_quantity == 0:
                 removing_ids.append(order_book_id)
         for order_book_id in removing_ids:
             positions.pop(order_book_id, None)
@@ -134,7 +132,6 @@ class FutureAccount(BaseAccount):
         created_quantity = order.quantity
         created_value = order._frozen_price * created_quantity * position._contract_multiplier
         frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, created_value)
-        self._update_order_data(position, order, created_quantity, created_value)
         self._update_frozen_cash(order, frozen_margin)
 
     def order_creation_pass(self, event):
@@ -150,7 +147,6 @@ class FutureAccount(BaseAccount):
         cancel_quantity = order.unfilled_quantity
         cancel_value = -order._frozen_price * cancel_quantity * position._contract_multiplier
         frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, cancel_value)
-        self._update_order_data(position, order, -cancel_quantity, cancel_value)
         self._update_frozen_cash(order, frozen_margin)
 
     def order_pending_cancel(self, event):
@@ -175,7 +171,6 @@ class FutureAccount(BaseAccount):
         rejected_quantity = order.unfilled_quantity
         rejected_value = -order._frozen_price * rejected_quantity * position._contract_multiplier
         frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, rejected_value)
-        self._update_order_data(position, order, -rejected_quantity, rejected_value)
         self._update_frozen_cash(order, frozen_margin)
 
     def trade(self, event):
@@ -205,12 +200,9 @@ class FutureAccount(BaseAccount):
         trade_value = trade.last_price * trade_quantity * position._contract_multiplier
         frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, minus_value_by_trade)
 
-        portfolio._total_tax += trade.tax
-        portfolio._total_commission += trade.commission
         portfolio._daily_transaction_cost = portfolio._daily_transaction_cost + trade.tax + trade.commission
 
         self._update_frozen_cash(order, frozen_margin)
-        self._update_order_data(position, order, -trade_quantity, minus_value_by_trade)
         self._update_trade_data(position, trade, trade_quantity, trade_value)
 
         self._last_trade_id = trade.exec_id
@@ -257,20 +249,6 @@ class FutureAccount(BaseAccount):
                 position._buy_daily_realized_pnl += delta_daily_realized_pnl
             position._sell_trade_quantity += trade_quantity
             position._sell_trade_value += trade_value
-
-    @staticmethod
-    def _update_order_data(position, order, inc_order_quantity, inc_order_value):
-        if order.side == SIDE.BUY:
-            if order.position_effect == POSITION_EFFECT.OPEN:
-                position._buy_open_order_quantity += inc_order_quantity
-            else:
-                position._buy_close_order_quantity += inc_order_quantity
-        else:
-            if order.position_effect == POSITION_EFFECT.OPEN:
-                pass
-                position._sell_open_order_quantity += inc_order_quantity
-            else:
-                position._sell_close_order_quantity += inc_order_quantity
 
     def _update_frozen_cash(self, order, inc_order_value):
         if order.position_effect == POSITION_EFFECT.OPEN:

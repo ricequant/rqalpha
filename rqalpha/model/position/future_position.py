@@ -259,29 +259,36 @@ class FuturePosition(BasePosition):
         """
         【int】买开挂单量
         """
-        # TODO:get open orders from execution
-        return self._buy_open_order_quantity
+        open_orders = ExecutionContext.get_open_orders(self.order_book_id, SIDE.BUY, POSITION_EFFECT.OPEN)
+        return sum(order.unfilled_quantity for order in open_orders)
 
     @property
     def sell_open_order_quantity(self):
         """
         【int】卖开挂单量
         """
-        return self._sell_open_order_quantity
+        open_orders = ExecutionContext.get_open_orders(self.order_book_id, SIDE.SELL, POSITION_EFFECT.OPEN)
+        return sum(order.unfilled_quantity for order in open_orders)
 
     @property
     def buy_close_order_quantity(self):
         """
         【int】买平挂单量
         """
-        return self._buy_close_order_quantity
+        close_open_orders = ExecutionContext.get_open_orders(self.order_book_id, SIDE.BUY, POSITION_EFFECT.CLOSE)
+        close_today_orders = ExecutionContext.get_open_orders(self.order_book_id, SIDE.BUY, POSITION_EFFECT.CLOSE_TODAY)
+        return sum(order.unfilled_quantity for order in close_open_orders) + \
+            sum(order.unfilled_quantity for order in close_today_orders)
 
     @property
     def sell_close_order_quantity(self):
         """
         【int】卖平挂单量
         """
-        return self._sell_close_order_quantity
+        close_open_orders = ExecutionContext.get_open_orders(self.order_book_id, SIDE.SELL, POSITION_EFFECT.CLOSE)
+        close_today_orders = ExecutionContext.get_open_orders(self.order_book_id, SIDE.SELL, POSITION_EFFECT.CLOSE_TODAY)
+        return sum(order.unfilled_quantity for order in close_open_orders) + \
+            sum(order.unfilled_quantity for order in close_today_orders)
 
     @property
     def _buy_old_holding_quantity(self):
@@ -349,7 +356,7 @@ class FuturePosition(BasePosition):
     def _quantity(self):
         return self.buy_quantity + self.sell_quantity
 
-    # - Margin
+    # - Margin 相关
     @property
     def buy_margin(self):
         """

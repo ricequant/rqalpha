@@ -179,6 +179,13 @@ class ExecutionContext(object):
         return ExecutionContext.accounts[account_type]
 
     @classmethod
-    def get_open_orders(cls, order_book_id, side, position_effect):
-        # TODO
-        pass
+    def get_open_orders(cls, order_book_id=None, side=None, position_effect=None):
+        open_orders = [order for account, order in ExecutionContext.broker.get_open_orders()]
+
+        if order_book_id:
+            open_orders = [order for order in open_orders if order.order_book_id == order_book_id]
+        if side:
+            open_orders = [order for order in open_orders if order.side == side]
+        if position_effect:
+            open_orders = [order for order in open_orders if order.position_effect == position_effect]
+        return open_orders
