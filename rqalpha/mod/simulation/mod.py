@@ -17,17 +17,19 @@
 from rqalpha.interface import AbstractMod
 
 from .simulation_broker import SimulationBroker
+from .signal_broker import SignalBroker
 from .simulation_event_source import SimulationEventSource
 
 
 class SimulationMod(AbstractMod):
     def __init__(self):
-        self._env = None
+        pass
 
     def start_up(self, env, mod_config):
-        self._env = env
-        self._env.set_broker(SimulationBroker(self._env))
-
+        if mod_config.signal:
+            env.set_broker(SignalBroker(env))
+        else:
+            env.set_broker(SimulationBroker(env))
         event_source = SimulationEventSource(env, env.config.base.account_list)
         env.set_event_source(event_source)
 

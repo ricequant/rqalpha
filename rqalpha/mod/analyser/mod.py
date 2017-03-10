@@ -60,13 +60,14 @@ class AnalyserMod(AbstractMod):
             env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
             env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
 
-    def _collect_trade(self, account, trade):
-        self._trades.append(self._to_trade_record(trade))
+    def _collect_trade(self, event):
+        self._trades.append(self._to_trade_record(event.trade))
 
-    def _collect_order(self, account, order):
+    def _collect_order(self, event):
+        order = event.order
         self._orders[order.trading_datetime.date()].append(order)
 
-    def _collect_daily(self):
+    def _collect_daily(self, event):
         date = self._env.calendar_dt.date()
         portfolio = self._env.account.get_portfolio(date)
 

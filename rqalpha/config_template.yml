@@ -1,4 +1,4 @@
-version: 0.1.2
+version: 0.1.3
 
 # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
 whitelist: [base, extra, validator, mod]
@@ -72,6 +72,7 @@ mod:
     lib: 'rqalpha.mod.simulation'
     enabled: true
     priority: 100
+    signal: false
   # 技术分析API
   funcat_api:
     lib: 'rqalpha.mod.funcat_api'

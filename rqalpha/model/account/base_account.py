@@ -121,7 +121,7 @@ class BaseAccount(Persistable):
     def get_order(self, order_id):
         return self.daily_orders.get(order_id, None)
 
-    def before_trading(self):
+    def before_trading(self, event):
         open_orders = {}
         for k, order in six.iteritems(self.daily_orders):
             if not order._is_final():
@@ -133,38 +133,38 @@ class BaseAccount(Persistable):
     def last_trade_id(self):
         return self._last_trade_id
 
-    def bar(self, bar_dict):
+    def bar(self, event):
         pass
 
-    def tick(self, tick):
+    def tick(self, event):
         pass
 
-    def after_trading(self):
+    def after_trading(self, event):
         pass
 
-    def settlement(self):
+    def settlement(self, event):
         pass
 
-    def order_pending_new(self, account, order):
+    def order_pending_new(self, event):
         pass
 
-    def order_creation_pass(self, account, order):
+    def order_creation_pass(self, event):
         pass
 
-    def order_creation_reject(self, account, order):
+    def order_creation_reject(self, event):
         pass
 
-    def order_pending_cancel(self, account, order):
+    def order_pending_cancel(self, event):
         pass
 
-    def order_cancellation_pass(self, account, order):
+    def order_cancellation_pass(self, event):
         pass
 
-    def order_cancellation_reject(self, account, order):
+    def order_cancellation_reject(self, event):
         pass
 
-    def order_unsolicited_update(self, account, order):
+    def order_unsolicited_update(self, event):
         pass
 
-    def trade(self, account, trade):
+    def trade(self, event):
         pass

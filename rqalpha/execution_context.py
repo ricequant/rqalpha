@@ -17,6 +17,7 @@
 from functools import wraps
 from contextlib import contextmanager
 
+from .utils import get_account_type
 from .utils.i18n import gettext as _
 from .utils.exception import CustomException, patch_user_exc
 from .utils import get_upper_underlying_symbol
@@ -171,6 +172,11 @@ class ExecutionContext(object):
     @classmethod
     def get_future_info(cls, order_book_id, hedge_type):
         return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)
+
+    @classmethod
+    def get_account(cls, order_book_id):
+        account_type = get_account_type(order_book_id)
+        return ExecutionContext.accounts[account_type]
 
     @classmethod
     def get_open_orders(cls, order_book_id, side, position_effect):

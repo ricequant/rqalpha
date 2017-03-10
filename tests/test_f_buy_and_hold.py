@@ -21,12 +21,14 @@ __config__ = {
     },
     "extra": {
         "log_level": "error",
-        # "plot": True,
     },
     "mod": {
         "progress": {
             "enabled": True,
             "priority": 400,
+        },
+        "analyser": {
+            "plot": False
         },
     },
 }

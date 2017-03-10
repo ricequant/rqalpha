@@ -29,8 +29,8 @@ class StockAccount(BaseAccount):
     def __init__(self, env, init_cash, start_date):
         super(StockAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.STOCK)
 
-    def before_trading(self):
-        super(StockAccount, self).before_trading()
+    def before_trading(self, event):
+        super(StockAccount, self).before_trading(event)
         positions = self.portfolio.positions
         removing_ids = []
         for order_book_id in positions.keys():
@@ -44,7 +44,7 @@ class StockAccount(BaseAccount):
         if self.config.base.handle_split:
             self._handle_split(trading_date)
 
-    def after_trading(self):
+    def after_trading(self, event):
         trading_date = ExecutionContext.get_current_trading_dt().date()
         portfolio = self.portfolio
         # de_listed may occur
@@ -71,7 +71,7 @@ class StockAccount(BaseAccount):
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=de_listed_id))
             del positions[de_listed_id]
 
-    def settlement(self):
+    def settlement(self, event):
         portfolio = self.portfolio
         trading_date = ExecutionContext.get_current_trading_dt().date()
 
@@ -81,7 +81,8 @@ class StockAccount(BaseAccount):
 
         self._handle_dividend_ex_dividend(trading_date)
 
-    def bar(self, bar_dict):
+    def bar(self, event):
+        bar_dict = event.bar_dict
         portfolio = self.portfolio
         # invalidate cache
         portfolio._portfolio_value = None
@@ -93,7 +94,8 @@ class StockAccount(BaseAccount):
                 position._market_value = position._quantity * bar.close
                 position._last_price = bar.close
 
-    def tick(self, tick):
+    def tick(self, event):
+        tick = event.tick
         portfolio = self.portfolio
         # invalidate cache
         portfolio._portfolio_value = None
@@ -102,9 +104,10 @@ class StockAccount(BaseAccount):
         position._market_value = position._quantity * tick.last_price
         position._last_price = tick.last_price
 
-    def order_pending_new(self, account, order):
-        if self != account:
+    def order_pending_new(self, event):
+        if self != event.account:
             return
+        order = event.order
         if order._is_final():
             return
         order_book_id = order.order_book_id
@@ -116,12 +119,13 @@ class StockAccount(BaseAccount):
         self._update_order_data(order, create_quantity, create_value)
         self._update_frozen_cash(order, create_value)
 
-    def order_creation_pass(self, account, order):
+    def order_creation_pass(self, event):
         pass
 
-    def order_creation_reject(self, account, order):
-        if self != account:
+    def order_creation_reject(self, event):
+        if self != event.account:
             return
+        order = event.order
         order_book_id = order.order_book_id
         position = self.portfolio.positions[order_book_id]
         position._total_orders -= 1
@@ -130,29 +134,32 @@ class StockAccount(BaseAccount):
         self._update_order_data(order, cancel_quantity, cancel_value)
         self._update_frozen_cash(order, -cancel_value)
 
-    def order_pending_cancel(self, account, order):
+    def order_pending_cancel(self, event):
         pass
 
-    def order_cancellation_pass(self, account, order):
-        self._cancel_order_cal(account, order)
-
-    def order_cancellation_reject(self, account, order):
-        pass
-
-    def order_unsolicited_update(self, account, order):
-        self._cancel_order_cal(account, order)
-
-    def _cancel_order_cal(self, account, order):
-        if self != account:
+    def order_cancellation_pass(self, event):
+        if self != event.account:
             return
+        self._cancel_order_cal(event.order)
+
+    def order_cancellation_reject(self, event):
+        pass
+
+    def order_unsolicited_update(self, event):
+        if self != event.account:
+            return
+        self._cancel_order_cal(event.order)
+
+    def _cancel_order_cal(self, order):
         rejected_quantity = order.unfilled_quantity
         rejected_value = order._frozen_price * rejected_quantity
         self._update_order_data(order, -rejected_quantity, -rejected_value)
         self._update_frozen_cash(order, -rejected_value)
 
-    def trade(self, account, trade):
-        if self != account:
+    def trade(self, event):
+        if self != event.account:
             return
+        trade = event.trade
         portfolio = self.portfolio
         portfolio._portfolio_value = None
         order = trade.order
