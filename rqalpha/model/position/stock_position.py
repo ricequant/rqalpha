@@ -34,11 +34,14 @@ class StockPosition(object):
 
     @classmethod
     def __from_dict__(cls, state):
+        # order_book_id, quantity, avg_price 必需
         position = cls(state['_order_book_id'])
         position._quantity = state['_quantity']
         position._avg_price = state['_avg_price']
-        position._non_closeable = state['_non_closeable']
-        position._frozen = state['_frozen']
+
+        # 以下字段可选
+        position._non_closeable = state['_non_closeable'] if '_non_closeable' in state else 0
+        position._frozen = state['_frozen'] if '_frozen' in state else 0
 
         try:
             position._bought_value = state['_bought_value']
@@ -75,6 +78,7 @@ class StockPosition(object):
         }
 
     def apply_trade_(self, trade):
+        self._total_trades += 1
         if trade.side == SIDE.BUY:
             self._bought_quantity += trade.last_quantity
             self._bought_value += trade.last_quantity * trade.last_price
@@ -90,11 +94,31 @@ class StockPosition(object):
             self._quantity -= trade.last_quantity
             self._frozen -= trade.last_quantity
 
-    def freeze_(self, quantity):
-        self._frozen += quantity
+    def split_(self, ratio):
+        self._quantity *= ratio
+        self._bought_quantity *= ratio
+        self._sold_quantity *= ratio
+        # split 发生时，这两个值理论上应该都是0
+        self._frozen *= ratio
+        self._non_closeable *= ratio
 
-    def unfreeze_(self, quantity):
-        self._frozen -= quantity
+    def on_order_pending_new_(self, order):
+        self._total_orders += 1
+        if order.side == SIDE.SELL:
+            self._frozen += order.quantity
+
+    def on_order_creation_reject_(self, order):
+        self._total_orders -= 1
+        if order.side == SIDE.SELL:
+            self._frozen -= order.quantity
+
+    def on_order_cancel_(self, order):
+        if order.side == SIDE.SELL:
+            self._frozen -= order.unfilled_quantity
+
+    def after_trading_(self):
+        # T+1 在结束交易时，_non_closeable 重设为0
+        self._non_closeable = 0
 
     @property
     def quantity(self):
@@ -148,7 +172,7 @@ class StockPosition(object):
     @property
     def sellable(self):
         """
-        【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓-今日买入的仓位
+        【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
         """
         return self._quantity - self._non_closeable - self._frozen
 
@@ -164,6 +188,3 @@ class StockPosition(object):
             return 0
         portfolio = accounts[ACCOUNT_TYPE.STOCK].portfolio
         return 0 if portfolio.portfolio_value == 0 else self._position_value / portfolio.portfolio_value
-
-    def _cal_close_today_amount(self, trade_amount, side):
-        return 0
