@@ -35,11 +35,19 @@ class BasePortfolio(object):
         self._current_date = start_date
 
         self._frozen_cash = 0.
-        self._total_commission = 0.
-        self._total_tax = 0.
+
+        # self._total_commission = 0.
+        # self._total_tax = 0.
 
         self._dividend_receivable = 0.
         self._dividend_info = {}
+
+    @property
+    def transaction_cost(self):
+        """
+        【float】总费用
+        """
+        return sum(position.transaction_cost for position in itervalues(self.positions))
 
     @property
     def _type(self):
@@ -150,11 +158,3 @@ class BasePortfolio(object):
         # 年化收益率
         return (1 + self.total_returns) ** (
             DAYS_CNT.DAYS_A_YEAR / float((self._current_date - self.start_date).days + 1)) - 1
-
-    @property
-    def transaction_cost(self):
-        """
-        【float】总费用
-        """
-        # 总费用
-        return self._total_commission + self._total_tax

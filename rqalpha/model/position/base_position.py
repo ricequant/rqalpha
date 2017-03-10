@@ -84,7 +84,7 @@ class BasePosition(object):
         """
         【float】持仓累计盈亏
         """
-        return self._market_value + self._sell_trade_value - self._buy_trade_value
+        raise NotImplementedError
 
     def _clone(self):
         p = PositionClone()

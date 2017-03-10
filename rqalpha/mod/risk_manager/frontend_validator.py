@@ -138,20 +138,20 @@ class FutureFrontendValidator(FrontendValidator):
             return True
         if order.position_effect != POSITION_EFFECT.CLOSE:
             return True
-        if order.side == SIDE.BUY and order.quantity > position._sell_closable_quantity:
+        if order.side == SIDE.BUY and order.quantity > position.closable_sell_quantity:
             order._mark_rejected(_(
                 "Order Rejected: not enough securities {order_book_id} to buy close, target sell quantity is {quantity}, sell_closable_quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
-                closable=position._sell_closable_quantity,
+                closable=position.closable_sell_quantity,
             ))
             return False
-        elif order.side == SIDE.SELL and order.quantity > position._buy_closable_quantity:
+        elif order.side == SIDE.SELL and order.quantity > position.closable_buy_quantity:
             order._mark_rejected(_(
                 "Order Rejected: not enough securities {order_book_id} to sell close, target sell quantity is {quantity}, buy_closable_quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
-                closable=position._buy_closable_quantity,
+                closable=position.closable_buy_quantity,
             ))
             return False
         return True

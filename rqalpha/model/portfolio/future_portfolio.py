@@ -47,7 +47,6 @@ class FuturePortfolioClone(object):
 class FuturePortfolio(BasePortfolio):
     def __init__(self, cash, start_date, account_type):
         super(FuturePortfolio, self).__init__(cash, start_date, account_type)
-        self._daily_transaction_cost = 0
         self._positions = Positions(FuturePosition)
         self._portfolio_value = None
 
@@ -67,8 +66,9 @@ class FuturePortfolio(BasePortfolio):
         portfolio._yesterday_units = portfolio_dict['yesterday_units']
         portfolio._yesterday_portfolio_value = portfolio_dict['yesterday_portfolio_value']
 
-        orders_dict = {}
         trades_dict = {}
+        orders_dict = {}
+
         for order in orders:
             if order.order_book_id not in orders_dict:
                 orders_dict[order.order_book_id] = []
@@ -80,18 +80,22 @@ class FuturePortfolio(BasePortfolio):
                 trades_dict[order.order_book_id] = []
             trades_dict[order.order_book_id].append(trade)
 
-        for order_book_id, position_dict in six.iteritems(portfolio_dict['positions']):
+        order_book_id_set = set(orders_dict.keys())
+        order_book_id_set.update(trades_dict.keys())
+        order_book_id_set.update(portfolio_dict['positions'].keys())
+
+        for order_book_id in order_book_id_set:
             orders = orders_dict[order_book_id] if order_book_id in orders_dict else []
             trades = trades_dict[order_book_id] if order_book_id in trades_dict else []
+            position_dict = portfolio_dict['positions'][order_book_id] if order_book_id in portfolio_dict['positions'] else {}
             position = FuturePosition.from_recovery(order_book_id, position_dict, orders, trades)
             portfolio._positions[order_book_id] = position
-            portfolio._daily_transaction_cost += position.transaction_cost
 
             for order in orders:
                 value = order._frozen_price * order.unfilled_quantity * position._contract_multiplier
                 portfolio._frozen_cash += account.margin_decider.cal_margin(order_book_id, order.side, value)
 
-        portfolio._cash = portfolio._yesterday_portfolio_value - portfolio._frozen_cash - portfolio._daily_transaction_cost
+        portfolio._cash = portfolio.yesterday_unit_net_value * portfolio.units - portfolio._frozen_cash - portfolio.margin
 
         return portfolio
 
@@ -148,8 +152,8 @@ class FuturePortfolio(BasePortfolio):
         【float】总权益，昨日总权益+当日盈亏
         """
         if self._portfolio_value is None:
-            self._portfolio_value = self._cash + self._frozen_cash + self.daily_holding_pnl + self.margin
-            # self._portfolio_value = self._yesterday_portfolio_value + self.daily_pnl
+            # self._portfolio_value = self._cash + self._frozen_cash + self.daily_holding_pnl + self.margin
+            self._portfolio_value = self.yesterday_unit_net_value * self.units + self.daily_pnl
 
         return self._portfolio_value
 
@@ -207,7 +211,7 @@ class FuturePortfolio(BasePortfolio):
         【float】当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
         """
         # 当日盈亏
-        return self.daily_realized_pnl + self.daily_holding_pnl - self._daily_transaction_cost
+        return self.daily_realized_pnl + self.daily_holding_pnl - self.transaction_cost
 
     def _clone(self):
         p = FuturePortfolioClone()
@@ -222,3 +226,4 @@ class FuturePortfolio(BasePortfolio):
             else:
                 setattr(p, key, getattr(self, key))
         return p
+

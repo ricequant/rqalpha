@@ -171,3 +171,8 @@ class ExecutionContext(object):
     @classmethod
     def get_future_info(cls, order_book_id, hedge_type):
         return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)
+
+    @classmethod
+    def get_open_orders(cls, order_book_id, side, position_effect):
+        # TODO
+        pass
