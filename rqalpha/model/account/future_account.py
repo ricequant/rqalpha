@@ -16,7 +16,6 @@
 
 import six
 
-from ..margin import Margin
 from ..portfolio.future_portfolio import FuturePortfolio
 from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
 from ...utils.i18n import gettext as _
@@ -29,11 +28,6 @@ from .base_account import BaseAccount
 class FutureAccount(BaseAccount):
     def __init__(self, env, init_cash, start_date):
         super(FutureAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.FUTURE)
-        self._margin_decider = Margin(env.config.base.margin_multiplier)
-
-    @property
-    def margin_decider(self):
-        return self._margin_decider
 
     @classmethod
     def from_recovery(cls, env, init_cash, start_date, account_dict):
@@ -131,7 +125,7 @@ class FutureAccount(BaseAccount):
         position._total_orders += 1
         created_quantity = order.quantity
         created_value = order._frozen_price * created_quantity * position._contract_multiplier
-        frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, created_value)
+        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, created_value)
         self._update_frozen_cash(order, frozen_margin)
 
     def order_creation_pass(self, event):
@@ -146,7 +140,7 @@ class FutureAccount(BaseAccount):
         position._total_orders -= 1
         cancel_quantity = order.unfilled_quantity
         cancel_value = -order._frozen_price * cancel_quantity * position._contract_multiplier
-        frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, cancel_value)
+        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, cancel_value)
         self._update_frozen_cash(order, frozen_margin)
 
     def order_pending_cancel(self, event):
@@ -170,7 +164,7 @@ class FutureAccount(BaseAccount):
         position = self.portfolio.positions[order.order_book_id]
         rejected_quantity = order.unfilled_quantity
         rejected_value = -order._frozen_price * rejected_quantity * position._contract_multiplier
-        frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, rejected_value)
+        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, rejected_value)
         self._update_frozen_cash(order, frozen_margin)
 
     def trade(self, event):
@@ -198,7 +192,7 @@ class FutureAccount(BaseAccount):
 
         minus_value_by_trade = -order._frozen_price * trade_quantity * position._contract_multiplier
         trade_value = trade.last_price * trade_quantity * position._contract_multiplier
-        frozen_margin = self.margin_decider.cal_margin(order_book_id, order.side, minus_value_by_trade)
+        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, minus_value_by_trade)
 
         portfolio._daily_transaction_cost = portfolio._daily_transaction_cost + trade.tax + trade.commission
 

@@ -363,8 +363,7 @@ class FuturePosition(BasePosition):
         【float】多头持仓占用保证金
         """
         # buy_margin: < float > 买保证金
-        margin_decider = Environment.get_instance().accounts[ACCOUNT_TYPE.FUTURE].margin_decider
-        return margin_decider.cal_margin(self.order_book_id, SIDE.BUY, self._buy_holding_cost)
+        return ExecutionContext.cal_margin(self.order_book_id, SIDE.BUY, self._buy_holding_cost)
 
     @property
     def sell_margin(self):
@@ -372,8 +371,7 @@ class FuturePosition(BasePosition):
         【float】空头持仓占用保证金
         """
         # sell_margin: < float > 卖保证金
-        margin_decider = Environment.get_instance().accounts[ACCOUNT_TYPE.FUTURE].margin_decider
-        return margin_decider.cal_margin(self.order_book_id, SIDE.SELL, self._sell_holding_cost)
+        return ExecutionContext.cal_margin(self.order_book_id, SIDE.SELL, self._sell_holding_cost)
 
     @property
     def margin(self):

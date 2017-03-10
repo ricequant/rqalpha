@@ -20,6 +20,7 @@ from .base_portfolio import BasePortfolio
 from ..dividend import Dividend
 from ..position import Positions, PositionsClone, FuturePosition
 from ...utils.repr import dict_repr
+from ...execution_context import ExecutionContext
 
 
 FuturePersistMap = {
@@ -88,12 +89,12 @@ class FuturePortfolio(BasePortfolio):
             orders = orders_dict[order_book_id] if order_book_id in orders_dict else []
             trades = trades_dict[order_book_id] if order_book_id in trades_dict else []
             position_dict = portfolio_dict['positions'][order_book_id] if order_book_id in portfolio_dict['positions'] else {}
-            position = FuturePosition.from_recovery(order_book_id, position_dict, orders, trades)
+            position = FuturePosition.from_recovery(order_book_id, position_dict, trades)
             portfolio._positions[order_book_id] = position
 
             for order in orders:
                 value = order._frozen_price * order.unfilled_quantity * position._contract_multiplier
-                portfolio._frozen_cash += account.margin_decider.cal_margin(order_book_id, order.side, value)
+                portfolio._frozen_cash += ExecutionContext.cal_margin(order_book_id, order.side, value)
 
         portfolio._cash = portfolio.yesterday_unit_net_value * portfolio.units - portfolio._frozen_cash - portfolio.margin
 
