@@ -52,19 +52,20 @@ class FuturePortfolio(BasePortfolio):
         self._portfolio_value = None
 
     @classmethod
-    def from_recovery(cls, account, start_date, account_type, portfolio_dict, orders, trades):
+    def from_recovery(cls, account, start_date, start_cash, account_type, portfolio_dict, orders, trades):
         """
         portfolio_dict = {
-            'total_cash': None,
+            'yesterday_portfolio_value': None,
             'units': None,
             'yesterday_units': None,
             'positions': []
         }
         """
-        portfolio = cls(0, start_date, account_type)
+        portfolio = cls(start_cash, start_date, account_type)
 
         portfolio._units = portfolio_dict['units']
         portfolio._yesterday_units = portfolio_dict['yesterday_units']
+        portfolio._yesterday_portfolio_value = portfolio_dict['yesterday_portfolio_value']
 
         orders_dict = {}
         trades_dict = {}
@@ -90,8 +91,9 @@ class FuturePortfolio(BasePortfolio):
                 value = order._frozen_price * order.unfilled_quantity * position._contract_multiplier
                 portfolio._frozen_cash += account.margin_decider.cal_margin(order_book_id, order.side, value)
 
-            portfolio._cash = portfolio_dict['total_cash'] - portfolio._frozen_cash
-            return portfolio
+        portfolio._cash = portfolio._yesterday_portfolio_value - portfolio._frozen_cash - portfolio._daily_transaction_cost
+
+        return portfolio
 
     def restore_from_dict_(self, portfolio_dict):
         self._cash = portfolio_dict['_cash']

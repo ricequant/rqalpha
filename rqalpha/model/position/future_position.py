@@ -140,7 +140,7 @@ class FuturePosition(BasePosition):
                 else:
                     position._sell_close_order_quantity += order.unfilled_quantity
 
-        if 'prev_settle_price':
+        if 'prev_settle_price' in position_dict:
             position._prev_settle_price = position_dict['prev_settle_price']
 
         if 'buy_today_quantity' not in position_dict:

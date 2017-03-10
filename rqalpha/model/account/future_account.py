@@ -48,7 +48,7 @@ class FutureAccount(BaseAccount):
         orders = account_dict['orders']
         trades = account_dict['trades']
         portfolio_dict = account_dict['portfolio']
-        account.portfolio = FuturePortfolio.from_recovery(account, start_date, ACCOUNT_TYPE.FUTURE, portfolio_dict, orders.values(), trades)
+        account.portfolio = FuturePortfolio.from_recovery(account, start_date, init_cash, ACCOUNT_TYPE.FUTURE, portfolio_dict, orders.values(), trades)
         account.daily_orders = orders
         account.daily_trades = trades
         return account
