@@ -103,7 +103,7 @@ class FuturePosition(BasePosition):
         return position
 
     @classmethod
-    def from_recovery(cls, order_book_id, position_dict, orders, trades):
+    def from_recovery(cls, order_book_id, position_dict, trades):
         """
         position_dict = {
             'buy_quantity': None,
