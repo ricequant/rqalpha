@@ -67,6 +67,10 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def get_dividend(self, order_book_id, adjusted=True):
         return self._data_source.get_dividend(order_book_id, adjusted)
 
+    @lru_cache(128)
+    def get_split(self, order_book_id):
+        return self._data_source.get_split(order_book_id)
+
     def get_dividend_by_book_date(self, order_book_id, date, adjusted=True):
         df = self.get_dividend(order_book_id, adjusted)
         if df is None or df.empty:
@@ -79,6 +83,15 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
             return None
 
         return df.iloc[pos]
+
+    def get_split_by_ex_date(self, order_book_id, date):
+        df = self.get_split(order_book_id)
+        if df is None or df.empty:
+            return
+        try:
+            return df.loc[date]
+        except KeyError:
+            pass
 
     @lru_cache(10240)
     def _get_prev_close(self, order_book_id, dt):
