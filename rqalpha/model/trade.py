@@ -123,6 +123,10 @@ class Trade(object):
         return self._tax + self._commission
 
     @property
+    def side(self):
+        return self.order.side
+
+    @property
     def position_effect(self):
         return self.order.position_effect
 
