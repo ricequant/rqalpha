@@ -131,6 +131,6 @@ Current Working
 .. _RQAlpha 基于 Mod 进行扩展: http://rqalpha.readthedocs.io/zh_CN/stable/development/mod.html
 .. _History: http://rqalpha.readthedocs.io/zh_CN/stable/history.html
 .. _TODO: http://rqalpha.readthedocs.io/zh_CN/stable/todo.html
-.. _develp 分支: https://github.com/ricequant/rqalpha/tree/develop
+.. _develop 分支: https://github.com/ricequant/rqalpha/tree/develop
 .. _master 分支: https://github.com/ricequant/rqalpha
 .. _rqalpha-mod-rqalpha: https://github.com/ricequant/rqalpha-mod-vnpy
