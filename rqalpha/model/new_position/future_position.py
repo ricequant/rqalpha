@@ -20,9 +20,9 @@ from ...environment import Environment
 from ...const import SIDE, POSITION_EFFECT
 
 
-class FuturePostion(BasePosition):
+class FuturePosition(BasePosition):
     def __init__(self, order_book_id):
-        super(FuturePostion, self).__init__(order_book_id)
+        super(FuturePosition, self).__init__(order_book_id)
 
         self._buy_old_holding_list = []
         self._sell_old_holding_list = []
@@ -44,6 +44,10 @@ class FuturePostion(BasePosition):
     @property
     def margin_multiplier(self):
         return Environment.get_instance().config.base.margin_multiplier
+
+    @property
+    def market_value(self):
+        raise NotImplementedError
 
     # -- PNL 相关
     @property
