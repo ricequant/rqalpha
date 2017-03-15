@@ -18,6 +18,7 @@ from six import itervalues
 
 from ...environment import Environment
 from ...const import DAYS_CNT
+from ...events import EVENT
 
 
 class BaseAccount(object):
@@ -29,27 +30,70 @@ class BaseAccount(object):
         self._daily_orders = daily_orders
         self._daily_trades = daily_trades
         self._positions = positions
-        self._frozen_cash = self._cal_frozen_cash(daily_orders)
+        self._frozen_cash = self._cal_frozen_cash([order for order in daily_orders if order._is_active()])
         self._cash = total_cash - self._frozen_cash
-        self._type = None
+        self._type = self._get_type()
         self._current_date = None
-
-    def _cal_frozen_cash(self, daily_orders):
-        raise NotImplementedError
+        self._register_event()
 
     def _get_starting_cash(self):
         raise NotImplementedError
+
+    def _get_type(self):
+        raise NotImplementedError
+
+    @staticmethod
+    def _cal_frozen_cash(daily_orders):
+        raise NotImplementedError
+
+    def _register_event(self):
+        event_bus = Environment.get_instance().event_bus
+
+        # 该事件会触发策略的before_trading函数
+        event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
+        # 该事件会触发策略的handle_bar函数
+        event_bus.add_listener(EVENT.BAR, self.bar)
+        # 该事件会触发策略的handel_tick函数
+        event_bus.add_listener(EVENT.TICK, self.tick)
+        # 该事件会触发策略的after_trading函数
+        event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
+        # 触发结算事件
+        event_bus.add_listener(EVENT.SETTLEMENT, self.settlement)
+
+        # 创建订单
+        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self.order_pending_new)
+        # 创建订单成功
+        event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self.order_creation_pass)
+        # 创建订单失败
+        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self.order_creation_reject)
+        # 创建撤单
+        event_bus.add_listener(EVENT.ORDER_PENDING_CANCEL, self.order_pending_cancel)
+        # 撤销订单成功
+        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self.order_cancellation_pass)
+        # 撤销订单失败
+        event_bus.add_listener(EVENT.ORDER_CANCELLATION_REJECT, self.order_cancellation_reject)
+        # 订单状态更新
+        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self.order_unsolicited_update)
+        # 成交
+        event_bus.add_listener(EVENT.TRADE, self.trade)
 
     @property
     def type(self):
         return self._type
 
     @property
-    def positions(self):
+    def daily_pnl(self):
         """
-        [dict] 持仓
+        [float] 当日盈亏
         """
-        return self._positions
+        raise NotImplementedError
+
+    @property
+    def total_value(self):
+        """
+        总权益
+        """
+        raise NotImplementedError
 
     @property
     def unit_net_value(self):
@@ -57,6 +101,13 @@ class BaseAccount(object):
         [float] 实时净值
         """
         raise NotImplementedError
+
+    @property
+    def positions(self):
+        """
+        [dict] 持仓
+        """
+        return self._positions
 
     @property
     def units(self):
@@ -86,13 +137,6 @@ class BaseAccount(object):
         [float] 可用资金
         """
         return self._cash
-
-    @property
-    def daily_pnl(self):
-        """
-        [float] 当日盈亏
-        """
-        raise NotImplementedError
 
     @property
     def market_value(self):
@@ -138,11 +182,87 @@ class BaseAccount(object):
         return self.unit_net_value ** (
         DAYS_CNT.DAYS_A_YEAR / float((self._current_date - self.start_date).days + 1)) - 1
 
-
-
     @property
     def portfolio_value(self):
         """
-        [Deprecated] 动态权益
+        [Deprecated] 总权益
         """
-        return self.unit_net_value * self._units
+        return self.total_value
+
+    def before_trading(self, event):
+        """
+        该事件会触发策略的before_trading函数
+        """
+        pass
+
+    def bar(self, event):
+        """
+        该事件会触发策略的handle_bar函数
+        """
+        pass
+
+    def tick(self, event):
+        """
+        该事件会触发策略的handel_tick函数
+        """
+        pass
+
+    def after_trading(self, event):
+        """
+        该事件会触发策略的after_trading函数
+        """
+        pass
+
+    def settlement(self, event):
+        """
+        触发结算事件
+        """
+        pass
+
+    def order_pending_new(self, event):
+        """
+        创建订单
+        """
+        pass
+
+    def order_creation_pass(self, event):
+        """
+        创建订单成功
+        """
+        pass
+
+    def order_creation_reject(self, event):
+        """
+        创建订单失败
+        """
+        pass
+
+    def order_pending_cancel(self, event):
+        """
+        创建撤单
+        """
+        pass
+
+    def order_cancellation_pass(self, event):
+        """
+        撤销订单成功
+        """
+        pass
+
+    def order_cancellation_reject(self, event):
+        """
+        撤销订单失败
+        """
+        pass
+
+    def order_unsolicited_update(self, event):
+        """
+        订单状态更新
+        """
+        pass
+
+    def trade(self, event):
+        """
+        成交
+        """
+        pass
