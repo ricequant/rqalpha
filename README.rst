@@ -108,7 +108,7 @@ Current Working
 *   解决通过代码调用 :code:`update_bundle` 函数报错的问题
 *   RQAlpha 提供基于当前Bar和下一个Bar的撮合引擎，但有一些业务场景下(比如跟单，仓位同步等)，策略下单只是一个信号，不需要进行撮合，希望能够按照下单价格直接成交，因此 RQAlpha 提供了这种业务场景的支持。只需要在启动策略的时候传入 `--signal` 即可。
 *   标准化 broker 对接接口，规范实盘接口对接流程，新的实盘接口对接只需要按照统一的接口层规范即可实现。
-*   基于 vnpy 完成CTP实盘交易接口的对接开发: 我们在 `rqalpha-mod-rqalpha`_ 项目中以 Mod 的形式，通过vnpy 完成CTP的对接，具体的对接工作正在进行中，目前还不稳定，等待下一个版本的发布，会完全实现 RQAlpha 和 CTP 的全链路打通，届时您通过RQAlpha进行回测后的策略可以直接连接实盘进行交易。
+*   基于 vnpy 完成CTP实盘交易接口的对接开发: 我们在 `rqalpha-mod-vnpy`_ 项目中以 Mod 的形式，通过vnpy 完成CTP的对接，具体的对接工作正在进行中，目前还不稳定，等待下一个版本的发布，会完全实现 RQAlpha 和 CTP 的全链路打通，届时您通过RQAlpha进行回测后的策略可以直接连接实盘进行交易。
 
 .. _Github Issue: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
@@ -133,4 +133,4 @@ Current Working
 .. _TODO: http://rqalpha.readthedocs.io/zh_CN/stable/todo.html
 .. _develop 分支: https://github.com/ricequant/rqalpha/tree/develop
 .. _master 分支: https://github.com/ricequant/rqalpha
-.. _rqalpha-mod-rqalpha: https://github.com/ricequant/rqalpha-mod-vnpy
+.. _rqalpha-mod-vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
