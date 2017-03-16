@@ -20,8 +20,9 @@ from .utils.i18n import gettext
 
 def plot_result(result_dict, show_windows=True, savefile=None):
     import os
-    from matplotlib import rcParams
+    from matplotlib import rcParams, gridspec, ticker, image as mpimg, pyplot as plt
     from matplotlib.font_manager import findfont, FontProperties
+    import numpy as np
 
     rcParams['font.family'] = 'sans-serif'
     rcParams['font.sans-serif'] = [
@@ -42,11 +43,6 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         use_chinese_fonts = False
         system_log.warn("Missing Chinese fonts. Fallback to English.")
 
-    import numpy as np
-    import matplotlib
-    from matplotlib import gridspec
-    import matplotlib.image as mpimg
-    import matplotlib.pyplot as plt
 
     summary = result_dict["summary"]
     title = summary['strategy_file']
@@ -145,8 +141,8 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     # strategy vs benchmark
     ax = plt.subplot(gs[4:10, :])
 
-    ax.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-    ax.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+    ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
+    ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
     ax.grid(b=True, which='major', linewidth=1)
 
