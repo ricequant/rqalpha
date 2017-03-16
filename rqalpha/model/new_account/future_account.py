@@ -71,12 +71,14 @@ class FutureAccount(BaseAccount):
         """
         return sum(position.margin for position in six.itervalues(self.positions))
 
+    @property
     def buy_margin(self):
         """
         [float] 买方向保证金
         """
         return sum(position.buy_margin for position in six.itervalues(self.positions))
 
+    @property
     def sell_margin(self):
         """
         [float] 卖方向保证金

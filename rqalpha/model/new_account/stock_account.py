@@ -27,16 +27,18 @@ from ...execution_context import ExecutionContext
 
 
 class StockAccount(object):
-    def __init__(self, cash, start_date):
-        self._starting_cash = cash
-        self._cash = cash
+    def __init__(self, start_date, starting_cash,
+                 static_unit_net_value, units, cash, frozen_cash=0,
+                 positions=Positions(StockPosition), dividend_receivable=None):
         self._start_date = start_date
-        self._units = cash
-        self._static_unit_net_value = 1
+        self._starting_cash = starting_cash
+        self._cash = cash
+        self._units = units
+        self._static_unit_net_value = static_unit_net_value
 
-        self._positions = Positions(StockPosition)
-        self._frozen_cash = 0
-        self._dividend_info = {}
+        self._positions = positions
+        self._frozen_cash = frozen_cash
+        self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
         # cached value
         self._market_value = None
@@ -126,12 +128,12 @@ class StockAccount(object):
 
     def _handle_dividend_payable(self, trading_date):
         to_be_removed = []
-        for order_book_id, dividend in six.iteritems(self._dividend_info):
+        for order_book_id, dividend in six.iteritems(self._dividend_receivable):
             if dividend['payable_date'] == trading_date:
                 to_be_removed.append(order_book_id)
                 self._cash += dividend['quantity'] * dividend['dividend_per_share']
         for order_book_id in to_be_removed:
-            del self._dividend_info[order_book_id]
+            del self._dividend_receivable[order_book_id]
 
     def _handle_dividend_book_closure(self, trading_date):
         data_proxy = ExecutionContext.get_data_proxy()
@@ -141,7 +143,7 @@ class StockAccount(object):
                 continue
 
             dividend_per_share = dividend['dividend_cash_before_tax'] / dividend['round_lot']
-            self._dividend_info[order_book_id] = {
+            self._dividend_receivable[order_book_id] = {
                 'quantity': position.quantity,
                 'dividend_per_share': dividend_per_share,
                 'payable_date': dividend['payable_date'].date()
@@ -231,4 +233,4 @@ class StockAccount(object):
         """
         【float】投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
         """
-        return sum(d['quantity'] * d['dividend_per_share'] for d in six.iteritems(self._dividend_info))
+        return sum(d['quantity'] * d['dividend_per_share'] for d in six.iteritems(self._dividend_receivable))
