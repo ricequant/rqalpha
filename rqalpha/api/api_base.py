@@ -34,23 +34,27 @@ import six
 from dateutil.parser import parse
 
 from . import names
-from ..const import EXECUTION_PHASE, EXC_TYPE
 from ..environment import Environment
 from ..execution_context import ExecutionContext
-from ..model.instrument import Instrument
-from ..model.instrument import SectorCodeItem, IndustryCodeItem
-from ..model.order import Order
 from ..utils import to_industry_code, to_sector_name, unwrapper
-from ..utils.arg_checker import apply_rules, verify_that
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _
+
+from ..model.instrument import SectorCodeItem, IndustryCodeItem
+from ..utils.arg_checker import apply_rules, verify_that
+# noinspection PyUnresolvedReferences
+from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
+# noinspection PyUnresolvedReferences
+from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
+# noinspection PyUnresolvedReferences
+from ..model.order import Order, MarketOrder, LimitOrder
+
 
 __all__ = [
     'sector_code',
     'industry_code',
     'LimitOrder',
     'MarketOrder',
-    'PriceRatioSlippage',
     'ORDER_STATUS',
     'SIDE',
     'POSITION_EFFECT',
