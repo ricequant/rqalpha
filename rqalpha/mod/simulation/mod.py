@@ -14,7 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 from rqalpha.interface import AbstractMod
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.exception import patch_user_exc
+from rqalpha.const import MATCHING_TYPE
 
 from .simulation_broker import SimulationBroker
 from .signal_broker import SignalBroker
@@ -26,6 +31,12 @@ class SimulationMod(AbstractMod):
         pass
 
     def start_up(self, env, mod_config):
+        mod_config.matching_type = self.parse_matching_type(mod_config.matching_type)
+        if mod_config.commission_multiplier < 0:
+            raise patch_user_exc(ValueError(_("invalid commission multiplier value: value range is [0, +∞)")))
+        if mod_config.margin_multiplier <= 0:
+            raise patch_user_exc(ValueError(_("invalid margin multiplier value: value range is (0, +∞]")))
+
         if mod_config.signal:
             env.set_broker(SignalBroker(env, mod_config))
         else:
@@ -35,3 +46,13 @@ class SimulationMod(AbstractMod):
 
     def tear_down(self, code, exception=None):
         pass
+
+    @staticmethod
+    def parse_matching_type(me_str):
+        assert isinstance(me_str, six.string_types)
+        if me_str == "current_bar":
+            return MATCHING_TYPE.CURRENT_BAR_CLOSE
+        elif me_str == "next_bar":
+            return MATCHING_TYPE.NEXT_BAR_OPEN
+        else:
+            raise NotImplementedError

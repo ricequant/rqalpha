@@ -20,6 +20,8 @@ base:
   future_starting_cash: 0
   # 设置策略类型，目前支持 `stock` (股票策略)、`future` (期货策略)及 `stock_future` (混合策略)
   strategy_type: stock
+  # 设置保证金乘数，默认为1
+  margin_multiplier: 1
   # 运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易。
   run_type: b
   # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
@@ -70,8 +72,6 @@ mod:
     slippage: 0
     # 设置手续费乘数，默认为1
     commission_multiplier: 1
-    # 设置保证金乘数，默认为1
-    margin_multiplier: 1
     # bar_limit: 在处于涨跌停时，无法买进/卖出，默认开启
     bar_limit: true
     # 按照当前成交量的百分比进行撮合

@@ -37,12 +37,14 @@ class RunInfo(object):
         self._frequency = config.base.frequency
         self._stock_starting_cash = config.base.stock_starting_cash
         self._future_starting_cash = config.base.future_starting_cash
-        self._slippage = config.base.slippage
         self._benchmark = config.base.benchmark
-        self._matching_type = config.base.matching_type
-        self._commission_multiplier = config.base.commission_multiplier
         self._margin_multiplier = config.base.margin_multiplier
         self._run_type = config.base.run_type
+
+        # For Mod
+        self._matching_type = config.mod.simulation.matching_type
+        self._slippage = config.mod.simulation.slippage
+        self._commission_multiplier = config.mod.simulation.commission_multiplier
 
     @property
     def run_id(self):

@@ -138,10 +138,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
         base_config.end_date = datetime.datetime.strptime(base_config.end_date, "%Y-%m-%d")
     if isinstance(base_config.end_date, datetime.datetime):
         base_config.end_date = base_config.end_date.date()
-    if base_config.commission_multiplier < 0:
-        raise patch_user_exc(ValueError(_("invalid commission multiplier value: value range is [0, +∞)")))
-    if base_config.margin_multiplier <= 0:
-        raise patch_user_exc(ValueError(_("invalid margin multiplier value: value range is (0, +∞]")))
+
 
     if base_config.data_bundle_path is None:
         base_config.data_bundle_path = os.path.expanduser("~/.rqalpha")
@@ -164,7 +161,6 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     base_config.run_type = parse_run_type(base_config.run_type)
     base_config.account_list = gen_account_list(base_config.strategy_type)
-    base_config.matching_type = parse_matching_type(base_config.matching_type)
     base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
 
     if extra_config.log_level.upper() != "NONE":
@@ -237,16 +233,6 @@ def parse_account_type(account_type_str):
         return ACCOUNT_TYPE.STOCK
     elif account_type_str == "future":
         return ACCOUNT_TYPE.FUTURE
-
-
-def parse_matching_type(me_str):
-    assert isinstance(me_str, six.string_types)
-    if me_str == "current_bar":
-        return MATCHING_TYPE.CURRENT_BAR_CLOSE
-    elif me_str == "next_bar":
-        return MATCHING_TYPE.NEXT_BAR_OPEN
-    else:
-        raise NotImplementedError
 
 
 def parse_run_type(rt_str):
