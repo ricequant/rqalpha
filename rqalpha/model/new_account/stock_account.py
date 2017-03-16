@@ -16,11 +16,9 @@
 
 import six
 
-from ...model.dividend import Dividend
 from ...model.position import Positions
 from ..new_position.stock_position import StockPosition
-from ...utils.repr import dict_repr
-from ...utils.logger import user_system_log, system_log
+from ...utils.logger import user_system_log
 from ...utils.i18n import gettext as _
 from ...const import SIDE
 from ...execution_context import ExecutionContext
@@ -56,41 +54,6 @@ class StockAccount(object):
 
         # cached value
         self._portfolio_value = None
-
-    def restore_from_dict_(self, portfolio_dict):
-        self._cash = portfolio_dict['_cash']
-        self._start_date = portfolio_dict['_start_date']
-        self._positions.clear()
-        self._dividend_info.clear()
-        for persist_key, origin_key in six.iteritems(StockPersistMap):
-            if persist_key == "_dividend_info":
-                tmp = {}
-                for order_book_id, dividend_dict in six.iteritems(portfolio_dict[persist_key]):
-                    tmp[order_book_id] = Dividend.__from_dict__(dividend_dict)
-                setattr(self, origin_key, tmp)
-            elif persist_key == "_positions":
-                for order_book_id, position_dict in six.iteritems(portfolio_dict[persist_key]):
-                    self._positions[order_book_id] = StockPosition.__from_dict__(position_dict)
-            else:
-                try:
-                    setattr(self, origin_key, portfolio_dict[persist_key])
-                except KeyError as e:
-                    if persist_key in ["_yesterday_units", "_units"]:
-                        # FIXME 对于已有 persist_key 做暂时error handling 处理。
-                        setattr(self, origin_key, portfolio_dict["_starting_cash"])
-                    else:
-                        raise e
-
-    def __to_dict__(self):
-        p_dict = {}
-        for persist_key, origin_key in six.iteritems(StockPersistMap):
-            if persist_key == "_dividend_info":
-                p_dict[persist_key] = {oid: dividend.__to_dict__() for oid, dividend in six.iteritems(getattr(self, origin_key))}
-            elif persist_key == "_positions":
-                p_dict[persist_key] = {oid: position.__to_dict__() for oid, position in six.iteritems(getattr(self, origin_key))}
-            else:
-                p_dict[persist_key] = getattr(self, origin_key)
-        return p_dict
 
     def apply_trade_(self, trade):
         position = self._positions[trade.order_book_id]

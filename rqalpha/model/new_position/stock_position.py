@@ -28,28 +28,6 @@ class StockPosition(BasePosition):
         self._frozen = 0            # 冻结量
         self._transaction_cost = 0  # 交易费用
 
-    @classmethod
-    def __from_dict__(cls, state):
-        # order_book_id, quantity, avg_price 必需
-        position = cls(state['_order_book_id'])
-        position._quantity = state['_quantity']
-        position._avg_price = state['_avg_price']
-
-        # 以下字段可选
-        position._non_closeable = state['_non_closeable'] if '_non_closeable' in state else 0
-        position._frozen = state['_frozen'] if '_frozen' in state else 0
-
-        return position
-
-    def __to_dict__(self):
-        return {
-            '_order_book_id': self._order_book_id,
-            '_quantity': self._quantity,
-            '_avg_price': self._avg_price,
-            '_non_closeable': self._non_closeable,
-            '_frozen': self._frozen,
-        }
-
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost
         if trade.side == SIDE.BUY:
