@@ -39,7 +39,7 @@ class FuturePosition(BasePosition):
 
     @property
     def margin_rate(self):
-        return ExecutionContext.get_future_margin(self.order_book_id)
+        return ExecutionContext.get_future_margin_rate(self.order_book_id)
 
     @property
     def margin_multiplier(self):

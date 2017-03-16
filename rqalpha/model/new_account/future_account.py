@@ -39,12 +39,12 @@ class FutureAccount(BaseAccount):
             order_book_id = order.order_book_id
             instrument = ExecutionContext.get_instrument(order_book_id)
             value = order._frozen_price * order.unfilled_quantity * instrument.contract_multiplier
-            frozen_cash += ExecutionContext.cal_margin(order_book_id, value)
+            frozen_cash += FutureAccount._cal_margin(order_book_id, value)
         return frozen_cash
 
     @staticmethod
     def _cal_margin(order_book_id, value):
-        margin_rate = ExecutionContext.get_future_margin(order_book_id)
+        margin_rate = ExecutionContext.get_future_margin_rate(order_book_id)
         multiplier = Environment.get_instance().config.base.margin_multiplier
         return value * margin_rate * multiplier
 

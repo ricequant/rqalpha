@@ -163,7 +163,7 @@ class ExecutionContext(object):
             return DEFAULT_FUTURE_INFO[underlying_symbol][hedge_type.value]
 
     @classmethod
-    def get_future_margin(cls, order_book_id):
+    def get_future_margin_rate(cls, order_book_id):
         try:
             return ExecutionContext.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
         except NotImplementedError:
@@ -189,9 +189,3 @@ class ExecutionContext(object):
         if position_effect:
             open_orders = [order for order in open_orders if order.position_effect == position_effect]
         return open_orders
-
-    @classmethod
-    def cal_margin(cls, order_book_id, side, value):
-        margin_rate = ExecutionContext.get_future_margin(order_book_id)
-        multiplier = ExecutionContext.config.base.margin_multiplier
-        return multiplier * value * margin_rate

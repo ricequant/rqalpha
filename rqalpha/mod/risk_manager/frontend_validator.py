@@ -17,6 +17,7 @@
 from rqalpha.const import SIDE, POSITION_EFFECT
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.execution_context import ExecutionContext
+from rqalpha.environment import Environment
 
 
 class FrontendValidator(object):
@@ -122,7 +123,9 @@ class FutureFrontendValidator(FrontendValidator):
         if order.position_effect != POSITION_EFFECT.OPEN:
             return True
         contract_multiplier = bar.instrument.contract_multiplier
-        cost_money = ExecutionContext.cal_margin(order.order_book_id, order.side, order._frozen_price * order.quantity * contract_multiplier)
+        margin_rate = ExecutionContext.get_future_margin_rate(order.order_book_id)
+        margin_multiplier = Environment.get_instance().config.base.margin_multiplier
+        cost_money = order._frozen_price * order.quantity * contract_multiplier * margin_rate * margin_multiplier
         if cost_money > account.portfolio.cash:
             order._mark_rejected(_(
                 "Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
