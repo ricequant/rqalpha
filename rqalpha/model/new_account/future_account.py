@@ -16,37 +16,49 @@
 
 import six
 
+from ...environment import Environment
+from ...events import EVENT
 from .base_account import BaseAccount
 from ...const import ACCOUNT_TYPE
 from ...execution_context import ExecutionContext
-from ...environment import Environment
 from ...utils.i18n import gettext as _
 from ...utils.logger import user_system_log
 
 
+def margin_of(order_book_id, quantity, price):
+    instrument = ExecutionContext.get_instrument(order_book_id)
+    margin_rate = ExecutionContext.get_future_margin_rate(order_book_id)
+    margin_multiplier = ExecutionContext.config.base.margin_multiplier
+    return quantity * price * margin_multiplier * margin_rate * instrument.contract_multiplier
+
+
 class FutureAccount(BaseAccount):
-    def _get_starting_cash(self):
-        return Environment.get_instance().config.base.future_starting_cash
+    def __init__(self, start_date, starting_cash, static_unit_net_value, units,
+                 cash, frozen_cash, positions):
+        super(self, FutureAccount).__init__(start_date, starting_cash, static_unit_net_value,
+                                            units, cash, frozen_cash, positions)
+
+        event_bus = Environment.get_instance().event_bus
+        event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._settlement)
+        event_bus.add_listener(EVENT.ORDER_PEDING_NEW, self._on_order_pending_new)
+        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
+        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.TRADE, self._on_trade)
+        event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
+        event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
     @property
     def type(self):
         return ACCOUNT_TYPE.FUTURE
 
     @staticmethod
-    def _cal_frozen_cash(orders):
-        frozen_cash = 0
-        for order in orders:
-            order_book_id = order.order_book_id
-            instrument = ExecutionContext.get_instrument(order_book_id)
-            value = order._frozen_price * order.unfilled_quantity * instrument.contract_multiplier
-            frozen_cash += FutureAccount._cal_margin(order_book_id, value)
-        return frozen_cash
+    def _frozen_cash_of_order(order):
+        return margin_of(order.order_book_id, order.unfilled_quantity, order._frozen_price)
 
     @staticmethod
-    def _cal_margin(order_book_id, value):
-        margin_rate = ExecutionContext.get_future_margin_rate(order_book_id)
-        multiplier = Environment.get_instance().config.base.margin_multiplier
-        return value * margin_rate * multiplier
+    def _frozen_cash_of_trade(trade):
+        return margin_of(trade.order.order_book_id, trade.last_quantity, trade.order._frozen_price)
 
     @property
     def cash(self):
@@ -107,7 +119,7 @@ class FutureAccount(BaseAccount):
         """
         return sum(position.daily_realized_pnl for position in six.iteritems(self.positions))
 
-    def bar(self, event):
+    def _on_bar(self, event):
         bar_dict = event.bar_dict
         for order_book_id, position in six.iteritems(self._positions):
             bar = bar_dict[order_book_id]
@@ -115,11 +127,11 @@ class FutureAccount(BaseAccount):
                 continue
             position._last_price = bar.close
 
-    def tick(self, event):
+    def _on_tick(self, event):
         tick = event.tick
         self.positions[tick.order_book_id].last_price = tick.last
 
-    def settlement(self, event):
+    def _settlement(self, event):
         for position in list(self.positions.values()):
             if position.is_de_listed():
                 order_book_id = position.order_book_id
@@ -127,86 +139,32 @@ class FutureAccount(BaseAccount):
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
                 self.positions.pop(order_book_id, None)
             elif position._quantity == 0:
+                # XXX seems wrong here @Eric
                 self.positions.pop(position.order_book_id, None)
             else:
                 position.apply_settlement()
 
         self._static_unit_net_value = self.unit_net_value
 
-    def order_pending_new(self, event):
+    def _on_order_pending_new(self, event):
         if self != event.account:
             return
-        self._frozen_cash += self._cal_frozen_cash([event.order])
+        self._frozen_cash += self._frozen_cash_of_order(event.order)
 
-    def order_creation_reject(self, event):
+    def _on_order_creation_reject(self, event):
         if self != event.account:
             return
-        self._frozen_cash -= self._cal_frozen_cash([event.order])
+        self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
-    def order_cancellation_pass(self, event):
+    def _on_order_unsolicited_update(self, event):
         if self != event.account:
             return
-        self._frozen_cash -= self._cal_frozen_cash([event.order])
+        self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
-    def order_unsolicited_update(self, event):
-        if self != event.account:
-            return
-        self._frozen_cash -= self._cal_frozen_cash([event.order])
-
-    def trade(self, event):
+    def _on_trade(self, event):
         if self != event.account:
             return
         trade = event.trade
-        order = trade.order
-        order_book_id = order.order_book_id
-        instrument = ExecutionContext.get_instrument(order_book_id)
-        self._frozen_cash -= order._frozen_price * trade.last_quantity * instrument.contract_multiplier
+        order_book_id = trade.order.order_book_id
+        self._frozen_cash -= self._frozen_cash_of_trade(trade)
         self._positions[order_book_id].apply_trade(trade)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

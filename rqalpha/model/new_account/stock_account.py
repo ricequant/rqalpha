@@ -20,24 +20,19 @@ from ...events import EVENT
 from ...environment import Environment
 from ...model.position import Positions
 from ..new_position.stock_position import StockPosition
+from .base_account import BaseAccount
 from ...utils.logger import user_system_log
 from ...utils.i18n import gettext as _
-from ...const import SIDE
+from ...const import SIDE, ACCOUNT_TYPE
 from ...execution_context import ExecutionContext
 
 
-class StockAccount(object):
+class StockAccount(BaseAccount):
     def __init__(self, start_date, starting_cash,
                  static_unit_net_value, units, cash, frozen_cash=0,
                  positions=Positions(StockPosition), dividend_receivable=None):
-        self._start_date = start_date
-        self._starting_cash = starting_cash
-        self._cash = cash
-        self._units = units
-        self._static_unit_net_value = static_unit_net_value
-
-        self._positions = positions
-        self._frozen_cash = frozen_cash
+        super(self, StockAccount).__init__(start_date, starting_cash, static_unit_net_value,
+                                           units, cash, frozen_cash, positions)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
         # cached value
@@ -123,6 +118,10 @@ class StockAccount(object):
         self._static_unit_net_value = self.unit_net_value
 
     @property
+    def type(self):
+        return ACCOUNT_TYPE.STOCK
+
+    @property
     def unit_net_value(self):
         return self.portfolio_value / self._units
 
@@ -159,21 +158,6 @@ class StockAccount(object):
             position.split_(ratio)
 
     @property
-    def cash(self):
-        """
-        【float】可用资金
-        """
-        return self._cash - self._frozen_cash
-
-    @property
-    def positions(self):
-        """
-        【dict】一个包含股票子组合仓位的字典，以order_book_id作为键，position对象作为值，
-        关于position的更多的信息可以在下面的部分找到。
-        """
-        return self._positions
-
-    @property
     def daily_pnl(self):
         """
         【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
@@ -198,34 +182,6 @@ class StockAccount(object):
 
     @property
     def total_value(self):
-        return self.market_value
-
-    @property
-    def units(self):
-        return self._units
-
-    @property
-    def start_date(self):
-        return self._start_date
-
-    @property
-    def transaction_cost(self):
-        """
-        [float] 总费用
-        """
-        return sum(position.transaction_cost for position in six.itervalues(self._positions))
-
-    @property
-    def daily_returns(self):
-        return self.unit_net_value / self._static_unit_net_value if self._static_unit_net_value != 0 else 0
-
-    @property
-    def total_returns(self):
-        return self.unit_net_value - 1
-
-    @property
-    def portfolio_value(self):
-        """deprecated"""
         return self.market_value
 
     @property
