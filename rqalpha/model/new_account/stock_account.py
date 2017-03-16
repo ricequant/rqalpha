@@ -31,7 +31,7 @@ class StockAccount(BaseAccount):
     def __init__(self, start_date, starting_cash,
                  static_unit_net_value, units, cash, frozen_cash=0,
                  positions=Positions(StockPosition), dividend_receivable=None):
-        super(self, StockAccount).__init__(start_date, starting_cash, static_unit_net_value,
+        super(StockAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
                                            units, cash, frozen_cash, positions)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
