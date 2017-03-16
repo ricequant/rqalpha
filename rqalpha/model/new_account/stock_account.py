@@ -35,9 +35,6 @@ class StockAccount(BaseAccount):
                                            units, cash, frozen_cash, positions)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
-        # cached value
-        self._market_value = None
-
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
@@ -51,7 +48,6 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
     def _on_trade(self, event):
-        self._market_value = None
         trade = event.trade
         position = self._positions[trade.order_book_id]
         self._cash -= trade.transaction_cost
@@ -79,7 +75,6 @@ class StockAccount(BaseAccount):
             self._frozen_cash -= unfilled_value
 
     def _before_trading(self, event):
-        self._market_value = None
         removed = [order_book_id for order_book_id, position in six.iteritems(self._positions)
                    if position.quantity == 0]
         for order_book_id in removed:
@@ -89,7 +84,6 @@ class StockAccount(BaseAccount):
             self._handle_split(event.trading_dt.date())
 
     def _after_trading(self, event):
-        self._market_value = None
         data_proxy = ExecutionContext.get_data_proxy()
         de_listed = []
         for order_book_id in six.iterkeys(self._positions):
@@ -129,7 +123,7 @@ class StockAccount(BaseAccount):
 
     @property
     def unit_net_value(self):
-        return self.portfolio_value / self._units
+        return self.market_value / self._units
 
     def _handle_dividend_payable(self, trading_date):
         to_be_removed = []
@@ -179,12 +173,8 @@ class StockAccount(BaseAccount):
         """
         【float】总权益，包含市场价值和剩余现金
         """
-        if self._market_value is None:
-            # 总资金 + Sum(position._position_value)
-            self._market_value = self._cash + sum(
-                position.market_value for position in six.itervalues(self._positions))
-
-        return self._market_value
+        # 总资金 + Sum(position._position_value)
+        return self._cash + sum(position.market_value for position in six.itervalues(self._positions))
 
     @property
     def total_value(self):
