@@ -16,25 +16,30 @@
 
 from collections import defaultdict
 
-from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import ORDER_TYPE, SIDE, BAR_STATUS
-from rqalpha.model.trade import Trade
+from rqalpha.const import ORDER_TYPE, SIDE, BAR_STATUS, MATCHING_TYPE
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT, Event
+from rqalpha.model.trade import Trade
+from rqalpha.utils.i18n import gettext as _
+
+from .decider import CommissionDecider, SlippageDecider, TaxDecider
 
 
 class Matcher(object):
-    def __init__(self,
-                 deal_price_decider,
-                 bar_limit=True,
-                 volume_percent=0.25):
+    def __init__(self, mod_config):
+        if mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:
+            self._deal_price_decider = lambda bar: bar.close
+        else:
+            self._deal_price_decider = lambda bar: bar.open
+        self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
+        self._slippage_decider = SlippageDecider(mod_config.slppage)
+        self._tax_decider = TaxDecider()
         self._board = None
         self._turnover = defaultdict(int)
         self._calendar_dt = None
         self._trading_dt = None
-        self._deal_price_decider = deal_price_decider
-        self._volume_percent = volume_percent
-        self._bar_limit = bar_limit
+        self._volume_percent = mod_config.volume_percent
+        self._bar_limit = mod_config.bar_limit
 
     def update(self, calendar_dt, trading_dt, bar_dict):
         self._board = bar_dict
@@ -44,9 +49,6 @@ class Matcher(object):
 
     def match(self, open_orders):
         for account, order in open_orders:
-            slippage_decider = account.slippage_decider
-            commission_decider = account.commission_decider
-            tax_decider = account.tax_decider
 
             bar = self._board[order.order_book_id]
             bar_status = bar._bar_status
@@ -126,11 +128,11 @@ class Matcher(object):
             unfilled = order.unfilled_quantity
             fill = min(unfilled, volume_limit)
             ct_amount = account.portfolio.positions[order.order_book_id]._cal_close_today_amount(fill, order.side)
-            price = slippage_decider.get_trade_price(order, deal_price)
+            price = self._slippage_decider.get_trade_price(order.side, deal_price)
             trade = Trade.__from_create__(order=order, calendar_dt=self._calendar_dt, trading_dt=self._trading_dt,
                                           price=price, amount=fill, close_today_amount=ct_amount)
-            trade._commission = commission_decider.get_commission(trade)
-            trade._tax = tax_decider.get_tax(trade)
+            trade._commission = self._commission_decider.get_commission(account.type, trade)
+            trade._tax = self._tax_decider.get_tax(account.type, trade)
             order._fill(trade)
             self._turnover[order.order_book_id] += fill
 

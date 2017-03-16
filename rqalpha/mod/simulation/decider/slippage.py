@@ -18,14 +18,9 @@ import abc
 
 from six import with_metaclass
 
-from ..const import SIDE
-from ..utils.exception import patch_user_exc
-from ..utils.i18n import gettext as _
-
-
-def init_slippage(rate=0):
-    # 未来可能会有多种slippage模型，目前只返回 FixedSlippage
-    return PriceRatioSlippage(rate)
+from rqalpha.const import SIDE
+from rqalpha.utils.exception import patch_user_exc
+from rqalpha.utils.i18n import gettext as _
 
 
 class BaseSlippage(with_metaclass(abc.ABCMeta)):
@@ -42,8 +37,8 @@ class PriceRatioSlippage(BaseSlippage):
         else:
             raise patch_user_exc(ValueError(_("invalid slippage rate value: value range is [0, 1)")))
 
-    def get_trade_price(self, order, price):
-        return price + price * self.rate * (1 if order.side == SIDE.BUY else -1)
+    def get_trade_price(self, side, price):
+        return price + price * self.rate * (1 if side == SIDE.BUY else -1)
 
 
 # class FixedSlippage(BaseSlippage):

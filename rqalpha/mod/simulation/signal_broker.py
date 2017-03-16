@@ -24,13 +24,17 @@ from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE
 from rqalpha.environment import Environment
 
+from .decider import CommissionDecider, SlippageDecider, TaxDecider
 from .utils import init_accounts
 
 
 class SignalBroker(AbstractBroker):
-    def __init__(self, env):
+    def __init__(self, env, mod_config):
         self._env = env
         self._accounts = None
+        self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
+        self._slippage_decider = SlippageDecider(mod_config.slppage)
+        self._tax_decider = TaxDecider()
 
     def get_accounts(self):
         if self._accounts is None:
@@ -58,9 +62,6 @@ class SignalBroker(AbstractBroker):
         bar_dict = ExecutionContext.get_current_bar_dict()
         # TODO support tick cal
         bar = bar_dict[order.order_book_id]
-        slippage_decider = account.slippage_decider
-        commission_decider = account.commission_decider
-        tax_decider = account.tax_decider
 
         bar_status = bar._bar_status
 
@@ -87,7 +88,7 @@ class SignalBroker(AbstractBroker):
         deal_price = min(deal_price, bar.high)
         deal_price = max(deal_price, bar.low)
 
-        deal_price = slippage_decider.get_trade_price(deal_price)
+        deal_price = self._slippage_decider.get_trade_price(order.side, deal_price)
 
         if (order.side == SIDE.BUY and bar_status == BAR_STATUS.LIMIT_UP) or (
                 order.side == SIDE.SELL and bar_status == BAR_STATUS.LIMIT_DOWN):
@@ -100,8 +101,8 @@ class SignalBroker(AbstractBroker):
         trade = Trade.__from_create__(order=order, calendar_dt=ExecutionContext.get_current_calendar_dt(),
                                       trading_dt=ExecutionContext.get_current_trading_dt(), price=deal_price,
                                       amount=order.quantity, close_today_amount=ct_amount)
-        trade._commission = commission_decider.get_commission(trade)
-        trade._tax = tax_decider.get_tax(trade)
+        trade._commission = self._commission_decider.get_commission(account.type, trade)
+        trade._tax = self._tax_decider.get_tax(account.type, trade)
         order._fill(trade)
 
         Environment.get_instance().event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))

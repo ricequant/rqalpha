@@ -18,19 +18,8 @@ import abc
 from six import with_metaclass
 from collections import defaultdict
 
-from ..utils import get_upper_underlying_symbol
-from ..utils.default_future_info import DEFAULT_FUTURE_INFO
-from ..const import ACCOUNT_TYPE, HEDGE_TYPE, SIDE, COMMISSION_TYPE, POSITION_EFFECT
-from ..execution_context import ExecutionContext
-
-
-def init_commission(account_type, multiplier):
-    if account_type in [ACCOUNT_TYPE.STOCK, ACCOUNT_TYPE.BENCHMARK]:
-        return StockCommission(multiplier)
-    elif account_type == ACCOUNT_TYPE.FUTURE:
-        return FutureCommission(multiplier)
-    else:
-        raise NotImplementedError
+from rqalpha.const import ACCOUNT_TYPE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
+from rqalpha.execution_context import ExecutionContext
 
 
 class BaseCommission(with_metaclass(abc.ABCMeta)):

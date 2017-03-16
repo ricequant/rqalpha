@@ -24,16 +24,8 @@ base:
   run_type: b
   # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
   frequency: 1d
-  # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
-  matching_type: current_bar
   # Benchmark，如果不设置，默认没有基准参照。
   benchmark: ~
-  # 设置滑点
-  slippage: 0
-  # 设置手续费乘数，默认为1
-  commission_multiplier: 1
-  # 设置保证金乘数，默认为1
-  margin_multiplier: 1
   # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
   resume_mode: false
   # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，
@@ -62,8 +54,6 @@ validator:
   cash_return_by_stock_delisted: false
   # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
   close_amount: true
-  # bar_limit: 在处于涨跌停时，无法买进/卖出，默认开启
-  bar_limit: true
 
 
 mod:
@@ -72,7 +62,20 @@ mod:
     lib: 'rqalpha.mod.simulation'
     enabled: true
     priority: 100
+    # 是否开启信号模式
     signal: false
+    # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
+    matching_type: current_bar
+    # 设置滑点
+    slippage: 0
+    # 设置手续费乘数，默认为1
+    commission_multiplier: 1
+    # 设置保证金乘数，默认为1
+    margin_multiplier: 1
+    # bar_limit: 在处于涨跌停时，无法买进/卖出，默认开启
+    bar_limit: true
+    # 按照当前成交量的百分比进行撮合
+    volume_percent: 0.25
   # 技术分析API
   funcat_api:
     lib: 'rqalpha.mod.funcat_api'

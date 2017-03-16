@@ -20,30 +20,30 @@ https://www.ricequant.com/api/python/chn
 '''
 
 from __future__ import division
-import sys
+
 import datetime
 import inspect
-import pandas as pd
-import six
+import sys
 from collections import Iterable
-from dateutil.parser import parse
-from types import FunctionType
 from functools import wraps
+from types import FunctionType
 from typing import List
 
+import pandas as pd
+import six
+from dateutil.parser import parse
+
+from . import names
+from ..const import EXECUTION_PHASE, EXC_TYPE
 from ..environment import Environment
-from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
-from ..model.instrument import SectorCodeItem, IndustryCodeItem
 from ..execution_context import ExecutionContext
-from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
+from ..model.instrument import Instrument
+from ..model.instrument import SectorCodeItem, IndustryCodeItem
+from ..model.order import Order
 from ..utils import to_industry_code, to_sector_name, unwrapper
+from ..utils.arg_checker import apply_rules, verify_that
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _
-from ..model.snapshot import SnapshotObject
-from ..model.order import Order, MarketOrder, LimitOrder
-from ..model.slippage import PriceRatioSlippage
-from ..utils.arg_checker import apply_rules, verify_that
-from . import names
 
 __all__ = [
     'sector_code',

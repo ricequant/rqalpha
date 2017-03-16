@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .utils.logger import system_log, user_log, user_detail_log
 from .events import EventBus
-from .model.commission import init_commission
+from .utils.logger import system_log, user_log, user_detail_log
 
 
 class Environment(object):
@@ -31,7 +30,6 @@ class Environment(object):
         self._strategy_loader = None
         self._global_vars = None
         self._persist_provider = None
-        self._commission_initializer = init_commission
         self.system_log = system_log
         self.user_log = user_log
         self.user_detail_log = user_detail_log

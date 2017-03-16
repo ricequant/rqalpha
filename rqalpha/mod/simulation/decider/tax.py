@@ -17,21 +17,8 @@
 import abc
 from six import with_metaclass
 
-from ..const import SIDE, ACCOUNT_TYPE
-from ..execution_context import ExecutionContext
-
-
-def init_tax(account_type, rate=None):
-    if account_type in [ACCOUNT_TYPE.STOCK, ACCOUNT_TYPE.BENCHMARK]:
-        if rate is None:
-            rate = 0.001
-        return StockTax(rate)
-    elif account_type == ACCOUNT_TYPE.FUTURE:
-        if rate is None:
-            rate = 0.
-        return FutureTax(rate)
-    else:
-        raise NotImplementedError
+from rqalpha.const import SIDE, ACCOUNT_TYPE
+from rqalpha.execution_context import ExecutionContext
 
 
 class BaseTax(with_metaclass(abc.ABCMeta)):
@@ -41,7 +28,7 @@ class BaseTax(with_metaclass(abc.ABCMeta)):
 
 
 class StockTax(BaseTax):
-    def __init__(self, rate):
+    def __init__(self, rate=0.001):
         self.rate = rate
 
     def get_tax(self, trade):
@@ -53,7 +40,7 @@ class StockTax(BaseTax):
 
 
 class FutureTax(BaseTax):
-    def __init__(self, rate):
+    def __init__(self, rate=0):
         self.rate = rate
 
     def get_tax(self, trade):

@@ -28,14 +28,11 @@ from .utils import init_accounts
 
 
 class SimulationBroker(AbstractBroker, Persistable):
-    def __init__(self, env):
+    def __init__(self, env, mod_config):
         self._env = env
-        if env.config.base.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:
-            self._matcher = Matcher(lambda bar: bar.close, env.config.validator.bar_limit)
-            self._match_immediately = True
-        else:
-            self._matcher = Matcher(lambda bar: bar.open, env.config.validator.bar_limit)
-            self._match_immediately = False
+
+        self._matcher = Matcher(mod_config)
+        self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._accounts = None
         self._open_orders = []

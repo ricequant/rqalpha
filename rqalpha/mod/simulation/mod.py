@@ -27,9 +27,9 @@ class SimulationMod(AbstractMod):
 
     def start_up(self, env, mod_config):
         if mod_config.signal:
-            env.set_broker(SignalBroker(env))
+            env.set_broker(SignalBroker(env, mod_config))
         else:
-            env.set_broker(SimulationBroker(env))
+            env.set_broker(SimulationBroker(env, mod_config))
         event_source = SimulationEventSource(env, env.config.base.account_list)
         env.set_event_source(event_source)
 
