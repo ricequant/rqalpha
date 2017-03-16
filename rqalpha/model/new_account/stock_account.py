@@ -41,7 +41,7 @@ class StockAccount(BaseAccount):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
+        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
@@ -67,14 +67,6 @@ class StockAccount(BaseAccount):
         if order.side == SIDE.BUY:
             order_value = order._frozen_price * order.quantity
             self._frozen_cash += order_value
-
-    def _on_order_creation_reject(self, event):
-        order = event.order
-        position = self._positions[order.order_book_id]
-        position.on_order_creation_reject_(order)
-        if order.side == SIDE.BUY:
-            order_value = order._frozen_price * order.quantity
-            self._frozen_cash -= order_value
 
     def _on_order_unsolicited_update(self, event):
         order = event.order
