@@ -47,6 +47,8 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
         event_bus.add_listener(EVENT.PRE_AFTER_TRADING, self._after_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
+        event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
     def _on_trade(self, event):
         self._market_value = None
@@ -108,6 +110,18 @@ class StockAccount(BaseAccount):
 
     def _on_settlement(self, event):
         self._static_unit_net_value = self.unit_net_value
+
+    def _on_bar(self, event):
+        bar_dict = event.bar_dict
+        for order_book_id, position in six.iteritems(self._positions):
+            bar = bar_dict[order_book_id]
+            if not bar.isnan:
+                position.last_price = bar.last
+
+    def _on_tick(self, event):
+        tick = event.tick
+        if tick.order_book_id in self._positions:
+            self._positions[tick.order_book_id].last_price = tick.last
 
     @property
     def type(self):

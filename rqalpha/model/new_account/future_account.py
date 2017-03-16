@@ -125,11 +125,12 @@ class FutureAccount(BaseAccount):
             bar = bar_dict[order_book_id]
             if bar.isnan:
                 continue
-            position._last_price = bar.close
+            position.last_price = bar.close
 
     def _on_tick(self, event):
         tick = event.tick
-        self.positions[tick.order_book_id].last_price = tick.last
+        if tick.order_book_id in self._positions:
+            self._positions[tick.order_book_id].last_price = tick.last
 
     def _settlement(self, event):
         for position in list(self.positions.values()):

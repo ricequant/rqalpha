@@ -152,4 +152,4 @@ class StockPosition(BasePosition):
             # FIXME 现在无法区分这个position是stock的还是benchmark的，但是benchmark因为没有用到这个字段，所以可以暂时返0处理。
             return 0
         portfolio = accounts[ACCOUNT_TYPE.STOCK].portfolio
-        return 0 if portfolio.portfolio_value == 0 else self._position_value / portfolio.portfolio_value
+        return 0 if portfolio.portfolio_value == 0 else self.market_value / portfolio.portfolio_value
