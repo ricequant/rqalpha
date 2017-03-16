@@ -16,7 +16,6 @@
 
 from .base_position import BasePosition, PositionClone
 from .future_position import FuturePosition
-from .stock_position import StockPosition
 
 
 class Positions(dict):

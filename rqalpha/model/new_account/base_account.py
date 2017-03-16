@@ -33,7 +33,6 @@ class BaseAccount(object):
         self._frozen_cash = self._cal_frozen_cash([order for order in daily_orders if order._is_active()])
         self._cash = total_cash - self._frozen_cash
         self._type = self._get_type()
-        self._current_date = None
         self._register_event()
 
     def _get_starting_cash(self):
@@ -180,7 +179,7 @@ class BaseAccount(object):
         [float] 累计年化收益率
         """
         return self.unit_net_value ** (
-        DAYS_CNT.DAYS_A_YEAR / float((self._current_date - self.start_date).days + 1)) - 1
+            DAYS_CNT.DAYS_A_YEAR / float((Environment.get_instance().calendar_dt - self.start_date).days + 1)) - 1
 
     @property
     def portfolio_value(self):

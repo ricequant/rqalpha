@@ -16,9 +16,9 @@
 
 import six
 
-from .base_portfolio import BasePortfolio
-from ..dividend import Dividend
-from ..position import Positions, PositionsClone, StockPosition
+from ...model.dividend import Dividend
+from ...model.position import Positions
+from ..new_position.stock_position import StockPosition
 from ...utils.repr import dict_repr
 from ...utils.logger import user_system_log, system_log
 from ...utils.i18n import gettext as _
@@ -42,28 +42,19 @@ StockPersistMap = {
 }
 
 
-# ET：如果这里修改的话，记得提醒我修改pickle那里，多谢
-class StockPortfolioClone(object):
-    __repr__ = dict_repr
-
-
-class StockPortfolio(object):
+class StockAccount(object):
     def __init__(self, cash, start_date):
         self._starting_cash = cash
         self._cash = cash
         self._start_date = start_date
         self._units = cash
-        self._yesterday_units = cash
-        self._yesterday_unit_net_value = 1
+        self._static_unit_net_value = 1
 
         self._positions = Positions(StockPosition)
         self._frozen_cash = 0
-        self._total_commission = 0
-        self._total_tax = 0
-        self._dividend_receivable = 0
         self._dividend_info = {}
 
-        # cache value
+        # cached value
         self._portfolio_value = None
 
     def restore_from_dict_(self, portfolio_dict):
@@ -103,8 +94,6 @@ class StockPortfolio(object):
 
     def apply_trade_(self, trade):
         position = self._positions[trade.order_book_id]
-        self._total_commission += trade.commission
-        self._total_tax += trade.tax
         self._cash -= trade.transaction_cost
         if trade.side == SIDE.BUY:
             self._cash -= trade.last_quantity * trade.last_price
@@ -163,7 +152,7 @@ class StockPortfolio(object):
             position.after_trading_()
 
     def _on_settlement(self, event):
-        self._yesterday_unit_net_value = self.unit_net_value()
+        self._static_unit_net_value = self.unit_net_value
 
     def unit_net_value(self):
         return self.portfolio_value / self._units
@@ -190,7 +179,6 @@ class StockPortfolio(object):
                 'dividend_per_share': dividend_per_share,
                 'payable_date': dividend['payable_date'].date()
             }
-            self._dividend_receivable += dividend_per_share * position.quantity
 
     def _handle_split(self, trading_date):
         data_proxy = ExecutionContext.get_data_proxy()
@@ -221,7 +209,7 @@ class StockPortfolio(object):
         """
         【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
         """
-        return self.portfolio_value - self._yesterday_units * self._yesterday_unit_net_value
+        return self.portfolio_value - self._units * self._static_unit_net_value
 
     @property
     def portfolio_value(self):
@@ -230,8 +218,8 @@ class StockPortfolio(object):
         """
         if self._portfolio_value is None:
             # 总资金 + Sum(position._position_value)
-            self._portfolio_value = self.cash + sum(
-                position.market_value for position in six.itervalues(self.positions))
+            self._portfolio_value = self._cash + sum(
+                position.market_value for position in six.itervalues(self._positions))
 
         return self._portfolio_value
 
@@ -240,18 +228,4 @@ class StockPortfolio(object):
         """
         【float】投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
         """
-        return self._dividend_receivable
-
-    def _clone(self):
-        p = StockPortfolioClone()
-        for key in dir(self):
-            if "__" in key:
-                continue
-            if key == "positions":
-                ps = PositionsClone(StockPosition)
-                for order_book_id in self.positions:
-                    ps[order_book_id] = self.positions[order_book_id]._clone()
-                setattr(p, key, ps)
-            else:
-                setattr(p, key, getattr(self, key))
-        return p
+        return sum(d['quantity'] * d['dividend_per_share'] for d in six.iteritems(self._dividend_info))

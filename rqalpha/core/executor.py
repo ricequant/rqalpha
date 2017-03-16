@@ -54,9 +54,6 @@ class Executor(object):
             if event.event_type in self.KNOWN_EVENTS:
                 self._env.calendar_dt = ExecutionContext.calendar_dt = event.calendar_dt
                 self._env.trading_dt = ExecutionContext.trading_dt = event.trading_dt
-                # FIXME
-                for account in self._env.accounts.values():
-                    account.portfolio._current_date = event.trading_dt.date()
 
             if event.event_type == EVENT.TICK:
                 event_bus.publish_event(PRE_TICK)

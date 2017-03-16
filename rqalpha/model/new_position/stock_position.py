@@ -16,15 +16,17 @@
 
 from ...execution_context import ExecutionContext
 from ...const import ACCOUNT_TYPE, SIDE
+from .base_position import BasePosition
 
 
-class StockPosition(object):
+class StockPosition(BasePosition):
     def __init__(self, order_book_id):
-        self._order_book_id = order_book_id
+        super(self, StockPosition).__init__(order_book_id)
         self._quantity = 0
         self._avg_price = 0
         self._non_closeable = 0     # 当天买入的不能卖出
         self._frozen = 0            # 冻结量
+        self._transaction_cost = 0  # 交易费用
 
     @classmethod
     def __from_dict__(cls, state):
@@ -48,7 +50,8 @@ class StockPosition(object):
             '_frozen': self._frozen,
         }
 
-    def apply_trade_(self, trade):
+    def apply_trade(self, trade):
+        self._transaction_cost += trade.transaction_cost
         if trade.side == SIDE.BUY:
             self._avg_price = (self._avg_price * self._quantity + trade.last_quantity * trade.last_price) / (
                 self._quantity + trade.last_quantity)
@@ -60,6 +63,9 @@ class StockPosition(object):
         else:
             self._quantity -= trade.last_quantity
             self._frozen -= trade.last_quantity
+
+    def apply_settlement(self):
+        pass
 
     def split_(self, ratio):
         self._quantity *= ratio
@@ -138,6 +144,14 @@ class StockPosition(object):
         【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
         """
         return self._quantity - self._non_closeable - self._frozen
+
+    @property
+    def market_value(self):
+        return self._quantity * self._last_price
+
+    @property
+    def transaction_cost(self):
+        return self._transaction_cost
 
     @property
     def value_percent(self):

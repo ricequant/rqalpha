@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .future_portfolio import FuturePortfolio
-from .stock_portfolio import StockPortfolio
+from rqalpha.model.new_account.stock_account import StockPortfolio
 from .base_portfolio import BasePortfolio
+from .future_portfolio import FuturePortfolio
 from ...const import ACCOUNT_TYPE
 
 
