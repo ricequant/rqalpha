@@ -25,12 +25,6 @@ class StockPosition(object):
         self._avg_price = 0
         self._non_closeable = 0     # 当天买入的不能卖出
         self._frozen = 0            # 冻结量
-        self._bought_value = 0
-        self._bought_quantity = 0
-        self._sold_value = 0
-        self._sold_quantity = 0
-        self._total_orders = 0
-        self._total_trades = 0
 
     @classmethod
     def __from_dict__(cls, state):
@@ -43,23 +37,6 @@ class StockPosition(object):
         position._non_closeable = state['_non_closeable'] if '_non_closeable' in state else 0
         position._frozen = state['_frozen'] if '_frozen' in state else 0
 
-        try:
-            position._bought_value = state['_bought_value']
-            position._bought_quantity = state['_bought_quantity']
-        except KeyError:
-            # 这两个值应该一起出现，否则会导致不一致
-            position._bought_quantity = position._quantity
-            position._bought_value = position._quantity * position._avg_price
-
-        try:
-            position._sold_quantity = state['_sold_quantity']
-            position._sold_value = state['_sold_value']
-        except KeyError:
-            pass
-
-        position._total_orders = state['_total_orders'] if '_total_orders' in state else 1
-        position._total_trades = state['_total_trades'] if '_total_trades' in state else 1
-
         return position
 
     def __to_dict__(self):
@@ -69,46 +46,32 @@ class StockPosition(object):
             '_avg_price': self._avg_price,
             '_non_closeable': self._non_closeable,
             '_frozen': self._frozen,
-            '_bought_value': self._bought_value,
-            '_bought_quantity': self._bought_quantity,
-            '_sold_value': self._sold_value,
-            '_sold_quantity': self._sold_quantity,
-            '_total_orders': self._total_orders,
-            '_total_trades': self._total_trades
         }
 
     def apply_trade_(self, trade):
-        self._total_trades += 1
         if trade.side == SIDE.BUY:
-            self._bought_quantity += trade.last_quantity
-            self._bought_value += trade.last_quantity * trade.last_price
+            self._avg_price = (self._avg_price * self._quantity + trade.last_quantity * trade.last_price) / (
+                self._quantity + trade.last_quantity)
             self._quantity += trade.last_quantity
-            self._avg_price = self._bought_value / self._bought_quantity
 
             if self._order_book_id not in {'510900.XSHG', '513030.XSHG', '513100.XSHG', '513500.XSHG'}:
                 # 除了上述 T+0 基金，其他都是 T+1
                 self._non_closeable += trade.last_quantity
         else:
-            self._sold_quantity += trade.last_quantity
-            self._sold_value += trade.last_price * trade.last_quantity
             self._quantity -= trade.last_quantity
             self._frozen -= trade.last_quantity
 
     def split_(self, ratio):
         self._quantity *= ratio
-        self._bought_quantity *= ratio
-        self._sold_quantity *= ratio
         # split 发生时，这两个值理论上应该都是0
         self._frozen *= ratio
         self._non_closeable *= ratio
 
     def on_order_pending_new_(self, order):
-        self._total_orders += 1
         if order.side == SIDE.SELL:
             self._frozen += order.quantity
 
     def on_order_creation_reject_(self, order):
-        self._total_orders -= 1
         if order.side == SIDE.SELL:
             self._frozen -= order.quantity
 
@@ -130,30 +93,30 @@ class StockPosition(object):
     @property
     def bought_quantity(self):
         """
-        【int】该证券的总买入股数，例如：如果你的投资组合并没有任何平安银行的成交，那么平安银行这个股票的仓位就是0
+        deprecated
         """
-        return self._bought_quantity
+        return self._quantity
 
     @property
     def sold_quantity(self):
         """
-        【int】该证券的总卖出股数，例如：如果你的投资组合曾经买入过平安银行股票200股并且卖出过100股，那么这个属性会返回100
+        deprecated
         """
-        return self._sold_quantity
+        return 0
 
     @property
     def bought_value(self):
         """
-        【float】该证券的总买入的价值，等于每一个该证券的 买入成交价 * 买入股数 总和
+        deprecated
         """
-        return self._bought_value
+        return self._quantity * self._avg_price
 
     @property
     def sold_value(self):
         """
-        【float】该证券的总卖出价值，等于每一个该证券的 卖出成交价 * 卖出股数 总和
+        deprecated
         """
-        return self._sold_value
+        return 0
 
     @property
     def average_cost(self):
