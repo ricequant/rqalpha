@@ -90,6 +90,16 @@ class StockPosition(BasePosition):
         self._non_closeable = 0
 
     @property
+    def total_orders(self):
+        """deprecated"""
+        return 1
+
+    @property
+    def total_trades(self):
+        """deprecated"""
+        return 1
+
+    @property
     def quantity(self):
         """
         【int】当前持仓股数
