@@ -16,28 +16,14 @@
 
 import six
 
+from ...events import EVENT
+from ...environment import Environment
 from ...model.position import Positions
 from ..new_position.stock_position import StockPosition
 from ...utils.logger import user_system_log
 from ...utils.i18n import gettext as _
 from ...const import SIDE
 from ...execution_context import ExecutionContext
-
-StockPersistMap = {
-    "_yesterday_portfolio_value": "_yesterday_portfolio_value",
-    "_yesterday_units": "_yesterday_units",
-    "_cash": "_cash",
-    "_starting_cash": "_starting_cash",
-    "_units": "_units",
-    "_start_date": "_start_date",
-    "_current_date": "_current_date",
-    "_frozen_cash": "_frozen_cash",
-    "_total_commission": "_total_commission",
-    "_total_tax": "_total_tax",
-    "_dividend_receivable": "_dividend_receivable",
-    "_dividend_info": "_dividend_info",
-    "_positions": "_positions",
-}
 
 
 class StockAccount(object):
@@ -53,9 +39,21 @@ class StockAccount(object):
         self._dividend_info = {}
 
         # cached value
-        self._portfolio_value = None
+        self._market_value = None
 
-    def apply_trade_(self, trade):
+        event_bus = Environment.get_instance().event_bus
+        event_bus.add_listener(EVENT.TRADE, self._on_trade)
+        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
+        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
+        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
+        event_bus.add_listener(EVENT.PRE_AFTER_TRADING, self._after_trading)
+        event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+
+    def _on_trade(self, event):
+        self._market_value = None
+        trade = event.trade
         position = self._positions[trade.order_book_id]
         self._cash -= trade.transaction_cost
         if trade.side == SIDE.BUY:
@@ -65,21 +63,24 @@ class StockAccount(object):
         else:
             self._cash += trade.last_price * trade.last_quantity
 
-    def on_order_pending_new(self, order):
+    def _on_order_pending_new(self, event):
+        order = event.order
         position = self._positions[order.order_book_id]
         position.on_order_pending_new_(order)
         if order.side == SIDE.BUY:
             order_value = order._frozen_price * order.quantity
             self._frozen_cash += order_value
 
-    def on_order_creation_reject_(self, order):
+    def _on_order_creation_reject(self, event):
+        order = event.order
         position = self._positions[order.order_book_id]
         position.on_order_creation_reject_(order)
         if order.side == SIDE.BUY:
             order_value = order._frozen_price * order.quantity
             self._frozen_cash -= order_value
 
-    def on_order_cancel_(self, order):
+    def _on_order_unsolicited_update(self, event):
+        order = event.order
         position = self._positions[order.order_book_id]
         position.on_order_cancel_(order)
         if order.side == SIDE.BUY:
@@ -87,6 +88,7 @@ class StockAccount(object):
             self._frozen_cash -= unfilled_value
 
     def _before_trading(self, event):
+        self._market_value = None
         removed = [order_book_id for order_book_id, position in six.iteritems(self._positions)
                    if position.quantity == 0]
         for order_book_id in removed:
@@ -96,6 +98,7 @@ class StockAccount(object):
             self._handle_split(event.trading_dt.date())
 
     def _after_trading(self, event):
+        self._market_value = None
         data_proxy = ExecutionContext.get_data_proxy()
         de_listed = []
         for order_book_id in six.iterkeys(self._positions):
@@ -117,6 +120,7 @@ class StockAccount(object):
     def _on_settlement(self, event):
         self._static_unit_net_value = self.unit_net_value
 
+    @property
     def unit_net_value(self):
         return self.portfolio_value / self._units
 
@@ -172,19 +176,55 @@ class StockAccount(object):
         """
         【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
         """
-        return self.portfolio_value - self._units * self._static_unit_net_value
+        return self.market_value - self._units * self._static_unit_net_value
 
     @property
-    def portfolio_value(self):
+    def pnl(self):
+        return self.market_value - self._starting_cash
+
+    @property
+    def market_value(self):
         """
         【float】总权益，包含市场价值和剩余现金
         """
-        if self._portfolio_value is None:
+        if self._market_value is None:
             # 总资金 + Sum(position._position_value)
-            self._portfolio_value = self._cash + sum(
+            self._market_value = self._cash + sum(
                 position.market_value for position in six.itervalues(self._positions))
 
-        return self._portfolio_value
+        return self._market_value
+
+    @property
+    def total_value(self):
+        return self.market_value
+
+    @property
+    def units(self):
+        return self._units
+
+    @property
+    def start_date(self):
+        return self._start_date
+
+    @property
+    def transaction_cost(self):
+        """
+        [float] 总费用
+        """
+        return sum(position.transaction_cost for position in six.itervalues(self._positions))
+
+    @property
+    def daily_returns(self):
+        return self.unit_net_value / self._static_unit_net_value if self._static_unit_net_value != 0 else 0
+
+    @property
+    def total_returns(self):
+        return self.unit_net_value - 1
+
+    @property
+    def portfolio_value(self):
+        """deprecated"""
+        return self.market_value
 
     @property
     def dividend_receivable(self):
