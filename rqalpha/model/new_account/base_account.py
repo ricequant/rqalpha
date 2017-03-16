@@ -32,13 +32,9 @@ class BaseAccount(object):
         self._positions = positions
         self._frozen_cash = self._cal_frozen_cash([order for order in daily_orders if order._is_active()])
         self._cash = total_cash - self._frozen_cash
-        self._type = self._get_type()
         self._register_event()
 
     def _get_starting_cash(self):
-        raise NotImplementedError
-
-    def _get_type(self):
         raise NotImplementedError
 
     @staticmethod
@@ -78,7 +74,7 @@ class BaseAccount(object):
 
     @property
     def type(self):
-        return self._type
+        raise NotImplementedError
 
     @property
     def daily_pnl(self):

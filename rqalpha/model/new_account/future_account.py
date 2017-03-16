@@ -25,11 +25,11 @@ from ...utils.logger import user_system_log
 
 
 class FutureAccount(BaseAccount):
-
     def _get_starting_cash(self):
         return Environment.get_instance().config.base.future_starting_cash
 
-    def _get_type(self):
+    @property
+    def type(self):
         return ACCOUNT_TYPE.FUTURE
 
     @staticmethod
