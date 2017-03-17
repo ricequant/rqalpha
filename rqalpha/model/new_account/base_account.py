@@ -31,6 +31,7 @@ class BaseAccount(object):
         self._frozen_cash = 0
         self._total_cash = total_cash
         self._backward_trade_set = backward_trade_set
+        self.register_event()
 
     def register_event(self):
         """
