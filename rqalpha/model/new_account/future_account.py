@@ -144,17 +144,18 @@ class FutureAccount(BaseAccount):
             self._positions[tick.order_book_id].last_price = tick.last
 
     def _settlement(self, event):
-        for position in list(self.positions.values()):
-            if position.is_de_listed():
-                order_book_id = position.order_book_id
+        for position in list(self._positions.values()):
+            order_book_id = position.order_book_id
+            if position.is_de_listed() and position.buy_quantity + position.sell_qauntity != 0:
                 user_system_log.warn(
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
-                self.positions.pop(order_book_id, None)
+                self._positions.pop(order_book_id, None)
             elif position.buy_quantity == 0 and position.sell_qauntity == 0:
-                self.positions.pop(position.order_book_id, None)
+                self._positions.pop(order_book_id, None)
             else:
                 position.apply_settlement()
 
+        self._backward_trade_set.clear()
         self._static_unit_net_value = self.unit_net_value
 
     def _on_order_pending_new(self, event):

@@ -96,36 +96,29 @@ class StockAccount(BaseAccount):
             self._frozen_cash -= unfilled_value
 
     def _before_trading(self, event):
-        removed = [order_book_id for order_book_id, position in six.iteritems(self._positions)
-                   if position.quantity == 0]
-        for order_book_id in removed:
-            del self._positions[order_book_id]
-        self._handle_dividend_payable(event.trading_dt.date())
         if ExecutionContext.config.base.handle_split:
             self._handle_split(event.trading_dt.date())
 
     def _after_trading(self, event):
-        data_proxy = ExecutionContext.get_data_proxy()
-        de_listed = []
-        for order_book_id in six.iterkeys(self._positions):
-            instrument = data_proxy.instruments(order_book_id)
-            if instrument.de_listed_date <= event.trading_dt:
-                de_listed.append(order_book_id)
-        for order_book_id in de_listed:
-            position = self._positions[order_book_id]
-            if ExecutionContext.config.validator.cash_return_by_stock_delisted:
-                self._total_cash += position.market_value
-            if position.quantity != 0:
-                user_system_log.warn(
-                    _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
-                )
-            del self._positions[order_book_id]
         for position in six.itervalues(self._positions):
             position.after_trading_()
 
-        self._backward_trade_set.clear()
-
     def _on_settlement(self, event):
+        for position in list(self._positions.values()):
+            order_book_id = position.order_book_id
+            if position.is_de_listed() and position.quantity != 0:
+                if Environment.get_instance().config.validator.cash_return_by_stock_delisted:
+                    self._total_cash += position.market_value
+                user_system_log.warn(
+                    _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
+                )
+                self._positions.pop(order_book_id, None)
+            elif position.quantity == 0:
+                self._positions.pop(order_book_id, None)
+            else:
+                position.apply_settlement()
+
+        self._backward_trade_set.clear()
         self._static_unit_net_value = self.unit_net_value
 
     def _on_bar(self, event):
@@ -134,7 +127,7 @@ class StockAccount(BaseAccount):
         for order_book_id, position in six.iteritems(self._positions):
             bar = bar_dict[order_book_id]
             if not bar.isnan:
-                position.last_price = bar.last
+                position.last_price = bar.close
 
     def _on_tick(self, event):
         tick = event.tick
