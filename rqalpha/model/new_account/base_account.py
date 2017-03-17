@@ -21,15 +21,17 @@ from ...const import DAYS_CNT
 
 
 class BaseAccount(object):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units,
-                 cash, frozen_cash, positions):
+    def __init__(self, start_date, starting_cash, static_unit_net_value, units, total_cash, positions):
         self._start_date = start_date
         self._starting_cash = starting_cash
         self._units = units
         self._static_unit_net_value = static_unit_net_value
         self._positions = positions
-        self._frozen_cash = frozen_cash
-        self._cash = cash
+        self._frozen_cash = 0
+        self._total_cash = total_cash
+
+    def fast_forward(self, orders, trades):
+        raise NotImplementedError
 
     @property
     def type(self):
@@ -90,7 +92,7 @@ class BaseAccount(object):
         """
         [float] 可用资金
         """
-        return self._cash - self._frozen_cash
+        return self._total_cash - self._frozen_cash
 
     @property
     def market_value(self):
