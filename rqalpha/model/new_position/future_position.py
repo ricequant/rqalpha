@@ -217,11 +217,6 @@ class FuturePosition(BasePosition):
         """
         return self.sell_quantity - self.buy_close_order_quantity
 
-    @property
-    def _quantity(self):
-        # TODO
-        raise NotImplementedError
-
     # -- Margin 相关
     @property
     def buy_margin(self):
