@@ -46,6 +46,7 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
     intro/detail_install
     intro/tutorial
     intro/examples
+    intro/virtual_machine
 
 :doc:`intro/overview`
     了解RQAlpha
@@ -61,6 +62,9 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
 
 :doc:`intro/examples`
     通过RQAlpha运行的策略示例
+
+:doc:`intro/virtual_machine`
+    RQAlpha开箱即用虚拟机
 
 
 RQAlpha API
