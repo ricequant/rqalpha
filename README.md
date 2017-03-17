@@ -31,6 +31,7 @@ RQAlpha 所有的策略都可以直接在 [Ricequant] 上进行回测和实盘�
 *   [安装指南]
 *   [10分钟学会 RQAlpha]
 *   [策略示例]
+*   [RQAlpha开箱即用虚拟机]
 
 ## RQAlpha API
 
@@ -115,6 +116,7 @@ RQAlpha 所有的策略都可以直接在 [Ricequant] 上进行回测和实盘�
 [安装指南]: http://rqalpha.readthedocs.io/zh_CN/stable/intro/install.html
 [10分钟学会 RQAlpha]: http://rqalpha.readthedocs.io/zh_CN/stable/intro/tutorial.html
 [策略示例]: http://rqalpha.readthedocs.io/zh_CN/stable/intro/examples.html
+[RQAlpha开箱即用虚拟机]: http://rqalpha.readthedocs.io/zh_CN/latest/intro/virtual_machine.html
 
 [参数配置]: http://rqalpha.readthedocs.io/zh_CN/stable/api/config.html
 [API]: http://rqalpha.readthedocs.io/zh_CN/stable/api/base_api.html
