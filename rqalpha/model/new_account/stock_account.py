@@ -29,11 +29,12 @@ from ...execution_context import ExecutionContext
 
 class StockAccount(BaseAccount):
     def __init__(self, start_date, starting_cash,
-                 static_unit_net_value, units, cash, frozen_cash=0,
+                 static_unit_net_value, units, cash,
                  positions=Positions(StockPosition), dividend_receivable=None):
         super(StockAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
-                                           units, cash, frozen_cash, positions)
+                                           units, cash, positions)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
+        self._processed_trades = set()
 
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
@@ -47,16 +48,32 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
         event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
+    def fast_forward(self, orders, trades):
+        for t in trades:
+            self._apply_trade(t)
+
+        self._frozen_cash = 0
+        for o in orders:
+            if o._is_final():
+                continue
+            self._frozen_cash += o._frozen_price * o.unfilled_quantity
+
     def _on_trade(self, event):
-        trade = event.trade
+        self._apply_trade(event.trade)
+
+    def _apply_trade(self, trade):
+        if trade.exec_id in self._processed_trades:
+            return
+        
         position = self._positions[trade.order_book_id]
-        self._cash -= trade.transaction_cost
+        self._total_cash -= trade.transaction_cost
         if trade.side == SIDE.BUY:
-            self._cash -= trade.last_quantity * trade.last_price
+            self._total_cash -= trade.last_quantity * trade.last_price
             self._frozen_cash -= trade.order._frozen_price * trade.last_quantity
             position.apply_trade_(trade)
         else:
-            self._cash += trade.last_price * trade.last_quantity
+            self._total_cash += trade.last_price * trade.last_quantity
+        self._processed_trades.add(trade.exec_id)
 
     def _on_order_pending_new(self, event):
         order = event.order
@@ -93,7 +110,7 @@ class StockAccount(BaseAccount):
         for order_book_id in de_listed:
             position = self._positions[order_book_id]
             if ExecutionContext.config.validator.cash_return_by_stock_delisted:
-                self._cash += position.market_value
+                self._total_cash += position.market_value
             if position.quantity != 0:
                 user_system_log.warn(
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
@@ -131,7 +148,7 @@ class StockAccount(BaseAccount):
         for order_book_id, dividend in six.iteritems(self._dividend_receivable):
             if dividend['payable_date'] == trading_date:
                 to_be_removed.append(order_book_id)
-                self._cash += dividend['quantity'] * dividend['dividend_per_share']
+                self._total_cash += dividend['quantity'] * dividend['dividend_per_share']
         for order_book_id in to_be_removed:
             del self._dividend_receivable[order_book_id]
 
@@ -175,7 +192,7 @@ class StockAccount(BaseAccount):
         【float】总权益，包含市场价值和剩余现金
         """
         # 总资金 + Sum(position._position_value)
-        return self._cash + sum(position.market_value for position in six.itervalues(self._positions))
+        return self._total_cash + sum(position.market_value for position in six.itervalues(self._positions))
 
     @property
     def total_value(self):
