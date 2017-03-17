@@ -21,7 +21,8 @@ from ...const import DAYS_CNT
 
 
 class BaseAccount(object):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units, total_cash, positions):
+    def __init__(self, start_date, starting_cash, static_unit_net_value, units,
+                 total_cash, positions, backward_trade_set=set()):
         self._start_date = start_date
         self._starting_cash = starting_cash
         self._units = units
@@ -29,6 +30,7 @@ class BaseAccount(object):
         self._positions = positions
         self._frozen_cash = 0
         self._total_cash = total_cash
+        self._backward_trade_set = backward_trade_set
 
     def fast_forward(self, orders, trades):
         raise NotImplementedError
