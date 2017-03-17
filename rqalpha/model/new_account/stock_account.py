@@ -28,11 +28,11 @@ from ...execution_context import ExecutionContext
 
 
 class StockAccount(BaseAccount):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units, cash,
+    def __init__(self, start_date, starting_cash, static_unit_net_value, units, total_cash,
                  positions=Positions(StockPosition), backward_trade_set=set(),
                  dividend_receivable=None):
         super(StockAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
-                                           units, cash, positions, backward_trade_set)
+                                           units, total_cash, positions, backward_trade_set)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
     def register_event(self):
