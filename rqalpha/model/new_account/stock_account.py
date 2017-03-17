@@ -28,13 +28,12 @@ from ...execution_context import ExecutionContext
 
 
 class StockAccount(BaseAccount):
-    def __init__(self, start_date, starting_cash,
-                 static_unit_net_value, units, cash,
-                 positions=Positions(StockPosition), dividend_receivable=None):
+    def __init__(self, start_date, starting_cash, static_unit_net_value, units, cash,
+                 positions=Positions(StockPosition), backward_trade_set=set(),
+                 dividend_receivable=None):
         super(StockAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
-                                           units, cash, positions)
+                                           units, cash, positions, backward_trade_set)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
-        self._processed_trades = set()
 
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
@@ -62,7 +61,7 @@ class StockAccount(BaseAccount):
         self._apply_trade(event.trade)
 
     def _apply_trade(self, trade):
-        if trade.exec_id in self._processed_trades:
+        if trade.exec_id in self._backward_trade_set:
             return
         
         position = self._positions[trade.order_book_id]
@@ -73,7 +72,7 @@ class StockAccount(BaseAccount):
             position.apply_trade_(trade)
         else:
             self._total_cash += trade.last_price * trade.last_quantity
-        self._processed_trades.add(trade.exec_id)
+        self._backward_trade_set.add(trade.exec_id)
 
     def _on_order_pending_new(self, event):
         order = event.order
@@ -119,7 +118,7 @@ class StockAccount(BaseAccount):
         for position in six.itervalues(self._positions):
             position.after_trading_()
 
-        self._processed_trades.clear()
+        self._backward_trade_set.clear()
 
     def _on_settlement(self, event):
         self._static_unit_net_value = self.unit_net_value
