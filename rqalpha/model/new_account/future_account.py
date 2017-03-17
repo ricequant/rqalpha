@@ -33,10 +33,9 @@ def margin_of(order_book_id, quantity, price):
 
 
 class FutureAccount(BaseAccount):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units,
-                 cash, frozen_cash, positions):
+    def __init__(self, start_date, starting_cash, static_unit_net_value, units, total_cash, positions):
         super(FutureAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
-                                            units, cash, frozen_cash, positions)
+                                            units, total_cash, positions)
 
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._settlement)
