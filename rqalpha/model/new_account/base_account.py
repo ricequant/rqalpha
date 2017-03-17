@@ -32,11 +32,19 @@ class BaseAccount(object):
         self._total_cash = total_cash
         self._backward_trade_set = backward_trade_set
 
-    def fast_forward(self, orders, trades):
+    def fast_forward(self, orders=None, trades=list()):
+        """
+        同步账户信息至最新状态
+        :param orders: 订单列表，主要用来计算frozen_cash，如果为None则不计算frozen_cash
+        :param trades: 交易列表，基于Trades 将当前Positions ==> 最新Positions
+        """
         raise NotImplementedError
 
     @property
     def type(self):
+        """
+        [enum] 账户类型
+        """
         raise NotImplementedError
 
     @property

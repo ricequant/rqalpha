@@ -33,9 +33,10 @@ def margin_of(order_book_id, quantity, price):
 
 
 class FutureAccount(BaseAccount):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units, total_cash, positions):
+    def __init__(self, start_date, starting_cash, static_unit_net_value, units,
+                 total_cash, positions, backward_trade_set=set()):
         super(FutureAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
-                                            units, total_cash, positions)
+                                            units, total_cash, positions, backward_trade_set)
 
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._settlement)
@@ -46,6 +47,17 @@ class FutureAccount(BaseAccount):
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
         event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
         event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
+
+    def fast_forward(self, orders=None, trades=list()):
+        # 计算 Positions
+        for trade in trades:
+            if trade.exec_id in self._backward_trade_set:
+                continue
+            self._apply_trade(trade)
+        # 计算 Frozen Cash
+        if orders is not None:
+            self._frozen_cash = sum([self._frozen_cash_of_order(order) for order in orders if order._is_active()])
+
 
     @property
     def type(self):
@@ -164,7 +176,13 @@ class FutureAccount(BaseAccount):
     def _on_trade(self, event):
         if self != event.account:
             return
-        trade = event.trade
+        self._apply_trade(event.trade)
+
+    def _apply_trade(self, trade):
+        if trade.exec_id in self._backward_trade_set:
+            return
+
         order_book_id = trade.order.order_book_id
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
         self._positions[order_book_id].apply_trade(trade)
+        self._backward_trade_set.add(trade.exec_id)

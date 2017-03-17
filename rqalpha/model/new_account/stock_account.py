@@ -47,15 +47,19 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
         event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
-    def fast_forward(self, orders, trades):
-        for t in trades:
-            self._apply_trade(t)
-
-        self._frozen_cash = 0
-        for o in orders:
-            if o._is_final():
+    def fast_forward(self, orders=None, trades=list()):
+        # 计算 Positions
+        for trade in trades:
+            if trade.exec_id in self._backward_trade_set:
                 continue
-            self._frozen_cash += o._frozen_price * o.unfilled_quantity
+            self._apply_trade(trade)
+        # 计算 Frozen Cash
+        if orders is not None:
+            self._frozen_cash = 0
+            for o in orders:
+                if o._is_final():
+                    continue
+                self._frozen_cash += o._frozen_price * o.unfilled_quantity
 
     def _on_trade(self, event):
         self._apply_trade(event.trade)
