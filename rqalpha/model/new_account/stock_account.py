@@ -106,6 +106,7 @@ class StockAccount(BaseAccount):
         self._static_unit_net_value = self.unit_net_value
 
     def _on_bar(self, event):
+        # FIXME last_price should be lazy queried
         bar_dict = event.bar_dict
         for order_book_id, position in six.iteritems(self._positions):
             bar = bar_dict[order_book_id]
