@@ -52,16 +52,15 @@ class Risk(object):
         self._benchmark = benchmark_daily_returns
         self._risk_free_rate = risk_free_rate
         self._annual_factor = _annual_factor(period)
+        self._daily_risk_free_rate = self._risk_free_rate / self._annual_factor
 
         self._alpha = None
         self._beta = None
         self._sharpe = None
         self._return = np.expm1(np.log1p(self._portfolio).sum())
         self._annual_return = (1 + self._return) ** (365 / days) - 1
-        # self._annual_return = (1 + self._return) ** (self._annual_factor / len(self._portfolio)) - 1
         self._benchmark_return = np.expm1(np.log1p(self._benchmark).sum())
         self._benchmark_annual_return = (1 + self._benchmark_return) ** (365 / days) - 1
-        # self._benchmark_annual_return = (1 + self._benchmark_return) ** (self._annual_factor / len(self._portfolio)) - 1
         self._max_drawdown = None
         self._volatility = None
         self._annual_volatility = None
@@ -74,6 +73,7 @@ class Risk(object):
         self._downside_risk = None
         self._annual_downside_risk = None
         self._calmar = None
+        self._avg_excess_return = None
 
     @property
     def return_rate(self):
@@ -101,7 +101,13 @@ class Risk(object):
             self._beta = np.nan
             return np.nan
 
-        self._alpha = self._annual_return - self._risk_free_rate - self.beta * (self._benchmark_annual_return - self._risk_free_rate)
+
+        self._alpha = 1.0 / len(self._portfolio) * (
+            np.sum(
+                self._portfolio - self._daily_risk_free_rate + self.beta * (
+                    self._benchmark - self._daily_risk_free_rate
+                ))
+        ) * self._annual_factor
         return self._alpha
 
     @property
@@ -120,12 +126,20 @@ class Risk(object):
         self._beta = cov[0][1] / cov[1][1]
         return self._beta
 
+    @property
+    def avg_excess_return(self):
+        if self._avg_excess_return is not None:
+            return self._avg_excess_return
+
+        self._avg_excess_return = 1.0 / len(self._portfolio) * (self._portfolio - self._daily_risk_free_rate).sum()
+        return self._avg_excess_return
+
     def _calc_volatility(self):
         if len(self._portfolio) < 2:
             self._volatility = 0
             self._annual_volatility = 0
         else:
-            std = self._portfolio.std()
+            std = self._portfolio.std(ddof=1)
             self._volatility = std * (len(self._portfolio) ** 0.5)
             self._annual_volatility = std * (self._annual_factor ** 0.5)
 
@@ -150,7 +164,7 @@ class Risk(object):
             self._benchmark_volatility = 0
             self._benchmark_annual_volatility = 0
         else:
-            std = self._benchmark.std()
+            std = self._benchmark.std(ddof=1)
             self._benchmark_volatility = std * (len(self._benchmark) ** 0.5)
             self._benchmark_annual_volatility = std * (self._annual_factor ** 0.5)
 
@@ -186,13 +200,14 @@ class Risk(object):
 
     def _calc_tracking_error(self):
         if len(self._portfolio) < 2:
-            self._tracking_error = np.nan
-            return np.nan
+            self._tracking_error = 0
+            return 0
 
         active_return = self._portfolio - self._benchmark
-        mean_squars = np.mean(np.square(active_return))
-        self._tracking_error = (mean_squars ** 0.5) * (len(active_return) ** 0.5)
-        self._annual_tracking_error = (mean_squars ** 0.5) * (self._annual_factor ** 0.5)
+        sum_mean_squares = np.sum(np.square(active_return))
+        self._avg_tracking_return = np.mean(np.sum(active_return))
+        self._tracking_error = (sum_mean_squares ** 0.5) * ((self._annual_factor / (len(active_return) - 1)) ** 0.5)
+        self._annual_tracking_error = (sum_mean_squares ** 0.5) / (self._annual_factor ** 0.5)
 
     @property
     def tracking_error(self):
@@ -219,15 +234,11 @@ class Risk(object):
             self._information_ratio = np.nan
             return np.nan
 
-        if np.isnan(self.tracking_error):
-            self._information_ratio = 0.0
-            return 0
-
         if self.tracking_error == 0:
             self._information_ratio = np.nan
             return np.nan
 
-        self._information_ratio = np.mean(self._portfolio - self._benchmark) / self.tracking_error
+        self._information_ratio = np.sqrt(self._annual_factor) * self._avg_tracking_return / self.tracking_error
         return self._information_ratio
 
     @property
@@ -239,15 +250,23 @@ class Risk(object):
             self._sharpe = np.nan
             return np.nan
 
-        self._sharpe = (self._annual_return - self._risk_free_rate) / self.annual_volatility
+        std_excess_return = np.std((1.0 + (1.0 / (self._annual_factor - 1))) * np.sum(
+            (self._portfolio - self._daily_risk_free_rate - self.avg_excess_return) ** 2
+        ))
+        self._sharpe = np.sqrt(self._annual_factor) * self.avg_excess_return / std_excess_return
         return self._sharpe
 
     def _calc_downside_risk(self):
+        if len(self._portfolio) < 2:
+            self._annual_downside_risk = 0
+            self._downside_risk = 0
+            return 0
         diff = self._portfolio - self._benchmark
         diff[diff > 0] = 0
-        mean_squares = np.mean(np.square(diff))
-        self._annual_downside_risk = (mean_squares ** 0.5) * (self._annual_factor ** 0.5)
-        self._downside_risk = (mean_squares ** 0.5) * (len(diff) ** 0.5)
+        sum_mean_squares = np.sum(np.square(diff))
+        self._annual_downside_risk = (sum_mean_squares ** 0.5) * \
+                                     ((self._annual_factor / (len(self._portfolio) - 1)) ** 0.5)
+        self._downside_risk = (sum_mean_squares ** 0.5) / (len(diff) ** 0.5)
 
     @property
     def downside_risk(self):
@@ -274,7 +293,7 @@ class Risk(object):
             self._sortino = np.nan
             return np.nan
 
-        self._sortino = (self._annual_return - self._risk_free_rate) / self.downside_risk
+        self._sortino = np.sqrt(self._annual_factor) * self.avg_excess_return / self.annual_downside_risk
         return self._sortino
 
     @property

@@ -4,6 +4,12 @@
 History
 ==================
 
+0.3.14
+==================
+
+- Hotfix :code:`UnboundLocalError: local variable 'signature' referenced before assignment`
+
+
 0.3.13
 ==================
 
