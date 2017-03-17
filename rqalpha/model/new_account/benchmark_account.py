@@ -66,4 +66,8 @@ class BenchmarkAccount(StockAccount):
             self._positions[self.benchmark].last_price = price
 
     def _on_settlement(self, event):
+        """
+        回测中的Benchmark 不处理退市相关的内容。如果退市则不再更新last_price
+        """
         self._static_unit_net_value = self.unit_net_value
+        self._handle_dividend_book_closure(event.trading_dt.date())

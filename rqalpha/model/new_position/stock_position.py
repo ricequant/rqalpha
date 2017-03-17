@@ -21,7 +21,7 @@ from .base_position import BasePosition
 
 class StockPosition(BasePosition):
     def __init__(self, order_book_id):
-        super(self, StockPosition).__init__(order_book_id)
+        super(StockPosition, self).__init__(order_book_id)
         self._quantity = 0
         self._avg_price = 0
         self._non_closeable = 0     # 当天买入的不能卖出

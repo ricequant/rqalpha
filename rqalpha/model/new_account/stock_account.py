@@ -96,8 +96,10 @@ class StockAccount(BaseAccount):
             self._frozen_cash -= unfilled_value
 
     def _before_trading(self, event):
+        trading_date = event.trading_dt.date()
+        self._handle_dividend_payable(trading_date)
         if ExecutionContext.config.base.handle_split:
-            self._handle_split(event.trading_dt.date())
+            self._handle_split(trading_date)
 
     def _after_trading(self, event):
         for position in six.itervalues(self._positions):
@@ -120,6 +122,7 @@ class StockAccount(BaseAccount):
 
         self._backward_trade_set.clear()
         self._static_unit_net_value = self.unit_net_value
+        self._handle_dividend_book_closure(event.trading_dt.date())
 
     def _on_bar(self, event):
         # FIXME last_price should be lazy queried
