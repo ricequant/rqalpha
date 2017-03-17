@@ -34,7 +34,9 @@ class StockAccount(BaseAccount):
         super(StockAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
                                            units, cash, positions, backward_trade_set)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
+        self.register_event()
 
+    def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)

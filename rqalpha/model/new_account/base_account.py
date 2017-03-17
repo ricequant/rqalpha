@@ -32,6 +32,12 @@ class BaseAccount(object):
         self._total_cash = total_cash
         self._backward_trade_set = backward_trade_set
 
+    def register_event(self):
+        """
+        注册事件
+        """
+        raise NotImplementedError
+
     def fast_forward(self, orders=None, trades=list()):
         """
         同步账户信息至最新状态
