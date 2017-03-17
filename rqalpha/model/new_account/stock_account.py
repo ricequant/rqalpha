@@ -119,6 +119,8 @@ class StockAccount(BaseAccount):
         for position in six.itervalues(self._positions):
             position.after_trading_()
 
+        self._processed_trades.clear()
+
     def _on_settlement(self, event):
         self._static_unit_net_value = self.unit_net_value
 
