@@ -134,9 +134,8 @@ class FutureAccount(BaseAccount):
         bar_dict = event.bar_dict
         for order_book_id, position in six.iteritems(self._positions):
             bar = bar_dict[order_book_id]
-            if bar.isnan:
-                continue
-            position.last_price = bar.close
+            if not bar.isnan:
+                position.last_price = bar.close
 
     def _on_tick(self, event):
         tick = event.tick
