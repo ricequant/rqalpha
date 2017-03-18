@@ -16,306 +16,149 @@
 
 import six
 
-from ..portfolio.future_portfolio import FuturePortfolio
-from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
+from ...environment import Environment
+from ...events import EVENT
+from .base_account import BaseAccount
+from ...const import ACCOUNT_TYPE, POSITION_EFFECT
+from ...execution_context import ExecutionContext
 from ...utils.i18n import gettext as _
 from ...utils.logger import user_system_log
-from ...execution_context import ExecutionContext
 
-from .base_account import BaseAccount
+
+def margin_of(order_book_id, quantity, price):
+    instrument = ExecutionContext.get_instrument(order_book_id)
+    margin_rate = ExecutionContext.get_future_margin_rate(order_book_id)
+    margin_multiplier = ExecutionContext.config.base.margin_multiplier
+    return quantity * price * margin_multiplier * margin_rate * instrument.contract_multiplier
 
 
 class FutureAccount(BaseAccount):
-    def __init__(self, env, init_cash, start_date):
-        super(FutureAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.FUTURE)
 
-    @classmethod
-    def from_recovery(cls, env, init_cash, start_date, account_dict):
-        """
-        account_dict = {
-            'orders': {},
-            'trades': [],
-            'portfolio': None,
-        }
-        """
-        account = cls(env, init_cash, start_date)
-        orders = account_dict['orders']
-        trades = account_dict['trades']
-        portfolio_dict = account_dict['portfolio']
-        account.portfolio = FuturePortfolio.from_recovery(account, start_date, init_cash, ACCOUNT_TYPE.FUTURE, portfolio_dict, orders.values(), trades)
-        account.daily_orders = orders
-        account.daily_trades = trades
-        return account
+    def register_event(self):
+        event_bus = Environment.get_instance().event_bus
+        event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._settlement)
+        event_bus.add_listener(EVENT.ORDER_PEDING_NEW, self._on_order_pending_new)
+        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
+        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.TRADE, self._on_trade)
 
-    def before_trading(self, event):
-        super(FutureAccount, self).before_trading(event)
-        positions = self.portfolio.positions
-        removing_ids = []
-        for order_book_id in positions.keys():
-            position = positions[order_book_id]
-            if position._quantity == 0 and position.buy_open_order_quantity == 0 \
-                    and position.sell_open_order_quantity == 0:
-                removing_ids.append(order_book_id)
-        for order_book_id in removing_ids:
-            positions.pop(order_book_id, None)
+    def fast_forward(self, orders=None, trades=list()):
+        # 计算 Positions
+        for trade in trades:
+            if trade.exec_id in self._backward_trade_set:
+                continue
+            self._apply_trade(trade)
+        # 计算 Frozen Cash
+        if orders is not None:
+            self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order._is_active())
 
-    def after_trading(self, event):
-        pass
-
-    def settlement(self, event):
-        portfolio = self.portfolio
-        portfolio._portfolio_value = None
-        positions = portfolio.positions
-        data_proxy = ExecutionContext.get_data_proxy()
-        trading_date = ExecutionContext.get_current_trading_dt().date()
-
-        for order_book_id, position in six.iteritems(positions):
-            settle_price = data_proxy.get_settle_price(order_book_id, trading_date)
-            position._last_price = settle_price
-
-        self.portfolio_persist()
-
-        portfolio._yesterday_portfolio_value = portfolio.portfolio_value
-
-        de_listed_id_list = []
-        for order_book_id, position in six.iteritems(positions):
-            # 检查合约是否到期,如果到期,则按照结算价来进行平仓操作
-            if position._de_listed_date is not None and trading_date >= position._de_listed_date.date():
-                de_listed_id_list.append(order_book_id)
-            else:
-                settle_price = data_proxy.get_settle_price(order_book_id, trading_date)
-                self._update_holding_by_settle(position, settle_price)
-                position._daily_realized_pnl = 0
-                position._buy_daily_realized_pnl = 0
-                position._sell_daily_realized_pnl = 0
-        for de_listed_id in de_listed_id_list:
-            if positions[de_listed_id]._quantity != 0:
-                user_system_log.warn(
-                    _("{order_book_id} is expired, close all positions by system").format(order_book_id=de_listed_id))
-            del positions[de_listed_id]
-
-        portfolio._daily_transaction_cost = 0
-
-    def bar(self, event):
-        bar_dict = event.bar_dict
-        portfolio = self.portfolio
-        portfolio._portfolio_value = None
-        positions = portfolio.positions
-
-        for order_book_id, position in six.iteritems(positions):
-            bar = bar_dict[order_book_id]
-            if not bar.isnan:
-                position._last_price = bar.close
-
-    def tick(self, event):
-        tick = event.tick
-        portfolio = self.portfolio
-        portfolio._portfolio_value = None
-        position = portfolio.positions[tick.order_book_id]
-        position._last_price = tick.last
-
-    def order_pending_new(self, event):
-        if self != event.account:
-            return
-        order = event.order
-        if order._is_final():
-            return
-        order_book_id = order.order_book_id
-        position = self.portfolio.positions[order_book_id]
-        position._total_orders += 1
-        created_quantity = order.quantity
-        created_value = order._frozen_price * created_quantity * position._contract_multiplier
-        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, created_value)
-        self._update_frozen_cash(order, frozen_margin)
-
-    def order_creation_pass(self, event):
-        pass
-
-    def order_creation_reject(self, event):
-        if self != event.account:
-            return
-        order = event.order
-        order_book_id = order.order_book_id
-        position = self.portfolio.positions[order_book_id]
-        position._total_orders -= 1
-        cancel_quantity = order.unfilled_quantity
-        cancel_value = -order._frozen_price * cancel_quantity * position._contract_multiplier
-        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, cancel_value)
-        self._update_frozen_cash(order, frozen_margin)
-
-    def order_pending_cancel(self, event):
-        pass
-
-    def order_cancellation_pass(self, event):
-        if self != event.account:
-            return
-        self._cancel_order_cal(event.order)
-
-    def order_cancellation_reject(self, event):
-        pass
-
-    def order_unsolicited_update(self, event):
-        if self != event.account:
-            return
-        self._cancel_order_cal(event.order)
-
-    def _cancel_order_cal(self, order):
-        order_book_id = order.order_book_id
-        position = self.portfolio.positions[order.order_book_id]
-        rejected_quantity = order.unfilled_quantity
-        rejected_value = -order._frozen_price * rejected_quantity * position._contract_multiplier
-        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, rejected_value)
-        self._update_frozen_cash(order, frozen_margin)
-
-    def trade(self, event):
-        if self != event.account:
-            return
-        trade = event.trade
-        order = trade.order
-        order_book_id = order.order_book_id
-        bar_dict = ExecutionContext.get_current_bar_dict()
-        portfolio = self.portfolio
-        portfolio._portfolio_value = None
-        position = portfolio.positions[order_book_id]
-        position._is_traded = True
-        position._total_trades += 1
-        trade_quantity = trade.last_quantity
-
-        if order.position_effect == POSITION_EFFECT.OPEN:
-            if order.side == SIDE.BUY:
-                position._buy_avg_open_price = (position._buy_avg_open_price * position.buy_quantity + trade_quantity *
-                                                trade.last_price) / (position.buy_quantity + trade_quantity)
-            elif order.side == SIDE.SELL:
-                position._sell_avg_open_price = (position._sell_avg_open_price * position.sell_quantity +
-                                                 trade_quantity * trade.last_price) / (position.sell_quantity +
-                                                                                  trade_quantity)
-
-        minus_value_by_trade = -order._frozen_price * trade_quantity * position._contract_multiplier
-        trade_value = trade.last_price * trade_quantity * position._contract_multiplier
-        frozen_margin = ExecutionContext.cal_margin(order_book_id, order.side, minus_value_by_trade)
-
-        portfolio._daily_transaction_cost = portfolio._daily_transaction_cost + trade.tax + trade.commission
-
-        self._update_frozen_cash(order, frozen_margin)
-        self._update_trade_data(position, trade, trade_quantity, trade_value)
-
-        self._last_trade_id = trade.exec_id
+    @property
+    def type(self):
+        return ACCOUNT_TYPE.FUTURE
 
     @staticmethod
-    def _update_holding_by_settle(position, settle_price):
-        position._prev_settle_price = settle_price
-        position._buy_old_holding_list += position._buy_today_holding_list
-        position._sell_old_holding_list += position._sell_today_holding_list
-        position._buy_today_holding_list = []
-        position._sell_today_holding_list = []
+    def _frozen_cash_of_order(order):
+        return margin_of(order.order_book_id, order.unfilled_quantity, order._frozen_price)
 
-    def _update_trade_data(self, position, trade, trade_quantity, trade_value):
+    @staticmethod
+    def _frozen_cash_of_trade(trade):
+        return margin_of(trade.order.order_book_id, trade.last_quantity, trade.order._frozen_price)
+
+    @property
+    def total_value(self):
+        return self._total_cash + self.margin + self.daily_holding_pnl
+
+    # -- Margin 相关
+    @property
+    def margin(self):
         """
-        计算 [buy|sell]_trade_[value|quantity]
-        计算 [buy|sell]_[open|close]_trade_quantity
-        计算 [buy|sell]_settle_holding
-        计算 [buy|sell]_today_holding_list
-        计算 [buy|sell]_holding_cost
-        计算 [bar|sell]_margin
-        计算 daily_realized_pnl
+        [float] 总保证金
         """
-        order = trade.order
+        return sum(position.margin for position in six.itervalues(self._positions))
 
-        if order.side == SIDE.BUY:
-            if order.position_effect == POSITION_EFFECT.OPEN:
-                position._buy_transaction_cost += trade.commission
-                position._buy_today_holding_list.insert(0, (trade.last_price, trade_quantity))
+    @property
+    def buy_margin(self):
+        """
+        [float] 买方向保证金
+        """
+        return sum(position.buy_margin for position in six.itervalues(self._positions))
+
+    @property
+    def sell_margin(self):
+        """
+        [float] 卖方向保证金
+        """
+        return sum(position.sell_margin for position in six.itervalues(self._positions))
+
+    # -- PNL 相关
+    @property
+    def daily_pnl(self):
+        """
+        [float] 当日盈亏
+        """
+        return self.daily_realized_pnl + self.daily_holding_pnl - self.transaction_cost
+
+    @property
+    def daily_holding_pnl(self):
+        """
+        [float] 浮动盈亏
+        """
+        return sum(position.daily_holding_pnl for position in six.itervalues(self._positions))
+
+    @property
+    def daily_realized_pnl(self):
+        """
+        [float] 平仓盈亏
+        """
+        return sum(position.daily_realized_pnl for position in six.iteritems(self._positions))
+
+    def _settlement(self, event):
+        for position in list(self._positions.values()):
+            order_book_id = position.order_book_id
+            if position.is_de_listed() and position.buy_quantity + position.sell_qauntity != 0:
+                self._total_cash += position.market_value * position.contract_multiplier
+                user_system_log.warn(
+                    _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
+                self._positions.pop(order_book_id, None)
+            elif position.buy_quantity == 0 and position.sell_qauntity == 0:
+                self._positions.pop(order_book_id, None)
             else:
-                position._sell_transaction_cost += trade.commission
-                delta_daily_realized_pnl = self._update_holding_by_close_action(trade)
-                position._daily_realized_pnl += delta_daily_realized_pnl
-                position._sell_daily_realized_pnl += delta_daily_realized_pnl
-            position._buy_trade_quantity += trade_quantity
-            position._buy_trade_value += trade_value
-        else:
-            if order.position_effect == POSITION_EFFECT.OPEN:
-                position._sell_transaction_cost += trade.commission
-                position._sell_today_holding_list.insert(0, (trade.last_price, trade_quantity))
-            else:
-                position._buy_transaction_cost += trade.commission
-                delta_daily_realized_pnl = self._update_holding_by_close_action(trade)
-                position._daily_realized_pnl += delta_daily_realized_pnl
-                position._buy_daily_realized_pnl += delta_daily_realized_pnl
-            position._sell_trade_quantity += trade_quantity
-            position._sell_trade_value += trade_value
+                position.apply_settlement()
 
-    def _update_frozen_cash(self, order, inc_order_value):
-        if order.position_effect == POSITION_EFFECT.OPEN:
-            self.portfolio._frozen_cash += inc_order_value
+        self._backward_trade_set.clear()
 
-    def _update_holding_by_close_action(self, trade):
-        order = trade.order
-        order_book_id = order.order_book_id
-        position = self.portfolio.positions[order_book_id]
-        settle_price = position._prev_settle_price
-        left_quantity = trade.last_quantity
-        delta_daily_realized_pnl = 0
-        if order.side == SIDE.BUY:
-            # 先平昨仓
-            while True:
-                if left_quantity == 0:
-                    break
-                if len(position._sell_old_holding_list) == 0:
-                    break
-                oldest_price, oldest_quantity = position._sell_old_holding_list.pop()
-                if oldest_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    position._sell_old_holding_list.append((oldest_price, oldest_quantity - left_quantity))
-                else:
-                    consumed_quantity = oldest_quantity
-                left_quantity -= consumed_quantity
-                delta_daily_realized_pnl += self._cal_daily_realized_pnl(trade, settle_price, consumed_quantity)
-            # 再平今仓
-            while True:
-                if left_quantity <= 0:
-                    break
-                oldest_price, oldest_quantity = position._sell_today_holding_list.pop()
-                if oldest_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    position._sell_today_holding_list.append((oldest_price, oldest_quantity - left_quantity))
-                else:
-                    consumed_quantity = oldest_quantity
-                left_quantity -= consumed_quantity
-                delta_daily_realized_pnl += self._cal_daily_realized_pnl(trade, oldest_price, consumed_quantity)
-        else:
-            # 先平昨仓
-            while True:
-                if left_quantity == 0:
-                    break
-                if len(position._buy_old_holding_list) == 0:
-                    break
-                oldest_price, oldest_quantity = position._buy_old_holding_list.pop()
-                if oldest_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    position._buy_old_holding_list.append((oldest_price, oldest_quantity - left_quantity))
-                else:
-                    consumed_quantity = oldest_quantity
-                left_quantity -= consumed_quantity
-                delta_daily_realized_pnl += self._cal_daily_realized_pnl(trade, settle_price, consumed_quantity)
-            # 再平今仓
-            while True:
-                if left_quantity <= 0:
-                    break
-                oldest_price, oldest_quantity = position._buy_today_holding_list.pop()
-                if oldest_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    position._buy_today_holding_list.append((oldest_price, oldest_quantity - left_quantity))
-                    left_quantity = 0
-                else:
-                    consumed_quantity = oldest_quantity
-                left_quantity -= consumed_quantity
-                delta_daily_realized_pnl += self._cal_daily_realized_pnl(trade, oldest_price, consumed_quantity)
-        return delta_daily_realized_pnl
+    def _on_order_pending_new(self, event):
+        if self != event.account:
+            return
+        self._frozen_cash += self._frozen_cash_of_order(event.order)
 
-    def _cal_daily_realized_pnl(self, trade, cost_price, consumed_quantity):
-        order = trade.order
-        position = self.portfolio.positions[order.order_book_id]
-        if order.side == SIDE.BUY:
-            return (cost_price - trade.last_price) * consumed_quantity * position._contract_multiplier
+    def _on_order_creation_reject(self, event):
+        if self != event.account:
+            return
+        self._frozen_cash -= self._frozen_cash_of_order(event.order)
+
+    def _on_order_unsolicited_update(self, event):
+        if self != event.account:
+            return
+        self._frozen_cash -= self._frozen_cash_of_order(event.order)
+
+    def _on_trade(self, event):
+        if self != event.account:
+            return
+        self._apply_trade(event.trade)
+
+    def _apply_trade(self, trade):
+        if trade.exec_id in self._backward_trade_set:
+            return
+        order_book_id = trade.order.order_book_id
+        position = self._positions[order_book_id]
+
+        self._total_cash -= trade.transaction_cost
+        if trade.order.position_effect != POSITION_EFFECT.OPEN:
+            self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
         else:
-            return (trade.last_price - cost_price) * consumed_quantity * position._contract_multiplier
+            self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
+        self._frozen_cash -= self._frozen_cash_of_trade(trade)
+        self._positions[order_book_id].apply_trade(trade)
+        self._backward_trade_set.add(trade.exec_id)

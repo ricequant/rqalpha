@@ -14,158 +14,77 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-
 import six
 
-from rqalpha.mod.simulation.decider.slippage import init_slippage
-from rqalpha.mod.simulation.decider.tax import init_tax
-from ..order import Order
-from ..portfolio import init_portfolio
-from ..trade import Trade
-from ...events import EVENT
-from ...execution_context import ExecutionContext
-from ...interface import Persistable
-from ...utils import json as json_utils
 
+class BaseAccount(object):
+    def __init__(self, total_cash, positions, backward_trade_set=set()):
+        self._positions = positions
+        self._frozen_cash = 0
+        self._total_cash = total_cash
+        self._backward_trade_set = backward_trade_set
+        self.register_event()
 
-class BaseAccount(Persistable):
-    def __init__(self, env, init_cash, start_date, account_type):
-        self._account_type = account_type
-        self._env = env
-        self.config = env.config
+    def register_event(self):
+        """
+        注册事件
+        """
+        raise NotImplementedError
 
-        self.portfolio = init_portfolio(init_cash, start_date, account_type)
-        self.slippage_decider = init_slippage(env.config.base.slippage)
-        commission_initializer = env._commission_initializer
-        self.commission_decider = commission_initializer(self._account_type, env.config.base.commission_multiplier)
-        self.tax_decider = init_tax(self._account_type)
+    def fast_forward(self, orders=None, trades=list()):
+        """
+        同步账户信息至最新状态
+        :param orders: 订单列表，主要用来计算frozen_cash，如果为None则不计算frozen_cash
+        :param trades: 交易列表，基于Trades 将当前Positions ==> 最新Positions
+        """
+        raise NotImplementedError
 
-        self.all_portfolios = OrderedDict()
-        self.daily_orders = {}
-        self.daily_trades = []
-        self._last_trade_id = 0
+    @property
+    def type(self):
+        """
+        [enum] 账户类型
+        """
+        raise NotImplementedError
 
-        # 该事件会触发策略的before_trading函数
-        self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
-        # 该事件会触发策略的handle_bar函数
-        self._env.event_bus.add_listener(EVENT.BAR, self.bar)
-        # 该事件会触发策略的handel_tick函数
-        self._env.event_bus.add_listener(EVENT.TICK, self.tick)
-        # 该事件会触发策略的after_trading函数
-        self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
-        # 触发结算事件
-        self._env.event_bus.add_listener(EVENT.SETTLEMENT, self.settlement)
+    @property
+    def total_value(self):
+        """
+        [float]总权益
+        """
+        raise NotImplementedError
 
-        # 创建订单
-        self._env.event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self.order_pending_new)
-        # 创建订单成功
-        self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self.order_creation_pass)
-        # 创建订单失败
-        self._env.event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self.order_creation_reject)
-        # 创建撤单
-        self._env.event_bus.add_listener(EVENT.ORDER_PENDING_CANCEL, self.order_pending_cancel)
-        # 撤销订单成功
-        self._env.event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self.order_cancellation_pass)
-        # 撤销订单失败
-        self._env.event_bus.add_listener(EVENT.ORDER_CANCELLATION_REJECT, self.order_cancellation_reject)
-        # 订单状态更新
-        self._env.event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self.order_unsolicited_update)
-        # 成交
-        self._env.event_bus.add_listener(EVENT.TRADE, self.trade)
+    @property
+    def positions(self):
+        """
+        [dict] 持仓
+        """
+        return self._positions
 
-    def set_state(self, state):
-        persist_dict = json_utils.convert_json_to_dict(state.decode('utf-8'))
-        self.portfolio.restore_from_dict_(persist_dict['portfolio'])
+    @property
+    def frozen_cash(self):
+        """
+        [float] 冻结资金
+        """
+        return self._frozen_cash
 
-        del self.daily_trades[:]
-        self.daily_orders.clear()
+    @property
+    def cash(self):
+        """
+        [float] 可用资金
+        """
+        return self._total_cash - self._frozen_cash
 
-        for order_id, order_dict in six.iteritems(persist_dict["daily_orders"]):
-            self.daily_orders[order_id] = Order.__from_dict__(order_dict)
+    @property
+    def market_value(self):
+        """
+        [float] 市值
+        """
+        return sum(position.market_value for position in six.itervalues(self._positions))
 
-        for trade_dict in persist_dict["daily_trades"]:
-            trade = Trade.__from_dict__(trade_dict, self.daily_orders[str(trade_dict["_order_id"])])
-            self.daily_trades.append(trade)
+    @property
+    def transaction_cost(self):
+        """
+        [float] 总费用
+        """
+        return sum(position.transaction_cost for position in six.itervalues(self._positions))
 
-        if 'last_trade_id' in persist_dict:
-            self._last_trade_id = persist_dict['last_trade_id']
-
-    def get_state(self):
-        return json_utils.convert_dict_to_json(self.__to_dict__()).encode('utf-8')
-
-    def __to_dict__(self):
-        account_dict = {
-            "portfolio": self.portfolio.__to_dict__(),
-            'last_trade_id': self._last_trade_id,
-            "daily_orders": {order_id: order.__to_dict__() for order_id, order in six.iteritems(self.daily_orders)},
-            "daily_trades": [trade.__to_dict__() for trade in self.daily_trades],
-        }
-        return account_dict
-
-    def portfolio_persist(self):
-        trading_date = ExecutionContext.get_current_trading_dt().date()
-        self.all_portfolios[trading_date] = self.portfolio._clone()
-
-    def get_portfolio(self, trading_date):
-        return self.all_portfolios[trading_date]
-
-    def append_order(self, order, is_active=True):
-        self.daily_orders[order.order_id] = order
-
-    def append_trade(self, trade):
-        self.daily_trades.append(trade)
-
-    def get_open_orders(self):
-        return {order.order_id: order for order in self.daily_orders.values() if order._is_active()}
-
-    def get_order(self, order_id):
-        return self.daily_orders.get(order_id, None)
-
-    def before_trading(self, event):
-        open_orders = {}
-        for k, order in six.iteritems(self.daily_orders):
-            if not order._is_final():
-                open_orders[k] = order
-
-        self.daily_orders = open_orders
-        self.daily_trades = []
-
-    def last_trade_id(self):
-        return self._last_trade_id
-
-    def bar(self, event):
-        pass
-
-    def tick(self, event):
-        pass
-
-    def after_trading(self, event):
-        pass
-
-    def settlement(self, event):
-        pass
-
-    def order_pending_new(self, event):
-        pass
-
-    def order_creation_pass(self, event):
-        pass
-
-    def order_creation_reject(self, event):
-        pass
-
-    def order_pending_cancel(self, event):
-        pass
-
-    def order_cancellation_pass(self, event):
-        pass
-
-    def order_cancellation_reject(self, event):
-        pass
-
-    def order_unsolicited_update(self, event):
-        pass
-
-    def trade(self, event):
-        pass

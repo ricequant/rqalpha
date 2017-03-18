@@ -14,89 +14,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-import pandas as pd
 import numpy as np
 
-from .base_account import BaseAccount
-from ..dividend import Dividend
-from ...execution_context import ExecutionContext
-from ...const import ACCOUNT_TYPE
+from .stock_account import StockAccount
+from ...environment import Environment
+from ...events import EVENT
 
 
-class BenchmarkAccount(BaseAccount):
-    def __init__(self, env, init_cash, start_date):
-        super(BenchmarkAccount, self).__init__(env, init_cash, start_date, ACCOUNT_TYPE.BENCHMARK)
-        self.benchmark = env.config.base.benchmark
+class BenchmarkAccount(StockAccount):
+    def __init__(self, total_cash, positions, backward_trade_set, dividend_receivable=None):
+        super(BenchmarkAccount, self).__init__(total_cash, positions, backward_trade_set, dividend_receivable)
+        self.benchmark = Environment.get_instance().config.base.benchmark
 
-    def before_trading(self, event):
-        portfolio = self.portfolio
-        portfolio._yesterday_portfolio_value = portfolio.portfolio_value
-        trading_date = ExecutionContext.get_current_trading_dt().date()
-        self._handle_dividend_payable(trading_date)
+    def register_event(self):
+        event_bus = Environment.get_instance().event_bus
+        event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
+        event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
-    def bar(self, event):
-        price = event.bar_dict[self.config.base.benchmark].close
-        if np.isnan(price):
-            return
-        portfolio = self.portfolio
-        portfolio._portfolio_value = None
-        position = portfolio.positions[self.benchmark]
+    def _on_bar(self, event):
+        if len(self._positions) == 0:
+            price = event.bar_dict[self.benchmark].close
+            if np.isnan(price):
+                return
+            position = self._positions[self.benchmark]
+            quantity = int(self._total_cash / price)
+            position._quantity = quantity
+            position._avg_price = price
+            self._total_cash -= quantity * price
 
-        if portfolio.market_value == 0:
-            trade_quantity = int(portfolio.cash / price)
-            delta_value = trade_quantity * price
-            commission = 0.0008 * trade_quantity * price
-            position._total_commission = commission
-            position._buy_trade_quantity = trade_quantity
-            position._buy_trade_value = delta_value
-            position._market_value = delta_value
-            portfolio._cash = portfolio._cash - delta_value - commission
-        else:
-            position._market_value = position._buy_trade_quantity * price
+    def _on_tick(self, event):
+        if len(self._positions) == 0:
+            tick = event.tick
+            if tick.order_book_id != self.benchmark:
+                return
+            price = tick.last
+            position = self._positions[self.benchmark]
+            quantity = int(self._total_cash / price)
+            position._quantity = quantity
+            position._avg_price = price
+            self._total_cash -= quantity * price
 
-    def after_trading(self, event):
-        trading_date = ExecutionContext.get_current_trading_dt().date()
-        self.portfolio_persist()
-        self._handle_dividend_ex_dividend(trading_date)
-
-    def _handle_dividend_payable(self, trading_date):
-        """handle dividend payable before trading
+    def _on_settlement(self, event):
         """
-        to_delete_dividend = []
-        for order_book_id, dividend_info in six.iteritems(self.portfolio._dividend_info):
-            dividend_series_dict = dividend_info.dividend_series_dict
-
-            if pd.Timestamp(trading_date) == pd.Timestamp(dividend_series_dict['payable_date']):
-                dividend_per_share = dividend_series_dict["dividend_cash_before_tax"] / dividend_series_dict["round_lot"]
-                if dividend_per_share > 0 and dividend_info.quantity > 0:
-                    dividend_cash = dividend_per_share * dividend_info.quantity
-                    self.portfolio._dividend_receivable -= dividend_cash
-                    self.portfolio._cash += dividend_cash
-                    # user_log.info(_("get dividend {dividend} for {order_book_id}").format(
-                    #     dividend=dividend_cash,
-                    #     order_book_id=order_book_id,
-                    # ))
-                    to_delete_dividend.append(order_book_id)
-
-        for order_book_id in to_delete_dividend:
-            self.portfolio._dividend_info.pop(order_book_id, None)
-
-    def _handle_dividend_ex_dividend(self, trading_date):
-        data_proxy = ExecutionContext.get_data_proxy()
-        for order_book_id, position in six.iteritems(self.portfolio.positions):
-            dividend_series = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
-            if dividend_series is None:
-                continue
-
-            dividend_series_dict = {
-                'book_closure_date': dividend_series['book_closure_date'],
-                'ex_dividend_date': dividend_series['ex_dividend_date'],
-                'payable_date': dividend_series['payable_date'],
-                'dividend_cash_before_tax': dividend_series['dividend_cash_before_tax'],
-                'round_lot': dividend_series['round_lot']
-            }
-
-            dividend_per_share = dividend_series_dict["dividend_cash_before_tax"] / dividend_series_dict["round_lot"]
-            self.portfolio._dividend_info[order_book_id] = Dividend(order_book_id, position._quantity, dividend_series_dict)
-            self.portfolio._dividend_receivable += dividend_per_share * position._quantity
+        回测中的Benchmark 不处理退市相关的内容。如果退市则不再更新last_price
+        """
+        self._handle_dividend_book_closure(event.trading_dt.date())
