@@ -23,6 +23,7 @@ class CustomEnum(Enum):
             self.__class__.__name__, self._name_)
 
 
+# noinspection PyPep8Naming
 class EXECUTION_PHASE(CustomEnum):
     GLOBAL = "[全局]"
     ON_INIT = "[程序初始化]"
@@ -34,6 +35,7 @@ class EXECUTION_PHASE(CustomEnum):
     SCHEDULED = "[scheduler函数内]"
 
 
+# noinspection PyPep8Naming
 class RUN_TYPE(CustomEnum):
     # Back Test
     BACKTEST = "BACKTEST"
@@ -41,6 +43,7 @@ class RUN_TYPE(CustomEnum):
     PAPER_TRADING = "PAPER_TRADING"
 
 
+# noinspection PyPep8Naming
 class ACCOUNT_TYPE(CustomEnum):
     TOTAL = "TOTAL"
     BENCHMARK = "BENCHMARK"
@@ -48,6 +51,7 @@ class ACCOUNT_TYPE(CustomEnum):
     FUTURE = "FUTURE"
 
 
+# noinspection PyPep8Naming
 class BAR_STATUS(CustomEnum):
     LIMIT_UP = "LIMIT_UP"
     LIMIT_DOWN = "LIMIT_DOWN"
@@ -55,16 +59,19 @@ class BAR_STATUS(CustomEnum):
     ERROR = "ERROR"
 
 
+# noinspection PyPep8Naming
 class MATCHING_TYPE(CustomEnum):
     CURRENT_BAR_CLOSE = "CURRENT_BAR_CLOSE"
     NEXT_BAR_OPEN = "NEXT_BAR_OPEN"
 
 
+# noinspection PyPep8Naming
 class ORDER_TYPE(CustomEnum):
     MARKET = "MARKET"
     LIMIT = "LIMIT"
 
 
+# noinspection PyPep8Naming
 class ORDER_STATUS(CustomEnum):
     PENDING_NEW = "PENDING_NEW"
     ACTIVE = "ACTIVE"
@@ -74,23 +81,27 @@ class ORDER_STATUS(CustomEnum):
     CANCELLED = "CANCELLED"
 
 
+# noinspection PyPep8Naming
 class SIDE(CustomEnum):
     BUY = "BUY"
     SELL = "SELL"
 
 
+# noinspection PyPep8Naming
 class POSITION_EFFECT(CustomEnum):
     OPEN = "OPEN"
     CLOSE = "CLOSE"
     CLOSE_TODAY = "CLOSE_TODAY"
 
 
+# noinspection PyPep8Naming
 class EXC_TYPE(CustomEnum):
     USER_EXC = "USER_EXC"
     SYSTEM_EXC = "SYSTEM_EXC"
     NOTSET = "NOTSET"
 
 
+# noinspection PyPep8Naming
 class INSTRUMENT_TYPE(CustomEnum):
     CS = "CS"
     FUTURE = "FUTURE"
@@ -103,33 +114,39 @@ class INSTRUMENT_TYPE(CustomEnum):
     FENJI_B = "FENJI_B"
 
 
+# noinspection PyPep8Naming
 class PERSIST_MODE(CustomEnum):
     ON_CRASH = "ON_CRASH"
     REAL_TIME = "REAL_TIME"
 
 
+# noinspection PyPep8Naming
 class MARGIN_TYPE(CustomEnum):
     BY_MONEY = "BY_MONEY"
     BY_VOLUME = "BY_VOLUME"
 
 
+# noinspection PyPep8Naming
 class COMMISSION_TYPE(CustomEnum):
     BY_MONEY = "BY_MONEY"
     BY_VOLUME = "BY_VOLUME"
 
 
+# noinspection PyPep8Naming
 class EXIT_CODE(CustomEnum):
     EXIT_SUCCESS = "EXIT_SUCCESS"
     EXIT_USER_ERROR = "EXIT_USER_ERROR"
     EXIT_INTERNAL_ERROR = "EXIT_INTERNAL_ERROR"
 
 
+# noinspection PyPep8Naming
 class HEDGE_TYPE(CustomEnum):
     HEDGE = "hedge"
     SPECULATION = "speculation"
     ARBITRAGE = "arbitrage"
 
 
+# noinspection PyPep8Naming
 class DAYS_CNT(object):
     DAYS_A_YEAR = 365
     TRADING_DAYS_A_YEAR = 252
