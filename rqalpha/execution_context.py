@@ -192,5 +192,6 @@ class ExecutionContext(object):
 
     @classmethod
     def get_last_price(cls, order_book_id):
-        # TODO 需要实现 bar_dict 和 tick 对于每一个order_book_id的last_price 的cache
-        raise NotImplementedError
+        # TODO 需要实现 tick 对于每一个 order_book_id 的 last_price 的 cache
+        bar_dict = cls.get_current_bar_dict()
+        return bar_dict[order_book_id].last
