@@ -33,95 +33,95 @@ class EXECUTION_PHASE(CustomEnum):
     FINALIZED = "[程序结束]"
     SCHEDULED = "[scheduler函数内]"
 
-RUN_TYPE = CustomEnum("RUN_TYPE", [
+
+class RUN_TYPE(CustomEnum):
     # Back Test
-    "BACKTEST",
+    BACKTEST = "BACKTEST"
     # Paper Trading
-    "PAPER_TRADING",
-])
+    PAPER_TRADING = "PAPER_TRADING"
 
-ACCOUNT_TYPE = CustomEnum("ACCOUNT_TYPE", [
-    "TOTAL",
-    "BENCHMARK",
-    "STOCK",
-    "FUTURE",
-])
 
-BAR_STATUS = CustomEnum("BAR_STATUS", [
-    "LIMIT_UP",
-    "LIMIT_DOWN",
-    "NORMAL",
-    "ERROR",
-])
+class ACCOUNT_TYPE(CustomEnum):
+    TOTAL = "TOTAL"
+    BENCHMARK = "BENCHMARK"
+    STOCK = "STOCK"
+    FUTURE = "FUTURE"
 
-MATCHING_TYPE = CustomEnum("MATCHING_TYPE", [
-    "CURRENT_BAR_CLOSE",
-    "NEXT_BAR_OPEN",
-])
 
-ORDER_TYPE = CustomEnum("ORDER_TYPE", [
-    "MARKET",
-    "LIMIT",
-])
+class BAR_STATUS(CustomEnum):
+    LIMIT_UP = "LIMIT_UP"
+    LIMIT_DOWN = "LIMIT_DOWN"
+    NORMAL = "NORMAL"
+    ERROR = "ERROR"
 
-ORDER_STATUS = CustomEnum("ORDER_STATUS", [
-    "PENDING_NEW",
-    "ACTIVE",
-    "FILLED",
-    "REJECTED",
-    "PENDING_CANCEL",
-    "CANCELLED",
-])
 
-SIDE = CustomEnum("SIDE", [
-    "BUY",
-    "SELL",
-])
+class MATCHING_TYPE(CustomEnum):
+    CURRENT_BAR_CLOSE = "CURRENT_BAR_CLOSE"
+    NEXT_BAR_OPEN = "NEXT_BAR_OPEN"
 
-POSITION_EFFECT = CustomEnum("POSITION_EFFECT", [
-    "OPEN",
-    "CLOSE",
-    "CLOSE_TODAY",
-])
 
-EXC_TYPE = CustomEnum("EXC_TYPE", [
-    "USER_EXC",
-    "SYSTEM_EXC",
-    "NOTSET",
-])
+class ORDER_TYPE(CustomEnum):
+    MARKET = "MARKET"
+    LIMIT = "LIMIT"
 
-INSTRUMENT_TYPE = CustomEnum("INSTRUMENT_TYPE", [
-    "CS",
-    "FUTURE",
-    "OPTION",
-    "ETF",
-    "LOF",
-    "INDX",
-    "FENJI_MU",
-    "FENJI_A",
-    "FENJI_B",
-])
 
-PERSIST_MODE = CustomEnum("PERSIST_MODE", [
-    "ON_CRASH",
-    "REAL_TIME"
-])
+class ORDER_STATUS(CustomEnum):
+    PENDING_NEW = "PENDING_NEW"
+    ACTIVE = "ACTIVE"
+    FILLED = "FILLED"
+    REJECTED = "REJECTED"
+    PENDING_CANCEL = "PENDING_CANCEL"
+    CANCELLED = "CANCELLED"
 
-MARGIN_TYPE = CustomEnum("MARGIN_TYPE", [
-    "BY_MONEY",
-    "BY_VOLUME",
-])
 
-COMMISSION_TYPE = CustomEnum("COMMISSION_TYPE", [
-    "BY_MONEY",
-    "BY_VOLUME",
-])
+class SIDE(CustomEnum):
+    BUY = "BUY"
+    SELL = "SELL"
 
-EXIT_CODE = CustomEnum("EXIT_CODE", [
-    "EXIT_SUCCESS",
-    "EXIT_USER_ERROR",
-    "EXIT_INTERNAL_ERROR",
-])
+
+class POSITION_EFFECT(CustomEnum):
+    OPEN = "OPEN"
+    CLOSE = "CLOSE"
+    CLOSE_TODAY = "CLOSE_TODAY"
+
+
+class EXC_TYPE(CustomEnum):
+    USER_EXC = "USER_EXC"
+    SYSTEM_EXC = "SYSTEM_EXC"
+    NOTSET = "NOTSET"
+
+
+class INSTRUMENT_TYPE(CustomEnum):
+    CS = "CS"
+    FUTURE = "FUTURE"
+    OPTION = "OPTION"
+    ETF = "ETF"
+    LOF = "LOF"
+    INDX = "INDX"
+    FENJI_MU = "FENJI_MU"
+    FENJI_A = "FENJI_A"
+    FENJI_B = "FENJI_B"
+
+
+class PERSIST_MODE(CustomEnum):
+    ON_CRASH = "ON_CRASH"
+    REAL_TIME = "REAL_TIME"
+
+
+class MARGIN_TYPE(CustomEnum):
+    BY_MONEY = "BY_MONEY"
+    BY_VOLUME = "BY_VOLUME"
+
+
+class COMMISSION_TYPE(CustomEnum):
+    BY_MONEY = "BY_MONEY"
+    BY_VOLUME = "BY_VOLUME"
+
+
+class EXIT_CODE(CustomEnum):
+    EXIT_SUCCESS = "EXIT_SUCCESS"
+    EXIT_USER_ERROR = "EXIT_USER_ERROR"
+    EXIT_INTERNAL_ERROR = "EXIT_INTERNAL_ERROR"
 
 
 class HEDGE_TYPE(CustomEnum):
