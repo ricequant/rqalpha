@@ -189,3 +189,8 @@ class ExecutionContext(object):
         if position_effect:
             open_orders = [order for order in open_orders if order.position_effect == position_effect]
         return open_orders
+
+    @classmethod
+    def get_last_price(cls, order_book_id):
+        # TODO 需要实现 bar_dict 和 tick 对于每一个order_book_id的last_price 的cache
+        raise NotImplementedError

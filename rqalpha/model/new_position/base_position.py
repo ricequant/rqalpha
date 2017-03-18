@@ -43,7 +43,7 @@ class BasePosition(object):
 
     @property
     def last_price(self):
-        return self._last_price
+        return ExecutionContext.get_last_price(self._order_book_id)
 
     @last_price.setter
     def last_price(self, value):
