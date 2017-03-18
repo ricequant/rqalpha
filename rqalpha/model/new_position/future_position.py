@@ -39,11 +39,9 @@ class FuturePosition(BasePosition):
 
     @property
     def margin_rate(self):
-        return ExecutionContext.get_future_margin_rate(self.order_book_id)
-
-    @property
-    def margin_multiplier(self):
-        return Environment.get_instance().config.base.margin_multiplier
+        margin_rate = ExecutionContext.get_future_margin_rate(self.order_book_id)
+        margin_multiplier = Environment.get_instance().config.base.margin_multiplier
+        return margin_rate * margin_multiplier
 
     @property
     def market_value(self):
@@ -223,14 +221,14 @@ class FuturePosition(BasePosition):
         """
         [float] 买方向持仓保证金
         """
-        return self._buy_holding_cost * self.margin_rate * self.margin_multiplier
+        return self._buy_holding_cost * self.margin_rate
 
     @property
     def sell_margin(self):
         """
         [float] 卖方向持仓保证金
         """
-        return self._sell_holding_cost * self.margin_rate * self.margin_multiplier
+        return self._sell_holding_cost * self.margin_rate
 
     @property
     def margin(self):

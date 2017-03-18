@@ -16,17 +16,9 @@
 
 import six
 
-from ...environment import Environment
-from ...const import DAYS_CNT
-
 
 class BaseAccount(object):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units,
-                 total_cash, positions, backward_trade_set=set()):
-        self._start_date = start_date
-        self._starting_cash = starting_cash
-        self._units = units
-        self._static_unit_net_value = static_unit_net_value
+    def __init__(self, total_cash, positions, backward_trade_set=set()):
         self._positions = positions
         self._frozen_cash = 0
         self._total_cash = total_cash
@@ -55,23 +47,9 @@ class BaseAccount(object):
         raise NotImplementedError
 
     @property
-    def daily_pnl(self):
-        """
-        [float] 当日盈亏
-        """
-        raise NotImplementedError
-
-    @property
     def total_value(self):
         """
-        总权益
-        """
-        raise NotImplementedError
-
-    @property
-    def unit_net_value(self):
-        """
-        [float] 实时净值
+        [float]总权益
         """
         raise NotImplementedError
 
@@ -81,21 +59,6 @@ class BaseAccount(object):
         [dict] 持仓
         """
         return self._positions
-
-    @property
-    def units(self):
-        """
-        [float] 份额
-        """
-        return self._units
-
-    @property
-    def start_date(self):
-        """
-        [datetime.datetime] 策略投资组合的开始日期
-        :return:
-        """
-        return self._start_date
 
     @property
     def frozen_cash(self):
@@ -125,39 +88,3 @@ class BaseAccount(object):
         """
         return sum(position.transaction_cost for position in six.itervalues(self._positions))
 
-    @property
-    def pnl(self):
-        """
-        [float] 累计盈亏
-        Note: 如果存在出入金的情况，需要同时更新starting_cash
-        """
-        return self.unit_net_value * self._units - self._starting_cash
-
-    @property
-    def daily_returns(self):
-        """
-        [float] 当前最新一天的日收益
-        """
-        return 0 if self._static_unit_net_value == 0 else self.unit_net_value / self._static_unit_net_value - 1
-
-    @property
-    def total_returns(self):
-        """
-        [float] 累计收益率
-        """
-        return self.unit_net_value - 1
-
-    @property
-    def annualized_returns(self):
-        """
-        [float] 累计年化收益率
-        """
-        return self.unit_net_value ** (
-            DAYS_CNT.DAYS_A_YEAR / float((Environment.get_instance().calendar_dt - self.start_date).days + 1)) - 1
-
-    @property
-    def portfolio_value(self):
-        """
-        [Deprecated] 总权益
-        """
-        return self.total_value

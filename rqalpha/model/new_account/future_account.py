@@ -19,7 +19,7 @@ import six
 from ...environment import Environment
 from ...events import EVENT
 from .base_account import BaseAccount
-from ...const import ACCOUNT_TYPE
+from ...const import ACCOUNT_TYPE, POSITION_EFFECT
 from ...execution_context import ExecutionContext
 from ...utils.i18n import gettext as _
 from ...utils.logger import user_system_log
@@ -33,11 +33,8 @@ def margin_of(order_book_id, quantity, price):
 
 
 class FutureAccount(BaseAccount):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units,
-                 total_cash, positions, backward_trade_set=set()):
-        super(FutureAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
-                                            units, total_cash, positions, backward_trade_set)
 
+    def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._settlement)
         event_bus.add_listener(EVENT.ORDER_PEDING_NEW, self._on_order_pending_new)
@@ -45,8 +42,6 @@ class FutureAccount(BaseAccount):
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
-        event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
-        event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
     def fast_forward(self, orders=None, trades=list()):
         # 计算 Positions
@@ -56,8 +51,7 @@ class FutureAccount(BaseAccount):
             self._apply_trade(trade)
         # 计算 Frozen Cash
         if orders is not None:
-            self._frozen_cash = sum([self._frozen_cash_of_order(order) for order in orders if order._is_active()])
-
+            self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order._is_active())
 
     @property
     def type(self):
@@ -72,19 +66,8 @@ class FutureAccount(BaseAccount):
         return margin_of(trade.order.order_book_id, trade.last_quantity, trade.order._frozen_price)
 
     @property
-    def cash(self):
-        """
-        [float] 可用资金
-        """
-        return self.total_value - self.margin - self.daily_holding_pnl - self.frozen_cash
-
-    @property
     def total_value(self):
-        return self._static_unit_net_value * self.units + self.daily_pnl
-
-    @property
-    def unit_net_value(self):
-        return self.total_value / self.units
+        return self._total_cash + self.margin + self.daily_holding_pnl
 
     # -- Margin 相关
     @property
@@ -92,21 +75,21 @@ class FutureAccount(BaseAccount):
         """
         [float] 总保证金
         """
-        return sum(position.margin for position in six.itervalues(self.positions))
+        return sum(position.margin for position in six.itervalues(self._positions))
 
     @property
     def buy_margin(self):
         """
         [float] 买方向保证金
         """
-        return sum(position.buy_margin for position in six.itervalues(self.positions))
+        return sum(position.buy_margin for position in six.itervalues(self._positions))
 
     @property
     def sell_margin(self):
         """
         [float] 卖方向保证金
         """
-        return sum(position.sell_margin for position in six.itervalues(self.positions))
+        return sum(position.sell_margin for position in six.itervalues(self._positions))
 
     # -- PNL 相关
     @property
@@ -121,31 +104,20 @@ class FutureAccount(BaseAccount):
         """
         [float] 浮动盈亏
         """
-        return sum(position.daily_holding_pnl for position in six.itervalues(self.positions))
+        return sum(position.daily_holding_pnl for position in six.itervalues(self._positions))
 
     @property
     def daily_realized_pnl(self):
         """
         [float] 平仓盈亏
         """
-        return sum(position.daily_realized_pnl for position in six.iteritems(self.positions))
-
-    def _on_bar(self, event):
-        bar_dict = event.bar_dict
-        for order_book_id, position in six.iteritems(self._positions):
-            bar = bar_dict[order_book_id]
-            if not bar.isnan:
-                position.last_price = bar.close
-
-    def _on_tick(self, event):
-        tick = event.tick
-        if tick.order_book_id in self._positions:
-            self._positions[tick.order_book_id].last_price = tick.last
+        return sum(position.daily_realized_pnl for position in six.iteritems(self._positions))
 
     def _settlement(self, event):
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.buy_quantity + position.sell_qauntity != 0:
+                self._total_cash += position.market_value * position.contract_multiplier
                 user_system_log.warn(
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
                 self._positions.pop(order_book_id, None)
@@ -155,7 +127,6 @@ class FutureAccount(BaseAccount):
                 position.apply_settlement()
 
         self._backward_trade_set.clear()
-        self._static_unit_net_value = self.unit_net_value
 
     def _on_order_pending_new(self, event):
         if self != event.account:
@@ -180,8 +151,14 @@ class FutureAccount(BaseAccount):
     def _apply_trade(self, trade):
         if trade.exec_id in self._backward_trade_set:
             return
-
         order_book_id = trade.order.order_book_id
+        position = self._positions[order_book_id]
+
+        self._total_cash -= trade.transaction_cost
+        if trade.order.position_effect != POSITION_EFFECT.OPEN:
+            self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
+        else:
+            self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
         self._positions[order_book_id].apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)

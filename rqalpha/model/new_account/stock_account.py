@@ -18,8 +18,6 @@ import six
 
 from ...events import EVENT
 from ...environment import Environment
-from ...model.position import Positions
-from ..new_position.stock_position import StockPosition
 from .base_account import BaseAccount
 from ...utils.logger import user_system_log
 from ...utils.i18n import gettext as _
@@ -28,11 +26,8 @@ from ...execution_context import ExecutionContext
 
 
 class StockAccount(BaseAccount):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units, total_cash,
-                 positions=Positions(StockPosition), backward_trade_set=set(),
-                 dividend_receivable=None):
-        super(StockAccount, self).__init__(start_date, starting_cash, static_unit_net_value,
-                                           units, total_cash, positions, backward_trade_set)
+    def __init__(self, total_cash, positions, backward_trade_set, dividend_receivable=None):
+        super(StockAccount, self).__init__(total_cash, positions, backward_trade_set)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
     def register_event(self):
@@ -45,8 +40,6 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
         event_bus.add_listener(EVENT.PRE_AFTER_TRADING, self._after_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
-        event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
-        event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
     def fast_forward(self, orders=None, trades=list()):
         # 计算 Positions
@@ -121,29 +114,11 @@ class StockAccount(BaseAccount):
                 position.apply_settlement()
 
         self._backward_trade_set.clear()
-        self._static_unit_net_value = self.unit_net_value
         self._handle_dividend_book_closure(event.trading_dt.date())
-
-    def _on_bar(self, event):
-        # FIXME last_price should be lazy queried
-        bar_dict = event.bar_dict
-        for order_book_id, position in six.iteritems(self._positions):
-            bar = bar_dict[order_book_id]
-            if not bar.isnan:
-                position.last_price = bar.close
-
-    def _on_tick(self, event):
-        tick = event.tick
-        if tick.order_book_id in self._positions:
-            self._positions[tick.order_book_id].last_price = tick.last
 
     @property
     def type(self):
         return ACCOUNT_TYPE.STOCK
-
-    @property
-    def unit_net_value(self):
-        return self.market_value / self._units
 
     def _handle_dividend_payable(self, trading_date):
         to_be_removed = []
@@ -176,25 +151,6 @@ class StockAccount(BaseAccount):
                 continue
             ratio = split['split_coefficient_to'] / split['split_coefficient_from']
             position.split_(ratio)
-
-    @property
-    def daily_pnl(self):
-        """
-        【float】当日盈亏，当日投资组合总权益-昨日投资组合总权益
-        """
-        return self.market_value - self._units * self._static_unit_net_value
-
-    @property
-    def pnl(self):
-        return self.market_value - self._starting_cash
-
-    @property
-    def market_value(self):
-        """
-        【float】总权益，包含市场价值和剩余现金
-        """
-        # 总资金 + Sum(position._position_value)
-        return self._total_cash + sum(position.market_value for position in six.itervalues(self._positions))
 
     @property
     def total_value(self):
