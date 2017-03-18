@@ -16,6 +16,7 @@
 
 from ..environment import Environment
 from ..const import DAYS_CNT
+from ..utils import get_account_type, merge_dicts
 
 
 class Portfolio(object):
@@ -25,6 +26,7 @@ class Portfolio(object):
         self._static_unit_net_value = static_unit_net_value
         self._units = units
         self._accounts = accounts
+        self._mixed_positions = None
 
     @property
     def start_date(self):
@@ -112,7 +114,9 @@ class Portfolio(object):
         """
         [dict] 持仓
         """
-        raise NotImplementedError
+        if self._mixed_positions is None:
+            self._mixed_positions = MixedPositions(self._accounts)
+        return self._mixed_positions
 
     @property
     def cash(self):
@@ -127,3 +131,43 @@ class Portfolio(object):
         [float] 市值
         """
         return sum(account.market_value for account in self._accounts)
+
+
+class MixedPositions(dict):
+    def __init__(self, accounts):
+        super(MixedPositions, self).__init__()
+        self._accounts = accounts
+
+    def __missing__(self, key):
+        account_type = get_account_type(key)
+        for account in self._accounts:
+            if account.type == account_type:
+                self[key] = account.positions[key]
+        return self[key]
+
+    def __repr__(self):
+        keys = []
+        for account in self._accounts:
+            keys += account.positions.keys()
+        return str(sorted(keys))
+
+    def __len__(self):
+        return sum(len(account.positions) for account in self._accounts)
+
+    def __iter__(self):
+        keys = []
+        for account in self._accounts:
+            keys += account.positions.keys()
+        for key in sorted(keys):
+            yield key
+
+    def items(self):
+        items = merge_dicts(*[account.positions.items() for account in self._accounts])
+        for k in sorted(items.keys()):
+            yield k, items[k]
+
+    def keys(self):
+        keys = []
+        for account in self._accounts:
+            keys += list(account.positions.keys())
+        return iter(sorted(keys))
