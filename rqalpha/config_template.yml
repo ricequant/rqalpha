@@ -115,3 +115,8 @@ mod:
     plot: ~
     plot_save_file: ~
     report_save_path: ~
+  # tushare 日行情数据
+  tushare_k_data:
+    priority: 100
+    enabled: false
+    lib: 'rqalpha.mod.tushare_k_data'
