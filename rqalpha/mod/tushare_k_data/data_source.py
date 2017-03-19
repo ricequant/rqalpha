@@ -1,5 +1,7 @@
 import six
 import tushare as ts
+from datetime import date
+from dateutil.relativedelta import relativedelta
 from rqalpha.data.base_data_source import BaseDataSource
 
 
@@ -13,15 +15,13 @@ class TushareKDataSource(BaseDataSource):
         code = order_book_id.split(".")[0]
 
         if instrument.type == 'CS':
-            is_index = False
+            index = False
         elif instrument.type == 'INDX':
-            is_index = True
+            index = True
         else:
             return None
 
-        ts_data = ts.get_k_data(code, index=is_index, start=start_dt.strftime('%Y-%m-%d'),
-                                end=end_dt.strftime('%Y-%m-%d'))
-        return ts_data
+        return ts.get_k_data(code, index=index, start=start_dt.strftime('%Y-%m-%d'), end=end_dt.strftime('%Y-%m-%d'))
 
     def get_bar(self, instrument, dt, frequency):
         if frequency != '1d':
@@ -52,7 +52,5 @@ class TushareKDataSource(BaseDataSource):
 
             return bar_data[fields].as_matrix()
 
-
-
-
-
+    def available_data_range(self, frequency):
+        return date(2005, 1, 1), date.today() - relativedelta(days=1)
