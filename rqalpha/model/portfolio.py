@@ -28,10 +28,16 @@ class Portfolio(object):
         self._mixed_positions = None
 
     @property
+    def accounts(self):
+        """
+        [dict] 账户字典
+        """
+        return self._accounts
+
+    @property
     def start_date(self):
         """
         [datetime.datetime] 策略投资组合的开始日期
-        :return:
         """
         return self._start_date
 
