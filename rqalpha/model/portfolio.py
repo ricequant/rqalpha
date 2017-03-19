@@ -20,9 +20,8 @@ from ..utils import get_account_type, merge_dicts
 
 
 class Portfolio(object):
-    def __init__(self, start_date, starting_cash, static_unit_net_value, units, accounts):
+    def __init__(self, start_date, static_unit_net_value, units, accounts):
         self._start_date = start_date
-        self._starting_cash = starting_cash
         self._static_unit_net_value = static_unit_net_value
         self._units = units
         self._accounts = accounts
@@ -37,14 +36,6 @@ class Portfolio(object):
         return self._start_date
 
     @property
-    def starting_cash(self):
-        """
-        [float] 初始资金
-        Note: 如果有出入金的话， starting_cash 需要跟着一起变化来保证pnl的计算是正确的
-        """
-        return self._starting_cash
-
-    @property
     def units(self):
         """
         [float] 份额
@@ -57,14 +48,6 @@ class Portfolio(object):
         [float] 实时净值
         """
         return self.total_value / self._units
-
-    @property
-    def pnl(self):
-        """
-        [float] 累计盈亏
-        Note: 如果存在出入金的情况，需要同时更新starting_cash
-        """
-        return self.total_value - self._starting_cash
 
     @property
     def daily_pnl(self):
