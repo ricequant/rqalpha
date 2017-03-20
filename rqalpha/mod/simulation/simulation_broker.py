@@ -78,11 +78,9 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
 
-        account.append_order(order)
         if order._is_final():
             return
 
-        # account.on_order_creating(order)
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
@@ -98,12 +96,10 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 
-        # account.on_order_cancelling(order)
         order._mark_cancelled(_("{order_id} order has been cancelled by user.").format(order_id=order.order_id))
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_PASS, account=account, order=order))
 
-        # account.on_order_cancellation_pass(order)
         try:
             self._open_orders.remove((account, order))
         except ValueError:

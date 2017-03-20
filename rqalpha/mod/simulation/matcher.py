@@ -127,7 +127,7 @@ class Matcher(object):
 
             unfilled = order.unfilled_quantity
             fill = min(unfilled, volume_limit)
-            ct_amount = account.portfolio.positions[order.order_book_id]._cal_close_today_amount(fill, order.side)
+            ct_amount = account.positions[order.order_book_id].cal_close_today_amount(fill, order.side)
             price = self._slippage_decider.get_trade_price(order.side, deal_price)
             trade = Trade.__from_create__(order=order, calendar_dt=self._calendar_dt, trading_dt=self._trading_dt,
                                           price=price, amount=fill, close_today_amount=ct_amount)

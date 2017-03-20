@@ -289,7 +289,7 @@ class FuturePosition(BasePosition):
 
     # -- Function
 
-    def _cal_close_today_amount(self, trade_amount, trade_side):
+    def cal_close_today_amount(self, trade_amount, trade_side):
         if trade_side == SIDE.SELL:
             close_today_amount = trade_amount - self.buy_old_quantity
         else:
