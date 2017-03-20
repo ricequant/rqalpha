@@ -32,7 +32,7 @@ class Matcher(object):
         else:
             self._deal_price_decider = lambda bar: bar.open
         self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
-        self._slippage_decider = SlippageDecider(mod_config.slppage)
+        self._slippage_decider = SlippageDecider(mod_config.slippage)
         self._tax_decider = TaxDecider()
         self._board = None
         self._turnover = defaultdict(int)

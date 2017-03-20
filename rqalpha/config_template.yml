@@ -1,4 +1,4 @@
-version: 0.1.3
+version: 0.1.4
 
 # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
 whitelist: [base, extra, validator, mod]

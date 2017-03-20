@@ -96,7 +96,7 @@ class ExecutionContext(object):
             raise last_exc_val
 
         from .utils import create_custom_exception
-        user_exc = create_custom_exception(exc_type, exc_val, exc_tb, self.config.base.strategy_file)
+        user_exc = create_custom_exception(exc_type, exc_val, exc_tb, Environment.get_instance().config.base.strategy_file)
         raise user_exc
 
     @classmethod

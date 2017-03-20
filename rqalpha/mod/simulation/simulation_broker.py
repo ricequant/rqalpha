@@ -52,7 +52,7 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def get_portfolio(self):
         if self._portfolio is None:
-            self._portfolio = self._init_portfolio(self._env)
+            self._portfolio = init_portfolio(self._env)
         return self._portfolio
 
     def get_open_orders(self):
