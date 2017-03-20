@@ -123,5 +123,5 @@ class Environment(object):
         account_type = get_account_type(order_book_id)
         return self.portfolio.accounts[account_type]
 
-    def get_open_orders(self):
-        return self.broker.get_open_orders()
+    def get_open_orders(self, order_book_id=None):
+        return self.broker.get_open_orders(order_book_id)

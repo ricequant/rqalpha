@@ -24,7 +24,6 @@ from functools import wraps
 from dateutil.parser import parse as parse_date
 
 from .exception import RQInvalidArgument, RQTypeError
-from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
 from ..environment import Environment
 from ..const import INSTRUMENT_TYPE, RUN_TYPE
@@ -94,7 +93,7 @@ class ArgumentChecker(object):
                     if index_contract_warning_flag:
                         index_contract_warning_flag = False
                         user_system_log.warn(_("Index Future contracts[99] are not supported in paper trading."))
-            instrument = ExecutionContext.get_data_proxy().instruments(value)
+            instrument = Environment.get_instance().get_instrument(value)
             if instrument is None:
                 self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
             return
@@ -110,7 +109,7 @@ class ArgumentChecker(object):
 
     def _is_valid_stock(self, func_name, value):
         if isinstance(value, six.string_types):
-            instrument = ExecutionContext.get_data_proxy().instruments(value)
+            instrument = Environment.get_instance().get_instrument(value)
             if instrument is None:
                 self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
             if instrument.enum_type not in INST_TYPE_IN_STOCK_ACCOUNT:
@@ -131,7 +130,7 @@ class ArgumentChecker(object):
 
     def _is_valid_future(self, func_name, value):
         if isinstance(value, six.string_types):
-            instrument = ExecutionContext.get_data_proxy().instruments(value)
+            instrument = Environment.get_instance().get_instrument(value)
             if instrument is None:
                 self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
             if instrument.enum_type != INSTRUMENT_TYPE.FUTURE:

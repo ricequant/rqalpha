@@ -20,9 +20,9 @@ import json
 from dateutil.parser import parse
 
 from ..execution_context import ExecutionContext
+from ..environment import Environment
 from ..utils.exception import patch_user_exc, ModifyExceptionFromType
 from ..const import EXC_TYPE, EXECUTION_PHASE
-from ..environment import Environment
 from ..events import EVENT
 
 try:
@@ -198,7 +198,7 @@ class Scheduler(object):
 
     def next_bar_(self, event):
         bars = event.bar_dict
-        with ExecutionContext(EXECUTION_PHASE.SCHEDULED, bars):
+        with ExecutionContext(EXECUTION_PHASE.SCHEDULED):
             self._current_minute = self._minutes_since_midnight(self._ucontext.now.hour, self._ucontext.now.minute)
             for day_rule, time_rule, func in self._registry:
                 if day_rule() and time_rule():

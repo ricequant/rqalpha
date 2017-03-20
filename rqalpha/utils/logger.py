@@ -36,10 +36,9 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.00"
 
 
 def user_std_handler_log_formatter(record, handler):
-    from ..execution_context import ExecutionContext
-
+    from ..environment import Environment
     try:
-        dt = ExecutionContext.get_current_calendar_dt().strftime(DATETIME_FORMAT)
+        dt = Environment.calendar_dt.strftime(DATETIME_FORMAT)
     except Exception:
         dt = "0000-00-00"
 

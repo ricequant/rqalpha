@@ -26,6 +26,7 @@ from ..const import EXC_TYPE, INSTRUMENT_TYPE, ACCOUNT_TYPE, UNDERLYING_SYMBOL_P
 from ..utils.datetime_func import TimeRange
 from ..utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
 from ..utils.i18n import gettext as _
+from ..environment import Environment
 
 
 def safe_round(value, ndigits=3):
@@ -194,8 +195,7 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
 
 
 def get_account_type(order_book_id):
-    from ..execution_context import ExecutionContext
-    instrument = ExecutionContext.get_instrument(order_book_id)
+    instrument = Environment.get_instance().get_instrument(order_book_id)
     enum_type = instrument.enum_type
     if enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
         return ACCOUNT_TYPE.STOCK
