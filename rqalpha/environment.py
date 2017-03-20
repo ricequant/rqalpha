@@ -15,7 +15,9 @@
 # limitations under the License.
 
 from .events import EventBus
+from .utils import get_upper_underlying_symbol, get_account_type
 from .utils.logger import system_log, user_log, user_detail_log
+from .utils.default_future_info import DEFAULT_FUTURE_INFO
 
 
 class Environment(object):
@@ -92,8 +94,34 @@ class Environment(object):
         self.get_plots().add_plot(self.trading_dt.date(), series_name, value)
 
     def get_last_price(self, order_book_id):
-        return self.bar_dict[order_book_id].last
+        return self.data_proxy.current_snapshot(
+            order_book_id,
+            self.config.base.frequency,
+            self.calendar_dt
+        ).last
 
     def get_instrument(self, order_book_id):
         return self.data_proxy.instrument(order_book_id)
 
+    def get_future_commission_info(self, order_book_id, hedge_type):
+        try:
+            return self.data_proxy.get_future_info(order_book_id, hedge_type)
+        except NotImplementedError:
+            underlying_symbol = get_upper_underlying_symbol(order_book_id)
+            return DEFAULT_FUTURE_INFO[underlying_symbol][hedge_type.value]
+
+    def get_future_margin_rate(self, order_book_id):
+        try:
+            return self.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
+        except NotImplementedError:
+            return self.data_proxy.instruments(order_book_id).margin_rate
+
+    def get_future_info(self, order_book_id, hedge_type):
+        return self.data_proxy.get_future_info(order_book_id, hedge_type)
+
+    def get_account(self, order_book_id):
+        account_type = get_account_type(order_book_id)
+        return self.portfolio.accounts[account_type]
+
+    def get_open_orders(self):
+        return self.broker.get_open_orders()
