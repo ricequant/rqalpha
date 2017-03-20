@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ...execution_context import ExecutionContext
-from ...const import ACCOUNT_TYPE, SIDE
 from .base_position import BasePosition
+from ...const import ACCOUNT_TYPE, SIDE
+from ...environment import Environment
 
 
 class StockPosition(BasePosition):
@@ -146,10 +146,8 @@ class StockPosition(BasePosition):
         """
         【float】获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
         """
-        # FIXME
-        accounts = ExecutionContext.accounts
+        accounts = Environment.get_instance().portfolio.accounts
         if ACCOUNT_TYPE.STOCK not in accounts:
-            # FIXME 现在无法区分这个position是stock的还是benchmark的，但是benchmark因为没有用到这个字段，所以可以暂时返0处理。
             return 0
-        portfolio = accounts[ACCOUNT_TYPE.STOCK].portfolio
-        return 0 if portfolio.portfolio_value == 0 else self.market_value / portfolio.portfolio_value
+        total_value = accounts[ACCOUNT_TYPE.STOCK].total_value
+        return 0 if total_value == 0 else self.market_value / total_value

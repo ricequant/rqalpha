@@ -16,13 +16,12 @@
 
 import six
 
+from .base_account import BaseAccount
 from ...events import EVENT
 from ...environment import Environment
-from .base_account import BaseAccount
 from ...utils.logger import user_system_log
 from ...utils.i18n import gettext as _
 from ...const import SIDE, ACCOUNT_TYPE
-from ...execution_context import ExecutionContext
 
 
 class StockAccount(BaseAccount):
@@ -90,7 +89,7 @@ class StockAccount(BaseAccount):
     def _before_trading(self, event):
         trading_date = event.trading_dt.date()
         self._handle_dividend_payable(trading_date)
-        if ExecutionContext.config.base.handle_split:
+        if Environment.get_instance().config.base.handle_split:
             self._handle_split(trading_date)
 
     def _after_trading(self, event):
@@ -129,7 +128,7 @@ class StockAccount(BaseAccount):
             del self._dividend_receivable[order_book_id]
 
     def _handle_dividend_book_closure(self, trading_date):
-        data_proxy = ExecutionContext.get_data_proxy()
+        data_proxy = Environment.get_instance().get_data_proxy()
         for order_book_id, position in six.iteritems(self._positions):
             dividend = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
@@ -143,7 +142,7 @@ class StockAccount(BaseAccount):
             }
 
     def _handle_split(self, trading_date):
-        data_proxy = ExecutionContext.get_data_proxy()
+        data_proxy = Environment.get_instance().get_data_proxy()
         for order_book_id, position in six.iteritems(self._positions):
             split = data_proxy.get_split_by_ex_date(order_book_id, trading_date)
             if split is None:

@@ -17,7 +17,7 @@
 import six
 import datetime
 
-from ..execution_context import ExecutionContext
+from ..environment import Environment
 from ..utils import instrument_type_str2enum
 
 
@@ -48,14 +48,14 @@ class Instrument(object):
 
     @property
     def listing(self):
-        now = ExecutionContext.get_current_calendar_dt()
+        now = Environment.get_instance().calendar_dt
         return self.listed_date <= now <= self.de_listed_date
 
     def days_from_listed(self):
         if self.listed_date == self.DEFAULT_LISTED_DATE:
             return -1
 
-        date = ExecutionContext.get_current_trading_dt().date()
+        date = Environment.get_instance().trading_dt.date()
         if self.de_listed_date.date() < date:
             return -1
 
@@ -69,8 +69,8 @@ class Instrument(object):
     def days_to_expire(self):
         if self.type != 'Future' or self.order_book_id[-2:] == '88' or self.order_book_id[-2:] == '99':
             return -1
-        
-        date = ExecutionContext.get_current_trading_dt().date()
+
+        date = Environment.get_instance().trading_dt.date()
         days = (self.maturity_date.date() - date).days
         return -1 if days < 0 else days
 

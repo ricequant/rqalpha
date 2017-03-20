@@ -16,20 +16,20 @@
 
 import six
 
+from .base_account import BaseAccount
 from ...environment import Environment
 from ...events import EVENT
-from .base_account import BaseAccount
 from ...const import ACCOUNT_TYPE, POSITION_EFFECT
-from ...execution_context import ExecutionContext
 from ...utils.i18n import gettext as _
 from ...utils.logger import user_system_log
 
 
 def margin_of(order_book_id, quantity, price):
-    instrument = ExecutionContext.get_instrument(order_book_id)
-    margin_rate = ExecutionContext.get_future_margin_rate(order_book_id)
-    margin_multiplier = ExecutionContext.config.base.margin_multiplier
-    return quantity * price * margin_multiplier * margin_rate * instrument.contract_multiplier
+    env = Environment.get_instance()
+    contract_multiplier = env.get_instrument(order_book_id).contract_multiplier
+    margin_rate = env.get_future_margin_rate(order_book_id)
+    margin_multiplier = env.config.base.margin_multiplier
+    return quantity * price * margin_multiplier * margin_rate * contract_multiplier
 
 
 class FutureAccount(BaseAccount):

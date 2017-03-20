@@ -55,8 +55,11 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._portfolio = init_portfolio(self._env)
         return self._portfolio
 
-    def get_open_orders(self):
-        return self._open_orders
+    def get_open_orders(self, order_book_id=None):
+        if order_book_id is None:
+            return self._open_orders
+        else:
+            return self._open_orders[order_book_id]
 
     def get_state(self):
         return jsonpickle.dumps([o.order_id for _, o in self._delayed_orders]).encode('utf-8')

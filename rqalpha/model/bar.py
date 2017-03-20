@@ -17,13 +17,13 @@
 import six
 import numpy as np
 
+from ..execution_context import ExecutionContext
 from ..environment import Environment
 from ..const import RUN_TYPE
 from ..utils.datetime_func import convert_int_to_datetime
 from ..utils.i18n import gettext as _
 from ..utils.logger import system_log
 from ..utils.exception import patch_user_exc
-from ..execution_context import ExecutionContext
 from ..const import EXECUTION_PHASE, BAR_STATUS
 
 
@@ -78,9 +78,9 @@ class BarObject(object):
             return v if v != 0 else np.nan
         except (ValueError, KeyError):
             if self._limit_up is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
+                trading_dt = Environment.get_instance().trading_dt
+                data_proxy = Environment.get_instance().data_proxy
+                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
                     self._limit_up = np.floor(self.prev_close * 10500) / 10000
                 else:
                     self._limit_up = np.floor(self.prev_close * 11000) / 10000
@@ -93,9 +93,9 @@ class BarObject(object):
             return v if v != 0 else np.nan
         except (ValueError, KeyError):
             if self._limit_down is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
+                trading_dt = Environment.get_instance().trading_dt
+                data_proxy = Environment.get_instance().data_proxy
+                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
                     self._limit_down = np.ceil(self.prev_close * 9500) / 10000
                 else:
                     self._limit_down = np.ceil(self.prev_close * 9000) / 10000
@@ -108,9 +108,9 @@ class BarObject(object):
             return v if v != 0 else np.nan
         except (ValueError, KeyError):
             if self.__internal_limit_up is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
+                trading_dt = Environment.get_instance().trading_dt
+                data_proxy = Environment.get_instance().data_proxy
+                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
                     self.__internal_limit_up = np.floor(self.prev_close * 10490) / 10000
                 else:
                     self.__internal_limit_up = np.floor(self.prev_close * 10990) / 10000
@@ -123,9 +123,9 @@ class BarObject(object):
             return v if v != 0 else np.nan
         except (ValueError, KeyError):
             if self.__internal_limit_down is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
+                trading_dt = Environment.get_instance().trading_dt
+                data_proxy = Environment.get_instance().data_proxy
+                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
                     self.__internal_limit_down = np.ceil(self.prev_close * 9510) / 10000
                 else:
                     self.__internal_limit_down = np.ceil(self.prev_close * 9010) / 10000
@@ -142,9 +142,9 @@ class BarObject(object):
             pass
 
         if self._prev_close is None:
-            data_proxy = ExecutionContext.data_proxy
-            dt = ExecutionContext.get_current_trading_dt()
-            self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, dt)
+            trading_dt = Environment.get_instance().trading_dt
+            data_proxy = Environment.get_instance().data_proxy
+            self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
         return self._prev_close
 
     @property
@@ -204,13 +204,13 @@ class BarObject(object):
         try:
             return self._data['basis_spread']
         except (ValueError, KeyError):
-            if self._instrument.type != 'Future' or ExecutionContext.config.base.run_type != RUN_TYPE.PAPER_TRADING:
+            if self._instrument.type != 'Future' or Environment.get_instance().config.base.run_type != RUN_TYPE.PAPER_TRADING:
                 raise
 
         if self._basis_spread is None:
             if self._instrument.underlying_symbol in ['IH', 'IC', 'IF']:
                 order_book_id = self.INDEX_MAP[self._instrument.underlying_symbol]
-                bar = ExecutionContext.data_proxy.get_bar(order_book_id, None, '1m')
+                bar = Environment.get_instance().data_proxy.get_bar(order_book_id, None, '1m')
                 self._basis_spread = self.close - bar.close
             else:
                 self._basis_spread = np.nan
@@ -231,9 +231,9 @@ class BarObject(object):
             pass
 
         if self._prev_settlement is None:
-            data_proxy = ExecutionContext.data_proxy
-            dt = ExecutionContext.get_current_trading_dt().date()
-            self._prev_settlement = data_proxy.get_prev_settlement(self._instrument.order_book_id, dt)
+            trading_dt = Environment.get_instance().trading_dt
+            data_proxy = Environment.get_instance().data_proxy
+            self._prev_settlement = data_proxy.get_prev_settlement(self._instrument.order_book_id, trading_dt)
         return self._prev_settlement
 
     @property
@@ -283,8 +283,7 @@ class BarObject(object):
         if self.isnan:
             return True
 
-        data_proxy = ExecutionContext.data_proxy
-        return data_proxy.is_suspended(self._instrument.order_book_id, int(self._data['datetime'] // 1000000))
+        return Environment.get_instance().data_proxy.is_suspended(self._instrument.order_book_id, int(self._data['datetime'] // 1000000))
 
     def mavg(self, intervals, frequency='1d'):
         if frequency == 'day':
@@ -293,14 +292,12 @@ class BarObject(object):
             frequency = '1m'
 
         # copy form history
-        dt = ExecutionContext.get_current_calendar_dt()
-        data_proxy = ExecutionContext.data_proxy
+        env = Environment.get_instance()
 
-        if (Environment.get_instance().config.base.frequency == '1m' and frequency == '1d') or \
-                        ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
-            dt = data_proxy.get_previous_trading_date(dt.date())
-        bars = data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, 'close', dt)
+            dt = env.data_proxy.get_previous_trading_date(env.calendar_dt.date())
+        bars = env.data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, 'close', dt)
         return bars.mean()
 
     def vwap(self, intervals, frequency='1d'):
@@ -310,14 +307,12 @@ class BarObject(object):
             frequency = '1m'
 
         # copy form history
-        dt = ExecutionContext.get_current_calendar_dt()
-        data_proxy = ExecutionContext.data_proxy
+        env = Environment.get_instance()
 
-        if (Environment.get_instance().config.base.frequency == '1m' and frequency == '1d') or \
-                        ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
-            dt = data_proxy.get_previous_trading_date(dt.date())
-        bars = data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, ['close', 'volume'], dt)
+            dt = env.data_proxy.get_previous_trading_date(env.calendar_dt.date())
+        bars = env.data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, ['close', 'volume'], dt)
         sum = bars['volume'].sum()
         if sum == 0:
             # 全部停牌

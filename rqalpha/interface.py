@@ -290,7 +290,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_open_orders(self):
+    def get_open_orders(self, order_book_id=None):
         """
         【Required】
 

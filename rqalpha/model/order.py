@@ -243,7 +243,7 @@ class Order(object):
         return properties(self)
 
 
-class OrderStyle:
+class OrderStyle(object):
     def get_limit_price(self):
         raise NotImplementedError
 

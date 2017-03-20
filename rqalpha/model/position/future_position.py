@@ -15,7 +15,6 @@
 # limitations under the License.
 
 from .base_position import BasePosition
-from ...execution_context import ExecutionContext
 from ...environment import Environment
 from ...const import SIDE, POSITION_EFFECT
 
@@ -39,7 +38,7 @@ class FuturePosition(BasePosition):
 
     @property
     def margin_rate(self):
-        margin_rate = ExecutionContext.get_future_margin_rate(self.order_book_id)
+        margin_rate = Environment.get_instance().get_future_margin_rate(self.order_book_id)
         margin_multiplier = Environment.get_instance().config.base.margin_multiplier
         return margin_rate * margin_multiplier
 
@@ -50,11 +49,11 @@ class FuturePosition(BasePosition):
     # -- PNL 相关
     @property
     def contract_multiplier(self):
-        return ExecutionContext.get_instrument(self.order_book_id).contract_multiplier
+        return Environment.get_instance().get_instrument(self.order_book_id).contract_multiplier
 
     @property
     def open_orders(self):
-        return ExecutionContext.get_open_orders(self.order_book_id)
+        return Environment.get_instance().broker.get_open_orders(self.order_book_id)
 
     @property
     def buy_holding_pnl(self):
@@ -299,7 +298,7 @@ class FuturePosition(BasePosition):
 
     def apply_settlement(self):
         data_proxy = Environment.get_instance().data_proxy
-        trading_date = ExecutionContext.get_current_trading_dt().date()
+        trading_date = Environment.get_instance().trading_dt.date()
         settle_price = data_proxy.get_settle_price(self.order_book_id, trading_date)
         self._buy_old_holding_list = [(settle_price, self.buy_quantity)]
         self._sell_old_holding_list = [(settle_price, self.sell_quantity)]

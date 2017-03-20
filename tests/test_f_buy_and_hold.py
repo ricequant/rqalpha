@@ -20,7 +20,7 @@ __config__ = {
         "benchmark": None,
     },
     "extra": {
-        "log_level": "error",
+        "log_level": "verbose",
     },
     "mod": {
         "progress": {
