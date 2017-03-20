@@ -106,3 +106,7 @@ class ExecutionContext(object):
                 return func(*args, **kwargs)
             return wrapper
         return decorator
+
+    @classmethod
+    def phase(cls):
+        return cls.stack.top.phase
