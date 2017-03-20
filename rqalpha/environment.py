@@ -44,7 +44,6 @@ class Environment(object):
         self.trading_dt = None
         self.mod_dict = None
         self.plots = None
-        # TODO bar_dict 初始化
         self.bar_dict = None
 
     @classmethod
@@ -77,6 +76,9 @@ class Environment(object):
 
     def set_broker(self, broker):
         self.broker = broker
+
+    def set_bar_dict(self, bar_dict):
+        self.bar_dict = bar_dict
 
     def get_universe(self):
         return self._universe.get()

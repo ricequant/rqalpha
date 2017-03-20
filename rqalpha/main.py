@@ -188,6 +188,7 @@ def run(config, source_code=None):
         assert event_source is not None
 
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
+        Environment.get_instance().set_bar_dict(bar_dict)
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
 
