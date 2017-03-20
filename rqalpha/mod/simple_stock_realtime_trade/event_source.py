@@ -24,7 +24,6 @@ from rqalpha.interface import AbstractEventSource
 from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
 from rqalpha.events import Event, EVENT
-from rqalpha.execution_context import ExecutionContext
 from rqalpha.utils import json as json_utils
 from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
 
@@ -59,7 +58,7 @@ class RealtimeEventSource(AbstractEventSource):
     def quotation_worker(self):
         while True:
             if not is_holiday_today() and is_tradetime_now():
-                order_book_id_list = sorted(ExecutionContext.data_proxy.all_instruments("CS").order_book_id.tolist())
+                order_book_id_list = sorted(Environment.get_instance().data_proxy.all_instruments("CS").order_book_id.tolist())
                 code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
 
                 try:

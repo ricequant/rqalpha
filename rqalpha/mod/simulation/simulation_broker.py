@@ -21,7 +21,6 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.environment import Environment
-from rqalpha.execution_context import ExecutionContext
 
 from .matcher import Matcher
 from .utils import init_portfolio
@@ -75,7 +74,7 @@ class SimulationBroker(AbstractBroker, Persistable):
                         self._open_orders.append((account, o))
 
     def submit_order(self, order):
-        account = ExecutionContext.get_account(order.order_book_id)
+        account = Environment.get_instance().get_account(order.order_book_id)
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
 
@@ -95,7 +94,7 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._match()
 
     def cancel_order(self, order):
-        account = ExecutionContext.get_account(order.order_book_id)
+        account = Environment.get_instance().get_account(order.order_book_id)
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 

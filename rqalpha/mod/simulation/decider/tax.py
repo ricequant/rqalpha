@@ -17,8 +17,8 @@
 import abc
 from six import with_metaclass
 
-from rqalpha.const import SIDE, ACCOUNT_TYPE
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.const import SIDE
+from rqalpha.environment import Environment
 
 
 class BaseTax(with_metaclass(abc.ABCMeta)):
@@ -33,7 +33,7 @@ class StockTax(BaseTax):
 
     def get_tax(self, trade):
         cost_money = trade.last_price * trade.last_quantity
-        if ExecutionContext.get_instrument(trade.order.order_book_id).type == 'CS':
+        if Environment.get_instance().get_instrument(trade.order.order_book_id).type == 'CS':
             return cost_money * self.rate if trade.order.side == SIDE.SELL else 0
         else:
             return 0

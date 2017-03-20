@@ -16,7 +16,6 @@
 
 from rqalpha.const import SIDE, POSITION_EFFECT
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 
 
@@ -26,10 +25,9 @@ class FrontendValidator(object):
 
     def order_pipeline(self, account, order):
         order_book_id = order.order_book_id
-        bar_dict = ExecutionContext.get_current_bar_dict()
+        bar = Environment.get_instance().get_bar(order_book_id)
         portfolio = account.portfolio
         position = portfolio.positions[order_book_id]
-        bar = bar_dict[order_book_id]
 
         if not self.validate_trading(order, bar):
             return False
@@ -44,13 +42,14 @@ class FrontendValidator(object):
 
     def validate_trading(self, order, bar):
         order_book_id = order.order_book_id
-        trading_date = ExecutionContext.get_current_trading_dt().date()
+        env = Environment.get_instance()
+        trading_date = env.trading_dt.date()
 
         if bar.isnan:
             """
             只有未上市/已退市，对应的bar才为NaN
             """
-            instrument = ExecutionContext.get_instrument(order_book_id)
+            instrument = env.get_instrument(order_book_id)
             if trading_date < instrument.listed_date.date():
                 order._mark_rejected(_("Order Rejected: {order_book_id} is not listed!").format(
                     order_book_id=order_book_id,
@@ -123,7 +122,7 @@ class FutureFrontendValidator(FrontendValidator):
         if order.position_effect != POSITION_EFFECT.OPEN:
             return True
         contract_multiplier = bar.instrument.contract_multiplier
-        margin_rate = ExecutionContext.get_future_margin_rate(order.order_book_id)
+        margin_rate = Environment.get_instance().get_future_margin_rate(order.order_book_id)
         margin_multiplier = Environment.get_instance().config.base.margin_multiplier
         cost_money = order._frozen_price * order.quantity * contract_multiplier * margin_rate * margin_multiplier
         if cost_money > account.portfolio.cash:

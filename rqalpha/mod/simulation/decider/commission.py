@@ -18,8 +18,8 @@ import abc
 from six import with_metaclass
 from collections import defaultdict
 
-from rqalpha.const import ACCOUNT_TYPE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.const import HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
+from rqalpha.environment import Environment
 
 
 class BaseCommission(with_metaclass(abc.ABCMeta)):
@@ -77,10 +77,10 @@ class FutureCommission(BaseCommission):
     def get_commission(self, trade):
         order = trade.order
         order_book_id = order.order_book_id
-        info = ExecutionContext.get_future_commission_info(order_book_id, self.hedge_type)
+        info = Environment.get_instance().get_future_commission_info(order_book_id, self.hedge_type)
         commission = 0
         if info['commission_type'] == COMMISSION_TYPE.BY_MONEY:
-            contract_multiplier = ExecutionContext.get_instrument(order.order_book_id).contract_multiplier
+            contract_multiplier = Environment.get_instance().get_instrument(order.order_book_id).contract_multiplier
             if trade.order.position_effect == POSITION_EFFECT.OPEN:
                 commission += trade.last_price * trade.last_quantity * contract_multiplier * info['open_commission_ratio']
             else:

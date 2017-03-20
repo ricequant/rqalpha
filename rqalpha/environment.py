@@ -88,10 +88,13 @@ class Environment(object):
         if self.plots is None:
             from .utils.plot_store import PlotStore
             self.plots = PlotStore()
-        return self.plots
+        return self.plots.get_plots()
 
     def add_plot(self, series_name, value):
         self.get_plots().add_plot(self.trading_dt.date(), series_name, value)
+
+    def get_bar(self, order_book_id):
+        return self.bar_dict[order_book_id]
 
     def get_last_price(self, order_book_id):
         return self.data_proxy.current_snapshot(

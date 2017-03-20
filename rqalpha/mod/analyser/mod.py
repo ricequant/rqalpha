@@ -28,7 +28,7 @@ from rqalpha.events import EVENT
 from rqalpha.const import ACCOUNT_TYPE, EXIT_CODE
 from rqalpha.utils.risk import Risk
 from rqalpha.utils.repr import properties
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.environment import Environment
 
 
 class AnalyserMod(AbstractMod):
@@ -197,8 +197,8 @@ class AnalyserMod(AbstractMod):
             'total_portfolios': total_portfolios,
         }
 
-        if ExecutionContext.plots is not None:
-            plots = ExecutionContext.plots.get_plots()
+        if Environment.get_instance().plots is not None:
+            plots = Environment.get_instance().get_plots()
             plots_items = defaultdict(dict)
             for series_name, value_dict in six.iteritems(plots):
                 for date, value in six.iteritems(value_dict):
