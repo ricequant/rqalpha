@@ -56,7 +56,7 @@ class AnalyserMod(AbstractMod):
                          self._mod_config.plot_save_file or self._mod_config.report_save_path)
 
         if self._enabled:
-            env.event_bus.add_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
+            env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._collect_daily)
             env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
             env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
 
@@ -69,20 +69,18 @@ class AnalyserMod(AbstractMod):
 
     def _collect_daily(self, event):
         date = self._env.calendar_dt.date()
-        portfolio = self._env.account.get_portfolio(date)
+        portfolio = self._env.portfolio
 
         self._latest_portfolio = portfolio
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
 
-        if ACCOUNT_TYPE.BENCHMARK in self._env.accounts:
-            self._latest_benchmark_portfolio = self._env.accounts[ACCOUNT_TYPE.BENCHMARK].portfolio
-            self._benchmark_daily_returns.append(self._latest_benchmark_portfolio.daily_returns)
-        else:
+        if portfolio.benchmark_account is None:
             self._benchmark_daily_returns.append(0)
+        else:
+            self._benchmark_daily_returns.append(portfolio.benchmark_account.daily_returns)
 
-        for account_type, account in six.iteritems(self._env.accounts):
-            portfolio = account.get_portfolio(date)
+        for account_type, account in six.iteritems(self._env.portfolio.accounts):
             self._sub_portfolios[account_type].append(self._to_portfolio_record2(date, portfolio))
             for order_book_id, position in six.iteritems(portfolio.positions):
                 self._positions[account_type].append(self._to_position_record(date, order_book_id, position))
@@ -210,7 +208,7 @@ class AnalyserMod(AbstractMod):
             df = df.set_index("date").sort_index()
             result_dict["plots"] = df
 
-        for account_type, account in six.iteritems(self._env.accounts):
+        for account_type, account in six.iteritems(self._env.portfolio.accounts):
             account_name = account_type.name.lower()
             portfolios_list = self._sub_portfolios[account_type]
             df = pd.DataFrame(portfolios_list)

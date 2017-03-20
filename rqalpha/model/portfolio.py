@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 from ..environment import Environment
 from ..const import DAYS_CNT
 from ..utils import get_account_type, merge_dicts
@@ -27,6 +29,10 @@ class Portfolio(object):
         self._accounts = accounts
         self._benchmark_account = benchmark_account
         self._mixed_positions = None
+
+    @property
+    def benchmark_account(self):
+        return self._benchmark_account
 
     @property
     def accounts(self):
@@ -82,15 +88,15 @@ class Portfolio(object):
         """
         [float] 累计年化收益率
         """
-        return self.unit_net_value ** (
-            DAYS_CNT.DAYS_A_YEAR / float((Environment.get_instance().calendar_dt - self.start_date).days + 1)) - 1
+        current_date = Environment.get_instance().calendar_dt.date()
+        return self.unit_net_value ** (DAYS_CNT.DAYS_A_YEAR / float((current_date - self.start_date).days + 1)) - 1
 
     @property
     def total_value(self):
         """
         [float]总权益
         """
-        return sum(account.total_value for account in self._accounts)
+        return sum(account.total_value for account in six.itervalues(self._accounts))
 
     @property
     def portfolio_value(self):
@@ -113,14 +119,14 @@ class Portfolio(object):
         """
         [float] 可用资金
         """
-        return sum(account.cash for account in self._accounts)
+        return sum(account.cash for account in six.itervalues(self._accounts))
 
     @property
     def market_value(self):
         """
         [float] 市值
         """
-        return sum(account.market_value for account in self._accounts)
+        return sum(account.market_value for account in six.itervalues(self._accounts))
 
 
 class MixedPositions(dict):
@@ -130,34 +136,34 @@ class MixedPositions(dict):
 
     def __missing__(self, key):
         account_type = get_account_type(key)
-        for a_type, account in self._accounts:
+        for a_type in self._accounts:
             if a_type == account_type:
-                self[key] = account.positions[key]
+                self[key] = self._accounts[a_type].positions[key]
         return self[key]
 
     def __repr__(self):
         keys = []
-        for a_type, account in self._accounts:
+        for account in six.itervalues(self._accounts):
             keys += account.positions.keys()
         return str(sorted(keys))
 
     def __len__(self):
-        return sum(len(account.positions) for account in self._accounts)
+        return sum(len(account.positions) for account in six.itervalues(self._accounts))
 
     def __iter__(self):
         keys = []
-        for account in self._accounts:
+        for account in six.itervalues(self._accounts):
             keys += account.positions.keys()
         for key in sorted(keys):
             yield key
 
     def items(self):
-        items = merge_dicts(*[account.positions.items() for account in self._accounts])
+        items = merge_dicts(*[account.positions.items() for account in six.itervalues(self._accounts)])
         for k in sorted(items.keys()):
             yield k, items[k]
 
     def keys(self):
         keys = []
-        for account in self._accounts:
+        for account in six.itervalues(self._accounts):
             keys += list(account.positions.keys())
         return iter(sorted(keys))

@@ -43,6 +43,9 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         TradingDatesMixin.__init__(self, data_source.get_trading_calendar())
 
     def __getattr__(self, item):
+        print("*" * 10)
+        print(item)
+        print("*" * 10)
         return getattr(self._data_source, item)
 
     def get_trading_minutes_for(self, order_book_id, dt):
