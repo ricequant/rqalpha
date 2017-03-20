@@ -176,7 +176,6 @@ system_mod = [
     'funcat_api',
     'progress',
     'simple_stock_realtime_trade',
-    'progressive_output_csv',
     'risk_manager',
     'analyser',
 ]

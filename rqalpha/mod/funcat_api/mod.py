@@ -33,6 +33,7 @@ class FuncatAPIMod(AbstractMod):
             print("-" * 50)
             raise
 
+        import warnings
         from funcat.data.backend import DataBackend
         from funcat.context import set_current_date
 
@@ -87,8 +88,9 @@ class FuncatAPIMod(AbstractMod):
                 names = list(dtype.names)
                 names[0] = "date"
                 dtype.names = names
-                bars = np.array(bars, dtype=dtype)
-
+                with warnings.catch_warnings():
+                    warnings.simplefilter(action="ignore", category=FutureWarning)
+                    bars = np.array(bars, dtype=dtype)
                 bars["date"] = origin_bars["datetime"] / 1000000
 
                 return bars
