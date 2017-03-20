@@ -27,7 +27,7 @@ class Positions(dict):
 
     def __missing__(self, key):
         if key not in self._cached_positions:
-            self._cached_positions = self._position_cls(key)
+            self._cached_positions[key] = self._position_cls(key)
         return self._cached_positions[key]
 
     def get_position(self, key):

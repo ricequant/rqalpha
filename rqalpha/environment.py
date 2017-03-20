@@ -106,7 +106,7 @@ class Environment(object):
         ).last
 
     def get_instrument(self, order_book_id):
-        return self.data_proxy.instrument(order_book_id)
+        return self.data_proxy.instruments(order_book_id)
 
     def get_future_commission_info(self, order_book_id, hedge_type):
         try:

@@ -26,8 +26,7 @@ class FrontendValidator(object):
     def order_pipeline(self, account, order):
         order_book_id = order.order_book_id
         bar = Environment.get_instance().get_bar(order_book_id)
-        portfolio = account.portfolio
-        position = portfolio.positions[order_book_id]
+        position = account.positions[order_book_id]
 
         if not self.validate_trading(order, bar):
             return False
@@ -89,12 +88,12 @@ class StockFrontendValidator(FrontendValidator):
             return True
         # 检查可用资金是否充足
         cost_money = order._frozen_price * order.quantity
-        if cost_money > account.portfolio.cash:
+        if cost_money > account.cash:
             order._mark_rejected(_(
                 "Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
                 cost_money=cost_money,
-                cash=account.portfolio.cash,
+                cash=account.cash,
             ))
             return False
         return True
@@ -125,12 +124,12 @@ class FutureFrontendValidator(FrontendValidator):
         margin_rate = Environment.get_instance().get_future_margin_rate(order.order_book_id)
         margin_multiplier = Environment.get_instance().config.base.margin_multiplier
         cost_money = order._frozen_price * order.quantity * contract_multiplier * margin_rate * margin_multiplier
-        if cost_money > account.portfolio.cash:
+        if cost_money > account.cash:
             order._mark_rejected(_(
                 "Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
                 cost_money=cost_money,
-                cash=account.portfolio.cash,
+                cash=account.cash,
             ))
             return False
         return True
