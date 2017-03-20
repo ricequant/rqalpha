@@ -24,12 +24,12 @@ except Exception as e:
 
 from six.moves import reduce
 
-from rqalpha.environment import Environment
 from rqalpha.utils.datetime_func import convert_dt_to_int
 
 
 def is_holiday_today():
     today = datetime.date.today()
+    from rqalpha.environment import Environment
     df = Environment.get_instance().data_proxy.get_trading_dates(today, today)
 
     return len(df) == 0
