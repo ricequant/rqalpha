@@ -359,19 +359,19 @@ class BarMap(object):
         self._cache.clear()
 
     def items(self):
-        return ((o, self.__getitem__(o)) for o in Environment.get_instance().universe)
+        return ((o, self.__getitem__(o)) for o in Environment.get_instance().get_universe())
 
     def keys(self):
-        return (o for o in Environment.get_instance().universe)
+        return (o for o in Environment.get_instance().get_universe())
 
     def values(self):
-        return (self.__getitem__(o) for o in Environment.get_instance().universe)
+        return (self.__getitem__(o) for o in Environment.get_instance().get_universe())
 
     def __contains__(self, o):
-        return o in Environment.get_instance().universe
+        return o in Environment.get_instance().get_universe()
 
     def __len__(self):
-        return len(Environment.get_instance().universe)
+        return len(Environment.get_instance().get_universe())
 
     def __getitem__(self, key):
         if not isinstance(key, six.string_types):

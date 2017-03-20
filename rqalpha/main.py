@@ -170,7 +170,6 @@ def run(config, source_code=None):
             env.set_data_source(BaseDataSource(config.base.data_bundle_path))
 
         env.set_data_proxy(DataProxy(env.data_source))
-        ExecutionContext.data_proxy = env.data_proxy
         Scheduler.set_trading_dates_(env.data_source.get_trading_calendar())
         scheduler = Scheduler(config.base.frequency)
         mod_scheduler._scheduler = scheduler

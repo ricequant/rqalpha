@@ -196,7 +196,7 @@ def update_universe(id_or_symbols):
     if isinstance(id_or_symbols, (six.string_types, Instrument)):
         id_or_symbols = [id_or_symbols]
     order_book_ids = set(assure_order_book_id(order_book_id) for order_book_id in id_or_symbols)
-    if order_book_ids != Environment.get_instance().universe:
+    if order_book_ids != Environment.get_instance().get_universe():
         Environment.get_instance().update_universe(order_book_ids)
 
 
@@ -217,7 +217,7 @@ def subscribe(id_or_symbols):
     :param id_or_ins: 标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
-    current_universe = Environment.get_instance().universe
+    current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
         order_book_id = instruments(id_or_symbols).order_book_id
         current_universe.add(order_book_id)
@@ -247,7 +247,7 @@ def unsubscribe(id_or_symbols):
     :param id_or_ins: 标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
-    current_universe = Environment.get_instance().universe
+    current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
         order_book_id = instruments(id_or_symbols).order_book_id
         current_universe.discard(order_book_id)
@@ -710,11 +710,7 @@ def plot(series_name, value):
     :param float value: the value of the series in this time
     :return: None
     """
-    if ExecutionContext.plots is None:
-        # FIXME: this is ugly
-        from ..utils.plot_store import PlotStore
-        ExecutionContext.plots = PlotStore()
-    ExecutionContext.plots.add_plot(ExecutionContext.trading_dt.date(), series_name, value)
+    Environment.get_instance().add_plot(series_name, value)
 
 
 @export_as_api

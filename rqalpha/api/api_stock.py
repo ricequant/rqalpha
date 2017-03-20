@@ -106,11 +106,9 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
             raise RQInvalidArgument(_("Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = bar.close
-    calendar_dt = ExecutionContext.get_current_calendar_dt()
-    trading_dt = ExecutionContext.get_current_trading_dt()
+    env = Environment.get_instance()
+
+    price = env.get_last_price(order_book_id)
 
     if amount > 0:
         side = SIDE.BUY
@@ -118,16 +116,16 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
         amount = abs(amount)
         side = SIDE.SELL
 
-    round_lot = int(ExecutionContext.data_proxy.instruments(order_book_id).round_lot)
+    round_lot = int(env.get_instrument(order_book_id).round_lot)
 
     try:
         amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
     except ValueError:
         amount = 0
 
-    r_order = Order.__from_create__(calendar_dt, trading_dt, order_book_id, amount, side, style, None)
+    r_order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, side, style, None)
 
-    if bar.isnan or price == 0:
+    if price == 0:
         user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
@@ -138,9 +136,8 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
         r_order._mark_rejected(_("Order Creation Failed: 0 order quantity"))
         return r_order
     if r_order.type == ORDER_TYPE.MARKET:
-        bar_dict = ExecutionContext.get_current_bar_dict()
-        r_order._frozen_price = bar_dict[order_book_id].close
-    ExecutionContext.broker.submit_order(r_order)
+        r_order._frozen_price = env.get_last_price()
+    env.broker.submit_order(r_order)
 
     return r_order
 
@@ -189,7 +186,7 @@ def order_lots(id_or_ins, amount, style=MarketOrder()):
     # :rtype: int
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
-    round_lot = int(ExecutionContext.get_instrument(order_book_id).round_lot)
+    round_lot = int(Environment.get_instance().get_instrument(order_book_id).round_lot)
 
     return order_shares(id_or_ins, amount * round_lot, style)
 
@@ -245,16 +242,15 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
             raise RQInvalidArgument(_("Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
+    env = Environment.get_instance()
 
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = bar.close
+    price = env.get_last_price(order_book_id)
 
-    if bar.isnan or price == 0:
+    if price == 0:
         return order_shares(order_book_id, 0, style)
 
-    account = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK]
-    round_lot = int(ExecutionContext.get_instrument(order_book_id).round_lot)
+    account = env.portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    round_lot = int(env.get_instrument(order_book_id).round_lot)
 
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.portfolio.cash)
@@ -319,9 +315,8 @@ def order_percent(id_or_ins, percent, style=MarketOrder()):
     if percent < -1 or percent > 1:
         raise RQInvalidArgument(_('percent should between -1 and 1'))
 
-    account = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK]
-    portfolio_value = account.portfolio.portfolio_value
-    return order_value(id_or_ins, portfolio_value * percent, style)
+    account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    return order_value(id_or_ins, account.total_value * percent, style)
 
 
 @export_as_api
@@ -367,15 +362,9 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()):
     # :rtype: int
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = 0 if bar.isnan else bar.close
+    position = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK].positions[order_book_id]
 
-    position = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK].portfolio.positions[order_book_id]
-
-    current_value = position._quantity * price
-
-    return order_value(order_book_id, cash_amount - current_value, style)
+    return order_value(order_book_id, cash_amount - position.market_value, style)
 
 
 @export_as_api
@@ -439,16 +428,10 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
         raise RQInvalidArgument(_('percent should between 0 and 1'))
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = 0 if bar.isnan else bar.close
+    account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    position = account.positions[order_book_id]
 
-    portfolio = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK].portfolio
-    position = portfolio.positions[order_book_id]
-
-    current_value = position._quantity * price
-
-    return order_value(order_book_id, portfolio.portfolio_value * percent - current_value, style)
+    return order_value(order_book_id, account.total_value * percent - position.market_value, style)
 
 
 def assure_stock_order_book_id(id_or_symbols):

@@ -170,7 +170,7 @@ class StrategyContext(object):
 
         :property getter: list[`str`]
         """
-        return Environment.get_instance().universe
+        return Environment.get_instance().get_universe()
 
     @property
     def now(self):

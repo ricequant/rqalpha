@@ -38,7 +38,7 @@ class SimulationEventSource(AbstractEventSource):
         self._universe_changed = True
 
     def _get_universe(self):
-        universe = Environment.get_instance().universe
+        universe = Environment.get_instance().get_universe()
         if len(universe) == 0 and ACCOUNT_TYPE.STOCK not in self._account_list:
             error = CustomError()
             error.set_msg("Current universe is empty. Please use subscribe function before trade")
