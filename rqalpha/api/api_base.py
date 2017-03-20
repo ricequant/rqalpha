@@ -35,7 +35,7 @@ from dateutil.parser import parse
 
 from . import names
 from ..environment import Environment
-# from ..execution_context import ExecutionContext
+from ..execution_context import ExecutionContext
 from ..utils import to_industry_code, to_sector_name, unwrapper
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _

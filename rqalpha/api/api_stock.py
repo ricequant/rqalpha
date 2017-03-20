@@ -126,8 +126,10 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     r_order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, side, style, None)
 
     if price == 0:
-        user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        user_system_log.warn(
+            _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        r_order._mark_rejected(
+            _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 
     if amount == 0:

@@ -13,9 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ..events import EVENT, Event
-from ..execution_context import ExecutionContext
 
+from ..events import EVENT, Event
 
 PRE_BEFORE_TRADING = Event(EVENT.PRE_BEFORE_TRADING)
 POST_BEFORE_TRADING = Event(EVENT.POST_BEFORE_TRADING)
@@ -52,8 +51,8 @@ class Executor(object):
 
         for event in self._env.event_source.events(start_date, end_date, frequency):
             if event.event_type in self.KNOWN_EVENTS:
-                self._env.calendar_dt = ExecutionContext.calendar_dt = event.calendar_dt
-                self._env.trading_dt = ExecutionContext.trading_dt = event.trading_dt
+                self._env.calendar_dt = event.calendar_dt
+                self._env.trading_dt = event.trading_dt
 
             if event.event_type == EVENT.TICK:
                 event_bus.publish_event(PRE_TICK)

@@ -16,13 +16,12 @@
 
 import six
 
-from ..execution_context import ExecutionContext
+from ..environment import Environment
 from .api_base import instruments
 
 
 def get_current_bar_dict():
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    return bar_dict
+    return Environment.get_instance().bar_dict
 
 
 def price_change(stock):
@@ -39,5 +38,4 @@ def symbol(order_book_id, split=", "):
 
 
 def now_time_str(str_format="%H:%M:%S"):
-    dt = ExecutionContext.get_current_trading_dt()
-    return dt.strftime(str_format)
+    return Environment.get_instance().trading_dt.strftime(str_format)

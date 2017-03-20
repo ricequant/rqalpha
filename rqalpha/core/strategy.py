@@ -79,14 +79,14 @@ class Strategy(object):
     @run_when_strategy_not_hold
     def handle_bar(self, event):
         bar_dict = event.bar_dict
-        with ExecutionContext(EXECUTION_PHASE.ON_BAR, bar_dict):
+        with ExecutionContext(EXECUTION_PHASE.ON_BAR):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._handle_bar(self._user_context, bar_dict)
 
     @run_when_strategy_not_hold
     def handle_tick(self, event):
         tick = event.tick
-        with ExecutionContext(EXECUTION_PHASE.ON_TICK, tick):
+        with ExecutionContext(EXECUTION_PHASE.ON_TICK):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._handle_tick(self._user_context, tick)
 
