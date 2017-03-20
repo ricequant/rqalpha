@@ -256,19 +256,16 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
     在扩展模块中，可以通过调用 ``env.set_broker`` 来替换默认的 Broker。
     """
+
     @abc.abstractmethod
-    def get_accounts(self):
+    def get_portfolio(self):
         """
         [Required]
 
-        获取账号信息。系统初始化时，RQAlpha 会调用此接口，获取账户信息。
+        获取投资组合。系统初始化时，会调用此接口，获取包含账户信息、净值、份额等内容的投资组合
 
-        RQAlpha 支持混合策略，因此返回的账户信息为一个字典(dict)，key 为账户类型（``rqalpha.const.ACCOUNT_TYPE``)，
-        value 为对应的 :class:`~Account` 对象。
-
-        :return: dict
+        :return: Portfolio
         """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def submit_order(self, order):

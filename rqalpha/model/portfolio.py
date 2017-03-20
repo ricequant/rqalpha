@@ -20,11 +20,12 @@ from ..utils import get_account_type, merge_dicts
 
 
 class Portfolio(object):
-    def __init__(self, start_date, static_unit_net_value, units, accounts):
+    def __init__(self, start_date, static_unit_net_value, units, accounts, benchmark_account):
         self._start_date = start_date
         self._static_unit_net_value = static_unit_net_value
         self._units = units
         self._accounts = accounts
+        self._benchmark_account = benchmark_account
         self._mixed_positions = None
 
     @property
@@ -129,14 +130,14 @@ class MixedPositions(dict):
 
     def __missing__(self, key):
         account_type = get_account_type(key)
-        for account in self._accounts:
-            if account.type == account_type:
+        for a_type, account in self._accounts:
+            if a_type == account_type:
                 self[key] = account.positions[key]
         return self[key]
 
     def __repr__(self):
         keys = []
-        for account in self._accounts:
+        for a_type, account in self._accounts:
             keys += account.positions.keys()
         return str(sorted(keys))
 

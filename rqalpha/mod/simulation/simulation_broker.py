@@ -24,7 +24,7 @@ from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
 
 from .matcher import Matcher
-from .utils import init_accounts
+from .utils import init_portfolio
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -34,7 +34,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._matcher = Matcher(mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
-        self._accounts = None
+        self._portfolio = None
         self._open_orders = []
         self._board = None
         self._turnover = {}
@@ -50,10 +50,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
 
-    def get_accounts(self):
-        if self._accounts is None:
-            self._accounts = init_accounts(self._env)
-        return self._accounts
+    def get_portfolio(self):
+        if self._portfolio is None:
+            self._portfolio = self._init_portfolio(self._env)
+        return self._portfolio
 
     def get_open_orders(self):
         return self._open_orders

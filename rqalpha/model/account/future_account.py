@@ -43,15 +43,14 @@ class FutureAccount(BaseAccount):
         event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
 
-    def fast_forward(self, orders=None, trades=list()):
+    def fast_forward(self, orders, trades=list()):
         # 计算 Positions
         for trade in trades:
             if trade.exec_id in self._backward_trade_set:
                 continue
             self._apply_trade(trade)
         # 计算 Frozen Cash
-        if orders is not None:
-            self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order._is_active())
+        self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order._is_active())
 
     @property
     def type(self):

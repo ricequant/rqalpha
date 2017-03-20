@@ -31,7 +31,7 @@ class BaseAccount(object):
         """
         raise NotImplementedError
 
-    def fast_forward(self, orders=None, trades=list()):
+    def fast_forward(self, orders, trades=list()):
         """
         同步账户信息至最新状态
         :param orders: 订单列表，主要用来计算frozen_cash，如果为None则不计算frozen_cash

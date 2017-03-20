@@ -22,6 +22,7 @@ from .utils.i18n import gettext as _
 from .utils.exception import CustomException, patch_user_exc
 from .utils import get_upper_underlying_symbol
 from .utils.default_future_info import DEFAULT_FUTURE_INFO
+from .environment import Environment
 
 
 class ContextStack(object):
@@ -55,13 +56,7 @@ class ContextStack(object):
 
 class ExecutionContext(object):
     stack = ContextStack()
-    config = None
-    data_proxy = None
-    account = None
-    accounts = None
-    broker = None
-    calendar_dt = None
-    trading_dt = None
+    env = Environment.get_instance()
     plots = None
 
     def __init__(self, phase, bar_dict=None):
@@ -105,35 +100,6 @@ class ExecutionContext(object):
         raise user_exc
 
     @classmethod
-    def get_active(cls):
-        return cls.stack.top
-
-    @classmethod
-    def get_current_bar_dict(cls):
-        ctx = cls.get_active()
-        return ctx.bar_dict
-
-    @classmethod
-    def get_current_calendar_dt(cls):
-        return ExecutionContext.calendar_dt
-
-    @classmethod
-    def get_current_trading_dt(cls):
-        return ExecutionContext.trading_dt
-
-    @classmethod
-    def get_current_run_id(cls):
-        return ExecutionContext.config.base.run_id
-
-    @classmethod
-    def get_instrument(cls, order_book_id):
-        return ExecutionContext.data_proxy.instruments(order_book_id)
-
-    @classmethod
-    def get_data_proxy(cls):
-        return ExecutionContext.data_proxy
-
-    @classmethod
     def enforce_phase(cls, *phases):
         def decorator(func):
             @wraps(func)
@@ -147,17 +113,46 @@ class ExecutionContext(object):
         return decorator
 
     @classmethod
+    def get_active(cls):
+        return cls.stack.top
+
+    @classmethod
+    def get_current_bar_dict(cls):
+        ctx = cls.get_active()
+        return ctx.bar_dict
+
+    @classmethod
+    def get_current_calendar_dt(cls):
+        return ExecutionContext.env.calendar_dt
+
+    @classmethod
+    def get_current_trading_dt(cls):
+        return ExecutionContext.env.trading_dt
+
+    @classmethod
+    def get_current_run_id(cls):
+        return ExecutionContext.env.config.base.run_id
+
+    @classmethod
+    def get_instrument(cls, order_book_id):
+        return ExecutionContext.env.data_proxy.instruments(order_book_id)
+
+    @classmethod
+    def get_data_proxy(cls):
+        return ExecutionContext.env.data_proxy
+
+    @classmethod
     def get_current_close_price(cls, order_book_id):
-        return ExecutionContext.data_proxy.current_snapshot(
+        return ExecutionContext.env.data_proxy.current_snapshot(
             order_book_id,
-            ExecutionContext.config.base.frequency,
-            ExecutionContext.calendar_dt
+            ExecutionContext.env.config.base.frequency,
+            ExecutionContext.env.calendar_dt
         ).last
 
     @classmethod
     def get_future_commission_info(cls, order_book_id, hedge_type):
         try:
-            return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)
+            return ExecutionContext.env.data_proxy.get_future_info(order_book_id, hedge_type)
         except NotImplementedError:
             underlying_symbol = get_upper_underlying_symbol(order_book_id)
             return DEFAULT_FUTURE_INFO[underlying_symbol][hedge_type.value]
@@ -165,22 +160,22 @@ class ExecutionContext(object):
     @classmethod
     def get_future_margin_rate(cls, order_book_id):
         try:
-            return ExecutionContext.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
+            return ExecutionContext.env.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
         except NotImplementedError:
-            return ExecutionContext.data_proxy.instruments(order_book_id).margin_rate
+            return ExecutionContext.env.data_proxy.instruments(order_book_id).margin_rate
 
     @classmethod
     def get_future_info(cls, order_book_id, hedge_type):
-        return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)
+        return ExecutionContext.env.data_proxy.get_future_info(order_book_id, hedge_type)
 
     @classmethod
     def get_account(cls, order_book_id):
         account_type = get_account_type(order_book_id)
-        return ExecutionContext.accounts[account_type]
+        return ExecutionContext.env.portfolio.accounts[account_type]
 
     @classmethod
     def get_open_orders(cls, order_book_id=None, side=None, position_effect=None):
-        open_orders = [order for account, order in ExecutionContext.broker.get_open_orders()]
+        open_orders = [order for account, order in ExecutionContext.env.broker.get_open_orders()]
 
         if order_book_id:
             open_orders = [order for order in open_orders if order.order_book_id == order_book_id]

@@ -25,21 +25,21 @@ from rqalpha.const import BAR_STATUS, SIDE
 from rqalpha.environment import Environment
 
 from .decider import CommissionDecider, SlippageDecider, TaxDecider
-from .utils import init_accounts
+from .utils import init_portfolio
 
 
 class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
-        self._accounts = None
         self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
         self._slippage_decider = SlippageDecider(mod_config.slppage)
         self._tax_decider = TaxDecider()
+        self._portfolio = None
 
-    def get_accounts(self):
-        if self._accounts is None:
-            self._accounts = init_accounts(self._env)
-        return self._accounts
+    def get_portfolio(self):
+        if self._portfolio is None:
+            self._portfolio = init_portfolio(self._env)
+        return self._portfolio
 
     def get_open_orders(self):
         return []

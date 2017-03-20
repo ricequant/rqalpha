@@ -35,8 +35,7 @@ class Environment(object):
         self.user_detail_log = user_detail_log
         self.event_bus = EventBus()
         self._broker = None
-        self.account = None
-        self.accounts = None
+        self.portfolio = None
         self.calendar_dt = None
         self.trading_dt = None
         self.mod_dict = None

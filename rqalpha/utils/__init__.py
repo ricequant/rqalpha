@@ -206,7 +206,9 @@ def get_account_type(order_book_id):
 
 
 def exclude_benchmark_generator(accounts):
-    return {k: v for k, v in six.iteritems(accounts) if k != ACCOUNT_TYPE.BENCHMARK}
+    for account_type in accounts:
+        if account_type != ACCOUNT_TYPE.BENCHMARK:
+            yield account_type, accounts[account_type]
 
 
 def get_upper_underlying_symbol(order_book_id):

@@ -42,7 +42,6 @@ from .execution_context import ExecutionContext
 from .interface import Persistable
 from .mod.mod_handler import ModHandler
 from .model.bar import BarMap
-from .model.account import MixedAccount
 from .utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from .utils.exception import CustomException, is_user_exc, patch_user_exc
 from .utils.i18n import gettext as _
@@ -184,13 +183,7 @@ def run(config, source_code=None):
 
         broker = env.broker
         assert broker is not None
-        env.accounts = accounts = broker.get_accounts()
-        env.account = account = MixedAccount(accounts)
-
-        ExecutionContext.broker = broker
-        ExecutionContext.accounts = accounts
-        ExecutionContext.account = account
-        ExecutionContext.config = env.config
+        env.portfolio = broker.get_portfolio()
 
         event_source = env.event_source
         assert event_source is not None
@@ -201,8 +194,8 @@ def run(config, source_code=None):
 
         # FIXME
         start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
-        env.calendar_dt = ExecutionContext.calendar_dt = start_dt
-        env.trading_dt = ExecutionContext.trading_dt = start_dt
+        env.calendar_dt = start_dt
+        env.trading_dt = start_dt
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
@@ -240,7 +233,8 @@ def run(config, source_code=None):
             persist_helper.register('universe', env._universe)
             if isinstance(event_source, Persistable):
                 persist_helper.register('event_source', event_source)
-            for k, v in six.iteritems(accounts):
+            # FIXME @hzliu
+            for k, v in six.iteritems(env.portfolio.accounts):
                 persist_helper.register('{}_account'.format(k.name.lower()), v)
             for name, module in six.iteritems(env.mod_dict):
                 if isinstance(module, Persistable):

@@ -26,7 +26,7 @@ from ...execution_context import ExecutionContext
 
 
 class StockAccount(BaseAccount):
-    def __init__(self, total_cash, positions, backward_trade_set, dividend_receivable=None):
+    def __init__(self, total_cash, positions, backward_trade_set=set(), dividend_receivable=None):
         super(StockAccount, self).__init__(total_cash, positions, backward_trade_set)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
@@ -41,19 +41,18 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_AFTER_TRADING, self._after_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
-    def fast_forward(self, orders=None, trades=list()):
+    def fast_forward(self, orders, trades=list()):
         # 计算 Positions
         for trade in trades:
             if trade.exec_id in self._backward_trade_set:
                 continue
             self._apply_trade(trade)
         # 计算 Frozen Cash
-        if orders is not None:
-            self._frozen_cash = 0
-            for o in orders:
-                if o._is_final():
-                    continue
-                self._frozen_cash += o._frozen_price * o.unfilled_quantity
+        self._frozen_cash = 0
+        for o in orders:
+            if o._is_final():
+                continue
+            self._frozen_cash += o._frozen_price * o.unfilled_quantity
 
     def _on_trade(self, event):
         self._apply_trade(event.trade)
