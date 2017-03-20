@@ -265,7 +265,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     # if the cash_amount is larger than you current security’s position,
     # then it will sell all shares of this security.
 
-    position = account.portfolio.positions[order_book_id]
+    position = account.portfolio.positions.get_or_create(order_book_id)
     amount = downsize_amount(amount, position)
 
     return order_shares(order_book_id, amount, style)
@@ -364,7 +364,7 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()):
     # :rtype: int
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
-    position = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK].positions[order_book_id]
+    position = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK].positions.get_or_create(order_book_id)
 
     return order_value(order_book_id, cash_amount - position.market_value, style)
 
@@ -431,7 +431,7 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
-    position = account.positions[order_book_id]
+    position = account.positions.get_or_create(order_book_id)
 
     return order_value(order_book_id, account.total_value * percent - position.market_value, style)
 

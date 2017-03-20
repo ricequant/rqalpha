@@ -75,16 +75,12 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def submit_order(self, order):
         account = Environment.get_instance().get_account(order.order_book_id)
-
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
-
         if order._is_final():
             return
-
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
-
         self._open_orders.append((account, order))
         order._active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))

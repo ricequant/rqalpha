@@ -44,7 +44,7 @@ class FuturePosition(BasePosition):
 
     @property
     def market_value(self):
-        raise NotImplementedError
+        return (self.buy_quantity - self.sell_quantity) * self.last_price * self.contract_multiplier
 
     # -- PNL 相关
     @property

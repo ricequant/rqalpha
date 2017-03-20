@@ -26,7 +26,7 @@ class FrontendValidator(object):
     def order_pipeline(self, account, order):
         order_book_id = order.order_book_id
         bar = Environment.get_instance().get_bar(order_book_id)
-        position = account.positions[order_book_id]
+        position = account.positions.get_or_create(order_book_id)
 
         if not self.validate_trading(order, bar):
             return False

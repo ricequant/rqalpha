@@ -18,7 +18,6 @@ from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
-from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.order import LimitOrder
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE
@@ -41,13 +40,12 @@ class SignalBroker(AbstractBroker):
             self._portfolio = init_portfolio(self._env)
         return self._portfolio
 
-    def get_open_orders(self):
+    def get_open_orders(self, order_book_id=None):
         return []
 
     def submit_order(self, order):
-        account = ExecutionContext.get_account(order)
+        account = Environment.get_instance().get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
-        account.append_order(order)
         if order._is_final():
             return
         order._active()
@@ -59,10 +57,9 @@ class SignalBroker(AbstractBroker):
         return None
 
     def _match(self, account, order):
-        bar_dict = ExecutionContext.get_current_bar_dict()
         # TODO support tick cal
-        bar = bar_dict[order.order_book_id]
-
+        env = Environment.get_instance()
+        bar = env.get_bar(order.order_book_id)
         bar_status = bar._bar_status
 
         if bar_status == BAR_STATUS.ERROR:
@@ -97,12 +94,11 @@ class SignalBroker(AbstractBroker):
                 quantity=order.quantity,
                 bar_status=bar_status
             ))
-        ct_amount = account.portfolio.positions[order.order_book_id]._cal_close_today_amount(order.quantity, order.side)
-        trade = Trade.__from_create__(order=order, calendar_dt=ExecutionContext.get_current_calendar_dt(),
-                                      trading_dt=ExecutionContext.get_current_trading_dt(), price=deal_price,
-                                      amount=order.quantity, close_today_amount=ct_amount)
+        ct_amount = account.portfolio.positions.get_or_create(order.order_book_id).cal_close_today_amount(order.quantity, order.side)
+        trade = Trade.__from_create__(order=order, calendar_dt=env.calendar_dt, trading_dt=env.trading_dt,
+                                      price=deal_price, amount=order.quantity, close_today_amount=ct_amount)
         trade._commission = self._commission_decider.get_commission(account.type, trade)
         trade._tax = self._tax_decider.get_tax(account.type, trade)
         order._fill(trade)
 
-        Environment.get_instance().event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
+        env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))

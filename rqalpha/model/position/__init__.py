@@ -30,7 +30,7 @@ class Positions(dict):
             self._cached_positions[key] = self._position_cls(key)
         return self._cached_positions[key]
 
-    def get_position(self, key):
+    def get_or_create(self, key):
         if key not in self:
             self[key] = self._position_cls(key)
         return self[key]

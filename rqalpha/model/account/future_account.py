@@ -66,7 +66,7 @@ class FutureAccount(BaseAccount):
 
     @property
     def total_value(self):
-        return self._total_cash + self.margin + self.daily_holding_pnl
+        return self._total_cash + self.margin + self.holding_pnl
 
     # -- Margin 相关
     @property
@@ -96,21 +96,21 @@ class FutureAccount(BaseAccount):
         """
         [float] 当日盈亏
         """
-        return self.daily_realized_pnl + self.daily_holding_pnl - self.transaction_cost
+        return self.realized_pnl + self.holding_pnl - self.transaction_cost
 
     @property
-    def daily_holding_pnl(self):
+    def holding_pnl(self):
         """
         [float] 浮动盈亏
         """
-        return sum(position.daily_holding_pnl for position in six.itervalues(self._positions))
+        return sum(position.holding_pnl for position in six.itervalues(self._positions))
 
     @property
-    def daily_realized_pnl(self):
+    def realized_pnl(self):
         """
         [float] 平仓盈亏
         """
-        return sum(position.daily_realized_pnl for position in six.iteritems(self._positions))
+        return sum(position.realized_pnl for position in six.iteritems(self._positions))
 
     def _settlement(self, event):
         for position in list(self._positions.values()):
@@ -151,7 +151,7 @@ class FutureAccount(BaseAccount):
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order.order_book_id
-        position = self._positions[order_book_id]
+        position = self._positions.get_or_create(order_book_id)
 
         self._total_cash -= trade.transaction_cost
         if trade.order.position_effect != POSITION_EFFECT.OPEN:
@@ -159,5 +159,5 @@ class FutureAccount(BaseAccount):
         else:
             self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
-        self._positions[order_book_id].apply_trade(trade)
+        position.apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)

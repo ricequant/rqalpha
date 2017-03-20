@@ -59,8 +59,8 @@ class StockAccount(BaseAccount):
     def _apply_trade(self, trade):
         if trade.exec_id in self._backward_trade_set:
             return
-        
-        position = self._positions[trade.order_book_id]
+
+        position = self._positions.get_or_create(trade.order.order_book_id)
         self._total_cash -= trade.transaction_cost
         if trade.side == SIDE.BUY:
             self._total_cash -= trade.last_quantity * trade.last_price
@@ -72,7 +72,7 @@ class StockAccount(BaseAccount):
 
     def _on_order_pending_new(self, event):
         order = event.order
-        position = self._positions[order.order_book_id]
+        position = self._positions.get_or_create(order.order_book_id)
         position.on_order_pending_new_(order)
         if order.side == SIDE.BUY:
             order_value = order._frozen_price * order.quantity
@@ -80,7 +80,7 @@ class StockAccount(BaseAccount):
 
     def _on_order_unsolicited_update(self, event):
         order = event.order
-        position = self._positions[order.order_book_id]
+        position = self._positions.get_or_create(order.order_book_id)
         position.on_order_cancel_(order)
         if order.side == SIDE.BUY:
             unfilled_value = order.unfilled_quantity * order._frozen_price

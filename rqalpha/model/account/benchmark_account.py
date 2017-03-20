@@ -37,7 +37,7 @@ class BenchmarkAccount(StockAccount):
             price = event.bar_dict[self.benchmark].close
             if np.isnan(price):
                 return
-            position = self._positions[self.benchmark]
+            position = self._positions.get_or_create(self.benchmark)
             quantity = int(self._total_cash / price)
             position._quantity = quantity
             position._avg_price = price
@@ -49,7 +49,7 @@ class BenchmarkAccount(StockAccount):
             if tick.order_book_id != self.benchmark:
                 return
             price = tick.last
-            position = self._positions[self.benchmark]
+            position = self._positions.get_or_create(self.benchmark)
             quantity = int(self._total_cash / price)
             position._quantity = quantity
             position._avg_price = price
