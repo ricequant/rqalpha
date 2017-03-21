@@ -152,12 +152,12 @@ class FutureAccount(BaseAccount):
             return
         order_book_id = trade.order.order_book_id
         position = self._positions.get_or_create(order_book_id)
+        position.apply_trade(trade)
 
         self._total_cash -= trade.transaction_cost
         if trade.order.position_effect != POSITION_EFFECT.OPEN:
-            self._total_cash += trade.last_quantity * trade.last_price * position.margin_rate
+            self._total_cash += margin_of(order_book_id, trade.last_quantity, trade.last_price)
         else:
-            self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
+            self._total_cash -= margin_of(order_book_id, trade.last_quantity, trade.last_price)
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
-        position.apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
