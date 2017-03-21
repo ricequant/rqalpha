@@ -120,7 +120,7 @@ class FutureAccount(BaseAccount):
                 user_system_log.warn(
                     _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
                 self._positions.pop(order_book_id, None)
-            elif position.buy_quantity == 0 and position.sell_qauntity == 0:
+            elif position.buy_quantity == 0 and position.sell_quantity == 0:
                 self._positions.pop(order_book_id, None)
             else:
                 position.apply_settlement()
