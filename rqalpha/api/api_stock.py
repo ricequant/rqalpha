@@ -255,7 +255,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     round_lot = int(env.get_instrument(order_book_id).round_lot)
 
     if cash_amount > 0:
-        cash_amount = min(cash_amount, account.portfolio.cash)
+        cash_amount = min(cash_amount, account.cash)
 
     if isinstance(style, MarketOrder):
         amount = int(Decimal(cash_amount) / Decimal(price) / Decimal(round_lot)) * round_lot
@@ -265,7 +265,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     # if the cash_amount is larger than you current security’s position,
     # then it will sell all shares of this security.
 
-    position = account.portfolio.positions.get_or_create(order_book_id)
+    position = account.positions.get_or_create(order_book_id)
     amount = downsize_amount(amount, position)
 
     return order_shares(order_book_id, amount, style)
