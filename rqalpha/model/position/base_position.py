@@ -24,7 +24,6 @@ class BasePosition(object):
 
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
-        self._last_price = 0
 
     @property
     def order_book_id(self):
@@ -44,10 +43,6 @@ class BasePosition(object):
     @property
     def last_price(self):
         return Environment.get_instance().get_last_price(self._order_book_id)
-
-    @last_price.setter
-    def last_price(self, value):
-        self._last_price = value
 
     # -- Function
     def is_de_listed(self):
