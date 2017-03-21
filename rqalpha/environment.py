@@ -43,7 +43,7 @@ class Environment(object):
         self.calendar_dt = None
         self.trading_dt = None
         self.mod_dict = None
-        self.plots = None
+        self.plot_store = None
         self.bar_dict = None
 
     @classmethod
@@ -86,14 +86,14 @@ class Environment(object):
     def update_universe(self, universe):
         self._universe.update(universe)
 
-    def get_plots(self):
-        if self.plots is None:
+    def get_plot_store(self):
+        if self.plot_store is None:
             from .utils.plot_store import PlotStore
-            self.plots = PlotStore()
-        return self.plots.get_plots()
+            self.plot_store = PlotStore()
+        return self.plot_store
 
     def add_plot(self, series_name, value):
-        self.get_plots().add_plot(self.trading_dt.date(), series_name, value)
+        self.get_plot_store().add_plot(self.trading_dt.date(), series_name, value)
 
     def get_bar(self, order_book_id):
         return self.bar_dict[order_book_id]

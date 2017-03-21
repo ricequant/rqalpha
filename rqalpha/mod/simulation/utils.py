@@ -29,9 +29,11 @@ def init_portfolio(env):
         if account_type == ACCOUNT_TYPE.STOCK:
             stock_starting_cash = config.base.stock_starting_cash
             accounts[ACCOUNT_TYPE.STOCK] = StockAccount(stock_starting_cash, Positions(StockPosition))
+            total_cash += stock_starting_cash
         elif account_type == ACCOUNT_TYPE.FUTURE:
             future_starting_cash = config.base.future_starting_cash
             accounts[ACCOUNT_TYPE.FUTURE] = FutureAccount(future_starting_cash, Positions(FuturePosition))
+            total_cash += future_starting_cash
         else:
             raise NotImplementedError
     if config.base.benchmark is not None:

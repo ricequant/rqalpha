@@ -87,7 +87,7 @@ class StockAccount(BaseAccount):
             self._frozen_cash -= unfilled_value
 
     def _before_trading(self, event):
-        trading_date = event.trading_dt.date()
+        trading_date = Environment.get_instance().trading_dt.date()
         self._handle_dividend_payable(trading_date)
         if Environment.get_instance().config.base.handle_split:
             self._handle_split(trading_date)

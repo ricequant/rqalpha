@@ -196,7 +196,7 @@ class AnalyserMod(AbstractMod):
         }
 
         if Environment.get_instance().plots is not None:
-            plots = Environment.get_instance().get_plots()
+            plots = Environment.get_instance().get_plot_store().get_plots()
             plots_items = defaultdict(dict)
             for series_name, value_dict in six.iteritems(plots):
                 for date, value in six.iteritems(value_dict):
