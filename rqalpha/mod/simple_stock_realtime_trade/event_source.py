@@ -111,4 +111,4 @@ class RealtimeEventSource(AbstractEventSource):
                     continue
 
             system_log.debug("real_dt {}, dt {}, event {}", real_dt, dt, event_type)
-            yield Event(event_type, real_dt, dt)
+            yield Event(event_type, calendar_dt=real_dt, trading_dt=dt)
