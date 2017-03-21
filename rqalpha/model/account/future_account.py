@@ -155,7 +155,7 @@ class FutureAccount(BaseAccount):
 
         self._total_cash -= trade.transaction_cost
         if trade.order.position_effect != POSITION_EFFECT.OPEN:
-            self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
+            self._total_cash += trade.last_quantity * trade.last_price * position.margin_rate
         else:
             self._total_cash -= trade.last_quantity * trade.last_price * position.margin_rate
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
