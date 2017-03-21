@@ -19,9 +19,12 @@ import six
 from ..environment import Environment
 from ..const import DAYS_CNT
 from ..utils import get_account_type, merge_dicts
+from ..utils.repr import property_repr
 
 
 class Portfolio(object):
+    __repr__ = property_repr
+
     def __init__(self, start_date, static_unit_net_value, units, accounts):
         self._start_date = start_date
         self._static_unit_net_value = static_unit_net_value
@@ -125,6 +128,7 @@ class Portfolio(object):
 
 
 class MixedPositions(dict):
+
     def __init__(self, accounts):
         super(MixedPositions, self).__init__()
         self._accounts = accounts
@@ -161,4 +165,4 @@ class MixedPositions(dict):
         keys = []
         for account in six.itervalues(self._accounts):
             keys += list(account.positions.keys())
-        return iter(sorted(keys))
+        return sorted(keys)
