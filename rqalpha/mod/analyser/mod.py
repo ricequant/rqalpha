@@ -38,7 +38,7 @@ class AnalyserMod(AbstractMod):
         self._enabled = False
         self._result = None
 
-        self._orders = defaultdict(list)
+        self._orders = []
         self._trades = []
         self._total_portfolios = []
         self._sub_accounts = defaultdict(list)
@@ -64,8 +64,7 @@ class AnalyserMod(AbstractMod):
         self._trades.append(self._to_trade_record(event.trade))
 
     def _collect_order(self, event):
-        order = event.order
-        self._orders[order.trading_datetime.date()].append(order)
+        self._orders.append(event.order)
 
     def _collect_daily(self, event):
         date = self._env.calendar_dt.date()
