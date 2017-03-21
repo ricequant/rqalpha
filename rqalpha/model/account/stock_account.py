@@ -128,9 +128,8 @@ class StockAccount(BaseAccount):
             del self._dividend_receivable[order_book_id]
 
     def _handle_dividend_book_closure(self, trading_date):
-        data_proxy = Environment.get_instance().get_data_proxy()
         for order_book_id, position in six.iteritems(self._positions):
-            dividend = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
+            dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
                 continue
 
@@ -142,9 +141,8 @@ class StockAccount(BaseAccount):
             }
 
     def _handle_split(self, trading_date):
-        data_proxy = Environment.get_instance().get_data_proxy()
         for order_book_id, position in six.iteritems(self._positions):
-            split = data_proxy.get_split_by_ex_date(order_book_id, trading_date)
+            split = Environment.get_instance().data_proxy.get_split_by_ex_date(order_book_id, trading_date)
             if split is None:
                 continue
             ratio = split['split_coefficient_to'] / split['split_coefficient_from']

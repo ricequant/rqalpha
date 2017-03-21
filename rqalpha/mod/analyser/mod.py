@@ -197,7 +197,7 @@ class AnalyserMod(AbstractMod):
             'total_portfolios': total_portfolios,
         }
 
-        if Environment.get_instance().plots is not None:
+        if Environment.get_instance().plot_store is not None:
             plots = Environment.get_instance().get_plot_store().get_plots()
             plots_items = defaultdict(dict)
             for series_name, value_dict in six.iteritems(plots):
