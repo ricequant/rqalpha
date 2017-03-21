@@ -138,7 +138,7 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
         r_order._mark_rejected(_("Order Creation Failed: 0 order quantity"))
         return r_order
     if r_order.type == ORDER_TYPE.MARKET:
-        r_order._frozen_price = env.get_last_price()
+        r_order._frozen_price = env.get_last_price(order_book_id)
     env.broker.submit_order(r_order)
 
     return r_order
