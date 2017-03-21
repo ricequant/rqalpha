@@ -166,4 +166,5 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return self._data_source.available_data_range(frequency)
 
     def get_future_info(self, order_book_id, hedge_type=HEDGE_TYPE.SPECULATION):
-        return self._data_source.get_future_info(order_book_id, hedge_type)
+        instrument = self.instruments(order_book_id)
+        return self._data_source.get_future_info(instrument, hedge_type)

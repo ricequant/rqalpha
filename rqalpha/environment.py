@@ -17,7 +17,6 @@
 from .events import EventBus
 from .utils import get_upper_underlying_symbol, get_account_type
 from .utils.logger import system_log, user_log, user_detail_log
-from .utils.default_future_info import DEFAULT_FUTURE_INFO
 
 
 class Environment(object):
@@ -106,11 +105,7 @@ class Environment(object):
         return self.data_proxy.instruments(order_book_id)
 
     def get_future_commission_info(self, order_book_id, hedge_type):
-        try:
-            return self.data_proxy.get_future_info(order_book_id, hedge_type)
-        except NotImplementedError:
-            underlying_symbol = get_upper_underlying_symbol(order_book_id)
-            return DEFAULT_FUTURE_INFO[underlying_symbol][hedge_type.value]
+        return self.data_proxy.get_future_info(order_book_id, hedge_type)
 
     def get_future_margin_rate(self, order_book_id):
         try:

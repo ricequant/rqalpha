@@ -246,11 +246,11 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_future_info(self, order_book_id, hedge_type):
+    def get_future_info(self, instrument, hedge_type):
         """
         获取期货合约手续费、保证金等数据
 
-        :param str order_book_id: 合约名
+        :param instrument: 合约对象
         :param HEDGE_TYPE hedge_type: 枚举类型，账户对冲类型
         :return: dict
         """
