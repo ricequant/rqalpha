@@ -17,7 +17,7 @@
 import six
 
 from ..environment import Environment
-from ..const import DAYS_CNT
+from ..const import DAYS_CNT, ACCOUNT_TYPE
 from ..utils import get_account_type, merge_dicts
 from ..utils.repr import property_repr
 from ..events import EVENT
@@ -50,6 +50,20 @@ class Portfolio(object):
         [dict] 账户字典
         """
         return self._accounts
+
+    @property
+    def stock_account(self):
+        """
+        [StockAccount] 股票账户
+        """
+        return self._accounts.get(ACCOUNT_TYPE.STOCK, None)
+
+    @property
+    def future_account(self):
+        """
+        [FutureAccount] 期货账户
+        """
+        return self._accounts.get(ACCOUNT_TYPE.FUTURE, None)
 
     @property
     def start_date(self):
