@@ -41,7 +41,7 @@ class AnalyserMod(AbstractMod):
         self._orders = defaultdict(list)
         self._trades = []
         self._total_portfolios = []
-        self._sub_portfolios = defaultdict(list)
+        self._sub_accounts = defaultdict(list)
         self._positions = defaultdict(list)
 
         self._benchmark_daily_returns = []
@@ -83,8 +83,8 @@ class AnalyserMod(AbstractMod):
             self._benchmark_daily_returns.append(benchmark_portfolio.daily_returns)
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
-            self._sub_portfolios[account_type].append(self._to_portfolio_record2(date, portfolio))
-            for order_book_id, position in six.iteritems(portfolio.positions):
+            self._sub_accounts[account_type].append(self._to_account_record(date, account))
+            for order_book_id, position in six.iteritems(account.positions):
                 self._positions[account_type].append(self._to_position_record(date, order_book_id, position))
 
     def _symbol(self, order_book_id):
@@ -110,7 +110,7 @@ class AnalyserMod(AbstractMod):
         data['date'] = date
         return data
 
-    def _to_portfolio_record2(self, date, portfolio):
+    def _to_account_record(self, date, portfolio):
         data = {
             k: self._safe_convert(v, 3) for k, v in six.iteritems(portfolio.__dict__)
             if not k.startswith('_') and not k.endswith('_') and k not in {
@@ -212,7 +212,7 @@ class AnalyserMod(AbstractMod):
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
             account_name = account_type.name.lower()
-            portfolios_list = self._sub_portfolios[account_type]
+            portfolios_list = self._sub_accounts[account_type]
             df = pd.DataFrame(portfolios_list)
             df["date"] = pd.to_datetime(df["date"])
             portfolios_df = df.set_index("date").sort_index()
