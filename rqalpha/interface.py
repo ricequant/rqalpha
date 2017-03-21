@@ -144,6 +144,16 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
+    def get_last_price(self, instrument, dt):
+        """
+        获取 dt 时刻的最新价格。注意，dt 时刻可能是收盘后
+        :param instrument: 合约对象
+        :type instrument: :class:`~Instrument`
+        :param datetime.datetime dt: calendar datetime
+        :return:
+        """
+        raise NotImplementedError
+
     def get_settle_price(self, instrument, date):
         """
         获取期货品种在 date 的结算价

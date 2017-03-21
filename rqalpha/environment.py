@@ -99,11 +99,7 @@ class Environment(object):
         return self.bar_dict[order_book_id]
 
     def get_last_price(self, order_book_id):
-        return self.data_proxy.current_snapshot(
-            order_book_id,
-            self.config.base.frequency,
-            self.calendar_dt
-        ).last
+        return self.data_proxy.get_last_price(order_book_id, self.calendar_dt)
 
     def get_instrument(self, order_book_id):
         return self.data_proxy.instruments(order_book_id)

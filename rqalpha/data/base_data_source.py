@@ -120,6 +120,16 @@ class BaseDataSource(AbstractDataSource):
 
         return bars[pos]
 
+    def get_last_price(self, instrument, dt):
+        bars = self._all_day_bars_of(instrument)
+        if bars is None:
+            return np.nan
+        dt = convert_date_to_int(dt)
+        pos = bars['datetime'].searchsorted(dt)
+        if pos >= len(bars) or bars['datetime'][pos] != dt:
+            return np.nan
+        return bars[pos]['close']
+
     def get_settle_price(self, instrument, date):
         bar = self.get_bar(instrument, date, '1d')
         if bar is None:

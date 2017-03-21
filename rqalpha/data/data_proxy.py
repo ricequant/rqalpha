@@ -43,9 +43,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         TradingDatesMixin.__init__(self, data_source.get_trading_calendar())
 
     def __getattr__(self, item):
-        print("*" * 10)
-        print(item)
-        print("*" * 10)
         return getattr(self._data_source, item)
 
     def get_trading_minutes_for(self, order_book_id, dt):
@@ -127,6 +124,10 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         if instrument.type != 'Future':
             return np.nan
         return self._data_source.get_settle_price(instrument, date)
+
+    def get_last_price(self, order_book_id, dt):
+        instrument = self.instruments(order_book_id)
+        return self._data_source.get_last_price(instrument, dt)
 
     def get_bar(self, order_book_id, dt, frequency='1d'):
         instrument = self.instruments(order_book_id)
