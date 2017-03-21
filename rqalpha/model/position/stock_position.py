@@ -138,7 +138,7 @@ class StockPosition(BasePosition):
 
     @property
     def market_value(self):
-        return self._quantity * self._last_price
+        return self._quantity * self.last_price
 
     @property
     def transaction_cost(self):
