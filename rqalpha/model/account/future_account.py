@@ -110,7 +110,7 @@ class FutureAccount(BaseAccount):
         """
         [float] 平仓盈亏
         """
-        return sum(position.realized_pnl for position in six.iteritems(self._positions))
+        return sum(position.realized_pnl for position in six.itervalues(self._positions))
 
     def _settlement(self, event):
         for position in list(self._positions.values()):
