@@ -56,9 +56,9 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:
-            return self._open_orders
+            return [order for account, order in self._open_orders]
         else:
-            return self._open_orders[order_book_id]
+            return [order for account, order in self._open_orders if order.order_book_id == order_book_id]
 
     def get_state(self):
         return jsonpickle.dumps([o.order_id for _, o in self._delayed_orders]).encode('utf-8')
