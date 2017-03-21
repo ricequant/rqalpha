@@ -250,7 +250,7 @@ class Risk(object):
             self._sharpe = np.nan
             return np.nan
 
-        std_excess_return = np.std((1.0 + (1.0 / (self._annual_factor - 1))) * np.sum(
+        std_excess_return = np.sqrt((1.0 + (1.0 / (self._annual_factor - 1))) * np.sum(
             (self._portfolio - self._daily_risk_free_rate - self.avg_excess_return) ** 2
         ))
         self._sharpe = np.sqrt(self._annual_factor) * self.avg_excess_return / std_excess_return
