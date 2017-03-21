@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from .events import EventBus
-from .utils import get_upper_underlying_symbol, get_account_type
+from .utils import get_account_type
 from .utils.logger import system_log, user_log, user_detail_log
 
 
@@ -28,6 +28,7 @@ class Environment(object):
         self._universe = None
         self.data_proxy = None
         self.data_source = None
+        self.price_board = None
         self.event_source = None
         self.strategy_loader = None
         self.global_vars = None
@@ -55,6 +56,9 @@ class Environment(object):
 
     def set_data_source(self, data_source):
         self.data_source = data_source
+
+    def set_price_board(self, price_board):
+        self.price_board = price_board
 
     def set_strategy_loader(self, strategy_loader):
         self.strategy_loader = strategy_loader
@@ -99,7 +103,7 @@ class Environment(object):
         return self.bar_dict[order_book_id]
 
     def get_last_price(self, order_book_id):
-        return self.data_proxy.get_last_price(order_book_id, self.calendar_dt)
+        return self.price_board.get_last_price(order_book_id)
 
     def get_instrument(self, order_book_id):
         return self.data_proxy.instruments(order_book_id)

@@ -125,7 +125,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
             return np.nan
         return self._data_source.get_settle_price(instrument, date)
 
-    @lru_cache(5000)
     def get_last_price(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_last_price(instrument, dt)

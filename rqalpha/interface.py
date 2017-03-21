@@ -16,7 +16,6 @@
 
 import abc
 
-
 from six import with_metaclass
 
 
@@ -70,6 +69,17 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
 
         :return: None
+        """
+        raise NotImplementedError
+
+
+class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
+    def get_last_price(self, order_book_id):
+        """
+        获取证券的最新价格
+        :param order_book_id:
+        :return:
         """
         raise NotImplementedError
 
@@ -141,16 +151,6 @@ class AbstractDataSource(object):
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
 
         :return: `numpy.ndarray` | `dict`
-        """
-        raise NotImplementedError
-
-    def get_last_price(self, instrument, dt):
-        """
-        获取 dt 时刻的最新价格。注意，dt 时刻可能是收盘后
-        :param instrument: 合约对象
-        :type instrument: :class:`~Instrument`
-        :param datetime.datetime dt: calendar datetime
-        :return:
         """
         raise NotImplementedError
 
