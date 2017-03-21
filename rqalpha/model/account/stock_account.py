@@ -65,7 +65,7 @@ class StockAccount(BaseAccount):
         if trade.side == SIDE.BUY:
             self._total_cash -= trade.last_quantity * trade.last_price
             self._frozen_cash -= trade.order._frozen_price * trade.last_quantity
-            position.apply_trade_(trade)
+            position.apply_trade(trade)
         else:
             self._total_cash += trade.last_price * trade.last_quantity
         self._backward_trade_set.add(trade.exec_id)

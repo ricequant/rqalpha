@@ -45,6 +45,9 @@ class StockPosition(BasePosition):
     def apply_settlement(self):
         pass
 
+    def cal_close_today_amount(self, *args):
+        return 0
+
     def split_(self, ratio):
         self._quantity *= ratio
         # split 发生时，这两个值理论上应该都是0
