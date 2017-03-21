@@ -205,12 +205,6 @@ def get_account_type(order_book_id):
         raise NotImplementedError
 
 
-def exclude_benchmark_generator(accounts):
-    for account_type in accounts:
-        if account_type != ACCOUNT_TYPE.BENCHMARK:
-            yield account_type, accounts[account_type]
-
-
 def get_upper_underlying_symbol(order_book_id):
     p = re.compile(UNDERLYING_SYMBOL_PATTERN)
     result = p.findall(order_book_id)

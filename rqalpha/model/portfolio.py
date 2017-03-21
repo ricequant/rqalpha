@@ -22,17 +22,12 @@ from ..utils import get_account_type, merge_dicts
 
 
 class Portfolio(object):
-    def __init__(self, start_date, static_unit_net_value, units, accounts, benchmark_account):
+    def __init__(self, start_date, static_unit_net_value, units, accounts):
         self._start_date = start_date
         self._static_unit_net_value = static_unit_net_value
         self._units = units
         self._accounts = accounts
-        self._benchmark_account = benchmark_account
         self._mixed_positions = None
-
-    @property
-    def benchmark_account(self):
-        return self._benchmark_account
 
     @property
     def accounts(self):

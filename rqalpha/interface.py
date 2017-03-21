@@ -278,6 +278,14 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         """
 
     @abc.abstractmethod
+    def get_benchmark_portfolio(self):
+        """
+        [Required]
+
+        获取Benchmark对应的投资组合，与 `get_portfolio` 类似
+        """
+
+    @abc.abstractmethod
     def submit_order(self, order):
         """
         【Required】

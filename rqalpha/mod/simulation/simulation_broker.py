@@ -23,7 +23,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.environment import Environment
 
 from .matcher import Matcher
-from .utils import init_portfolio
+from .utils import init_portfolio, init_benchmark_portfolio
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -33,7 +33,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._matcher = Matcher(mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
-        self._portfolio = None
         self._open_orders = []
         self._board = None
         self._turnover = {}
@@ -50,9 +49,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
 
     def get_portfolio(self):
-        if self._portfolio is None:
-            self._portfolio = init_portfolio(self._env)
-        return self._portfolio
+        return init_portfolio(self._env)
+
+    def get_benchmark_portfolio(self):
+        return init_benchmark_portfolio(self._env)
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:

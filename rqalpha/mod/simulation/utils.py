@@ -36,9 +36,22 @@ def init_portfolio(env):
             total_cash += future_starting_cash
         else:
             raise NotImplementedError
-    if config.base.benchmark is not None:
-        benchmark_account = BenchmarkAccount(total_cash, Positions(StockPosition))
-    else:
-        benchmark_account = None
+    return Portfolio(start_date, 1, total_cash, accounts)
 
-    return Portfolio(start_date, 1, total_cash, accounts, benchmark_account)
+
+def init_benchmark_portfolio(env):
+    if env.config.base.benchmark is None:
+        return None
+    accounts = {}
+    config = env.config
+    start_date = config.base.start_date
+    total_cash = 0
+    for account_type in config.base.account_list:
+        if account_type == ACCOUNT_TYPE.STOCK:
+            total_cash += config.base.stock_starting_cash
+        elif account_type == ACCOUNT_TYPE.FUTURE:
+            total_cash += config.base.future_starting_cash
+        else:
+            raise NotImplementedError
+    accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(StockPosition))
+    return Portfolio(start_date, 1, total_cash, accounts)

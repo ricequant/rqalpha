@@ -70,15 +70,17 @@ class AnalyserMod(AbstractMod):
     def _collect_daily(self, event):
         date = self._env.calendar_dt.date()
         portfolio = self._env.portfolio
+        benchmark_portfolio = self._env.benchmark_portfolio
 
         self._latest_portfolio = portfolio
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
 
-        if portfolio.benchmark_account is None:
+        if benchmark_portfolio is None:
             self._benchmark_daily_returns.append(0)
         else:
-            self._benchmark_daily_returns.append(portfolio.benchmark_account.daily_returns)
+            self._latest_benchmark_portfolio = benchmark_portfolio
+            self._benchmark_daily_returns.append(benchmark_portfolio.daily_returns)
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
             self._sub_portfolios[account_type].append(self._to_portfolio_record2(date, portfolio))

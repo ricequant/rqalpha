@@ -183,6 +183,7 @@ def run(config, source_code=None):
         broker = env.broker
         assert broker is not None
         env.portfolio = broker.get_portfolio()
+        env.benchmark_portfolio = broker.get_benchmark_portfolio()
 
         event_source = env.event_source
         assert event_source is not None
