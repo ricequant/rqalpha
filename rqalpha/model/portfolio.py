@@ -20,6 +20,7 @@ from ..environment import Environment
 from ..const import DAYS_CNT
 from ..utils import get_account_type, merge_dicts
 from ..utils.repr import property_repr
+from ..events import EVENT
 
 
 class Portfolio(object):
@@ -31,6 +32,17 @@ class Portfolio(object):
         self._units = units
         self._accounts = accounts
         self._mixed_positions = None
+        self.register_event()
+
+    def register_event(self):
+        """
+        注册事件
+        """
+        event_bus = Environment.get_instance().event_bus
+        event_bus.add_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+
+    def _post_settlement(self, event):
+        self._static_unit_net_value = self.unit_net_value
 
     @property
     def accounts(self):
