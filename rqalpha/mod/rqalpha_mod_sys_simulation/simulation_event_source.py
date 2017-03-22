@@ -182,10 +182,16 @@ class SimulationEventSource(AbstractEventSource):
                         raw_tick = merge_ticks[idx]
                         order_book_id = order_book_id_map[raw_tick[-1]]
                         snapshot = {
+                            "open": 0,
+                            "limit_up": 0,
+                            "limit_down": 0,
+                            "prev_settlement": 0,
+                            "prev_close": 0,
+                            "trading_date": date,
                         }
                         for i in range(names_size):
                             snapshot[names[i]] = raw_tick[i]
-                        last_tick = tick = Tick(order_book_id, dt, snapshot)
+                        tick = Tick(order_book_id, dt, snapshot)
                         yield Event(EVENT.TICK, tick=tick)
 
                     if self._universe_changed:
