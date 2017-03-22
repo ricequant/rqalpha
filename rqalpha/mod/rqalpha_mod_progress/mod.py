@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
-
 from rqalpha.interface import AbstractMod
 from rqalpha.events import EVENT
 
@@ -39,7 +37,3 @@ class ProgressMod(AbstractMod):
 
     def tear_down(self, success, exception=None):
         self.progress_bar.render_finish()
-
-
-def load_mod():
-    return ProgressMod()

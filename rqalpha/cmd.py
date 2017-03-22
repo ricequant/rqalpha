@@ -14,9 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import analyser
-from . import funcat_api
-from . import risk_manager
-from . import rqalpha_mod_progress
-from . import simple_stock_realtime_trade
-from . import simulation
+import click
+
+
+@click.group()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def cmd_cli(ctx, verbose):
+    ctx.obj["VERBOSE"] = verbose
+
+
+def entry_point():
+    # 获取 Mod 中的命令
+    # noinspection PyUnresolvedReferences
+    from . import mod
+
+    # 获取第三方包中的命令
+    from pkgutil import iter_modules
+    for package in iter_modules():
+        if "rqalpha_mod_" in package[1]:
+            __import__(package[1])
+
+    cmd_cli(obj={})

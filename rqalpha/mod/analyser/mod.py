@@ -25,7 +25,7 @@ import pandas as pd
 
 from rqalpha.interface import AbstractMod
 from rqalpha.events import EVENT
-from rqalpha.const import ACCOUNT_TYPE, EXIT_CODE
+from rqalpha.const import EXIT_CODE
 from rqalpha.utils.risk import Risk
 from rqalpha.environment import Environment
 

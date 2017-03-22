@@ -19,6 +19,8 @@ RQAlpha - a Algorithm Trading System
 """
 
 import pkgutil
+from .cmd import cmd_cli
+from .__main__ import cli
 
 __all__ = [
     '__version__',
