@@ -45,8 +45,6 @@ class AnalyserMod(AbstractMod):
 
         self._benchmark_daily_returns = []
         self._portfolio_daily_returns = []
-        self._latest_portfolio = None
-        self._latest_benchmark_portfolio = None
 
     def start_up(self, env, mod_config):
         self._env = env
@@ -70,14 +68,12 @@ class AnalyserMod(AbstractMod):
         portfolio = self._env.portfolio
         benchmark_portfolio = self._env.benchmark_portfolio
 
-        self._latest_portfolio = portfolio
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
 
         if benchmark_portfolio is None:
             self._benchmark_daily_returns.append(0)
         else:
-            self._latest_benchmark_portfolio = benchmark_portfolio
             self._benchmark_daily_returns.append(benchmark_portfolio.daily_returns)
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
@@ -208,18 +204,18 @@ class AnalyserMod(AbstractMod):
         })
 
         summary.update({
-            'total_value': self._safe_convert(self._latest_portfolio.total_value),
-            'cash': self._safe_convert(self._latest_portfolio.cash),
-            'total_returns': self._safe_convert(self._latest_portfolio.total_returns),
-            'annualized_returns': self._safe_convert(self._latest_portfolio.annualized_returns),
-            'unit_net_value': self._safe_convert(self._latest_portfolio.unit_net_value),
-            'units': self._latest_portfolio.units,
+            'total_value': self._safe_convert(self._env.portfolio.total_value),
+            'cash': self._safe_convert(self._env.portfolio.cash),
+            'total_returns': self._safe_convert(self._env.portfolio.total_returns),
+            'annualized_returns': self._safe_convert(self._env.portfolio.annualized_returns),
+            'unit_net_value': self._safe_convert(self._env.portfolio.unit_net_value),
+            'units': self._env.portfolio.units,
         })
 
-        if self._latest_benchmark_portfolio:
-            summary['benchmark_total_returns'] = self._safe_convert(self._latest_benchmark_portfolio.total_returns)
+        if self._env.benchmark_portfolio:
+            summary['benchmark_total_returns'] = self._safe_convert(self._env.benchmark_portfolio.total_returns)
             summary['benchmark_annualized_returns'] = self._safe_convert(
-                self._latest_benchmark_portfolio.annualized_returns)
+                self._env.benchmark_portfolio.annualized_returns)
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
