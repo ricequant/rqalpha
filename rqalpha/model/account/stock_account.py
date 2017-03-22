@@ -37,7 +37,6 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
-        event_bus.add_listener(EVENT.PRE_AFTER_TRADING, self._after_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
     def fast_forward(self, orders, trades=list()):
@@ -98,10 +97,6 @@ class StockAccount(BaseAccount):
         self._handle_dividend_payable(trading_date)
         if Environment.get_instance().config.base.handle_split:
             self._handle_split(trading_date)
-
-    def _after_trading(self, event):
-        for position in six.itervalues(self._positions):
-            position.after_trading_()
 
     def _on_settlement(self, event):
         for position in list(self._positions.values()):

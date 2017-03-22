@@ -24,7 +24,7 @@ class StockPosition(BasePosition):
         super(StockPosition, self).__init__(order_book_id)
         self._quantity = 0
         self._avg_price = 0
-        self._non_closeable = 0     # 当天买入的不能卖出
+        self._non_closable = 0     # 当天买入的不能卖出
         self._frozen = 0            # 冻结量
         self._transaction_cost = 0  # 交易费用
 
@@ -37,22 +37,26 @@ class StockPosition(BasePosition):
 
             if self._order_book_id not in {'510900.XSHG', '513030.XSHG', '513100.XSHG', '513500.XSHG'}:
                 # 除了上述 T+0 基金，其他都是 T+1
-                self._non_closeable += trade.last_quantity
+                self._non_closable += trade.last_quantity
         else:
             self._quantity -= trade.last_quantity
             self._frozen -= trade.last_quantity
 
     def apply_settlement(self):
-        pass
+        self._non_closable = 0
 
     def cal_close_today_amount(self, *args):
         return 0
+
+    @property
+    def type(self):
+        return ACCOUNT_TYPE.STOCK
 
     def split_(self, ratio):
         self._quantity *= ratio
         # split 发生时，这两个值理论上应该都是0
         self._frozen *= ratio
-        self._non_closeable *= ratio
+        self._non_closable *= ratio
 
     def on_order_pending_new_(self, order):
         if order.side == SIDE.SELL:
@@ -65,10 +69,6 @@ class StockPosition(BasePosition):
     def on_order_cancel_(self, order):
         if order.side == SIDE.SELL:
             self._frozen -= order.unfilled_quantity
-
-    def after_trading_(self):
-        # T+1 在结束交易时，_non_closeable 重设为0
-        self._non_closeable = 0
 
     @property
     def total_orders(self):
@@ -134,7 +134,7 @@ class StockPosition(BasePosition):
         """
         【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
         """
-        return self._quantity - self._non_closeable - self._frozen
+        return self._quantity - self._non_closable - self._frozen
 
     @property
     def market_value(self):

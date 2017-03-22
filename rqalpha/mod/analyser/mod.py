@@ -100,47 +100,79 @@ class AnalyserMod(AbstractMod):
         return value
 
     def _to_portfolio_record(self, date, portfolio):
-        data = {
-            k: self._safe_convert(v, 3) for k, v in six.iteritems(properties(portfolio))
-            if not k.startswith('_') and not k.endswith('_') and k not in {
-                "positions", "start_date", "starting_cash"
-            }
+        return {
+            'date': date,
+            'cash': self._safe_convert(portfolio.cash),
+            'total_returns': self._safe_convert(portfolio.total_returns),
+            'daily_returns': self._safe_convert(portfolio.daily_returns),
+            'daily_pnl': self._safe_convert(portfolio.daily_pnl),
+            'total_value': self._safe_convert(portfolio.total_value),
+            'market_value': self._safe_convert(portfolio.market_value),
+            'annualized_returns': self._safe_convert(portfolio.annualized_returns),
+            'unit_net_value': self._safe_convert(portfolio.unit_net_value),
+            'units': portfolio.units,
+            'static_unit_net_value': self._safe_convert(portfolio.static_unit_net_value),
         }
-        data['date'] = date
+
+    ACCOUNT_FIELDS_MAP = {
+        ACCOUNT_TYPE.STOCK: ['dividend_receivable'],
+        ACCOUNT_TYPE.FUTURE: ['holding_pnl', 'realized_pnl', 'daily_pnl', 'margin'],
+    }
+
+    def _to_account_record(self, date, account):
+        data = {
+            'date': date,
+            'total_cash': self._safe_convert(account.cash + account.frozen_cash),
+            'transaction_cost': self._safe_convert(account.transaction_cost),
+            'market_value': self._safe_convert(account.market_value),
+            'total_value': self._safe_convert(account.total_value),
+        }
+
+        for f in self.ACCOUNT_FIELDS_MAP[account.type]:
+            data[f] = self._safe_convert(getattr(account, f))
+
         return data
 
-    def _to_account_record(self, date, portfolio):
-        data = {
-            k: self._safe_convert(v, 3) for k, v in six.iteritems(portfolio.__dict__)
-            if not k.startswith('_') and not k.endswith('_') and k not in {
-                "positions", "start_date", "starting_cash"
-            }
-            }
-        data['date'] = date
-        return data
+    POSITION_FIELDS_MAP = {
+        ACCOUNT_TYPE.STOCK: [
+            'quantity', 'last_price', 'avg_price', 'market_value', 'sellable'
+        ],
+        ACCOUNT_TYPE.FUTURE: [
+            'pnl', 'daily_pnl', 'holding_pnl', 'realized_pnl', 'margin', 'market_value',
+            'buy_pnl', 'sell_pnl', 'closable_buy_quantity', 'buy_margin', 'buy_today_quantity',
+            'buy_avg_open_price', 'buy_avg_holding_price', 'closeable_sell_quantity',
+            'sell_margin', 'sell_today_quantity', 'sell_quantity', 'sell_avg_open_price',
+            'sell_avg_holding_price'
+        ],
+    }
 
     def _to_position_record(self, date, order_book_id, position):
         data = {
-            k: self._safe_convert(v, 3) for k, v in six.iteritems(position.__dict__)
-            if not k.startswith('_') and not k.endswith('_')
-            }
-        data['order_book_id'] = order_book_id
-        data['symbol'] = self._symbol(order_book_id)
-        data['date'] = date
+            'order_book_id': order_book_id,
+            'symbol': self._symbol(order_book_id),
+            'date': date,
+        }
+
+        for f in self.POSITION_FIELDS_MAP[position.type]:
+            data[f] = self._safe_convert(getattr(position, f))
         return data
 
     def _to_trade_record(self, trade):
-        data = {
-            k: self._safe_convert(v) for k, v in six.iteritems(properties(trade))
-            if not k.startswith('_') and not k.endswith('_') and k != 'order'
+        return {
+            'datetime': trade.datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            'trading_datetime': trade.trading_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            'order_book_id': trade.order.order_book_id,
+            'symbol': self._symbol(trade.order.order_book_id),
+            'side': self._safe_convert(trade.order.side),
+            'position_effect': self._safe_convert(trade.order.position_effect),
+            'exec_id': trade.exec_id,
+            'tax': trade.tax,
+            'commission': trade.commission,
+            'last_quantity': trade.last_quantity,
+            'last_price': self._safe_convert(trade.last_price),
+            'order_id': trade.order_id,
+            'transaction_cost': trade.transaction_cost,
         }
-        data['order_book_id'] = trade.order.order_book_id
-        data['symbol'] = self._symbol(trade.order.order_book_id)
-        data['side'] = self._safe_convert(trade.order.side)
-        data['position_effect'] = self._safe_convert(trade.order.position_effect)
-        data['datetime'] = data['datetime'].strftime("%Y-%m-%d %H:%M:%S")
-        data['trading_datetime'] = data['trading_datetime'].strftime("%Y-%m-%d %H:%M:%S")
-        return data
 
     def tear_down(self, code, exception=None):
         if code != EXIT_CODE.EXIT_SUCCESS or not self._enabled:
@@ -151,12 +183,15 @@ class AnalyserMod(AbstractMod):
 
         summary = {
             'strategy_name': strategy_name,
+            'start_date': self._env.config.base.start_date.strftime('%Y-%m-%d'),
+            'end_date': self._env.config.base.end_date.strftime('%Y-%m-%d'),
+            'strategy_file': self._env.config.base.strategy_file,
+            'strategy_type': self._env.config.base.strategy_type,
+            'run_id': self._env.config.base.run_id,
+            'run_type': self._env.config.base.run_type.value,
+            'stock_starting_cash': self._env.config.base.stock_starting_cash,
+            'future_starting_cash': self._env.config.base.future_starting_cash,
         }
-        for k, v in six.iteritems(self._env.config.base.__dict__):
-            if k in ["trading_calendar", "account_list", "timezone", "persist_mode",
-                     "resume_mode", "data_bundle_path", "handle_split", "persist"]:
-                continue
-            summary[k] = self._safe_convert(v, 2)
 
         risk = Risk(np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns),
                     data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date),
@@ -174,13 +209,18 @@ class AnalyserMod(AbstractMod):
         })
 
         summary.update({
-            k: self._safe_convert(v, 3) for k, v in six.iteritems(properties(self._latest_portfolio))
-            if k not in ["positions", "daily_returns", "daily_pnl"]
+            'total_value': self._safe_convert(self._latest_portfolio.total_value),
+            'cash': self._safe_convert(self._latest_portfolio.cash),
+            'total_returns': self._safe_convert(self._latest_portfolio.total_returns),
+            'annualized_returns': self._safe_convert(self._latest_portfolio.annualized_returns),
+            'unit_net_value': self._safe_convert(self._latest_portfolio.unit_net_value),
+            'units': self._latest_portfolio.units,
         })
 
         if self._latest_benchmark_portfolio:
-            summary['benchmark_total_returns'] = self._latest_benchmark_portfolio.total_returns
-            summary['benchmark_annualized_returns'] = self._latest_benchmark_portfolio.annualized_returns
+            summary['benchmark_total_returns'] = self._safe_convert(self._latest_benchmark_portfolio.total_returns)
+            summary['benchmark_annualized_returns'] = self._safe_convert(
+                self._latest_benchmark_portfolio.annualized_returns)
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:

@@ -41,6 +41,10 @@ class BasePosition(object):
         raise NotImplementedError
 
     @property
+    def type(self):
+        raise NotImplementedError
+
+    @property
     def last_price(self):
         return Environment.get_instance().get_last_price(self._order_book_id)
 

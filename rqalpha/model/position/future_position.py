@@ -16,7 +16,7 @@
 
 from .base_position import BasePosition
 from ...environment import Environment
-from ...const import SIDE, POSITION_EFFECT
+from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
 
 
 class FuturePosition(BasePosition):
@@ -35,6 +35,10 @@ class FuturePosition(BasePosition):
 
         self._buy_avg_open_price = 0.
         self._sell_avg_open_price = 0.
+
+    @property
+    def type(self):
+        return ACCOUNT_TYPE.FUTURE
 
     @property
     def margin_rate(self):

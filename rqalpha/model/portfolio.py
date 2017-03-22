@@ -87,6 +87,10 @@ class Portfolio(object):
         return self.total_value / self._units
 
     @property
+    def static_unit_net_value(self):
+        return self._static_unit_net_value
+
+    @property
     def daily_pnl(self):
         """
         [float] 当日盈亏
