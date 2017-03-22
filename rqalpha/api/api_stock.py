@@ -31,10 +31,13 @@ from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
 from ..model.order import Order, OrderStyle, MarketOrder, LimitOrder
 from ..utils.arg_checker import apply_rules, verify_that
+# noinspection PyUnresolvedReferences
 from ..utils.exception import patch_user_exc, RQInvalidArgument
 from ..utils.i18n import gettext as _
 from ..utils.logger import user_system_log
+# noinspection PyUnresolvedReferences
 from ..utils.scheduler import market_close, market_open
+# noinspection PyUnresolvedReferences
 from ..utils import scheduler
 
 # 使用Decimal 解决浮点数运算精度问题
@@ -99,12 +102,14 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     #     `LimitOrder(limit_price)`
     # :return:  A unique order id.
     # :rtype: int
+    if amount is 0:
+        # 如果下单量为0，则认为其并没有发单，则直接返回None
+        return None
     if not isinstance(style, OrderStyle):
         raise RQInvalidArgument(_('style should be OrderStyle'))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
             raise RQInvalidArgument(_("Limit order price should be positive"))
-
     order_book_id = assure_stock_order_book_id(id_or_ins)
     env = Environment.get_instance()
 
