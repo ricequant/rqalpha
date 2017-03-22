@@ -69,6 +69,7 @@ setup(
     entry_points={
         "console_scripts": [
             "rqalpha = rqalpha.__main__:entry_point",
+            "rqalpha-exec = rqalpha.__exec__:entry_point",
         ]
     },
     classifiers=[
