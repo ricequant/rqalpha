@@ -25,7 +25,7 @@ import pandas as pd
 
 from rqalpha.interface import AbstractMod
 from rqalpha.events import EVENT
-from rqalpha.const import EXIT_CODE
+from rqalpha.const import EXIT_CODE, ACCOUNT_TYPE
 from rqalpha.utils.risk import Risk
 from rqalpha.environment import Environment
 
@@ -135,7 +135,7 @@ class AnalyserMod(AbstractMod):
         ACCOUNT_TYPE.FUTURE: [
             'pnl', 'daily_pnl', 'holding_pnl', 'realized_pnl', 'margin', 'market_value',
             'buy_pnl', 'sell_pnl', 'closable_buy_quantity', 'buy_margin', 'buy_today_quantity',
-            'buy_avg_open_price', 'buy_avg_holding_price', 'closeable_sell_quantity',
+            'buy_avg_open_price', 'buy_avg_holding_price', 'closable_sell_quantity',
             'sell_margin', 'sell_today_quantity', 'sell_quantity', 'sell_avg_open_price',
             'sell_avg_holding_price'
         ],
