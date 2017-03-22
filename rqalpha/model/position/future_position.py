@@ -60,14 +60,14 @@ class FuturePosition(BasePosition):
         """
         [float] 买方向当日持仓盈亏
         """
-        return (self.last_price - self._buy_avg_open_price) * self.buy_quantity * self.contract_multiplier
+        return (self.last_price - self.buy_avg_holding_price) * self.buy_quantity * self.contract_multiplier
 
     @property
     def sell_holding_pnl(self):
         """
         [float] 卖方向当日持仓盈亏
         """
-        return (self._sell_avg_open_price - self.last_price) * self.sell_quantity * self.contract_multiplier
+        return (self.sell_avg_holding_price - self.last_price) * self.sell_quantity * self.contract_multiplier
 
     @property
     def buy_realized_pnl(self):
