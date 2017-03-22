@@ -14,9 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import analyser
-from . import funcat_api
-from . import risk_manager
-from . import rqalpha_mod_progress
-from . import simple_stock_realtime_trade
-from . import simulation
+import click
+from rqalpha import cmd_cli
+
+from .mod import ProgressMod
+
+
+def load_mod():
+
+    return ProgressMod()
+
+
+def cli_injection(cli):
+    """
+    注入 --progress option
+    可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
+    """
+    cli.commands['run'].params.append(
+        click.Option(("--progress", "mod__progress__enabled"),
+                     is_flag=True,
+                     default=False,
+                     help="[Progress]show progress bar")
+    )
+
+
+@cmd_cli.command()
+def progress_test():
+    print("This is progress command injection test")

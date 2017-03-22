@@ -31,12 +31,7 @@ def entry_point():
 
     # 获取第三方包中的命令
     from pkgutil import iter_modules
-    iterator = iter_modules()
-    while True:
-        try:
-            package = iterator.next()
-        except:
-            break
+    for package in iter_modules():
         if "rqalpha_mod_" in package[1]:
             __import__(package[1])
 

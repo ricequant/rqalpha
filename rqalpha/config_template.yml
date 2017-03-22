@@ -83,7 +83,7 @@ mod:
     priority: 200
   # 开启该选项，可以在命令行查看回测进度
   progress:
-    lib: 'rqalpha.mod.progress'
+    lib: 'rqalpha.mod.rqalpha_mod_progress'
     enabled: false
     priority: 400
   # 接收实时行情运行

@@ -21,6 +21,7 @@ import shutil
 import ruamel.yaml as yaml
 from importlib import import_module
 
+from .utils import dummy_func
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_default_config_path, load_config, dump_config
 
@@ -33,6 +34,17 @@ def cli(ctx, verbose):
 
 
 def entry_point():
+    from . import mod
+    from pkgutil import iter_modules
+    for package_name in mod.__dict__:
+        if "rqalpha_mod_" in package_name:
+            cli_injection = getattr(getattr(mod, package_name), 'cli_injection', dummy_func)
+            cli_injection(cli)
+    for package in iter_modules():
+        if "rqalpha_mod_" in package[1]:
+            lib = import_module(package[1])
+            cli_injection = getattr(lib, 'cli_injection', dummy_func)
+            cli_injection(cli)
     cli(obj={})
 
 
@@ -174,7 +186,7 @@ def generate_config(directory):
 system_mod = [
     'simulation',
     'funcat_api',
-    'progress',
+    'rqalpha_mod_progress',
     'simple_stock_realtime_trade',
     'risk_manager',
     'analyser',
