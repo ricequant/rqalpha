@@ -267,6 +267,17 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
+    def get_ticks(self, order_book_id, date):
+        """
+        获取 Ticks
+
+        :param str order_book_id: 合约名
+        :param datetime.date date: 日期
+
+        :return: `numpy.ndarray`
+        """
+        raise NotImplementedError
+
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):
     """

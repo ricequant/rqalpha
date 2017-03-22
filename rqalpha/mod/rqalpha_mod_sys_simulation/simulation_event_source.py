@@ -16,6 +16,9 @@
 
 import datetime
 
+import numpy as np
+import numpy.lib.recfunctions as nprf
+
 from rqalpha.interface import AbstractEventSource
 from rqalpha.events import Event, EVENT
 from rqalpha.environment import Environment
@@ -23,6 +26,9 @@ from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.const import ACCOUNT_TYPE
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.model.tick import Tick
+
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
@@ -45,6 +51,7 @@ class SimulationEventSource(AbstractEventSource):
             raise patch_user_exc(CustomException(error))
         return universe
 
+    # [BEGIN] minute event helper
     @staticmethod
     def _get_stock_trading_minutes(trading_date):
         trading_minutes = set()
@@ -80,6 +87,7 @@ class SimulationEventSource(AbstractEventSource):
             elif account_type == ACCOUNT_TYPE.FUTURE:
                 trading_minutes = trading_minutes.union(self._get_future_trading_minutes(trading_date))
         return sorted(list(trading_minutes))
+    # [END] minute event helper
 
     def events(self, start_date, end_date, frequency):
         if frequency == "1d":
@@ -95,7 +103,7 @@ class SimulationEventSource(AbstractEventSource):
 
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
                 yield Event(EVENT.SETTLEMENT, calendar_dt=dt_settlement, trading_dt=dt_settlement)
-        else:
+        elif frequency == '1m':
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
                 date = day.to_pydatetime()
@@ -139,3 +147,60 @@ class SimulationEventSource(AbstractEventSource):
 
                 dt = date.replace(hour=17, minute=0)
                 yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
+        elif frequency == "tick":
+            data_proxy = self._env.data_proxy
+            for day in data_proxy.get_trading_dates(start_date, end_date):
+                before_trading_flag = True
+                date = day.to_pydatetime()
+                last_dt = None
+                done = False
+
+                order_book_id_map = {}
+                today_ticks_cache = {}
+                dt_before_day_trading = date.replace(hour=8, minute=30)
+                last_tick = None
+                while True:
+                    if done:
+                        break
+                    exit_loop = True
+
+                    # get today ticks
+                    for idx, order_book_id in enumerate(self._get_universe()):
+                        order_book_id_map[idx] = order_book_id
+                        ticks = data_proxy.get_ticks(order_book_id, date)
+                        ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx))
+                        today_ticks_cache[order_book_id] = ticks
+
+                    # merge ticks arrays into one
+                    merge_ticks = np.concatenate(today_ticks_cache.values())
+
+                    names = merge_ticks.dtype.names
+                    names_size = len(names)
+
+                    # yield ticks
+                    for idx in range(len(merge_ticks)):
+                        raw_tick = merge_ticks[idx]
+                        order_book_id = order_book_id_map[raw_tick[-1]]
+                        snapshot = {
+                        }
+                        for i in range(names_size):
+                            snapshot[names[i]] = raw_tick[i]
+                        last_tick = tick = Tick(order_book_id, dt, snapshot)
+                        yield Event(EVENT.TICK, tick=tick)
+
+                    if self._universe_changed:
+                        self._universe_changed = False
+                        # last_dt = calendar_dt
+                        exit_loop = False
+                        break
+
+                    if exit_loop:
+                        done = True
+
+                dt = date.replace(hour=15, minute=30)
+                yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
+
+                dt = date.replace(hour=17, minute=0)
+                yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
+        else:
+            raise NotImplementedError(_("Frequency {} is not support.").format(frequency))

@@ -164,3 +164,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def get_future_info(self, order_book_id, hedge_type=HEDGE_TYPE.SPECULATION):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_future_info(instrument, hedge_type)
+
+    def get_ticks(self, order_book_id, date):
+        return self._data_source.get_ticks(order_book_id, date)

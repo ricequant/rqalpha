@@ -65,21 +65,86 @@ class Tick(object):
     def prev_settlement(self):
         return self._snapshot['prev_settlement']
 
+    # FIXME use dynamic creation
     @property
-    def bid(self):
-        return self._snapshot['bid']
+    def b1(self):
+        return self._snapshot['b1']
 
     @property
-    def bid_volume(self):
-        return self._snapshot['bid_volume']
+    def b2(self):
+        return self._snapshot['b2']
 
     @property
-    def ask(self):
-        return self._snapshot['ask']
+    def b3(self):
+        return self._snapshot['b3']
 
     @property
-    def ask_volume(self):
-        return self._snapshot['ask_volume']
+    def b4(self):
+        return self._snapshot['b4']
+
+    @property
+    def b5(self):
+        return self._snapshot['b5']
+
+    @property
+    def b1_v(self):
+        return self._snapshot['b1_v']
+
+    @property
+    def b2_v(self):
+        return self._snapshot['b2_v']
+
+    @property
+    def b3_v(self):
+        return self._snapshot['b3_v']
+
+    @property
+    def b4_v(self):
+        return self._snapshot['b4_v']
+
+    @property
+    def b5_v(self):
+        return self._snapshot['b5_v']
+
+    @property
+    def a1(self):
+        return self._snapshot['a1']
+
+    @property
+    def a2(self):
+        return self._snapshot['a2']
+
+    @property
+    def a3(self):
+        return self._snapshot['a3']
+
+    @property
+    def a4(self):
+        return self._snapshot['a4']
+
+    @property
+    def a5(self):
+        return self._snapshot['a5']
+
+    @property
+    def a1_v(self):
+        return self._snapshot['a1_v']
+
+    @property
+    def a2_v(self):
+        return self._snapshot['a2_v']
+
+    @property
+    def a3_v(self):
+        return self._snapshot['a3_v']
+
+    @property
+    def a4_v(self):
+        return self._snapshot['a4_v']
+
+    @property
+    def a5_v(self):
+        return self._snapshot['a5_v']
 
     @property
     def limit_up(self):
