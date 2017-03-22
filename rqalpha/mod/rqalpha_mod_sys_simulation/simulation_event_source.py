@@ -168,11 +168,13 @@ class SimulationEventSource(AbstractEventSource):
                     for idx, order_book_id in enumerate(self._get_universe()):
                         order_book_id_map[idx] = order_book_id
                         ticks = data_proxy.get_ticks(order_book_id, date)
-                        ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx))
+                        ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
                         today_ticks_cache[order_book_id] = ticks
 
                     # merge ticks arrays into one
-                    merge_ticks = np.concatenate(today_ticks_cache.values())
+                    merge_ticks = np.concatenate(list(today_ticks_cache.values()))
+
+                    merge_ticks.sort(order=("date", "time"))
 
                     names = merge_ticks.dtype.names
                     names_size = len(names)
@@ -181,7 +183,7 @@ class SimulationEventSource(AbstractEventSource):
                     for idx in range(len(merge_ticks)):
                         raw_tick = merge_ticks[idx]
                         order_book_id = order_book_id_map[raw_tick[-1]]
-                        snapshot = {
+                        tick_dict = {
                             "open": 0,
                             "limit_up": 0,
                             "limit_down": 0,
@@ -190,9 +192,10 @@ class SimulationEventSource(AbstractEventSource):
                             "trading_date": date,
                         }
                         for i in range(names_size):
-                            snapshot[names[i]] = raw_tick[i]
-                        tick = Tick(order_book_id, dt, snapshot)
-                        yield Event(EVENT.TICK, tick=tick)
+                            tick_dict[names[i]] = raw_tick[i]
+                        dt = tick_dict["time"]
+                        tick = Tick(order_book_id, dt, tick_dict)
+                        yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=dt, tick=tick)
 
                     if self._universe_changed:
                         self._universe_changed = False

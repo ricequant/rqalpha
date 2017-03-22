@@ -56,8 +56,8 @@ class BaseDataSource(AbstractDataSource):
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
 
-        from .bcolz_loader import TicksLoader
-        self.tick_loader = TicksLoader("/Users/cedricporter/tmp/mini")
+        from .ticks_loader import TicksLoader
+        self.tick_loader = TicksLoader("~/.rqalpha/ticks")
 
     def get_dividend(self, order_book_id, adjusted=True):
         if adjusted:
@@ -170,7 +170,7 @@ class BaseDataSource(AbstractDataSource):
         return None
 
     def available_data_range(self, frequency):
-        if frequency == '1d':
+        if frequency in ['tick', '1d']:
             s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
