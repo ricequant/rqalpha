@@ -19,3 +19,9 @@ from .mod import RealtimeTradeMod
 
 def load_mod():
     return RealtimeTradeMod()
+
+
+__config__ = {
+    "persist_path": "./persist/strategy/",
+    "fps": 3,
+}

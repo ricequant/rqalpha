@@ -139,7 +139,6 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     if isinstance(base_config.end_date, datetime.datetime):
         base_config.end_date = base_config.end_date.date()
 
-
     if base_config.data_bundle_path is None:
         base_config.data_bundle_path = os.path.expanduser("~/.rqalpha")
 

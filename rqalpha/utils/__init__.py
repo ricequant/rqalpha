@@ -45,9 +45,6 @@ class Singleton(type):
 
 
 class RqAttrDict(object):
-    '''
-    fuck attrdict
-    '''
 
     def __init__(self, d=None):
         self.__dict__ = d if d is not None else dict()

@@ -6,7 +6,7 @@ def init(context):
 
 def handle_bar(context, bar_dict):
     buy_open(context.s1, 1)
-    logger.info("我的天啊".decode('utf-8'))
+    # logger.info("我的天啊".decode('utf-8'))
 
 
 __config__ = {

@@ -19,3 +19,13 @@ from .mod import RiskManagerMod
 
 def load_mod():
     return RiskManagerMod()
+
+
+__config__ = {
+    # available_cash: 查可用资金是否充足，默认开启
+    "available_cash": True,
+    # available_position: 检查可平仓位是否充足，默认开启
+    "available_position": True,
+    # short_stock: 允许裸卖空
+    "short_stock": False,
+}

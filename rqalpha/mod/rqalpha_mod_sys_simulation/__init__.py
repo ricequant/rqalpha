@@ -19,3 +19,17 @@ from .mod import SimulationMod
 
 def load_mod():
     return SimulationMod()
+
+
+__config__ = {
+    # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
+    "matching_type": "current_bar",
+    # 设置滑点
+    "slippage": 0,
+    # 设置手续费乘数，默认为1
+    "commission_multiplier": 1,
+    # bar_limit: 在处于涨跌停时，无法买进/卖出，默认开启
+    "bar_limit": True,
+    # 按照当前成交量的百分比进行撮合
+    "volume_percent": 0.25,
+}
