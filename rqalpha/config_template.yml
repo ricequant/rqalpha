@@ -60,10 +60,8 @@ validator:
 
 mod:
   # 回测 / 模拟交易 支持 Mod
-  simulation:
-    lib: 'rqalpha.mod.simulation'
+  sys_simulation:
     enabled: true
-    priority: 100
     # 是否开启信号模式
     signal: false
     # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
@@ -77,36 +75,27 @@ mod:
     # 按照当前成交量的百分比进行撮合
     volume_percent: 0.25
   # 技术分析API
-  funcat_api:
-    lib: 'rqalpha.mod.funcat_api'
+  sys_funcat:
     enabled: false
-    priority: 200
   # 开启该选项，可以在命令行查看回测进度
-  progress:
-    lib: 'rqalpha.mod.rqalpha_mod_progress'
+  sys_progress:
     enabled: false
-    priority: 400
   # 接收实时行情运行
-  simple_stock_realtime_trade:
-    lib: 'rqalpha.mod.simple_stock_realtime_trade'
+  sys_stock_realtime:
     persist_path: "./persist/strategy/"
     fps: 3
     enabled: false
-    priority: 500
-  risk_manager:
-    lib: 'rqalpha.mod.risk_manager'
+  sys_risk:
     enabled: true
-    priority: 700
     # available_cash: 查可用资金是否充足，默认开启
     available_cash: true
     # available_position: 检查可平仓位是否充足，默认开启
     available_position: true
     # short_stock: 允许裸卖空
     short_stock: false
-  analyser:
+  sys_analyser:
     priority: 100
     enabled: true
-    lib: 'rqalpha.mod.analyser'
     record: true
     output_file: ~
     plot: ~
