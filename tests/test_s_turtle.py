@@ -113,6 +113,7 @@ def handle_bar(context, bar_dict):
 
     context.pre_trading_signal = context.trading_signal
 
+
 __config__ = {
     "base": {
         "strategy_type": "stock",

@@ -49,6 +49,7 @@ class SimulationMod(AbstractMod):
 
     @staticmethod
     def parse_matching_type(me_str):
+        print(me_str, type(me_str))
         assert isinstance(me_str, six.string_types)
         if me_str == "current_bar":
             return MATCHING_TYPE.CURRENT_BAR_CLOSE

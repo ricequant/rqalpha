@@ -102,11 +102,13 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     # load default config from rqalpha
     config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
-
     # load user config
     user_config = load_config(config_path)
+
+    # use user config to extend system default config
     deep_update(user_config, config)
 
+    # use config_args to extend config
     if click_type:
         for key, value in six.iteritems(config_args):
             if key in ["config_path"]:
@@ -127,7 +129,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
         deep_update(config_args, config)
 
     # config from user code
-    config = parse_user_config(config, source_code)
+    config = parse_user_config_from_code(config, source_code)
 
     config = RqAttrDict(config)
 
@@ -200,7 +202,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     return config
 
 
-def parse_user_config(config, source_code=None):
+def parse_user_config_from_code(config, source_code=None):
     try:
         if source_code is None:
             with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
