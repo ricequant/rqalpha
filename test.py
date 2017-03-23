@@ -173,7 +173,7 @@ def test_api():
             "log_level": "error",
         },
         "mod": {
-            "progress": {
+            "sys_progress": {
                 "enabled": False,
                 "priority": 400,
             },
@@ -194,7 +194,7 @@ def test_api():
             "log_level": "error",
         },
         "mod": {
-            "progress": {
+            "sys_progress": {
                 "enabled": False,
                 "priority": 400,
             },
@@ -215,7 +215,7 @@ def test_api():
             "log_level": "error",
         },
         "mod": {
-            "progress": {
+            "sys_progress": {
                 "enabled": False,
                 "priority": 400,
             },
@@ -259,6 +259,7 @@ def test_api():
 
 def test_strategy():
     get_test_files()
+
 
 if __name__ == '__main__':
     if is_enable_coverage():

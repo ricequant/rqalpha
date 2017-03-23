@@ -31,6 +31,7 @@ class SimulationMod(AbstractMod):
         pass
 
     def start_up(self, env, mod_config):
+        print("startup", mod_config)
         mod_config.matching_type = self.parse_matching_type(mod_config.matching_type)
         if mod_config.commission_multiplier < 0:
             raise patch_user_exc(ValueError(_(u"invalid commission multiplier value: value range is [0, +∞)")))
@@ -49,7 +50,7 @@ class SimulationMod(AbstractMod):
 
     @staticmethod
     def parse_matching_type(me_str):
-        print(me_str, type(me_str))
+        print("parse_matching_type", me_str, type(me_str))
         assert isinstance(me_str, six.string_types)
         if me_str == "current_bar":
             return MATCHING_TYPE.CURRENT_BAR_CLOSE
