@@ -6,7 +6,6 @@ def init(context):
 
 def handle_bar(context, bar_dict):
     buy_open(context.s1, 1)
-    # logger.info("我的天啊".decode('utf-8'))
 
 
 __config__ = {
@@ -15,9 +14,8 @@ __config__ = {
         "start_date": "2015-01-09",
         "end_date": "2015-03-09",
         "frequency": "1d",
-        "matching_type": "next_bar",
+        "matching_type": "current_bar",
         "future_starting_cash": 1000000,
-        "commission_multiplier": 0.01,
         "benchmark": None,
     },
     "extra": {
