@@ -93,7 +93,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--report', 'mod__sys_analyser__report_save_path', type=click.Path(writable=True), help="save report")
 @click.option('-o', '--output-file', 'mod__sys_analyser__output_file', type=click.Path(writable=True),
               help="output result pickle file")
-@click.option('--progress/--no-progress', 'mod__sys_progress__enabled', default=None, help="show progress bar")
 @click.option('--short-stock', 'mod__sys_risk__short_stock', is_flag=True, help="enable stock shorting")
 @click.option('--signal', 'mod__sys_simulation__signal', is_flag=True, help="exclude match engine")
 @click.option('-sp', '--slippage', 'mod__sys_simulation__slippage', type=click.FLOAT)

@@ -31,7 +31,7 @@ def cli_injection(cli):
     可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
     """
     cli.commands['run'].params.append(
-        click.Option(("--progress", "mod__progress__enabled"),
+        click.Option(("--progress", "mod__sys_progress__enabled"),
                      is_flag=True,
                      default=False,
                      help="[Progress]show progress bar")
