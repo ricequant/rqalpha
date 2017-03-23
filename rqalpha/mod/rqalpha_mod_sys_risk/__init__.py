@@ -14,12 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mod import RiskManagerMod
-
-
-def load_mod():
-    return RiskManagerMod()
-
+import click
 
 __config__ = {
     # available_cash: 查可用资金是否充足，默认开启
@@ -29,3 +24,24 @@ __config__ = {
     # short_stock: 允许裸卖空
     "short_stock": False,
 }
+
+
+def load_mod():
+    from .mod import RiskManagerMod
+    return RiskManagerMod()
+
+
+def cli_injection(cli):
+    """
+    注入 --short-stock option
+    可以通过 `rqalpha run --short-stock` 来开启允许卖空
+    """
+    cli_prefix = "mod__sys_plot__"
+
+    cli.commands['run'].params.append(
+        click.Option(
+            ("--short-stock", cli_prefix + "short_stock"),
+            is_flag=True,
+            help="[sys_risk]enable stock shorting"
+        )
+    )

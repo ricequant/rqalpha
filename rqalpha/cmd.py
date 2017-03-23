@@ -25,9 +25,16 @@ def cmd_cli(ctx, verbose):
 
 
 def entry_point():
+    from rqalpha.utils.config import get_default_config_path
+    get_default_config_path()
+
     # 获取 Mod 中的命令
     # noinspection PyUnresolvedReferences
-    from . import mod
+    from .mod import SYSTEM_MOD_LIST
+    mod_lib_prefix = "rqalpha.mod.rqalpha_mod_"
+    for sys_mod in SYSTEM_MOD_LIST:
+        lib_name = mod_lib_prefix + sys_mod
+        __import__(lib_name)
 
     # 获取第三方包中的命令
     from pkgutil import iter_modules

@@ -16,12 +16,15 @@
 
 import click
 from rqalpha import cmd_cli
-from rqalpha import cli
 
 from .mod import PlotMod
 
 
-cli_prefix = "mod__sys_plot__"
+__config__ = {
+    "plot": None,
+    "plot_save_file": None,
+    "priority": -9999,
+}
 
 
 def load_mod():
@@ -33,26 +36,31 @@ def cli_injection(cli):
     注入 --plot option
     可以通过 `rqalpha run --plot` 的方式支持回测的时候显示进度条
     """
+    cli_prefix = "mod__sys_plot__"
+
     cli.commands['run'].params.append(
-        click.Option(('-p', '--plot/--no-plot', cli_prefix + 'plot'),
-                     default=None,
-                     help="plot result [sys_plot]")
+        click.Option(
+            ('-p', '--plot/--no-plot', cli_prefix + 'plot'),
+            default=None,
+            help="[sys_plot]plot result"
+        )
     )
     cli.commands['run'].params.append(
-        click.Option(('--plot-save', cli_prefix + 'plot_save_file'),
-                     default=None,
-                     help="save plot to file [sys_plot]"
-                     )
+        click.Option(
+            ('--plot-save', cli_prefix + 'plot_save_file'),
+            default=None,
+            help="[sys_plot]save plot to file"
+        )
     )
 
 
-@cli.command()
+@cmd_cli.command()
 @click.argument('result_dict_file', type=click.Path(exists=True), required=True)
 @click.option('--show/--hide', 'is_show', default=True)
 @click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
 def plot(result_dict_file, is_show, plot_save_file):
     """
-    Draw result DataFrame [sys_plot]
+    [sys_plot]draw result DataFrame
     """
     import pandas as pd
     from .plot import plot_result
@@ -62,10 +70,3 @@ def plot(result_dict_file, is_show, plot_save_file):
         plot_result(result_dict)
     if plot_save_file:
         plot_result(result_dict, show_windows=False, savefile=plot_save_file)
-
-
-__config__ = {
-    "plot": None,
-    "plot_save_file": None,
-    "priority": -9999,
-}

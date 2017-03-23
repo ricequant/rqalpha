@@ -34,6 +34,8 @@ def cli(ctx, verbose):
 
 
 def entry_point():
+    from rqalpha.utils.config import get_default_config_path
+    get_default_config_path()
     from . import mod
     from pkgutil import iter_modules
     # inject system mod
@@ -88,7 +90,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
-@click.option('--short-stock', 'mod__sys_risk__short_stock', is_flag=True, help="enable stock shorting")
 @click.option('--signal', 'mod__sys_simulation__signal', is_flag=True, help="exclude match engine")
 @click.option('-sp', '--slippage', 'mod__sys_simulation__slippage', type=click.FLOAT)
 @click.option('-cm', '--commission-multiplier', 'mod__sys_simulation__commission_multiplier', type=click.FLOAT)

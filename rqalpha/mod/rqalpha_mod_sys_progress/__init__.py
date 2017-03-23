@@ -15,13 +15,14 @@
 # limitations under the License.
 
 import click
-from rqalpha import cmd_cli
 
-from .mod import ProgressMod
+__config__ = {
+    "show": False
+}
 
 
 def load_mod():
-
+    from .mod import ProgressMod
     return ProgressMod()
 
 
@@ -30,14 +31,12 @@ def cli_injection(cli):
     注入 --progress option
     可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
     """
+    cli_prefix = "mod__sys_progress__"
     cli.commands['run'].params.append(
-        click.Option(("--progress", "mod__sys_progress__enabled"),
-                     is_flag=True,
-                     default=False,
-                     help="[Progress]show progress bar")
+        click.Option(
+            ("--progress", cli_prefix + "show"),
+            is_flag=True,
+            help="[sys_progress]show progress bar"
+        )
     )
 
-
-@cmd_cli.command()
-def progress_test():
-    print("This is progress command injection test")

@@ -16,11 +16,15 @@
 
 import click
 
-from rqalpha import cmd_cli
-from .mod import AnalyserMod
+__config__ = {
+    "record": True,
+    "output_file": None,
+    "report_save_path": None,
+}
 
 
 def load_mod():
+    from .mod import AnalyserMod
     return AnalyserMod()
 
 
@@ -30,18 +34,16 @@ def cli_injection(cli):
     可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
     """
     cli.commands['run'].params.append(
-        click.Option(('--report', 'mod__sys_analyser__report_save_path'),
-                     type=click.Path(writable=True), help="save report [sys_analyser]")
+        click.Option(
+            ('--report', 'mod__sys_analyser__report_save_path'),
+            type=click.Path(writable=True),
+            help="[sys_analyser]save report"
+        )
     )
     cli.commands['run'].params.append(
-        click.Option(('-o', '--output-file', 'mod__sys_analyser__output_file'),
-                     type=click.Path(writable=True),
-                     help="output result pickle file [sys_analyser]")
+        click.Option(
+            ('-o', '--output-file', 'mod__sys_analyser__output_file'),
+            type=click.Path(writable=True),
+            help="[sys_analyser]output result pickle file"
+        )
     )
-
-
-__config__ = {
-    "record": True,
-    "output_file": None,
-    "report_save_path": None,
-}
