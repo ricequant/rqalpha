@@ -18,6 +18,7 @@ from __future__ import division
 import pprint
 import re
 import six
+import collections
 
 from contextlib import contextmanager
 
@@ -62,6 +63,24 @@ class RqAttrDict(object):
         for k, v in six.iteritems(self.__dict__):
             yield k, v
 
+    def update(self, other):
+        RqAttrDict._update_dict_recursive(self, other)
+
+    @staticmethod
+    def _update_dict_recursive(target, other):
+        if isinstance(other, RqAttrDict):
+            other = other.__dict__
+        if isinstance(target, RqAttrDict):
+            target = target.__dict__
+
+        for k, v in six.iteritems(other):
+            if isinstance(v, collections.Mapping):
+                r = RqAttrDict._update_dict_recursive(target.get(k, {}), v)
+                target[k] = r
+            else:
+                target[k] = other[k]
+        return target
+
 
 def dummy_func(*args, **kwargs):
     return None
@@ -88,7 +107,7 @@ class Nop(object):
 def to_sector_name(s):
     from ..model.instrument import SectorCode, SectorCodeItem
 
-    for _, v in six.iteritems(SectorCode.__dict__):
+    for __, v in six.iteritems(SectorCode.__dict__):
         if isinstance(v, SectorCodeItem):
             if v.cn == s or v.en == s or v.name == s:
                 return v.name
@@ -99,7 +118,7 @@ def to_sector_name(s):
 def to_industry_code(s):
     from ..model.instrument import IndustryCode, IndustryCodeItem
 
-    for _, v in six.iteritems(IndustryCode.__dict__):
+    for __, v in six.iteritems(IndustryCode.__dict__):
         if isinstance(v, IndustryCodeItem):
             if v.name == s:
                 return v.code

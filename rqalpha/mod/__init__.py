@@ -59,7 +59,7 @@ class ModHandler(object):
             self._mod_dict[mod_name].start_up(self._env, mod_config)
 
     def tear_down(self, *args):
-        for mod_name, _ in reversed(self._mod_list):
+        for mod_name, __ in reversed(self._mod_list):
             self._mod_dict[mod_name].tear_down(*args)
 
 SYSTEM_MOD_LIST = [
