@@ -270,7 +270,6 @@ def run(config, source_code=None):
 
         # FIXME
         if 'sys_analyser' in env.mod_dict:
-            print("sys_analyser   " * 100)
             return env.mod_dict['sys_analyser']._result
     except CustomException as e:
         if init_succeed and env.config.base.persist and persist_helper:

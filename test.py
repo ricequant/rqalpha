@@ -175,7 +175,6 @@ def test_api():
         "mod": {
             "sys_progress": {
                 "enabled": False,
-                "priority": 400,
             },
         },
     }
@@ -196,7 +195,6 @@ def test_api():
         "mod": {
             "sys_progress": {
                 "enabled": False,
-                "priority": 400,
             },
         },
     }
@@ -217,7 +215,6 @@ def test_api():
         "mod": {
             "sys_progress": {
                 "enabled": False,
-                "priority": 400,
             },
         },
     }

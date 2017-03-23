@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 from importlib import import_module
 from collections import OrderedDict
 
@@ -49,9 +50,8 @@ class ModHandler(object):
             mod_module = import_module(lib_name)
             mod = mod_module.load_mod()
 
-            mod_config = RqAttrDict(getattr(mod_module, "__config__", {}))
+            mod_config = RqAttrDict(copy.deepcopy(getattr(mod_module, "__config__", {})))
             mod_config.update(user_mod_config)
-            print((mod_name, user_mod_config), mod_config)
             self._mod_list[idx] = (mod_name, mod_config)
             self._mod_dict[mod_name] = mod
 

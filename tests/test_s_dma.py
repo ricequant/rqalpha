@@ -46,7 +46,6 @@ __config__ = {
     "mod": {
         "sys_progress": {
             "enabled": True,
-            "priority": 400,
         },
         "sys_funcat": {
             "enabled": True,
