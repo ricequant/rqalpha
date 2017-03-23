@@ -109,23 +109,23 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         return gettext(txt) if use_chinese_fonts else txt
 
     fig_data = [
-        (0.00, label_height, value_height, _("Total Returns"), "{0:.3%}".format(summary["total_returns"]), red, black),
-        (0.15, label_height, value_height, _("Annual Returns"), "{0:.3%}".format(summary["annualized_returns"]), red, black),
-        (0.00, label_height2, value_height2, _("Benchmark Returns"), "{0:.3%}".format(summary.get("benchmark_total_returns", 0)), blue,
+        (0.00, label_height, value_height, _(u"Total Returns"), "{0:.3%}".format(summary["total_returns"]), red, black),
+        (0.15, label_height, value_height, _(u"Annual Returns"), "{0:.3%}".format(summary["annualized_returns"]), red, black),
+        (0.00, label_height2, value_height2, _(u"Benchmark Returns"), "{0:.3%}".format(summary.get("benchmark_total_returns", 0)), blue,
          black),
-        (0.15, label_height2, value_height2, _("Benchmark Annual"), "{0:.3%}".format(summary.get("benchmark_annualized_returns", 0)),
+        (0.15, label_height2, value_height2, _(u"Benchmark Annual"), "{0:.3%}".format(summary.get("benchmark_annualized_returns", 0)),
          blue, black),
 
-        (0.30, label_height, value_height, _("Alpha"), "{0:.4}".format(summary["alpha"]), black, black),
-        (0.40, label_height, value_height, _("Beta"), "{0:.4}".format(summary["beta"]), black, black),
-        (0.55, label_height, value_height, _("Sharpe"), "{0:.4}".format(summary["sharpe"]), black, black),
-        (0.70, label_height, value_height, _("Sortino"), "{0:.4}".format(summary["sortino"]), black, black),
-        (0.85, label_height, value_height, _("Information Ratio"), "{0:.4}".format(summary["information_ratio"]), black, black),
+        (0.30, label_height, value_height, _(u"Alpha"), "{0:.4}".format(summary["alpha"]), black, black),
+        (0.40, label_height, value_height, _(u"Beta"), "{0:.4}".format(summary["beta"]), black, black),
+        (0.55, label_height, value_height, _(u"Sharpe"), "{0:.4}".format(summary["sharpe"]), black, black),
+        (0.70, label_height, value_height, _(u"Sortino"), "{0:.4}".format(summary["sortino"]), black, black),
+        (0.85, label_height, value_height, _(u"Information Ratio"), "{0:.4}".format(summary["information_ratio"]), black, black),
 
-        (0.30, label_height2, value_height2, _("Volatility"), "{0:.4}".format(summary["volatility"]), black, black),
-        (0.40, label_height2, value_height2, _("MaxDrawdown"), "{0:.3%}".format(summary["max_drawdown"]), black, black),
-        (0.55, label_height2, value_height2, _("Tracking Error"), "{0:.4}".format(summary["tracking_error"]), black, black),
-        (0.70, label_height2, value_height2, _("Downside Risk"), "{0:.4}".format(summary["downside_risk"]), black, black),
+        (0.30, label_height2, value_height2, _(u"Volatility"), "{0:.4}".format(summary["volatility"]), black, black),
+        (0.40, label_height2, value_height2, _(u"MaxDrawdown"), "{0:.3%}".format(summary["max_drawdown"]), black, black),
+        (0.55, label_height2, value_height2, _(u"Tracking Error"), "{0:.4}".format(summary["tracking_error"]), black, black),
+        (0.70, label_height2, value_height2, _(u"Downside Risk"), "{0:.4}".format(summary["downside_risk"]), black, black),
     ]
 
     ax = plt.subplot(gs[:3, :-1])
@@ -134,7 +134,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         ax.text(x, y1, label, color=label_color, fontsize=font_size)
         ax.text(x, y2, value, color=value_color, fontsize=value_font_size)
     for x, y1, y2, label, value, label_color, value_color in [
-        (0.85, label_height2, value_height2, _("MaxDD/MaxDDD"), max_dd_info, black, black)]:
+        (0.85, label_height2, value_height2, _(u"MaxDD/MaxDDD"), max_dd_info, black, black)]:
         ax.text(x, y1, label, color=label_color, fontsize=font_size)
         ax.text(x, y2, value, color=value_color, fontsize=8)
 
@@ -147,15 +147,15 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     ax.grid(b=True, which='major', linewidth=1)
 
     # plot two lines
-    ax.plot(total_portfolios["total_returns"], label=_("strategy"), alpha=1, linewidth=2, color=red)
+    ax.plot(total_portfolios["total_returns"], label=_(u"strategy"), alpha=1, linewidth=2, color=red)
     if benchmark_portfolios is not None:
-        ax.plot(benchmark_portfolios["total_returns"], label=_("benchmark"), alpha=1, linewidth=2, color=blue)
+        ax.plot(benchmark_portfolios["total_returns"], label=_(u"benchmark"), alpha=1, linewidth=2, color=blue)
 
     # plot MaxDD/MaxDDD
     ax.plot([index[max_dd_end], index[max_dd_start]], [rt[max_dd_end], rt[max_dd_start]],
-            'v', color='Green', markersize=8, alpha=.7, label=_("MaxDrawdown"))
+            'v', color='Green', markersize=8, alpha=.7, label=_(u"MaxDrawdown"))
     ax.plot([index[max_ddd_start_day], index[max_ddd_end_day]],
-            [rt[max_ddd_start_day], rt[max_ddd_end_day]], 'D', color='Blue', markersize=8, alpha=.7, label=_("MaxDDD"))
+            [rt[max_ddd_start_day], rt[max_ddd_end_day]], 'D', color='Blue', markersize=8, alpha=.7, label=_(u"MaxDDD"))
 
     # place legend
     leg = plt.legend(loc="best")

@@ -109,7 +109,7 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
         raise RQInvalidArgument(_('style should be OrderStyle'))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
-            raise RQInvalidArgument(_("Limit order price should be positive"))
+            raise RQInvalidArgument(_(u"Limit order price should be positive"))
     order_book_id = assure_stock_order_book_id(id_or_ins)
     env = Environment.get_instance()
 
@@ -132,15 +132,15 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
 
     if price == 0:
         user_system_log.warn(
-            _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         r_order.mark_rejected(
-            _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 
     if amount == 0:
         # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
         # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
-        r_order.mark_rejected(_("Order Creation Failed: 0 order quantity"))
+        r_order.mark_rejected(_(u"Order Creation Failed: 0 order quantity"))
         return r_order
     if r_order.type == ORDER_TYPE.MARKET:
         r_order.set_frozen_price(price)
@@ -246,7 +246,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
         raise RQInvalidArgument(_('style should be OrderStyle'))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
-            raise RQInvalidArgument(_("Limit order price should be positive"))
+            raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
     env = Environment.get_instance()
@@ -452,12 +452,12 @@ def assure_stock_order_book_id(id_or_symbols):
             return order_book_id
         else:
             raise RQInvalidArgument(
-                _("{order_book_id} is not supported in current strategy type").format(
+                _(u"{order_book_id} is not supported in current strategy type").format(
                     order_book_id=order_book_id))
     elif isinstance(id_or_symbols, six.string_types):
         return assure_stock_order_book_id(instruments(id_or_symbols))
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
 
 def downsize_amount(amount, position):

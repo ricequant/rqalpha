@@ -35,7 +35,7 @@ class PriceRatioSlippage(BaseSlippage):
         if 0 <= rate < 1:
             self.rate = rate
         else:
-            raise patch_user_exc(ValueError(_("invalid slippage rate value: value range is [0, 1)")))
+            raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is [0, 1)")))
 
     def get_trade_price(self, side, price):
         return price + price * self.rate * (1 if side == SIDE.BUY else -1)

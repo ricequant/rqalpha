@@ -86,11 +86,11 @@ def _validate_benchmark(config, data_proxy):
     end_date = config.base.end_date
     if instrument.listed_date.date() > start_date:
         raise patch_user_exc(ValueError(
-            _("benchmark {benchmark} has not been listed on {start_date}").format(benchmark=benchmark,
+            _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=benchmark,
                                                                                   start_date=start_date)))
     if instrument.de_listed_date.date() < end_date:
         raise patch_user_exc(ValueError(
-            _("benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
+            _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
                                                                                end_date=end_date)))
 
 
@@ -116,7 +116,7 @@ def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
         data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
     if (confirm and os.path.exists(data_bundle_path) and data_bundle_path != default_bundle_path and
             os.listdir(data_bundle_path)):
-        click.confirm(_("""
+        click.confirm(_(u"""
 [WARNING]
 Target bundle path {data_bundle_path} is not empty.
 The content of this folder will be REMOVED before updating.
@@ -151,7 +151,7 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     tar.extractall(data_bundle_path)
     tar.close()
     os.remove(tmp)
-    six.print_(_("Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
+    six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
 def run(config, source_code=None):
@@ -266,7 +266,7 @@ def run(config, source_code=None):
             output_profile_result(env)
 
         mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
-        system_log.debug(_("strategy run successfully, normal exit"))
+        system_log.debug(_(u"strategy run successfully, normal exit"))
 
         # FIXME
         if 'analyser' in env.mod_dict:
@@ -275,7 +275,7 @@ def run(config, source_code=None):
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
 
-        user_detail_log.exception(_("strategy execute exception"))
+        user_detail_log.exception(_(u"strategy execute exception"))
         user_system_log.error(e.error)
         mod_handler.tear_down(const.EXIT_CODE.EXIT_USER_ERROR, e)
     except Exception as e:
@@ -288,10 +288,10 @@ def run(config, source_code=None):
         user_system_log.error(user_exc.error)
         code = const.EXIT_CODE.EXIT_USER_ERROR
         if not is_user_exc(exc_val):
-            system_log.exception(_("strategy execute exception"))
+            system_log.exception(_(u"strategy execute exception"))
             code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
         else:
-            user_detail_log.exception(_("strategy execute exception"))
+            user_detail_log.exception(_(u"strategy execute exception"))
 
         mod_handler.tear_down(code, user_exc)
 

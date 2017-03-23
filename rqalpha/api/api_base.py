@@ -126,7 +126,7 @@ def assure_order_book_id(id_or_ins):
     elif isinstance(id_or_ins, six.string_types):
         order_book_id = instruments(id_or_ins).order_book_id
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
     return order_book_id
 
@@ -170,7 +170,7 @@ def cancel_order(order):
     :type order: :class:`~Order` object
     """
     if order is None:
-        patch_user_exc(KeyError(_("Cancel order fail: invalid order id")))
+        patch_user_exc(KeyError(_(u"Cancel order fail: invalid order id")))
     Environment.get_instance().broker.cancel_order(order)
     return order
 
@@ -224,7 +224,7 @@ def subscribe(id_or_symbols):
         for item in id_or_symbols:
             current_universe.add(assure_order_book_id(item))
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
     verify_that('id_or_symbols')._are_valid_instruments("subscribe", id_or_symbols)
     Environment.get_instance().update_universe(current_universe)
 
@@ -255,7 +255,7 @@ def unsubscribe(id_or_symbols):
             i = assure_order_book_id(item)
             current_universe.discard(i)
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
     Environment.get_instance().update_universe(current_universe)
 

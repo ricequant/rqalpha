@@ -79,20 +79,20 @@ class ArgumentChecker(object):
         if isinstance(value, six.string_types):
             if config.base.run_type == RUN_TYPE.PAPER_TRADING:
                 if "88" in value:
-                    raise RQInvalidArgument(_("Main Future contracts[88] are not supported in paper trading."))
+                    raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
                 if "99" in value:
-                    raise RQInvalidArgument(_("Index Future contracts[99] are not supported in paper trading."))
+                    raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
             else:
                 if "88" in value:
                     global main_contract_warning_flag
                     if main_contract_warning_flag:
                         main_contract_warning_flag = False
-                        user_system_log.warn(_("Main Future contracts[88] are not supported in paper trading."))
+                        user_system_log.warn(_(u"Main Future contracts[88] are not supported in paper trading."))
                 if "99" in value:
                     global index_contract_warning_flag
                     if index_contract_warning_flag:
                         index_contract_warning_flag = False
-                        user_system_log.warn(_("Index Future contracts[99] are not supported in paper trading."))
+                        user_system_log.warn(_(u"Index Future contracts[99] are not supported in paper trading."))
             instrument = Environment.get_instance().get_instrument(value)
             if instrument is None:
                 self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
@@ -278,7 +278,7 @@ class ArgumentChecker(object):
 
         if not valid:
             raise RQInvalidArgument(
-                _("function {}: invalid {} argument, interval should be in form of '1d', '3m', '4q', '2y', "
+                _(u"function {}: invalid {} argument, interval should be in form of '1d', '3m', '4q', '2y', "
                   "got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))
@@ -292,7 +292,7 @@ class ArgumentChecker(object):
         for e in entities:
             if not isinstance(e, InstrumentedAttribute):
                 raise RQInvalidArgument(
-                    _("function {}: invalid {} argument, should be entity like "
+                    _(u"function {}: invalid {} argument, should be entity like "
                       "Fundamentals.balance_sheet.total_equity, got {} (type: {})").format(
                         func_name, self.arg_name, e, type(e)
                     ))
@@ -311,7 +311,7 @@ class ArgumentChecker(object):
 
         if not valid:
             raise RQInvalidArgument(
-                _("function {}: invalid {} argument, frequency should be in form of "
+                _(u"function {}: invalid {} argument, frequency should be in form of "
                   "'1m', '5m', '1d', got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))

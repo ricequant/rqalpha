@@ -147,7 +147,7 @@ def run_when_strategy_not_hold(func):
         if not Environment.get_instance().config.extra.is_hold:
             return func(*args, **kwargs)
         else:
-            system_log.debug(_("not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
+            system_log.debug(_(u"not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
 
     return wrapper
 

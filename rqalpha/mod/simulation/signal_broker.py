@@ -53,7 +53,7 @@ class SignalBroker(AbstractBroker):
         self._match(account, order)
 
     def cancel_order(self, order):
-        user_system_log.error(_("cancel_order function is not supported in signal mode"))
+        user_system_log.error(_(u"cancel_order function is not supported in signal mode"))
         return None
 
     def _match(self, account, order):
@@ -71,7 +71,7 @@ class SignalBroker(AbstractBroker):
                     listed_date=listed_date,
                 )
             else:
-                reason = _("Order Cancelled: current bar [{order_book_id}] miss market data.").format(
+                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
                     order_book_id=order.order_book_id)
             order.mark_rejected(reason)
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
@@ -89,7 +89,7 @@ class SignalBroker(AbstractBroker):
 
         if (order.side == SIDE.BUY and bar_status == BAR_STATUS.LIMIT_UP) or (
                 order.side == SIDE.SELL and bar_status == BAR_STATUS.LIMIT_DOWN):
-            user_system_log.warning(_("You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+            user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
                 bar_status=bar_status

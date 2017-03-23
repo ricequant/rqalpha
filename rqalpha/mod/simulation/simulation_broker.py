@@ -92,7 +92,7 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 
-        order.mark_cancelled(_("{order_id} order has been cancelled by user.").format(order_id=order.order_id))
+        order.mark_cancelled(_(u"{order_id} order has been cancelled by user.").format(order_id=order.order_id))
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_PASS, account=account, order=order))
 
@@ -111,7 +111,7 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def after_trading(self, event):
         for account, order in self._open_orders:
-            order.mark_rejected(_("Order Rejected: {order_book_id} can not match. Market close.").format(
+            order.mark_rejected(_(u"Order Rejected: {order_book_id} can not match. Market close.").format(
                 order_book_id=order.order_book_id
             ))
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))

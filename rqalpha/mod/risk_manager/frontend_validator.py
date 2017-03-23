@@ -50,15 +50,15 @@ class FrontendValidator(object):
             """
             instrument = env.get_instrument(order_book_id)
             if trading_date < instrument.listed_date.date():
-                order._mark_rejected(_("Order Rejected: {order_book_id} is not listed!").format(
+                order._mark_rejected(_(u"Order Rejected: {order_book_id} is not listed!").format(
                     order_book_id=order_book_id,
                 ))
             elif trading_date > instrument.de_listed_date.date():
-                order._mark_rejected(_("Order Rejected: {order_book_id} has been delisted!").format(
+                order._mark_rejected(_(u"Order Rejected: {order_book_id} has been delisted!").format(
                     order_book_id=order_book_id,
                 ))
             else:
-                order._mark_rejected(_("Order Rejected: {order_book_id} is not trading!").format(
+                order._mark_rejected(_(u"Order Rejected: {order_book_id} is not trading!").format(
                     order_book_id=order_book_id,
                 ))
             return False
@@ -67,7 +67,7 @@ class FrontendValidator(object):
             如果bar.is_trading为False，还需要判断是否为停盘，如果不是停牌，则说明交易量为0.
             """
             if bar.suspended:
-                order._mark_rejected(_("Order Rejected: {order_book_id} is suspended!").format(
+                order._mark_rejected(_(u"Order Rejected: {order_book_id} is suspended!").format(
                     order_book_id=order_book_id,
                 ))
                 return False

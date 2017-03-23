@@ -33,9 +33,9 @@ class SimulationMod(AbstractMod):
     def start_up(self, env, mod_config):
         mod_config.matching_type = self.parse_matching_type(mod_config.matching_type)
         if mod_config.commission_multiplier < 0:
-            raise patch_user_exc(ValueError(_("invalid commission multiplier value: value range is [0, +∞)")))
+            raise patch_user_exc(ValueError(_(u"invalid commission multiplier value: value range is [0, +∞)")))
         if env.config.base.margin_multiplier <= 0:
-            raise patch_user_exc(ValueError(_("invalid margin multiplier value: value range is (0, +∞]")))
+            raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
 
         if mod_config.signal:
             env.set_broker(SignalBroker(env, mod_config))

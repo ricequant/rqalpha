@@ -45,7 +45,7 @@ def user_std_handler_log_formatter(record, handler):
     log = "{dt} {level} {msg}".format(
         dt=dt,
         level=record.level_name,
-        msg=record.message,
+        msg=record.message.encode('utf-8'),
     )
     return log
 
@@ -59,7 +59,7 @@ def formatter_builder(tag):
         log = "[{formatter_tag}] [{time}] {level}: {msg}".format(
             formatter_tag=tag,
             level=record.level_name,
-            msg=record.message,
+            msg=record.message.encode('utf-8'),
             time=record.time,
         )
 

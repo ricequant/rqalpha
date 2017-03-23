@@ -105,7 +105,7 @@ class StockAccount(BaseAccount):
                 if Environment.get_instance().config.validator.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
                 user_system_log.warn(
-                    _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
+                    _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
                 )
                 self._positions.pop(order_book_id, None)
             elif position.quantity == 0:

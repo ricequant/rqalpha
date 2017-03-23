@@ -384,7 +384,7 @@ class BarMap(object):
                 bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
             except Exception as e:
                 system_log.exception(e)
-                raise patch_user_exc(KeyError(_("id_or_symbols {} does not exist").format(key)))
+                raise patch_user_exc(KeyError(_(u"id_or_symbols {} does not exist").format(key)))
             if bar is None:
                 return BarObject(instrument, NANDict, self._dt)
             else:

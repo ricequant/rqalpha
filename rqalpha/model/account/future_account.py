@@ -118,7 +118,7 @@ class FutureAccount(BaseAccount):
             if position.is_de_listed() and position.buy_quantity + position.sell_qauntity != 0:
                 self._total_cash += position.market_value * position.contract_multiplier
                 user_system_log.warn(
-                    _("{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
+                    _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
                 self._positions.pop(order_book_id, None)
             elif position.buy_quantity == 0 and position.sell_quantity == 0:
                 self._positions.pop(order_book_id, None)

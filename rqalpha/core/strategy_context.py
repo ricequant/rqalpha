@@ -223,12 +223,12 @@ class StrategyContext(object):
 
     @property
     def stock_portfolio(self):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.stock_portfolio'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.stock_portfolio'))
         return self.stock_account
 
     @property
     def future_portfolio(self):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.future_portfolio'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.future_portfolio'))
         return self.future_account
 
     @property
@@ -253,20 +253,20 @@ class StrategyContext(object):
 
     @slippage.setter
     def slippage(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.slippage'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.slippage'))
 
     @benchmark.setter
     def benchmark(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.benchmark'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.benchmark'))
 
     @margin_rate.setter
     def margin_rate(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.margin_rate'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.margin_rate'))
 
     @commission.setter
     def commission(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.commission'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.commission'))
 
     @short_selling_allowed.setter
     def short_selling_allowed(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.short_selling_allowed'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.short_selling_allowed'))

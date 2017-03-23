@@ -60,7 +60,7 @@ def order(id_or_ins, amount, side, position_effect, style):
     if amount <= 0:
         raise RuntimeError
     if isinstance(style, LimitOrder) and style.get_limit_price() <= 0:
-        raise RQInvalidArgument(_("Limit order price should be positive"))
+        raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
     order_book_id = assure_future_order_book_id(id_or_ins)
     env = Environment.get_instance()
@@ -72,9 +72,9 @@ def order(id_or_ins, amount, side, position_effect, style):
 
     if np.isnan(price) or price == 0:
         user_system_log.warn(
-            _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         r_order.mark_rejected(
-            _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 
     if r_order.type == ORDER_TYPE.MARKET:
@@ -173,14 +173,14 @@ def assure_future_order_book_id(id_or_symbols):
     if isinstance(id_or_symbols, Instrument):
         if id_or_symbols.type != "Future":
             raise RQInvalidArgument(
-                _("{order_book_id} is not supported in current strategy type").format(
+                _(u"{order_book_id} is not supported in current strategy type").format(
                     order_book_id=id_or_symbols.order_book_id))
         else:
             return id_or_symbols.order_book_id
     elif isinstance(id_or_symbols, six.string_types):
         return assure_future_order_book_id(instruments(id_or_symbols))
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
 
 @export_as_api

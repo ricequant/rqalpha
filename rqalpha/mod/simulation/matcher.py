@@ -56,12 +56,12 @@ class Matcher(object):
             if bar_status == BAR_STATUS.ERROR:
                 listed_date = bar.instrument.listed_date.date()
                 if listed_date == self._trading_dt.date():
-                    reason = _("Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
+                    reason = _(u"Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
                         order_book_id=order.order_book_id,
                         listed_date=listed_date,
                     )
                 else:
-                    reason = _("Order Cancelled: current bar [{order_book_id}] miss market data.").format(
+                    reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
                         order_book_id=order.order_book_id)
                 order.mark_rejected(reason)
                 continue

@@ -35,7 +35,7 @@ from ..mod.utils import mod_config_value_parse
 
 def load_config(config_path, loader=yaml.Loader, verify_version=True):
     if not os.path.exists(config_path):
-        system_log.error(_("config.yml not found in {config_path}").format(config_path))
+        system_log.error(_(u"config.yml not found in {config_path}").format(config_path))
         return False
     with codecs.open(config_path, encoding="utf-8") as stream:
         config = yaml.load(stream, loader)
@@ -69,7 +69,7 @@ def config_version_verify(config, config_path):
         shutil.move(config_path, back_config_file_path)
         shutil.copy(config_template_path, config_path)
 
-        system_log.warning(_("""
+        system_log.warning(_(u"""
 Your current config file {config_file_path} is too old and may cause RQAlpha running error.
 RQAlpha has replaced the config file with the newest one.
 the backup config file has been saved in {back_config_file_path}.
@@ -150,13 +150,13 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     if not os.path.exists(base_config.data_bundle_path):
         system_log.error(
-            _("data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
+            _(u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
                 bundle_path=base_config.data_bundle_path))
         return
 
     if source_code is None and not os.path.exists(base_config.strategy_file):
         system_log.error(
-            _("strategy file not found in {strategy_file}").format(strategy_file=base_config.strategy_file))
+            _(u"strategy file not found in {strategy_file}").format(strategy_file=base_config.strategy_file))
         return
 
     base_config.run_type = parse_run_type(base_config.run_type)
