@@ -38,11 +38,8 @@ class ModHandler(object):
             mod_config = getattr(config.mod, mod_name)
             if not mod_config.enabled:
                 continue
-            if not hasattr(mod_config, "priority"):
-                setattr(mod_config, "priority", 100)
             self._mod_list.append((mod_name, mod_config))
 
-        self._mod_list.sort(key=lambda item: item[1].priority)
         for idx, (mod_name, user_mod_config) in enumerate(self._mod_list):
             if mod_name in SYSTEM_MOD_LIST:
                 lib_name = "rqalpha.mod.rqalpha_mod_" + mod_name
@@ -55,6 +52,7 @@ class ModHandler(object):
             self._mod_list[idx] = (mod_name, mod_config)
             self._mod_dict[mod_name] = mod
 
+        self._mod_list.sort(key=lambda item: getattr(item[1], "priority", 100))
         environment.mod_dict = self._mod_dict
 
     def start_up(self):

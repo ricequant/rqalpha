@@ -53,4 +53,5 @@ def plot():
 __config__ = {
     "plot": None,
     "plot_save_file": None,
+    "priority": -9999,
 }
