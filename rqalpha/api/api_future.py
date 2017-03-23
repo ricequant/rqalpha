@@ -73,12 +73,12 @@ def order(id_or_ins, amount, side, position_effect, style):
     if np.isnan(price) or price == 0:
         user_system_log.warn(
             _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        r_order._mark_rejected(
+        r_order.mark_rejected(
             _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 
     if r_order.type == ORDER_TYPE.MARKET:
-        r_order._frozen_price = price
+        r_order.set_frozen_price(price)
     env.broker.submit_order(r_order)
     return r_order
 

@@ -66,23 +66,23 @@ class SimulationBroker(AbstractBroker, Persistable):
     def set_state(self, state):
         delayed_orders = jsonpickle.loads(state.decode('utf-8'))
         for account in self._accounts.values():
-            for o in account.daily_orders.values():
-                if not o._is_final():
-                    if o.order_id in delayed_orders:
-                        self._delayed_orders.append((account, o))
+            for order in account.daily_orders.values():
+                if not order.is_final():
+                    if order.order_id in delayed_orders:
+                        self._delayed_orders.append((account, order))
                     else:
-                        self._open_orders.append((account, o))
+                        self._open_orders.append((account, order))
 
     def submit_order(self, order):
         account = Environment.get_instance().get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
-        if order._is_final():
+        if order.is_final():
             return
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
         self._open_orders.append((account, order))
-        order._active()
+        order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         if self._match_immediately:
             self._match()
@@ -92,7 +92,7 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 
-        order._mark_cancelled(_("{order_id} order has been cancelled by user.").format(order_id=order.order_id))
+        order.mark_cancelled(_("{order_id} order has been cancelled by user.").format(order_id=order.order_id))
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_PASS, account=account, order=order))
 
@@ -106,12 +106,12 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def before_trading(self, event):
         for account, order in self._open_orders:
-            order._active()
+            order.active()
             self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
 
     def after_trading(self, event):
         for account, order in self._open_orders:
-            order._mark_rejected(_("Order Rejected: {order_book_id} can not match. Market close.").format(
+            order.mark_rejected(_("Order Rejected: {order_book_id} can not match. Market close.").format(
                 order_book_id=order.order_book_id
             ))
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
@@ -133,8 +133,8 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def _match(self):
         self._matcher.match(self._open_orders)
-        final_orders = [(a, o) for a, o in self._open_orders if o._is_final()]
-        self._open_orders = [(a, o) for a, o in self._open_orders if not o._is_final()]
+        final_orders = [(a, o) for a, o in self._open_orders if o.is_final()]
+        self._open_orders = [(a, o) for a, o in self._open_orders if not o.is_final()]
 
         for account, order in final_orders:
             if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:

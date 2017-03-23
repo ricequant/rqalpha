@@ -133,17 +133,17 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     if price == 0:
         user_system_log.warn(
             _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        r_order._mark_rejected(
+        r_order.mark_rejected(
             _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 
     if amount == 0:
         # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
         # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
-        r_order._mark_rejected(_("Order Creation Failed: 0 order quantity"))
+        r_order.mark_rejected(_("Order Creation Failed: 0 order quantity"))
         return r_order
     if r_order.type == ORDER_TYPE.MARKET:
-        r_order._frozen_price = price
+        r_order.set_frozen_price(price)
     env.broker.submit_order(r_order)
 
     return r_order

@@ -63,7 +63,7 @@ class Matcher(object):
                 else:
                     reason = _("Order Cancelled: current bar [{order_book_id}] miss market data.").format(
                         order_book_id=order.order_book_id)
-                order._mark_rejected(reason)
+                order.mark_rejected(reason)
                 continue
 
             deal_price = self._deal_price_decider(bar)
@@ -75,7 +75,7 @@ class Matcher(object):
                         limit_price=order.price,
                         limit_up=bar.limit_up
                     )
-                    order._mark_rejected(reason)
+                    order.mark_rejected(reason)
                     continue
 
                 if order.price < bar.limit_down:
@@ -85,7 +85,7 @@ class Matcher(object):
                         limit_price=order.price,
                         limit_down=bar.limit_down
                     )
-                    order._mark_rejected(reason)
+                    order.mark_rejected(reason)
                     continue
 
                 if order.side == SIDE.BUY and order.price < deal_price:
@@ -97,13 +97,13 @@ class Matcher(object):
                     reason = _(
                         "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
                     ).format(order_book_id=order.order_book_id)
-                    order._mark_rejected(reason)
+                    order.mark_rejected(reason)
                     continue
                 elif self._bar_limit and order.side == SIDE.SELL and bar_status == BAR_STATUS.LIMIT_DOWN:
                     reason = _(
                         "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
                     ).format(order_book_id=order.order_book_id)
-                    order._mark_rejected(reason)
+                    order.mark_rejected(reason)
                     continue
 
             if self._bar_limit:
@@ -122,7 +122,7 @@ class Matcher(object):
                         order_book_id=order.order_book_id,
                         order_volume=order.quantity
                     )
-                    order._mark_cancelled(reason)
+                    order.mark_cancelled(reason)
                 continue
 
             unfilled = order.unfilled_quantity
@@ -133,7 +133,7 @@ class Matcher(object):
                                           price=price, amount=fill, close_today_amount=ct_amount)
             trade._commission = self._commission_decider.get_commission(account.type, trade)
             trade._tax = self._tax_decider.get_tax(account.type, trade)
-            order._fill(trade)
+            order.fill(trade)
             self._turnover[order.order_book_id] += fill
 
             Environment.get_instance().event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
@@ -147,4 +147,4 @@ class Matcher(object):
                     order_volume=order.quantity,
                     filled_volume=order.filled_quantity
                 )
-                order._mark_cancelled(reason)
+                order.mark_cancelled(reason)

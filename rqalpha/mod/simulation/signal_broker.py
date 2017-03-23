@@ -46,9 +46,9 @@ class SignalBroker(AbstractBroker):
     def submit_order(self, order):
         account = Environment.get_instance().get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
-        if order._is_final():
+        if order.is_final():
             return
-        order._active()
+        order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         self._match(account, order)
 
@@ -73,7 +73,7 @@ class SignalBroker(AbstractBroker):
             else:
                 reason = _("Order Cancelled: current bar [{order_book_id}] miss market data.").format(
                     order_book_id=order.order_book_id)
-            order._mark_rejected(reason)
+            order.mark_rejected(reason)
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
             return
 
@@ -99,6 +99,6 @@ class SignalBroker(AbstractBroker):
                                       price=deal_price, amount=order.quantity, close_today_amount=ct_amount)
         trade._commission = self._commission_decider.get_commission(account.type, trade)
         trade._tax = self._tax_decider.get_tax(account.type, trade)
-        order._fill(trade)
+        order.fill(trade)
 
         env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))

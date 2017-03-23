@@ -87,9 +87,9 @@ class StockFrontendValidator(FrontendValidator):
         if order.side != SIDE.BUY:
             return True
         # 检查可用资金是否充足
-        cost_money = order._frozen_price * order.quantity
+        cost_money = order.frozen_price * order.quantity
         if cost_money > account.cash:
-            order._mark_rejected(_(
+            order.mark_rejected(_(
                 "Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
                 cost_money=cost_money,
@@ -104,7 +104,7 @@ class StockFrontendValidator(FrontendValidator):
         if order.side != SIDE.SELL:
             return True
         if order.quantity > position.sellable:
-            order._mark_rejected(_(
+            order.mark_rejected(_(
                 "Order Rejected: not enough stock {order_book_id} to sell, you want to sell {quantity}, sellable {sellable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
@@ -123,9 +123,9 @@ class FutureFrontendValidator(FrontendValidator):
         contract_multiplier = bar.instrument.contract_multiplier
         margin_rate = Environment.get_instance().get_future_margin_rate(order.order_book_id)
         margin_multiplier = Environment.get_instance().config.base.margin_multiplier
-        cost_money = order._frozen_price * order.quantity * contract_multiplier * margin_rate * margin_multiplier
+        cost_money = order.frozen_price * order.quantity * contract_multiplier * margin_rate * margin_multiplier
         if cost_money > account.cash:
-            order._mark_rejected(_(
+            order.mark_rejected(_(
                 "Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
                 cost_money=cost_money,
@@ -140,7 +140,7 @@ class FutureFrontendValidator(FrontendValidator):
         if order.position_effect != POSITION_EFFECT.CLOSE:
             return True
         if order.side == SIDE.BUY and order.quantity > position.closable_sell_quantity:
-            order._mark_rejected(_(
+            order.mark_rejected(_(
                 "Order Rejected: not enough securities {order_book_id} to buy close, target sell quantity is {quantity}, sell_closable_quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
@@ -148,7 +148,7 @@ class FutureFrontendValidator(FrontendValidator):
             ))
             return False
         elif order.side == SIDE.SELL and order.quantity > position.closable_buy_quantity:
-            order._mark_rejected(_(
+            order.mark_rejected(_(
                 "Order Rejected: not enough securities {order_book_id} to sell close, target sell quantity is {quantity}, buy_closable_quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,

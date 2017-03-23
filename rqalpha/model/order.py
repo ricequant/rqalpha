@@ -17,7 +17,7 @@
 import six
 import time
 
-from ..const import ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE
+from ..const import ORDER_STATUS, ORDER_TYPE
 from ..utils import id_gen
 from ..utils.repr import property_repr, properties
 from ..utils.logger import user_system_log
@@ -204,19 +204,26 @@ class Order(object):
         """
         return self._transaction_cost
 
-    def _is_final(self):
+    @property
+    def frozen_price(self):
+        """
+        【float】冻结价格
+        """
+        return self._frozen_price
+
+    def is_final(self):
         if self.status == ORDER_STATUS.PENDING_NEW or self.status == ORDER_STATUS.ACTIVE:
             return False
         else:
             return True
 
-    def _is_active(self):
+    def is_active(self):
         return self.status == ORDER_STATUS.ACTIVE
 
-    def _active(self):
+    def active(self):
         self._status = ORDER_STATUS.ACTIVE
 
-    def _fill(self, trade):
+    def fill(self, trade):
         amount = trade.last_quantity
         assert self.filled_quantity + amount <= self.quantity
         new_quantity = self._filled_quantity + amount
@@ -226,18 +233,21 @@ class Order(object):
         if self.unfilled_quantity == 0:
             self._status = ORDER_STATUS.FILLED
 
-    def _mark_rejected(self, reject_reason):
-        if not self._is_final():
+    def mark_rejected(self, reject_reason):
+        if not self.is_final():
             self._message = reject_reason
             self._status = ORDER_STATUS.REJECTED
             user_system_log.warn(reject_reason)
 
-    def _mark_cancelled(self, cancelled_reason, user_warn=True):
-        if not self._is_final():
+    def mark_cancelled(self, cancelled_reason, user_warn=True):
+        if not self.is_final():
             self._message = cancelled_reason
             self._status = ORDER_STATUS.CANCELLED
             if user_warn:
                 user_system_log.warn(cancelled_reason)
+
+    def set_frozen_price(self, value):
+        self._frozen_price = value
 
     def __simple_object__(self):
         return properties(self)

@@ -50,7 +50,7 @@ class FutureAccount(BaseAccount):
                 continue
             self._apply_trade(trade)
         # 计算 Frozen Cash
-        self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order._is_active())
+        self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
 
     @property
     def type(self):
@@ -58,11 +58,11 @@ class FutureAccount(BaseAccount):
 
     @staticmethod
     def _frozen_cash_of_order(order):
-        return margin_of(order.order_book_id, order.unfilled_quantity, order._frozen_price)
+        return margin_of(order.order_book_id, order.unfilled_quantity, order.frozen_price)
 
     @staticmethod
     def _frozen_cash_of_trade(trade):
-        return margin_of(trade.order.order_book_id, trade.last_quantity, trade.order._frozen_price)
+        return margin_of(trade.order.order_book_id, trade.last_quantity, trade.order.frozen_price)
 
     @property
     def total_value(self):
