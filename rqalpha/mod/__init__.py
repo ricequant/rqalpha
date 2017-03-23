@@ -65,10 +65,12 @@ class ModHandler(object):
         for mod_name, __ in reversed(self._mod_list):
             self._mod_dict[mod_name].tear_down(*args)
 
+
 SYSTEM_MOD_LIST = [
     "sys_analyser",
     "sys_funcat",
     "sys_risk",
+    "sys_plot",
     "sys_simulation",
     "sys_stock_realtime",
 ]

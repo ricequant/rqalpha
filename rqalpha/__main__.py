@@ -36,10 +36,12 @@ def cli(ctx, verbose):
 def entry_point():
     from . import mod
     from pkgutil import iter_modules
-    for package_name in mod.__dict__:
-        if "rqalpha_mod_" in package_name:
-            cli_injection = getattr(getattr(mod, package_name), 'cli_injection', dummy_func)
-            cli_injection(cli)
+    # inject system mod
+    for package_name in mod.SYSTEM_MOD_LIST:
+        module_name = "rqalpha_mod_{}".format(package_name)
+        cli_injection = getattr(import_module("rqalpha.mod.{}".format(module_name)), 'cli_injection', dummy_func)
+        cli_injection(cli)
+    # inject user mod
     for package in iter_modules():
         if "rqalpha_mod_" in package[1]:
             lib = import_module(package[1])
@@ -86,8 +88,8 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
-@click.option('-p', '--plot/--no-plot', 'mod__sys_analyser__plot', default=None, help="plot result")
-@click.option('--plot-save', 'mod__sys_analyser__plot_save_file', default=None, help="save plot to file")
+# @click.option('-p', '--plot/--no-plot', 'mod__sys_analyser__plot', default=None, help="plot result")
+# @click.option('--plot-save', 'mod__sys_analyser__plot_save_file', default=None, help="save plot to file")
 @click.option('--report', 'mod__sys_analyser__report_save_path', type=click.Path(writable=True), help="save report")
 @click.option('-o', '--output-file', 'mod__sys_analyser__output_file', type=click.Path(writable=True),
               help="output result pickle file")
