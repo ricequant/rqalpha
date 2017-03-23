@@ -16,6 +16,7 @@
 
 import click
 from rqalpha import cmd_cli
+from rqalpha import cli
 
 from .mod import PlotMod
 
@@ -35,19 +36,32 @@ def cli_injection(cli):
     cli.commands['run'].params.append(
         click.Option(('-p', '--plot/--no-plot', cli_prefix + 'plot'),
                      default=None,
-                     help="[Plot]plot result")
+                     help="plot result [sys_plot]")
     )
     cli.commands['run'].params.append(
         click.Option(('--plot-save', cli_prefix + 'plot_save_file'),
                      default=None,
-                     help="[Plot]save plot to file"
+                     help="save plot to file [sys_plot]"
                      )
     )
 
 
-@cmd_cli.command()
-def plot():
-    print("This is plot command injection test")
+@cli.command()
+@click.argument('result_dict_file', type=click.Path(exists=True), required=True)
+@click.option('--show/--hide', 'is_show', default=True)
+@click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
+def plot(result_dict_file, is_show, plot_save_file):
+    """
+    Draw result DataFrame [sys_plot]
+    """
+    import pandas as pd
+    from .plot import plot_result
+
+    result_dict = pd.read_pickle(result_dict_file)
+    if is_show:
+        plot_result(result_dict)
+    if plot_save_file:
+        plot_result(result_dict, show_windows=False, savefile=plot_save_file)
 
 
 __config__ = {

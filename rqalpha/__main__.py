@@ -129,7 +129,6 @@ def examples(directory):
             print("Folder examples is exists.")
 
 
-
 @cli.command()
 @click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
 @click.argument('target_report_csv_path', type=click.Path(exists=True, writable=True), required=True)

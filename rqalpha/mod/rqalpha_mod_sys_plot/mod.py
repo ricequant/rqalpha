@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
-
 from rqalpha.interface import AbstractMod
-from rqalpha.events import EVENT
 
 
 class PlotMod(AbstractMod):
