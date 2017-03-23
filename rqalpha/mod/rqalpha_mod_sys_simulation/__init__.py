@@ -14,11 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mod import SimulationMod
-
-
-def load_mod():
-    return SimulationMod()
+import click
 
 
 __config__ = {
@@ -35,3 +31,59 @@ __config__ = {
     # 按照当前成交量的百分比进行撮合
     "volume_percent": 0.25,
 }
+
+
+def load_mod():
+    from .mod import SimulationMod
+    return SimulationMod()
+
+
+def cli_injection(cli):
+    """
+    注入 --signal option: 实现信号模式回测
+    注入 --slippage option: 实现设置滑点
+    注入 --commission-multiplier options: 实现设置手续费乘数
+    注入 --matching-type: 实现选择回测引擎
+    """
+    cli_prefix = "mod__sys_simulation__"
+
+    cli.commands['run'].params.append(
+        click.Option(
+            ('--signal', cli_prefix + "signal"),
+            is_flag=True,
+            help="[sys_simulation]exclude match engine",
+        )
+    )
+
+    cli.commands['run'].params.append(
+        click.Option(
+            ('-sp', '--slippage', cli_prefix + "slippage"),
+            type=click.FLOAT,
+            help="[sys_simulation]set slippage"
+        )
+    )
+
+    cli.commands['run'].params.append(
+        click.Option(
+            ('-cm', '--commission-multiplier', cli_prefix + "commission_multiplier"),
+            type=click.FLOAT,
+            help="[sys_simulation] set commission multiplier"
+        )
+    )
+
+    cli.commands['run'].params.append(
+        # [Deprecated] using matching type
+        click.Option(
+            ('-me', '--match-engine', cli_prefix + "matching_type"),
+            type=click.Choice(['current_bar', 'next_bar']),
+            help="[Deprecated][sys_simulation] set matching type"
+        )
+    )
+
+    cli.commands['run'].params.append(
+        click.Option(
+            ('-mt', '--matching-type', cli_prefix + "matching_type"),
+            type=click.Choice(['current_bar', 'next_bar']),
+            help="[sys_simulation] set matching type"
+        )
+    )

@@ -90,11 +90,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
-@click.option('--signal', 'mod__sys_simulation__signal', is_flag=True, help="exclude match engine")
-@click.option('-sp', '--slippage', 'mod__sys_simulation__slippage', type=click.FLOAT)
-@click.option('-cm', '--commission-multiplier', 'mod__sys_simulation__commission_multiplier', type=click.FLOAT)
-@click.option('-me', '--match-engine', 'mod__sys_simulation__matching_type', type=click.Choice(['current_bar', 'next_bar']))
-# -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 1.0.0
+# -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 3.0.0
 @click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
 @click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
 def run(**kwargs):
