@@ -130,7 +130,6 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     # config from user code
     config = parse_user_config_from_code(config, source_code)
-
     config = RqAttrDict(config)
 
     base_config = config.base
@@ -214,8 +213,6 @@ def parse_user_config_from_code(config, source_code=None):
         six.exec_(code, scope)
 
         __config__ = scope.get("__config__", {})
-
-        deep_update(__config__, config)
 
         for sub_key, sub_dict in six.iteritems(__config__):
             if sub_key not in config["whitelist"]:

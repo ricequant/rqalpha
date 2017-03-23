@@ -27,11 +27,11 @@ __config__ = {
         "log_level": "error",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
             "priority": 400,
         },
-        "analyser": {
+        "sys_analyser": {
             "plot": False
         },
     },
