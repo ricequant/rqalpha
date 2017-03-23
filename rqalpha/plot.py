@@ -43,7 +43,6 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         use_chinese_fonts = False
         system_log.warn("Missing Chinese fonts. Fallback to English.")
 
-
     summary = result_dict["summary"]
     title = summary['strategy_file']
 
@@ -53,7 +52,8 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     index = total_portfolios.index
 
     # maxdrawdown
-    xs = total_portfolios.portfolio_value.values
+    portfolio_value = total_portfolios.unit_net_value * total_portfolios.units
+    xs = portfolio_value.values
     rt = total_portfolios.total_returns.values
     max_dd_end = np.argmax(np.maximum.accumulate(xs) / xs)
     if max_dd_end == 0:
