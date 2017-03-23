@@ -14,9 +14,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import analyser
-from . import funcat_api
-from . import risk_manager
-from . import rqalpha_mod_progress
-from . import simple_stock_realtime_trade
-from . import simulation
+from importlib import import_module
+from collections import OrderedDict
+
+from rqalpha.utils.logger import system_log
+from rqalpha.utils.i18n import gettext as _
+
+
+class ModHandler(object):
+    def __init__(self):
+        self._env = None
+        self._mod_list = []
+        self._mod_dict = OrderedDict()
+
+    def set_env(self, environment):
+        self._env = environment
+
+        config = environment.config
+
+        for mod_name in config.mod.__dict__:
+            mod_config = getattr(config.mod, mod_name)
+            if not mod_config.enabled:
+                continue
+            print(mod_name, type(mod_config), getattr(mod_config, "priority"))
+            # if getattr(mod_config, 'priority', None)
+            self._mod_list.append((mod_name, mod_config))
+
+        self._mod_list.sort(key=lambda item: item[1].priority)
+        for mod_name, mod_config in self._mod_list:
+
+            system_log.debug(_('loading mod {}').format(mod_name))
+            mod_module = import_module(mod_config.lib)
+            mod = mod_module.load_mod()
+            self._mod_dict[mod_name] = mod
+
+        environment.mod_dict = self._mod_dict
+
+    def start_up(self):
+        for mod_name, mod_config in self._mod_list:
+            self._mod_dict[mod_name].start_up(self._env, mod_config)
+
+    def tear_down(self, *args):
+        for mod_name, _ in reversed(self._mod_list):
+            self._mod_dict[mod_name].tear_down(*args)
+
+SYSTEM_MOD_LIST = [
+    "sys_analyser",
+    "sys_funcat",
+    "sys_risk",
+    "sys_simulation",
+    "sys_stock_realtime",
+]

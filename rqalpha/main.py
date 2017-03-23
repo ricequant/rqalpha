@@ -40,7 +40,7 @@ from .environment import Environment
 from .events import EVENT, Event
 from .execution_context import ExecutionContext
 from .interface import Persistable
-from .mod.mod_handler import ModHandler
+from .mod import ModHandler
 from .model.bar import BarMap
 from .utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from .utils.exception import CustomException, is_user_exc, patch_user_exc

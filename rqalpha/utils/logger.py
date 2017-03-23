@@ -42,10 +42,15 @@ def user_std_handler_log_formatter(record, handler):
     except Exception:
         dt = "0000-00-00"
 
+    try:
+        message = record.message.encode('utf-8')
+    except AttributeError:
+        message = record.message
+
     log = "{dt} {level} {msg}".format(
         dt=dt,
         level=record.level_name,
-        msg=record.message.encode('utf-8'),
+        msg=message,
     )
     return log
 
@@ -56,10 +61,16 @@ user_std_handler.formatter = user_std_handler_log_formatter
 
 def formatter_builder(tag):
     def formatter(record, handler):
+
+        try:
+            message = record.message.encode('utf-8')
+        except AttributeError:
+            message = record.message
+
         log = "[{formatter_tag}] [{time}] {level}: {msg}".format(
             formatter_tag=tag,
             level=record.level_name,
-            msg=record.message.encode('utf-8'),
+            msg=message,
             time=record.time,
         )
 
