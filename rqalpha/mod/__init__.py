@@ -24,7 +24,7 @@ from rqalpha.utils.i18n import gettext as _
 class ModHandler(object):
     def __init__(self):
         self._env = None
-        self._mod_list = []
+        self._mod_list = list()
         self._mod_dict = OrderedDict()
 
     def set_env(self, environment):
@@ -47,6 +47,9 @@ class ModHandler(object):
             system_log.debug(_('loading mod {}').format(lib_name))
             mod_module = import_module(lib_name)
             mod = mod_module.load_mod()
+
+            default_config = getattr(mod_module, "__config__", {})
+            mod_config.update(default_config)
             self._mod_dict[mod_name] = mod
 
         environment.mod_dict = self._mod_dict
