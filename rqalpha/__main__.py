@@ -181,6 +181,8 @@ def generate_config(directory):
     print("Config file has been generated in", target_config_path)
 
 
+# For Mod Cli
+
 @cli.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
@@ -198,163 +200,152 @@ def mod(cmd, params):
     rqalpha mod disable xxx \n
 
     """
-    print("mod", cmd)
-    globals()[cmd](params)
+    def install(params):
+        """
+        Install third-party Mod
+        """
+        from pip import main as pip_main
+        from pip.commands.install import InstallCommand
+
+        params = [param for param in params]
+
+        options, mod_list = InstallCommand().parse_args(params)
+
+        params = ["install"] + params
+
+        for mod_name in mod_list:
+            mod_name_index = params.index(mod_name)
+            if mod_name.startswith("rqalpha_mod_sys_"):
+                print('System Mod can not be installed or uninstalled')
+                return
+            if "rqalpha_mod_" in mod_name:
+                lib_name = mod_name
+                mod_name = lib_name.replace("rqalpha_mod_", "")
+            else:
+                lib_name = "rqalpha_mod_" + mod_name
+            params[mod_name_index] = lib_name
+
+        # Install Mod
+        pip_main(params)
+
+        # Export config
+        config_path = get_default_config_path()
+        config = load_config(config_path, loader=yaml.RoundTripLoader)
+
+        for mod_name in mod_list:
+            if "rqalpha_mod_" in mod_name:
+                lib_name = mod_name
+                mod_name = lib_name.replace("rqalpha_mod_", "")
+            else:
+                lib_name = "rqalpha_mod_" + mod_name
+
+            mod = import_module(lib_name)
+
+            mod_config = yaml.load(mod.__mod_config__, yaml.RoundTripLoader)
+
+            config['mod'][mod_name] = mod_config
+            config['mod'][mod_name]['lib'] = lib_name
+            config['mod'][mod_name]['enabled'] = False
+            config['mod'][mod_name]['priority'] = 1000
+
+        dump_config(config_path, config)
 
 
-# For Mod Cli
+    def uninstall(params):
+        """
+        Uninstall third-party Mod
+        """
+        from pip import main as pip_main
+        from pip.commands.uninstall import UninstallCommand
+
+        params = [param for param in params]
+
+        options, mod_list = UninstallCommand().parse_args(params)
+
+        params = ["uninstall"] + params
+
+        for mod_name in mod_list:
+            mod_name_index = params.index(mod_name)
+            if mod_name.startswith("rqalpha_mod_sys_"):
+                print('System Mod can not be installed or uninstalled')
+                return
+            if "rqalpha_mod_" in mod_name:
+                lib_name = mod_name
+                mod_name = lib_name.replace("rqalpha_mod_", "")
+            else:
+                lib_name = "rqalpha_mod_" + mod_name
+            params[mod_name_index] = lib_name
+
+        # Uninstall Mod
+        pip_main(params)
+
+        # Remove Mod Config
+        config_path = get_default_config_path()
+        config = load_config(config_path, loader=yaml.RoundTripLoader)
+
+        for mod_name in mod_list:
+            if "rqalpha_mod_" in mod_name:
+                mod_name = mod_name.replace("rqalpha_mod_", "")
+
+            del config['mod'][mod_name]
+
+        dump_config(config_path, config)
 
 
-# @cli.command(context_settings=dict(
-#     ignore_unknown_options=True,
-# ))
-# @click.argument('params', nargs=-1)
-def install(params):
-    """
-    Install third-party Mod
-    """
-    from pip import main as pip_main
-    from pip.commands.install import InstallCommand
+    def list(params):
+        """
+        List all mod configuration
+        """
+        config_path = get_default_config_path()
+        config = load_config(config_path, loader=yaml.RoundTripLoader)
 
-    params = [param for param in params]
-
-    options, mod_list = InstallCommand().parse_args(params)
-
-    params = ["install"] + params
-
-    for mod_name in mod_list:
-        mod_name_index = params.index(mod_name)
-        if mod_name.startswith("rqalpha_mod_sys_"):
-            print('System Mod can not be installed or uninstalled')
-            return
-        if "rqalpha_mod_" in mod_name:
-            lib_name = mod_name
-            mod_name = lib_name.replace("rqalpha_mod_", "")
-        else:
-            lib_name = "rqalpha_mod_" + mod_name
-        params[mod_name_index] = lib_name
-
-    # Install Mod
-    print(params)
-    pip_main(params)
-
-    # Export config
-    config_path = get_default_config_path()
-    config = load_config(config_path, loader=yaml.RoundTripLoader)
-
-    for mod_name in mod_list:
-        if "rqalpha_mod_" in mod_name:
-            lib_name = mod_name
-            mod_name = lib_name.replace("rqalpha_mod_", "")
-        else:
-            lib_name = "rqalpha_mod_" + mod_name
-
-        mod = import_module(lib_name)
-
-        mod_config = yaml.load(mod.__mod_config__, yaml.RoundTripLoader)
-
-        config['mod'][mod_name] = mod_config
-        config['mod'][mod_name]['lib'] = lib_name
-        config['mod'][mod_name]['enabled'] = False
-        config['mod'][mod_name]['priority'] = 1000
-
-    dump_config(config_path, config)
+        print(yaml.dump(config['mod'], Dumper=yaml.RoundTripDumper))
 
 
-def uninstall(params):
-    """
-    Uninstall third-party Mod
-    """
-    from pip import main as pip_main
-    from pip.commands.uninstall import UninstallCommand
-
-    params = [param for param in params]
-
-    options, mod_list = UninstallCommand().parse_args(params)
-
-    params = ["uninstall"] + params
-
-    for mod_name in mod_list:
-        mod_name_index = params.index(mod_name)
-        if mod_name.startswith("rqalpha_mod_sys_"):
-            print('System Mod can not be installed or uninstalled')
-            return
-        if "rqalpha_mod_" in mod_name:
-            lib_name = mod_name
-            mod_name = lib_name.replace("rqalpha_mod_", "")
-        else:
-            lib_name = "rqalpha_mod_" + mod_name
-        params[mod_name_index] = lib_name
-
-    # Uninstall Mod
-    print(params)
-    pip_main(params)
-
-    # Remove Mod Config
-    config_path = get_default_config_path()
-    config = load_config(config_path, loader=yaml.RoundTripLoader)
-
-    for mod_name in mod_list:
-        if "rqalpha_mod_" in mod_name:
+    def enable(params):
+        """
+        enable mod
+        """
+        mod_name = params[0]
+        if not mod_name.startswith("rqalpha_mod_sys_") and "rqalpha_mod_" in mod_name:
             mod_name = mod_name.replace("rqalpha_mod_", "")
 
-        del config['mod'][mod_name]
+        # check whether is installed
+        module_name = "rqalpha_mod_" + mod_name
+        try:
+            lib = import_module(module_name)
+        except ImportError:
+            install([module_name])
 
-    dump_config(config_path, config)
+        config_path = get_default_config_path()
+        config = load_config(config_path, loader=yaml.RoundTripLoader)
 
-
-def list(params):
-    """
-    List all mod configuration
-    """
-    config_path = get_default_config_path()
-    config = load_config(config_path, loader=yaml.RoundTripLoader)
-
-    print(yaml.dump(config['mod'], Dumper=yaml.RoundTripDumper))
-
-
-def enable(params):
-    """
-    enable mod
-    """
-    mod_name = params[0]
-    if not mod_name.startswith("rqalpha_mod_sys_") and "rqalpha_mod_" in mod_name:
-        mod_name = mod_name.replace("rqalpha_mod_", "")
-
-    # check whether is installed
-    module_name = "rqalpha_mod_" + mod_name
-    try:
-        lib = import_module(module_name)
-    except ImportError:
-        install([module_name])
-
-    config_path = get_default_config_path()
-    config = load_config(config_path, loader=yaml.RoundTripLoader)
-
-    try:
-        config['mod'][mod_name]['enabled'] = True
-        dump_config(config_path, config)
-    except Exception as e:
-        pass
+        try:
+            config['mod'][mod_name]['enabled'] = True
+            dump_config(config_path, config)
+        except Exception as e:
+            pass
 
 
-def disable(params):
-    """
-    disable mod
-    """
-    mod_name = params[0]
+    def disable(params):
+        """
+        disable mod
+        """
+        mod_name = params[0]
 
-    if not mod_name.startswith("rqalpha_mod_sys_") and "rqalpha_mod_" in mod_name:
-        mod_name = mod_name.replace("rqalpha_mod_", "")
+        if not mod_name.startswith("rqalpha_mod_sys_") and "rqalpha_mod_" in mod_name:
+            mod_name = mod_name.replace("rqalpha_mod_", "")
 
-    config_path = get_default_config_path()
-    config = load_config(config_path, loader=yaml.RoundTripLoader)
+        config_path = get_default_config_path()
+        config = load_config(config_path, loader=yaml.RoundTripLoader)
 
-    try:
-        config['mod'][mod_name]['enabled'] = False
-        dump_config(config_path, config)
-    except Exception as e:
-        pass
+        try:
+            config['mod'][mod_name]['enabled'] = False
+            dump_config(config_path, config)
+        except Exception as e:
+            pass
+
+    locals()[cmd](params)
 
 
 if __name__ == '__main__':
