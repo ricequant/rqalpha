@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .utils.logger import system_log
-from .utils.i18n import gettext
+from rqalpha.utils.logger import system_log
+from rqalpha.utils.i18n import gettext
+import rqalpha
 
 
 def plot_result(result_dict, show_windows=True, savefile=None):
@@ -92,7 +93,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     # draw logo
     ax = plt.subplot(gs[:3, -1:])
     ax.axis("off")
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "resource")
+    filename = os.path.join(os.path.dirname(os.path.realpath(rqalpha.__file__)), "resource")
     filename = os.path.join(filename, "ricequant-logo.png")
     img = mpimg.imread(filename)
     ax.imshow(img, interpolation="nearest")

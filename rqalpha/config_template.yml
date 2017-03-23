@@ -17,3 +17,5 @@ mod:
     enabled: true
   sys_analyser:
     enabled: true
+  sys_plot:
+    enabled: true

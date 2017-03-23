@@ -24,7 +24,5 @@ def load_mod():
 __config__ = {
     "record": True,
     "output_file": None,
-    "plot": None,
-    "plot_save_file": None,
     "report_save_path": None,
 }

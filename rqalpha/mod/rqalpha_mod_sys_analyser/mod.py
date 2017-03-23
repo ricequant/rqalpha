@@ -265,14 +265,6 @@ class AnalyserMod(AbstractMod):
             with open(self._mod_config.output_file, 'wb') as f:
                 pickle.dump(result_dict, f)
 
-        if self._mod_config.plot:
-            from rqalpha.plot import plot_result
-            plot_result(result_dict)
-
-        if self._mod_config.plot_save_file:
-            from rqalpha.plot import plot_result
-            plot_result(result_dict, False, self._mod_config.plot_save_file)
-
         if self._mod_config.report_save_path:
             from rqalpha.utils.report import generate_report
             generate_report(result_dict, self._mod_config.report_save_path)
