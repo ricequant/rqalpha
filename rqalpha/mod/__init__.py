@@ -36,15 +36,16 @@ class ModHandler(object):
             mod_config = getattr(config.mod, mod_name)
             if not mod_config.enabled:
                 continue
-            print(mod_name, type(mod_config), getattr(mod_config, "priority"))
-            # if getattr(mod_config, 'priority', None)
+            if not hasattr(mod_config, "priority"):
+                setattr(mod_config, "priority", 100)
             self._mod_list.append((mod_name, mod_config))
 
         self._mod_list.sort(key=lambda item: item[1].priority)
         for mod_name, mod_config in self._mod_list:
-
-            system_log.debug(_('loading mod {}').format(mod_name))
-            mod_module = import_module(mod_config.lib)
+            if mod_name in SYSTEM_MOD_LIST:
+                lib_name = "rqalpha.mod.rqalpha_mod_" + mod_name
+            system_log.debug(_('loading mod {}').format(lib_name))
+            mod_module = import_module(lib_name)
             mod = mod_module.load_mod()
             self._mod_dict[mod_name] = mod
 

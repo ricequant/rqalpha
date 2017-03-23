@@ -24,11 +24,11 @@ __config__ = {
         "log_level": "verbose",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
             "priority": 400,
         },
-        "analyser": {
+        "sys_analyser": {
             "plot": False
         },
     },

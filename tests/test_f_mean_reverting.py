@@ -133,13 +133,13 @@ __config__ = {
     "extra": {
         "log_level": "error",
     },
+    "validator": {
+        "bar_limit": True,
+    },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
             "priority": 400,
         },
     },
-    "validator": {
-        "bar_limit": True,
-    }
 }

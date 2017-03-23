@@ -51,11 +51,11 @@ __config__ = {
         "log_level": "error",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
             "priority": 400,
         },
-        "funcat_api": {
+        "sys_funcat": {
             "enabled": True,
         },
     },
