@@ -47,12 +47,18 @@ class CustomError(object):
         if len(self.stacks) == 0:
             return self.msg
 
+        def _repr(v):
+            try:
+                return repr(v)
+            except Exception:
+                return 'UNREPRESENTABLE VALUE'
+
         content = ["Traceback (most recent call last):"]
         for filename, lineno, func_name, code, local_variables in self.stacks:
             content.append('  File %s, line %s in %s' % (filename, lineno, func_name))
             content.append('    %s' % (code, ))
             for k, v in six.iteritems(local_variables):
-                content.append('    --> %s = %s' % (k, repr(v)))
+                content.append('    --> %s = %s' % (k, _repr(v)))
             content.append('')
         content.append("%s: %s" % (self.exc_type.__name__, self.msg))
 
