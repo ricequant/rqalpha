@@ -100,7 +100,12 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     config_path = get_default_config_path() if config_path is None else os.path.abspath(config_path)
 
-    config = load_config(config_path)
+    # load default config from rqalpha
+    config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
+
+    # load user config
+    user_config = load_config(config_path)
+    deep_update(user_config, config)
 
     if click_type:
         for key, value in six.iteritems(config_args):
@@ -121,6 +126,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     else:
         deep_update(config_args, config)
 
+    # config from user code
     config = parse_user_config(config, source_code)
 
     config = RqAttrDict(config)
