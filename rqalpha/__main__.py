@@ -86,17 +86,17 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
-@click.option('-p', '--plot/--no-plot', 'mod__analyser__plot', default=None, help="plot result")
-@click.option('--plot-save', 'mod__analyser__plot_save_file', default=None, help="save plot to file")
-@click.option('--report', 'mod__analyser__report_save_path', type=click.Path(writable=True), help="save report")
-@click.option('-o', '--output-file', 'mod__analyser__output_file', type=click.Path(writable=True),
+@click.option('-p', '--plot/--no-plot', 'mod__sys_analyser__plot', default=None, help="plot result")
+@click.option('--plot-save', 'mod__sys_analyser__plot_save_file', default=None, help="save plot to file")
+@click.option('--report', 'mod__sys_analyser__report_save_path', type=click.Path(writable=True), help="save report")
+@click.option('-o', '--output-file', 'mod__sys_analyser__output_file', type=click.Path(writable=True),
               help="output result pickle file")
-@click.option('--progress/--no-progress', 'mod__progress__enabled', default=None, help="show progress bar")
-@click.option('--short-stock', 'mod__risk_manager__short_stock', is_flag=True, help="enable stock shorting")
-@click.option('--signal', 'mod__simulation__signal', is_flag=True, help="exclude match engine")
-@click.option('-sp', '--slippage', 'mod__simulation__slippage', type=click.FLOAT)
-@click.option('-cm', '--commission-multiplier', 'mod__simulation__commission_multiplier', type=click.FLOAT)
-@click.option('-me', '--match-engine', 'mod__simulation__matching_type', type=click.Choice(['current_bar', 'next_bar']))
+@click.option('--progress/--no-progress', 'mod__sys_progress__enabled', default=None, help="show progress bar")
+@click.option('--short-stock', 'mod__sys_risk__short_stock', is_flag=True, help="enable stock shorting")
+@click.option('--signal', 'mod__sys_simulation__signal', is_flag=True, help="exclude match engine")
+@click.option('-sp', '--slippage', 'mod__sys_simulation__slippage', type=click.FLOAT)
+@click.option('-cm', '--commission-multiplier', 'mod__sys_simulation__commission_multiplier', type=click.FLOAT)
+@click.option('-me', '--match-engine', 'mod__sys_simulation__matching_type', type=click.Choice(['current_bar', 'next_bar']))
 # -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 1.0.0
 @click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT)
 @click.option('-k', '--kind', 'base__strategy_type', type=click.Choice(['stock', 'future', 'stock_future']))
@@ -184,12 +184,12 @@ def generate_config(directory):
 # For Mod Cli
 
 system_mod = [
-    'simulation',
-    'funcat_api',
-    'rqalpha_mod_progress',
-    'simple_stock_realtime_trade',
-    'risk_manager',
-    'analyser',
+  "rqalpha_mod_sys_analyser",
+  "rqalpha_mod_sys_funcat",
+  "rqalpha_mod_sys_progress",
+  "rqalpha_mod_sys_risk",
+  "rqalpha_mod_sys_simulation",
+  "rqalpha_mod_sys_stock_realtime",
 ]
 
 
