@@ -14,11 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import click
+
+from rqalpha import cmd_cli
 from .mod import AnalyserMod
 
 
 def load_mod():
     return AnalyserMod()
+
+
+def cli_injection(cli):
+    """
+    注入 --progress option
+    可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
+    """
+    cli.commands['run'].params.append(
+        click.Option(('--report', 'mod__sys_analyser__report_save_path'),
+                     type=click.Path(writable=True), help="save report [sys_analyser]")
+    )
+    cli.commands['run'].params.append(
+        click.Option(('-o', '--output-file', 'mod__sys_analyser__output_file'),
+                     type=click.Path(writable=True),
+                     help="output result pickle file [sys_analyser]")
+    )
 
 
 __config__ = {
