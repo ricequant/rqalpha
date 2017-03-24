@@ -150,6 +150,10 @@ class Portfolio(object):
         return sum(account.cash for account in six.itervalues(self._accounts))
 
     @property
+    def dividend_receivable(self):
+        return sum(getattr(account, 'dividend_receivable', 0) for account in six.itervalues(self._accounts))
+
+    @property
     def market_value(self):
         """
         [float] 市值
