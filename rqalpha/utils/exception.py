@@ -27,7 +27,7 @@ class CustomError(object):
         self.exc_val = None
         self.exc_tb = None
         self.error_type = const.EXC_TYPE.NOTSET
-        self.exc_var_len = 160
+        self.max_exc_var_len = 160
 
     def set_exc(self, exc_type, exc_val, exc_tb):
         self.exc_type = exc_type
@@ -51,8 +51,8 @@ class CustomError(object):
         def _repr(v):
             try:
                 var_str = repr(v)
-                if len(var_str) > self.exc_var_len:
-                    var_str = var_str[:self.exc_var_len] + " ..."
+                if len(var_str) > self.max_exc_var_len:
+                    var_str = var_str[:self.max_exc_var_len] + " ..."
                 return var_str
             except Exception:
                 return 'UNREPRESENTABLE VALUE'
