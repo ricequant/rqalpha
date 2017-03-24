@@ -47,7 +47,7 @@ class StockCommission(BaseCommission):
             4.1 如果commission 等于 min_commission, 说明是第一笔trade, 此时，返回min_commission(提前把最小手续费收了)
             4.2 如果commission 不等于 min_commission， 说明不是第一笔trade, 之前的trade中min_commission已经收过了，所以返回0.
         """
-        order_id = trade.order.order_id
+        order_id = trade.order_id
         commission = self.commission_map[order_id]
         cost_money = trade.last_price * trade.last_quantity * self.rate * self.multiplier
         if cost_money > commission:
@@ -75,23 +75,22 @@ class FutureCommission(BaseCommission):
         self.hedge_type = hedge_type
 
     def get_commission(self, trade):
-        order = trade.order
-        order_book_id = order.order_book_id
+        order_book_id = trade.order_book_id
         info = Environment.get_instance().get_future_commission_info(order_book_id, self.hedge_type)
         commission = 0
         if info['commission_type'] == COMMISSION_TYPE.BY_MONEY:
-            contract_multiplier = Environment.get_instance().get_instrument(order.order_book_id).contract_multiplier
-            if trade.order.position_effect == POSITION_EFFECT.OPEN:
+            contract_multiplier = Environment.get_instance().get_instrument(trade.order_book_id).contract_multiplier
+            if trade.position_effect == POSITION_EFFECT.OPEN:
                 commission += trade.last_price * trade.last_quantity * contract_multiplier * info['open_commission_ratio']
             else:
-                commission += trade.last_price * (trade.last_quantity - trade._close_today_amount) * contract_multiplier * info[
+                commission += trade.last_price * (trade.last_quantity - trade.close_today_amount) * contract_multiplier * info[
                     'close_commission_ratio']
-                commission += trade.last_price * trade._close_today_amount * contract_multiplier * info[
+                commission += trade.last_price * trade.close_today_amount * contract_multiplier * info[
                     'close_commission_today_ratio']
         else:
-            if trade.order.position_effect == POSITION_EFFECT.OPEN:
+            if trade.position_effect == POSITION_EFFECT.OPEN:
                 commission += trade.last_quantity * info['open_commission_ratio']
             else:
-                commission += (trade.last_quantity - trade._close_today_amount) * info['close_commission_ratio']
-                commission += trade._close_today_amount * info['close_commission_today_ratio']
+                commission += (trade.last_quantity - trade.close_today_amount) * info['close_commission_ratio']
+                commission += trade.close_today_amount * info['close_commission_today_ratio']
         return commission * self.multiplier

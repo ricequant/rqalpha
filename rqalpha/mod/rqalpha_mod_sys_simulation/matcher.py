@@ -129,8 +129,18 @@ class Matcher(object):
             fill = min(unfilled, volume_limit)
             ct_amount = account.positions.get_or_create(order.order_book_id).cal_close_today_amount(fill, order.side)
             price = self._slippage_decider.get_trade_price(order.side, deal_price)
-            trade = Trade.__from_create__(order=order, calendar_dt=self._calendar_dt, trading_dt=self._trading_dt,
-                                          price=price, amount=fill, close_today_amount=ct_amount)
+            trade = Trade.__from_create__(
+                order_id=order.order_id,
+                calendar_dt=self._calendar_dt,
+                trading_dt=self._trading_dt,
+                price=price,
+                amount=fill,
+                side=order.side,
+                position_effect=order.position_effect,
+                order_book_id=order.order_book_id,
+                frozen_price=order.frozen_price,
+                close_today_amount=ct_amount
+            )
             trade._commission = self._commission_decider.get_commission(account.type, trade)
             trade._tax = self._tax_decider.get_tax(account.type, trade)
             order.fill(trade)

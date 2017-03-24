@@ -349,10 +349,9 @@ class FuturePosition(BasePosition):
         self._sell_realized_pnl = 0.
 
     def apply_trade(self, trade):
-        order = trade.order
         trade_quantity = trade.last_quantity
-        if order.side == SIDE.BUY:
-            if order.position_effect == POSITION_EFFECT.OPEN:
+        if trade.side == SIDE.BUY:
+            if trade.position_effect == POSITION_EFFECT.OPEN:
                 self._buy_avg_open_price = (self._buy_avg_open_price * self.buy_quantity +
                                             trade_quantity * trade.last_price) / (self.buy_quantity + trade_quantity)
                 self._buy_transaction_cost += trade.commission
@@ -362,7 +361,7 @@ class FuturePosition(BasePosition):
                 delta_realized_pnl = self._close_holding(trade)
                 self._sell_realized_pnl += delta_realized_pnl
         else:
-            if order.position_effect == POSITION_EFFECT.OPEN:
+            if trade.position_effect == POSITION_EFFECT.OPEN:
                 self._sell_avg_open_price = (self._sell_avg_open_price * self.sell_quantity +
                                              trade_quantity * trade.last_price) / (self.sell_quantity + trade_quantity)
                 self._sell_transaction_cost += trade.commission

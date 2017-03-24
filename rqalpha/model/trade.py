@@ -31,7 +31,7 @@ class Trade(object):
         self._trading_dt = None
         self._price = None
         self._amount = None
-        self._order = None
+        self._order_id = None
         self._commission = None
         self._tax = None
         self._trade_id = None
@@ -39,28 +39,25 @@ class Trade(object):
         self._side = None
         self._position_effect = None
         self._order_book_id = None
+        self._frozen_price = None
 
     @classmethod
-    def __from_create__(cls, order, calendar_dt, trading_dt, price, amount, commission=0., tax=0., trade_id=None,
-                        close_today_amount=0, side=None, position_effect=None, order_book_id=None):
+    def __from_create__(cls, order_id, calendar_dt, trading_dt, price, amount, side, position_effect, order_book_id,
+                        commission=0., tax=0., trade_id=None, close_today_amount=0, frozen_price=0):
         trade = cls()
         trade._calendar_dt = calendar_dt
         trade._trading_dt = trading_dt
         trade._price = price
         trade._amount = amount
-        trade._order = order
+        trade._order_id = order_id
         trade._commission = commission
         trade._tax = tax
         trade._trade_id = trade_id if trade_id is not None else next(trade.trade_id_gen)
         trade._close_today_amount = close_today_amount
-        if order is None:
-            trade._side = side
-            trade._position_effect = position_effect
-            trade._order_book_id = order_book_id
-        else:
-            trade._side = order.side
-            trade._position_effect = order.position_effect
-            trade._order_book_id = order.order_book_id
+        trade._side = side
+        trade._position_effect = position_effect
+        trade._order_book_id = order_book_id
+        trade._frozen_price = frozen_price
         return trade
 
     @property
@@ -77,7 +74,7 @@ class Trade(object):
 
     @property
     def order_id(self):
-        return self.order.order_id
+        return self._order_id
 
     @property
     def last_price(self):
@@ -86,10 +83,6 @@ class Trade(object):
     @property
     def last_quantity(self):
         return self._amount
-
-    @property
-    def order(self):
-        return self._order
 
     @property
     def commission(self):
@@ -117,10 +110,11 @@ class Trade(object):
 
     @property
     def frozen_price(self):
-        if self._order is None:
-            return 0
-        else:
-            return self._order.frozen_price
+        return self._frozen_price
+
+    @property
+    def close_today_amount(self):
+        return self._close_today_amount
 
     def __simple_object__(self):
         return properties(self)

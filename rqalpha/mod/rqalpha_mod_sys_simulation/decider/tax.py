@@ -33,8 +33,8 @@ class StockTax(BaseTax):
 
     def get_tax(self, trade):
         cost_money = trade.last_price * trade.last_quantity
-        if Environment.get_instance().get_instrument(trade.order.order_book_id).type == 'CS':
-            return cost_money * self.rate if trade.order.side == SIDE.SELL else 0
+        if Environment.get_instance().get_instrument(trade.order_book_id).type == 'CS':
+            return cost_money * self.rate if trade.side == SIDE.SELL else 0
         else:
             return 0
 
