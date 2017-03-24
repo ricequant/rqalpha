@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 import logbook
 from logbook import Logger
 from logbook.more import ColorizedStderrHandler
 
+from .py2 import to_utf8
 
 logbook.set_datetime_format("local")
 
@@ -42,15 +45,10 @@ def user_std_handler_log_formatter(record, handler):
     except Exception:
         dt = "0000-00-00"
 
-    if isinstance(record.message, str):
-        message = record.message
-    else:
-        message = record.message.encode('utf-8')
-
     log = "{dt} {level} {msg}".format(
         dt=dt,
         level=record.level_name,
-        msg=message,
+        msg=to_utf8(record.message),
     )
     return log
 
@@ -62,15 +60,10 @@ user_std_handler.formatter = user_std_handler_log_formatter
 def formatter_builder(tag):
     def formatter(record, handler):
 
-        if isinstance(record.message, str):
-            message = record.message
-        else:
-            message = record.message.encode('utf-8')
-
         log = "[{formatter_tag}] [{time}] {level}: {msg}".format(
             formatter_tag=tag,
             level=record.level_name,
-            msg=message,
+            msg=to_utf8(record.message),
             time=record.time,
         )
 
