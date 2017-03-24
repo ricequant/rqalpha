@@ -49,9 +49,9 @@ def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
         file.write(yaml.dump(config, Dumper=dumper))
 
 
-def get_default_config_path():
-    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
-    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
+def get_default_config_path(tmpl):
+    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../{}_template.yml".format(tmpl))
+    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/{}.yml".format(tmpl)))
     if not os.path.exists(default_config_path):
         dir_path = os.path.dirname(default_config_path)
         if not os.path.exists(dir_path):
@@ -98,14 +98,16 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     set_locale(config_args.get("extra__locale", None))
 
-    config_path = get_default_config_path() if config_path is None else os.path.abspath(config_path)
+    config_path = get_default_config_path("config") if config_path is None else os.path.abspath(config_path)
+    mod_config_path = get_default_config_path("mod_config")
 
     # load default config from rqalpha
     config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
+    # load mod config
+    mod_config = load_config(mod_config_path, verify_version=False)
+    deep_update(mod_config, config)
     # load user config
     user_config = load_config(config_path)
-
-    # use user config to extend system default config
     deep_update(user_config, config)
 
     # use config_args to extend config

@@ -34,7 +34,7 @@ def cli(ctx, verbose):
 
 def entry_point():
     from rqalpha.utils.config import get_default_config_path
-    get_default_config_path()
+    get_default_config_path("mod_config")
     from . import mod
     from pkgutil import iter_modules
     # inject system mod
@@ -199,8 +199,8 @@ def mod(cmd, params):
         pip_main(params)
 
         # Export config
-        config_path = get_default_config_path()
-        config = load_config(config_path, loader=yaml.RoundTripLoader)
+        config_path = get_default_config_path("mod_config")
+        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
 
         for mod_name in mod_list:
             if "rqalpha_mod_" in mod_name:
@@ -250,8 +250,8 @@ def mod(cmd, params):
         pip_main(params)
 
         # Remove Mod Config
-        config_path = get_default_config_path()
-        config = load_config(config_path, loader=yaml.RoundTripLoader)
+        config_path = get_default_config_path("mod_config")
+        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
 
         for mod_name in mod_list:
             if "rqalpha_mod_" in mod_name:
@@ -266,8 +266,8 @@ def mod(cmd, params):
         """
         List all mod configuration
         """
-        config_path = get_default_config_path()
-        config = load_config(config_path, loader=yaml.RoundTripLoader)
+        config_path = get_default_config_path("mod_config")
+        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
 
         print(yaml.dump(config['mod'], Dumper=yaml.RoundTripDumper))
 
@@ -287,8 +287,8 @@ def mod(cmd, params):
         except ImportError:
             install([module_name])
 
-        config_path = get_default_config_path()
-        config = load_config(config_path, loader=yaml.RoundTripLoader)
+        config_path = get_default_config_path("mod_config")
+        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
 
         try:
             config['mod'][mod_name]['enabled'] = True
@@ -306,8 +306,8 @@ def mod(cmd, params):
         if not mod_name.startswith("rqalpha_mod_sys_") and "rqalpha_mod_" in mod_name:
             mod_name = mod_name.replace("rqalpha_mod_", "")
 
-        config_path = get_default_config_path()
-        config = load_config(config_path, loader=yaml.RoundTripLoader)
+        config_path = get_default_config_path("mod_config")
+        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
 
         try:
             config['mod'][mod_name]['enabled'] = False
