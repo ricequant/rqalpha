@@ -188,4 +188,4 @@ class StockAccount(BaseAccount):
         """
         【float】投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
         """
-        return sum(d['quantity'] * d['dividend_per_share'] for d in six.iteritems(self._dividend_receivable))
+        return sum(d['quantity'] * d['dividend_per_share'] for d in six.itervalues(self._dividend_receivable))
