@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mod import FuncatAPIMod
-
-
 def load_mod():
+    from .mod import FuncatAPIMod
     return FuncatAPIMod()

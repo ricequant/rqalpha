@@ -15,9 +15,7 @@
 # limitations under the License.
 
 import click
-from rqalpha import cmd_cli
-
-from .mod import PlotMod
+from rqalpha.__main__ import cli
 
 
 __config__ = {
@@ -28,33 +26,33 @@ __config__ = {
 
 
 def load_mod():
+    from .mod import PlotMod
     return PlotMod()
 
 
-def cli_injection(cli):
-    """
-    注入 --plot option
-    可以通过 `rqalpha run --plot` 的方式支持回测的时候显示进度条
-    """
-    cli_prefix = "mod__sys_plot__"
+"""
+注入 --plot option
+可以通过 `rqalpha run --plot` 的方式支持回测的时候显示进度条
+"""
+cli_prefix = "mod__sys_plot__"
 
-    cli.commands['run'].params.append(
-        click.Option(
-            ('-p', '--plot/--no-plot', cli_prefix + 'plot'),
-            default=None,
-            help="[sys_plot]plot result"
-        )
+cli.commands['run'].params.append(
+    click.Option(
+        ('-p', '--plot/--no-plot', cli_prefix + 'plot'),
+        default=None,
+        help="[sys_plot]plot result"
     )
-    cli.commands['run'].params.append(
-        click.Option(
-            ('--plot-save', cli_prefix + 'plot_save_file'),
-            default=None,
-            help="[sys_plot]save plot to file"
-        )
+)
+cli.commands['run'].params.append(
+    click.Option(
+        ('--plot-save', cli_prefix + 'plot_save_file'),
+        default=None,
+        help="[sys_plot]save plot to file"
     )
+)
 
 
-@cmd_cli.command()
+@cli.command()
 @click.argument('result_dict_file', type=click.Path(exists=True), required=True)
 @click.option('--show/--hide', 'is_show', default=True)
 @click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")

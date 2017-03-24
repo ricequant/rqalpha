@@ -25,6 +25,7 @@ __config__ = {
     },
     "extra": {
         "log_level": "error",
+        "show": True,
     },
     "mod": {
         "sys_progress": {

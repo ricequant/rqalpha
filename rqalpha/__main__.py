@@ -21,7 +21,6 @@ import shutil
 import ruamel.yaml as yaml
 from importlib import import_module
 
-from .utils import dummy_func
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_default_config_path, load_config, dump_config
 
@@ -40,15 +39,11 @@ def entry_point():
     from pkgutil import iter_modules
     # inject system mod
     for package_name in mod.SYSTEM_MOD_LIST:
-        module_name = "rqalpha_mod_{}".format(package_name)
-        cli_injection = getattr(import_module("rqalpha.mod.{}".format(module_name)), 'cli_injection', dummy_func)
-        cli_injection(cli)
+        __import__("rqalpha.mod.rqalpha_mod_" + package_name)
     # inject user mod
     for package in iter_modules():
         if "rqalpha_mod_" in package[1]:
-            lib = import_module(package[1])
-            cli_injection = getattr(lib, 'cli_injection', dummy_func)
-            cli_injection(cli)
+            __import__(package[1])
     cli(obj={})
 
 

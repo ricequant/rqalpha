@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import click
+from rqalpha.__main__ import cli
 
 __config__ = {
     "record": True,
@@ -28,22 +29,21 @@ def load_mod():
     return AnalyserMod()
 
 
-def cli_injection(cli):
-    """
-    注入 --progress option
-    可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
-    """
-    cli.commands['run'].params.append(
-        click.Option(
-            ('--report', 'mod__sys_analyser__report_save_path'),
-            type=click.Path(writable=True),
-            help="[sys_analyser]save report"
-        )
+"""
+注入 --progress option
+可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
+"""
+cli.commands['run'].params.append(
+    click.Option(
+        ('--report', 'mod__sys_analyser__report_save_path'),
+        type=click.Path(writable=True),
+        help="[sys_analyser]save report"
     )
-    cli.commands['run'].params.append(
-        click.Option(
-            ('-o', '--output-file', 'mod__sys_analyser__output_file'),
-            type=click.Path(writable=True),
-            help="[sys_analyser]output result pickle file"
-        )
+)
+cli.commands['run'].params.append(
+    click.Option(
+        ('-o', '--output-file', 'mod__sys_analyser__output_file'),
+        type=click.Path(writable=True),
+        help="[sys_analyser]output result pickle file"
     )
+)

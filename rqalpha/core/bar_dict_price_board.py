@@ -25,15 +25,15 @@ class BarDictPriceBoard(AbstractPriceBoard):
         self._settlement_lock = False
         self._trading_date = None
         self._env = Environment.get_instance()
-        if ACCOUNT_TYPE.FUTURE in self._env.config.account_list:
+        if ACCOUNT_TYPE.FUTURE in self._env.config.base.account_list:
             self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._lock_settlement)
             self._env.event_bus.add_listener(EVENT.POST_BEFORE_TRADING, self._unlock_settlement)
 
     def get_last_price(self, order_book_id):
         if self._settlement_lock:
-            return self._bar_dict[order_book_id].last
-        else:
             return self._env.data_proxy.get_settle_price(order_book_id, self._trading_date)
+        else:
+            return self._bar_dict[order_book_id].last
 
     def _lock_settlement(self, event):
         self._settlement_lock = True

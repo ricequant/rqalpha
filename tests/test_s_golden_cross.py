@@ -56,6 +56,7 @@ __config__ = {
         },
         "sys_funcat": {
             "enabled": True,
+            "show": True,
         },
     },
 }

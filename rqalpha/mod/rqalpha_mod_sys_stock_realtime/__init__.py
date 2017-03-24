@@ -14,14 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mod import RealtimeTradeMod
-
-
-def load_mod():
-    return RealtimeTradeMod()
-
 
 __config__ = {
     "persist_path": "./persist/strategy/",
     "fps": 3,
 }
+
+
+def load_mod():
+    from .mod import RealtimeTradeMod
+    return RealtimeTradeMod()
+
+

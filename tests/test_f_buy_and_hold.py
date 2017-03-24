@@ -24,6 +24,7 @@ __config__ = {
     "mod": {
         "sys_progress": {
             "enabled": True,
+            "show": True,
         },
         "sys_analyser": {
             "plot": False
