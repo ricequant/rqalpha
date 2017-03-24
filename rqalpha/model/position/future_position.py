@@ -50,6 +50,14 @@ class FuturePosition(BasePosition):
     def market_value(self):
         return (self.buy_quantity - self.sell_quantity) * self.last_price * self.contract_multiplier
 
+    @property
+    def buy_market_value(self):
+        return self.buy_quantity * self.last_price * self.contract_multiplier
+
+    @property
+    def sell_market_value(self):
+        return self.sell_quantity * self.last_price * self.contract_multiplier
+
     # -- PNL 相关
     @property
     def contract_multiplier(self):
