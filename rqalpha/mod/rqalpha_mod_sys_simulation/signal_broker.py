@@ -24,7 +24,7 @@ from rqalpha.const import BAR_STATUS, SIDE
 from rqalpha.environment import Environment
 
 from .decider import CommissionDecider, SlippageDecider, TaxDecider
-from .utils import init_portfolio, init_benchmark_portfolio
+from .utils import init_portfolio
 
 
 class SignalBroker(AbstractBroker):
@@ -36,9 +36,6 @@ class SignalBroker(AbstractBroker):
 
     def get_portfolio(self):
         return init_portfolio(self._env)
-
-    def get_benchmark_portfolio(self):
-        return init_benchmark_portfolio(self._env)
 
     def get_open_orders(self, order_book_id=None):
         return []

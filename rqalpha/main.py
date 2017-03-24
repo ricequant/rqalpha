@@ -95,6 +95,29 @@ def _validate_benchmark(config, data_proxy):
                                                                                end_date=end_date)))
 
 
+def create_benchmark_portfolio(env):
+    if env.config.base.benchmark is None:
+        return None
+
+    from .const import ACCOUNT_TYPE
+    from .model.account import BenchmarkAccount
+    from .model.position import Positions, StockPosition
+    from .model.portfolio import Portfolio
+    accounts = {}
+    config = env.config
+    start_date = config.base.start_date
+    total_cash = 0
+    for account_type in config.base.account_list:
+        if account_type == ACCOUNT_TYPE.STOCK:
+            total_cash += config.base.stock_starting_cash
+        elif account_type == ACCOUNT_TYPE.FUTURE:
+            total_cash += config.base.future_starting_cash
+        else:
+            raise NotImplementedError
+    accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(StockPosition))
+    return Portfolio(start_date, 1, total_cash, accounts)
+
+
 def create_base_scope():
     import copy
 
@@ -184,7 +207,7 @@ def run(config, source_code=None):
         broker = env.broker
         assert broker is not None
         env.portfolio = broker.get_portfolio()
-        env.benchmark_portfolio = broker.get_benchmark_portfolio()
+        env.benchmark_portfolio = create_benchmark_portfolio(env)
 
         event_source = env.event_source
         assert event_source is not None
@@ -239,9 +262,9 @@ def run(config, source_code=None):
             persist_helper.register('universe', env._universe)
             if isinstance(event_source, Persistable):
                 persist_helper.register('event_source', event_source)
-            # FIXME @hzliu
-            for k, v in six.iteritems(env.portfolio.accounts):
-                persist_helper.register('{}_account'.format(k.name.lower()), v)
+            persist_helper.register('portfolio', env.portfolio)
+            if env.benchmark_portfolio:
+                persist_helper.register('benchmark_portfolio', env.benchmark_portfolio)
             for name, module in six.iteritems(env.mod_dict):
                 if isinstance(module, Persistable):
                     persist_helper.register('mod_{}'.format(name), module)

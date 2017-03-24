@@ -23,7 +23,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.environment import Environment
 
 from .matcher import Matcher
-from .utils import init_portfolio, init_benchmark_portfolio
+from .utils import init_portfolio
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -50,9 +50,6 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def get_portfolio(self):
         return init_portfolio(self._env)
-
-    def get_benchmark_portfolio(self):
-        return init_benchmark_portfolio(self._env)
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:

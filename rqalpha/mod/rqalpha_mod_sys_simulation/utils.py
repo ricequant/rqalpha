@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from rqalpha.const import ACCOUNT_TYPE
-from rqalpha.model.account import BenchmarkAccount, StockAccount, FutureAccount
+from rqalpha.model.account import StockAccount, FutureAccount
 from rqalpha.model.position import Positions, StockPosition, FuturePosition
 from rqalpha.model.portfolio import Portfolio
 
@@ -36,22 +36,4 @@ def init_portfolio(env):
             total_cash += future_starting_cash
         else:
             raise NotImplementedError
-    return Portfolio(start_date, 1, total_cash, accounts)
-
-
-def init_benchmark_portfolio(env):
-    if env.config.base.benchmark is None:
-        return None
-    accounts = {}
-    config = env.config
-    start_date = config.base.start_date
-    total_cash = 0
-    for account_type in config.base.account_list:
-        if account_type == ACCOUNT_TYPE.STOCK:
-            total_cash += config.base.stock_starting_cash
-        elif account_type == ACCOUNT_TYPE.FUTURE:
-            total_cash += config.base.future_starting_cash
-        else:
-            raise NotImplementedError
-    accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(StockPosition))
     return Portfolio(start_date, 1, total_cash, accounts)
