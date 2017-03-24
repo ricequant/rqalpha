@@ -26,6 +26,7 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 import pytz
 import requests
 import six
+import better_exceptions
 
 from . import const
 from .api import helper as api_helper
@@ -277,6 +278,9 @@ def run(config, source_code=None):
 
         user_detail_log.exception(_(u"strategy execute exception"))
         user_system_log.error(e.error)
+
+        better_exceptions.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
+
         mod_handler.tear_down(const.EXIT_CODE.EXIT_USER_ERROR, e)
     except Exception as e:
         if init_succeed and env.config.base.persist and persist_helper:

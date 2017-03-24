@@ -44,6 +44,7 @@ install_requirements = [
     'XlsxWriter>=0.9.6',
     'line-profiler>=2.0',
     'ruamel.yaml>=0.13.14',
+    'better_exceptions',
 ]
 
 if sys.version_info.major < 3:

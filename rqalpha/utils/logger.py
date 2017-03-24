@@ -81,7 +81,7 @@ user_system_log = Logger("user_system_log")
 
 # 用于用户异常的详细日志打印
 user_detail_log = Logger("user_detail_log")
-user_detail_log.handlers.append(ColorizedStderrHandler(bubble=True))
+# user_detail_log.handlers.append(ColorizedStderrHandler(bubble=True))
 
 # 系统日志
 system_log = Logger("system_log")

@@ -30,6 +30,8 @@ class PlotMod(AbstractMod):
         # FIXME need a better way to access data from other mod
         if 'sys_analyser' in env.mod_dict:
             result_dict = env.mod_dict['sys_analyser']._result
+            if result_dict is None:
+                return
 
             if self._mod_config.plot:
                 from .plot import plot_result
