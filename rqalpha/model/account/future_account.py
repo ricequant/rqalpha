@@ -35,7 +35,7 @@ def margin_of(order_book_id, quantity, price):
 class FutureAccount(BaseAccount):
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._settlement)
+        event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
         event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
@@ -81,7 +81,7 @@ class FutureAccount(BaseAccount):
 
     @staticmethod
     def _frozen_cash_of_trade(trade):
-        return margin_of(trade.order.order_book_id, trade.last_quantity, trade.order.frozen_price)
+        return margin_of(trade.order_book_id, trade.last_quantity, trade.frozen_price)
 
     @property
     def total_value(self):
@@ -132,6 +132,8 @@ class FutureAccount(BaseAccount):
         return sum(position.realized_pnl for position in six.itervalues(self._positions))
 
     def _settlement(self, event):
+        old_margin = self.margin
+        old_daily_pnl = self.daily_pnl + self.transaction_cost
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.buy_quantity + position.sell_qauntity != 0:
@@ -143,6 +145,7 @@ class FutureAccount(BaseAccount):
                 self._positions.pop(order_book_id, None)
             else:
                 position.apply_settlement()
+        self._total_cash = self._total_cash + (old_margin - self.margin) + old_daily_pnl
 
         self._backward_trade_set.clear()
 
@@ -169,12 +172,12 @@ class FutureAccount(BaseAccount):
     def _apply_trade(self, trade):
         if trade.exec_id in self._backward_trade_set:
             return
-        order_book_id = trade.order.order_book_id
+        order_book_id = trade.order_book_id
         position = self._positions.get_or_create(order_book_id)
         position.apply_trade(trade)
 
         self._total_cash -= trade.transaction_cost
-        if trade.order.position_effect != POSITION_EFFECT.OPEN:
+        if trade.position_effect != POSITION_EFFECT.OPEN:
             self._total_cash += margin_of(order_book_id, trade.last_quantity, trade.last_price)
         else:
             self._total_cash -= margin_of(order_book_id, trade.last_quantity, trade.last_price)

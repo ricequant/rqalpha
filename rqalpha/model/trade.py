@@ -14,28 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 import time
 
 from ..utils import id_gen
 from ..utils.repr import property_repr, properties
 
-TradePersistMap = {
-    "_calendar_dt": "_calendar_dt",
-    "_trading_dt": "_trading_dt",
-    "_price": "_price",
-    "_amount": "_amount",
-    "_order_id": "_order_id",
-    "_commission": "_commission",
-    "_tax": "_tax",
-    "_trade_id": "_trade_id",
-    "_close_today_amount": "_close_today_amount",
-}
-
 
 class Trade(object):
-    __slots__ = ["_calendar_dt", "_trading_dt", "_price", "_amount", "_order", "_commission", "_tax", "_trade_id",
-                 "_close_today_amount"]
 
     __repr__ = property_repr
 
@@ -51,10 +36,13 @@ class Trade(object):
         self._tax = None
         self._trade_id = None
         self._close_today_amount = None
+        self._side = None
+        self._position_effect = None
+        self._order_book_id = None
 
     @classmethod
     def __from_create__(cls, order, calendar_dt, trading_dt, price, amount, commission=0., tax=0., trade_id=None,
-                        close_today_amount=0):
+                        close_today_amount=0, side=None, position_effect=None, order_book_id=None):
         trade = cls()
         trade._calendar_dt = calendar_dt
         trade._trading_dt = trading_dt
@@ -65,26 +53,19 @@ class Trade(object):
         trade._tax = tax
         trade._trade_id = trade_id if trade_id is not None else next(trade.trade_id_gen)
         trade._close_today_amount = close_today_amount
+        if order is None:
+            trade._side = side
+            trade._position_effect = position_effect
+            trade._order_book_id = order_book_id
+        else:
+            trade._side = order.side
+            trade._position_effect = order.position_effect
+            trade._order_book_id = order.order_book_id
         return trade
 
-    @classmethod
-    def __from_dict__(cls, trade_dict, order):
-        trade = cls()
-        for persist_key, origin_key in six.iteritems(TradePersistMap):
-            if persist_key == "_order_id":
-                continue
-            setattr(trade, origin_key, trade_dict[persist_key])
-        trade._order = order
-        return trade
-
-    def __to_dict__(self):
-        trade_dict = {}
-        for persist_key, origin_key in six.iteritems(TradePersistMap):
-            if persist_key == "_order_id":
-                trade_dict["_order_id"] = self._order.order_id
-            else:
-                trade_dict[persist_key] = getattr(self, origin_key)
-        return trade_dict
+    @property
+    def order_book_id(self):
+        return self._order_book_id
 
     @property
     def trading_datetime(self):
@@ -124,15 +105,22 @@ class Trade(object):
 
     @property
     def side(self):
-        return self.order.side
+        return self._side
 
     @property
     def position_effect(self):
-        return self.order.position_effect
+        return self._position_effect
 
     @property
     def exec_id(self):
         return self._trade_id
+
+    @property
+    def frozen_price(self):
+        if self._order is None:
+            return 0
+        else:
+            return self._order.frozen_price
 
     def __simple_object__(self):
         return properties(self)

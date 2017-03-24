@@ -373,10 +373,9 @@ class FuturePosition(BasePosition):
                 self._buy_realized_pnl += delta_realized_pnl
 
     def _close_holding(self, trade):
-        order = trade.order
         left_quantity = trade.last_quantity
         delta = 0
-        if order.side == SIDE.BUY:
+        if trade.side == SIDE.BUY:
             # 先平昨仓
             if len(self._sell_old_holding_list) != 0:
                 old_price, old_quantity = self._sell_old_holding_list.pop()
@@ -387,7 +386,7 @@ class FuturePosition(BasePosition):
                 else:
                     consumed_quantity = left_quantity
                 left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(old_price, trade.last_price, order.side, consumed_quantity)
+                delta += self._cal_realized_pnl(old_price, trade.last_price, trade.side, consumed_quantity)
             # 再平进仓
             while True:
                 if left_quantity <= 0:
@@ -399,7 +398,7 @@ class FuturePosition(BasePosition):
                 else:
                     consumed_quantity = oldest_quantity
                 left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(oldest_price, trade.last_price, order.side, consumed_quantity)
+                delta += self._cal_realized_pnl(oldest_price, trade.last_price, trade.side, consumed_quantity)
         else:
             # 先平昨仓
             if len(self._buy_old_holding_list) != 0:
@@ -410,7 +409,7 @@ class FuturePosition(BasePosition):
                 else:
                     consumed_quantity = left_quantity
                 left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(old_price, trade.last_price, order.side, consumed_quantity)
+                delta += self._cal_realized_pnl(old_price, trade.last_price, trade.side, consumed_quantity)
             # 再平今仓
             while True:
                 if left_quantity <= 0:
@@ -423,7 +422,7 @@ class FuturePosition(BasePosition):
                 else:
                     consumed_quantity = oldest_quantity
                 left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(oldest_price, trade.last_price, order.side, consumed_quantity)
+                delta += self._cal_realized_pnl(oldest_price, trade.last_price, trade.side, consumed_quantity)
         return delta
 
     def _cal_realized_pnl(self, cost_price, trade_price, side, consumed_quantity):

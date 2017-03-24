@@ -14,31 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 import time
 
 from ..const import ORDER_STATUS, ORDER_TYPE
 from ..utils import id_gen
 from ..utils.repr import property_repr, properties
 from ..utils.logger import user_system_log
-
-
-OrderPersistMap = {
-    "_order_id": "_order_id",
-    "_calendar_dt": "_calendar_dt",
-    "_trading_dt": "_trading_dt",
-    "_quantity": "_quantity",
-    "_order_book_id": "_order_book_id",
-    "_side": "_side",
-    "_position_effect": "_position_effect",
-    "_message": "_message",
-    "_filled_quantity": "_filled_quantity",
-    "_status": "_status",
-    "_frozen_price": "_frozen_price",
-    "_type": "_type",
-    "_avg_price": "_avg_price",
-    "_transaction_cost": "_transaction_cost",
-}
 
 
 class Order(object):
@@ -85,19 +66,6 @@ class Order(object):
         order._avg_price = 0
         order._transaction_cost = 0
         return order
-
-    @classmethod
-    def __from_dict__(cls, order_dict):
-        order = cls()
-        for persist_key, origin_key in six.iteritems(OrderPersistMap):
-            setattr(order, origin_key, order_dict[persist_key])
-        return order
-
-    def __to_dict__(self):
-        order_dict = {}
-        for persist_key, origin_key in six.iteritems(OrderPersistMap):
-            order_dict[persist_key] = getattr(self, origin_key)
-        return order_dict
 
     @property
     def order_id(self):

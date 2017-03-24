@@ -72,10 +72,10 @@ class StockAccount(BaseAccount):
         self._frozen_cash = 0
         frozen_quantity = defaultdict(int)
         for o in orders:
-            if o._is_final():
+            if o.is_final():
                 continue
             if o.side == SIDE.BUY:
-                self._frozen_cash += o._frozen_price * o.unfilled_quantity
+                self._frozen_cash += o.frozen_price * o.unfilled_quantity
             else:
                 frozen_quantity[o.order_book_id] += o.unfilled_quantity
         for order_book_id, position in six.iteritems(self._positions):
@@ -90,12 +90,12 @@ class StockAccount(BaseAccount):
         if trade.exec_id in self._backward_trade_set:
             return
 
-        position = self._positions.get_or_create(trade.order.order_book_id)
+        position = self._positions.get_or_create(trade.order_book_id)
         position.apply_trade(trade)
         self._total_cash -= trade.transaction_cost
         if trade.side == SIDE.BUY:
             self._total_cash -= trade.last_quantity * trade.last_price
-            self._frozen_cash -= trade.order.frozen_price * trade.last_quantity
+            self._frozen_cash -= trade.frozen_price * trade.last_quantity
         else:
             self._total_cash += trade.last_price * trade.last_quantity
         self._backward_trade_set.add(trade.exec_id)
