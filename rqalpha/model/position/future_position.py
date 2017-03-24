@@ -36,6 +36,32 @@ class FuturePosition(BasePosition):
         self._buy_avg_open_price = 0.
         self._sell_avg_open_price = 0.
 
+    def get_state(self):
+        return {
+            'order_book_id': self._order_book_id,
+            'buy_old_holding_list': self._buy_old_holding_list,
+            'sell_old_holding_list': self._sell_old_holding_list,
+            'buy_today_holding_list': self._buy_today_holding_list,
+            'sell_today_holding_list': self._sell_today_holding_list,
+            'buy_transaction_cost': self._buy_transaction_cost,
+            'sell_transaction_cost': self._sell_transaction_cost,
+            'buy_realized_pnl': self._buy_realized_pnl,
+            'sell_realized_pnl': self._sell_realized_pnl,
+            'buy_avg_open_price': self._buy_avg_open_price,
+            'sell_avg_open_price': self._sell_avg_open_price,
+        }
+
+    def set_state(self, state):
+        assert self._order_book_id == state['order_book_id']
+        self._buy_old_holding_list = state['buy_old_holding_list']
+        self._sell_old_holding_list = state['sell_old_holding_list']
+        self._buy_today_holding_list = state['buy_today_holding_list']
+        self._sell_today_holding_list = state['sell_today_holding_list']
+        self._buy_transaction_cost = state['buy_transaction_cost']
+        self._sell_transaction_cost = state['sell_transaction_cost']
+        self._buy_avg_open_price = state['buy_avg_open_price']
+        self._sell_avg_open_price = state['sell_avg_open_price']
+
     @property
     def type(self):
         return ACCOUNT_TYPE.FUTURE

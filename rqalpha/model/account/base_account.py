@@ -53,6 +53,12 @@ class BaseAccount(object):
         """
         raise NotImplementedError
 
+    def get_state(self):
+        raise NotImplementedError
+
+    def set_state(self, state):
+        raise NotImplementedError
+
     @property
     def positions(self):
         """

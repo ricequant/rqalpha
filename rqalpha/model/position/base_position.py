@@ -25,6 +25,12 @@ class BasePosition(object):
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
 
+    def get_state(self):
+        raise NotImplementedError
+
+    def set_state(self, state):
+        raise NotImplementedError
+
     @property
     def order_book_id(self):
         return self._order_book_id

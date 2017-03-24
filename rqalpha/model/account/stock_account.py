@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from collections import defaultdict
 
 import six
 
@@ -39,6 +40,28 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
+    def get_state(self):
+        return {
+            'positions': {
+                order_book_id: position.get_state()
+                for order_book_id, position in six.iteritems(self._positions)
+            },
+            'frozen_cash': self._frozen_cash,
+            'total_cash': self._total_cash,
+            'backward_trade_set': list(self._backward_trade_set),
+            'dividend_receivable': self._dividend_receivable,
+        }
+
+    def set_state(self, state):
+        self._frozen_cash = state['frozen_cash']
+        self._total_cash = state['total_cash']
+        self._backward_trade_set = set(state['backward_trade_set'])
+        self._dividend_receivable = state['dividend_receivable']
+        self._positions.clear()
+        for order_book_id, v in six.iteritems(state['positions']):
+            position = self._positions.get_or_create(order_book_id)
+            position.set_state(v)
+
     def fast_forward(self, orders, trades=list()):
         # 计算 Positions
         for trade in trades:
@@ -47,10 +70,16 @@ class StockAccount(BaseAccount):
             self._apply_trade(trade)
         # 计算 Frozen Cash
         self._frozen_cash = 0
+        frozen_quantity = defaultdict(int)
         for o in orders:
             if o._is_final():
                 continue
-            self._frozen_cash += o._frozen_price * o.unfilled_quantity
+            if o.side == SIDE.BUY:
+                self._frozen_cash += o._frozen_price * o.unfilled_quantity
+            else:
+                frozen_quantity[o.order_book_id] += o.unfilled_quantity
+        for order_book_id, position in six.iteritems(self._positions):
+            position.reset_frozen(frozen_quantity[order_book_id])
 
     def _on_trade(self, event):
         if event.account != self:

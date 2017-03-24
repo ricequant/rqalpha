@@ -28,6 +28,24 @@ class StockPosition(BasePosition):
         self._frozen = 0            # 冻结量
         self._transaction_cost = 0  # 交易费用
 
+    def get_state(self):
+        return {
+            'order_book_id': self._order_book_id,
+            'quantity': self._quantity,
+            'avg_price': self._avg_price,
+            'non_closable': self._non_closable,
+            'frozen': self._frozen,
+            'transaction_cost': self._transaction_cost,
+        }
+
+    def set_state(self, state):
+        assert self._order_book_id == state['order_book_id']
+        self._quantity = state['quantity']
+        self._avg_price = state['avg_price']
+        self._non_closable = state['non_closable']
+        self._frozen = state['frozen']
+        self._transaction_cost = state['transaction_cost']
+
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost
         if trade.side == SIDE.BUY:
@@ -44,6 +62,9 @@ class StockPosition(BasePosition):
 
     def apply_settlement(self):
         self._non_closable = 0
+
+    def reset_frozen(self, frozen):
+        self._frozen = frozen
 
     def cal_close_today_amount(self, *args):
         return 0

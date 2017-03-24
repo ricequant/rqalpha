@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import six
+import jsonpickle
 
 from ..environment import Environment
 from ..const import DAYS_CNT, ACCOUNT_TYPE
@@ -40,6 +41,25 @@ class Portfolio(object):
         """
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+
+    def get_state(self):
+        return jsonpickle.encode({
+            'start_date': self._start_date,
+            'static_unit_net_value': self._static_unit_net_value,
+            'units': self._units,
+            'accounts': {
+                name: account.get_state() for name, account in six.iteritems(self._accounts)
+            }
+        }).encode('utf-8')
+
+    def set_state(self, state):
+        state = state.decode('utf-8')
+        value = jsonpickle.decode(state)
+        self._start_date = value['start_date']
+        self._static_unit_net_value = value['static_unit_net_value']
+        self._units = value['units']
+        for k, v in six.iteritems(value['accounts']):
+            self._accounts[k].set_state(v)
 
     def _post_settlement(self, event):
         self._static_unit_net_value = self.unit_net_value

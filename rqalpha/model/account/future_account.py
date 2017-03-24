@@ -33,7 +33,6 @@ def margin_of(order_book_id, quantity, price):
 
 
 class FutureAccount(BaseAccount):
-
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._settlement)
@@ -51,6 +50,26 @@ class FutureAccount(BaseAccount):
             self._apply_trade(trade)
         # 计算 Frozen Cash
         self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
+
+    def get_state(self):
+        return {
+            'positions': {
+                order_book_id: position.get_state()
+                for order_book_id, position in six.iteritems(self._positions)
+                },
+            'frozen_cash': self._frozen_cash,
+            'total_cash': self._total_cash,
+            'backward_trade_set': list(self._backward_trade_set),
+        }
+
+    def set_state(self, state):
+        self._frozen_cash = state['frozen_cash']
+        self._total_cash = state['total_cash']
+        self._backward_trade_set = set(state['backward_trade_set'])
+        self._positions.clear()
+        for order_book_id, v in six.iteritems(state['positions']):
+            position = self._positions.get_or_create(order_book_id)
+            position.set_state(v)
 
     @property
     def type(self):
