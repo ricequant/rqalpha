@@ -14,11 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from ..interface import AbstractPriceBoard
+from ..environment import Environment
+from ..events import EVENT
 
 
 class BarDictPriceBoard(AbstractPriceBoard):
     def __init__(self, bar_dict):
         self._bar_dict = bar_dict
+        self._settlement_lock = False
+        self._trading_date = None
+        self._env = Environment.get_instance()
+        self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._lock_settlement)
+        self._env.event_bus.add_listener(EVENT.POST_BEFORE_TRADING, self._unlock_settlement)
 
     def get_last_price(self, order_book_id):
-        return self._bar_dict[order_book_id].last
+        if self._settlement_lock:
+            return self._bar_dict[order_book_id].last
+        else:
+            return self._env.data_proxy.get_settle_price(order_book_id, self._trading_date)
+
+    def _lock_settlement(self, event):
+        self._settlement_lock = True
+        self._trading_date = self._env.trading_dt.date()
+
+    def _unlock_settlement(self, event):
+        self._settlement_lock = False
