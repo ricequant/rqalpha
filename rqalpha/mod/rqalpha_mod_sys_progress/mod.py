@@ -25,15 +25,17 @@ class ProgressMod(AbstractMod):
         self._show = False
         self._progress_bar = None
         self._trading_length = 0
+        self._env = None
 
     def start_up(self, env, mod_config):
         self._show = mod_config.show
+        self._env = env
         if self._show:
-            self._trading_length = env.config.base.trading_calendar
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._init)
             env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._tick)
 
     def _init(self, event):
+        self._trading_length = len(self._env.config.base.trading_calendar)
         self.progress_bar = click.progressbar(length=self._trading_length, show_eta=False)
 
     def _tick(self, event):
