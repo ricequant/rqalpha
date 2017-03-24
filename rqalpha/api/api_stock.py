@@ -378,7 +378,7 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
-             verify_that('percent').is_number().is_greater_than(0).is_less_than(1),
+             verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     """

@@ -247,6 +247,16 @@ class ArgumentChecker(object):
         self._rules.append(check_is_valid_date)
         return self
 
+    def is_greater_or_equal_than(self, low):
+        def check_greater_or_equal_than(func_name, value):
+            if value < low:
+                raise RQInvalidArgument(
+                    _('function {}: invalid {} argument, expect a value >= {}, got {} (type: {})').format(
+                        func_name, self._arg_name, low, value, type(value)
+                    ))
+        self._rules.append(check_greater_or_equal_than)
+        return self
+
     def is_greater_than(self, low):
         def check_greater_than(func_name, value):
             if value <= low:
@@ -255,6 +265,17 @@ class ArgumentChecker(object):
                         func_name, self._arg_name, low, value, type(value)
                     ))
         self._rules.append(check_greater_than)
+        return self
+
+    def is_less_or_equal_than(self, high):
+        def check_less_or_equal_than(func_name, value):
+            if value > high:
+                raise RQInvalidArgument(
+                    _('function {}: invalid {} argument, expect a value <= {}, got {} (type: {})').format(
+                        func_name, self._arg_name, high, value, type(value)
+                    ))
+
+        self._rules.append(check_less_or_equal_than)
         return self
 
     def is_less_than(self, high):

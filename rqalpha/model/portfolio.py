@@ -191,8 +191,8 @@ class MixedPositions(dict):
         account_type = get_account_type(key)
         for a_type in self._accounts:
             if a_type == account_type:
-                self[key] = self._accounts[a_type].positions[key]
-        return self[key]
+                return self._accounts[a_type].positions[key]
+        return None
 
     def __repr__(self):
         keys = []

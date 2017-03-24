@@ -28,8 +28,11 @@ class BaseTax(with_metaclass(abc.ABCMeta)):
 
 
 class StockTax(BaseTax):
-    def __init__(self, rate=0.001):
-        self.rate = rate
+    def __init__(self, rate=None):
+        if rate is None:
+            self.rate = 0.001
+        else:
+            self.rate = rate
 
     def get_tax(self, trade):
         cost_money = trade.last_price * trade.last_quantity
