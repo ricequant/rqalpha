@@ -211,12 +211,8 @@ def mod(cmd, params):
 
             mod = import_module(lib_name)
 
-            mod_config = yaml.load(mod.__mod_config__, yaml.RoundTripLoader)
-
-            config['mod'][mod_name] = mod_config
-            config['mod'][mod_name]['lib'] = lib_name
+            config['mod'][mod_name] = {}
             config['mod'][mod_name]['enabled'] = False
-            config['mod'][mod_name]['priority'] = 1000
 
         dump_config(config_path, config)
 
