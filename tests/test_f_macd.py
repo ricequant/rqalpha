@@ -51,20 +51,21 @@ __config__ = {
         "start_date": "2014-09-01",
         "end_date": "2016-09-05",
         "frequency": "1d",
-        "matching_type": "next_bar",
+        "matching_type": "current_bar",
         "future_starting_cash": 1000000,
         "benchmark": None,
     },
     "extra": {
         "log_level": "error",
     },
-    "validator": {
-        "bar_limit": False,
-    },
     "mod": {
         "sys_progress": {
             "enabled": True,
-            "show": True,
+            "show": False,
+        },
+        "sys_plot": {
+            "enabled": False,
+            "plot": True
         },
     },
 }

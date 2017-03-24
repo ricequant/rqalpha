@@ -32,8 +32,9 @@ __config__ = {
             "enabled": True,
             "show": True,
         },
-        "sys_analyser": {
-            "plot": False
-        },
+        "sys_plot": {
+            "enabled": False,
+            "plot": True,
+        }
     },
 }

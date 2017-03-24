@@ -123,18 +123,18 @@ __config__ = {
         "matching_type": "current_bar",
         "stock_starting_cash": 1000000,
         "benchmark": "000300.XSHG",
-        "slippage": 0.00123,
     },
     "extra": {
         "log_level": "error",
-    },
-    "validator": {
-        "bar_limit": False,
     },
     "mod": {
         "sys_progress": {
             "enabled": True,
             "show": True,
         },
+        "sys_plot": {
+            "enabled": False,
+            "plot": True,
+        }
     },
 }
