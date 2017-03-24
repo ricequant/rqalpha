@@ -99,7 +99,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     set_locale(config_args.get("extra__locale", None))
 
     config_path = get_default_config_path("config") if config_path is None else os.path.abspath(config_path)
-    mod_config_path = get_default_config_path("mod_config")
+    mod_config_path = get_default_config_path(".mod_config")
 
     # load default config from rqalpha
     config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
