@@ -12,13 +12,13 @@ History
 **Portfolio/Account/Position 相关**
 
 - 重新定义了 :code:`Portfolio`, :code:`Account` 和 :code:`Position` 的角色和关系
-- 删除大部分累计所得的属性，重新实现股票和期货的计算逻辑
-- 现在只有在 :code:`Portfolio` 层级进行净值/份额的计算，账户级别不再进行净值/份额/收益/相关的计算
-- 账户的恢复和初始化现在只需要 :code:`total_cash`, :code:`positions` 和 :code:`backward_trade_set` 即可
-- 精简 :code:`Position` 的初始化，现在的完全可以从 :code:`real_broker` 进行恢复
+- 删除大部分累计计算的属性，重新实现股票和期货的计算逻辑
+- 现在只有在 :code:`Portfolio` 层级进行净值/份额的计算，Account级别不再进行净值/份额/收益/相关的计算
+- 账户的恢复和初始化现在只需要 :code:`total_cash`, :code:`positions` 和 :code:`backward_trade_set` 即可完成
+- 精简 :code:`Position` 的初始化，可以从 :code:`real_broker` 直接进行恢复
 - :code:`Account` 提供 :code:`fast_forward` 函数，账户现在可以从任意时刻通过 :code:`orders` 和 :code:`trades` 快速前进至最新状态
 - 如果存在 Benchmark， 则创建一个 :code:`benchmark_portfolio`, 其包含一个 :code:`benchmark_account`
-- 策略在调用 :code:`context.portfolio.positions[some_security]` 时候，如果 position 不存在，不再每次创建，而是会缓存，从而提高回测速度和性能。
+- 策略在调用 :code:`context.portfolio.positions[some_security]` 时候，如果 position 不存在，不再每次都创建临时仓位，而是会缓存，从而提高回测速度和性能
 - 不再使用 :code:`clone` 方法
 - 不再使用 :code:`PortfolioProxy` 和 :code:`PositionProxy`
 
@@ -27,8 +27,9 @@ History
 - 规范 Event 的生成和相应逻辑, 使用 Event object 来替换原来的 Enum
 - 抽离事件执行相关逻辑为 :code:`Executor` 模块
 
-**Slippage/Commission 相关**
+** Mod 相关**
 
+- 规范化 Mod 命名规则，需要以 `rqalpha_mod_xxx` 作为 Mod 依赖库命名
 - 抽离 :code:`slippage` 相关业务逻辑至 :code:`simulation mod`
 - 抽离 :code:`commission` 相关业务逻辑至 :code:`simulation mod`
 - 抽离 :code:`tax` 相关业务逻辑至 :code:`simulation mod`
