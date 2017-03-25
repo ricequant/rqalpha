@@ -16,11 +16,8 @@
 
 import bcolz
 import numpy as np
-try:
-    # For Python 2 兼容
-    from functools import lru_cache
-except Exception as e:
-    from fastcache import lru_cache
+
+from ..utils.six import lru_cache
 
 
 class DateSet(object):

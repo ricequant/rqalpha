@@ -17,11 +17,6 @@
 import math
 import time
 import datetime
-try:
-    from functools import lru_cache
-except Exception as e:
-    from fastcache import lru_cache
-
 from six.moves import reduce
 
 from rqalpha.utils.datetime_func import convert_dt_to_int

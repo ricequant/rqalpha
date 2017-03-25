@@ -116,7 +116,6 @@ def examples(directory):
             print("Folder examples is exists.")
 
 
-
 @cli.command()
 @click.option('-v', '--verbose', is_flag=True)
 def version(**kwargs):

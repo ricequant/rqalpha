@@ -17,17 +17,13 @@
 import six
 import numpy as np
 import pandas as pd
-try:
-    # For Python 2 兼容
-    from functools import lru_cache
-except Exception as e:
-    from fastcache import lru_cache
 
 from . import risk_free_helper
 from .instrument_mixin import InstrumentMixin
 from .trading_dates_mixin import TradingDatesMixin
 from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
+from ..utils.six import lru_cache
 from ..utils.datetime_func import convert_int_to_datetime
 from ..const import HEDGE_TYPE
 
