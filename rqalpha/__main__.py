@@ -38,13 +38,14 @@ def entry_point():
     get_default_config_path(".mod_config")
     from . import mod
     from pkgutil import iter_modules
+    from rqalpha.utils.package_helper import import_mod
     # inject system mod
     for package_name in mod.SYSTEM_MOD_LIST:
-        __import__("rqalpha.mod.rqalpha_mod_" + package_name)
+        import_mod("rqalpha.mod.rqalpha_mod_" + package_name)
     # inject user mod
     for package in iter_modules():
         if "rqalpha_mod_" in package[1]:
-            __import__(package[1])
+            import_mod(package[1])
     cli(obj={})
 
 

@@ -15,9 +15,9 @@
 # limitations under the License.
 
 import copy
-from importlib import import_module
 from collections import OrderedDict
 
+from rqalpha.utils.package_helper import import_mod
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import RqAttrDict
@@ -46,7 +46,10 @@ class ModHandler(object):
             else:
                 lib_name = "rqalpha_mod_" + mod_name
             system_log.debug(_('loading mod {}').format(lib_name))
-            mod_module = import_module(lib_name)
+            mod_module = import_mod(lib_name)
+            if mod_module is None:
+                del self._mod_list[idx]
+                return
             mod = mod_module.load_mod()
 
             mod_config = RqAttrDict(copy.deepcopy(getattr(mod_module, "__config__", {})))
