@@ -52,14 +52,14 @@ cli.commands['run'].params.append(
 )
 cli.commands['run'].params.append(
     click.Option(
-        ('-p', '--plot/--no-plot', 'mod_sys_analyser__plot'),
+        ('-p', '--plot/--no-plot', 'mod__sys_analyser__plot'),
         default=None,
         help="[sys_analyser]plot result"
     )
 )
 cli.commands['run'].params.append(
     click.Option(
-        ('--plot-save', 'mod_sys_analyser__plot_save_file'),
+        ('--plot-save', 'mod__sys_analyser__plot_save_file'),
         default=None,
         help="[sys_analyser]save plot to file"
     )
