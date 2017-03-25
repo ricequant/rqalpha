@@ -117,20 +117,6 @@ def examples(directory):
 
 
 @cli.command()
-@click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
-@click.argument('target_report_csv_path', type=click.Path(exists=True, writable=True), required=True)
-def report(result_pickle_file_path, target_report_csv_path):
-    """
-    Generate report from backtest output file
-    """
-    import pandas as pd
-    result_dict = pd.read_pickle(result_pickle_file_path)
-
-    from rqalpha.mod.rqalpha_mod_sys_analyser.report import generate_report
-    generate_report(result_dict, target_report_csv_path)
-
-
-@cli.command()
 @click.option('-v', '--verbose', is_flag=True)
 def version(**kwargs):
     """
