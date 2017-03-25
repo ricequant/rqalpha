@@ -27,7 +27,7 @@ History
 - 规范 Event 的生成和相应逻辑, 使用 Event object 来替换原来的 Enum
 - 抽离事件执行相关逻辑为 :code:`Executor` 模块
 
-** Mod 相关**
+**Mod 相关**
 
 - 规范化 Mod 命名规则，需要以 `rqalpha_mod_xxx` 作为 Mod 依赖库命名
 - 抽离 :code:`slippage` 相关业务逻辑至 :code:`simulation mod`
@@ -50,7 +50,10 @@ History
 
 **Risk 计算**
 
-- 修改 Risk 计算逻辑
+- 修复 `tracking error <https://www.ricequant.com/api/python/chn#backtest-results-factors>`_ 计算错误
+- 修改 `sharpe <https://www.ricequant.com/api/python/chn#backtest-results-risk-adjusted-returns>`_ , `sortino <https://www.ricequant.com/api/python/chn#backtest-results-risk-adjusted-returns>`_ , `information ratio <https://www.ricequant.com/api/python/chn#backtest-results-risk-adjusted-returns>`_ , `alpha <https://www.ricequant.com/api/python/chn#backtest-results-risk-adjusted-returns>`_ 计算逻辑。参考`晨星 <https://gladmainnew.morningstar.com/directhelp/Methodology_StDev_Sharpe.pdf>`_ 的方法, 先计算单日级别指标, 再进行年化。与原本直接基于年化值计算相比, 在分析时间较短的情况下, 新的指标计算结果会系统性低于原指标结果。
+- 引入单日无风险利率作为中间变量计算上述指标。单日无风险利率为通过 `中国债券信息网 <http://yield.chinabond.com.cn/cbweb-mn/yield_main>`_ 获取得到对应期限的年化国债到期收益率除以244得到
+- 修改指标说明若干
 
 **其他**
 
