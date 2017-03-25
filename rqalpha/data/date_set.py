@@ -17,7 +17,7 @@
 import bcolz
 import numpy as np
 
-from ..utils.six import lru_cache
+from ..utils import lru_cache
 
 
 class DateSet(object):

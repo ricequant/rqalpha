@@ -17,7 +17,7 @@ import datetime
 
 from collections import namedtuple
 
-from .six import lru_cache
+from . import lru_cache
 
 
 TimeRange = namedtuple('TimeRange', ['start', 'end'])
@@ -78,4 +78,3 @@ def convert_int_to_datetime(dt_int):
     hour, r = divmod(r, 10000)
     minute, second = divmod(r, 100)
     return datetime.datetime(year, month, day, hour, minute, second)
-

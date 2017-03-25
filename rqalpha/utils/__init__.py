@@ -21,6 +21,10 @@ import six
 import collections
 
 from contextlib import contextmanager
+try:
+    from functools import lru_cache
+except ImportError:
+    from fastcache import lru_cache
 
 from .exception import CustomError, CustomException
 from ..const import EXC_TYPE, INSTRUMENT_TYPE, ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
