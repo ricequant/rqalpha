@@ -27,6 +27,7 @@ class CustomError(object):
         self.exc_val = None
         self.exc_tb = None
         self.error_type = const.EXC_TYPE.NOTSET
+        self.max_exc_var_len = 160
 
     def set_exc(self, exc_type, exc_val, exc_tb):
         self.exc_type = exc_type
@@ -47,12 +48,21 @@ class CustomError(object):
         if len(self.stacks) == 0:
             return self.msg
 
+        def _repr(v):
+            try:
+                var_str = repr(v)
+                if len(var_str) > self.max_exc_var_len:
+                    var_str = var_str[:self.max_exc_var_len] + " ..."
+                return var_str
+            except Exception:
+                return 'UNREPRESENTABLE VALUE'
+
         content = ["Traceback (most recent call last):"]
         for filename, lineno, func_name, code, local_variables in self.stacks:
             content.append('  File %s, line %s in %s' % (filename, lineno, func_name))
             content.append('    %s' % (code, ))
             for k, v in six.iteritems(local_variables):
-                content.append('    --> %s = %s' % (k, repr(v)))
+                content.append('    --> %s = %s' % (k, _repr(v)))
             content.append('')
         content.append("%s: %s" % (self.exc_type.__name__, self.msg))
 

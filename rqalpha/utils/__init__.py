@@ -18,6 +18,7 @@ from __future__ import division
 import pprint
 import re
 import six
+import collections
 
 from contextlib import contextmanager
 
@@ -44,9 +45,6 @@ class Singleton(type):
 
 
 class RqAttrDict(object):
-    '''
-    fuck attrdict
-    '''
 
     def __init__(self, d=None):
         self.__dict__ = d if d is not None else dict()
@@ -61,6 +59,24 @@ class RqAttrDict(object):
     def __iter__(self):
         for k, v in six.iteritems(self.__dict__):
             yield k, v
+
+    def update(self, other):
+        RqAttrDict._update_dict_recursive(self, other)
+
+    @staticmethod
+    def _update_dict_recursive(target, other):
+        if isinstance(other, RqAttrDict):
+            other = other.__dict__
+        if isinstance(target, RqAttrDict):
+            target = target.__dict__
+
+        for k, v in six.iteritems(other):
+            if isinstance(v, collections.Mapping):
+                r = RqAttrDict._update_dict_recursive(target.get(k, {}), v)
+                target[k] = r
+            else:
+                target[k] = other[k]
+        return target
 
 
 def dummy_func(*args, **kwargs):
@@ -88,7 +104,7 @@ class Nop(object):
 def to_sector_name(s):
     from ..model.instrument import SectorCode, SectorCodeItem
 
-    for _, v in six.iteritems(SectorCode.__dict__):
+    for __, v in six.iteritems(SectorCode.__dict__):
         if isinstance(v, SectorCodeItem):
             if v.cn == s or v.en == s or v.name == s:
                 return v.name
@@ -99,7 +115,7 @@ def to_sector_name(s):
 def to_industry_code(s):
     from ..model.instrument import IndustryCode, IndustryCodeItem
 
-    for _, v in six.iteritems(IndustryCode.__dict__):
+    for __, v in six.iteritems(IndustryCode.__dict__):
         if isinstance(v, IndustryCodeItem):
             if v.name == s:
                 return v.code
@@ -144,10 +160,10 @@ def run_when_strategy_not_hold(func):
     from ..utils.logger import system_log
 
     def wrapper(*args, **kwargs):
-        if not Environment.get_instance().is_strategy_hold:
+        if not Environment.get_instance().config.extra.is_hold:
             return func(*args, **kwargs)
         else:
-            system_log.debug(_("not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
+            system_log.debug(_(u"not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
 
     return wrapper
 
@@ -194,8 +210,8 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
 
 
 def get_account_type(order_book_id):
-    from ..execution_context import ExecutionContext
-    instrument = ExecutionContext.get_instrument(order_book_id)
+    from ..environment import Environment
+    instrument = Environment.get_instance().get_instrument(order_book_id)
     enum_type = instrument.enum_type
     if enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
         return ACCOUNT_TYPE.STOCK
@@ -203,10 +219,6 @@ def get_account_type(order_book_id):
         return ACCOUNT_TYPE.FUTURE
     else:
         raise NotImplementedError
-
-
-def exclude_benchmark_generator(accounts):
-    return {k: v for k, v in six.iteritems(accounts) if k != ACCOUNT_TYPE.BENCHMARK}
 
 
 def get_upper_underlying_symbol(order_book_id):

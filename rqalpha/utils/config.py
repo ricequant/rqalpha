@@ -35,7 +35,7 @@ from ..mod.utils import mod_config_value_parse
 
 def load_config(config_path, loader=yaml.Loader, verify_version=True):
     if not os.path.exists(config_path):
-        system_log.error(_("config.yml not found in {config_path}").format(config_path))
+        system_log.error(_(u"config.yml not found in {config_path}").format(config_path))
         return False
     with codecs.open(config_path, encoding="utf-8") as stream:
         config = yaml.load(stream, loader)
@@ -49,9 +49,9 @@ def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
         file.write(yaml.dump(config, Dumper=dumper))
 
 
-def get_default_config_path():
-    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
-    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
+def get_default_config_path(tmpl):
+    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../{}_template.yml".format(tmpl))
+    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/{}.yml".format(tmpl)))
     if not os.path.exists(default_config_path):
         dir_path = os.path.dirname(default_config_path)
         if not os.path.exists(dir_path):
@@ -69,7 +69,7 @@ def config_version_verify(config, config_path):
         shutil.move(config_path, back_config_file_path)
         shutil.copy(config_template_path, config_path)
 
-        system_log.warning(_("""
+        system_log.warning(_(u"""
 Your current config file {config_file_path} is too old and may cause RQAlpha running error.
 RQAlpha has replaced the config file with the newest one.
 the backup config file has been saved in {back_config_file_path}.
@@ -98,10 +98,19 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     set_locale(config_args.get("extra__locale", None))
 
-    config_path = get_default_config_path() if config_path is None else os.path.abspath(config_path)
+    config_path = get_default_config_path("config") if config_path is None else os.path.abspath(config_path)
+    mod_config_path = get_default_config_path(".mod_config")
 
-    config = load_config(config_path)
+    # load default config from rqalpha
+    config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
+    # load mod config
+    mod_config = load_config(mod_config_path, verify_version=False)
+    deep_update(mod_config, config)
+    # load user config
+    user_config = load_config(config_path)
+    deep_update(user_config, config)
 
+    # use config_args to extend config
     if click_type:
         for key, value in six.iteritems(config_args):
             if key in ["config_path"]:
@@ -121,8 +130,8 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     else:
         deep_update(config_args, config)
 
-    config = parse_user_config(config, source_code)
-
+    # config from user code
+    config = parse_user_config_from_code(config, source_code)
     config = RqAttrDict(config)
 
     base_config = config.base
@@ -138,10 +147,6 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
         base_config.end_date = datetime.datetime.strptime(base_config.end_date, "%Y-%m-%d")
     if isinstance(base_config.end_date, datetime.datetime):
         base_config.end_date = base_config.end_date.date()
-    if base_config.commission_multiplier < 0:
-        raise patch_user_exc(ValueError(_("invalid commission multiplier value: value range is [0, +∞)")))
-    if base_config.margin_multiplier <= 0:
-        raise patch_user_exc(ValueError(_("invalid margin multiplier value: value range is (0, +∞]")))
 
     if base_config.data_bundle_path is None:
         base_config.data_bundle_path = os.path.expanduser("~/.rqalpha")
@@ -153,18 +158,17 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     if not os.path.exists(base_config.data_bundle_path):
         system_log.error(
-            _("data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
+            _(u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
                 bundle_path=base_config.data_bundle_path))
         return
 
     if source_code is None and not os.path.exists(base_config.strategy_file):
         system_log.error(
-            _("strategy file not found in {strategy_file}").format(strategy_file=base_config.strategy_file))
+            _(u"strategy file not found in {strategy_file}").format(strategy_file=base_config.strategy_file))
         return
 
     base_config.run_type = parse_run_type(base_config.run_type)
     base_config.account_list = gen_account_list(base_config.strategy_type)
-    base_config.matching_type = parse_matching_type(base_config.matching_type)
     base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
 
     if extra_config.log_level.upper() != "NONE":
@@ -199,7 +203,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     return config
 
 
-def parse_user_config(config, source_code=None):
+def parse_user_config_from_code(config, source_code=None):
     try:
         if source_code is None:
             with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
@@ -211,8 +215,6 @@ def parse_user_config(config, source_code=None):
         six.exec_(code, scope)
 
         __config__ = scope.get("__config__", {})
-
-        deep_update(__config__, config)
 
         for sub_key, sub_dict in six.iteritems(__config__):
             if sub_key not in config["whitelist"]:
@@ -237,16 +239,6 @@ def parse_account_type(account_type_str):
         return ACCOUNT_TYPE.STOCK
     elif account_type_str == "future":
         return ACCOUNT_TYPE.FUTURE
-
-
-def parse_matching_type(me_str):
-    assert isinstance(me_str, six.string_types)
-    if me_str == "current_bar":
-        return MATCHING_TYPE.CURRENT_BAR_CLOSE
-    elif me_str == "next_bar":
-        return MATCHING_TYPE.NEXT_BAR_OPEN
-    else:
-        raise NotImplementedError
 
 
 def parse_run_type(rt_str):

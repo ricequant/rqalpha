@@ -14,61 +14,92 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-
 from .base_position import BasePosition
-from ...execution_context import ExecutionContext
-from ...const import ACCOUNT_TYPE
-
-
-StockPersistMap = {
-    "_order_book_id": "_order_book_id",
-    "_last_price": "_last_price",
-    "_market_value": "_market_value",
-    "_buy_trade_value": "_buy_trade_value",
-    "_sell_trade_value": "_sell_trade_value",
-    "_buy_order_value": "_buy_order_value",
-    "_sell_order_value": "_sell_order_value",
-    "_buy_order_quantity": "_buy_order_quantity",
-    "_sell_order_quantity": "_sell_order_quantity",
-    "_buy_trade_quantity": "_buy_trade_quantity",
-    "_sell_trade_quantity": "_sell_trade_quantity",
-    "_total_orders": "_total_orders",
-    "_total_trades": "_total_trades",
-    "_is_traded": "_is_traded",
-    "_buy_today_holding_quantity": "_buy_today_holding_quantity",
-    "_avg_price": "_avg_price",
-    "_de_listed_date": "_de_listed_date",
-    "_transaction_cost": "_transaction_cost",
-}
+from ...const import ACCOUNT_TYPE, SIDE
+from ...environment import Environment
 
 
 class StockPosition(BasePosition):
-
     def __init__(self, order_book_id):
         super(StockPosition, self).__init__(order_book_id)
-        self._buy_today_holding_quantity = 0        # int   T+1,所以记录下来该股票今天的买单量
-        self._avg_price = 0.                        # float	获得该持仓的买入均价，计算方法为每次买入的数量做加权平均。
-        instrument = ExecutionContext.get_instrument(self.order_book_id)
-        self._de_listed_date = None if instrument is None else instrument.de_listed_date
-        self._transaction_cost = 0.
+        self._quantity = 0
+        self._avg_price = 0
+        self._non_closable = 0     # 当天买入的不能卖出
+        self._frozen = 0            # 冻结量
+        self._transaction_cost = 0  # 交易费用
 
-    @classmethod
-    def __from_dict__(cls, position_dict):
-        position = cls(position_dict["_order_book_id"])
-        for persist_key, origin_key in six.iteritems(StockPersistMap):
-            setattr(position, origin_key, position_dict[persist_key])
-        return position
+    def get_state(self):
+        return {
+            'order_book_id': self._order_book_id,
+            'quantity': self._quantity,
+            'avg_price': self._avg_price,
+            'non_closable': self._non_closable,
+            'frozen': self._frozen,
+            'transaction_cost': self._transaction_cost,
+        }
 
-    def __to_dict__(self):
-        p_dict = {}
-        for persist_key, origin_key in six.iteritems(StockPersistMap):
-            p_dict[persist_key] = getattr(self, origin_key)
-        return p_dict
+    def set_state(self, state):
+        assert self._order_book_id == state['order_book_id']
+        self._quantity = state['quantity']
+        self._avg_price = state['avg_price']
+        self._non_closable = state['non_closable']
+        self._frozen = state['frozen']
+        self._transaction_cost = state['transaction_cost']
+
+    def apply_trade(self, trade):
+        self._transaction_cost += trade.transaction_cost
+        if trade.side == SIDE.BUY:
+            self._avg_price = (self._avg_price * self._quantity + trade.last_quantity * trade.last_price) / (
+                self._quantity + trade.last_quantity)
+            self._quantity += trade.last_quantity
+
+            if self._order_book_id not in {'510900.XSHG', '513030.XSHG', '513100.XSHG', '513500.XSHG'}:
+                # 除了上述 T+0 基金，其他都是 T+1
+                self._non_closable += trade.last_quantity
+        else:
+            self._quantity -= trade.last_quantity
+            self._frozen -= trade.last_quantity
+
+    def apply_settlement(self):
+        self._non_closable = 0
+
+    def reset_frozen(self, frozen):
+        self._frozen = frozen
+
+    def cal_close_today_amount(self, *args):
+        return 0
 
     @property
-    def _position_value(self):
-        return self._market_value
+    def type(self):
+        return ACCOUNT_TYPE.STOCK
+
+    def split_(self, ratio):
+        self._quantity *= ratio
+        # split 发生时，这两个值理论上应该都是0
+        self._frozen *= ratio
+        self._non_closable *= ratio
+
+    def on_order_pending_new_(self, order):
+        if order.side == SIDE.SELL:
+            self._frozen += order.quantity
+
+    def on_order_creation_reject_(self, order):
+        if order.side == SIDE.SELL:
+            self._frozen -= order.quantity
+
+    def on_order_cancel_(self, order):
+        if order.side == SIDE.SELL:
+            self._frozen -= order.unfilled_quantity
+
+    @property
+    def total_orders(self):
+        """deprecated"""
+        return 1
+
+    @property
+    def total_trades(self):
+        """deprecated"""
+        return 1
 
     @property
     def quantity(self):
@@ -80,30 +111,30 @@ class StockPosition(BasePosition):
     @property
     def bought_quantity(self):
         """
-        【int】该证券的总买入股数，例如：如果你的投资组合并没有任何平安银行的成交，那么平安银行这个股票的仓位就是0
+        deprecated
         """
-        return self._buy_trade_quantity
+        return self._quantity
 
     @property
     def sold_quantity(self):
         """
-        【int】该证券的总卖出股数，例如：如果你的投资组合曾经买入过平安银行股票200股并且卖出过100股，那么这个属性会返回100
+        deprecated
         """
-        return self._sell_trade_quantity
+        return 0
 
     @property
     def bought_value(self):
         """
-        【float】该证券的总买入的价值，等于每一个该证券的 买入成交价 * 买入股数 总和
+        deprecated
         """
-        return self._buy_trade_value
+        return self._quantity * self._avg_price
 
     @property
     def sold_value(self):
         """
-        【float】该证券的总卖出价值，等于每一个该证券的 卖出成交价 * 卖出股数 总和
+        deprecated
         """
-        return self._sell_trade_value
+        return 0
 
     @property
     def average_cost(self):
@@ -122,19 +153,16 @@ class StockPosition(BasePosition):
     @property
     def sellable(self):
         """
-        【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓-今日买入的仓位
+        【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
         """
-        return self._quantity - self._buy_today_holding_quantity - self._sell_order_quantity
+        return self._quantity - self._non_closable - self._frozen
 
     @property
-    def _quantity(self):
-        return self._buy_trade_quantity - self._sell_trade_quantity
+    def market_value(self):
+        return self._quantity * self.last_price
 
     @property
     def transaction_cost(self):
-        """
-        【float】总费用
-        """
         return self._transaction_cost
 
     @property
@@ -142,12 +170,8 @@ class StockPosition(BasePosition):
         """
         【float】获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
         """
-        accounts = ExecutionContext.accounts
+        accounts = Environment.get_instance().portfolio.accounts
         if ACCOUNT_TYPE.STOCK not in accounts:
-            # FIXME 现在无法区分这个position是stock的还是benchmark的，但是benchmark因为没有用到这个字段，所以可以暂时返0处理。
             return 0
-        portfolio = accounts[ACCOUNT_TYPE.STOCK].portfolio
-        return 0 if portfolio.portfolio_value == 0 else self._position_value / portfolio.portfolio_value
-
-    def _cal_close_today_amount(self, trade_amount, side):
-        return 0
+        total_value = accounts[ACCOUNT_TYPE.STOCK].total_value
+        return 0 if total_value == 0 else self.market_value / total_value

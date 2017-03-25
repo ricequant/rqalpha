@@ -14,53 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_position import BasePosition, PositionClone
+from .base_position import BasePosition
 from .future_position import FuturePosition
 from .stock_position import StockPosition
 
 
 class Positions(dict):
-    def __init__(self, position_type):
+    def __init__(self, position_cls):
         super(Positions, self).__init__()
-        self._position_type = position_type
+        self._position_cls = position_cls
+        self._cached_positions = {}
 
     def __missing__(self, key):
-        p = self._position_type(key)
-        self[key] = p
-        return p
+        if key not in self._cached_positions:
+            self._cached_positions[key] = self._position_cls(key)
+        return self._cached_positions[key]
 
-    def _clone(self):
-        ps = {}
-        for order_book_id in self:
-            ps[order_book_id] = self[order_book_id]._clone()
-        return ps
-
-
-class PositionsClone(dict):
-    def __init__(self, position_type):
-        super(PositionsClone, self).__init__()
-        self._position_type = position_type
-
-    def __missing__(self, key):
-        p = PositionClone()
-        position = self._position_type(key)
-        for key in dir(position):
-            if "__" in key:
-                continue
-            setattr(p, key, getattr(position, key))
-        return p
-
-    def __repr__(self):
-        return str([order_book_id for order_book_id in self])
-
-    def __iter__(self):
-        for key in sorted(super(PositionsClone, self).keys()):
-            yield key
-
-    def items(self):
-        for key in self.keys():
-            yield key, self[key]
-
-    def keys(self):
-        for key in sorted(super(PositionsClone, self).keys()):
-            yield key
+    def get_or_create(self, key):
+        if key not in self:
+            self[key] = self._position_cls(key)
+        return self[key]

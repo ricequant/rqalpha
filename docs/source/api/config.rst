@@ -167,12 +167,6 @@ N/A           `- -` config                    设置配置文件路径
         fps: 3
         enabled: false
         priority: 500
-      # 渐进式输出运行结果
-      progressive_output_csv:
-        lib: 'rqalpha.mod.progressive_output_csv'
-        enabled: false
-        output_path: "./"
-        priority: 600
       risk_manager:
         lib: 'rqalpha.mod.risk_manager'
         enabled: true

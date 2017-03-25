@@ -22,15 +22,18 @@ __config__ = {
         "matching_type": "current_bar",
         "stock_starting_cash": 100000,
         "benchmark": "000001.XSHE",
-        "slippage": 0.00123,
     },
     "extra": {
         "log_level": "error",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
-            "priority": 400,
+            "show": True,
         },
+        "sys_plot": {
+            "enabled": False,
+            "plot": True,
+        }
     },
 }

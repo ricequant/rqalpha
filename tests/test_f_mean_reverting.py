@@ -134,12 +134,13 @@ __config__ = {
         "log_level": "error",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
-            "priority": 400,
+            "show": True,
         },
+        "sys_plot": {
+            "enabled": False,
+            "plot": True,
+        }
     },
-    "validator": {
-        "bar_limit": True,
-    }
 }

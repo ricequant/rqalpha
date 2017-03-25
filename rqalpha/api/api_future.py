@@ -25,14 +25,14 @@ import numpy as np
 
 from .api_base import decorate_api_exc, instruments
 from ..execution_context import ExecutionContext
+from ..environment import Environment
 from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from ..const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE
 from ..model.instrument import Instrument
-from ..utils.exception import patch_user_exc, RQInvalidArgument
+from ..utils.exception import RQInvalidArgument
 from ..utils.logger import user_system_log
 from ..utils.i18n import gettext as _
 from ..utils.arg_checker import apply_rules, verify_that
-
 
 __all__ = [
 ]
@@ -60,27 +60,26 @@ def order(id_or_ins, amount, side, position_effect, style):
     if amount <= 0:
         raise RuntimeError
     if isinstance(style, LimitOrder) and style.get_limit_price() <= 0:
-        raise RQInvalidArgument(_("Limit order price should be positive"))
+        raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
     order_book_id = assure_future_order_book_id(id_or_ins)
-
-    price = ExecutionContext.get_current_close_price(order_book_id)
-
+    env = Environment.get_instance()
+    price = env.get_last_price(order_book_id)
     amount = int(amount)
 
-    calendar_dt = ExecutionContext.get_current_calendar_dt()
-    trading_dt = ExecutionContext.get_current_trading_dt()
-    r_order = Order.__from_create__(calendar_dt, trading_dt, order_book_id, amount, side, style, position_effect)
+    r_order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, side, style,
+                                    position_effect)
 
     if np.isnan(price) or price == 0:
-        user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        r_order.mark_rejected(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 
     if r_order.type == ORDER_TYPE.MARKET:
-        bar_dict = ExecutionContext.get_current_bar_dict()
-        r_order._frozen_price = bar_dict[order_book_id].close
-    ExecutionContext.broker.submit_order(r_order)
+        r_order.set_frozen_price(price)
+    env.broker.submit_order(r_order)
     return r_order
 
 
@@ -174,14 +173,14 @@ def assure_future_order_book_id(id_or_symbols):
     if isinstance(id_or_symbols, Instrument):
         if id_or_symbols.type != "Future":
             raise RQInvalidArgument(
-                _("{order_book_id} is not supported in current strategy type").format(
+                _(u"{order_book_id} is not supported in current strategy type").format(
                     order_book_id=id_or_symbols.order_book_id))
         else:
             return id_or_symbols.order_book_id
     elif isinstance(id_or_symbols, six.string_types):
         return assure_future_order_book_id(instruments(id_or_symbols))
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
 
 @export_as_api
@@ -211,5 +210,5 @@ def get_future_contracts(underlying_symbol):
             [Out]
             ['IF1612', 'IF1701', 'IF1703', 'IF1706']
     """
-    dt = ExecutionContext.get_current_trading_dt()
-    return ExecutionContext.data_proxy.get_future_contracts(underlying_symbol, dt)
+    env = Environment.get_instance()
+    return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)

@@ -14,14 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ...utils.repr import property_repr, dict_repr
-
-
-class PositionClone(object):
-    __repr__ = dict_repr
-
-    def __simple_object__(self):
-        return self.__dict__
+from ...utils.repr import property_repr
+from ...environment import Environment
 
 
 class BasePosition(object):
@@ -30,67 +24,49 @@ class BasePosition(object):
 
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
-        self._last_price = 0
-        self._market_value = 0.
-        self._buy_trade_value = 0.
-        self._sell_trade_value = 0
-        self._buy_order_value = 0.
-        self._sell_order_value = 0.
 
-        self._buy_order_quantity = 0
-        self._sell_order_quantity = 0
-        self._buy_trade_quantity = 0
-        self._sell_trade_quantity = 0
+    def get_state(self):
+        raise NotImplementedError
 
-        self._total_orders = 0
-        self._total_trades = 0
+    def set_state(self, state):
+        raise NotImplementedError
 
-        self._is_traded = False
+    @property
+    def order_book_id(self):
+        return self._order_book_id
 
     @property
     def market_value(self):
         """
-        【float】投资组合当前所有证券仓位的市值的加总
+        [float] 当前仓位市值
         """
-        return self._market_value
-
-    @property
-    def order_book_id(self):
-        """
-        【str】合约代码
-        """
-        return self._order_book_id
-
-    @property
-    def total_orders(self):
-        """
-        【int】该仓位的总订单的次数
-        """
-        return self._total_orders
-
-    @property
-    def total_trades(self):
-        """
-        【int】该仓位的总成交的次数
-        """
-        return self._total_trades
-
-    @property
-    def _position_value(self):
         raise NotImplementedError
 
     @property
-    def pnl(self):
-        """
-        【float】持仓累计盈亏
-        """
-        return self._market_value + self._sell_trade_value - self._buy_trade_value
+    def transaction_cost(self):
+        raise NotImplementedError
 
-    def _clone(self):
-        p = PositionClone()
-        for key in dir(self):
-            if "__" in key:
-                continue
-            setattr(p, key, getattr(self, key))
-        return p
+    @property
+    def type(self):
+        raise NotImplementedError
 
+    @property
+    def last_price(self):
+        return Environment.get_instance().get_last_price(self._order_book_id)
+
+    # -- Function
+    def is_de_listed(self):
+        """
+        判断合约是否过期
+        """
+        instrument = Environment.get_instance().get_instrument(self._order_book_id)
+        current_date = Environment.get_instance().trading_dt
+        if instrument.de_listed_date is not None and current_date >= instrument.de_listed_date:
+            return True
+        return False
+
+    def apply_settlement(self):
+        raise NotImplementedError
+
+    def apply_trade(self, trade):
+        raise NotImplementedError

@@ -17,11 +17,9 @@
 from functools import wraps
 from contextlib import contextmanager
 
-from .utils import get_account_type
 from .utils.i18n import gettext as _
 from .utils.exception import CustomException, patch_user_exc
-from .utils import get_upper_underlying_symbol
-from .utils.default_future_info import DEFAULT_FUTURE_INFO
+from .environment import Environment
 
 
 class ContextStack(object):
@@ -55,18 +53,9 @@ class ContextStack(object):
 
 class ExecutionContext(object):
     stack = ContextStack()
-    config = None
-    data_proxy = None
-    account = None
-    accounts = None
-    broker = None
-    calendar_dt = None
-    trading_dt = None
-    plots = None
 
-    def __init__(self, phase, bar_dict=None):
+    def __init__(self, phase):
         self.phase = phase
-        self.bar_dict = bar_dict
 
     def _push(self):
         self.stack.push(self)
@@ -101,79 +90,23 @@ class ExecutionContext(object):
             raise last_exc_val
 
         from .utils import create_custom_exception
-        user_exc = create_custom_exception(exc_type, exc_val, exc_tb, self.config.base.strategy_file)
+        strategy_file = Environment.get_instance().config.base.strategy_file
+        user_exc = create_custom_exception(exc_type, exc_val, exc_tb, strategy_file)
         raise user_exc
-
-    @classmethod
-    def get_active(cls):
-        return cls.stack.top
-
-    @classmethod
-    def get_current_bar_dict(cls):
-        ctx = cls.get_active()
-        return ctx.bar_dict
-
-    @classmethod
-    def get_current_calendar_dt(cls):
-        return ExecutionContext.calendar_dt
-
-    @classmethod
-    def get_current_trading_dt(cls):
-        return ExecutionContext.trading_dt
-
-    @classmethod
-    def get_current_run_id(cls):
-        return ExecutionContext.config.base.run_id
-
-    @classmethod
-    def get_instrument(cls, order_book_id):
-        return ExecutionContext.data_proxy.instruments(order_book_id)
-
-    @classmethod
-    def get_data_proxy(cls):
-        return ExecutionContext.data_proxy
 
     @classmethod
     def enforce_phase(cls, *phases):
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                phase = cls.get_active().phase
+                phase = cls.stack.top.phase
                 if phase not in phases:
                     raise patch_user_exc(
-                        RuntimeError(_("You cannot call %s when executing %s") % (func.__name__, phase.value)))
+                        RuntimeError(_(u"You cannot call %s when executing %s") % (func.__name__, phase.value)))
                 return func(*args, **kwargs)
             return wrapper
         return decorator
 
     @classmethod
-    def get_current_close_price(cls, order_book_id):
-        return ExecutionContext.data_proxy.current_snapshot(
-            order_book_id,
-            ExecutionContext.config.base.frequency,
-            ExecutionContext.calendar_dt
-        ).last
-
-    @classmethod
-    def get_future_commission_info(cls, order_book_id, hedge_type):
-        try:
-            return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)
-        except NotImplementedError:
-            underlying_symbol = get_upper_underlying_symbol(order_book_id)
-            return DEFAULT_FUTURE_INFO[underlying_symbol][hedge_type.value]
-
-    @classmethod
-    def get_future_margin(cls, order_book_id):
-        try:
-            return ExecutionContext.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
-        except NotImplementedError:
-            return ExecutionContext.data_proxy.instruments(order_book_id).margin_rate
-
-    @classmethod
-    def get_future_info(cls, order_book_id, hedge_type):
-        return ExecutionContext.data_proxy.get_future_info(order_book_id, hedge_type)
-
-    @classmethod
-    def get_account(cls, order_book_id):
-        account_type = get_account_type(order_book_id)
-        return ExecutionContext.accounts[account_type]
+    def phase(cls):
+        return cls.stack.top.phase

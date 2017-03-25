@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 import logbook
 from logbook import Logger
 from logbook.more import ColorizedStderrHandler
 
+from .py2 import to_utf8
 
 logbook.set_datetime_format("local")
 
@@ -36,17 +39,16 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.00"
 
 
 def user_std_handler_log_formatter(record, handler):
-    from ..execution_context import ExecutionContext
-
+    from ..environment import Environment
     try:
-        dt = ExecutionContext.get_current_calendar_dt().strftime(DATETIME_FORMAT)
+        dt = Environment.get_instance().calendar_dt.strftime(DATETIME_FORMAT)
     except Exception:
         dt = "0000-00-00"
 
     log = "{dt} {level} {msg}".format(
         dt=dt,
         level=record.level_name,
-        msg=record.message,
+        msg=to_utf8(record.message),
     )
     return log
 
@@ -57,10 +59,11 @@ user_std_handler.formatter = user_std_handler_log_formatter
 
 def formatter_builder(tag):
     def formatter(record, handler):
+
         log = "[{formatter_tag}] [{time}] {level}: {msg}".format(
             formatter_tag=tag,
             level=record.level_name,
-            msg=record.message,
+            msg=to_utf8(record.message),
             time=record.time,
         )
 
@@ -78,7 +81,7 @@ user_system_log = Logger("user_system_log")
 
 # 用于用户异常的详细日志打印
 user_detail_log = Logger("user_detail_log")
-user_detail_log.handlers.append(ColorizedStderrHandler(bubble=True))
+# user_detail_log.handlers.append(ColorizedStderrHandler(bubble=True))
 
 # 系统日志
 system_log = Logger("system_log")

@@ -31,10 +31,13 @@ from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
 from ..model.order import Order, OrderStyle, MarketOrder, LimitOrder
 from ..utils.arg_checker import apply_rules, verify_that
+# noinspection PyUnresolvedReferences
 from ..utils.exception import patch_user_exc, RQInvalidArgument
 from ..utils.i18n import gettext as _
 from ..utils.logger import user_system_log
+# noinspection PyUnresolvedReferences
 from ..utils.scheduler import market_close, market_open
+# noinspection PyUnresolvedReferences
 from ..utils import scheduler
 
 # 使用Decimal 解决浮点数运算精度问题
@@ -99,18 +102,18 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     #     `LimitOrder(limit_price)`
     # :return:  A unique order id.
     # :rtype: int
+    if amount is 0:
+        # 如果下单量为0，则认为其并没有发单，则直接返回None
+        return None
     if not isinstance(style, OrderStyle):
         raise RQInvalidArgument(_('style should be OrderStyle'))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
-            raise RQInvalidArgument(_("Limit order price should be positive"))
-
+            raise RQInvalidArgument(_(u"Limit order price should be positive"))
     order_book_id = assure_stock_order_book_id(id_or_ins)
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = bar.close
-    calendar_dt = ExecutionContext.get_current_calendar_dt()
-    trading_dt = ExecutionContext.get_current_trading_dt()
+    env = Environment.get_instance()
+
+    price = env.get_last_price(order_book_id)
 
     if amount > 0:
         side = SIDE.BUY
@@ -118,29 +121,30 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
         amount = abs(amount)
         side = SIDE.SELL
 
-    round_lot = int(ExecutionContext.data_proxy.instruments(order_book_id).round_lot)
+    round_lot = int(env.get_instrument(order_book_id).round_lot)
 
     try:
         amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
     except ValueError:
         amount = 0
 
-    r_order = Order.__from_create__(calendar_dt, trading_dt, order_book_id, amount, side, style, None)
+    r_order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, side, style, None)
 
-    if bar.isnan or price == 0:
-        user_system_log.warn(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        r_order._mark_rejected(_("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+    if price == 0:
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        r_order.mark_rejected(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return r_order
 
     if amount == 0:
         # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
         # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
-        r_order._mark_rejected(_("Order Creation Failed: 0 order quantity"))
+        r_order.mark_rejected(_(u"Order Creation Failed: 0 order quantity"))
         return r_order
     if r_order.type == ORDER_TYPE.MARKET:
-        bar_dict = ExecutionContext.get_current_bar_dict()
-        r_order._frozen_price = bar_dict[order_book_id].close
-    ExecutionContext.broker.submit_order(r_order)
+        r_order.set_frozen_price(price)
+    env.broker.submit_order(r_order)
 
     return r_order
 
@@ -189,7 +193,7 @@ def order_lots(id_or_ins, amount, style=MarketOrder()):
     # :rtype: int
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
-    round_lot = int(ExecutionContext.get_instrument(order_book_id).round_lot)
+    round_lot = int(Environment.get_instance().get_instrument(order_book_id).round_lot)
 
     return order_shares(id_or_ins, amount * round_lot, style)
 
@@ -242,22 +246,21 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
         raise RQInvalidArgument(_('style should be OrderStyle'))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
-            raise RQInvalidArgument(_("Limit order price should be positive"))
+            raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
+    env = Environment.get_instance()
 
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = bar.close
+    price = env.get_last_price(order_book_id)
 
-    if bar.isnan or price == 0:
+    if price == 0:
         return order_shares(order_book_id, 0, style)
 
-    account = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK]
-    round_lot = int(ExecutionContext.get_instrument(order_book_id).round_lot)
+    account = env.portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    round_lot = int(env.get_instrument(order_book_id).round_lot)
 
     if cash_amount > 0:
-        cash_amount = min(cash_amount, account.portfolio.cash)
+        cash_amount = min(cash_amount, account.cash)
 
     if isinstance(style, MarketOrder):
         amount = int(Decimal(cash_amount) / Decimal(price) / Decimal(round_lot)) * round_lot
@@ -267,7 +270,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     # if the cash_amount is larger than you current security’s position,
     # then it will sell all shares of this security.
 
-    position = account.portfolio.positions[order_book_id]
+    position = account.positions.get_or_create(order_book_id)
     amount = downsize_amount(amount, position)
 
     return order_shares(order_book_id, amount, style)
@@ -319,9 +322,8 @@ def order_percent(id_or_ins, percent, style=MarketOrder()):
     if percent < -1 or percent > 1:
         raise RQInvalidArgument(_('percent should between -1 and 1'))
 
-    account = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK]
-    portfolio_value = account.portfolio.portfolio_value
-    return order_value(id_or_ins, portfolio_value * percent, style)
+    account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    return order_value(id_or_ins, account.total_value * percent, style)
 
 
 @export_as_api
@@ -367,22 +369,16 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()):
     # :rtype: int
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = 0 if bar.isnan else bar.close
+    position = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK].positions.get_or_create(order_book_id)
 
-    position = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK].portfolio.positions[order_book_id]
-
-    current_value = position._quantity * price
-
-    return order_value(order_book_id, cash_amount - current_value, style)
+    return order_value(order_book_id, cash_amount - position.market_value, style)
 
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
-             verify_that('percent').is_number().is_greater_than(0).is_less_than(1),
+             verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder)))
 def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     """
@@ -439,16 +435,10 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
         raise RQInvalidArgument(_('percent should between 0 and 1'))
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
-    bar_dict = ExecutionContext.get_current_bar_dict()
-    bar = bar_dict[order_book_id]
-    price = 0 if bar.isnan else bar.close
+    account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    position = account.positions.get_or_create(order_book_id)
 
-    portfolio = ExecutionContext.accounts[ACCOUNT_TYPE.STOCK].portfolio
-    position = portfolio.positions[order_book_id]
-
-    current_value = position._quantity * price
-
-    return order_value(order_book_id, portfolio.portfolio_value * percent - current_value, style)
+    return order_value(order_book_id, account.total_value * percent - position.market_value, style)
 
 
 def assure_stock_order_book_id(id_or_symbols):
@@ -462,12 +452,12 @@ def assure_stock_order_book_id(id_or_symbols):
             return order_book_id
         else:
             raise RQInvalidArgument(
-                _("{order_book_id} is not supported in current strategy type").format(
+                _(u"{order_book_id} is not supported in current strategy type").format(
                     order_book_id=order_book_id))
     elif isinstance(id_or_symbols, six.string_types):
         return assure_stock_order_book_id(instruments(id_or_symbols))
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
 
 def downsize_amount(amount, position):

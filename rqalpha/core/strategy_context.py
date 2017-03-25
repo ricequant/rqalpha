@@ -37,12 +37,14 @@ class RunInfo(object):
         self._frequency = config.base.frequency
         self._stock_starting_cash = config.base.stock_starting_cash
         self._future_starting_cash = config.base.future_starting_cash
-        self._slippage = config.base.slippage
         self._benchmark = config.base.benchmark
-        self._matching_type = config.base.matching_type
-        self._commission_multiplier = config.base.commission_multiplier
         self._margin_multiplier = config.base.margin_multiplier
         self._run_type = config.base.run_type
+
+        # For Mod
+        self._matching_type = config.mod.simulation.matching_type
+        self._slippage = config.mod.simulation.slippage
+        self._commission_multiplier = config.mod.simulation.commission_multiplier
 
     @property
     def run_id(self):
@@ -168,7 +170,7 @@ class StrategyContext(object):
 
         :property getter: list[`str`]
         """
-        return Environment.get_instance().universe
+        return Environment.get_instance().get_universe()
 
     @property
     def now(self):
@@ -188,94 +190,46 @@ class StrategyContext(object):
     @property
     def portfolio(self):
         """
-        该投资组合在单一股票或期货策略中分别为股票投资组合和期货投资组合。在股票+期货的混合策略中代表汇总之后的总投资组合。
+        投资组合
 
         =========================   =========================   ==============================================================================
         属性                         类型                        注释
         =========================   =========================   ==============================================================================
-        starting_cash               float                       初始资金，为子组合初始资金的加总
-        cash                        float                       可用资金，为子组合可用资金的加总
-        total_returns               float                       投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
-        daily_returns               float                       投资组合每日收益率
-        daily_pnl                   float                       当日盈亏，子组合当日盈亏的加总
-        market_value                float                       投资组合当前的市场价值，为子组合市场价值的加总
-        portfolio_value             float                       总权益，为子组合总权益加总
-        pnl                         float                       当前投资组合的累计盈亏
+        accounts                    dict                        账户字典
         start_date                  datetime.datetime           策略投资组合的回测/实时模拟交易的开始日期
+        units                       float                       份额
+        unit_net_value              float                       净值
+        daily_pnl                   float                       当日盈亏，当日盈亏的加总
+        daily_returns               float                       投资组合每日收益率
+        total_returns               float                       投资组合总收益率
         annualized_returns          float                       投资组合的年化收益率
+        total_value                 float                       投资组合总权益
         positions                   dict                        一个包含所有仓位的字典，以order_book_id作为键，position对象作为值
+        cash                        float                       总的可用资金
+        market_value                float                       投资组合当前的市场价值，为子组合市场价值的加总
         =========================   =========================   ==============================================================================
 
-        :property getter: :class:`~MixedPortfolio` | :class:`~StockPortfolio` | :class:`~FuturePortfolio`
+        :property getter: :class:`~Portfolio`
         """
-        env = Environment.get_instance()
-        account_list = env.config.base.account_list
-        if len(account_list) == 1:
-            if account_list[0] == ACCOUNT_TYPE.STOCK:
-                return self.stock_portfolio
-            elif account_list[0] == ACCOUNT_TYPE.FUTURE:
-                return self.future_portfolio
-        return Environment.get_instance().account.portfolio
+        return Environment.get_instance().portfolio
+
+    @property
+    def stock_account(self):
+        return self.portfolio.accounts[ACCOUNT_TYPE.STOCK]
+
+    @property
+    def future_account(self):
+        return self.portfolio.accounts[ACCOUNT_TYPE.FUTURE]
 
     @property
     def stock_portfolio(self):
-        """
-        获取股票投资组合信息。
-
-        在单独股票类型策略中，内容与portfolio一致，都代表当前投资组合；在期货+股票混合策略中代表股票子组合；在单独期货策略中，不能被访问。
-
-        =========================   =========================   ==============================================================================
-        属性                         类型                        注释
-        =========================   =========================   ==============================================================================
-        starting_cash               float                       回测或实盘交易给算法策略设置的初始资金
-        cash                        float                       可用资金
-        total_returns               float                       投资组合至今的累积收益率。计算方法是现在的投资组合价值/投资组合的初始资金
-        daily_returns               float                       当前最新一天的每日收益
-        daily_pnl                   float                       当日盈亏，当日投资组合总权益-昨日投资组合总权益
-        market_value                float                       投资组合当前所有证券仓位的市值的加总
-        portfolio_value             float                       总权益，包含市场价值和剩余现金
-        pnl                         float                       当前投资组合的累计盈亏
-        start_date                  date                        策略投资组合的回测/实时模拟交易的开始日期
-        annualized_returns          float                       投资组合的年化收益率
-        positions                   dict                        一个包含所有证券仓位的字典，以order_book_id作为键，position对象作为值
-        dividend_receivable         float                       投资组合在分红现金收到账面之前的应收分红部分
-        =========================   =========================   ==============================================================================
-
-        :property getter: :class:`~StockPortfolio`
-        """
-        return Environment.get_instance().accounts[ACCOUNT_TYPE.STOCK].portfolio
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.stock_portfolio'))
+        return self.stock_account
 
     @property
     def future_portfolio(self):
-        """
-        获取期货投资组合信息。
-
-        在单独期货类型策略中，内容与portfolio一致，都代表当前投资组合；在期货+股票混合策略中代表期货子组合；在单独股票策略中，不能被访问。
-
-        =========================   =========================   ==============================================================================
-        属性                         类型                        注释
-        =========================   =========================   ==============================================================================
-        starting_cash               float                       初始资金
-        cash                        float                       可用资金
-        frozen_cash                 float                       冻结资金
-        total_returns               float                       投资组合至今的累积收益率，当前总权益/初始资金
-        daily_returns               float                       当日收益率 = 当日收益 / 昨日总权益
-        market_value                float                       投资组合当前所有期货仓位的名义市值的加总
-        pnl                         float                       累计盈亏，当前投资组合总权益-初始资金
-        daily_pnl                   float                       当日盈亏，当日浮动盈亏 + 当日平仓盈亏 - 当日费用
-        daily_holding_pnl           float                       当日浮动盈亏
-        daily_realized_pnl          float                       当日平仓盈亏
-        portfolio_value             float                       总权益，昨日总权益+当日盈亏
-        transaction_cost            float                       总费用
-        start_date                  date                        回测开始日期
-        annualized_returns          float                       投资组合的年化收益率
-        positions                   dict                        一个包含期货仓位的字典，以order_book_id作为键，position对象作为值
-        margin                      float                       已占用保证金
-        =========================   =========================   ==============================================================================
-
-        :property getter: :class:`~FuturePortfolio`
-        """
-        return Environment.get_instance().accounts[ACCOUNT_TYPE.FUTURE].portfolio
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.future_portfolio'))
+        return self.future_account
 
     @property
     def slippage(self):
@@ -299,20 +253,20 @@ class StrategyContext(object):
 
     @slippage.setter
     def slippage(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.slippage'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.slippage'))
 
     @benchmark.setter
     def benchmark(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.benchmark'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.benchmark'))
 
     @margin_rate.setter
     def margin_rate(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.margin_rate'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.margin_rate'))
 
     @commission.setter
     def commission(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.commission'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.commission'))
 
     @short_selling_allowed.setter
     def short_selling_allowed(self, value):
-        user_system_log.warn(_("[deprecated] {} is no longer used.").format('context.short_selling_allowed'))
+        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.short_selling_allowed'))

@@ -4,6 +4,64 @@
 History
 ==================
 
+2.0.0-beta
+==================
+
+2.0.0 详细修改内容请访问：`RQAlpha 2.0.0 <https://github.com/ricequant/rqalpha/issues/65>`_
+
+**Portfolio/Account/Position 相关**
+
+- 重新定义了 :code:`Portfolio`, :code:`Account` 和 :code:`Position` 的角色和关系
+- 删除大部分累计所得的属性，重新实现股票和期货的计算逻辑
+- 现在只有在 :code:`Portfolio` 层级进行净值/份额的计算，账户级别不再进行净值/份额/收益/相关的计算
+- 账户的恢复和初始化现在只需要 :code:`total_cash`, :code:`positions` 和 :code:`backward_trade_set` 即可
+- 精简 :code:`Position` 的初始化，现在的完全可以从 :code:`real_broker` 进行恢复
+- :code:`Account` 提供 :code:`fast_forward` 函数，账户现在可以从任意时刻通过 :code:`orders` 和 :code:`trades` 快速前进至最新状态
+- 如果存在 Benchmark， 则创建一个 :code:`benchmark_portfolio`, 其包含一个 :code:`benchmark_account`
+- 策略在调用 :code:`context.portfolio.positions[some_security]` 时候，如果 position 不存在，不再每次创建，而是会缓存，从而提高回测速度和性能。
+- 不再使用 :code:`clone` 方法
+- 不再使用 :code:`PortfolioProxy` 和 :code:`PositionProxy`
+
+**Event 相关**
+
+- 规范 Event 的生成和相应逻辑, 使用 Event object 来替换原来的 Enum
+- 抽离事件执行相关逻辑为 :code:`Executor` 模块
+
+**Slippage/Commission 相关**
+
+- 抽离 :code:`slippage` 相关业务逻辑至 :code:`simulation mod`
+- 抽离 :code:`commission` 相关业务逻辑至 :code:`simulation mod`
+- 抽离 :code:`tax` 相关业务逻辑至 :code:`simulation mod`
+
+**Environment 和 ExecutionContext 相关**
+
+- 现在 :code:`ExecutionContext` 只负责上下文相关的内容，不再可以通过 :code:`ExecutionContext` 访问其他成员变量。
+- 扩展了 :code:`Environment` 的功能，RQAlpha 及 Mod 均可以直接通过 :code:`Environment.get_instance()` 来获取到环境中核心模块的引用
+- :code:`Environment` 还提供了很多常用的方法，具体请直接参考代码
+
+**配置及参数相关**
+
+- 重构了配置相关的内容，`~/.rqalpha/config.yml` 现在类似于 Sublime/Atom 的用户配置文件，用于覆盖默认配置信息，因此只需要增加自定义配置项即可，不需要全部的配置内容都存在
+- 将Mod自己的默认配置从配置文件中删除，放在Mod中自行管理和维护
+- 独立存在 `~/.rqalpha/.mod_conifg.yml`, 提供 `rqalpha mod install/uninstall/enable/disable/list` 命令，RQAlpha 会通过该配置文件来对Mod进行管理。
+- 抽离 :code:`rqalpha run` 的参数，将其中属于 `Mod` 的参数全部删除，取代之为Mod提供了参数注入机制，所以现在 `Mod` 可以自行决定是否要注入参数或者命令来扩展 RQAlpha 的功能
+- 提供了 :code:`rqalpha-cmd` 命令，`Mod` 推荐在该命令下注入自己的命令来实现功能扩展
+
+**Risk 计算**
+
+- 修改 Risk 计算逻辑
+
+**其他**
+
+- 修改了 :code:`Order` 和 :code:`Trade` 的字段和函数，使其更通用
+- 为 :code:`RqAttrDict` 类增加 :code:`update` 方法，现在支持动态更新了
+- :code:`arg_checker` 增加 :code:`is_greater_or_equal_than` 和 :code:`is_less_or_equal_than` 函数
+- 删除 :code:`DEFAULT_FUTURE_INFO` 变量，现在可以直接通过 :code:`data_proxy` 获取相关数据
+- 通过 `better_exceptions <https://github.com/Qix-/better-exceptions>`_ 提供更好的错误堆栈提示体验
+- 对字符串的处理进行了优化，现在可以正确在 Python2.x/3.x 下显示中文了
+- 修复 `update_bundle` 直接在代码中调用会报错的问题
+- 增加对于下单量为0的订单过滤，不再会创建订单，也不再会输出警报日志
+
 0.3.14
 ==================
 

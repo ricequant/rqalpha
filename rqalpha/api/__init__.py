@@ -18,5 +18,3 @@
 from .api_base import *
 from .api_stock import *
 from .api_future import *
-
-from ..utils.logger import user_log as logger

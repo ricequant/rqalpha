@@ -16,8 +16,6 @@
 
 import six
 
-from .cached_property import CachedProperty
-
 
 def property_repr(inst):
     # return pformat(properties(inst))
@@ -62,5 +60,5 @@ def slots(inst):
 def iter_properties_of_class(cls):
     for varname in vars(cls):
         value = getattr(cls, varname)
-        if isinstance(value, (property, CachedProperty)):
+        if isinstance(value, property):
             yield varname

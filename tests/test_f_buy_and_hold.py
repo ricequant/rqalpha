@@ -14,21 +14,21 @@ __config__ = {
         "start_date": "2015-01-09",
         "end_date": "2015-03-09",
         "frequency": "1d",
-        "matching_type": "next_bar",
+        "matching_type": "current_bar",
         "future_starting_cash": 1000000,
-        "commission_multiplier": 0.01,
         "benchmark": None,
     },
     "extra": {
         "log_level": "error",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
-            "priority": 400,
+            "show": True,
         },
-        "analyser": {
-            "plot": False
+        "sys_plot": {
+            "enabled": False,
+            "plot": True
         },
     },
 }

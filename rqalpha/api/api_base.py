@@ -20,37 +20,41 @@ https://www.ricequant.com/api/python/chn
 '''
 
 from __future__ import division
-import sys
+
 import datetime
 import inspect
-import pandas as pd
-import six
+import sys
 from collections import Iterable
-from dateutil.parser import parse
-from types import FunctionType
 from functools import wraps
+from types import FunctionType
 from typing import List
 
+import pandas as pd
+import six
+from dateutil.parser import parse
+
+from . import names
 from ..environment import Environment
-from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
-from ..model.instrument import SectorCodeItem, IndustryCodeItem
 from ..execution_context import ExecutionContext
-from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
 from ..utils import to_industry_code, to_sector_name, unwrapper
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _
-from ..model.snapshot import SnapshotObject
-from ..model.order import Order, MarketOrder, LimitOrder
-from ..model.slippage import PriceRatioSlippage
+
+from ..model.instrument import SectorCodeItem, IndustryCodeItem
 from ..utils.arg_checker import apply_rules, verify_that
-from . import names
+# noinspection PyUnresolvedReferences
+from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
+# noinspection PyUnresolvedReferences
+from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
+# noinspection PyUnresolvedReferences
+from ..model.order import Order, MarketOrder, LimitOrder
+
 
 __all__ = [
     'sector_code',
     'industry_code',
     'LimitOrder',
     'MarketOrder',
-    'PriceRatioSlippage',
     'ORDER_STATUS',
     'SIDE',
     'POSITION_EFFECT',
@@ -122,7 +126,7 @@ def assure_order_book_id(id_or_ins):
     elif isinstance(id_or_ins, six.string_types):
         order_book_id = instruments(id_or_ins).order_book_id
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
     return order_book_id
 
@@ -133,11 +137,8 @@ def assure_order_book_id(id_or_ins):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-def get_order(order_id):
-    if isinstance(order_id, Order):
-        return order_id
-    else:
-        return ExecutionContext.account.get_order(order_id)
+def get_order(order):
+    return order
 
 
 @export_as_api
@@ -152,7 +153,7 @@ def get_open_orders():
 
     :return: List[:class:`~Order` object]
     """
-    return ExecutionContext.account.get_open_orders()
+    return Environment.get_instance().broker.get_open_orders()
 
 
 @export_as_api
@@ -168,10 +169,10 @@ def cancel_order(order):
     :param order: 需要撤销的order对象
     :type order: :class:`~Order` object
     """
-    order = order if isinstance(order, Order) else get_order(order)
     if order is None:
-        patch_user_exc(KeyError(_("Cancel order fail: invalid order id")))
-    ExecutionContext.broker.cancel_order(order)
+        patch_user_exc(KeyError(_(u"Cancel order fail: invalid order id")))
+    Environment.get_instance().broker.cancel_order(order)
+    return order
 
 
 @export_as_api
@@ -192,7 +193,7 @@ def update_universe(id_or_symbols):
     if isinstance(id_or_symbols, (six.string_types, Instrument)):
         id_or_symbols = [id_or_symbols]
     order_book_ids = set(assure_order_book_id(order_book_id) for order_book_id in id_or_symbols)
-    if order_book_ids != Environment.get_instance().universe:
+    if order_book_ids != Environment.get_instance().get_universe():
         Environment.get_instance().update_universe(order_book_ids)
 
 
@@ -213,7 +214,7 @@ def subscribe(id_or_symbols):
     :param id_or_ins: 标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
-    current_universe = Environment.get_instance().universe
+    current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
         order_book_id = instruments(id_or_symbols).order_book_id
         current_universe.add(order_book_id)
@@ -223,7 +224,7 @@ def subscribe(id_or_symbols):
         for item in id_or_symbols:
             current_universe.add(assure_order_book_id(item))
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
     verify_that('id_or_symbols')._are_valid_instruments("subscribe", id_or_symbols)
     Environment.get_instance().update_universe(current_universe)
 
@@ -243,7 +244,7 @@ def unsubscribe(id_or_symbols):
     :param id_or_ins: 标的物
     :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
-    current_universe = Environment.get_instance().universe
+    current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
         order_book_id = instruments(id_or_symbols).order_book_id
         current_universe.discard(order_book_id)
@@ -254,7 +255,7 @@ def unsubscribe(id_or_symbols):
             i = assure_order_book_id(item)
             current_universe.discard(i)
     else:
-        raise RQInvalidArgument(_("unsupported order_book_id type"))
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
     Environment.get_instance().update_universe(current_universe)
 
@@ -297,10 +298,9 @@ def get_yield_curve(date=None, tenor=None):
         2013-01-04  0.0314  0.0318   ...    0.0342  0.0350  0.0353  0.0357  0.0361
         ...
     """
-    data_proxy = ExecutionContext.data_proxy
-    dt = ExecutionContext.get_current_trading_dt().date()
-
-    yesterday = data_proxy.get_previous_trading_date(dt)
+    env = Environment.get_instance()
+    trading_date = env.trading_dt.date()
+    yesterday = env.data_proxy.get_previous_trading_date(trading_date)
 
     if date is None:
         date = yesterday
@@ -309,7 +309,7 @@ def get_yield_curve(date=None, tenor=None):
         if date > yesterday:
             raise RQInvalidArgument('get_yield_curve: {} >= now({})'.format(date, yesterday))
 
-    return data_proxy.get_yield_curve(start_date=date, end_date=date, tenor=tenor)
+    return env.data_proxy.get_yield_curve(start_date=date, end_date=date, tenor=tenor)
 
 
 @export_as_api
@@ -397,18 +397,19 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
         [ 8.69  8.7   8.71  8.81  8.81]
     """
     order_book_id = assure_order_book_id(order_book_id)
-    data_proxy = ExecutionContext.data_proxy
-    dt = ExecutionContext.get_current_calendar_dt()
+    env = Environment.get_instance()
 
-    if frequency == '1m' and Environment.get_instance().config.base.frequency == '1d':
+    dt = env.calendar_dt.date()
+
+    if frequency == '1m' and env.config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
 
-    if (Environment.get_instance().config.base.frequency == '1m' and frequency == '1d') or \
-            (frequency == '1d' and ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING):
+    if (env.config.base.frequency == '1m' and frequency == '1d') or \
+        (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
         # 在分钟回测获取日线数据, 应该推前一天，这里应该使用 trading date
-        dt = data_proxy.get_previous_trading_date(ExecutionContext.get_current_trading_dt().date())
+        dt = env.data_proxy.get_previous_trading_date(env.trading_dt.date())
 
-    return data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended)
+    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended)
 
 
 @export_as_api
@@ -462,7 +463,7 @@ def all_instruments(type=None):
         ...
 
     """
-    return ExecutionContext.data_proxy.all_instruments(type)
+    return Environment.get_instance().data_proxy.all_instruments(type)
 
 
 @export_as_api
@@ -518,7 +519,7 @@ def instruments(id_or_symbols):
 
             instruments('IF1701').days_to_expire()
     """
-    return ExecutionContext.data_proxy.instruments(id_or_symbols)
+    return Environment.get_instance().data_proxy.instruments(id_or_symbols)
 
 
 @export_as_api
@@ -535,7 +536,7 @@ def sector(code):
     else:
         code = to_sector_name(code)
 
-    return ExecutionContext.data_proxy.sector(code)
+    return Environment.get_instance().data_proxy.sector(code)
 
 
 @export_as_api
@@ -552,7 +553,7 @@ def industry(code):
     else:
         code = to_industry_code(code)
 
-    return ExecutionContext.data_proxy.industry(code)
+    return Environment.get_instance().data_proxy.industry(code)
 
 
 @export_as_api
@@ -563,7 +564,7 @@ def industry(code):
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 def concept(*concept_names):
-    return ExecutionContext.data_proxy.concept(*concept_names)
+    return Environment.get_instance().data_proxy.concept(*concept_names)
 
 
 @export_as_api
@@ -596,7 +597,7 @@ def get_trading_dates(start_date, end_date):
         [Out]
         [datetime.date(2016, 5, 5)]
     """
-    return ExecutionContext.data_proxy.get_trading_dates(start_date, end_date)
+    return Environment.get_instance().data_proxy.get_trading_dates(start_date, end_date)
 
 
 @export_as_api
@@ -625,7 +626,7 @@ def get_previous_trading_date(date):
         [Out]
         [datetime.date(2016, 4, 29)]
     """
-    return ExecutionContext.data_proxy.get_previous_trading_date(date)
+    return Environment.get_instance().data_proxy.get_previous_trading_date(date)
 
 
 @export_as_api
@@ -654,7 +655,7 @@ def get_next_trading_date(date):
         [Out]
         [datetime.date(2016, 5, 3)]
     """
-    return ExecutionContext.data_proxy.get_next_trading_date(date)
+    return Environment.get_instance().data_proxy.get_next_trading_date(date)
 
 
 def to_date(date):
@@ -681,7 +682,8 @@ def to_date(date):
              verify_that('start_date').is_valid_date(ignore_none=False),
              verify_that('adjusted').is_instance_of(bool))
 def get_dividend(order_book_id, start_date, adjusted=True):
-    dt = ExecutionContext.get_current_trading_dt().date() - datetime.timedelta(days=1)
+    env = Environment.get_instance()
+    dt = env.trading_dt.date() - datetime.timedelta(days=1)
     start_date = to_date(start_date)
     if start_date > dt:
         raise RQInvalidArgument(
@@ -689,7 +691,7 @@ def get_dividend(order_book_id, start_date, adjusted=True):
                 start_date, dt
             ))
     order_book_id = assure_order_book_id(order_book_id)
-    df = ExecutionContext.data_proxy.get_dividend(order_book_id, adjusted)
+    df = env.data_proxy.get_dividend(order_book_id, adjusted)
     return df[start_date:dt]
 
 
@@ -706,11 +708,7 @@ def plot(series_name, value):
     :param float value: the value of the series in this time
     :return: None
     """
-    if ExecutionContext.plots is None:
-        # FIXME: this is ugly
-        from ..utils.plot_store import PlotStore
-        ExecutionContext.plots = PlotStore()
-    ExecutionContext.plots.add_plot(ExecutionContext.trading_dt.date(), series_name, value)
+    Environment.get_instance().add_plot(series_name, value)
 
 
 @export_as_api
@@ -739,10 +737,7 @@ def current_snapshot(id_or_symbol):
         2016-01-04 09:33:00.00  INFO
         Snapshot(order_book_id: '000001.XSHE', datetime: datetime.datetime(2016, 1, 4, 9, 33), open: 10.0, high: 10.025, low: 9.9667, last: 9.9917, volume: 2050320, total_turnover: 20485195, prev_close: 9.99)
     """
-    data_proxy = ExecutionContext.data_proxy
-    cal_dt = ExecutionContext.get_current_calendar_dt()
-
+    env = Environment.get_instance()
     frequency = Environment.get_instance().config.base.frequency
-
     order_book_id = assure_order_book_id(id_or_symbol)
-    return data_proxy.current_snapshot(order_book_id, frequency, cal_dt)
+    return env.data_proxy.current_snapshot(order_book_id, frequency, env.calendar_dt)

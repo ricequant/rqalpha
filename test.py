@@ -54,7 +54,7 @@ def get_test_files(file_path=None):
             system_log.exception()
             error_map[filename.replace(".py", "")] = e
     for filename, result_data in iteritems(error_map):
-        print("*" * 20, "【{}】did not pass!".format(filename), "*" * 20)
+        print(u"*" * 20, u"[{}]did not pass!".format(filename), u"*" * 20)
         if isinstance(result_data, Exception):
             system_log.error(result_data)
         else:
@@ -64,8 +64,8 @@ def get_test_files(file_path=None):
             # print("+" * 10, "new test Dataframe: ", "+" * 10)
             # print(df.drop(result.columns[result.all()], axis=1))
             print(result.all())
-    print("=" * 40)
-    print("[{}|{}] strategies has been passed!".format(len(files) - len(error_map), len(files)))
+    print(u"=" * 40)
+    print(u"[{}|{}] strategies has been passed!".format(len(files) - len(error_map), len(files)))
     return len(error_map)
 
 
@@ -75,7 +75,7 @@ def run_test(filename):
             "strategy_file": os.path.join(TEST_DIR, filename)
         }
     }
-    print("Start test: " + str(config["base"]["strategy_file"]))
+    print(u"Start test: " + str(config["base"]["strategy_file"]))
     result_dict = run(config)
     df = result_dict["total_portfolios"]
     # del df['positions']
@@ -104,8 +104,8 @@ def run_test(filename):
         except:
             pass
 
-        df = df.round(4)
-        old_df = old_df.round(4)
+        df = df.round(0)
+        old_df = old_df.round(0)
 
         result = df.eq(old_df)
         if not result.all().all():
@@ -141,7 +141,7 @@ def is_enable_coverage():
 
 
 def test_api():
-    print("Testing API......")
+    print(u"Testing API......")
     from rqalpha import run
 
     from tests.api.test_api_base import test_get_order_code_new, test_get_open_order_code_new, \
@@ -173,9 +173,8 @@ def test_api():
             "log_level": "error",
         },
         "mod": {
-            "progress": {
+            "sys_progress": {
                 "enabled": False,
-                "priority": 400,
             },
         },
     }
@@ -194,9 +193,8 @@ def test_api():
             "log_level": "error",
         },
         "mod": {
-            "progress": {
+            "sys_progress": {
                 "enabled": False,
-                "priority": 400,
             },
         },
     }
@@ -215,9 +213,8 @@ def test_api():
             "log_level": "error",
         },
         "mod": {
-            "progress": {
+            "sys_progress": {
                 "enabled": False,
-                "priority": 400,
             },
         },
     }
@@ -254,11 +251,12 @@ def test_api():
     run(future_api_config, test_buy_close_code_new)
     run(future_api_config, test_sell_close_code_new)
 
-    print("API test ends.")
+    print(u"API test ends.")
 
 
 def test_strategy():
     get_test_files()
+
 
 if __name__ == '__main__':
     if is_enable_coverage():
@@ -299,9 +297,9 @@ if __name__ == '__main__':
                 for row in reader:
                     old_test_times.append(row)
             if len(old_test_times) != 0 and time_spend > float(old_test_times[-1]["time_spend"]) * 1.1:
-                system_log.error("代码咋写的，太慢了！")
-                system_log.error("上次测试用例执行的总时长为：" + old_test_times[-1]["time_spend"])
-                system_log.error("本次测试用例执行的总时长增长为: " + str(time_spend))
+                system_log.error(u"代码咋写的，太慢了！")
+                system_log.error(u"上次测试用例执行的总时长为：" + old_test_times[-1]["time_spend"])
+                system_log.error(u"本次测试用例执行的总时长增长为: " + str(time_spend))
             else:
                 with open(time_csv_file_path, 'a') as csv_file:
                     writer = csv.DictWriter(csv_file, fieldnames=field_names)

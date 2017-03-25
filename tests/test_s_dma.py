@@ -44,12 +44,17 @@ __config__ = {
         "log_level": "error",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
-            "priority": 400,
+            "show": True,
         },
-        "funcat_api": {
+        "sys_funcat": {
             "enabled": True,
+            "show": True,
         },
+        "sys_plot": {
+            "enabled": False,
+            "plot": True,
+        }
     },
 }

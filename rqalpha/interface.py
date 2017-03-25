@@ -16,7 +16,6 @@
 
 import abc
 
-
 from six import with_metaclass
 
 
@@ -70,6 +69,17 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
 
         :return: None
+        """
+        raise NotImplementedError
+
+
+class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
+    def get_last_price(self, order_book_id):
+        """
+        获取证券的最新价格
+        :param order_book_id:
+        :return:
         """
         raise NotImplementedError
 
@@ -236,11 +246,11 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_future_info(self, order_book_id, hedge_type):
+    def get_future_info(self, instrument, hedge_type):
         """
         获取期货合约手续费、保证金等数据
 
-        :param str order_book_id: 合约名
+        :param instrument: 合约对象
         :param HEDGE_TYPE hedge_type: 枚举类型，账户对冲类型
         :return: dict
         """
@@ -256,19 +266,16 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
     在扩展模块中，可以通过调用 ``env.set_broker`` 来替换默认的 Broker。
     """
+
     @abc.abstractmethod
-    def get_accounts(self):
+    def get_portfolio(self):
         """
         [Required]
 
-        获取账号信息。系统初始化时，RQAlpha 会调用此接口，获取账户信息。
+        获取投资组合。系统初始化时，会调用此接口，获取包含账户信息、净值、份额等内容的投资组合
 
-        RQAlpha 支持混合策略，因此返回的账户信息为一个字典(dict)，key 为账户类型（``rqalpha.const.ACCOUNT_TYPE``)，
-        value 为对应的 :class:`~Account` 对象。
-
-        :return: dict
+        :return: Portfolio
         """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def submit_order(self, order):
@@ -293,7 +300,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_open_orders(self):
+    def get_open_orders(self, order_book_id=None):
         """
         【Required】
 
