@@ -40,28 +40,28 @@ cli.commands['run'].params.append(
     click.Option(
         ('--report', 'mod__sys_analyser__report_save_path'),
         type=click.Path(writable=True),
-        help="[sys_analyser]save report"
+        help="[sys_analyser] save report"
     )
 )
 cli.commands['run'].params.append(
     click.Option(
         ('-o', '--output-file', 'mod__sys_analyser__output_file'),
         type=click.Path(writable=True),
-        help="[sys_analyser]output result pickle file"
+        help="[sys_analyser] output result pickle file"
     )
 )
 cli.commands['run'].params.append(
     click.Option(
         ('-p', '--plot/--no-plot', 'mod__sys_analyser__plot'),
         default=None,
-        help="[sys_analyser]plot result"
+        help="[sys_analyser] plot result"
     )
 )
 cli.commands['run'].params.append(
     click.Option(
         ('--plot-save', 'mod__sys_analyser__plot_save_file'),
         default=None,
-        help="[sys_analyser]save plot to file"
+        help="[sys_analyser] save plot to file"
     )
 )
 
@@ -72,10 +72,24 @@ cli.commands['run'].params.append(
 @click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
 def plot(result_dict_file, show, plot_save_file):
     """
-    [sys_analyser]draw result DataFrame
+    [sys_analyser] draw result DataFrame
     """
     import pandas as pd
     from .plot import plot_result
 
     result_dict = pd.read_pickle(result_dict_file)
     plot_result(result_dict, show, plot_save_file)
+
+
+@cli.command()
+@click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
+@click.argument('target_report_csv_path', type=click.Path(exists=True, writable=True), required=True)
+def report(result_pickle_file_path, target_report_csv_path):
+    """
+    [sys_analyser] Generate report from backtest output file
+    """
+    import pandas as pd
+    result_dict = pd.read_pickle(result_pickle_file_path)
+
+    from .report import generate_report
+    generate_report(result_dict, target_report_csv_path)
