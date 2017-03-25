@@ -25,3 +25,8 @@ def to_utf8(string):
             return string
     except AttributeError:
         return to_utf8(str(string))
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from fastcache import lru_cache

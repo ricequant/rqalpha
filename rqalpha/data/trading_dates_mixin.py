@@ -17,7 +17,7 @@ import datetime
 
 import pandas as pd
 
-from ..utils.six import lru_cache
+from ..utils.py2 import lru_cache
 
 
 class TradingDatesMixin(object):

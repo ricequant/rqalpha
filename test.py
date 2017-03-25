@@ -29,7 +29,6 @@ import coverage
 
 from rqalpha import run
 from rqalpha.utils.logger import system_log
-from rqalpha.utils.config import parse_config
 
 
 TEST_DIR = os.path.abspath("./tests/")

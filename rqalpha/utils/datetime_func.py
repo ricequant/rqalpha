@@ -17,7 +17,7 @@ import datetime
 
 from collections import namedtuple
 
-from .six import lru_cache
+from .py2 import lru_cache
 
 
 TimeRange = namedtuple('TimeRange', ['start', 'end'])

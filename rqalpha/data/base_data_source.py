@@ -18,7 +18,7 @@ import os
 import six
 import numpy as np
 
-from ..utils.six import lru_cache
+from ..utils.py2 import lru_cache
 from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
 from ..interface import AbstractDataSource
 from .future_info_cn import CN_FUTURE_INFO

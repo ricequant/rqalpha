@@ -53,6 +53,7 @@ __config__ = {
     "mod": {
         "sys_progress": {
             "enabled": True,
+            "show": True,
         },
         "sys_funcat": {
             "enabled": True,
