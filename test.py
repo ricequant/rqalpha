@@ -104,8 +104,8 @@ def run_test(filename):
         except:
             pass
 
-        df = df.round(4)
-        old_df = old_df.round(4)
+        df = df.round(0)
+        old_df = old_df.round(0)
 
         result = df.eq(old_df)
         if not result.all().all():
