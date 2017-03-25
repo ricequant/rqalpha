@@ -36,7 +36,7 @@ def load_mod():
 注入 --short-stock option
 可以通过 `rqalpha run --short-stock` 来开启允许卖空
 """
-cli_prefix = "mod__sys_plot__"
+cli_prefix = "mod__sys_risk__"
 
 cli.commands['run'].params.append(
     click.Option(

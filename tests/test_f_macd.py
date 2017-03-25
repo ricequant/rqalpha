@@ -63,9 +63,5 @@ __config__ = {
             "enabled": True,
             "show": False,
         },
-        "sys_plot": {
-            "enabled": False,
-            "plot": True
-        },
     },
 }

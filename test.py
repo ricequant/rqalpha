@@ -76,7 +76,7 @@ def run_test(filename):
         }
     }
     print(u"Start test: " + str(config["base"]["strategy_file"]))
-    result_dict = run(config)
+    result_dict = run(config)['sys_analyser']
     df = result_dict["total_portfolios"]
     # del df['positions']
 

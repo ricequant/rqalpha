@@ -21,6 +21,8 @@ __config__ = {
     "record": True,
     "output_file": None,
     "report_save_path": None,
+    'plot': False,
+    'plot_save_file': None,
 }
 
 
@@ -30,8 +32,9 @@ def load_mod():
 
 
 """
-注入 --progress option
-可以通过 `rqalpha run --progress` 的方式支持回测的时候显示进度条
+--report
+--output-file
+
 """
 cli.commands['run'].params.append(
     click.Option(
@@ -47,3 +50,32 @@ cli.commands['run'].params.append(
         help="[sys_analyser]output result pickle file"
     )
 )
+cli.commands['run'].params.append(
+    click.Option(
+        ('-p', '--plot/--no-plot', 'mod_sys_analyser__plot'),
+        default=None,
+        help="[sys_analyser]plot result"
+    )
+)
+cli.commands['run'].params.append(
+    click.Option(
+        ('--plot-save', 'mod_sys_analyser__plot_save_file'),
+        default=None,
+        help="[sys_analyser]save plot to file"
+    )
+)
+
+
+@cli.command()
+@click.argument('result_dict_file', type=click.Path(exists=True), required=True)
+@click.option('--show/--hide', 'show', default=True)
+@click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
+def plot(result_dict_file, show, plot_save_file):
+    """
+    [sys_analyser]draw result DataFrame
+    """
+    import pandas as pd
+    from .plot import plot_result
+
+    result_dict = pd.read_pickle(result_dict_file)
+    plot_result(result_dict, show, plot_save_file)

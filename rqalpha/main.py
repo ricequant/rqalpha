@@ -289,12 +289,9 @@ def run(config, source_code=None):
         if env.profile_deco:
             output_profile_result(env)
 
-        mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
+        result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug(_(u"strategy run successfully, normal exit"))
-
-        # FIXME
-        if 'sys_analyser' in env.mod_dict:
-            return env.mod_dict['sys_analyser']._result
+        return result
     except CustomException as e:
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()

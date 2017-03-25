@@ -62,8 +62,12 @@ class ModHandler(object):
             self._mod_dict[mod_name].start_up(self._env, mod_config)
 
     def tear_down(self, *args):
+        result = {}
         for mod_name, __ in reversed(self._mod_list):
-            self._mod_dict[mod_name].tear_down(*args)
+            ret = self._mod_dict[mod_name].tear_down(*args)
+            if ret is not None:
+                result[mod_name] = ret
+        return result
 
 
 SYSTEM_MOD_LIST = [
@@ -71,7 +75,6 @@ SYSTEM_MOD_LIST = [
     "sys_progress",
     "sys_funcat",
     "sys_risk",
-    "sys_plot",
     "sys_simulation",
     "sys_stock_realtime",
 ]

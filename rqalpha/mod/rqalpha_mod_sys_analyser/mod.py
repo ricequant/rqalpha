@@ -17,17 +17,17 @@
 import os
 import pickle
 from collections import defaultdict
-
-import six
 from enum import Enum
+
 import numpy as np
 import pandas as pd
+import six
 
-from rqalpha.interface import AbstractMod
-from rqalpha.events import EVENT
 from rqalpha.const import EXIT_CODE, ACCOUNT_TYPE
-from rqalpha.utils.risk import Risk
 from rqalpha.environment import Environment
+from rqalpha.events import EVENT
+from rqalpha.interface import AbstractMod
+from rqalpha.utils.risk import Risk
 
 
 class AnalyserMod(AbstractMod):
@@ -35,7 +35,6 @@ class AnalyserMod(AbstractMod):
         self._env = None
         self._mod_config = None
         self._enabled = False
-        self._result = None
 
         self._orders = []
         self._trades = []
@@ -259,12 +258,16 @@ class AnalyserMod(AbstractMod):
                 positions_df = positions_df.set_index("date").sort_index()
             result_dict["{}_positions".format(account_name)] = positions_df
 
-        self._result = result_dict
-
         if self._mod_config.output_file:
             with open(self._mod_config.output_file, 'wb') as f:
                 pickle.dump(result_dict, f)
 
         if self._mod_config.report_save_path:
-            from rqalpha.utils.report import generate_report
+            from .report import generate_report
             generate_report(result_dict, self._mod_config.report_save_path)
+
+        if self._mod_config.plot or self._mod_config.plot_save_file:
+            from .plot import plot_result
+            plot_result(result_dict, self._mod_config.plot, self._mod_config.plot_save_file)
+
+        return result_dict

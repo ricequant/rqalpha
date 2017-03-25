@@ -138,9 +138,5 @@ __config__ = {
             "enabled": True,
             "show": True,
         },
-        "sys_plot": {
-            "enabled": False,
-            "plot": True,
-        }
     },
 }

@@ -14,12 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
 import errno
 import os
 import shutil
-import ruamel.yaml as yaml
 from importlib import import_module
+
+import click
+import ruamel.yaml as yaml
 
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_default_config_path, load_config, dump_config
@@ -125,7 +126,7 @@ def report(result_pickle_file_path, target_report_csv_path):
     import pandas as pd
     result_dict = pd.read_pickle(result_pickle_file_path)
 
-    from rqalpha.utils.report import generate_report
+    from rqalpha.mod.rqalpha_mod_sys_analyser.report import generate_report
     generate_report(result_dict, target_report_csv_path)
 
 
