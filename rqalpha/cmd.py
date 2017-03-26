@@ -25,21 +25,23 @@ def cmd_cli(ctx, verbose):
 
 
 def entry_point():
-    from rqalpha.utils.config import get_default_config_path
-    get_default_config_path()
+    import six
+    import ruamel.yaml as yaml
+    from rqalpha.mod import SYSTEM_MOD_LIST
+    from rqalpha.utils.config import get_default_config_path, load_config
+    from rqalpha.utils.package_helper import import_mod
+    mod_config_path = get_default_config_path("mod_config")
+    mod_config = load_config(mod_config_path, loader=yaml.RoundTripLoader, verify_version=False)
 
-    # 获取 Mod 中的命令
-    # noinspection PyUnresolvedReferences
-    from .mod import SYSTEM_MOD_LIST
-    mod_lib_prefix = "rqalpha.mod.rqalpha_mod_"
-    from .utils.package_helper import import_mod
-    for sys_mod in SYSTEM_MOD_LIST:
-        import_mod(mod_lib_prefix + sys_mod)
-
-    # 获取第三方包中的命令
-    from pkgutil import iter_modules
-    for package in iter_modules():
-        if "rqalpha_mod_" in package[1]:
-            import_mod(package[1])
+    for mod_name, config in six.iteritems(mod_config['mod']):
+        lib_name = "rqalpha_mod_{}".format(mod_name)
+        if not config['enabled']:
+            continue
+        if mod_name in SYSTEM_MOD_LIST:
+            # inject system mod
+            import_mod("rqalpha.mod." + lib_name)
+        else:
+            # inject third part mod
+            import_mod(lib_name)
 
     cmd_cli(obj={})
