@@ -134,7 +134,7 @@ ProgressMod 需要实现的需求非常的简单：在命令行输出目前回�
         def _init(self, event):
             pass
 
-        def _tick(event):
+        def _tick(self, event):
             pass
 
 在 :code:`_init` 函数中，初始化 :code:`progressBar`，进度条的长度为回测的总时长
@@ -229,7 +229,7 @@ ProgressMod 需要实现的需求非常的简单：在命令行输出目前回�
 
 上一节讲的是如何订阅事件源，那么如何发布事件呢？其实也很简单，只需要通过 :code:`publish_event` 就可以进行事件的发布。
 
-RQAlpha 整个回测模块是通过 :code:`SimulationMod` 实现的，其中定义了基于Bar回测的 :code:`event_source` 和 :code:`simulation_broker`， 其中包含了 MarketEvent 和 OrderEvent 大部分事件源的定义和发布。
+RQAlpha 整个回测模块是通过 :code:`rqalpha_mod_sys_simulation` 实现的，其中定义了基于Bar回测的 :code:`event_source` 和 :code:`simulation_broker`， 其中包含了 MarketEvent 和 OrderEvent 大部分事件源的定义和发布。
 
 我们简单来分析一下日线回测 :code:`simulation_event_source` 中 MaketEvent 相关事件的触发流程。
 
@@ -254,7 +254,7 @@ RQAlpha 整个回测模块是通过 :code:`SimulationMod` 实现的，其中定�
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
                 yield Event(EVENT.SETTLEMENT, calendar_dt=dt_settlement, trading_dt=dt_settlement)
 
-:code:`event` 函数是一个generator, 在 SimulationMod 中主要返回 :code:`BEFORE_TRADING`, :code:`BAR`, :code:`AFTER_TRADING` 和 :code:`SETTLEMENT` 事件。RQAlpha 在接受到对应的事件后，会自动的进行相应的 `publish_event` 操作，并且会自动 publish 相关的 `PRE_` 和 `POST_` 事件。
+:code:`event` 函数是一个generator, 在 rqalpha_mod_sys_simulation 中主要返回 :code:`BEFORE_TRADING`, :code:`BAR`, :code:`AFTER_TRADING` 和 :code:`SETTLEMENT` 事件。RQAlpha 在接受到对应的事件后，会自动的进行相应的 `publish_event` 操作，并且会自动 publish 相关的 `PRE_` 和 `POST_` 事件。
 
 而在 :code:`simulation_broker` 中可以看到，当被调用 `cancel_order` 时，会模拟撤单的执行流程，分别触发 :code:`ORDER_PENDING_CANCEL` && :code:`ORDER_CANCELLATION_PASS` 事件，并将 :code:`account` 和 :code:`order` 传递给回调函数，使其可以获取其可能需要到的数据。
 
@@ -280,7 +280,7 @@ RQAlpha 整个回测模块是通过 :code:`SimulationMod` 实现的，其中定�
                 except ValueError:
                     pass
 
-如果想查看详细的事件源相关的内容，建议直接阅读 `SimulationMod` 源码，您会发现，扩展事件源比想象中要简单。
+如果想查看详细的事件源相关的内容，建议直接阅读 `rqalpha_mod_sys_simulation` 源码，您会发现，扩展事件源比想象中要简单。
 
-您也可以基于 `SimulationMod` 扩展一个自定义的回测引擎，实现您特定的回测需求。
+您也可以基于 `rqalpha_mod_sys_simulation` 扩展一个自定义的回测引擎，实现您特定的回测需求。
 

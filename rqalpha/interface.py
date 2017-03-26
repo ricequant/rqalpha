@@ -74,12 +74,15 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
 
 
 class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
+    """
+    RQAlpha多个地方需要使用最新价格，不同的数据源其最新价格获取的方式不尽相同
+
+    因此抽离出 `AbstractPriceBoard`, 您可以自行进行扩展并替换默认 PriceBoard
+    """
     @abc.abstractmethod
     def get_last_price(self, order_book_id):
         """
         获取证券的最新价格
-        :param order_book_id:
-        :return:
         """
         raise NotImplementedError
 

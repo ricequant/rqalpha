@@ -47,6 +47,12 @@ Broker
 ..  autoclass:: AbstractBroker
     :members:
 
+PriceBoarder
+------------------
+
+..  autoclass:: AbstractPriceBoard
+    :members:
+
 Mod
 ------------------
 

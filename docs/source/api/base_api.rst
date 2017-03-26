@@ -717,34 +717,6 @@ Order
     :show-inheritance:
     :inherited-members:
 
-MixedPortfolio
-------------------------------------------------------
-..  module:: rqalpha.model.account.mixed_account
-
-..  autoclass:: MixedPortfolio
-    :members:
-    :show-inheritance:
-    :inherited-members:
-
-
-StockPortfolio
-------------------------------------------------------
-..  module:: rqalpha.model.portfolio.stock_portfolio
-
-..  autoclass:: StockPortfolio
-    :members:
-    :show-inheritance:
-    :inherited-members:
-
-FuturePortfolio
-------------------------------------------------------
-..  module:: rqalpha.model.portfolio.future_portfolio
-
-..  autoclass:: FuturePortfolio
-    :members:
-    :show-inheritance:
-    :inherited-members:
-
 StockPosition
 ------------------------------------------------------
 ..  module:: rqalpha.model.position.stock_position

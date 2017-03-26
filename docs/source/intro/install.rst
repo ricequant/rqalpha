@@ -4,15 +4,16 @@
 安装指南
 ==================
 
-兼容性
-==================
-
-RQAlpha目前只支持 python 3.4+ && Python 2.7+
-
 安装前
 ==================
 
 **我们强烈建议您如果安装过程中遇到了问题，先阅读该文档下面的 「FAQ」 章节来尝试着解决**
+
+..  image:: https://img.shields.io/pypi/pyversions/rqalpha.svg
+    :target: https://pypi.python.org/pypi/rqalpha
+    :alt: Python Version Support
+
+注: 我们尽量保证 Python 2.7 的兼容，但如果没有特殊的需求，尽量使用 Python 3.4+
 
 为了避免一些安装问题，建议您先升级您的 pip 和 setuptools :
 
