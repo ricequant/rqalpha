@@ -12,14 +12,7 @@ RQAlpha目前只支持 python 3.4+ && Python 2.7+
 安装前
 ==================
 
-我们强烈建议您在安装 RQAlpha 前，首先单独安装 bcolz 库，因为其编译时间较长，并且中间比较容易失败，单独安装好以后再继续安装RQAlpha。
-
-Windows 环境下编译安装 bcolz 需要使用 :code:`Visual C++ Compiler`，需要自行下载并安装 visual-cpp-build-tools，
-
-如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 :code:`bcolz wheel` 包，直接安装编译后的 bcolz 版本。
-
-安装
-==================
+**我们强烈建议您如果安装过程中遇到了问题，先阅读该文档下面的 「FAQ」 章节来尝试着解决**
 
 为了避免一些安装问题，建议您先升级您的 pip 和 setuptools :
 
@@ -27,14 +20,17 @@ Windows 环境下编译安装 bcolz 需要使用 :code:`Visual C++ Compiler`，�
 
     $ pip install -U pip setuptools
 
-因为 bcolz 对于一些用户可能会安装困难，可能需要重试多次，所以建议先安装 cython / bcolz 库:
+bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比较容易失败，建议先单独安装 bcolz 库，安装好以后再安装 RQAlpha。如果在安装的过程中出现问题，请参考 「FAQ」 章节。
+
+Windows 环境下因为默认没有安装 `Visual C++ Compiler`, 需要自行下载并安装 `visual-cpp-build-tools`，如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 :code:`bcolz wheel` 包，直接安装编译后的 bcolz 版本。
 
 .. code-block:: bash
 
     $ pip install cython
-    $ pip install bcolz==1.1.0
+    $ pip install bcolz
 
-安装 RQAlpha :
+安装
+==================
 
 .. code-block:: bash
 
@@ -88,3 +84,27 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 
     $ rqalpha generate_config
 
+FAQ
+==================
+
+1.  Bcolz 相关问题
+    
+    请首先 `pip install cython` 来安装cython
+
+    `bcolz` 安装大部分问题都来自于没有安装 `Visual C++ Compiler`，建议您无论如何先成功安装 `Visual C++ Compiler`， 访问 https://wiki.python.org/moin/WindowsCompilers 根据自己的机器环境和Python版本选择安装对应的编译工具。
+
+    不进行编译安装，访问 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载 :code:`bcolz` 直接进行安装。
+
+2.  Matplotlib 相关问题
+
+    1.  运行回测时，matplotlib 报错怎么办？:code:`RuntimeError: Python is not installed as a framework`:
+
+    解决方案：创建文件 :code:`~/.matplotlib/matplotlibrc`，并加入代码 :code:`backend: TkAgg`
+    
+    2.  在 Python 3.6 下没有任何报错，但是就是没有plot输出:
+
+    解决方案：创建文件 :code:`~/.matplotlib/matplotlibrc`，并加入代码 :code:`backend: TkAgg`
+
+    3.  在Windows运行报 :code:`Error on import matplotlib.pyplot`:
+
+    解决方案: 请访问 `Error on import matplotlib.pyplot (on Anaconda3 for Windows 10 Home 64-bit PC) <http://stackoverflow.com/questions/34004063/error-on-import-matplotlib-pyplot-on-anaconda3-for-windows-10-home-64-bit-pc>`_ 解决。
