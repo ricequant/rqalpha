@@ -46,9 +46,8 @@ def load_config(config_path, loader=yaml.Loader, verify_version=True):
 
 
 def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
-    with codecs.open(config_path, mode='w', encoding='utf-8') as file:
-        yaml_content = yaml.dump(config, Dumper=dumper)
-        file.write(to_utf8(yaml_content))
+    with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
+        stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
 
 
 def get_default_config_path(tmpl):
