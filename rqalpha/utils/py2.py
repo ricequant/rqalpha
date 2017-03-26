@@ -20,6 +20,8 @@ import six
 def to_utf8(string):
     try:
         if six.PY2:
+            if isinstance(string, str):
+                string = unicode(string, 'utf-8')
             return string.encode('utf-8')
         else:
             return string

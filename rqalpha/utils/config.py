@@ -30,6 +30,7 @@ from .logger import user_log, user_system_log, system_log, std_log, user_std_han
 from ..const import ACCOUNT_TYPE, MATCHING_TYPE, RUN_TYPE, PERSIST_MODE
 from ..utils.i18n import gettext as _, localization
 from ..utils.dict_func import deep_update
+from ..utils.py2 import to_utf8
 from ..mod.utils import mod_config_value_parse
 
 
@@ -46,12 +47,13 @@ def load_config(config_path, loader=yaml.Loader, verify_version=True):
 
 def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
     with codecs.open(config_path, mode='w', encoding='utf-8') as file:
-        file.write(yaml.dump(config, Dumper=dumper))
+        yaml_content = yaml.dump(config, Dumper=dumper)
+        file.write(to_utf8(yaml_content))
 
 
 def get_default_config_path(tmpl):
-    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../{}_template.yml".format(tmpl))
-    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/.{}.yml".format(tmpl)))
+    config_template_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../{}_template.yml".format(tmpl)))
+    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/{}.yml".format(tmpl)))
     if not os.path.exists(default_config_path):
         dir_path = os.path.dirname(default_config_path)
         if not os.path.exists(dir_path):
