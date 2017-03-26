@@ -32,10 +32,10 @@ install:
   - pip install funcat
   - pip install .
 script:
-  - la $HOME/.rqalpha/
-  - la $HOME/.rqalpha/bundle/
+  - ls -al $HOME/.rqalpha/
+  - ls -al $HOME/.rqalpha/bundle/
   - |
-      if [ ! -d $HOME/.rqalpha/bundole/instruments.pk ]; then
+      if [ ! -d $HOME/.rqalpha/bundle/instruments.pk ]; then
         rqalpha update_bundle
       fi
   - coverage run --source=rqalpha test.py
