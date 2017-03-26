@@ -45,6 +45,8 @@ install_requirements = [
     'line-profiler>=2.0',
     'ruamel.yaml>=0.13.14',
     'better_exceptions',
+    "tabulate",
+    "colorama",
 ]
 
 if sys.version_info.major < 3:

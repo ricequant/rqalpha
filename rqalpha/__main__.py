@@ -181,10 +181,27 @@ def mod(cmd, params):
         """
         List all mod configuration
         """
-        config_path = get_default_config_path("mod_config")
-        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
+        from colorama import init, Fore
+        from tabulate import tabulate
+        init()
+        mod_config_path = get_default_config_path("mod_config")
+        mod_config = load_config(mod_config_path, loader=yaml.RoundTripLoader, verify_version=False)
 
-        print(yaml.dump(config['mod'], Dumper=yaml.RoundTripDumper))
+        table = []
+
+        for mod_name, mod in six.iteritems(mod_config['mod']):
+            table.append([
+                Fore.RESET + mod_name,
+                Fore.GREEN + "enabled" + Fore.RESET if mod['enabled'] else Fore.RED + "disabled" + Fore.RESET
+            ])
+
+        headers = [
+            Fore.CYAN + "name",
+            Fore.CYAN + "status" + Fore.RESET
+        ]
+
+        print(tabulate(table, headers=headers, tablefmt="psql"))
+        print(Fore.LIGHTYELLOW_EX + "You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
 
     def install(params):
         """
