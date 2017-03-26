@@ -35,7 +35,7 @@ script:
   - ls -al $HOME/.rqalpha/
   - ls -al $HOME/.rqalpha/bundle/
   - |
-      if [ ! -d $HOME/.rqalpha/bundle/instruments.pk ]; then
+      if [ ! -f $HOME/.rqalpha/bundle/instruments.pk ]; then
         rqalpha update_bundle
       fi
   - coverage run --source=rqalpha test.py
