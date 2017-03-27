@@ -30,10 +30,8 @@ import coverage
 from rqalpha import run
 from rqalpha.utils.logger import system_log
 
-
 TEST_DIR = os.path.abspath("./tests/")
 TEST_OUT = os.path.abspath("./tests/outs/")
-
 
 pd.set_option("display.width", 160)
 
@@ -160,7 +158,7 @@ def test_api():
 
     base_api_config = {
         "base": {
-            "securities": "stock",
+            "strategy_type": "stock",
             "start_date": "2016-12-01",
             "end_date": "2016-12-31",
             "frequency": "1d",
@@ -180,7 +178,7 @@ def test_api():
 
     stock_api_config = {
         "base": {
-            "securities": "stock",
+            "strategy_type": "stock",
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "frequency": "1d",
@@ -200,7 +198,7 @@ def test_api():
 
     future_api_config = {
         "base": {
-            "securities": "future",
+            "strategy_type": "future",
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "frequency": "1d",
@@ -257,13 +255,48 @@ def test_strategy():
     get_test_files()
 
 
+def write_csv(path, fields):
+    old_test_times = []
+    if not os.path.exists(path):
+        with open(path, 'w') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=fields)
+            writer.writeheader()
+    with open(path) as csv_file:
+        reader = csv.DictReader(csv_file)
+        for row in reader:
+            old_test_times.append(row)
+
+    if performance_path is None:
+        if len(old_test_times) != 0 and time_spend > float(old_test_times[-1]["time_spend"]) * 1.1:
+            system_log.error("代码咋写的，太慢了！")
+            system_log.error("上次测试用例执行的总时长为：" + old_test_times[-1]["time_spend"])
+            system_log.error("本次测试用例执行的总时长增长为: " + str(time_spend))
+        else:
+            with open(path, 'a') as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=fields)
+                writer.writerow({'date_time': end_time, 'time_spend': time_spend})
+    else:
+        if 0 < len(old_test_times) < 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times))/len(old_test_times) * 1.1:
+            raise RuntimeError('Performance regresses!')
+        elif len(old_test_times) >= 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times[-5:]))/5 * 1.1:
+            raise RuntimeError('Performance regresses!')
+        else:
+            with open(path, 'a') as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=fields)
+                writer.writerow({'date_time': end_time, 'time_spend': time_spend})
+
+
 if __name__ == '__main__':
     if is_enable_coverage():
         print("enable coverage")
         cov = coverage.Coverage()
         cov.start()
 
+    performance_path = None
+    field_names = ['date_time', 'time_spend']
+
     start_time = datetime.now()
+
     if len(sys.argv) >= 2:
         if sys.argv[1] == 'mod':
             test_api()
@@ -272,6 +305,14 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'strategy':
             test_strategy()
             end_time = datetime.now()
+
+        elif sys.argv[1] == 'performance':
+            test_api()
+            test_strategy()
+            end_time = datetime.now()
+            performance_path = sys.argv[2]
+            time_spend = (end_time - start_time).total_seconds()
+            write_csv(performance_path, field_names)
 
         else:
             target_file = sys.argv[1]
@@ -284,25 +325,8 @@ if __name__ == '__main__':
         end_time = datetime.now()
         if error_count == 0:
             time_csv_file_path = os.path.join(TEST_OUT, "time.csv")
-            field_names = ['date_time', 'time_spend']
-            old_test_times = []
             time_spend = (end_time - start_time).total_seconds()
-            if not os.path.exists(time_csv_file_path):
-                with open(time_csv_file_path, 'w') as csv_file:
-                    writer = csv.DictWriter(csv_file, fieldnames=field_names)
-                    writer.writeheader()
-            with open(time_csv_file_path) as csv_file:
-                reader = csv.DictReader(csv_file)
-                for row in reader:
-                    old_test_times.append(row)
-            if len(old_test_times) != 0 and time_spend > float(old_test_times[-1]["time_spend"]) * 1.1:
-                system_log.error(u"代码咋写的，太慢了！")
-                system_log.error(u"上次测试用例执行的总时长为：" + old_test_times[-1]["time_spend"])
-                system_log.error(u"本次测试用例执行的总时长增长为: " + str(time_spend))
-            else:
-                with open(time_csv_file_path, 'a') as csv_file:
-                    writer = csv.DictWriter(csv_file, fieldnames=field_names)
-                    writer.writerow({'date_time': end_time, 'time_spend': time_spend})
+            write_csv(time_csv_file_path, field_names)
 
         else:
             print('Failed!')
