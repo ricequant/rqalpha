@@ -42,7 +42,7 @@ cli_prefix = "mod__sys_risk__"
 
 cli.commands['run'].params.append(
     click.Option(
-        ("--short-stock", "mod__sys_risk__validate_position"),
+        ("--no-short-stock/--short-stock", "mod__sys_risk__validate_position"),
         is_flag=True, default=True,
         help="[sys_risk] enable stock shorting"
     )
