@@ -27,7 +27,7 @@ import shutil
 from . import RqAttrDict, logger
 from .exception import patch_user_exc
 from .logger import user_log, user_system_log, system_log, std_log, user_std_handler
-from ..const import ACCOUNT_TYPE, MATCHING_TYPE, RUN_TYPE, PERSIST_MODE
+from ..const import RUN_TYPE, PERSIST_MODE, ACCOUNT_TYPE
 from ..utils.i18n import gettext as _, localization
 from ..utils.dict_func import deep_update
 from ..utils.py2 import to_utf8
@@ -169,7 +169,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
         return
 
     base_config.run_type = parse_run_type(base_config.run_type)
-    base_config.account_list = gen_account_list(base_config.strategy_type)
+    base_config.account_list = parse_account_list(base_config.securities)
     base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
 
     if extra_config.log_level.upper() != "NONE":
@@ -228,18 +228,13 @@ def parse_user_config_from_code(config, source_code=None):
         return config
 
 
-def gen_account_list(account_list_str):
-    assert isinstance(account_list_str, six.string_types)
-    account_list = account_list_str.split("_")
-    return [parse_account_type(account_str) for account_str in account_list]
-
-
-def parse_account_type(account_type_str):
-    assert isinstance(account_type_str, six.string_types)
-    if account_type_str == "stock":
-        return ACCOUNT_TYPE.STOCK
-    elif account_type_str == "future":
-        return ACCOUNT_TYPE.FUTURE
+def parse_account_list(securities):
+    if isinstance(securities, (tuple, list)):
+        return [ACCOUNT_TYPE[security.upper()] for security in securities]
+    elif isinstance(securities, six.string_types):
+        return [ACCOUNT_TYPE[securities.upper()]]
+    else:
+        raise NotImplementedError
 
 
 def parse_run_type(rt_str):

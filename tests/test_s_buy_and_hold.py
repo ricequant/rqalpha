@@ -15,7 +15,7 @@ def after_trading(context):
 
 __config__ = {
     "base": {
-        "strategy_type": "stock",
+        "securities": "stock",
         "start_date": "2015-01-09",
         "end_date": "2016-01-12",
         "frequency": "1d",

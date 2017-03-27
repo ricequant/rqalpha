@@ -10,7 +10,7 @@ def handle_bar(context, bar_dict):
 
 __config__ = {
     "base": {
-        "strategy_type": "future",
+        "securities": "future",
         "start_date": "2015-01-09",
         "end_date": "2015-03-09",
         "frequency": "1d",

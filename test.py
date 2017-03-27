@@ -160,7 +160,7 @@ def test_api():
 
     base_api_config = {
         "base": {
-            "strategy_type": "stock",
+            "securities": "stock",
             "start_date": "2016-12-01",
             "end_date": "2016-12-31",
             "frequency": "1d",
@@ -180,7 +180,7 @@ def test_api():
 
     stock_api_config = {
         "base": {
-            "strategy_type": "stock",
+            "securities": "stock",
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "frequency": "1d",
@@ -200,7 +200,7 @@ def test_api():
 
     future_api_config = {
         "base": {
-            "strategy_type": "future",
+            "securities": "future",
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "frequency": "1d",

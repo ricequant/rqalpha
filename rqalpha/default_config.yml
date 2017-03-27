@@ -4,8 +4,6 @@ version: 0.1.5
 whitelist: [base, extra, validator, mod]
 
 base:
-  # 可以指定回测的唯一ID，用户区分多次回测的结果
-  run_id: 9999
   # 数据源所存储的文件路径
   data_bundle_path: ~
   # 启动的策略文件路径
@@ -18,8 +16,8 @@ base:
   stock_starting_cash: 0
   # 期货起始资金，默认为0
   future_starting_cash: 0
-  # 设置策略类型，目前支持 `stock` (股票策略)、`future` (期货策略)及 `stock_future` (混合策略)
-  strategy_type: stock
+  # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)tst
+  securities: [stock]
   # 设置保证金乘数，默认为1
   margin_multiplier: 1
   # 运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易。

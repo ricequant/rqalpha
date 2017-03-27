@@ -31,7 +31,6 @@ class RunInfo(object):
     __repr__ = property_repr
 
     def __init__(self, config):
-        self._run_id = config.base.run_id
         self._start_date = config.base.start_date
         self._end_date = config.base.end_date
         self._frequency = config.base.frequency
@@ -45,13 +44,6 @@ class RunInfo(object):
         self._matching_type = config.mod.simulation.matching_type
         self._slippage = config.mod.simulation.slippage
         self._commission_multiplier = config.mod.simulation.commission_multiplier
-
-    @property
-    def run_id(self):
-        """
-        :property getter: 标识策略每次运行的唯一id
-        """
-        return self._run_id
 
     @property
     def start_date(self):

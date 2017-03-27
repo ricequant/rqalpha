@@ -116,7 +116,7 @@ def handle_bar(context, bar_dict):
 
 __config__ = {
     "base": {
-        "strategy_type": "stock",
+        "securities": "stock",
         "start_date": "2008-07-01",
         "end_date": "2014-09-01",
         "frequency": "1d",
