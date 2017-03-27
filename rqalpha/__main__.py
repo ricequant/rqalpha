@@ -92,6 +92,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
 @click.option('-st', '--security', 'base__securities', multiple=True, type=click.Choice(['stock', 'future']))
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m']))
+@click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 # -- Extra Configuration
