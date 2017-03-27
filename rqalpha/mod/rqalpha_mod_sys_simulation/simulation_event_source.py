@@ -33,12 +33,30 @@ from rqalpha.model.tick import Tick
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
 
+
 class SimulationEventSource(AbstractEventSource):
     def __init__(self, env, account_list):
         self._env = env
         self._account_list = account_list
         self._universe_changed = False
         Environment.get_instance().event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
+
+    def _get_merge_ticks(self, date):
+        self.today_ticks_cache = {}
+        data_proxy = self._env.data_proxy
+        self.order_book_id_map = {}
+        # get today ticks
+        for idx, order_book_id in enumerate(self._get_universe()):
+            self.order_book_id_map[idx] = order_book_id
+            ticks = data_proxy.get_ticks(order_book_id, date)
+            ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
+            self.today_ticks_cache[order_book_id] = ticks
+
+        # merge ticks arrays into one
+        merge_ticks = np.concatenate(list(self.today_ticks_cache.values()))
+
+        merge_ticks.sort(kind='mergesort', order=("date", "time"))
+        return merge_ticks
 
     def _on_universe_changed(self, event):
         self._universe_changed = True
@@ -155,8 +173,6 @@ class SimulationEventSource(AbstractEventSource):
                 last_dt = None
                 done = False
 
-                order_book_id_map = {}
-                today_ticks_cache = {}
                 dt_before_day_trading = date.replace(hour=8, minute=30)
                 last_tick = None
                 while True:
@@ -164,17 +180,7 @@ class SimulationEventSource(AbstractEventSource):
                         break
                     exit_loop = True
 
-                    # get today ticks
-                    for idx, order_book_id in enumerate(self._get_universe()):
-                        order_book_id_map[idx] = order_book_id
-                        ticks = data_proxy.get_ticks(order_book_id, date)
-                        ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
-                        today_ticks_cache[order_book_id] = ticks
-
-                    # merge ticks arrays into one
-                    merge_ticks = np.concatenate(list(today_ticks_cache.values()))
-
-                    merge_ticks.sort(order=("date", "time"))
+                    merge_ticks = self._get_merge_ticks(date)
 
                     names = merge_ticks.dtype.names
                     names_size = len(names)
@@ -182,7 +188,7 @@ class SimulationEventSource(AbstractEventSource):
                     # yield ticks
                     for idx in range(len(merge_ticks)):
                         raw_tick = merge_ticks[idx]
-                        order_book_id = order_book_id_map[raw_tick[-1]]
+                        order_book_id = self.order_book_id_map[raw_tick[-1]]
                         tick_dict = {
                             "open": 0,
                             "limit_up": 0,
