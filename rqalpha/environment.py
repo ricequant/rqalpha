@@ -46,6 +46,7 @@ class Environment(object):
         self.mod_dict = None
         self.plot_store = None
         self.bar_dict = None
+        self._frontend_validators = []
 
     @classmethod
     def get_instance(cls):
@@ -81,6 +82,23 @@ class Environment(object):
     def set_broker(self, broker):
         self.broker = broker
 
+    def add_frontend_validator(self, validator):
+        self._frontend_validators.append(validator)
+
+    def can_submit_order(self, order):
+        account = self.get_account(order.order_book_id)
+        for v in self._frontend_validators:
+            if not v.can_submit_order(account, order):
+                return False
+        return True
+
+    def can_cancel_order(self, order):
+        account = self.get_account(order.order_book_id)
+        for v in self._frontend_validators:
+            if not v.can_cancel_order(account, order):
+                return False
+        return True
+
     def set_bar_dict(self, bar_dict):
         self.bar_dict = bar_dict
 
@@ -113,9 +131,9 @@ class Environment(object):
 
     def get_future_margin_rate(self, order_book_id):
         try:
-            return self.data_proxy.instruments(order_book_id).margin_rate
-        except NotImplementedError:
             return self.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
+        except Exception:
+            return self.data_proxy.instruments(order_book_id).margin_rate
 
     def get_future_info(self, order_book_id, hedge_type):
         return self.data_proxy.get_future_info(order_book_id, hedge_type)

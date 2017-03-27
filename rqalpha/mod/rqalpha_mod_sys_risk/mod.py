@@ -15,47 +15,23 @@
 # limitations under the License.
 
 from rqalpha.interface import AbstractMod
-from rqalpha.events import EVENT, Event
-from rqalpha.utils import get_account_type
-from rqalpha.const import ACCOUNT_TYPE
-from rqalpha.environment import Environment
 
-from .frontend_validator import StockFrontendValidator, FutureFrontendValidator
+from .price_validator import PriceValidator
+from .position_validator import PositionValidator
+from .cash_validator import CashValidator
+from .is_trading_validator import IsTradingValidator
 
 
 class RiskManagerMod(AbstractMod):
-
-    def __init__(self):
-        self._env = None
-        self.mod_config = None
-        self._frontend_validator = {}
-
     def start_up(self, env, mod_config):
-        self._env = env
-        self.mod_config = mod_config
-        self._env.event_bus.prepend_listener(EVENT.ORDER_PENDING_NEW, self._frontend_validate)
+        if mod_config.validate_price:
+            env.add_frontend_validator(PriceValidator(env))
+        if mod_config.validate_is_trading:
+            env.add_frontend_validator(IsTradingValidator(env))
+        if mod_config.validate_cash:
+            env.add_frontend_validator(CashValidator(env))
+        if mod_config.validate_position:
+            env.add_frontend_validator(PositionValidator())
 
     def tear_down(self, code, exception=None):
         pass
-
-    def _frontend_validate(self, event):
-        frontend_validator = self._get_frontend_validator_for(event.order.order_book_id)
-        validation_pass = frontend_validator.order_pipeline(event.account, event.order)
-        if not validation_pass:
-            account = Environment.get_instance().get_account(event.order.order_book_id)
-            self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, account=account, order=event.order))
-
-    def _get_frontend_validator_for(self, order_book_id):
-        account_type = get_account_type(order_book_id)
-        try:
-            return self._frontend_validator[account_type]
-        except KeyError:
-            if account_type == ACCOUNT_TYPE.STOCK:
-                validator = StockFrontendValidator(self.mod_config)
-            elif account_type == ACCOUNT_TYPE.FUTURE:
-                validator = FutureFrontendValidator(self.mod_config)
-            else:
-                raise RuntimeError('account type {} not supported yet'.format(account_type))
-            self._frontend_validator[account_type] = validator
-            return validator
-

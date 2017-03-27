@@ -171,7 +171,9 @@ def cancel_order(order):
     """
     if order is None:
         patch_user_exc(KeyError(_(u"Cancel order fail: invalid order id")))
-    Environment.get_instance().broker.cancel_order(order)
+    env = Environment.get_instance()
+    if env.can_cancel_order(order):
+        env.broker.cancel_order(order)
     return order
 
 

@@ -68,26 +68,6 @@ class Matcher(object):
 
             deal_price = self._deal_price_decider(bar)
             if order.type == ORDER_TYPE.LIMIT:
-                if order.price > bar.limit_up:
-                    reason = _(
-                        "Order Rejected: limit order price {limit_price} is higher than limit up {limit_up}."
-                    ).format(
-                        limit_price=order.price,
-                        limit_up=bar.limit_up
-                    )
-                    order.mark_rejected(reason)
-                    continue
-
-                if order.price < bar.limit_down:
-                    reason = _(
-                        "Order Rejected: limit order price {limit_price} is lower than limit down {limit_down}."
-                    ).format(
-                        limit_price=order.price,
-                        limit_down=bar.limit_down
-                    )
-                    order.mark_rejected(reason)
-                    continue
-
                 if order.side == SIDE.BUY and order.price < deal_price:
                     continue
                 if order.side == SIDE.SELL and order.price > deal_price:

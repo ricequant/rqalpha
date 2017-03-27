@@ -86,6 +86,14 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def get_limit_up(self, order_book_id):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_limit_down(self, order_book_id):
+        raise NotImplementedError
+
 
 class AbstractDataSource(object):
     """
@@ -389,3 +397,15 @@ class Persistable(with_metaclass(abc.ABCMeta)):
                     any("set_state" in B.__dict__ for B in C.__mro__)):
                 return True
         return NotImplemented
+
+
+class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
+    def can_submit_order(self, account, order):
+        # FIXME need a better name
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def can_cancel_order(self, account, order):
+        # FIXME need a better name
+        raise NotImplementedError
