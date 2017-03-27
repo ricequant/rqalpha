@@ -285,7 +285,7 @@ class FuturePosition(BasePosition):
     @property
     def sell_avg_holding_price(self):
         """
-        【float】卖方向持仓均价
+        [float] 卖方向持仓均价
         """
         return 0 if self.sell_quantity == 0 else self._sell_holding_cost / self.sell_quantity / self.contract_multiplier
 

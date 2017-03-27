@@ -104,7 +104,7 @@ class StockPosition(BasePosition):
     @property
     def quantity(self):
         """
-        【int】当前持仓股数
+        [int] 当前持仓股数
         """
         return self._quantity
 
@@ -139,21 +139,21 @@ class StockPosition(BasePosition):
     @property
     def average_cost(self):
         """
-        【已弃用】请使用 avg_price 获取持仓买入均价
+        [已弃用] 请使用 avg_price 获取持仓买入均价
         """
         return self._avg_price
 
     @property
     def avg_price(self):
         """
-        【float】获得该持仓的买入均价，计算方法为每次买入的数量做加权平均
+        [float] 获得该持仓的买入均价，计算方法为每次买入的数量做加权平均
         """
         return self._avg_price
 
     @property
     def sellable(self):
         """
-        【int】该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
+        [int] 该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
         """
         return self._quantity - self._non_closable - self._frozen
 
@@ -168,7 +168,7 @@ class StockPosition(BasePosition):
     @property
     def value_percent(self):
         """
-        【float】获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
+        [float] 获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
         """
         accounts = Environment.get_instance().portfolio.accounts
         if ACCOUNT_TYPE.STOCK not in accounts:

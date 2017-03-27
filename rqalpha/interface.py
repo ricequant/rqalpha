@@ -28,7 +28,7 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def load(self, strategy, scope):
         """
-        【Required】
+        [Required]
 
         load 函数负责组装策略代码和策略代码所在的域，并输出最终组装好的可执行域。
 
@@ -50,7 +50,7 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def events(self, start_date, end_date, frequency):
         """
-        【Required】
+        [Required]
 
         扩展 EventSource 必须实现 events 函数。
 
@@ -291,7 +291,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def submit_order(self, order):
         """
-        【Required】
+        [Required]
 
         提交订单。在当前版本，RQAlpha 会生成 :class:`~Order` 对象，再通过此接口提交到 Broker。
         TBD: 由 Broker 对象生成 Order 并返回？
@@ -301,7 +301,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def cancel_order(self, order):
         """
-        【Required】
+        [Required]
 
         撤单。
 
@@ -313,7 +313,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def get_open_orders(self, order_book_id=None):
         """
-        【Required】
+        [Required]
 
         获得当前未完成的订单。
 

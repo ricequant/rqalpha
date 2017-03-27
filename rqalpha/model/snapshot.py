@@ -67,56 +67,56 @@ class SnapshotObject(object):
     @property
     def open(self):
         """
-        【float】当日开盘价
+        [float] 当日开盘价
         """
         return self._data["open"]
 
     @property
     def last(self):
         """
-        【float】当前最新价
+        [float] 当前最新价
         """
         return self._data["last"]
 
     @property
     def low(self):
         """
-        【float】截止到当前的最低价
+        [float] 截止到当前的最低价
         """
         return self._data["low"]
 
     @property
     def high(self):
         """
-        【float】截止到当前的最高价
+        [float] 截止到当前的最高价
         """
         return self._data["high"]
 
     @property
     def prev_close(self):
         """
-        【float】昨日收盘价
+        [float] 昨日收盘价
         """
         return self._data['prev_close']
 
     @property
     def volume(self):
         """
-        【float】截止到当前的成交量
+        [float] 截止到当前的成交量
         """
         return self._data['volume']
 
     @property
     def total_turnover(self):
         """
-        【float】截止到当前的成交额
+        [float] 截止到当前的成交额
         """
         return self._data['total_turnover']
 
     @property
     def datetime(self):
         """
-        【datetime.datetime】当前快照数据的时间戳
+        [datetime.datetime] 当前快照数据的时间戳
         """
         if self._dt is not None:
             return self._dt
@@ -131,21 +131,21 @@ class SnapshotObject(object):
     @property
     def order_book_id(self):
         """
-        【str】股票代码
+        [str] 股票代码
         """
         return self._instrument.order_book_id
 
     @property
     def prev_settlement(self):
         """
-        【float】昨日结算价（期货专用）
+        [float] 昨日结算价（期货专用）
         """
         return self._data['prev_settlement']
 
     @property
     def open_interest(self):
         """
-        【float】截止到当前的持仓量（期货专用）
+        [float] 截止到当前的持仓量（期货专用）
         """
         return self._data['open_interest']
 

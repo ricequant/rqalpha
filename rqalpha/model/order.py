@@ -70,112 +70,112 @@ class Order(object):
     @property
     def order_id(self):
         """
-        【int】唯一标识订单的id
+        [int] 唯一标识订单的id
         """
         return self._order_id
 
     @property
     def trading_datetime(self):
         """
-        【datetime.datetime】订单的交易日期（对应期货夜盘）
+        [datetime.datetime] 订单的交易日期（对应期货夜盘）
         """
         return self._trading_dt
 
     @property
     def datetime(self):
         """
-        【datetime.datetime】订单创建时间
+        [datetime.datetime] 订单创建时间
         """
         return self._calendar_dt
 
     @property
     def quantity(self):
         """
-        【int】订单数量
+        [int] 订单数量
         """
         return self._quantity
 
     @property
     def unfilled_quantity(self):
         """
-        【int】订单未成交数量
+        [int] 订单未成交数量
         """
         return self._quantity - self._filled_quantity
 
     @property
     def order_book_id(self):
         """
-        【str】合约代码
+        [str] 合约代码
         """
         return self._order_book_id
 
     @property
     def side(self):
         """
-        【SIDE】订单方向
+        [SIDE] 订单方向
         """
         return self._side
 
     @property
     def position_effect(self):
         """
-        【POSITION_EFFECT】订单开平（期货专用）
+        [POSITION_EFFECT] 订单开平（期货专用）
         """
         return self._position_effect
 
     @property
     def message(self):
         """
-        【str】信息。比如拒单时候此处会提示拒单原因
+        [str] 信息。比如拒单时候此处会提示拒单原因
         """
         return self._message
 
     @property
     def filled_quantity(self):
         """
-        【int】订单已成交数量
+        [int] 订单已成交数量
         """
         return self._filled_quantity
 
     @property
     def status(self):
         """
-        【ORDER_STATUS】订单状态
+        [ORDER_STATUS] 订单状态
         """
         return self._status
 
     @property
     def price(self):
         """
-        【float】订单价格，只有在订单类型为'限价单'的时候才有意义
+        [float] 订单价格，只有在订单类型为'限价单'的时候才有意义
         """
         return 0 if self.type == ORDER_TYPE.MARKET else self._frozen_price
 
     @property
     def type(self):
         """
-        【ORDER_TYPE】订单类型
+        [ORDER_TYPE] 订单类型
         """
         return self._type
 
     @property
     def avg_price(self):
         """
-        【float】成交均价
+        [float] 成交均价
         """
         return self._avg_price
 
     @property
     def transaction_cost(self):
         """
-        【float】费用
+        [float] 费用
         """
         return self._transaction_cost
 
     @property
     def frozen_price(self):
         """
-        【float】冻结价格
+        [float] 冻结价格
         """
         return self._frozen_price
 
