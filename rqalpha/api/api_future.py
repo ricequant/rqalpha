@@ -79,7 +79,9 @@ def order(id_or_ins, amount, side, position_effect, style):
 
     if r_order.type == ORDER_TYPE.MARKET:
         r_order.set_frozen_price(price)
-    env.broker.submit_order(r_order)
+
+    if env.can_submit_order(r_order):
+        env.broker.submit_order(r_order)
     return r_order
 
 

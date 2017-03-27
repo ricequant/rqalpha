@@ -18,12 +18,14 @@ import click
 from rqalpha.__main__ import cli
 
 __config__ = {
-    # available_cash: 查可用资金是否充足，默认开启
-    "available_cash": True,
-    # available_position: 检查可平仓位是否充足，默认开启
-    "available_position": True,
-    # short_stock: 允许裸卖空
-    "short_stock": False,
+    # 检查限价单价格是否合法
+    "validate_price": True,
+    # 检查标的证券是否可以交易
+    "validate_is_trading": True,
+    # 检查可用资金是否充足
+    "validate_cash": True,
+    # 检查可平仓位是否充足
+    "validate_position": True,
 }
 
 
@@ -40,8 +42,8 @@ cli_prefix = "mod__sys_risk__"
 
 cli.commands['run'].params.append(
     click.Option(
-        ("--short-stock", cli_prefix + "short_stock"),
-        is_flag=True,
-        help="[sys_risk]enable stock shorting"
+        ("--short-stock", "mod__sys_risk__validate_position"),
+        is_flag=True, default=True,
+        help="[sys_risk] enable stock shorting"
     )
 )
