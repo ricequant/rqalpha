@@ -560,8 +560,8 @@ concept - 概念股票列表
 
         *   得到一个概念的股票列表:
 
-        ..   code-block:: python3
-        :linenos:
+        ..  code-block:: python3
+            :linenos:
 
             concept('民营医院')
             #[Out]
@@ -573,8 +573,8 @@ concept - 概念股票列表
 
         *   得到某几个概念的股票列表:
 
-        ..   code-block:: python3
-        :linenos:
+        ..  code-block:: python3
+            :linenos:
 
             concept('民营医院', '国企改革')
             #[Out]
@@ -713,6 +713,36 @@ Order
 ..  module:: rqalpha.model.order
 
 ..  autoclass:: Order
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+Portfolio
+------------------------------------------------------
+
+.. module:: rqalpha.model.portfolio
+
+.. autoclass:: Portfolio
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+StockAccount
+------------------------------------------------------
+
+.. module:: rqalpha.model.account.stock_account
+
+.. autoclass:: StockAccount
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+FutureAccount
+------------------------------------------------------
+
+.. module:: rqalpha.model.account.future_account
+
+.. autoclass:: FutureAccount
     :members:
     :show-inheritance:
     :inherited-members:
