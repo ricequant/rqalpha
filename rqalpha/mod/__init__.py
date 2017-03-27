@@ -41,7 +41,9 @@ class ModHandler(object):
             self._mod_list.append((mod_name, mod_config))
 
         for idx, (mod_name, user_mod_config) in enumerate(self._mod_list):
-            if mod_name in SYSTEM_MOD_LIST:
+            if hasattr(user_mod_config, 'lib'):
+                lib_name = user_mod_config.lib
+            elif mod_name in SYSTEM_MOD_LIST:
                 lib_name = "rqalpha.mod.rqalpha_mod_" + mod_name
             else:
                 lib_name = "rqalpha_mod_" + mod_name
