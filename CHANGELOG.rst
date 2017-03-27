@@ -1,9 +1,6 @@
 2.0.0-beta
 ==================
 
-2.0.0-beta
-==================
-
 2.0.0 详细修改内容请访问：`RQAlpha 2.0.0 <https://github.com/ricequant/rqalpha/issues/65>`_
 
 **Portfolio/Account/Position 相关**
@@ -30,6 +27,7 @@
 - 抽离 :code:`slippage` 相关业务逻辑至 :code:`simulation mod`
 - 抽离 :code:`commission` 相关业务逻辑至 :code:`simulation mod`
 - 抽离 :code:`tax` 相关业务逻辑至 :code:`simulation mod`
+- `rqalpha mod list` 命令现在可以格式化显示 Mod 当前的状态了
 
 **Environment 和 ExecutionContext 相关**
 
@@ -44,6 +42,10 @@
 - 独立存在 `~/.rqalpha/.mod_conifg.yml`, 提供 `rqalpha mod install/uninstall/enable/disable/list` 命令，RQAlpha 会通过该配置文件来对Mod进行管理。
 - 抽离 :code:`rqalpha run` 的参数，将其中属于 `Mod` 的参数全部删除，取代之为Mod提供了参数注入机制，所以现在 `Mod` 可以自行决定是否要注入参数或者命令来扩展 RQAlpha 的功能
 - 提供了 :code:`rqalpha-cmd` 命令，`Mod` 推荐在该命令下注入自己的命令来实现功能扩展
+- 不再使用 `--strategy-type`， 改为使用 `--security` 选项
+- `--output-file` | `--report` | `--plot` | `--plot-save`参数 转移至 `sys_analyser` Mod 中
+- `plot` | `report` 命令，转移至 `sys_analyser` Mod 中
+- `--signal` | `--slippage` | `--commission-multiplier` | `--matching-type` | `--rid` 转移至 `sys_simulation` Mod 中
 
 **Risk 计算**
 
