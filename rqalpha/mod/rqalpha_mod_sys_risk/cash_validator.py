@@ -25,7 +25,7 @@ class CashValidator(AbstractFrontendValidator):
         self._env = env
 
     def _stock_validator(self, account, order):
-        if order.type == SIDE.SELL:
+        if order.side == SIDE.SELL:
             return True
         # 检查可用资金是否充足
         cost_money = order.frozen_price * order.quantity
