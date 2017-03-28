@@ -59,7 +59,12 @@ class Portfolio(object):
         self._static_unit_net_value = value['static_unit_net_value']
         self._units = value['units']
         for k, v in six.iteritems(value['accounts']):
-            self._accounts[k].set_state(v)
+            if k == 'ACCOUNT_TYPE.STOCK':
+                self._accounts[ACCOUNT_TYPE.STOCK].set_state(v)
+            elif k == 'ACCOUNT_TYPE.FUTURE':
+                self._accounts[ACCOUNT_TYPE.FUTURE].set_state(v)
+            else:
+                raise NotImplementedError
 
     def _post_settlement(self, event):
         self._static_unit_net_value = self.unit_net_value
