@@ -24,6 +24,9 @@ class Event(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+    def __repr__(self):
+        return ' '.join('{}:{}'.format(k, v) for k, v in self.__dict__.items())
+
 
 class EventBus(object):
     def __init__(self):
