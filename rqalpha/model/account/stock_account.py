@@ -26,8 +26,8 @@ from ...const import SIDE, ACCOUNT_TYPE
 
 
 class StockAccount(BaseAccount):
-    def __init__(self, total_cash, positions, backward_trade_set=set(), dividend_receivable=None):
-        super(StockAccount, self).__init__(total_cash, positions, backward_trade_set)
+    def __init__(self, total_cash, positions, backward_trade_set=set(), dividend_receivable=None, register_event=True):
+        super(StockAccount, self).__init__(total_cash, positions, backward_trade_set, register_event)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
 
     def register_event(self):

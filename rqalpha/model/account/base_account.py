@@ -18,12 +18,13 @@ import six
 
 
 class BaseAccount(object):
-    def __init__(self, total_cash, positions, backward_trade_set=set()):
+    def __init__(self, total_cash, positions, backward_trade_set=set(), register_event=True):
         self._positions = positions
         self._frozen_cash = 0
         self._total_cash = total_cash
         self._backward_trade_set = backward_trade_set
-        self.register_event()
+        if register_event:
+            self.register_event()
 
     def register_event(self):
         """

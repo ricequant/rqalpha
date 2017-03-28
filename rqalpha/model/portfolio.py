@@ -27,13 +27,14 @@ from ..events import EVENT
 class Portfolio(object):
     __repr__ = property_repr
 
-    def __init__(self, start_date, static_unit_net_value, units, accounts):
+    def __init__(self, start_date, static_unit_net_value, units, accounts, register_event=True):
         self._start_date = start_date
         self._static_unit_net_value = static_unit_net_value
         self._units = units
         self._accounts = accounts
         self._mixed_positions = None
-        self.register_event()
+        if register_event:
+            self.register_event()
 
     def register_event(self):
         """
