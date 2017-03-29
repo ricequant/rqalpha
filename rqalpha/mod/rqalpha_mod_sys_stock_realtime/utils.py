@@ -79,7 +79,7 @@ def get_realtime_quotes(code_list, open_only=False):
     index_df["code"] = index_symbol
     index_df["is_index"] = True
     total_df = total_df.append(index_df)
-    total_df = total_df.set_index("code").sort_index()
+    total_df = total_df.set_index("code")#.sort_index()
 
     columns = set(total_df.columns) - set(["name", "time", "date"])
     # columns = filter(lambda x: "_v" not in x, columns)
@@ -96,6 +96,8 @@ def get_realtime_quotes(code_list, open_only=False):
     total_df["datetime"] = total_df["datetime"].apply(lambda x: convert_dt_to_int(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")))
 
     total_df["close"] = total_df["price"]
+
+    total_df = total_df.set_index("order_book_id").sort_index()
 
     if open_only:
         total_df = total_df[total_df.open > 0]
