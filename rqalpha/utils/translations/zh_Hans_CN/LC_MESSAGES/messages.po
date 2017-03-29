@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-03-29 10:00+0800\n"
+"POT-Creation-Date: 2017-03-29 10:32+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -77,7 +77,7 @@ msgstr "策略运行产生异常"
 
 #: rqalpha/api/api_base.py:129 rqalpha/api/api_base.py:229
 #: rqalpha/api/api_base.py:260 rqalpha/api/api_future.py:185
-#: rqalpha/api/api_stock.py:461
+#: rqalpha/api/api_stock.py:504
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
@@ -99,7 +99,7 @@ msgstr "Limit order 价格应该为正，请检查您的下单价格。"
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
-#: rqalpha/api/api_future.py:178 rqalpha/api/api_stock.py:456
+#: rqalpha/api/api_future.py:178 rqalpha/api/api_stock.py:499
 msgid "{order_book_id} is not supported in current strategy type"
 msgstr "当前策略类型不支持 {order_book_id} 合约。"
 

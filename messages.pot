@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-03-29 10:00+0800\n"
+"POT-Creation-Date: 2017-03-29 10:32+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -69,7 +69,7 @@ msgstr ""
 
 #: rqalpha/api/api_base.py:129 rqalpha/api/api_base.py:229
 #: rqalpha/api/api_base.py:260 rqalpha/api/api_future.py:185
-#: rqalpha/api/api_stock.py:461
+#: rqalpha/api/api_stock.py:504
 msgid "unsupported order_book_id type"
 msgstr ""
 
@@ -91,7 +91,7 @@ msgstr ""
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr ""
 
-#: rqalpha/api/api_future.py:178 rqalpha/api/api_stock.py:456
+#: rqalpha/api/api_future.py:178 rqalpha/api/api_stock.py:499
 msgid "{order_book_id} is not supported in current strategy type"
 msgstr ""
 
