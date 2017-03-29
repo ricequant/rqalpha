@@ -51,14 +51,11 @@ def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
 
 
 def get_default_config_path(tmpl):
-    config_template_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../{}_template.yml".format(tmpl)))
     default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/{}.yml".format(tmpl)))
     if not os.path.exists(default_config_path):
-        dir_path = os.path.dirname(default_config_path)
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-        shutil.copy(config_template_path, default_config_path)
-    return default_config_path
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../{}_template.yml".format(tmpl)))
+    else:
+        return default_config_path
 
 
 def config_version_verify(config, config_path):
@@ -243,8 +240,8 @@ def parse_run_type(rt_str):
         return RUN_TYPE.BACKTEST
     elif rt_str == "p":
         return RUN_TYPE.PAPER_TRADING
-    elif rt_str == "CTP":
-        return RUN_TYPE.CTP
+    elif rt_str == 'r':
+        return RUN_TYPE.LIVE_TRADING
     else:
         raise NotImplementedError
 
