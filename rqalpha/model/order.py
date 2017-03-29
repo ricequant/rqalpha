@@ -16,10 +16,12 @@
 
 import time
 
-from ..const import ORDER_STATUS, ORDER_TYPE
+from ..const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
 from ..utils import id_gen
 from ..utils.repr import property_repr, properties
 from ..utils.logger import user_system_log
+
+
 
 
 class Order(object):
@@ -43,6 +45,47 @@ class Order(object):
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
+
+    @staticmethod
+    def _enum_to_str(v):
+        return v.name
+
+    @staticmethod
+    def _str_to_enum(enum_class, s):
+        return enum_class.__members__[s]
+
+    def get_state(self):
+        return {
+            'order_id': self._order_id,
+            'calendar_dt': self._calendar_dt,
+            'trading_dt': self._trading_dt,
+            'order_book_id': self._order_book_id,
+            'quantity': self._quantity,
+            'side': self._enum_to_str(self._side),
+            'position_effect': self._enum_to_str(self._position_effect) if self._position_effect is not None else None,
+            'message': self._message,
+            'filled_quantity': self._filled_quantity,
+            'status': self._enum_to_str(self._status),
+            'frozen_price': self._frozen_price,
+            'type': self._enum_to_str(self._type),
+        }
+
+    def set_state(self, d):
+        self._order_id = d['order_id']
+        self._calendar_dt = d['calendar_dt']
+        self._trading_dt = d['trading_dt']
+        self._order_book_id = d['order_book_id']
+        self._quantity = d['quantity']
+        self._side = self._str_to_enum(SIDE, d['side'])
+        if d['position_effect'] is None:
+            self._position_effect = None
+        else:
+            self._position_effect = self._str_to_enum(POSITION_EFFECT, d['position_effect'])
+        self._message = d['messages']
+        self._filled_quantity = d['filled_quantity']
+        self._status = self._str_to_enum(ORDER_STATUS, d['status'])
+        self._frozen_price = d['frozen_price']
+        self._type = self._str_to_enum(ORDER_TYPE, d['type'])
 
     @classmethod
     def __from_create__(cls, calendar_dt, trading_dt, order_book_id, quantity, side, style, position_effect):
