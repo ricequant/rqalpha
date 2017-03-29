@@ -35,6 +35,7 @@ def cli(ctx, verbose):
 
 
 def entry_point():
+
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.config import get_default_config_path
     from rqalpha.utils.package_helper import import_mod
