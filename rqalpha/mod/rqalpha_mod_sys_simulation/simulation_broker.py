@@ -21,6 +21,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.environment import Environment
+from rqalpha.model.order import Order
 
 from .matcher import Matcher
 from .utils import init_portfolio
@@ -58,17 +59,23 @@ class SimulationBroker(AbstractBroker, Persistable):
             return [order for account, order in self._open_orders if order.order_book_id == order_book_id]
 
     def get_state(self):
-        return jsonpickle.dumps([o.order_id for _, o in self._delayed_orders]).encode('utf-8')
+        return jsonpickle.dumps({
+            'open_orders': [o.get_state() for account, o in self._open_orders],
+            'delayed_orders': [o.get_state() for account, o in self._delayed_orders]
+        }).encode('utf-8')
 
     def set_state(self, state):
-        delayed_orders = jsonpickle.loads(state.decode('utf-8'))
-        for account in self._accounts.values():
-            for order in account.daily_orders.values():
-                if not order.is_final():
-                    if order.order_id in delayed_orders:
-                        self._delayed_orders.append((account, order))
-                    else:
-                        self._open_orders.append((account, order))
+        value = jsonpickle.loads(state.decode('utf-8'))
+        for v in value['open_orders']:
+            o = Order()
+            o.set_state(v)
+            account = self._env.get_account(o.order_book_id)
+            self._open_orders.append((account, o))
+        for v in value['delayed_orders']:
+            o = Order()
+            o.set_state(v)
+            account = self._env.get_account(o.order_book_id)
+            self._delayed_orders.append((account, o))
 
     def submit_order(self, order):
         account = Environment.get_instance().get_account(order.order_book_id)
