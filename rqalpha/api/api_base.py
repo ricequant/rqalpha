@@ -358,7 +358,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     T日handle_bar                T日当前minute bar
     =========================   ===================================================
 
-    :param order_book_id: 合约代码或者合约代码列表
+    :param order_book_id: 合约代码
     :type order_book_id: `str`
 
     :param int bar_count: 获取的历史数据数量，必填项

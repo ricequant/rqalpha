@@ -630,30 +630,12 @@ get_yield_curve - 收益率曲线
 is_suspended - 全天停牌判断
 ------------------------------------------------------
 
-..  py:function:: is_suspended(order_book_id, count)
-
-    判断某只股票是否全天停牌。
-
-    :param str order_book_id: 某只股票的代码或股票代码列表，可传入单只股票的order_book_id, symbol
-
-    :param int count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
-
-    :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
+.. autofunction:: is_suspended(order_book_id)
 
 is_st_stock - ST股判断
 ------------------------------------------------------
 
-..  py:function:: is_st_stock(order_book_id, count=1)
-
-    判断一只或多只股票在一段时间内是否为ST股（包括ST与*ST）。
-
-    ST股是有退市风险因此风险比较大的股票，很多时候您也会希望判断自己使用的股票是否是'ST'股来避开这些风险大的股票。另外，我们目前的策略比赛也禁止了使用'ST'股。
-
-    :param str order_book_id: 某只股票的代码或股票代码列表，可传入单只股票的order_book_id, symbol
-
-    :param int count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
-
-    :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
+.. autofunction:: is_st_stock(order_book_id)
 
 其他方法
 ======================================================

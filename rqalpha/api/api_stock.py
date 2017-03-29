@@ -442,6 +442,49 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     return order_value(order_book_id, account.total_value * percent - position.market_value, style)
 
 
+@export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.AFTER_TRADING,
+                                EXECUTION_PHASE.SCHEDULED)
+@apply_rules(verify_that('order_book_id').is_valid_instrument(),
+             verify_that('count').is_greater_than(0))
+def is_suspended(order_book_id):
+    """
+    判断某只股票是否全天停牌。
+
+    :param str order_book_id: 某只股票的代码或股票代码，可传入单只股票的order_book_id, symbol
+
+    :return: `bool`
+    """
+    dt = Environment.get_instance().calendar_dt.date()
+    order_book_id = assure_stock_order_book_id(order_book_id)
+    return Environment.get_instance().data_proxy.is_suspended(order_book_id, dt)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.AFTER_TRADING,
+                                EXECUTION_PHASE.SCHEDULED)
+@apply_rules(verify_that('order_book_id').is_valid_instrument())
+def is_st_stock(order_book_id):
+    """
+    判断股票在一段时间内是否为ST股（包括ST与*ST）。
+
+    ST股是有退市风险因此风险比较大的股票，很多时候您也会希望判断自己使用的股票是否是'ST'股来避开这些风险大的股票。另外，我们目前的策略比赛也禁止了使用'ST'股。
+
+    :param str order_book_id: 某只股票的代码，可传入单只股票的order_book_id, symbol
+
+    :return: `bool`
+    """
+    dt = Environment.get_instance().calendar_dt.date()
+    order_book_id = assure_stock_order_book_id(order_book_id)
+    return Environment.get_instance().data_proxy.is_st_stock(order_book_id, dt)
+
+
 def assure_stock_order_book_id(id_or_symbols):
     if isinstance(id_or_symbols, Instrument):
         order_book_id = id_or_symbols.order_book_id
