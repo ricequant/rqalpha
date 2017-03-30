@@ -740,6 +740,6 @@ def current_snapshot(id_or_symbol):
         Snapshot(order_book_id: '000001.XSHE', datetime: datetime.datetime(2016, 1, 4, 9, 33), open: 10.0, high: 10.025, low: 9.9667, last: 9.9917, volume: 2050320, total_turnover: 20485195, prev_close: 9.99)
     """
     env = Environment.get_instance()
-    frequency = Environment.get_instance().config.base.frequency
+    frequency = env.config.base.frequency
     order_book_id = assure_order_book_id(id_or_symbol)
     return env.data_proxy.current_snapshot(order_book_id, frequency, env.calendar_dt)
