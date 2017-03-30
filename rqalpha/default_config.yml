@@ -1,3 +1,5 @@
+# see more config
+# http://rqalpha.readthedocs.io/zh_CN/stable/api/config.html
 version: 0.1.5
 
 # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
