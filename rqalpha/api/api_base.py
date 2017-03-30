@@ -401,7 +401,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     order_book_id = assure_order_book_id(order_book_id)
     env = Environment.get_instance()
 
-    dt = env.calendar_dt.date()
+    dt = env.calendar_dt
 
     if frequency == '1m' and env.config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
@@ -409,7 +409,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     if (env.config.base.frequency == '1m' and frequency == '1d') or \
         (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
         # 在分钟回测获取日线数据, 应该推前一天，这里应该使用 trading date
-        dt = env.data_proxy.get_previous_trading_date(env.trading_dt.date())
+        dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
 
     return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended)
 

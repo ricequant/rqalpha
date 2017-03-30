@@ -41,9 +41,9 @@ class RunInfo(object):
         self._run_type = config.base.run_type
 
         # For Mod
-        self._matching_type = config.mod.simulation.matching_type
-        self._slippage = config.mod.simulation.slippage
-        self._commission_multiplier = config.mod.simulation.commission_multiplier
+        self._matching_type = config.mod.sys_simulation.matching_type
+        self._slippage = config.mod.sys_simulation.slippage
+        self._commission_multiplier = config.mod.sys_simulation.commission_multiplier
 
     @property
     def start_date(self):
