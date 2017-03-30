@@ -47,10 +47,10 @@ class RUN_TYPE(CustomEnum):
 
 # noinspection PyPep8Naming
 class ACCOUNT_TYPE(CustomEnum):
-    TOTAL = "TOTAL"
-    BENCHMARK = "BENCHMARK"
-    STOCK = "STOCK"
-    FUTURE = "FUTURE"
+    TOTAL = 0
+    BENCHMARK = 1
+    STOCK = 2
+    FUTURE = 3
 
 
 # noinspection PyPep8Naming
