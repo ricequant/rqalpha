@@ -19,8 +19,6 @@ from rqalpha.__main__ import cli
 
 
 __config__ = {
-    # 可以指定回测的唯一ID，用户区分多次回测的结果
-    "run_id": 9999,
     # 是否开启信号模式
     "signal": False,
     # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
@@ -87,13 +85,5 @@ cli.commands['run'].params.append(
         ('-mt', '--matching-type', cli_prefix + "matching_type"),
         type=click.Choice(['current_bar', 'next_bar']),
         help="[sys_simulation] set matching type"
-    )
-)
-
-cli.commands['run'].params.append(
-    click.Option(
-        ('-r', '--rid', cli_prefix + "run_id"),
-        type=click.STRING,
-        help="[sys_simulation] set run id"
     )
 )
