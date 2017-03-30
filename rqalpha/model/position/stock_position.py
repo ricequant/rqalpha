@@ -151,6 +151,10 @@ class StockPosition(BasePosition):
         return self._avg_price
 
     @property
+    def pnl(self):
+        return self._quantity * (self.last_price - self._avg_price)
+
+    @property
     def sellable(self):
         """
         [int] 该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
