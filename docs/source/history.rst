@@ -4,6 +4,41 @@
 History
 ==================
 
+2.0.2
+==================
+
+- 现在可以通过配置 `base.extra_vars` 向策略中预定义变量了。用法如下:
+
+.. code-block:: python3
+
+    from rqalpha import run
+
+    config = {
+      "base": {
+        "strategy_file": "strategy.py",
+        "start_date": "2016-06-01",
+        "end_date": "2016-07-01",
+        "stock_starting_cash":100000,
+        "benchmark": '000300.XSHG'
+      },  
+      "extra":{
+        "context_vars":{
+          "short":5,
+          "middle":10,
+          "long":21
+        }
+      }
+    }
+
+    result_dict = run(config)
+
+    # 以下是策略代码:
+
+    def handle_bar(context):
+        print(context.short)    # 5
+        print(context.middle)   # 10
+        print(context.long)     # 21
+
 2.0.1
 ==================
 
