@@ -24,7 +24,7 @@ from rqalpha.interface import AbstractEventSource
 from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
 from rqalpha.events import Event, EVENT
-from rqalpha.utils import json as json_utils
+from rqalpha.utils import rq_json
 from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
 
 
@@ -45,12 +45,12 @@ class RealtimeEventSource(AbstractEventSource):
         self.quotation_engine_thread.daemon = True
 
     def set_state(self, state):
-        persist_dict = json_utils.convert_json_to_dict(state.decode('utf-8'))
+        persist_dict = rq_json.convert_json_to_dict(state.decode('utf-8'))
         self.before_trading_fire_date = persist_dict['before_trading_fire_date']
         self.after_trading_fire_date = persist_dict['after_trading_fire_date']
 
     def get_state(self):
-        return json_utils.convert_dict_to_json({
+        return rq_json.convert_dict_to_json({
             "before_trading_fire_date": self.before_trading_fire_date,
             "after_trading_fire_date": self.after_trading_fire_date,
         }).encode('utf-8')

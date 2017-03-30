@@ -194,9 +194,11 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
             user_system_log.handlers.append(user_std_handler)
 
     if extra_config.context_vars:
-        import base64
-        import json
-        extra_config.context_vars = json.loads(base64.b64decode(extra_config.context_vars).decode('utf-8'))
+        import simplejson as json
+        print(extra_config.context_vars, type(extra_config.context_vars))
+        if isinstance(extra_config.context_vars,  six.string_types):
+            print(to_utf8(extra_config.context_vars))
+            extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
 
     if base_config.stock_starting_cash < 0:
         raise patch_user_exc(ValueError(_('invalid stock starting cash: {}').format(base_config.stock_starting_cash)))
