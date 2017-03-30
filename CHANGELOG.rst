@@ -3,7 +3,7 @@
 
 - 修改配置的读取方式，不再从 `~/.rqalpha/config.yml` 读取自定义配置信息，而是默认从当前路径读取 `config.yml`，如果没找到，则会读取系统默认配置信息
 - 现在不再对自定义信息进行版本检查
-- :code:`rqalpha generate_config` 现在回生成包含所有默认系统配置信息的 `config.yml` 文件。
+- :code:`rqalpha generate_config` 现在会生成包含所有默认系统配置信息的 `config.yml` 文件。
 - :code:`RUN_TYPE` 增加 :code:`LIVE_TRADING`
 - 修复 :code:`history_bars` 获取日期错误产生的问题
 - 修复执行 :code:`context.run_info` 会报错的问题
