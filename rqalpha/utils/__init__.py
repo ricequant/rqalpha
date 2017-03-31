@@ -57,8 +57,7 @@ class RqAttrDict(object):
         return pprint.pformat(self.__dict__)
 
     def __iter__(self):
-        for k in self.__dict__.keys():
-            yield k
+        return self.__dict__.__iter__()
 
     def update(self, other):
         RqAttrDict._update_dict_recursive(self, other)
