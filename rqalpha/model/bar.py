@@ -73,63 +73,13 @@ class BarObject(object):
 
     @property
     def limit_up(self):
-        try:
-            v = self._data['limit_up']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self._limit_up is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self._limit_up = np.floor(self.prev_close * 10500) / 10000
-                else:
-                    self._limit_up = np.floor(self.prev_close * 11000) / 10000
-            return self._limit_up
+        v = self._data['limit_up']
+        return v if v != 0 else np.nan
 
     @property
     def limit_down(self):
-        try:
-            v = self._data['limit_down']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self._limit_down is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self._limit_down = np.ceil(self.prev_close * 9500) / 10000
-                else:
-                    self._limit_down = np.ceil(self.prev_close * 9000) / 10000
-            return self._limit_down
-
-    @property
-    def _internal_limit_up(self):
-        try:
-            v = self._data['limit_up']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self.__internal_limit_up is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self.__internal_limit_up = np.floor(self.prev_close * 10490) / 10000
-                else:
-                    self.__internal_limit_up = np.floor(self.prev_close * 10990) / 10000
-            return self.__internal_limit_up
-
-    @property
-    def _internal_limit_down(self):
-        try:
-            v = self._data['limit_down']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self.__internal_limit_down is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self.__internal_limit_down = np.ceil(self.prev_close * 9510) / 10000
-                else:
-                    self.__internal_limit_down = np.ceil(self.prev_close * 9010) / 10000
-            return self.__internal_limit_down
+        v = self._data['limit_down']
+        return v if v != 0 else np.nan
 
     @property
     def prev_close(self):
@@ -147,18 +97,18 @@ class BarObject(object):
             self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
         return self._prev_close
 
-    @property
-    def _bar_status(self):
-        """
-        WARNING: 获取 bar_status 比较耗费性能，而且是lazy_compute，因此不要多次调用！！！！
-        """
-        if self.isnan or np.isnan(self.limit_up):
-            return BAR_STATUS.ERROR
-        if self.close >= self._internal_limit_up:
-            return BAR_STATUS.LIMIT_UP
-        if self.close <= self._internal_limit_down:
-            return BAR_STATUS.LIMIT_DOWN
-        return BAR_STATUS.NORMAL
+    # @property
+    # def _bar_status(self):
+    #     """
+    #     WARNING: 获取 bar_status 比较耗费性能，而且是lazy_compute，因此不要多次调用！！！！
+    #     """
+    #     if self.isnan or np.isnan(self.limit_up):
+    #         return BAR_STATUS.ERROR
+    #     if self.close >= self._internal_limit_up:
+    #         return BAR_STATUS.LIMIT_UP
+    #     if self.close <= self._internal_limit_down:
+    #         return BAR_STATUS.LIMIT_DOWN
+    #     return BAR_STATUS.NORMAL
 
     @property
     def last(self):

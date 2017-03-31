@@ -21,7 +21,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.const import MATCHING_TYPE
 
-from .bar_simulation_broker import BarSimulationBroker
+from .bar_simulation_broker import SimulationBroker
 from .signal_broker import SignalBroker
 from .simulation_event_source import SimulationEventSource
 
@@ -40,7 +40,8 @@ class SimulationMod(AbstractMod):
         if mod_config.signal:
             env.set_broker(SignalBroker(env, mod_config))
         else:
-            env.set_broker(BarSimulationBroker(env, mod_config))
+            env.set_broker(SimulationBroker(env, mod_config))
+
         event_source = SimulationEventSource(env, env.config.base.account_list)
         env.set_event_source(event_source)
 
