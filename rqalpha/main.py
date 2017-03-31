@@ -213,11 +213,12 @@ def run(config, source_code=None):
         assert event_source is not None
 
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
+        env.set_bar_dict(bar_dict)
+
         if env.price_board is None:
             from .core.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard(bar_dict)
 
-        env.set_bar_dict(bar_dict)
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
 
@@ -310,6 +311,7 @@ def run(config, source_code=None):
         exc_type, exc_val, exc_tb = sys.exc_info()
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, config.base.strategy_file)
 
+        better_exceptions.excepthook(exc_type, exc_val, exc_tb)
         user_system_log.error(user_exc.error)
         code = const.EXIT_CODE.EXIT_USER_ERROR
         if not is_user_exc(exc_val):
