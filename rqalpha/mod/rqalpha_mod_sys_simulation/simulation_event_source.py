@@ -89,7 +89,7 @@ class SimulationEventSource(AbstractEventSource):
         return sorted(list(trading_minutes))
     # [END] minute event helper
 
-    def _get_merge_ticks(self, date):
+    def _get_merge_ticks(self, date, last_dt):
         self.today_ticks_cache = {}
         data_proxy = self._env.data_proxy
         self.order_book_id_map = {}
@@ -106,6 +106,11 @@ class SimulationEventSource(AbstractEventSource):
         merge_ticks = np.concatenate(list(self.today_ticks_cache.values()))
 
         merge_ticks.sort(kind='mergesort', order=("date", "time"))
+
+        time_arr = merge_ticks["date"].astype(np.uint64) * 1000000000 + merge_ticks["time"]
+        last_idx = time_arr.searchsorted(convert_dt_to_int(last_dt) * 1000)
+        merge_ticks = merge_ticks[last_idx:]
+
         return merge_ticks
 
     def events(self, start_date, end_date, frequency):
@@ -182,12 +187,7 @@ class SimulationEventSource(AbstractEventSource):
                         break
                     exit_loop = True
 
-                    merge_ticks = self._get_merge_ticks(date)
-                    time_arr = merge_ticks["date"].astype(np.uint64) * 1000000000 + merge_ticks["time"]
-                    last_idx = time_arr.searchsorted(convert_dt_to_int(last_dt) * 1000)
-                    merge_ticks = merge_ticks[last_idx:]
-                    names = merge_ticks.dtype.names
-                    names_size = len(names)
+                    merge_ticks = self._get_merge_ticks(date, last_dt)
 
                     # yield ticks
                     for idx in range(len(merge_ticks)):

@@ -175,3 +175,6 @@ class BaseDataSource(AbstractDataSource):
 
     def get_future_info(self, instrument, hedge_type):
         return CN_FUTURE_INFO[instrument.underlying_symbol][hedge_type.value]
+
+    def get_ticks(self, order_book_id, date):
+        raise NotImplementedError
