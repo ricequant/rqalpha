@@ -129,12 +129,11 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_dividend(self, order_book_id, adjusted=True):
+    def get_dividend(self, order_book_id):
         """
         获取股票/基金分红信息
 
         :param str order_book_id: 合约名
-        :param bool adjusted: 是否经过前复权处理
         :return:
         """
         raise NotImplementedError

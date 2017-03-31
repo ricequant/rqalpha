@@ -60,15 +60,15 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return 0 if np.isnan(rate) else rate
 
     @lru_cache(128)
-    def get_dividend(self, order_book_id, adjusted=True):
-        return self._data_source.get_dividend(order_book_id, adjusted)
+    def get_dividend(self, order_book_id):
+        return self._data_source.get_dividend(order_book_id)
 
     @lru_cache(128)
     def get_split(self, order_book_id):
         return self._data_source.get_split(order_book_id)
 
-    def get_dividend_by_book_date(self, order_book_id, date, adjusted=True):
-        df = self.get_dividend(order_book_id, adjusted)
+    def get_dividend_by_book_date(self, order_book_id, date):
+        df = self.get_dividend(order_book_id)
         if df is None or df.empty:
             return
 

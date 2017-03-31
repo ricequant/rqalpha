@@ -30,6 +30,7 @@ from .dividend_store import DividendStore
 from .instrument_store import InstrumentStore
 from .trading_dates_store import TradingDatesStore
 from .yield_curve_store import YieldCurveStore
+from .simple_factor_store import SimpleFactorStore
 
 
 class BaseDataSource(AbstractDataSource):
@@ -45,10 +46,11 @@ class BaseDataSource(AbstractDataSource):
         ]
 
         self._instruments = InstrumentStore(_p('instruments.pk'))
-        self._adjusted_dividends = DividendStore(_p('adjusted_dividends.bcolz'))
-        self._original_dividends = DividendStore(_p('original_dividends.bcolz'))
+        self._dividends = DividendStore(_p('original_dividends.bcolz'))
         self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
         self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
+        self._split = SimpleFactorStore(_p('split.bcolz'))
+        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
 
         self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
         self._suspend_days = DateSet(_p('suspended_days.bcolz'))
@@ -56,11 +58,8 @@ class BaseDataSource(AbstractDataSource):
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
 
-    def get_dividend(self, order_book_id, adjusted=True):
-        if adjusted:
-            return self._adjusted_dividends.get_dividend(order_book_id)
-        else:
-            return self._original_dividends.get_dividend(order_book_id)
+    def get_dividend(self, order_book_id):
+        return self._dividends.get_dividend(order_book_id)
 
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
@@ -110,7 +109,7 @@ class BaseDataSource(AbstractDataSource):
         bars = self._all_day_bars_of(instrument)
         if bars is None:
             return
-        dt = convert_date_to_int(dt)
+        dt = np.uint64(convert_date_to_int(dt))
         pos = bars['datetime'].searchsorted(dt)
         if pos >= len(bars) or bars['datetime'][pos] != dt:
             return None
@@ -134,6 +133,22 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
+    def _adjust_bar(self, order_book_id, bars, fields):
+        ex_factors = self._ex_cum_factor.get_factors(order_book_id)
+        if ex_factors is None:
+            return bars if fields is None else bars[fields]
+
+        start_date = bars['datetime'][0]
+        end_date = bars['datetime'][-1]
+        start_index = ex_factors['datetime'].searchsorted(start_date)
+        end_index = ex_factors['datetime'].searchsorted(end_date)
+        if start_index == end_index:
+            return bars if fields is None else bars[fields]
+
+        result = np.empty_like(bars if fields is None else bars[fields])
+        # the hard part
+
+
     def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
         if frequency != '1d':
             raise NotImplementedError
@@ -146,13 +161,15 @@ class BaseDataSource(AbstractDataSource):
         if bars is None or not self._are_fields_valid(fields, bars.dtype.names):
             return None
 
-        dt = convert_date_to_int(dt)
+        dt = np.uint64(convert_date_to_int(dt))
         i = bars['datetime'].searchsorted(dt, side='right')
         left = i - bar_count if i >= bar_count else 0
-        if fields is None:
-            return bars[left:i]
-        else:
-            return bars[left:i][fields]
+        bars = bars[left:i]
+        if instrument.type in {'Future', 'INDX'}:
+            # 期货及指数无需复权
+            return bars if fields is None else bars[fields]
+
+        return self._adjust_bar(instrument.order_book_id, bars, fields)
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor)
@@ -164,7 +181,7 @@ class BaseDataSource(AbstractDataSource):
         raise NotImplementedError
 
     def get_split(self, order_book_id):
-        return None
+        return self._split.get_factors(order_book_id)
 
     def available_data_range(self, frequency):
         if frequency == '1d':
