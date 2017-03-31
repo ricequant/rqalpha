@@ -45,6 +45,12 @@ class TickPriceBoard(AbstractPriceBoard):
     def get_limit_down(self, order_book_id):
         return self._tick_board[order_book_id].limit_down
 
+    def get_a1(self, order_book_id):
+        return self._tick_board[order_book_id].a1
+
+    def get_b1(self, order_book_id):
+        return self._tick_board[order_book_id].b1
+
     def _lock_settlement(self, event):
         self._settlement_lock = True
 

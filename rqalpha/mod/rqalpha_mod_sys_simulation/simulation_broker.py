@@ -23,7 +23,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order
 
-from .bar_matcher import BarMatcher
+from .matcher import Matcher
 from .utils import init_portfolio
 
 
@@ -32,8 +32,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env = env
         self._mod_config = mod_config
 
-        # if env.config.base.frequency == "tick":
-        self._matcher = BarMatcher(mod_config)
+        self._matcher = Matcher(mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []
@@ -45,9 +44,9 @@ class SimulationBroker(AbstractBroker, Persistable):
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
         # 该事件会触发策略的handle_bar函数
-        self._env.event_bus.add_listener(EVENT.BAR, self.on_bar)
+        self._env.event_bus.add_listener(EVENT.BAR, self.on_market_event)
         # 该事件会触发策略的handel_tick函数
-        self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
+        self._env.event_bus.add_listener(EVENT.TICK, self.on_market_event)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
 
@@ -124,61 +123,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
 
-    def on_bar(self, event):
-        bar_dict = event.bar_dict
+    def on_market_event(self, event):
         env = Environment.get_instance()
-        self._matcher.update(env.calendar_dt, env.trading_dt, bar_dict)
+        self._matcher.update(env.calendar_dt, env.trading_dt)
         self._match()
-
-    def on_tick(self, event):
-        tick = event.tick
-        self._match_tick(tick)
-
-    def _match_tick(self, tick):
-        from rqalpha.const import ORDER_TYPE, SIDE, BAR_STATUS, MATCHING_TYPE
-        mod_config = self._mod_config
-
-        for account, order in self._open_orders:
-            deal_price = tick.last
-            if order.type == ORDER_TYPE.LIMIT:
-                if order.side == SIDE.BUY and order.price < deal_price:
-                    continue
-                if order.side == SIDE.SELL and order.price > deal_price:
-                    continue
-            else:
-                if mod_config.bar_limit and order.side == SIDE.BUY and tick.last >= tick.limit_up:
-                    reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-                elif mod_config.bar_limit and order.side == SIDE.SELL and tick.last <= tick.limit_up:
-                    reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-
-            if self._bar_limit:
-                if order.side == SIDE.BUY and tick.last >= tick.limit_up:
-                    continue
-                if order.side == SIDE.SELL and tick.last <= tick.limit_up:
-                    continue
-
-            volume = 0
-            volume_limit = round(bar.volume * self._volume_percent) - self._turnover[order.order_book_id]
-            round_lot = bar.instrument.round_lot
-
-            volume_limit = (volume_limit // round_lot) * round_lot
-            if volume_limit <= 0:
-                if order.type == ORDER_TYPE.MARKET:
-                    reason = _('Order Cancelled: market order {order_book_id} volume {order_volume}'
-                               ' due to volume limit').format(
-                        order_book_id=order.order_book_id,
-                        order_volume=order.quantity
-                    )
-                    order.mark_cancelled(reason)
-                continue
 
     def _match(self):
         self._matcher.match(self._open_orders)

@@ -21,7 +21,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.const import MATCHING_TYPE
 
-from .bar_simulation_broker import SimulationBroker
+from .simulation_broker import SimulationBroker
 from .signal_broker import SignalBroker
 from .simulation_event_source import SimulationEventSource
 
@@ -55,5 +55,11 @@ class SimulationMod(AbstractMod):
             return MATCHING_TYPE.CURRENT_BAR_CLOSE
         elif me_str == "next_bar":
             return MATCHING_TYPE.NEXT_BAR_OPEN
+        elif me_str == "last":
+            return MATCHING_TYPE.NEXT_TICK_LAST
+        elif me_str == "best_own":
+            return MATCHING_TYPE.NEXT_TICK_BEST_OWN
+        elif me_str == "best_counterparty":
+            return MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY
         else:
             raise NotImplementedError

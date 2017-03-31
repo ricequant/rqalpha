@@ -97,18 +97,18 @@ class BarObject(object):
             self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
         return self._prev_close
 
-    # @property
-    # def _bar_status(self):
-    #     """
-    #     WARNING: 获取 bar_status 比较耗费性能，而且是lazy_compute，因此不要多次调用！！！！
-    #     """
-    #     if self.isnan or np.isnan(self.limit_up):
-    #         return BAR_STATUS.ERROR
-    #     if self.close >= self._internal_limit_up:
-    #         return BAR_STATUS.LIMIT_UP
-    #     if self.close <= self._internal_limit_down:
-    #         return BAR_STATUS.LIMIT_DOWN
-    #     return BAR_STATUS.NORMAL
+    @property
+    def _bar_status(self):
+        """
+        WARNING: 获取 bar_status 比较耗费性能，而且是lazy_compute，因此不要多次调用！！！！
+        """
+        if self.isnan or np.isnan(self.limit_up):
+            return BAR_STATUS.ERROR
+        if self.close >= self.limit_up:
+            return BAR_STATUS.LIMIT_UP
+        if self.close <= self.limit_down:
+            return BAR_STATUS.LIMIT_DOWN
+        return BAR_STATUS.NORMAL
 
     @property
     def last(self):
