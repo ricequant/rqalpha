@@ -30,7 +30,7 @@ __config__ = {
     # price_limit: 在处于涨跌停时，无法买进/卖出，默认开启
     "price_limit": True,
     # 是否有成交量限制
-    "volume_limit": False,
+    "volume_limit": True,
     # 按照当前成交量的百分比进行撮合
     "volume_percent": 0.25,
 }

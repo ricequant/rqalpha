@@ -92,7 +92,7 @@ class Matcher(object):
                     ).format(order_book_id=order.order_book_id)
                     order.mark_rejected(reason)
                     continue
-                elif self._price_limit and order.side == SIDE.SELL and deal_price <= price_board.get_limit_up(order_book_id):
+                elif self._price_limit and order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
                     reason = _(
                         "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
                     ).format(order_book_id=order.order_book_id)
@@ -103,7 +103,7 @@ class Matcher(object):
             if self._price_limit:
                 if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
                     continue
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_up(order_book_id):
+                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
                     continue
 
             if self._volume_limit:
