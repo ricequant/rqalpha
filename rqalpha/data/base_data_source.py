@@ -56,9 +56,6 @@ class BaseDataSource(AbstractDataSource):
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
 
-        from .ticks_loader import TicksLoader
-        self.tick_loader = TicksLoader("~/.rqalpha/ticks")
-
     def get_dividend(self, order_book_id, adjusted=True):
         if adjusted:
             return self._adjusted_dividends.get_dividend(order_book_id)
@@ -178,7 +175,3 @@ class BaseDataSource(AbstractDataSource):
 
     def get_future_info(self, instrument, hedge_type):
         return CN_FUTURE_INFO[instrument.underlying_symbol][hedge_type.value]
-
-    def get_ticks(self, order_book_id, date):
-        date = int(date.strftime("%Y%m%d"))
-        return self.tick_loader.get_ticks_by_date(order_book_id, date)

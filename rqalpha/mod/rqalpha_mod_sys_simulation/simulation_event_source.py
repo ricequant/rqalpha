@@ -24,14 +24,13 @@ from rqalpha.events import Event, EVENT
 from rqalpha.environment import Environment
 from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
-from rqalpha.utils.datetime_func import convert_int_to_datetime
+from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_time_int_to_datetime
 from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.model.tick import Tick
 
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
-
 
 
 class SimulationEventSource(AbstractEventSource):
@@ -45,10 +44,12 @@ class SimulationEventSource(AbstractEventSource):
         self.today_ticks_cache = {}
         data_proxy = self._env.data_proxy
         self.order_book_id_map = {}
+
         # get today ticks
         for idx, order_book_id in enumerate(self._get_universe()):
             self.order_book_id_map[idx] = order_book_id
             ticks = data_proxy.get_ticks(order_book_id, date)
+            # append idx columns
             ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
             self.today_ticks_cache[order_book_id] = ticks
 
@@ -174,7 +175,10 @@ class SimulationEventSource(AbstractEventSource):
                 done = False
 
                 dt_before_day_trading = date.replace(hour=8, minute=30)
-                last_tick = None
+                dt_after_trading = date.replace(hour=15, minute=30)
+
+                snapshot_dict = {}
+                # last_tick = None
                 while True:
                     if done:
                         break
@@ -188,18 +192,32 @@ class SimulationEventSource(AbstractEventSource):
                     # yield ticks
                     for idx in range(len(merge_ticks)):
                         raw_tick = merge_ticks[idx]
+
+                        # get order_book_id from idx
                         order_book_id = self.order_book_id_map[raw_tick[-1]]
-                        tick_dict = {
-                            "open": 0,
-                            "limit_up": 0,
-                            "limit_down": 0,
-                            "prev_settlement": 0,
-                            "prev_close": 0,
-                            "trading_date": date,
-                        }
+
+                        bar = data_proxy.get_bar(order_book_id, dt_after_trading, frequency="1d")
+
+                        tick_dict = {}
                         for i in range(names_size):
                             tick_dict[names[i]] = raw_tick[i]
-                        dt = tick_dict["time"]
+                        tick_dict.update({
+                            "limit_up": bar.limit_up,
+                            "limit_down": bar.limit_down,
+                            "prev_settlement": bar.prev_settlement,
+                            "prev_close": bar.prev_close,
+                            "trading_date": date,
+                        })
+                        dt = convert_date_time_int_to_datetime(tick_dict["date"], tick_dict["time"])
+
+                        try:
+                            snapshot = snapshot_dict[order_book_id]
+                        except KeyError:
+                            snapshot = data_proxy.current_snapshot(order_book_id, "1m", dt.replace(second=0, microsecond=0))
+                            print(snapshot)
+
+                        tick_dict["open"] = snapshot.open
+
                         tick = Tick(order_book_id, dt, tick_dict)
                         yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=dt, tick=tick)
 

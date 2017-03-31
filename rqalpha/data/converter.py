@@ -50,8 +50,8 @@ StockBarConverter = Converter({
     'close': Rule(float64, 1 / 10000.0, 4),
     'high': Rule(float64, 1 / 10000.0, 4),
     'low': Rule(float64, 1 / 10000.0, 4),
-    'limit_up': Rule(float64, 1/10000.0, 4),
-    'limit_down': Rule(float64, 1/10000.0, 4),
+    'limit_up': Rule(float64, 1 / 10000.0, 4),
+    'limit_down': Rule(float64, 1 / 10000.0, 4),
 })
 
 FutureDayBarConverter = Converter({
@@ -74,8 +74,8 @@ FundDayBarConverter = Converter({
     'acc_net_value': Rule(float64, 1 / 10000.0, 4),
     'unit_net_value': Rule(float64, 1 / 10000.0, 4),
     'discount_rate': Rule(float64, 1 / 10000.0, 4),
-    'limit_up': Rule(float64, 1/10000.0, 4),
-    'limit_down': Rule(float64, 1/10000.0, 4),
+    'limit_up': Rule(float64, 1 / 10000.0, 4),
+    'limit_down': Rule(float64, 1 / 10000.0, 4),
 })
 
 IndexBarConverter = Converter({
