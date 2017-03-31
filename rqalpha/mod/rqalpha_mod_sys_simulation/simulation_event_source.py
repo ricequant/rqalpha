@@ -214,7 +214,6 @@ class SimulationEventSource(AbstractEventSource):
                             snapshot = snapshot_dict[order_book_id]
                         except KeyError:
                             snapshot = data_proxy.current_snapshot(order_book_id, "1m", dt.replace(second=0, microsecond=0))
-                            print(snapshot)
 
                         tick_dict["open"] = snapshot.open
 
