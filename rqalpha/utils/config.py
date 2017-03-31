@@ -62,7 +62,7 @@ def get_mod_config_path(generate=False):
             return mod_config_path
         else:
             return mod_template_path
-    return mod_template_path
+    return mod_config_path
 
 
 def get_user_config_path(config_path=None):
