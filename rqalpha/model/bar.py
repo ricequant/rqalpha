@@ -293,6 +293,7 @@ class BarObject(object):
 
         # copy form history
         env = Environment.get_instance()
+        dt = env.calendar_dt
 
         if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
@@ -308,6 +309,7 @@ class BarObject(object):
 
         # copy form history
         env = Environment.get_instance()
+        dt = env.calendar_dt
 
         if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
