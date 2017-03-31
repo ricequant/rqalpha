@@ -23,15 +23,15 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order
 
-from .matcher import Matcher
+from .bar_matcher import BarMatcher
 from .utils import init_portfolio
 
 
-class SimulationBroker(AbstractBroker, Persistable):
+class BarSimulationBroker(AbstractBroker, Persistable):
     def __init__(self, env, mod_config):
         self._env = env
 
-        self._matcher = Matcher(mod_config)
+        self._matcher = BarMatcher(mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []

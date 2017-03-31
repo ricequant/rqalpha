@@ -25,7 +25,7 @@ from rqalpha.utils.i18n import gettext as _
 from .decider import CommissionDecider, SlippageDecider, TaxDecider
 
 
-class Matcher(object):
+class BarMatcher(object):
     def __init__(self, mod_config):
         if mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:
             self._deal_price_decider = lambda bar: bar.close
