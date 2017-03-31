@@ -22,7 +22,7 @@ from ..const import ACCOUNT_TYPE
 class TickPriceBoard(AbstractPriceBoard):
     def __init__(self):
         self._env = Environment.get_instance()
-        self._env.event_bus.add_listener(EVENT.TICK, self._on_tick)
+        self._env.event_bus.prepend_listener(EVENT.TICK, self._on_tick)
         self._tick_board = {}
         self._settlement_lock = False
         if ACCOUNT_TYPE.FUTURE in self._env.config.base.account_list:

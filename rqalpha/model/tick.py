@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from rqalpha.utils.datetime_func import convert_date_time_int_to_datetime
+
 
 class Tick(object):
-    def __init__(self, order_book_id, dt, tick):
+    def __init__(self, order_book_id, tick):
         self._order_book_id = order_book_id
-        self._dt = dt
         self._tick = tick
 
     @property
@@ -27,7 +28,8 @@ class Tick(object):
 
     @property
     def datetime(self):
-        return self._dt
+        dt = convert_date_time_int_to_datetime(self._tick["date"], self._tick["time"])
+        return dt
 
     @property
     def open(self):

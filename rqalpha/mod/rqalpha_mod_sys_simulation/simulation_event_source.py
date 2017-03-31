@@ -178,7 +178,6 @@ class SimulationEventSource(AbstractEventSource):
                 dt_after_trading = date.replace(hour=15, minute=30)
 
                 snapshot_dict = {}
-                # last_tick = None
                 while True:
                     if done:
                         break
@@ -192,39 +191,18 @@ class SimulationEventSource(AbstractEventSource):
                     # yield ticks
                     for idx in range(len(merge_ticks)):
                         raw_tick = merge_ticks[idx]
-
-                        # get order_book_id from idx
                         order_book_id = self.order_book_id_map[raw_tick[-1]]
 
-                        bar = data_proxy.get_bar(order_book_id, dt_after_trading, frequency="1d")
+                        tick = Tick(order_book_id, raw_tick)
+                        dt = tick.datetime
 
-                        tick_dict = {}
-                        for i in range(names_size):
-                            tick_dict[names[i]] = raw_tick[i]
-                        tick_dict.update({
-                            "limit_up": bar.limit_up,
-                            "limit_down": bar.limit_down,
-                            "prev_settlement": bar.prev_settlement,
-                            "prev_close": bar.prev_close,
-                            "trading_date": date,
-                        })
-                        dt = convert_date_time_int_to_datetime(tick_dict["date"], tick_dict["time"])
-
-                        try:
-                            snapshot = snapshot_dict[order_book_id]
-                        except KeyError:
-                            snapshot = data_proxy.current_snapshot(order_book_id, "1m", dt.replace(second=0, microsecond=0))
-
-                        tick_dict["open"] = snapshot.open
-
-                        tick = Tick(order_book_id, dt, tick_dict)
                         yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=dt, tick=tick)
 
-                    if self._universe_changed:
-                        self._universe_changed = False
-                        # last_dt = calendar_dt
-                        exit_loop = False
-                        break
+                        if self._universe_changed:
+                            self._universe_changed = False
+                            last_dt = dt
+                            exit_loop = False
+                            break
 
                     if exit_loop:
                         done = True
