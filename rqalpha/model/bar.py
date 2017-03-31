@@ -73,13 +73,19 @@ class BarObject(object):
 
     @property
     def limit_up(self):
-        v = self._data['limit_up']
-        return v if v != 0 else np.nan
+        try:
+            v = self._data['limit_up']
+            return v if v != 0 else np.nan
+        except (KeyError, ValueError):
+            return np.nan
 
     @property
     def limit_down(self):
-        v = self._data['limit_down']
-        return v if v != 0 else np.nan
+        try:
+            v = self._data['limit_down']
+            return v if v != 0 else np.nan
+        except (KeyError, ValueError):
+            return np.nan
 
     @property
     def prev_close(self):
