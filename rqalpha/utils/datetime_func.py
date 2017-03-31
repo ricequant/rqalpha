@@ -43,6 +43,11 @@ def get_last_date(trading_calendar, dt):
     return trading_calendar[idx - 1]
 
 
+def convert_date_to_date_int(dt):
+    t = dt.year * 10000 + dt.month * 100 + dt.day
+    return t
+
+
 def convert_date_to_int(dt):
     t = dt.year * 10000 + dt.month * 100 + dt.day
     t *= 1000000

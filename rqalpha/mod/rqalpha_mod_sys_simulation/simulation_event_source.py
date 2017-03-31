@@ -24,7 +24,7 @@ from rqalpha.events import Event, EVENT
 from rqalpha.environment import Environment
 from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
-from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_time_int_to_datetime
+from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_date_int, convert_dt_to_int
 from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.model.tick import Tick
@@ -39,25 +39,6 @@ class SimulationEventSource(AbstractEventSource):
         self._account_list = account_list
         self._universe_changed = False
         Environment.get_instance().event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
-
-    def _get_merge_ticks(self, date):
-        self.today_ticks_cache = {}
-        data_proxy = self._env.data_proxy
-        self.order_book_id_map = {}
-
-        # get today ticks
-        for idx, order_book_id in enumerate(self._get_universe()):
-            self.order_book_id_map[idx] = order_book_id
-            ticks = data_proxy.get_ticks(order_book_id, date)
-            # append idx columns
-            ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
-            self.today_ticks_cache[order_book_id] = ticks
-
-        # merge ticks arrays into one
-        merge_ticks = np.concatenate(list(self.today_ticks_cache.values()))
-
-        merge_ticks.sort(kind='mergesort', order=("date", "time"))
-        return merge_ticks
 
     def _on_universe_changed(self, event):
         self._universe_changed = True
@@ -107,6 +88,25 @@ class SimulationEventSource(AbstractEventSource):
                 trading_minutes = trading_minutes.union(self._get_future_trading_minutes(trading_date))
         return sorted(list(trading_minutes))
     # [END] minute event helper
+
+    def _get_merge_ticks(self, date):
+        self.today_ticks_cache = {}
+        data_proxy = self._env.data_proxy
+        self.order_book_id_map = {}
+
+        # get today ticks
+        for idx, order_book_id in enumerate(self._get_universe()):
+            self.order_book_id_map[idx] = order_book_id
+            ticks = data_proxy.get_ticks(order_book_id, date)
+            # append idx columns
+            ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
+            self.today_ticks_cache[order_book_id] = ticks
+
+        # merge ticks arrays into one
+        merge_ticks = np.concatenate(list(self.today_ticks_cache.values()))
+
+        merge_ticks.sort(kind='mergesort', order=("date", "time"))
+        return merge_ticks
 
     def events(self, start_date, end_date, frequency):
         if frequency == "1d":
@@ -171,20 +171,21 @@ class SimulationEventSource(AbstractEventSource):
             for day in data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
                 date = day.to_pydatetime()
-                last_dt = None
+                last_dt = date
                 done = False
 
                 dt_before_day_trading = date.replace(hour=8, minute=30)
                 dt_after_trading = date.replace(hour=15, minute=30)
 
-                snapshot_dict = {}
                 while True:
                     if done:
                         break
                     exit_loop = True
 
                     merge_ticks = self._get_merge_ticks(date)
-
+                    time_arr = merge_ticks["date"].astype(np.uint64) * 1000000000 + merge_ticks["time"]
+                    last_idx = time_arr.searchsorted(convert_dt_to_int(last_dt) * 1000)
+                    merge_ticks = merge_ticks[last_idx:]
                     names = merge_ticks.dtype.names
                     names_size = len(names)
 
