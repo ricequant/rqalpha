@@ -34,7 +34,7 @@ class Matcher(object):
         self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
         self._slippage_decider = SlippageDecider(mod_config.slippage)
         self._tax_decider = TaxDecider()
-        self._board = None
+        self._bar_dict = None
         self._turnover = defaultdict(int)
         self._calendar_dt = None
         self._trading_dt = None
@@ -42,7 +42,7 @@ class Matcher(object):
         self._bar_limit = mod_config.bar_limit
 
     def update(self, calendar_dt, trading_dt, bar_dict):
-        self._board = bar_dict
+        self._bar_dict = bar_dict
         self._turnover.clear()
         self._calendar_dt = calendar_dt
         self._trading_dt = trading_dt
@@ -50,7 +50,7 @@ class Matcher(object):
     def match(self, open_orders):
         for account, order in open_orders:
 
-            bar = self._board[order.order_book_id]
+            bar = self._bar_dict[order.order_book_id]
             bar_status = bar._bar_status
 
             if bar_status == BAR_STATUS.ERROR:

@@ -94,6 +94,12 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
     def get_limit_down(self, order_book_id):
         raise NotImplementedError
 
+    def get_a1(self, order_book_id):
+        raise NotImplementedError
+
+    def get_b1(self, order_book_id):
+        raise NotImplementedError
+
 
 class AbstractDataSource(object):
     """

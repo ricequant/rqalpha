@@ -17,7 +17,6 @@ from ..interface import AbstractPriceBoard
 from ..environment import Environment
 from ..events import EVENT
 from ..const import ACCOUNT_TYPE
-from ..const import ACCOUNT_TYPE
 
 
 class TickPriceBoard(AbstractPriceBoard):
@@ -25,8 +24,13 @@ class TickPriceBoard(AbstractPriceBoard):
         self._env = Environment.get_instance()
         self._env.event_bus.add_listener(EVENT.TICK, self._on_tick)
         self._tick_board = {}
+        self._settlement_lock = False
+        if ACCOUNT_TYPE.FUTURE in self._env.config.base.account_list:
+            self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._lock_settlement)
+            self._env.event_bus.add_listener(EVENT.POST_BEFORE_TRADING, self._unlock_settlement)
 
-    def _on_tick(self, tick):
+    def _on_tick(self, event):
+        tick = event.tick
         self._tick_board[tick.order_book_id] = tick
 
     def get_last_price(self, order_book_id):
@@ -40,3 +44,9 @@ class TickPriceBoard(AbstractPriceBoard):
 
     def get_limit_down(self, order_book_id):
         return self._tick_board[order_book_id].limit_down
+
+    def _lock_settlement(self, event):
+        self._settlement_lock = True
+
+    def _unlock_settlement(self, event):
+        self._settlement_lock = False
