@@ -225,9 +225,12 @@ class AnalyserMod(AbstractMod):
         df['date'] = pd.to_datetime(df['date'])
         total_portfolios = df.set_index('date').sort_index()
 
-        b_df = pd.DataFrame(self._total_benchmark_portfolios)
-        df['date'] = pd.to_datetime(df['date'])
-        benchmark_portfolios = b_df.set_index('date').sort_index()
+        if self._env.benchmark_portfolio:
+            b_df = pd.DataFrame(self._total_benchmark_portfolios)
+            b_df['date'] = pd.to_datetime(b_df['date'])
+            benchmark_portfolios = b_df.set_index('date').sort_index()
+        else:
+            benchmark_portfolios = None
 
         result_dict = {
             'summary': summary,

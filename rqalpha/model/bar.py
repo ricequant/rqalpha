@@ -76,60 +76,16 @@ class BarObject(object):
         try:
             v = self._data['limit_up']
             return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self._limit_up is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self._limit_up = np.floor(self.prev_close * 10500) / 10000
-                else:
-                    self._limit_up = np.floor(self.prev_close * 11000) / 10000
-            return self._limit_up
+        except (KeyError, ValueError):
+            return np.nan
 
     @property
     def limit_down(self):
         try:
             v = self._data['limit_down']
             return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self._limit_down is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self._limit_down = np.ceil(self.prev_close * 9500) / 10000
-                else:
-                    self._limit_down = np.ceil(self.prev_close * 9000) / 10000
-            return self._limit_down
-
-    @property
-    def _internal_limit_up(self):
-        try:
-            v = self._data['limit_up']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self.__internal_limit_up is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self.__internal_limit_up = np.floor(self.prev_close * 10490) / 10000
-                else:
-                    self.__internal_limit_up = np.floor(self.prev_close * 10990) / 10000
-            return self.__internal_limit_up
-
-    @property
-    def _internal_limit_down(self):
-        try:
-            v = self._data['limit_down']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self.__internal_limit_down is None:
-                trading_dt = Environment.get_instance().trading_dt
-                data_proxy = Environment.get_instance().data_proxy
-                if data_proxy.is_st_stock(self._instrument.order_book_id, trading_dt):
-                    self.__internal_limit_down = np.ceil(self.prev_close * 9510) / 10000
-                else:
-                    self.__internal_limit_down = np.ceil(self.prev_close * 9010) / 10000
-            return self.__internal_limit_down
+        except (KeyError, ValueError):
+            return np.nan
 
     @property
     def prev_close(self):
@@ -154,9 +110,9 @@ class BarObject(object):
         """
         if self.isnan or np.isnan(self.limit_up):
             return BAR_STATUS.ERROR
-        if self.close >= self._internal_limit_up:
+        if self.close >= self.limit_up:
             return BAR_STATUS.LIMIT_UP
-        if self.close <= self._internal_limit_down:
+        if self.close <= self.limit_down:
             return BAR_STATUS.LIMIT_DOWN
         return BAR_STATUS.NORMAL
 

@@ -75,7 +75,7 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
 
 class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
     """
-    RQAlpha多个地方需要使用最新价格，不同的数据源其最新价格获取的方式不尽相同
+    RQAlpha多个地方需要使用最新「行情」，不同的数据源其最新价格获取的方式不尽相同
 
     因此抽离出 `AbstractPriceBoard`, 您可以自行进行扩展并替换默认 PriceBoard
     """
@@ -92,6 +92,12 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
     def get_limit_down(self, order_book_id):
+        raise NotImplementedError
+
+    def get_a1(self, order_book_id):
+        raise NotImplementedError
+
+    def get_b1(self, order_book_id):
         raise NotImplementedError
 
 
@@ -263,6 +269,17 @@ class AbstractDataSource(object):
         :param instrument: 合约对象
         :param HEDGE_TYPE hedge_type: 枚举类型，账户对冲类型
         :return: dict
+        """
+        raise NotImplementedError
+
+    def get_ticks(self, order_book_id, date):
+        """
+        获取 Ticks
+
+        :param str order_book_id: 合约名
+        :param datetime.date date: 日期
+
+        :return: `numpy.ndarray`
         """
         raise NotImplementedError
 

@@ -136,13 +136,13 @@ class FutureAccount(BaseAccount):
         old_daily_pnl = self.daily_pnl + self.transaction_cost
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
-            if position.is_de_listed() and position.buy_quantity + position.sell_qauntity != 0:
-                self._total_cash += position.market_value * position.contract_multiplier
+            if position.is_de_listed() and position.buy_quantity + position.sell_quantity != 0:
+                self._total_cash += position.market_value * position.margin_rate
                 user_system_log.warn(
                     _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
-                self._positions.pop(order_book_id, None)
+                del self._positions[order_book_id]
             elif position.buy_quantity == 0 and position.sell_quantity == 0:
-                self._positions.pop(order_book_id, None)
+                del self._positions[order_book_id]
             else:
                 position.apply_settlement()
         self._total_cash = self._total_cash + (old_margin - self.margin) + old_daily_pnl

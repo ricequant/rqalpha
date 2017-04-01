@@ -106,7 +106,7 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
         # 如果下单量为0，则认为其并没有发单，则直接返回None
         return None
     if not isinstance(style, OrderStyle):
-        raise RQInvalidArgument(_('style should be OrderStyle'))
+        raise RQInvalidArgument(_(u"style should be OrderStyle"))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
@@ -244,7 +244,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     # :return:  A unique order id.
     # :rtype: int
     if not isinstance(style, OrderStyle):
-        raise RQInvalidArgument(_('style should be OrderStyle'))
+        raise RQInvalidArgument(_(u"style should be OrderStyle"))
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
@@ -321,7 +321,7 @@ def order_percent(id_or_ins, percent, style=MarketOrder()):
     # :return:  A unique order id.
     # :rtype: int
     if percent < -1 or percent > 1:
-        raise RQInvalidArgument(_('percent should between -1 and 1'))
+        raise RQInvalidArgument(_(u"percent should between -1 and 1"))
 
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
     return order_value(id_or_ins, account.total_value * percent, style)
@@ -433,7 +433,7 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     # :return:  A unique order id.
     # :rtype: int
     if percent < 0 or percent > 1:
-        raise RQInvalidArgument(_('percent should between 0 and 1'))
+        raise RQInvalidArgument(_(u"percent should between 0 and 1"))
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]

@@ -90,7 +90,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
 @click.option('-st', '--security', 'base__securities', multiple=True, type=click.Choice(['stock', 'future']))
-@click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m']))
+@click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 # -- Extra Configuration

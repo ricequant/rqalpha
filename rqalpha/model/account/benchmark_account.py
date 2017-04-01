@@ -33,6 +33,7 @@ class BenchmarkAccount(StockAccount):
         event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
     def _on_bar(self, event):
+        # run once
         if len(self._positions) == 0:
             price = event.bar_dict[self.benchmark].close
             if np.isnan(price):
@@ -44,6 +45,7 @@ class BenchmarkAccount(StockAccount):
             self._total_cash -= quantity * price
 
     def _on_tick(self, event):
+        # run once
         if len(self._positions) == 0:
             tick = event.tick
             if tick.order_book_id != self.benchmark:

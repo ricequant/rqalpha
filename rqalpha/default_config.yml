@@ -18,7 +18,7 @@ base:
   stock_starting_cash: 0
   # 期货起始资金，默认为0
   future_starting_cash: 0
-  # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)tst
+  # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)
   securities: [stock]
   # 设置保证金乘数，默认为1
   margin_multiplier: 1

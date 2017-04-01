@@ -47,7 +47,7 @@ class ModHandler(object):
                 lib_name = "rqalpha.mod.rqalpha_mod_" + mod_name
             else:
                 lib_name = "rqalpha_mod_" + mod_name
-            system_log.debug(_('loading mod {}').format(lib_name))
+            system_log.debug(_(u"loading mod {}").format(lib_name))
             mod_module = import_mod(lib_name)
             if mod_module is None:
                 del self._mod_list[idx]
