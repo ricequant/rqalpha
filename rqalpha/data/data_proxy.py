@@ -82,7 +82,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     def get_split_by_ex_date(self, order_book_id, date):
         df = self.get_split(order_book_id)
-        if df is None or df.empty:
+        if df is None or len(df) == 0:
             return
 
         dt = convert_date_to_int(date)
