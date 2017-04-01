@@ -91,10 +91,9 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     @lru_cache(10240)
     def _get_prev_close(self, order_book_id, dt):
-        prev_trading_date = self.get_previous_trading_date(dt)
         instrument = self.instruments(order_book_id)
-        bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date, False)
-        if bar is None or len(bar) == 0:
+        bar = self._data_source.history_bars(instrument, 2, '1d', 'close', dt, False)
+        if bar is None or len(bar) < 2:
             return np.nan
         return bar[0]
 
@@ -120,10 +119,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         if instrument.type != 'Future':
             return np.nan
         return self._data_source.get_settle_price(instrument, date)
-
-    def get_last_price(self, order_book_id, dt):
-        instrument = self.instruments(order_book_id)
-        return self._data_source.get_last_price(instrument, dt)
 
     def get_bar(self, order_book_id, dt, frequency='1d'):
         instrument = self.instruments(order_book_id)

@@ -49,7 +49,7 @@ class BaseDataSource(AbstractDataSource):
         self._dividends = DividendStore(_p('original_dividends.bcolz'))
         self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
         self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
-        self._split = SimpleFactorStore(_p('split.bcolz'))
+        self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
 
         self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
@@ -133,6 +133,21 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
+    @staticmethod
+    def _factor_for_date(dates, factors, d):
+        if d > dates[-1]:
+            return factors[-1]
+        i = 0
+        while d > dates[i]:
+            i += 1
+        return factors[i]
+
+    PRICE_FIELDS = {
+        'open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'acc_net_value', 'unit_net_value'
+    }
+
+    FIELDS_REQUIRE_ADJUSTMENT = PRICE_FIELDS.copy().add('volume')
+
     def _adjust_bar(self, order_book_id, bars, fields):
         ex_factors = self._ex_cum_factor.get_factors(order_book_id)
         if ex_factors is None:
@@ -140,14 +155,38 @@ class BaseDataSource(AbstractDataSource):
 
         start_date = bars['datetime'][0]
         end_date = bars['datetime'][-1]
-        start_index = ex_factors['datetime'].searchsorted(start_date)
-        end_index = ex_factors['datetime'].searchsorted(end_date)
-        if start_index == end_index:
+
+        dates = ex_factors['start_date']
+
+        if (self._factor_for_date(dates, ex_factors['ex_cum_factor'], start_date) ==
+                self._factor_for_date(dates, ex_factors['ex_cum_factor'], end_date)):
             return bars if fields is None else bars[fields]
 
-        result = np.empty_like(bars if fields is None else bars[fields])
-        # the hard part
+        factors = np.array(len(bars), dtype=np.float64)
+        j = 0
+        for i in range(len(bars)):
+            d = dates[i]
+            while d > dates[j]:
+                j += 1
+            factors[i] = ex_factors['ex_cum_factor'][j]
 
+        # 前复权
+        factors /= factors[-1]
+        if isinstance(fields, str):
+            if fields in self.PRICE_FIELDS:
+                return bars[fields] * factors
+            elif fields == 'volume':
+                return bars[fields] / factors
+            # should not got here
+            return bars[fields]
+
+        result = np.copy(bars if fields is None else bars[fields])
+        for f in result.dtype.names:
+            if f in self.PRICE_FIELDS:
+                result[f] *= factors
+            elif f == 'volume':
+                result[f] /= factors
+        return result
 
     def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
         if frequency != '1d':
@@ -169,6 +208,9 @@ class BaseDataSource(AbstractDataSource):
             # 期货及指数无需复权
             return bars if fields is None else bars[fields]
 
+        if isinstance(fields, str) and fields not in self.FIELDS_REQUIRE_ADJUSTMENT:
+            return bars if fields is None else bars[fields]
+
         return self._adjust_bar(instrument.order_book_id, bars, fields)
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
@@ -181,7 +223,7 @@ class BaseDataSource(AbstractDataSource):
         raise NotImplementedError
 
     def get_split(self, order_book_id):
-        return self._split.get_factors(order_book_id)
+        return self._split_factor.get_factors(order_book_id)
 
     def available_data_range(self, frequency):
         if frequency == '1d':
