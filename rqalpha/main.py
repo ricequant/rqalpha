@@ -64,7 +64,7 @@ def _adjust_start_date(config, data_proxy):
     config.base.end_date = min(end, config.base.end_date)
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
-        raise patch_user_exc(ValueError(_('There is no trading day between {start_date} and {end_date}.').format(
+        raise patch_user_exc(ValueError(_(u"There is no trading day between {start_date} and {end_date}.").format(
             start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
@@ -77,7 +77,7 @@ def _validate_benchmark(config, data_proxy):
         return
     instrument = data_proxy.instruments(benchmark)
     if instrument is None:
-        raise patch_user_exc(ValueError(_('invalid benchmark {}').format(benchmark)))
+        raise patch_user_exc(ValueError(_(u"invalid benchmark {}").format(benchmark)))
 
     if instrument.order_book_id == "000300.XSHG":
         # 000300.XSHG 数据进行了补齐，因此认为只要benchmark设置了000300.XSHG，就存在数据，不受限于上市日期。
@@ -152,7 +152,7 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     while True:
         url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
             day.year, day.month, day.day)
-        six.print_(_('try {} ...').format(url))
+        six.print_(_(u"try {} ...").format(url))
         r = requests.get(url, stream=True)
         if r.status_code != 200:
             day = day - datetime.timedelta(days=1)
@@ -161,7 +161,7 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
         out = open(tmp, 'wb')
         total_length = int(r.headers.get('content-length'))
 
-        with click.progressbar(length=total_length, label=_('downloading ...')) as bar:
+        with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
             for data in r.iter_content(chunk_size=8192):
                 bar.update(len(data))
                 out.write(data)

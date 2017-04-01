@@ -113,8 +113,8 @@ class Matcher(object):
                 volume_limit = (volume_limit // round_lot) * round_lot
                 if volume_limit <= 0:
                     if order.type == ORDER_TYPE.MARKET:
-                        reason = _('Order Cancelled: market order {order_book_id} volume {order_volume}'
-                                   ' due to volume limit').format(
+                        reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
+                                   u" due to volume limit").format(
                             order_book_id=order.order_book_id,
                             order_volume=order.quantity
                         )
@@ -149,8 +149,8 @@ class Matcher(object):
 
             if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
                 reason = _(
-                    "Order Cancelled: market order {order_book_id} volume {order_volume} is"
-                    " larger than 25 percent of current bar volume, fill {filled_volume} actually"
+                    u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
+                    u" larger than 25 percent of current bar volume, fill {filled_volume} actually"
                 ).format(
                     order_book_id=order.order_book_id,
                     order_volume=order.quantity,
