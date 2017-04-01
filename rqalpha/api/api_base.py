@@ -689,7 +689,7 @@ def get_dividend(order_book_id, start_date, adjusted=True):
     start_date = to_date(start_date)
     if start_date > dt:
         raise RQInvalidArgument(
-            _('in get_dividend, start_date {} is later than the previous test day {}').format(
+            _(u"in get_dividend, start_date {} is later than the previous test day {}").format(
                 start_date, dt
             ))
     order_book_id = assure_order_book_id(order_book_id)

@@ -62,7 +62,7 @@ def get_mod_config_path(generate=False):
             return mod_config_path
         else:
             return mod_template_path
-    return mod_template_path
+    return mod_config_path
 
 
 def get_user_config_path(config_path=None):
@@ -199,13 +199,13 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
             extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
 
     if base_config.stock_starting_cash < 0:
-        raise patch_user_exc(ValueError(_('invalid stock starting cash: {}').format(base_config.stock_starting_cash)))
+        raise patch_user_exc(ValueError(_(u"invalid stock starting cash: {}").format(base_config.stock_starting_cash)))
 
     if base_config.future_starting_cash < 0:
-        raise patch_user_exc(ValueError(_('invalid future starting cash: {}').format(base_config.future_starting_cash)))
+        raise patch_user_exc(ValueError(_(u"invalid future starting cash: {}").format(base_config.future_starting_cash)))
 
     if base_config.stock_starting_cash + base_config.future_starting_cash == 0:
-        raise patch_user_exc(ValueError(_('stock starting cash and future starting cash can not be both 0.')))
+        raise patch_user_exc(ValueError(_(u"stock starting cash and future starting cash can not be both 0.")))
 
     system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
     std_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
@@ -239,7 +239,7 @@ def parse_user_config_from_code(config, source_code=None):
             deep_update(sub_dict, config[sub_key])
 
     except Exception as e:
-        system_log.error(_('in parse_user_config, exception: {e}').format(e=e))
+        system_log.error(_(u"in parse_user_config, exception: {e}").format(e=e))
     finally:
         return config
 
@@ -272,4 +272,4 @@ def parse_persist_mode(persist_mode):
     elif persist_mode == 'on_crash':
         return PERSIST_MODE.ON_CRASH
     else:
-        raise RuntimeError(_('unknown persist mode: {persist_mode}').format(persist_mode=persist_mode))
+        raise RuntimeError(_(u"unknown persist mode: {persist_mode}").format(persist_mode=persist_mode))

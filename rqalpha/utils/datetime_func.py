@@ -43,6 +43,11 @@ def get_last_date(trading_calendar, dt):
     return trading_calendar[idx - 1]
 
 
+def convert_date_to_date_int(dt):
+    t = dt.year * 10000 + dt.month * 100 + dt.day
+    return t
+
+
 def convert_date_to_int(dt):
     t = dt.year * 10000 + dt.month * 100 + dt.day
     t *= 1000000
@@ -78,3 +83,15 @@ def convert_int_to_datetime(dt_int):
     hour, r = divmod(r, 10000)
     minute, second = divmod(r, 100)
     return datetime.datetime(year, month, day, hour, minute, second)
+
+
+def convert_date_time_int_to_datetime(date_int, time_int):
+    date_int, time_int = int(date_int), int(time_int)
+    dt = _convert_int_to_date(date_int)
+
+    hours, r = divmod(time_int, 10000000)
+    minutes, r = divmod(r, 100000)
+    seconds, millisecond = divmod(r, 1000)
+
+    return dt.replace(hour=hours, minute=minutes, second=seconds,
+                      microsecond=millisecond * 1000)

@@ -82,6 +82,7 @@ N/A           `- -` signal                    [sys_simulation]开启信号模式
 除了在启动策略的时候传入参数，还可以通过指定配置文件的方式来进行参数的配置, 配置文件的配置信息优先级低于启动参数，也就是说启动参数会覆盖配置文件的配置项，配置文件的格式如下:
 
 注1: 如果没有指定 `config.yml`， RQAlpha 在运行时会自动在当前目录下寻找 `config.yml` 文件作为用户配置文件，如果没有寻找到，则按照默认配置运行。
+
 注2: 您只需要指定需要修改的配置信息，您没有指定的部分，会按照默认配置项来运行。
 
 您也可以使用 `$ rqalpha generate_config` 来生成一份包含所有系统配置的默认的配置文件。
@@ -108,7 +109,7 @@ N/A           `- -` signal                    [sys_simulation]开启信号模式
       stock_starting_cash: 0
       # 期货起始资金，默认为0
       future_starting_cash: 0
-      # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)tst
+      # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)
       securities: [stock]
       # 设置保证金乘数，默认为1
       margin_multiplier: 1

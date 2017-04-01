@@ -37,10 +37,16 @@ class SimulationMod(AbstractMod):
         if env.config.base.margin_multiplier <= 0:
             raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
 
+        from rqalpha.core.tick_price_board import TickPriceBoard
+        if env.config.base.frequency == "tick":
+            env.price_board = TickPriceBoard()
+            mod_config.volume_limit = False
+
         if mod_config.signal:
             env.set_broker(SignalBroker(env, mod_config))
         else:
             env.set_broker(SimulationBroker(env, mod_config))
+
         event_source = SimulationEventSource(env, env.config.base.account_list)
         env.set_event_source(event_source)
 
@@ -54,5 +60,11 @@ class SimulationMod(AbstractMod):
             return MATCHING_TYPE.CURRENT_BAR_CLOSE
         elif me_str == "next_bar":
             return MATCHING_TYPE.NEXT_BAR_OPEN
+        elif me_str == "last":
+            return MATCHING_TYPE.NEXT_TICK_LAST
+        elif me_str == "best_own":
+            return MATCHING_TYPE.NEXT_TICK_BEST_OWN
+        elif me_str == "best_counterparty":
+            return MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY
         else:
             raise NotImplementedError
