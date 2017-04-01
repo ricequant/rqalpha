@@ -13,6 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import numpy as np
+
 from ..interface import AbstractPriceBoard
 from ..environment import Environment
 from ..events import EVENT
@@ -37,7 +40,11 @@ class TickPriceBoard(AbstractPriceBoard):
         if self._settlement_lock:
             return self._env.data_proxy.get_settle_price(order_book_id, self._env.trading_dt)
         else:
-            return self._tick_board[order_book_id].last
+            try:
+                tick = self._tick_board[order_book_id]
+            except KeyError:
+                return np.nan
+            return tick.last
 
     def get_limit_up(self, order_book_id):
         return self._tick_board[order_book_id].limit_up

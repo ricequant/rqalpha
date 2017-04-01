@@ -98,12 +98,17 @@ class SimulationEventSource(AbstractEventSource):
         for idx, order_book_id in enumerate(self._get_universe()):
             self.order_book_id_map[idx] = order_book_id
             ticks = data_proxy.get_ticks(order_book_id, date)
+            if ticks is None:
+                continue
             # append idx columns
             ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
             self.today_ticks_cache[order_book_id] = ticks
 
         # merge ticks arrays into one
-        merge_ticks = np.concatenate(list(self.today_ticks_cache.values()))
+        ticks_list = list(self.today_ticks_cache.values())
+        if len(ticks_list) == 0:
+            return []
+        merge_ticks = np.concatenate(ticks_list)
 
         merge_ticks.sort(kind='mergesort', order=("date", "time"))
 
@@ -180,7 +185,6 @@ class SimulationEventSource(AbstractEventSource):
                 done = False
 
                 dt_before_day_trading = date.replace(hour=8, minute=30)
-                dt_after_trading = date.replace(hour=15, minute=30)
 
                 while True:
                     if done:
@@ -189,7 +193,6 @@ class SimulationEventSource(AbstractEventSource):
 
                     merge_ticks = self._get_merge_ticks(date, last_dt)
 
-                    # yield ticks
                     for idx in range(len(merge_ticks)):
                         raw_tick = merge_ticks[idx]
                         order_book_id = self.order_book_id_map[raw_tick[-1]]
