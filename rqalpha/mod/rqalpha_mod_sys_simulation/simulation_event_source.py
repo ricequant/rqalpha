@@ -179,12 +179,13 @@ class SimulationEventSource(AbstractEventSource):
         elif frequency == "tick":
             data_proxy = self._env.data_proxy
             for day in data_proxy.get_trading_dates(start_date, end_date):
-                before_trading_flag = True
                 date = day.to_pydatetime()
                 last_dt = date
                 done = False
 
-                dt_before_day_trading = date.replace(hour=8, minute=30)
+                before_trading_dt = date.replace(hour=8, minute=30)
+                yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
+                            trading_dt=before_trading_dt)
 
                 while True:
                     if done:
