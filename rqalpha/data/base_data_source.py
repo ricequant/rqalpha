@@ -137,10 +137,8 @@ class BaseDataSource(AbstractDataSource):
     def _factor_for_date(dates, factors, d):
         if d > dates[-1]:
             return factors[-1]
-        i = 0
-        while d > dates[i]:
-            i += 1
-        return factors[i]
+        pos = dates.searchsorted(d, side='right')
+        return factors[pos-1]
 
     PRICE_FIELDS = {
         'open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'acc_net_value', 'unit_net_value'
@@ -157,18 +155,14 @@ class BaseDataSource(AbstractDataSource):
         end_date = bars['datetime'][-1]
 
         dates = ex_factors['start_date']
+        ex_cum_factors = ex_factors['ex_cum_factor']
 
-        if (self._factor_for_date(dates, ex_factors['ex_cum_factor'], start_date) ==
-                self._factor_for_date(dates, ex_factors['ex_cum_factor'], end_date)):
+        if (self._factor_for_date(dates, ex_cum_factors, start_date) ==
+                self._factor_for_date(dates, ex_cum_factors, end_date)):
             return bars if fields is None else bars[fields]
 
-        factors = np.array(len(bars), dtype=np.float64)
-        j = 0
-        for i in range(len(bars)):
-            d = dates[i]
-            while d > dates[j]:
-                j += 1
-            factors[i] = ex_factors['ex_cum_factor'][j]
+        factors = np.array([self._factor_for_date(dates, ex_cum_factors, d) for d in bars['datetime']],
+                           dtype=np.float64)
 
         # 前复权
         factors /= factors[-1]
@@ -204,7 +198,7 @@ class BaseDataSource(AbstractDataSource):
         i = bars['datetime'].searchsorted(dt, side='right')
         left = i - bar_count if i >= bar_count else 0
         bars = bars[left:i]
-        if instrument.type in {'Future', 'INDX'}:
+        if instrument.type in {'Future', 'INDX'} or len(bars) == 1:
             # 期货及指数无需复权
             return bars if fields is None else bars[fields]
 
