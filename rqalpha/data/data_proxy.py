@@ -24,7 +24,7 @@ from .trading_dates_mixin import TradingDatesMixin
 from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
 from ..utils.py2 import lru_cache
-from ..utils.datetime_func import convert_int_to_datetime
+from ..utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 from ..const import HEDGE_TYPE
 
 
@@ -84,10 +84,13 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         df = self.get_split(order_book_id)
         if df is None or df.empty:
             return
-        try:
-            return df.loc[date]
-        except KeyError:
-            pass
+
+        dt = convert_date_to_int(date)
+        pos = df['ex_date'].searchsorted(dt)
+        if pos == len(df) or df['ex_date'][pos] != dt:
+            return None
+
+        return df['split_factor'][pos]
 
     @lru_cache(10240)
     def _get_prev_close(self, order_book_id, dt):

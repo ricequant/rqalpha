@@ -124,8 +124,7 @@ class StockAccount(BaseAccount):
     def _before_trading(self, event):
         trading_date = Environment.get_instance().trading_dt.date()
         self._handle_dividend_payable(trading_date)
-        if Environment.get_instance().config.base.handle_split:
-            self._handle_split(trading_date)
+        self._handle_split(trading_date)
 
     def _on_settlement(self, event):
         for position in list(self._positions.values()):
@@ -159,8 +158,9 @@ class StockAccount(BaseAccount):
             del self._dividend_receivable[order_book_id]
 
     def _handle_dividend_book_closure(self, trading_date):
+        data_proxy = Environment.get_instance().data_proxy
         for order_book_id, position in six.iteritems(self._positions):
-            dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
+            dividend = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
                 continue
 
@@ -172,11 +172,11 @@ class StockAccount(BaseAccount):
             }
 
     def _handle_split(self, trading_date):
+        data_proxy = Environment.get_instance().data_proxy
         for order_book_id, position in six.iteritems(self._positions):
-            split = Environment.get_instance().data_proxy.get_split_by_ex_date(order_book_id, trading_date)
-            if split is None:
+            ratio = data_proxy.get_split_by_ex_date(order_book_id, trading_date)
+            if ratio is None:
                 continue
-            ratio = split['split_coefficient_to'] / split['split_coefficient_from']
             position.split_(ratio)
 
     @property
