@@ -144,7 +144,7 @@ class BaseDataSource(AbstractDataSource):
         'open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'acc_net_value', 'unit_net_value'
     }
 
-    FIELDS_REQUIRE_ADJUSTMENT = PRICE_FIELDS.copy().add('volume')
+    FIELDS_REQUIRE_ADJUSTMENT = set(list(PRICE_FIELDS) + ['volume'])
 
     def _adjust_bar(self, order_book_id, bars, fields):
         ex_factors = self._ex_cum_factor.get_factors(order_book_id)
