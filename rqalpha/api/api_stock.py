@@ -450,7 +450,7 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
              verify_that('count').is_greater_than(0))
-def is_suspended(order_book_id):
+def is_suspended(order_book_id, count=1):
     """
     判断某只股票是否全天停牌。
 
@@ -460,7 +460,7 @@ def is_suspended(order_book_id):
     """
     dt = Environment.get_instance().calendar_dt.date()
     order_book_id = assure_stock_order_book_id(order_book_id)
-    return Environment.get_instance().data_proxy.is_suspended(order_book_id, dt)
+    return Environment.get_instance().data_proxy.is_suspended(order_book_id, dt, count)
 
 
 @export_as_api
@@ -470,7 +470,7 @@ def is_suspended(order_book_id):
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument())
-def is_st_stock(order_book_id):
+def is_st_stock(order_book_id, count=1):
     """
     判断股票在一段时间内是否为ST股（包括ST与*ST）。
 
@@ -482,7 +482,7 @@ def is_st_stock(order_book_id):
     """
     dt = Environment.get_instance().calendar_dt.date()
     order_book_id = assure_stock_order_book_id(order_book_id)
-    return Environment.get_instance().data_proxy.is_st_stock(order_book_id, dt)
+    return Environment.get_instance().data_proxy.is_st_stock(order_book_id, dt, count)
 
 
 def assure_stock_order_book_id(id_or_symbols):
