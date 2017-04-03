@@ -71,11 +71,11 @@ class BaseDataSource(AbstractDataSource):
     def get_all_instruments(self):
         return self._instruments.get_all_instruments()
 
-    def is_suspended(self, order_book_id, dt):
-        return self._suspend_days.contains(order_book_id, dt)
+    def is_suspended(self, order_book_id, dates):
+        return self._suspend_days.contains(order_book_id, dates)
 
-    def is_st_stock(self, order_book_id, dt):
-        return self._st_stock_days.contains(order_book_id, dt)
+    def is_st_stock(self, order_book_id, dates):
+        return self._st_stock_days.contains(order_book_id, dates)
 
     INSTRUMENT_TYPE_MAP = {
         'CS': 0,

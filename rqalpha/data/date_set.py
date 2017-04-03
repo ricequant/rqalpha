@@ -37,16 +37,22 @@ class DateSet(object):
 
         return self._get_set(s, e)
 
-    def contains(self, order_book_id, dt):
+    def contains(self, order_book_id, dates):
         try:
             s, e = self._index[order_book_id]
         except KeyError:
             return False
 
-        if isinstance(dt, (int, np.int64, np.uint64)):
-            if dt > 100000000:
-                dt //= 1000000
-        else:
-            dt = dt.year*10000 + dt.month*100 + dt.day
+        def _to_dt_int(d):
+            if isinstance(d, (int, np.int64, np.uint64)):
+                if d > 100000000:
+                    return d // 1000000
+            else:
+                return d.year*10000 + d.month*100 + d.day
 
-        return dt in self._get_set(s, e)
+        date_set = self._get_set(s, e)
+
+        if len(dates) == 1:
+            return _to_dt_int(dates[0]) in date_set
+
+        return [(_to_dt_int(d) in date_set) for d in dates]
