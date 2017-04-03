@@ -371,13 +371,15 @@ def apply_rules(*rules):
                 try:
                     call_args = inspect.getcallargs(unwrapper(func), *args, **kwargs)
                 except TypeError as e:
-                    raise RQTypeError(*e.args).with_traceback(tb)
+                    six.reraise(RQTypeError, RQTypeError(*e.args), tb)
+                    return
 
                 try:
                     for r in rules:
                         r.verify(func.__name__, call_args[r.arg_name])
                 except RQInvalidArgument as e:
-                    raise e.with_traceback(tb)
+                    six.reraise(RQInvalidArgument, e, tb)
+                    return
 
                 raise
 
