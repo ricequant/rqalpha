@@ -135,6 +135,8 @@ class BaseDataSource(AbstractDataSource):
 
     @staticmethod
     def _factor_for_date(dates, factors, d):
+        if d < dates[0]:
+            return 1
         if d > dates[-1]:
             return factors[-1]
         pos = dates.searchsorted(d, side='right')
@@ -146,10 +148,17 @@ class BaseDataSource(AbstractDataSource):
 
     FIELDS_REQUIRE_ADJUSTMENT = set(list(PRICE_FIELDS) + ['volume'])
 
-    def _adjust_bar(self, order_book_id, bars, fields):
+    def _adjust_bar(self, order_book_id, bars, fields, adjust_type, adjust_orig):
         ex_factors = self._ex_cum_factor.get_factors(order_book_id)
         if ex_factors is None:
             return bars if fields is None else bars[fields]
+
+        if adjust_type == 'pre':
+            adjust_orig_dt = np.uint64(convert_date_to_int(adjust_orig))
+            base_adjust_rate = self._factor_for_date(
+                ex_factors['start_date'], ex_factors['ex_cum_factor'], adjust_orig_dt)
+        else:
+            base_adjust_rate = 1.0
 
         start_date = bars['datetime'][0]
         end_date = bars['datetime'][-1]
@@ -157,15 +166,15 @@ class BaseDataSource(AbstractDataSource):
         dates = ex_factors['start_date']
         ex_cum_factors = ex_factors['ex_cum_factor']
 
-        if (self._factor_for_date(dates, ex_cum_factors, start_date) ==
-                self._factor_for_date(dates, ex_cum_factors, end_date)):
+        if (self._factor_for_date(dates, ex_cum_factors, start_date) == base_adjust_rate and
+            self._factor_for_date(dates, ex_cum_factors, end_date) == base_adjust_rate):
             return bars if fields is None else bars[fields]
 
         factors = np.array([self._factor_for_date(dates, ex_cum_factors, d) for d in bars['datetime']],
                            dtype=np.float64)
 
-        # 前复权
-        factors /= factors[-1]
+        # 复权
+        factors /= base_adjust_rate
         if isinstance(fields, str):
             if fields in self.PRICE_FIELDS:
                 return bars[fields] * factors
@@ -182,7 +191,8 @@ class BaseDataSource(AbstractDataSource):
                 result[f] /= factors
         return result
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt,
+                     skip_suspended, adjust_type, adjust_orig):
         if frequency != '1d':
             raise NotImplementedError
 
@@ -198,14 +208,14 @@ class BaseDataSource(AbstractDataSource):
         i = bars['datetime'].searchsorted(dt, side='right')
         left = i - bar_count if i >= bar_count else 0
         bars = bars[left:i]
-        if instrument.type in {'Future', 'INDX'} or len(bars) == 1:
+        if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
             # 期货及指数无需复权
             return bars if fields is None else bars[fields]
 
         if isinstance(fields, str) and fields not in self.FIELDS_REQUIRE_ADJUSTMENT:
             return bars if fields is None else bars[fields]
 
-        return self._adjust_bar(instrument.order_book_id, bars, fields)
+        return self._adjust_bar(instrument.order_book_id, bars, fields, adjust_type, adjust_orig)
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor)

@@ -137,11 +137,14 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return pd.Series(data[field], index=[convert_int_to_datetime(t) for t in data['datetime']])
 
     def fast_history(self, order_book_id, bar_count, frequency, field, dt):
-        return self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended=False)
+        return self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended=False,
+                                 adjust_type='pre', adjust_orig=dt)
 
-    def history_bars(self, order_book_id, bar_count, frequency, field, dt, skip_suspended=True):
+    def history_bars(self, order_book_id, bar_count, frequency, field, dt,
+                     skip_suspended, adjust_type, adjust_orig):
         instrument = self.instruments(order_book_id)
-        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt, skip_suspended)
+        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
+                                              skip_suspended, adjust_type, adjust_orig)
 
     def current_snapshot(self, order_book_id, frequency, dt):
         instrument = self.instruments(order_book_id)

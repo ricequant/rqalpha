@@ -322,10 +322,12 @@ def get_yield_curve(date=None, tenor=None):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
              verify_that('bar_count').is_instance_of(int).is_greater_than(0),
-             verify_that('frequency').is_in(('1m', '1d')),
+             verify_that('frequency').is_valid_frequency(),
              verify_that('fields').are_valid_fields(names.VALID_HISTORY_FIELDS, ignore_none=True),
-             verify_that('skip_suspended').is_instance_of(bool))
-def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True):
+             verify_that('skip_suspended').is_instance_of(bool),
+             verify_that('adjust_type').is_in({'pre', 'none', 'post'}))
+def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True,
+                 adjust_type='pre'):
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
 
@@ -362,9 +364,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     :type order_book_id: `str`
 
     :param int bar_count: 获取的历史数据数量，必填项
-
     :param str frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
-
     :param str fields: 返回数据字段。必填项。见下方列表。
 
     =========================   ===================================================
@@ -383,6 +383,8 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     settlement                  结算价（期货日线专用）
     prev_settlement             结算价（期货日线专用）
     =========================   ===================================================
+
+    :param str adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
 
     :return: `ndarray`, 方便直接与talib等计算库对接，效率较history返回的DataFrame更高。
 
@@ -403,15 +405,19 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
 
     dt = env.calendar_dt
 
-    if frequency == '1m' and env.config.base.frequency == '1d':
+    if frequency[-1] == 'm' and env.config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
+
+    if adjust_type not in {'pre', 'post', 'none'}:
+        raise RuntimeError('invalid adjust_type')
 
     if (env.config.base.frequency == '1m' and frequency == '1d') or \
         (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
         # 在分钟回测获取日线数据, 应该推前一天，这里应该使用 trading date
         dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
 
-    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended)
+    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt,
+                                       skip_suspended, adjust_type, env.trading_dt)
 
 
 @export_as_api

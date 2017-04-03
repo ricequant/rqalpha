@@ -183,7 +183,8 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended,
+                     adjust_type, adjust_orig):
         """
         获取历史数据
 
@@ -212,8 +213,9 @@ class AbstractDataSource(object):
         =========================   ===================================================
 
         :param datetime.datetime dt: 时间
-
         :param bool skip_suspended: 是否跳过停牌日
+        :param str adjust_type: 复权类型，'pre', 'none', 'post'
+        :param datetime.datetime adjust_orig: 复权起点；
 
         :return: `numpy.ndarray`
 
@@ -240,7 +242,6 @@ class AbstractDataSource(object):
 
     def get_trading_minutes_for(self, instrument, trading_dt):
         """
-
         获取证券某天的交易时段，用于期货回测
 
         :param instrument: 合约对象
