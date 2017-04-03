@@ -170,7 +170,6 @@ class ArgumentChecker(object):
                     _(u"function {}: invalid {} argument, valid: {}, got {} (type: {})").format(
                         func_name, self._arg_name, repr(valid_values), value, type(value))
                 )
-            return
 
         self._rules.append(check_is_in)
         return self
@@ -197,11 +196,13 @@ class ArgumentChecker(object):
                         _(u"function {}: invalid field {}, valid fields are {}, got {} (type: {})").format(
                             func_name, invalid_fields, repr(valid_fields), fields, type(fields)
                         ))
+                return
 
             raise RQInvalidArgument(
                 _(u"function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
                     func_name, self._arg_name, repr(fields), type(fields)
                 ))
+
         self._rules.append(check_are_valid_fields)
         return self
 
@@ -233,6 +234,7 @@ class ArgumentChecker(object):
             if isinstance(value, six.string_types):
                 try:
                     v = parse_date(value)
+                    return
                 except ValueError:
                     raise RQInvalidArgument(
                         _(u"function {}: invalid {} argument, expect a valid date, got {} (type: {})").format(
