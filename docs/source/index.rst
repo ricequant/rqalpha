@@ -65,7 +65,7 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
     通过 RQAlpha 运行的策略示例
 
 :doc:`intro/optimizing_parameters`
-    对 RQAlpha 参数调优
+    通过 RQAlpha 进行参数调优
 
 :doc:`intro/virtual_machine`
     RQAlpha 开箱即用虚拟机
