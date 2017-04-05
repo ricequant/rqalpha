@@ -117,7 +117,6 @@ RQAlpha可以输出一个 pickle 文件，里面为一个 dict 。keys 包括
     #  'max_drawdown': 0.087999999999999995,
     #  'pnl': 26624.358,
     #  'portfolio_value': 1026624.358,
-    #  'run_id': 9999,
     #  'run_type': 'BACKTEST',
     #  'sharpe': 0.016,
     #  'slippage': 0,

@@ -197,6 +197,7 @@ class Risk(object):
     def _calc_tracking_error(self):
         if len(self._portfolio) < 2:
             self._tracking_error = 0
+            self._annual_tracking_error = 0
             return 0
 
         active_return = self._portfolio - self._benchmark
@@ -207,7 +208,6 @@ class Risk(object):
         self._tracking_error = active_return.std(ddof=1)
         #self._annual_tracking_error = (sum_mean_squares ** 0.5) / (self._annual_factor ** 0.5)
         self._annual_tracking_error = self._tracking_error * (self._annual_factor ** 0.5)
-
 
     @property
     def tracking_error(self):

@@ -1,4 +1,59 @@
-2.0.0-beta
+==================
+CHANGELOG
+==================
+
+2.0.6
+==================
+
+- 解决在 Python 2.x 下安装 RQAlpha 提示 `requirements-py2.txt Not Found` 的问题
+- 解决 `Benchmark` 无法显示的问题
+- 解决 `rqalpha mod list` 显示不正确的问题
+- 现在可以通过配置 `base.extra_vars` 向策略中预定义变量了。用法如下:
+
+.. code-block:: python3
+
+    from rqalpha import run
+
+    config = {
+      "base": {
+        "strategy_file": "strategy.py",
+        "start_date": "2016-06-01",
+        "end_date": "2016-07-01",
+        "stock_starting_cash":100000,
+        "benchmark": '000300.XSHG'
+      },  
+      "extra":{
+        "context_vars":{
+          "short":5,
+          "middle":10,
+          "long":21
+        }
+      }
+    }
+
+    result_dict = run(config)
+
+    # 以下是策略代码:
+
+    def handle_bar(context):
+        print(context.short)    # 5
+        print(context.middle)   # 10
+        print(context.long)     # 21
+
+2.0.1
+==================
+
+- 修改配置的读取方式，不再从 `~/.rqalpha/config.yml` 读取自定义配置信息，而是默认从当前路径读取 `config.yml`，如果没找到，则会读取系统默认配置信息
+- 现在不再对自定义信息进行版本检查
+- :code:`rqalpha generate_config` 现在会生成包含所有默认系统配置信息的 `config.yml` 文件。
+- :code:`RUN_TYPE` 增加 :code:`LIVE_TRADING`
+- 修复 :code:`history_bars` 获取日期错误产生的问题
+- 修复执行 :code:`context.run_info` 会报错的问题
+- 修复持久化报错的问题
+- 增加 Order Persist 相关内容
+
+
+2.0.0
 ==================
 
 2.0.0 详细修改内容请访问：`RQAlpha 2.0.0 <https://github.com/ricequant/rqalpha/issues/65>`_
@@ -62,8 +117,9 @@
 - 删除 :code:`DEFAULT_FUTURE_INFO` 变量，现在可以直接通过 :code:`data_proxy` 获取相关数据
 - 通过 `better_exceptions <https://github.com/Qix-/better-exceptions>`_ 提供更好的错误堆栈提示体验
 - 对字符串的处理进行了优化，现在可以正确在 Python2.x/3.x 下显示中文了
-- 修复 `update_bundle` 直接在代码中调用会报错的问题
+- 修复 :code:`update_bundle` 直接在代码中调用会报错的问题
 - 增加对于下单量为0的订单过滤，不再会创建订单，也不再会输出警报日志
+- 增加 :code:`is_suspended` 和 :code:`is_st_stock` API 的支持
 
 0.3.14
 ==================

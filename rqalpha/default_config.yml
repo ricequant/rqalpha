@@ -1,3 +1,5 @@
+# see more config
+# http://rqalpha.readthedocs.io/zh_CN/stable/api/config.html
 version: 0.1.5
 
 # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
@@ -40,7 +42,7 @@ extra:
   # 或者设置 `error` 只查看错误级别的日志输出
   log_level: info
   user_system_log_disabled: false
-  # 在回测结束后，选择是否查看图形化的收益曲线
+  # 通过该参数可以将预定义变量传入 `context` 内。
   context_vars: ~
   # force_run_init_when_pt_resume: 在PT的resume模式时，是否强制执行用户init。主要用于用户改代码。
   force_run_init_when_pt_resume: false

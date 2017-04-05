@@ -34,14 +34,14 @@ from ..utils.py2 import to_utf8
 from ..mod.utils import mod_config_value_parse
 
 
-def load_config(config_path, loader=yaml.Loader, verify_version=True):
+def load_config(config_path, loader=yaml.Loader):
+    if config_path is None:
+        return {}
     if not os.path.exists(config_path):
         system_log.error(_(u"config.yml not found in {config_path}").format(config_path))
         return False
     with codecs.open(config_path, encoding="utf-8") as stream:
         config = yaml.load(stream, loader)
-    if verify_version:
-        config = config_version_verify(config, config_path)
     return config
 
 
@@ -50,30 +50,49 @@ def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
 
 
-def get_default_config_path(tmpl):
-    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/{}.yml".format(tmpl)))
-    if not os.path.exists(default_config_path):
-        return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../{}_template.yml".format(tmpl)))
+def get_mod_config_path(generate=False):
+    mod_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/mod_config.yml"))
+    mod_template_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../mod_config_template.yml"))
+    if not os.path.exists(mod_config_path):
+        if generate:
+            dir_path = os.path.dirname(mod_config_path)
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
+            shutil.copy(mod_template_path, mod_config_path)
+            return mod_config_path
+        else:
+            return mod_template_path
+    return mod_config_path
+
+
+def get_user_config_path(config_path=None):
+    if config_path is None:
+        config_path = os.path.abspath(os.path.join(os.getcwd(), "config.yml"))
     else:
-        return default_config_path
+        if not os.path.exists(config_path):
+            system_log.error(_("config path: {config_path} does not exist.").format(config_path=config_path))
+    if not os.path.exists(config_path):
+        return None
+    else:
+        return config_path
 
 
-def config_version_verify(config, config_path):
-    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
-    default_config = load_config(config_template_path, verify_version=False)
-    config_version = config.get("version", None)
-    if config_version != default_config["version"]:
-        back_config_file_path = config_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
-        shutil.move(config_path, back_config_file_path)
-        shutil.copy(config_template_path, config_path)
-
-        system_log.warning(_(u"""
-Your current config file {config_file_path} is too old and may cause RQAlpha running error.
-RQAlpha has replaced the config file with the newest one.
-the backup config file has been saved in {back_config_file_path}.
-        """).format(config_file_path=config_path, back_config_file_path=back_config_file_path))
-        config = default_config
-    return config
+# def config_version_verify(config, config_path):
+#     default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml")
+#     default_config = load_config(default_config_path, verify_version=False)
+#     config_version = config.get("version", None)
+#     if config_version != default_config["version"]:
+#         back_config_file_path = config_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
+#         shutil.move(config_path, back_config_file_path)
+#         shutil.copy(default_config_path, config_path)
+#
+#         system_log.warning(_(u"""
+# Your current config file {config_file_path} is too old and may cause RQAlpha running error.
+# RQAlpha has replaced the config file with the newest one.
+# the backup config file has been saved in {back_config_file_path}.
+#         """).format(config_file_path=config_path, back_config_file_path=back_config_file_path))
+#         config = default_config
+#     return config
 
 
 def set_locale(lc):
@@ -96,16 +115,16 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     set_locale(config_args.get("extra__locale", None))
 
-    config_path = get_default_config_path("config") if config_path is None else os.path.abspath(config_path)
-    mod_config_path = get_default_config_path("mod_config")
+    user_config_path = get_user_config_path(config_path)
+    mod_config_path = get_mod_config_path()
 
     # load default config from rqalpha
     config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
     # load mod config
-    mod_config = load_config(mod_config_path, verify_version=False)
+    mod_config = load_config(mod_config_path)
     deep_update(mod_config, config)
     # load user config
-    user_config = load_config(config_path)
+    user_config = load_config(user_config_path)
     deep_update(user_config, config)
 
     # use config_args to extend config
@@ -175,9 +194,9 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
             user_system_log.handlers.append(user_std_handler)
 
     if extra_config.context_vars:
-        import base64
-        import json
-        extra_config.context_vars = json.loads(base64.b64decode(extra_config.context_vars).decode('utf-8'))
+        import simplejson as json
+        if isinstance(extra_config.context_vars,  six.string_types):
+            extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
 
     if base_config.stock_starting_cash < 0:
         raise patch_user_exc(ValueError(_('invalid stock starting cash: {}').format(base_config.stock_starting_cash)))
