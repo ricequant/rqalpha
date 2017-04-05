@@ -110,11 +110,12 @@ class SimulationEventSource(AbstractEventSource):
             return []
         merge_ticks = np.concatenate(ticks_list)
 
-        merge_ticks.sort(kind='mergesort', order=("date", "time"))
+        merge_ticks.sort(kind='mergesort', order=("trading_date", "date", "time"))
 
-        time_arr = merge_ticks["date"].astype(np.uint64) * 1000000000 + merge_ticks["time"]
-        last_idx = time_arr.searchsorted(convert_dt_to_int(last_dt) * 1000)
-        merge_ticks = merge_ticks[last_idx:]
+        if last_dt is not None:
+            time_arr = merge_ticks["date"].astype(np.uint64) * 1000000000 + merge_ticks["time"]
+            last_idx = time_arr.searchsorted(convert_dt_to_int(last_dt) * 1000)
+            merge_ticks = merge_ticks[last_idx:]
 
         return merge_ticks
 
@@ -178,14 +179,11 @@ class SimulationEventSource(AbstractEventSource):
                 yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
         elif frequency == "tick":
             data_proxy = self._env.data_proxy
+            last_dt = None
             for day in data_proxy.get_trading_dates(start_date, end_date):
+                before_trading_flag = True
                 date = day.to_pydatetime()
-                last_dt = date
                 done = False
-
-                before_trading_dt = date.replace(hour=8, minute=30)
-                yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
-                            trading_dt=before_trading_dt)
 
                 while True:
                     if done:
@@ -194,18 +192,28 @@ class SimulationEventSource(AbstractEventSource):
 
                     merge_ticks = self._get_merge_ticks(date, last_dt)
 
+                    if before_trading_flag:
+                        if len(merge_ticks) > 0:
+                            raw_tick = merge_ticks[0]
+                            order_book_id = self.order_book_id_map[raw_tick["order_book_id"]]
+                            tick = Tick(order_book_id, raw_tick)
+                            dt = tick.datetime
+                            before_trading_flag = False
+                            before_trading_dt = dt - datetime.timedelta(minutes=30)
+                            yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
+                                        trading_dt=before_trading_dt)
+
                     for idx in range(len(merge_ticks)):
                         raw_tick = merge_ticks[idx]
-                        order_book_id = self.order_book_id_map[raw_tick[-1]]
+                        order_book_id = self.order_book_id_map[raw_tick["order_book_id"]]
 
                         tick = Tick(order_book_id, raw_tick)
-                        dt = tick.datetime
+                        last_dt = dt = tick.datetime
 
                         yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=dt, tick=tick)
 
                         if self._universe_changed:
                             self._universe_changed = False
-                            last_dt = dt
                             exit_loop = False
                             break
 
