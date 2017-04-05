@@ -195,7 +195,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     if extra_config.context_vars:
         import simplejson as json
-        if isinstance(extra_config.context_vars,  six.string_types):
+        if isinstance(extra_config.context_vars, six.string_types):
             extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
 
     if base_config.stock_starting_cash < 0:
