@@ -42,7 +42,6 @@ class RealtimeEventSource(AbstractEventSource):
 
         self.quotation_engine_thread = Thread(target=self.quotation_worker)
         self.quotation_engine_thread.daemon = True
-        self.quotation_worker_started = False
 
         self.clock_engine_thread = Thread(target=self.clock_worker)
         self.clock_engine_thread.daemon = True
@@ -60,14 +59,12 @@ class RealtimeEventSource(AbstractEventSource):
 
     def quotation_worker(self):
         while True:
-            if True or not is_holiday_today() and is_tradetime_now():
+            if not is_holiday_today() and is_tradetime_now():
                 order_book_id_list = sorted(Environment.get_instance().data_proxy.all_instruments("CS").order_book_id.tolist())
                 code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
 
                 try:
-                    realtime_quotes_df = get_realtime_quotes(code_list)
-                    self.event_queue.put((None, self.MARKET_DATA_EVENT, realtime_quotes_df))
-                    self.quotation_worker_started = True
+                    data_board.realtime_quotes_df = get_realtime_quotes(code_list)
                 except Exception as e:
                     system_log.exception("get_realtime_quotes fail")
                     continue
@@ -77,7 +74,7 @@ class RealtimeEventSource(AbstractEventSource):
     def clock_worker(self):
         while True:
             # wait for the first data ready
-            if self.quotation_worker_started:
+            if not data_board.realtime_quotes_df.empty:
                 break
             time.sleep(0.1)
 
@@ -91,14 +88,14 @@ class RealtimeEventSource(AbstractEventSource):
             dt = datetime.datetime.now()
 
             if dt.strftime("%H:%M:%S") >= "08:30:00" and dt.date() > self.before_trading_fire_date:
-                self.event_queue.put((dt, EVENT.BEFORE_TRADING, None))
+                self.event_queue.put((dt, EVENT.BEFORE_TRADING))
                 self.before_trading_fire_date = dt.date()
             elif dt.strftime("%H:%M:%S") >= "15:10:00" and dt.date() > self.after_trading_fire_date:
-                self.event_queue.put((dt, EVENT.AFTER_TRADING, None))
+                self.event_queue.put((dt, EVENT.AFTER_TRADING))
                 self.after_trading_fire_date = dt.date()
 
-            if True or is_tradetime_now():
-                self.event_queue.put((dt, EVENT.BAR, None))
+            if is_tradetime_now():
+                self.event_queue.put((dt, EVENT.BAR))
 
     def events(self, start_date, end_date, frequency):
         running = True
@@ -110,10 +107,7 @@ class RealtimeEventSource(AbstractEventSource):
             real_dt = datetime.datetime.now()
             while True:
                 try:
-                    dt, event_type, data = self.event_queue.get(timeout=1)
-                    if event_type == self.MARKET_DATA_EVENT:
-                        data_board.realtime_quotes_df = data
-                        continue
+                    dt, event_type = self.event_queue.get(timeout=1)
                     break
                 except Empty:
                     continue
