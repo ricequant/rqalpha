@@ -17,6 +17,12 @@
 import six
 
 
+if six.PY2:
+    import sys
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
+
+
 def to_utf8(string):
     try:
         if six.PY2:
