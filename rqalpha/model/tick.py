@@ -157,4 +157,12 @@ class Tick(object):
         return self._tick['limit_down']
 
     def __repr__(self):
-        return str(self._tick)
+        items = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            items.append((name, getattr(self, name)))
+        return "Tick({0})".format(', '.join('{0}: {1}'.format(k, v) for k, v in items))
+
+    def __getitem__(self, key):
+        return getattr(self, key)
