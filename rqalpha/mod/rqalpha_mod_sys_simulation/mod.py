@@ -37,9 +37,7 @@ class SimulationMod(AbstractMod):
         if env.config.base.margin_multiplier <= 0:
             raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
 
-        from rqalpha.core.tick_price_board import TickPriceBoard
         if env.config.base.frequency == "tick":
-            env.price_board = TickPriceBoard()
             mod_config.volume_limit = False
 
         if mod_config.signal:
