@@ -30,8 +30,6 @@ class DataSource(BaseDataSource):
         self._env = Environment.get_instance()
 
     def get_bar(self, instrument, dt, frequency):
-        # from ipdb import set_trace ; set_trace()
-        system_log.debug("data_board.realtime_quotes_df {}", data_board.realtime_quotes_df)
         bar = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         return bar
 
