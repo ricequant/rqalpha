@@ -368,7 +368,9 @@ def is_suspended(order_book_id, count=1):
 
     :param str order_book_id: 某只股票的代码或股票代码，可传入单只股票的order_book_id, symbol
 
-    :return: `bool`
+    :param int count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+
+    :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
     """
     dt = Environment.get_instance().calendar_dt.date()
     order_book_id = assure_stock_order_book_id(order_book_id)
@@ -390,7 +392,9 @@ def is_st_stock(order_book_id, count=1):
 
     :param str order_book_id: 某只股票的代码，可传入单只股票的order_book_id, symbol
 
-    :return: `bool`
+    :param int count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+
+    :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
     """
     dt = Environment.get_instance().calendar_dt.date()
     order_book_id = assure_stock_order_book_id(order_book_id)
