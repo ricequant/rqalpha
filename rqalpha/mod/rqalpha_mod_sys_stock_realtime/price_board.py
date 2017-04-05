@@ -27,17 +27,13 @@ class StockRealtimePriceBoard(AbstractPriceBoard):
         return self.realtime_quotes_df.loc[order_book_id]['last']
 
     def get_limit_up(self, order_book_id):
-        series = self.realtime_quotes_df.loc[order_book_id]
-        rate = 1.1
-        if "ST" in series["name"]:
-            rate = 1.05
-        return series["prev_close"] * rate
+        return self.realtime_quotes_df.loc[order_book_id]['limit_up']
 
     def get_limit_down(self, order_book_id):
-        return tick_snapshot['limit_down']
+        return self.realtime_quotes_df.loc[order_book_id]['limit_down']
 
-    def get_a1(self):
-        pass
+    def get_a1(self, order_book_id):
+        return self.realtime_quotes_df.loc[order_book_id]['a1_p']
 
-    def get_b1(self):
-        pass
+    def get_b1(self, order_book_id):
+        return self.realtime_quotes_df.loc[order_book_id]['b1_p']
