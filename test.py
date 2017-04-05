@@ -277,8 +277,13 @@ def write_csv(path, fields):
                 writer.writerow({'date_time': end_time, 'time_spend': time_spend})
     else:
         if 0 < len(old_test_times) < 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times))/len(old_test_times) * 1.1:
+            print('Average time of last 5 runs:', float(sum(float(i['time_spend']) for i in old_test_times))/len(old_test_times))
+            print('Now time spend:', time_spend)
             raise RuntimeError('Performance regresses!')
         elif len(old_test_times) >= 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times[-5:]))/5 * 1.1:
+            print('Average time of last 5 runs:',
+                  float(sum(float(i['time_spend']) for i in old_test_times[-5:])) / 5)
+            print('Now time spend:', time_spend)
             raise RuntimeError('Performance regresses!')
         else:
             with open(path, 'a') as csv_file:

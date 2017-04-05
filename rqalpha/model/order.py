@@ -235,10 +235,10 @@ class Order(object):
         self._status = ORDER_STATUS.ACTIVE
 
     def fill(self, trade):
-        amount = trade.last_quantity
-        assert self.filled_quantity + amount <= self.quantity
-        new_quantity = self._filled_quantity + amount
-        self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * amount) / new_quantity
+        quantity = trade.last_quantity
+        assert self.filled_quantity + quantity <= self.quantity
+        new_quantity = self._filled_quantity + quantity
+        self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
         self._transaction_cost += trade.commission + trade.tax
         self._filled_quantity = new_quantity
         if self.unfilled_quantity == 0:

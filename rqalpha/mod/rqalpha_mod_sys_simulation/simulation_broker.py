@@ -30,6 +30,7 @@ from .utils import init_portfolio
 class SimulationBroker(AbstractBroker, Persistable):
     def __init__(self, env, mod_config):
         self._env = env
+        self._mod_config = mod_config
 
         self._matcher = Matcher(mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
@@ -43,9 +44,9 @@ class SimulationBroker(AbstractBroker, Persistable):
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
         # 该事件会触发策略的handle_bar函数
-        self._env.event_bus.add_listener(EVENT.BAR, self.bar)
+        self._env.event_bus.add_listener(EVENT.BAR, self.on_bar)
         # 该事件会触发策略的handel_tick函数
-        self._env.event_bus.add_listener(EVENT.TICK, self.tick)
+        self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
 
@@ -122,21 +123,22 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
 
-    def bar(self, event):
-        bar_dict = event.bar_dict
+    def on_bar(self, event):
         env = Environment.get_instance()
-        self._matcher.update(env.calendar_dt, env.trading_dt, bar_dict)
+        self._matcher.update(env.calendar_dt, env.trading_dt)
         self._match()
 
-    def tick(self, event):
-        # TODO support tick matching
-        pass
-        # env = Environment.get_instance()
-        # self._matcher.update(env.calendar_dt, env.trading_dt, tick)
-        # self._match()
+    def on_tick(self, event):
+        tick = event.tick
+        env = Environment.get_instance()
+        self._matcher.update(env.calendar_dt, env.trading_dt)
+        self._match(tick.order_book_id)
 
-    def _match(self):
-        self._matcher.match(self._open_orders)
+    def _match(self, order_book_id=None):
+        open_orders = self._open_orders
+        if order_book_id is not None:
+            open_orders = [(a, o) for (a, o) in self._open_orders if o.order_book_id == order_book_id]
+        self._matcher.match(open_orders)
         final_orders = [(a, o) for a, o in self._open_orders if o.is_final()]
         self._open_orders = [(a, o) for a, o in self._open_orders if not o.is_final()]
 
