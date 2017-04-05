@@ -2,9 +2,6 @@
 RQAlpha SYS_stock_realtime Mod
 ===============================
 
-Simple A Stock Realtime Trade Mod
-============================
-
 使用该Mod可以接收实时行情进行触发。用于 RQAlpha 实时模拟交易，实盘交易。
 
 这个是一个初级的DEMO。

@@ -30,11 +30,6 @@ class DataSource(BaseDataSource):
         self.realtime_quotes_df = pd.DataFrame()
 
     def get_bar(self, instrument, dt, frequency):
-        # if frequency == '1d':
-        #     return super(DataSource, self).get_bar(instrument, dt, frequency)
-
-        # FIXME: 目前这样仅仅给撮合引擎用，不是定义的bar
-        # FIXME: self.realtime_quotes_df 是从 event_source.py 那边「飞线」设置过来的
         bar = self.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
 
         return bar

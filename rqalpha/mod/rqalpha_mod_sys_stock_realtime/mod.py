@@ -33,6 +33,9 @@ class RealtimeTradeMod(AbstractMod):
             persist_provider = DiskPersistProvider(mod_config.persist_path)
             env.set_persist_provider(persist_provider)
 
+            from .price_board import StockRealtimePriceBoard
+            env.set_price_board(StockRealtimePriceBoard())
+
             env.config.base.persist = True
             env.config.base.persist_mode = PERSIST_MODE.REAL_TIME
 
