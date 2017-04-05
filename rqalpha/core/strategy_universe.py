@@ -38,8 +38,10 @@ class StrategyUniverse(object):
     def update(self, universe):
         if isinstance(universe, (six.string_types, Instrument)):
             universe = [universe]
-        self._set = set(universe)
-        Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_UNIVERSE_CHANGED, universe=self._set))
+        new_set = set(universe)
+        if new_set != self._set:
+            self._set = new_set
+            Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_UNIVERSE_CHANGED, universe=self._set))
 
     def get(self):
         return self._set
