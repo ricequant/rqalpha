@@ -406,8 +406,8 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     if frequency == '1m' and env.config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
 
-    if (env.config.base.frequency == '1m' and frequency == '1d') or \
-        (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
+    if ((env.config.base.frequency == '1m' and frequency == '1d') or
+        (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING)):
         # 在分钟回测获取日线数据, 应该推前一天，这里应该使用 trading date
         dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
 
@@ -669,7 +669,7 @@ def to_date(date):
             return date.date()
         except AttributeError:
             return date
-    
+
     raise RQInvalidArgument('unknown date value: {}'.format(date))
 
 
