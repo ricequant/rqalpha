@@ -65,7 +65,7 @@ def order_book_id_2_tushare_code(order_book_id):
 
 def get_realtime_quotes(code_list, open_only=False):
     import tushare as ts
-
+    
     max_len = 800
     loop_cnt = int(math.ceil(float(len(code_list)) / max_len))
 
@@ -98,7 +98,7 @@ def get_realtime_quotes(code_list, open_only=False):
     total_df["close"] = total_df["price"]
 
     total_df = total_df.set_index("order_book_id").sort_index()
-
+    
     if open_only:
         total_df = total_df[total_df.open > 0]
 
