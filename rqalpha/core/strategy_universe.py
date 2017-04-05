@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import json
+import copy
 
 import six
 
@@ -44,7 +45,7 @@ class StrategyUniverse(object):
             Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_UNIVERSE_CHANGED, universe=self._set))
 
     def get(self):
-        return self._set
+        return copy.copy(self._set)
 
     def _clear_de_listed(self, event):
         de_listed = set()

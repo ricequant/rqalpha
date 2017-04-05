@@ -148,21 +148,11 @@ class SimulationEventSource(AbstractEventSource):
                 yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
         elif frequency == "tick":
             data_proxy = self._env.data_proxy
-            last_dt = None
             for day in data_proxy.get_trading_dates(start_date, end_date):
                 date = day.to_pydatetime()
-                done = False
-                exit_loop = True
-
                 last_tick = None
+                last_dt = None
                 while True:
-                    if done:
-                        break
-                    if exit_loop:
-                        last_dt = None
-
-                    exit_loop = True
-
                     for tick in data_proxy.get_merge_ticks(self._get_universe(), date, last_dt):
                         # find before trading time
                         if last_tick is None:
@@ -177,12 +167,10 @@ class SimulationEventSource(AbstractEventSource):
 
                         if self._universe_changed:
                             self._universe_changed = False
-                            exit_loop = False
                             last_dt = dt
                             break
-
-                    if exit_loop:
-                        done = True
+                    else:
+                        break
 
                 dt = date.replace(hour=15, minute=30)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
