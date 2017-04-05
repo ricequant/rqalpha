@@ -2,9 +2,12 @@
 CHANGELOG
 ==================
 
-2.0.2
+2.0.6
 ==================
 
+- 解决在 Python 2.x 下安装 RQAlpha 提示 `requirements-py2.txt Not Found` 的问题
+- 解决 `Benchmark` 无法显示的问题
+- 解决 `rqalpha mod list` 显示不正确的问题
 - 现在可以通过配置 `base.extra_vars` 向策略中预定义变量了。用法如下:
 
 .. code-block:: python3
