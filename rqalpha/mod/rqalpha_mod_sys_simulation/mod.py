@@ -39,6 +39,18 @@ class SimulationMod(AbstractMod):
 
         if env.config.base.frequency == "tick":
             mod_config.volume_limit = False
+            if mod_config.matching_type not in [
+                MATCHING_TYPE.NEXT_TICK_LAST,
+                MATCHING_TYPE.NEXT_TICK_BEST_OWN,
+                MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY,
+            ]:
+                raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
+        else:
+            if mod_config.matching_type not in [
+                MATCHING_TYPE.NEXT_BAR_OPEN,
+                MATCHING_TYPE.CURRENT_BAR_CLOSE,
+            ]:
+                raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
 
         if mod_config.signal:
             env.set_broker(SignalBroker(env, mod_config))
