@@ -154,6 +154,7 @@ class SimulationEventSource(AbstractEventSource):
                 done = False
                 exit_loop = True
 
+                last_tick = None
                 while True:
                     if done:
                         break
@@ -162,7 +163,6 @@ class SimulationEventSource(AbstractEventSource):
 
                     exit_loop = True
 
-                    last_tick = None
                     for tick in data_proxy.get_merge_ticks(self._get_universe(), date, last_dt):
                         # find before trading time
                         if last_tick is None:
