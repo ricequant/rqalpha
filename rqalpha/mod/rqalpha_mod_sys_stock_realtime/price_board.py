@@ -16,24 +16,23 @@
 # limitations under the License.
 
 from rqalpha.interface import AbstractPriceBoard
-from rqalpha.utils.logger import system_log
+
+from . import data_board
 
 
 class StockRealtimePriceBoard(AbstractPriceBoard):
-    def __init__(self, realtime_quotes_df=None):
-        self.realtime_quotes_df = realtime_quotes_df
 
     def get_last_price(self, order_book_id):
-        return self.realtime_quotes_df.loc[order_book_id]['last']
+        return data_board.realtime_quotes_df.loc[order_book_id]['last']
 
     def get_limit_up(self, order_book_id):
-        return self.realtime_quotes_df.loc[order_book_id]['limit_up']
+        return data_board.realtime_quotes_df.loc[order_book_id]['limit_up']
 
     def get_limit_down(self, order_book_id):
-        return self.realtime_quotes_df.loc[order_book_id]['limit_down']
+        return data_board.realtime_quotes_df.loc[order_book_id]['limit_down']
 
     def get_a1(self, order_book_id):
-        return self.realtime_quotes_df.loc[order_book_id]['a1_p']
+        return data_board.realtime_quotes_df.loc[order_book_id]['a1_p']
 
     def get_b1(self, order_book_id):
-        return self.realtime_quotes_df.loc[order_book_id]['b1_p']
+        return data_board.realtime_quotes_df.loc[order_book_id]['b1_p']

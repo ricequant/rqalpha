@@ -26,6 +26,7 @@ from rqalpha.utils.logger import system_log
 from rqalpha.events import Event, EVENT
 from rqalpha.utils import rq_json
 from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
+from . import data_board
 
 
 class RealtimeEventSource(AbstractEventSource):
@@ -62,7 +63,7 @@ class RealtimeEventSource(AbstractEventSource):
                 code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
 
                 try:
-                    self._env.data_source.realtime_quotes_df = get_realtime_quotes(code_list)
+                    data_board.realtime_quotes_df = get_realtime_quotes(code_list)
                 except Exception as e:
                     system_log.exception("get_realtime_quotes fail")
                     continue
@@ -72,7 +73,7 @@ class RealtimeEventSource(AbstractEventSource):
     def clock_worker(self):
         while True:
             # wait for the first data ready
-            if not self._env.data_source.realtime_quotes_df.empty:
+            if not data_board.realtime_quotes_df.empty:
                 break
             time.sleep(0.1)
 

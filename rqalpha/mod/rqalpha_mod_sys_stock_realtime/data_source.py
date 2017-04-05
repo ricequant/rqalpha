@@ -16,29 +16,27 @@
 
 import datetime
 
-import pandas as pd
-
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
 from rqalpha.model.snapshot import SnapshotObject
+
+from . import data_board
 
 
 class DataSource(BaseDataSource):
     def __init__(self, path):
         super(DataSource, self).__init__(path)
         self._env = Environment.get_instance()
-        self.realtime_quotes_df = pd.DataFrame()
 
     def get_bar(self, instrument, dt, frequency):
-        bar = self.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
-
+        bar = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         return bar
 
     def get_last_price(self, instrument, dt):
-        return self.realtime_quotes_df.loc[instrument.order_book_id]['last']
+        return data_board.realtime_quotes_df.loc[instrument.order_book_id]['last']
 
     def current_snapshot(self, instrument, frequency, dt):
-        snapshot_dict = self.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
+        snapshot_dict = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         snapshot_dict["last"] = snapshot_dict["price"]
         return SnapshotObject(instrument, snapshot_dict)
 
