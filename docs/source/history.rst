@@ -4,6 +4,13 @@
 History
 ==================
 
+2.0.7
+==================
+
+- Fix [Issue 78](https://github.com/ricequant/rqalpha/issues/78)
+- `is_st_stock` | `is_suspended` 支持 `count` 参数
+- 解决大量 Python 2.x 下中文乱码问题
+
 2.0.6
 ==================
 
