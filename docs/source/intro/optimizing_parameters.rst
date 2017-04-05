@@ -52,7 +52,7 @@ TBD
 
     import concurrent.futures
     import multiprocessing
-    from rqalpha.main import run
+    from rqalpha import run
 
 
     tasks = []
@@ -64,7 +64,7 @@ TBD
 			"SHORTPERIOD": short_period,
 			"LONGPERIOD": long_period,
 		    },
-		    "log_level": "verbose",
+		    "log_level": "error",
 		},
 		"base": {
 		    "securities": "stock",
@@ -83,7 +83,7 @@ TBD
 		    },
 		    "sys_analyser": {
 			"enabled": True,
-			"report_save_path": "results/out-{short_period}-{long_period}.pkl".format(
+			"output_file": "results/out-{short_period}-{long_period}.pkl".format(
 			    short_period=short_period,
 			    long_period=long_period,
 			)
@@ -91,7 +91,7 @@ TBD
 		},
 	    }
 
-	    run(config)
+	    tasks.append(config)
 
 
     def run_bt(config):
