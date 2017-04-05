@@ -10,4 +10,4 @@ RQAlpha SYS_stock_realtime Mod
 
 .. code-block:: bash
 
-    rqalpha run -fq 1m -rt p -f ~/tmp/test_a.py -sc 100000 -l verbose
+    rqalpha run -fq 1m -rt p -f ~/tmp/test_a.py -sc 100000 -l verbose -mc sys_stock_realtime.enabled True
