@@ -71,7 +71,7 @@ RQAlpha 策略分析 Mod。
 
 ..  code-block:: bash
 
-    $ rqalpha run -f target_file.py --report target_csv_path -o target_pickle_path --plot --plot-save target_plot_img_path
+    $ rqalpha run -f strategy.py --report target_csv_path -o target_pickle_path --plot --plot-save target_plot_img_path
 
 *   增加 `rqalpha plot` 命令，根据生成的 `pickle` 文件来显示收益曲线图
     *   `--show/--hide` 选项，是否显示收益曲线图
@@ -86,4 +86,3 @@ RQAlpha 策略分析 Mod。
 ..  code-block:: bash
 
     $ rqalpha report result_pickle_file_path target_report_csv_path
-
