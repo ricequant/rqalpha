@@ -67,7 +67,7 @@ cli.commands['run'].params.append(
 
 
 @cli.command()
-@click.argument('result_dict_file', type=click.Path(exists=True), required=True)
+@click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
 @click.option('--show/--hide', 'show', default=True)
 @click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
 def plot(result_dict_file, show, plot_save_file):
