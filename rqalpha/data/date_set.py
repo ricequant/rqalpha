@@ -24,7 +24,7 @@ class DateSet(object):
     def __init__(self, f):
         dates = bcolz.open(f, 'r')
         self._index = dates.attrs['line_map']
-        self._dates = dates[:]
+        self._dates = [int(d) for d in dates]
 
     @lru_cache(None)
     def _get_set(self, s, e):
@@ -47,7 +47,7 @@ class DateSet(object):
         def _to_dt_int(d):
             if isinstance(d, (int, np.int64, np.uint64)):
                 if d > 100000000:
-                    return d // 1000000
+                    return int(d // 1000000)
             else:
                 return d.year*10000 + d.month*100 + d.day
 
