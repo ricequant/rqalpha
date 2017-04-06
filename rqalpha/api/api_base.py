@@ -39,6 +39,7 @@ from ..execution_context import ExecutionContext
 from ..utils import to_industry_code, to_sector_name, unwrapper
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _
+from ..utils.logger import user_log as logger
 
 from ..model.instrument import SectorCodeItem, IndustryCodeItem
 from ..utils.arg_checker import apply_rules, verify_that
@@ -51,6 +52,7 @@ from ..model.order import Order, MarketOrder, LimitOrder
 
 
 __all__ = [
+    'logger',
     'sector_code',
     'industry_code',
     'LimitOrder',
