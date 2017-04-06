@@ -50,6 +50,17 @@ def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
 
 
+def load_mod_config(config_path, loader=yaml.Loader):
+    mod_config = load_config(config_path, loader)
+    if mod_config is None or "mod" not in mod_config:
+        import os
+        os.remove(config_path)
+        config_path = get_mod_config_path()
+        return load_mod_config(config_path, loader)
+    else:
+        return mod_config
+
+
 def get_mod_config_path(generate=False):
     mod_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/mod_config.yml"))
     mod_template_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../mod_config_template.yml"))
@@ -195,7 +206,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
 
     if extra_config.context_vars:
         import simplejson as json
-        if isinstance(extra_config.context_vars,  six.string_types):
+        if isinstance(extra_config.context_vars, six.string_types):
             extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
 
     if base_config.stock_starting_cash < 0:

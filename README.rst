@@ -58,6 +58,40 @@ RQAlpha API
 *   `参数配置`_ : 启动 RQAlpha 参数配置
 *   `API`_ : RQAlpha API 文档
 
+Mod
+============================
+
+RQAlpha 提供了极具拓展性的 Mod Hook 接口，这意味着 RQAlpha 可以非常容易的对接其他量化库，安装和使用 Mod 也非常简单，当您安装好 RQAlpha 后，可以直接通过如下命令对管理您的Mod:
+
+..  code-block:: bash
+    
+    # 查看当前安装的 Mod 列表及状态
+    $ rqalpha mod list
+    # 安装 Mod
+    $ rqalpha mod install xxx
+    # 卸载 Mod
+    $ rqalpha mod uninstall xxx
+    # 启用 Mod
+    $ rqalpha mod enable xxx
+    # 禁用 Mod
+    $ rqalpha mod disable xxx
+
+======================    ==============================================================================================================
+Mod名                      说明
+======================    ==============================================================================================================
+`sys_analyser`_           【系统模块】记录每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，并以csv、plot图标等形式输出分析结果
+`sys_funcat`_             【系统模块】支持以通达信公式的方式写策略
+`sys_progress`_           【系统模块】在控制台输出当前策略的回测进度。
+`sys_risk`_               【系统模块】对订单进行事前风控校验
+`sys_simulation`_         【系统模块】支持回测、撮合、滑点控制等
+`sys_stock_realtime`_     【系统模块】Demo 模块，用于展示如何接入自有行情进行回测/模拟/实盘
+`vnpy`_                   【第三方模块】通过 VNPY 对接期货实盘行情和实盘交易 
+`tushare`_                【第三方模块】Demo Mod，用于展示如何通过tushare 获取实时Bar数据并组装以供RQAlpha使用
+`shipane`_                【第三方模块】集成实盘易SDK，用于对接股票实盘跟单交易
+======================    ==============================================================================================================
+
+如果您基于 RQAlpha 进行了 Mod 扩展，欢迎告知我们，在审核通过后，会在 Mod 列表中添加您的 Mod 信息和链接。
+
 机构版
 ============================
 
@@ -75,19 +109,53 @@ RQAlpha API
 *   业绩分析和风险管理系统
 *   技术支持及定制化开发
 
+Feature Status
+============================
+
+*   VNPY 对接 --> `vnpy`_
+
+    * ✅ 扩展VNPY_Gateway
+    * ✅ 实盘交易对接
+    * ✅ 数据源对接
+    * ✅ 事件源对接
+
+*   Tushare 对接
+
+    * ✅ 数据源对接 --> `rqalpha_mod_sys_stock_realtime`_
+    * ✅ 合成分钟线 --> `rqalpha_mod_tushare`_
+
+*   Tick 相关支持
+
+    * ✅ TICK 相关事件支持 --> `EVENT.PRE_TICK` | `EVENT.TICK` | `EVENT.POST_TICK`
+    * ✅ handle_tick 函数支持
+
+*   Mod Manager --> `通过 Mod 扩展 RQAlpha`_
+
+    * ✅ 定义 Mod 编写规范, workflow && Doc
+    * ✅ 提供 Mod Demo && Tutorial
+    * ✅ 提供 `rqalpha install xx_mod` 等命令 加载第三方 Mod
+
+*   i18n
+
+    * 🚫 English Doc
+
+*   Support Options
+
+    * 🚫 OptionAccount
+    * 🚫 OptionPosition
+
+*   Support BitCoin
+
+    * 🚫 BitcoinAccount
+    * 🚫 BitcoinPosition
+
+
 加入开发
 ============================
 
 *   `如何贡献代码`_
 *   `基本概念`_
 *   `RQAlpha 基于 Mod 进行扩展`_
-
-其他
-============================
-
-*   `FAQ`_
-*   `History`_
-*   `TODO`_
 
 获取帮助
 ============================
@@ -99,27 +167,39 @@ RQAlpha API
 *  在 `Github Issue`_ 中提交issue
 *  RQAlpha 交流群「487188429」
 
+
 .. _Github Issue: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
-.. _RQAlpha 文档: http://rqalpha.readthedocs.io/zh_CN/stable/
+.. _RQAlpha 文档: http://rqalpha.readthedocs.io/zh_CN/latest/
 .. _Ricequant 文档: https://www.ricequant.com/api/python/chn
 .. _Ricequant 社区: https://www.ricequant.com/community/category/all/
-.. _FAQ: http://rqalpha.readthedocs.io/zh_CN/stable/faq.html
-.. _索引: http://rqalpha.readthedocs.io/zh_CN/stable/genindex.html
+.. _FAQ: http://rqalpha.readthedocs.io/zh_CN/latest/faq.html
+.. _索引: http://rqalpha.readthedocs.io/zh_CN/latest/genindex.html
 
-.. _RQAlpha 介绍: http://rqalpha.readthedocs.io/zh_CN/stable/intro/overview.html
-.. _安装指南: http://rqalpha.readthedocs.io/zh_CN/stable/intro/install.html
-.. _10分钟学会 RQAlpha: http://rqalpha.readthedocs.io/zh_CN/stable/intro/tutorial.html
-.. _策略示例: http://rqalpha.readthedocs.io/zh_CN/stable/intro/examples.html
+.. _RQAlpha 介绍: http://rqalpha.readthedocs.io/zh_CN/latest/intro/overview.html
+.. _安装指南: http://rqalpha.readthedocs.io/zh_CN/latest/intro/install.html
+.. _10分钟学会 RQAlpha: http://rqalpha.readthedocs.io/zh_CN/latest/intro/tutorial.html
+.. _策略示例: http://rqalpha.readthedocs.io/zh_CN/latest/intro/examples.html
 
-.. _参数配置: http://rqalpha.readthedocs.io/zh_CN/stable/api/config.html
-.. _API: http://rqalpha.readthedocs.io/zh_CN/stable/api/base_api.html
+.. _参数配置: http://rqalpha.readthedocs.io/zh_CN/latest/api/config.html
+.. _API: http://rqalpha.readthedocs.io/zh_CN/latest/api/base_api.html
 
-.. _如何贡献代码: http://rqalpha.readthedocs.io/zh_CN/stable/development/make_contribute.html
-.. _基本概念: http://rqalpha.readthedocs.io/zh_CN/stable/development/basic_concept.html
-.. _RQAlpha 基于 Mod 进行扩展: http://rqalpha.readthedocs.io/zh_CN/stable/development/mod.html
-.. _History: http://rqalpha.readthedocs.io/zh_CN/stable/history.html
-.. _TODO: http://rqalpha.readthedocs.io/zh_CN/stable/todo.html
+.. _如何贡献代码: http://rqalpha.readthedocs.io/zh_CN/latest/development/make_contribute.html
+.. _基本概念: http://rqalpha.readthedocs.io/zh_CN/latest/development/basic_concept.html
+.. _RQAlpha 基于 Mod 进行扩展: http://rqalpha.readthedocs.io/zh_CN/latest/development/mod.html
+.. _History: http://rqalpha.readthedocs.io/zh_CN/latest/history.html
+.. _TODO: https://github.com/ricequant/rqalpha/blob/master/TODO.md
 .. _develop 分支: https://github.com/ricequant/rqalpha/tree/develop
 .. _master 分支: https://github.com/ricequant/rqalpha
-.. _rqalpha-mod-vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
+.. _rqalpha_mod_sys_stock_realtime: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_stock_realtime/README.rst
+.. _rqalpha_mod_tushare: https://github.com/ricequant/rqalpha-mod-tushare
+.. _通过 Mod 扩展 RQAlpha: http://rqalpha.io/zh_CN/latest/development/mod.html
+.. _sys_analyser: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_analyser/README.rst
+.. _sys_funcat: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_funcat/README.rst
+.. _sys_progress: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_progress/README.rst
+.. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
+.. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
+.. _sys_stock_realtime: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_stock_realtime/README.rst
+.. _vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
+.. _tushare: https://github.com/ricequant/rqalpha-mod-tushare
+.. _shipane: https://github.com/wh1100717/rqalpha-mod-ShiPanE

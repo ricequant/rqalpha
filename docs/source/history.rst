@@ -4,6 +4,59 @@
 History
 ==================
 
+2.0.8
+==================
+
+- Fix [Issue 81](https://github.com/ricequant/rqalpha/issues/81)
+- 解决 `mod_config.yml` 文件解析出错以后，所有的命令报错的问题
+- 默认在 Python 2.x 下 `sys.setdefaultencoding("utf-8")`
+- 优化 `UNIVERSE_CHANGED` 事件，现在只有在universe真正变化时才触发
+
+2.0.7
+==================
+
+- Fix [Issue 78](https://github.com/ricequant/rqalpha/issues/78)
+- `is_st_stock` | `is_suspended` 支持 `count` 参数
+- 解决大量 Python 2.x 下中文乱码问题
+
+2.0.6
+==================
+
+- 解决在 Python 2.x 下安装 RQAlpha 提示 `requirements-py2.txt Not Found` 的问题
+- 解决 `Benchmark` 无法显示的问题
+- 解决 `rqalpha mod list` 显示不正确的问题
+- 现在可以通过配置 `base.extra_vars` 向策略中预定义变量了。用法如下:
+
+.. code-block:: python3
+
+    from rqalpha import run
+
+    config = {
+      "base": {
+        "strategy_file": "strategy.py",
+        "start_date": "2016-06-01",
+        "end_date": "2016-07-01",
+        "stock_starting_cash":100000,
+        "benchmark": '000300.XSHG'
+      },  
+      "extra":{
+        "context_vars":{
+          "short":5,
+          "middle":10,
+          "long":21
+        }
+      }
+    }
+
+    result_dict = run(config)
+
+    # 以下是策略代码:
+
+    def handle_bar(context):
+        print(context.short)    # 5
+        print(context.middle)   # 10
+        print(context.long)     # 21
+
 2.0.2
 ==================
 

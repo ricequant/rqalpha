@@ -22,8 +22,9 @@ from ..utils.py2 import lru_cache
 
 class DateSet(object):
     def __init__(self, f):
-        self._dates = bcolz.open(f, 'r')
-        self._index = self._dates.attrs['line_map']
+        dates = bcolz.open(f, 'r')
+        self._index = dates.attrs['line_map']
+        self._dates = dates[:]
 
     @lru_cache(None)
     def _get_set(self, s, e):

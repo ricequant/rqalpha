@@ -79,9 +79,8 @@ def get_realtime_quotes(code_list, open_only=False):
     index_df["code"] = index_symbol
     index_df["is_index"] = True
     total_df = total_df.append(index_df)
-    total_df = total_df.set_index("code").sort_index()
 
-    columns = set(total_df.columns) - set(["name", "time", "date"])
+    columns = set(total_df.columns) - set(["name", "time", "date", "code"])
     # columns = filter(lambda x: "_v" not in x, columns)
     for label in columns:
         total_df[label] = total_df[label].map(lambda x: 0 if str(x).strip() == "" else x)
@@ -89,13 +88,19 @@ def get_realtime_quotes(code_list, open_only=False):
 
     total_df["chg"] = total_df["price"] / total_df["pre_close"] - 1
 
-    total_df["order_book_id"] = total_df.index
+    total_df["order_book_id"] = total_df["code"]
     total_df["order_book_id"] = total_df["order_book_id"].apply(tushare_code_2_order_book_id)
+
+    total_df = total_df.set_index("order_book_id").sort_index()
 
     total_df["datetime"] = total_df["date"] + " " + total_df["time"]
     total_df["datetime"] = total_df["datetime"].apply(lambda x: convert_dt_to_int(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")))
 
     total_df["close"] = total_df["price"]
+    total_df["last"] = total_df["price"]
+
+    total_df["limit_up"] = total_df.apply(lambda row: row.pre_close * (1.1 if "ST" not in row["name"] else 1.05), axis=1).round(2)
+    total_df["limit_down"] = total_df.apply(lambda row: row.pre_close * (0.9 if "ST" not in row["name"] else 0.95), axis=1).round(2)
 
     if open_only:
         total_df = total_df[total_df.open > 0]
