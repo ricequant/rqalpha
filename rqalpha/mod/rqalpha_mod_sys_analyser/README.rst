@@ -1,8 +1,10 @@
 ===============================
-RQAlpha sys_analyser Mod
+sys_analyser Mod
 ===============================
 
-RQAlpha 策略分析 Mod。启用该 Mod 后会记录下来每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，最终以csv、plot图标等形式输出分析结果。
+RQAlpha 策略分析 Mod。
+
+启用该 Mod 后会记录下来每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，最终以csv、plot图标等形式输出分析结果。
 
 该模块是系统自带模块，不可以删除
 
@@ -27,7 +29,7 @@ RQAlpha 策略分析 Mod。启用该 Mod 后会记录下来每天的下单、成
 ..  code-block:: python
     :linenos:
 
-    __config__ = {
+    {
         "record": True,
         "output_file": None,
         "report_save_path": None,
