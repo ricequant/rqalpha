@@ -42,7 +42,7 @@ class DateSet(object):
         try:
             s, e = self._index[order_book_id]
         except KeyError:
-            return False
+            return [False] * len(dates)
 
         def _to_dt_int(d):
             if isinstance(d, (int, np.int64, np.uint64)):
@@ -52,8 +52,5 @@ class DateSet(object):
                 return d.year*10000 + d.month*100 + d.day
 
         date_set = self._get_set(s, e)
-
-        if len(dates) == 1:
-            return _to_dt_int(dates[0]) in date_set
 
         return [(_to_dt_int(d) in date_set) for d in dates]
