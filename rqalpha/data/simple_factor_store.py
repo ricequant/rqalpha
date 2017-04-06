@@ -19,8 +19,9 @@ import bcolz
 
 class SimpleFactorStore(object):
     def __init__(self, f):
-        self._table = bcolz.open(f, 'r')
-        self._index = self._table.attrs['line_map']
+        table = bcolz.open(f, 'r')
+        self._index = table.attrs['line_map']
+        self._table = table[:]
 
     def get_factors(self, order_book_id):
         try:
