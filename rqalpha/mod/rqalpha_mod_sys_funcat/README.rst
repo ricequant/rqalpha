@@ -4,17 +4,24 @@ sys_funcat Mod
 
 该模块为 RQAlpha 带来了通达信公式的方式写策略。
 
-启用该 Mod ，会自动将 Funcat_ 注入 API 到 RQAlpha 中。
+启用该 Mod ，会自动将 funcat_ 注入 API 到 RQAlpha 中。
+
+该 mod 依赖 funcat_ ，使用前需要安装依赖库：
+
+.. code-block:: bash
+
+    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple funcat
+
 
 开启或关闭 Mod
 ===============================
 
 .. code-block:: bash
 
-    # 启用 Funcat API Mod
+    # 启用 funcat API Mod
     $ rqalpha mod enable sys_funcat
 
-    # 关闭 Funcat API Mod
+    # 关闭 funcat API Mod
     $ rqalpha mod disable sys_funcat
 
 
@@ -110,7 +117,7 @@ API样例策略
 更多 API 介绍
 ===============================
 
-请见 Funcat_ 。
+请见 funcat_ 。
 
 
-.. _Funcat: https://github.com/cedricporter/funcat
+.. _funcat: https://github.com/cedricporter/funcat
