@@ -27,7 +27,6 @@ RQAlpha 策略分析 Mod。
 默认配置项如下：
 
 ..  code-block:: python
-    :linenos:
 
     {
         "record": True,
@@ -40,7 +39,6 @@ RQAlpha 策略分析 Mod。
 您可以通过如下方式来修改模块的配置信息，比如下面的示例中介绍了如何开启显示回测收益曲线图
 
 ..  code-block:: python
-    :linenos:
 
     from rqalpha import run
     config = {
