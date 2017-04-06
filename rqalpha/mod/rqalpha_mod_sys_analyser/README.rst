@@ -1,10 +1,12 @@
 ===============================
-RQAlpha sys_analyser Mod
+sys_analyser Mod
 ===============================
 
-RQAlpha 策略分析 Mod。启用该 Mod 后会记录下来每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，最终以csv、plot图标等形式输出分析结果。
+RQAlpha 策略分析 Mod。
 
-该模块是系统自带模块，不可以删除
+启用该 Mod 后会记录下来每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，最终以csv、plot图标等形式输出分析结果。
+
+该模块是系统模块，不可删除
 
 开启或关闭策略分析 Mod
 ===============================
@@ -25,9 +27,8 @@ RQAlpha 策略分析 Mod。启用该 Mod 后会记录下来每天的下单、成
 默认配置项如下：
 
 ..  code-block:: python
-    :linenos:
 
-    __config__ = {
+    {
         "record": True,
         "output_file": None,
         "report_save_path": None,
@@ -38,7 +39,6 @@ RQAlpha 策略分析 Mod。启用该 Mod 后会记录下来每天的下单、成
 您可以通过如下方式来修改模块的配置信息，比如下面的示例中介绍了如何开启显示回测收益曲线图
 
 ..  code-block:: python
-    :linenos:
 
     from rqalpha import run
     config = {
@@ -71,7 +71,7 @@ RQAlpha 策略分析 Mod。启用该 Mod 后会记录下来每天的下单、成
 
 ..  code-block:: bash
 
-    $ rqalpha run -f target_file.py --report target_csv_path -o target_pickle_path --plot --plot-save target_plot_img_path
+    $ rqalpha run -f strategy.py --report target_csv_path -o target_pickle_path --plot --plot-save target_plot_img_path
 
 *   增加 `rqalpha plot` 命令，根据生成的 `pickle` 文件来显示收益曲线图
     *   `--show/--hide` 选项，是否显示收益曲线图
@@ -86,4 +86,3 @@ RQAlpha 策略分析 Mod。启用该 Mod 后会记录下来每天的下单、成
 ..  code-block:: bash
 
     $ rqalpha report result_pickle_file_path target_report_csv_path
-
