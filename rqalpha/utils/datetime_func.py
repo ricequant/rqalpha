@@ -85,7 +85,7 @@ def convert_int_to_datetime(dt_int):
     return datetime.datetime(year, month, day, hour, minute, second)
 
 
-def convert_date_time_int_to_datetime(date_int, time_int):
+def convert_date_time_ms_int_to_datetime(date_int, time_int):
     date_int, time_int = int(date_int), int(time_int)
     dt = _convert_int_to_date(date_int)
 

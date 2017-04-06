@@ -273,14 +273,15 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_ticks(self, order_book_id, date):
+    def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         """
-        获取 Ticks
+        获取合并的 ticks
 
-        :param str order_book_id: 合约名
-        :param datetime.date date: 日期
+        :param list order_book_id_list: 合约名列表
+        :param datetime.date trading_date: 交易日
+        :param datetime.datetime last_dt: 仅返回 last_dt 之后的时间
 
-        :return: `numpy.ndarray`
+        :return: Tick
         """
         raise NotImplementedError
 

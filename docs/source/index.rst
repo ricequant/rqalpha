@@ -45,26 +45,30 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
     intro/install
     intro/detail_install
     intro/tutorial
+    intro/optimizing_parameters
     intro/examples
     intro/virtual_machine
 
 :doc:`intro/overview`
-    了解RQAlpha
+    了解 RQAlpha
 
 :doc:`intro/install`
-    安装RQAlpha
+    安装 RQAlpha
 
 :doc:`intro/detail_install`
-    如果对Python并不熟悉的话，我们提供了整套开发环境的详细安装教程
+    如果对 Python 并不熟悉的话，我们提供了整套开发环境的详细安装教程
 
 :doc:`intro/tutorial`
-    使用RQAlpha
+    使用 RQAlpha
 
 :doc:`intro/examples`
-    通过RQAlpha运行的策略示例
+    通过 RQAlpha 运行的策略示例
+
+:doc:`intro/optimizing_parameters`
+    通过 RQAlpha 进行参数调优
 
 :doc:`intro/virtual_machine`
-    RQAlpha开箱即用虚拟机
+    RQAlpha 开箱即用虚拟机
 
 
 RQAlpha API
@@ -144,4 +148,3 @@ RQAlpha API
 
 .. _github issue page: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
-

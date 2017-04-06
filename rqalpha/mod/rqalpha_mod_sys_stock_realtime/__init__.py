@@ -16,6 +16,7 @@
 
 
 __config__ = {
+    "priority": 200,
     "persist_path": "./persist/strategy/",
     "fps": 3,
 }
@@ -24,5 +25,3 @@ __config__ = {
 def load_mod():
     from .mod import RealtimeTradeMod
     return RealtimeTradeMod()
-
-

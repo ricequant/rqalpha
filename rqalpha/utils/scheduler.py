@@ -217,7 +217,7 @@ class Scheduler(object):
 
     def _fill_week(self):
         weekday = self._today.isoweekday()
-        weekend = self._today + datetime.timedelta(days=7-weekday)
+        weekend = self._today + datetime.timedelta(days=7 - weekday)
         week_start = weekend - datetime.timedelta(days=6)
 
         left = self._TRADING_DATES.searchsorted(week_start)
@@ -226,9 +226,9 @@ class Scheduler(object):
 
     def _fill_month(self):
         try:
-            month_end = self._today.replace(month=self._today.month+1, day=1)
+            month_end = self._today.replace(month=self._today.month + 1, day=1)
         except ValueError:
-            month_end = self._today.replace(year=self._today.year+1, month=1, day=1)
+            month_end = self._today.replace(year=self._today.year + 1, month=1, day=1)
 
         month_begin = self._today.replace(day=1)
         left, right = self._TRADING_DATES.searchsorted(month_begin), self._TRADING_DATES.searchsorted(month_end)

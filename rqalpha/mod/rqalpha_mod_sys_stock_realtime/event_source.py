@@ -26,9 +26,11 @@ from rqalpha.utils.logger import system_log
 from rqalpha.events import Event, EVENT
 from rqalpha.utils import rq_json
 from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
+from . import data_board
 
 
 class RealtimeEventSource(AbstractEventSource):
+    MARKET_DATA_EVENT = "RealtimeEventSource.MARKET_DATA_EVENT"
 
     def __init__(self, fps):
         self._env = Environment.get_instance()
@@ -38,11 +40,11 @@ class RealtimeEventSource(AbstractEventSource):
         self.before_trading_fire_date = datetime.date(2000, 1, 1)
         self.after_trading_fire_date = datetime.date(2000, 1, 1)
 
-        self.clock_engine_thread = Thread(target=self.clock_worker)
-        self.clock_engine_thread.daemon = True
-
         self.quotation_engine_thread = Thread(target=self.quotation_worker)
         self.quotation_engine_thread.daemon = True
+
+        self.clock_engine_thread = Thread(target=self.clock_worker)
+        self.clock_engine_thread.daemon = True
 
     def set_state(self, state):
         persist_dict = rq_json.convert_json_to_dict(state.decode('utf-8'))
@@ -62,7 +64,7 @@ class RealtimeEventSource(AbstractEventSource):
                 code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
 
                 try:
-                    self._env.data_source.realtime_quotes_df = get_realtime_quotes(code_list)
+                    data_board.realtime_quotes_df = get_realtime_quotes(code_list)
                 except Exception as e:
                     system_log.exception("get_realtime_quotes fail")
                     continue
@@ -72,7 +74,7 @@ class RealtimeEventSource(AbstractEventSource):
     def clock_worker(self):
         while True:
             # wait for the first data ready
-            if not self._env.data_source.realtime_quotes_df.empty:
+            if not data_board.realtime_quotes_df.empty:
                 break
             time.sleep(0.1)
 

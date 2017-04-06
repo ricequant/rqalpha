@@ -27,7 +27,6 @@ from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_date_int, convert_dt_to_int
 from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.model.tick import Tick
 
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
@@ -88,35 +87,6 @@ class SimulationEventSource(AbstractEventSource):
                 trading_minutes = trading_minutes.union(self._get_future_trading_minutes(trading_date))
         return sorted(list(trading_minutes))
     # [END] minute event helper
-
-    def _get_merge_ticks(self, date, last_dt):
-        self.today_ticks_cache = {}
-        data_proxy = self._env.data_proxy
-        self.order_book_id_map = {}
-
-        # get today ticks
-        for idx, order_book_id in enumerate(self._get_universe()):
-            self.order_book_id_map[idx] = order_book_id
-            ticks = data_proxy.get_ticks(order_book_id, date)
-            if ticks is None:
-                continue
-            # append idx columns
-            ticks = nprf.append_fields(ticks, 'order_book_id', np.full(len(ticks), idx), usemask=False)
-            self.today_ticks_cache[order_book_id] = ticks
-
-        # merge ticks arrays into one
-        ticks_list = list(self.today_ticks_cache.values())
-        if len(ticks_list) == 0:
-            return []
-        merge_ticks = np.concatenate(ticks_list)
-
-        merge_ticks.sort(kind='mergesort', order=("date", "time"))
-
-        time_arr = merge_ticks["date"].astype(np.uint64) * 1000000000 + merge_ticks["time"]
-        last_idx = time_arr.searchsorted(convert_dt_to_int(last_dt) * 1000)
-        merge_ticks = merge_ticks[last_idx:]
-
-        return merge_ticks
 
     def events(self, start_date, end_date, frequency):
         if frequency == "1d":
@@ -180,37 +150,27 @@ class SimulationEventSource(AbstractEventSource):
             data_proxy = self._env.data_proxy
             for day in data_proxy.get_trading_dates(start_date, end_date):
                 date = day.to_pydatetime()
-                last_dt = date
-                done = False
-
-                before_trading_dt = date.replace(hour=8, minute=30)
-                yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
-                            trading_dt=before_trading_dt)
-
+                last_tick = None
+                last_dt = None
                 while True:
-                    if done:
-                        break
-                    exit_loop = True
+                    for tick in data_proxy.get_merge_ticks(self._get_universe(), date, last_dt):
+                        # find before trading time
+                        if last_tick is None:
+                            last_tick = tick
+                            dt = tick.datetime
+                            before_trading_dt = dt - datetime.timedelta(minutes=30)
+                            yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
+                                        trading_dt=before_trading_dt)
 
-                    merge_ticks = self._get_merge_ticks(date, last_dt)
-
-                    for idx in range(len(merge_ticks)):
-                        raw_tick = merge_ticks[idx]
-                        order_book_id = self.order_book_id_map[raw_tick[-1]]
-
-                        tick = Tick(order_book_id, raw_tick)
                         dt = tick.datetime
-
                         yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=dt, tick=tick)
 
                         if self._universe_changed:
                             self._universe_changed = False
                             last_dt = dt
-                            exit_loop = False
                             break
-
-                    if exit_loop:
-                        done = True
+                    else:
+                        break
 
                 dt = date.replace(hour=15, minute=30)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)

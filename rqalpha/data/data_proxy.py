@@ -169,6 +169,9 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_ticks(instrument, date)
 
+    def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
+        return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)
+
     def is_suspended(self, order_book_id, dt, count=1):
         if count == 1:
             return self._data_source.is_suspended(order_book_id, [dt])

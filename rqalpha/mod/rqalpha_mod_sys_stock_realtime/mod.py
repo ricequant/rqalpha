@@ -30,6 +30,7 @@ class RealtimeTradeMod(AbstractMod):
             env.set_data_source(DataSource(env.config.base.data_bundle_path))
             env.set_event_source(RealtimeEventSource(mod_config.fps))
 
+            # add persist
             persist_provider = DiskPersistProvider(mod_config.persist_path)
             env.set_persist_provider(persist_provider)
 

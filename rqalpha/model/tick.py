@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rqalpha.utils.datetime_func import convert_date_time_int_to_datetime
+from rqalpha.utils.datetime_func import convert_date_time_ms_int_to_datetime
 
 
 class Tick(object):
@@ -28,7 +28,7 @@ class Tick(object):
 
     @property
     def datetime(self):
-        dt = convert_date_time_int_to_datetime(self._tick["date"], self._tick["time"])
+        dt = convert_date_time_ms_int_to_datetime(self._tick["date"], self._tick["time"])
         return dt
 
     @property
@@ -157,4 +157,12 @@ class Tick(object):
         return self._tick['limit_down']
 
     def __repr__(self):
-        return str(self._tick)
+        items = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            items.append((name, getattr(self, name)))
+        return "Tick({0})".format(', '.join('{0}: {1}'.format(k, v) for k, v in items))
+
+    def __getitem__(self, key):
+        return getattr(self, key)
