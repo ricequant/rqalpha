@@ -219,8 +219,8 @@ class StockAccount(BaseAccount):
         for order_book_id, position in six.iteritems(self.portfolio.positions):
             split_df = rqdatac.get_split(order_book_id, start_date="2005-01-01", end_date="2099-01-01")
             if split_df is None:
-                system_log.warn(_("no split data {}").format(order_book_id))
                 continue
+
             try:
                 series = split_df.loc[trading_date]
             except KeyError:
