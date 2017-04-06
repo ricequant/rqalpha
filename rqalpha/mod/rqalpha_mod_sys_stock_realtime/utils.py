@@ -80,8 +80,6 @@ def get_realtime_quotes(code_list, open_only=False):
     index_df["is_index"] = True
     total_df = total_df.append(index_df)
 
-    total_df = total_df.set_index("code")#.sort_index()
-    
     columns = set(total_df.columns) - set(["name", "time", "date", "code"])
     # columns = filter(lambda x: "_v" not in x, columns)
     for label in columns:
@@ -104,8 +102,6 @@ def get_realtime_quotes(code_list, open_only=False):
     total_df["limit_up"] = total_df.apply(lambda row: row.pre_close * (1.1 if "ST" not in row["name"] else 1.05), axis=1).round(2)
     total_df["limit_down"] = total_df.apply(lambda row: row.pre_close * (0.9 if "ST" not in row["name"] else 0.95), axis=1).round(2)
 
-    total_df = total_df.set_index("order_book_id").sort_index()
-    
     if open_only:
         total_df = total_df[total_df.open > 0]
 
