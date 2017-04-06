@@ -124,12 +124,6 @@ Feature Status
     * ✅ 数据源对接 --> `rqalpha_mod_sys_stock_realtime`_
     * ✅ 合成分钟线 --> `rqalpha_mod_tushare`_
 
-*   量化掘金 对接
-
-    * 🚫 实盘交易对接
-    * 🚫 数据源对接
-    * 🚫 事件源对接
-
 *   Tick 相关支持
 
     * ✅ TICK 相关事件支持 --> `EVENT.PRE_TICK` | `EVENT.TICK` | `EVENT.POST_TICK`
