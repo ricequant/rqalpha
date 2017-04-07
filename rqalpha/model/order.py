@@ -223,7 +223,7 @@ class Order(object):
         return self._frozen_price
 
     def is_final(self):
-        return self._status in {
+        return self._status not in {
             ORDER_STATUS.PENDING_NEW,
             ORDER_STATUS.ACTIVE,
             ORDER_STATUS.PENDING_CANCEL
