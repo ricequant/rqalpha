@@ -58,7 +58,7 @@ RQAlpha 控制台进度条 Mod
 扩展命令
 ===============================
 
-在启用该 Mod 的情况下，您可以直接通过 `rqalpha run --progress` 的方式来开启进度条的显示。
+在启用该 Mod 的情况下，您可以直接通过 :code:`rqalpha run --progress` 的方式来开启进度条的显示。
 
 ..  code-block:: bash
 
