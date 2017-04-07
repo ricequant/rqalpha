@@ -126,7 +126,7 @@ class Risk(object):
     def avg_excess_return(self):
         if self._avg_excess_return is not None:
             return self._avg_excess_return
-        #self._avg_excess_return = 1.0 / len(self._portfolio) * (self._portfolio - self._daily_risk_free_rate).sum()
+        # self._avg_excess_return = 1.0 / len(self._portfolio) * (self._portfolio - self._daily_risk_free_rate).sum()
         self._avg_excess_return = np.mean(self._portfolio - self._daily_risk_free_rate)
         return self._avg_excess_return
 
@@ -135,7 +135,7 @@ class Risk(object):
             self._volatility = 0
             self._annual_volatility = 0
         else:
-            #std = self._portfolio.std(ddof=1)
+            # std = self._portfolio.std(ddof=1)
             self._volatility = self._portfolio.std(ddof=1)
             self._annual_volatility = self._volatility * (self._annual_factor ** 0.5)
 
@@ -160,7 +160,7 @@ class Risk(object):
             self._benchmark_volatility = 0
             self._benchmark_annual_volatility = 0
         else:
-            #std = self._benchmark.std(ddof=1)
+            # std = self._benchmark.std(ddof=1)
             self._benchmark_volatility = self._benchmark.std(ddof=1)
             self._benchmark_annual_volatility = self._benchmark_volatility * (self._annual_factor ** 0.5)
 
@@ -201,12 +201,12 @@ class Risk(object):
             return 0
 
         active_return = self._portfolio - self._benchmark
-        #sum_mean_squares = np.sum(np.square(active_return))
-        #self._avg_tracking_return = np.mean(np.sum(active_return))
+        # sum_mean_squares = np.sum(np.square(active_return))
+        # self._avg_tracking_return = np.mean(np.sum(active_return))
         self._avg_tracking_return = np.mean(active_return)
-        #self._tracking_error = (sum_mean_squares ** 0.5) * ((self._annual_factor / (len(active_return) - 1)) ** 0.5)
+        # self._tracking_error = (sum_mean_squares ** 0.5) * ((self._annual_factor / (len(active_return) - 1)) ** 0.5)
         self._tracking_error = active_return.std(ddof=1)
-        #self._annual_tracking_error = (sum_mean_squares ** 0.5) / (self._annual_factor ** 0.5)
+        # self._annual_tracking_error = (sum_mean_squares ** 0.5) / (self._annual_factor ** 0.5)
         self._annual_tracking_error = self._tracking_error * (self._annual_factor ** 0.5)
 
     @property
@@ -264,8 +264,8 @@ class Risk(object):
         diff = self._portfolio - self._benchmark
         diff[diff > 0] = 0
         sum_mean_squares = np.sum(np.square(diff))
-        #self._annual_downside_risk = (sum_mean_squares ** 0.5) * \
-        #                             ((self._annual_factor / (len(self._portfolio) - 1)) ** 0.5)
+        # self._annual_downside_risk = (sum_mean_squares ** 0.5) * \
+        #                              ((self._annual_factor / (len(self._portfolio) - 1)) ** 0.5)
         self._downside_risk = (sum_mean_squares / (len(diff) - 1)) ** 0.5
         self._annual_downside_risk = self._downside_risk * (self._annual_factor ** 0.5)
 
