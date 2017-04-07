@@ -22,8 +22,6 @@ from ..utils.repr import property_repr, properties
 from ..utils.logger import user_system_log
 
 
-
-
 class Order(object):
 
     order_id_gen = id_gen(int(time.time()))
