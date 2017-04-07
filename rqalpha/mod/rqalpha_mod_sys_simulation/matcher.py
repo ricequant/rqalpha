@@ -17,7 +17,7 @@
 from collections import defaultdict
 
 import numpy as np
-from rqalpha.const import ORDER_TYPE, SIDE, BAR_STATUS, MATCHING_TYPE
+from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
@@ -41,18 +41,16 @@ class Matcher(object):
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
-        if matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:
-            return lambda order_book_id, side: self._env.bar_dict[order_book_id].close
-        elif matching_type == MATCHING_TYPE.NEXT_BAR_OPEN:
-            return lambda order_book_id, side: self._env.bar_dict[order_book_id].open
-        elif matching_type == MATCHING_TYPE.NEXT_TICK_LAST:
-            return lambda order_book_id, side: self._env.price_board.get_last_price(order_book_id)
-        elif matching_type == MATCHING_TYPE.NEXT_TICK_BEST_OWN:
-            return lambda order_book_id, side: (self._env.price_board.get_b1(order_book_id)
-                                                if side == SIDE.BUY else self._env.price_board.get_a1(order_book_id))
-        elif matching_type == MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY:
-            return lambda order_book_id, side: (self._env.price_board.get_a1(order_book_id)
-                                                if side == SIDE.BUY else self._env.price_board.get_b1(order_book_id))
+        decider_dict = {
+            MATCHING_TYPE.CURRENT_BAR_CLOSE: lambda order_book_id, side: self._env.bar_dict[order_book_id].close,
+            MATCHING_TYPE.NEXT_BAR_OPEN: lambda order_book_id, side: self._env.bar_dict[order_book_id].open,
+            MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(order_book_id),
+            MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: (
+                self._env.price_board.get_b1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_a1(order_book_id)),
+            MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
+                self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(order_book_id))
+        }
+        return decider_dict[matching_type]
 
     def update(self, calendar_dt, trading_dt):
         self._turnover.clear()
