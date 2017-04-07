@@ -124,7 +124,7 @@ class IndustryCodeItem(object):
         return self.__name
 
     def __repr__(self):
-        return "{0}:{1}".format(self.__code,self.__name)
+        return "{0}:{1}".format(self.__code, self.__name)
 
 
 class IndustryCode(object):

@@ -1,9 +1,26 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+#
+# Copyright 2017 Ricequant, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import inspect
+
 
 def test_get_order():
     from rqalpha.api import order_shares, get_order
+
     def init(context):
         context.s1 = '000001.XSHE'
         context.amount = 100
@@ -19,6 +36,7 @@ test_get_order_code_new = "".join(inspect.getsourcelines(test_get_order)[0])
 
 def test_get_open_order():
     from rqalpha.api import order_shares, get_open_orders, get_order
+
     def init(context):
         context.s1 = '000001.XSHE'
         context.limitprice = 8.9
@@ -45,6 +63,7 @@ test_get_open_order_code_new = "".join(inspect.getsourcelines(test_get_open_orde
 
 def test_cancel_order():
     from rqalpha.api import order_shares, cancel_order, get_order
+
     def init(context):
         context.s1 = '000001.XSHE'
         context.limitprice = 8.59
@@ -63,6 +82,7 @@ test_cancel_order_code_new = "".join(inspect.getsourcelines(test_cancel_order)[0
 
 def test_update_universe():
     from rqalpha.api import update_universe, history_bars
+
     def init(context):
         context.s1 = '000001.XSHE'
         context.s2 = '600340.XSHG'
@@ -82,6 +102,7 @@ test_update_universe_code_new = "".join(inspect.getsourcelines(test_update_unive
 
 def test_subscribe():
     from rqalpha.api import subscribe
+
     def init(context):
         context.f1 = 'AU88'
         context.amount = 1
@@ -94,6 +115,7 @@ test_subscribe_code_new = "".join(inspect.getsourcelines(test_subscribe)[0])
 
 def test_unsubscribe():
     from rqalpha.api import subscribe, unsubscribe
+
     def init(context):
         context.f1 = 'AU88'
         context.amount = 1
@@ -107,6 +129,7 @@ test_unsubscribe_code_new = "".join(inspect.getsourcelines(test_unsubscribe)[0])
 
 def test_get_yield_curve():
     from rqalpha.api import get_yield_curve
+
     def init(context):
         pass
 
@@ -119,6 +142,7 @@ test_get_yield_curve_code_new = "".join(inspect.getsourcelines(test_get_yield_cu
 
 def test_history_bars():
     from rqalpha.api import history_bars
+
     def init(context):
         context.s1 = '000001.XSHE'
         pass
@@ -132,6 +156,7 @@ test_history_bars_code_new = "".join(inspect.getsourcelines(test_history_bars)[0
 
 def test_all_instruments():
     from rqalpha.api import all_instruments
+
     def init(context):
         pass
 
@@ -151,8 +176,10 @@ def test_all_instruments():
         assert all_instruments('Future').shape >= (3500, 16)
 test_all_instruments_code_new = "".join(inspect.getsourcelines(test_all_instruments)[0])
 
+
 def test_instruments_code():
     from rqalpha.api import instruments
+
     def init(context):
         context.s1 = '000001.XSHE'
         pass
@@ -170,6 +197,7 @@ test_instruments_code_new = "".join(inspect.getsourcelines(test_instruments_code
 
 def test_sector():
     from rqalpha.api import sector
+
     def init(context):
         pass
 
@@ -180,6 +208,7 @@ test_sector_code_new = "".join(inspect.getsourcelines(test_sector)[0])
 
 def test_industry():
     from rqalpha.api import industry, instruments
+
     def init(context):
         context.s1 = '000001.XSHE'
         context.s2 = '600340.XSHG'
@@ -196,6 +225,7 @@ test_industry_code_new = "".join(inspect.getsourcelines(test_industry)[0])
 
 def test_concept():
     from rqalpha.api import concept, instruments
+
     def init(context):
         context.s1 = '000002.XSHE'
 
@@ -210,6 +240,7 @@ test_concept_code_new = "".join(inspect.getsourcelines(test_concept)[0])
 def test_get_trading_dates():
     from rqalpha.api import get_trading_dates
     import datetime
+
     def init(context):
         pass
 
@@ -228,6 +259,7 @@ test_get_trading_dates_code_new = "".join(inspect.getsourcelines(test_get_tradin
 
 def test_get_previous_trading_date():
     from rqalpha.api import get_previous_trading_date
+
     def init(context):
         pass
 
@@ -244,6 +276,7 @@ test_get_previous_trading_date_code_new = "".join(inspect.getsourcelines(test_ge
 
 def test_get_next_trading_date():
     from rqalpha.api import get_next_trading_date
+
     def init(context):
         pass
 
@@ -256,6 +289,7 @@ test_get_next_trading_date_code_new = "".join(inspect.getsourcelines(test_get_ne
 def test_get_dividend():
     from rqalpha.api import get_dividend
     import pandas
+
     def init(context):
         pass
 

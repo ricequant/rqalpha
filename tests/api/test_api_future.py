@@ -1,9 +1,26 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+#
+# Copyright 2017 Ricequant, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import inspect
+
 
 def test_buy_open():
     from rqalpha.api import buy_open, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+
     def init(context):
         context.f1 = 'P88'
         context.amount = 1
@@ -27,6 +44,7 @@ test_buy_open_code_new = "".join(inspect.getsourcelines(test_buy_open)[0])
 
 def test_sell_open():
     from rqalpha.api import sell_open, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+
     def init(context):
         context.f1 = 'P88'
         context.amount = 1
@@ -50,6 +68,7 @@ test_sell_open_code_new = "".join(inspect.getsourcelines(test_sell_open)[0])
 
 def test_buy_close():
     from rqalpha.api import buy_close, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+
     def init(context):
         context.f1 = 'P88'
         context.amount = 1
@@ -73,6 +92,7 @@ test_buy_close_code_new = "".join(inspect.getsourcelines(test_buy_close)[0])
 
 def test_sell_close():
     from rqalpha.api import sell_close, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+
     def init(context):
         context.f1 = 'P88'
         context.amount = 1

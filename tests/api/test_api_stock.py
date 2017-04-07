@@ -1,7 +1,21 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+#
+# Copyright 2017 Ricequant, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import inspect
-import datetime
 
 
 def test_order_shares():
@@ -14,6 +28,7 @@ def test_order_shares():
 
 def test_order_shares():
     from rqalpha.api import order_shares, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -36,6 +51,7 @@ test_order_shares_code_new = "".join(inspect.getsourcelines(test_order_shares)[0
 
 def test_order_lots():
     from rqalpha.api import order_lots, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -58,6 +74,7 @@ test_order_lots_code_new = "".join(inspect.getsourcelines(test_order_lots)[0])
 
 def test_order_value():
     from rqalpha.api import order_value, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -78,6 +95,7 @@ test_order_value_code_new = "".join(inspect.getsourcelines(test_order_value)[0])
 
 def test_order_percent():
     from rqalpha.api import order_percent, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -97,6 +115,7 @@ test_order_percent_code_new = "".join(inspect.getsourcelines(test_order_percent)
 
 def test_order_target_value():
     from rqalpha.api import order_target_percent, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
