@@ -1,7 +1,7 @@
 .. _intro-overview:
 
 ====================
-RQAlpha 介绍
+介绍
 ====================
 
 .. _Ricequant: https://www.ricequant.com/algorithms

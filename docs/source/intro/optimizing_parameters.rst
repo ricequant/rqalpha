@@ -1,7 +1,7 @@
 .. _intro-optimizing-parameters:
 
 ==================
-通过 RQAlpha 进行参数调优
+参数调优
 ==================
 
 
