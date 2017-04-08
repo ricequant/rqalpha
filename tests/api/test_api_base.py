@@ -16,6 +16,12 @@
 # limitations under the License.
 
 import inspect
+import re
+
+
+def get_code_block(func):
+    lines = inspect.getsourcelines(test_get_order)[0][1:]
+    return "".join([re.sub(r'^    ', '', line) for line in lines])
 
 
 def test_get_order():
@@ -26,12 +32,13 @@ def test_get_order():
         context.amount = 100
 
     def handle_bar(context, bar_dict):
+        print("test_get_order")
         order_id = order_shares(context.s1, context.amount, style=LimitOrder(9.5))
         order = get_order(order_id)
         assert order.order_book_id == context.s1
         assert order.quantity == context.amount
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
-test_get_order_code_new = "".join(inspect.getsourcelines(test_get_order)[0])
+test_get_order_code_new = get_code_block(test_get_order)
 
 
 def test_get_open_order():
@@ -58,7 +65,7 @@ def test_get_open_order():
         if context.counter == 2:
             assert order.order_id in get_open_orders()
         context.counter = 0
-test_get_open_order_code_new = "".join(inspect.getsourcelines(test_get_open_order)[0])
+test_get_open_order_code_new = get_code_block(test_get_open_order)
 
 
 def test_cancel_order():
@@ -77,7 +84,7 @@ def test_cancel_order():
         assert order.filled_quantity == 0
         return order_id
         assert order.price == context.limitprice
-test_cancel_order_code_new = "".join(inspect.getsourcelines(test_cancel_order)[0])
+test_cancel_order_code_new = get_code_block(test_cancel_order)
 
 
 def test_update_universe():
@@ -97,7 +104,7 @@ def test_update_universe():
             print(sorted(his.tolist()))
             print(sorted([24.1, 23.71, 23.82, 23.93, 23.66]))
             assert sorted(his.tolist()) == sorted([26.06, 26.13, 26.54, 26.6, 26.86])
-test_update_universe_code_new = "".join(inspect.getsourcelines(test_update_universe)[0])
+test_update_universe_code_new = get_code_block(test_update_universe)
 
 
 def test_subscribe():
@@ -110,7 +117,7 @@ def test_subscribe():
 
     def handle_bar(context, bar_dict):
         assert context.f1 in context.universe
-test_subscribe_code_new = "".join(inspect.getsourcelines(test_subscribe)[0])
+test_subscribe_code_new = get_code_block(test_subscribe)
 
 
 def test_unsubscribe():
@@ -124,7 +131,7 @@ def test_unsubscribe():
 
     def handle_bar(context, bar_dict):
         assert context.f1 not in context.universe
-test_unsubscribe_code_new = "".join(inspect.getsourcelines(test_unsubscribe)[0])
+test_unsubscribe_code_new = get_code_block(test_unsubscribe)
 
 
 def test_get_yield_curve():
@@ -137,7 +144,7 @@ def test_get_yield_curve():
         df = get_yield_curve('20161101')
         assert df.iloc[0, 0] == 0.019923
         assert df.iloc[0, 6] == 0.021741
-test_get_yield_curve_code_new = "".join(inspect.getsourcelines(test_get_yield_curve)[0])
+test_get_yield_curve_code_new = get_code_block(test_get_yield_curve)
 
 
 def test_history_bars():
@@ -151,7 +158,7 @@ def test_history_bars():
         return_list = history_bars(context.s1, 5, '1d', 'close')
         if str(context.now.date()) == '2016-12-29':
             assert return_list.tolist() == [9.08, 9.1199, 9.08, 9.06, 9.08]
-test_history_bars_code_new = "".join(inspect.getsourcelines(test_history_bars)[0])
+test_history_bars_code_new = get_code_block(test_history_bars)
 
 
 def test_all_instruments():
@@ -174,7 +181,7 @@ def test_all_instruments():
         assert all_instruments('FenjiB').shape >= (140, 9)
         assert all_instruments('INDX').shape >= (500, 8)
         assert all_instruments('Future').shape >= (3500, 16)
-test_all_instruments_code_new = "".join(inspect.getsourcelines(test_all_instruments)[0])
+test_all_instruments_code_new = get_code_block(test_all_instruments)
 
 
 def test_instruments_code():
@@ -192,7 +199,7 @@ def test_instruments_code():
         assert ins.order_book_id == context.s1
         assert ins.type == 'CS'
         print('world')
-test_instruments_code_new = "".join(inspect.getsourcelines(test_instruments_code)[0])
+test_instruments_code_new = get_code_block(test_instruments_code)
 
 
 def test_sector():
@@ -203,7 +210,7 @@ def test_sector():
 
     def handle_bar(context, bar_dict):
         assert len(sector('金融')) >= 180
-test_sector_code_new = "".join(inspect.getsourcelines(test_sector)[0])
+test_sector_code_new = get_code_block(test_sector)
 
 
 def test_industry():
@@ -220,7 +227,7 @@ def test_industry():
         industry_list_2 = industry(ins_2.industry_name)
         assert context.s1 in industry_list_1
         assert context.s2 in industry_list_2
-test_industry_code_new = "".join(inspect.getsourcelines(test_industry)[0])
+test_industry_code_new = get_code_block(test_industry)
 
 
 def test_concept():
@@ -234,7 +241,7 @@ def test_concept():
         concept_list = concept(ins.concept_names[:4])  # 取 concept_names 的前4个字，即 context.s1 的第一个概念
         assert context.s1 in concept_list
         assert len(concept_list) >= 90
-test_concept_code_new = "".join(inspect.getsourcelines(test_concept)[0])
+test_concept_code_new = get_code_block(test_concept)
 
 
 def test_get_trading_dates():
@@ -254,7 +261,7 @@ def test_get_trading_dates():
         assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted(
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
-test_get_trading_dates_code_new = "".join(inspect.getsourcelines(test_get_trading_dates)[0])
+test_get_trading_dates_code_new = get_code_block(test_get_trading_dates)
 
 
 def test_get_previous_trading_date():
@@ -271,7 +278,7 @@ def test_get_previous_trading_date():
         assert str(get_previous_trading_date('2010-01-03').date()) == '2009-12-31'
         assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
         assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
-test_get_previous_trading_date_code_new = "".join(inspect.getsourcelines(test_get_previous_trading_date)[0])
+test_get_previous_trading_date_code_new = get_code_block(test_get_previous_trading_date)
 
 
 def test_get_next_trading_date():
@@ -283,7 +290,7 @@ def test_get_next_trading_date():
     def handle_bar(context, bar_dict):
         assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
         assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
-test_get_next_trading_date_code_new = "".join(inspect.getsourcelines(test_get_next_trading_date)[0])
+test_get_next_trading_date_code_new = get_code_block(test_get_next_trading_date)
 
 
 def test_get_dividend():
@@ -299,7 +306,7 @@ def test_get_dividend():
         assert df.shape >= (4, 5)
         assert df_to_assert.iloc[0, 1] == 0.9838
         assert df_to_assert.iloc[0, 3] == pandas.tslib.Timestamp('2013-06-20 00:00:00')
-test_get_dividend_code_new = "".join(inspect.getsourcelines(test_get_dividend)[0])
+test_get_dividend_code_new = get_code_block(test_get_dividend)
 
 # =================== 以下把代码写为纯字符串 ===================
 
