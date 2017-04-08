@@ -189,7 +189,8 @@ def test_api():
         },
         "mod": {
             "sys_progress": {
-                "enabled": False,
+                "enabled": True,
+                "show": True,
             },
         },
     }
@@ -209,7 +210,8 @@ def test_api():
         },
         "mod": {
             "sys_progress": {
-                "enabled": False,
+                "enabled": True,
+                "show": True,
             },
         },
     }
@@ -229,7 +231,8 @@ def test_api():
         },
         "mod": {
             "sys_progress": {
-                "enabled": False,
+                "enabled": True,
+                "show": True,
             },
         },
     }
