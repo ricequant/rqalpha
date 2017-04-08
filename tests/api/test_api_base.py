@@ -58,7 +58,7 @@ def test_get_open_order():
         print('cash: ', context.portfolio.cash)
         print('check_get_open_orders done')
         print(order.order_id)
-        print(get_open_orders().keys())
+        # print(get_open_orders())
         print(get_open_orders())
         print(get_order(order.order_id))
         if context.counter == 2:
@@ -342,7 +342,7 @@ def handle_bar(context, bar_dict):
     print('cash: ', context.portfolio.cash)
     print('check_get_open_orders done')
     print(order.order_id)
-    print(get_open_orders().keys())
+    # print(get_open_orders())
     print(get_open_orders())
     print(get_order(order.order_id))
     if context.counter == 2:
