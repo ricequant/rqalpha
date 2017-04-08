@@ -20,7 +20,7 @@ import re
 
 
 def get_code_block(func):
-    lines = inspect.getsourcelines(test_get_order)[0][1:]
+    lines = inspect.getsourcelines(func)[0][1:]
     return "".join([re.sub(r'^    ', '', line) for line in lines])
 
 
