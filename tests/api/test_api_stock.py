@@ -15,15 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
-
-
-def test_order_shares():
-    def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
-        pass
+from .test_api_base import get_code_block
 
 
 def test_order_shares():
@@ -46,7 +38,7 @@ def test_order_shares():
         assert order.quantity == context.amount
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_shares_code_new = "".join(inspect.getsourcelines(test_order_shares)[0])
+test_order_shares_code_new = get_code_block(test_order_shares)
 
 
 def test_order_lots():
@@ -69,7 +61,7 @@ def test_order_lots():
         assert order.quantity == 100
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_lots_code_new = "".join(inspect.getsourcelines(test_order_lots)[0])
+test_order_lots_code_new = get_code_block(test_order_lots)
 
 
 def test_order_value():
@@ -90,7 +82,7 @@ def test_order_value():
         assert order.quantity == 100
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_value_code_new = "".join(inspect.getsourcelines(test_order_value)[0])
+test_order_value_code_new = get_code_block(test_order_value)
 
 
 def test_order_percent():
@@ -110,7 +102,7 @@ def test_order_percent():
         assert order.order_book_id == context.s1
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_percent_code_new = "".join(inspect.getsourcelines(test_order_percent)[0])
+test_order_percent_code_new = get_code_block(test_order_percent)
 
 
 def test_order_target_value():
@@ -130,4 +122,4 @@ def test_order_target_value():
         assert order.side == order_side
         assert order.order_book_id == context.s1
         assert order.price == context.limitprice
-test_order_target_value_code_new = "".join(inspect.getsourcelines(test_order_target_value)[0])
+test_order_target_value_code_new = get_code_block(test_order_target_value)

@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
+from .test_api_base import get_code_block
 
 
 def test_buy_open():
@@ -39,7 +39,7 @@ def test_buy_open():
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.side == SIDE.BUY
         assert order.position_effect == POSITION_EFFECT.OPEN
-test_buy_open_code_new = "".join(inspect.getsourcelines(test_buy_open)[0])
+test_buy_open_code_new = get_code_block(test_buy_open)
 
 
 def test_sell_open():
@@ -63,7 +63,7 @@ def test_sell_open():
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.side == SIDE.SELL
         assert order.position_effect == POSITION_EFFECT.OPEN
-test_sell_open_code_new = "".join(inspect.getsourcelines(test_sell_open)[0])
+test_sell_open_code_new = get_code_block(test_sell_open)
 
 
 def test_buy_close():
@@ -87,7 +87,7 @@ def test_buy_close():
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.side == SIDE.BUY
         assert order.position_effect == POSITION_EFFECT.CLOSE
-test_buy_close_code_new = "".join(inspect.getsourcelines(test_buy_close)[0])
+test_buy_close_code_new = get_code_block(test_buy_close)
 
 
 def test_sell_close():
@@ -111,4 +111,4 @@ def test_sell_close():
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.side == SIDE.SELL
         assert order.position_effect == POSITION_EFFECT.CLOSE
-test_sell_close_code_new = "".join(inspect.getsourcelines(test_sell_close)[0])
+test_sell_close_code_new = get_code_block(test_sell_close)
