@@ -4,6 +4,21 @@
 History
 ==================
 
+2.0.9
+==================
+
+- Fix [Issue 79](https://github.com/ricequant/rqalpha/issues/79)
+- Fix [Issue 82](https://github.com/ricequant/rqalpha/issues/82)
+- Fix :code:`rqalpha cmd` 失效
+
+2.0.8
+==================
+
+- Fix [Issue 81](https://github.com/ricequant/rqalpha/issues/81)
+- 解决 `mod_config.yml` 文件解析出错以后，所有的命令报错的问题
+- 默认在 Python 2.x 下 `sys.setdefaultencoding("utf-8")`
+- 优化 `UNIVERSE_CHANGED` 事件，现在只有在universe真正变化时才触发
+
 2.0.7
 ==================
 

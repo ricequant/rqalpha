@@ -1,19 +1,26 @@
 #!/usr/bin/env python
-# encoding: utf-8
-import inspect
-import datetime
+# -*- coding: utf-8 -*-
+#
+# Copyright 2017 Ricequant, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-
-def test_order_shares():
-    def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
-        pass
+from .test_api_base import get_code_block
 
 
 def test_order_shares():
     from rqalpha.api import order_shares, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -31,11 +38,12 @@ def test_order_shares():
         assert order.quantity == context.amount
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_shares_code_new = "".join(inspect.getsourcelines(test_order_shares)[0])
+test_order_shares_code_new = get_code_block(test_order_shares)
 
 
 def test_order_lots():
     from rqalpha.api import order_lots, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -53,11 +61,12 @@ def test_order_lots():
         assert order.quantity == 100
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_lots_code_new = "".join(inspect.getsourcelines(test_order_lots)[0])
+test_order_lots_code_new = get_code_block(test_order_lots)
 
 
 def test_order_value():
     from rqalpha.api import order_value, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -73,11 +82,12 @@ def test_order_value():
         assert order.quantity == 100
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_value_code_new = "".join(inspect.getsourcelines(test_order_value)[0])
+test_order_value_code_new = get_code_block(test_order_value)
 
 
 def test_order_percent():
     from rqalpha.api import order_percent, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -92,11 +102,12 @@ def test_order_percent():
         assert order.order_book_id == context.s1
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.price == context.limitprice
-test_order_percent_code_new = "".join(inspect.getsourcelines(test_order_percent)[0])
+test_order_percent_code_new = get_code_block(test_order_percent)
 
 
 def test_order_target_value():
     from rqalpha.api import order_target_percent, get_order, SIDE, LimitOrder
+
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -111,4 +122,4 @@ def test_order_target_value():
         assert order.side == order_side
         assert order.order_book_id == context.s1
         assert order.price == context.limitprice
-test_order_target_value_code_new = "".join(inspect.getsourcelines(test_order_target_value)[0])
+test_order_target_value_code_new = get_code_block(test_order_target_value)

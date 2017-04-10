@@ -16,15 +16,11 @@
 
 import datetime
 
-import numpy as np
-import numpy.lib.recfunctions as nprf
-
 from rqalpha.interface import AbstractEventSource
 from rqalpha.events import Event, EVENT
-from rqalpha.environment import Environment
 from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
-from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_date_int, convert_dt_to_int
+from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
 
@@ -37,13 +33,13 @@ class SimulationEventSource(AbstractEventSource):
         self._env = env
         self._account_list = account_list
         self._universe_changed = False
-        Environment.get_instance().event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
+        self._env.event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
 
     def _on_universe_changed(self, event):
         self._universe_changed = True
 
     def _get_universe(self):
-        universe = Environment.get_instance().get_universe()
+        universe = self._env.get_universe()
         if len(universe) == 0 and ACCOUNT_TYPE.STOCK not in self._account_list:
             error = CustomError()
             error.set_msg("Current universe is empty. Please use subscribe function before trade")

@@ -1,7 +1,7 @@
 .. _development-mod:
 
 ====================================
-RQAlpha 扩展 - Mod
+Mod
 ====================================
 
 目前内置了几个简单的 mod 示例，在 :code:`rqalpha/mod/` 目录下面。
@@ -94,16 +94,16 @@ RQAlpha 支持安装、卸载、启用、停止第三方Mod。
     # 以名为 "xxx" 的 Mod 为例，介绍RQAlpha 第三方Mod的使用
 
     # 安装
-    $ rqalpha install xxx
+    $ rqalpha mod install xxx
 
     # 卸载
-    $ rqalpha uninstall xxx
+    $ rqalpha mod uninstall xxx
 
     # 启用
-    $ rqalpha enable xxx
+    $ rqalpha mod enable xxx
 
     # 关闭
-    $ rqalpha disable xxx
+    $ rqalpha mod disable xxx
 
 如果您希望发布自己的Mod并被 RQAlpha 的用户使用，只需要遵循简单的约定即可。
 

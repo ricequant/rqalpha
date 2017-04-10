@@ -141,9 +141,9 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def fast_history(self, order_book_id, bar_count, frequency, field, dt):
         return self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended=False)
 
-    def history_bars(self, order_book_id, bar_count, frequency, field, dt, skip_suspended=True):
+    def history_bars(self, order_book_id, bar_count, frequency, field, dt, skip_suspended=True, include_now=False):
         instrument = self.instruments(order_book_id)
-        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt, skip_suspended)
+        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt, skip_suspended, include_now)
 
     def current_snapshot(self, order_book_id, frequency, dt):
         instrument = self.instruments(order_book_id)
@@ -174,14 +174,14 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     def is_suspended(self, order_book_id, dt, count=1):
         if count == 1:
-            return self._data_source.is_suspended(order_book_id, [dt])
+            return self._data_source.is_suspended(order_book_id, [dt])[0]
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_suspended(order_book_id, trading_dates)
 
     def is_st_stock(self, order_book_id, dt, count=1):
         if count == 1:
-            return self._data_source.is_st_stock(order_book_id, [dt])
+            return self._data_source.is_st_stock(order_book_id, [dt])[0]
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_st_stock(order_book_id, trading_dates)

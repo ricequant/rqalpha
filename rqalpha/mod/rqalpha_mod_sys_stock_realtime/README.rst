@@ -1,12 +1,31 @@
 ===============================
-RQAlpha SYS_stock_realtime Mod
+sys_stock_realtime Mod
 ===============================
 
-使用该Mod可以接收实时行情进行触发。用于 RQAlpha 实时模拟交易，实盘交易。
+RQAlpha 接受实时行情并触发事件 Mod
 
-这个是一个初级的DEMO。
+该模块目前只是一个初级的 Demo，用于展示如何接入自有行情进行回测/模拟/实盘
 
-使用:code:`--run-type`或者:code:`-rt`为:code:`p`(PaperTrading)，就可以激活改 mod。
+该模块是系统模块，不可删除
+
+开启或关闭 Mod
+
+===============================
+
+..  code-block:: bash
+
+    # 关闭策略分析 Mod
+    $ rqalpha mod disable sys_stock_realtime
+
+    # 启用策略分析 Mod
+    $ rqalpha mod enable sys_stock_realtime
+
+使用方式
+===============================
+
+在启动该 Mod 的情况下，
+
+使用 :code:`--run-type` 或者 :code:`-rt` 为 :code:`p` (PaperTrading)，就可以激活改 mod。
 
 .. code-block:: bash
 

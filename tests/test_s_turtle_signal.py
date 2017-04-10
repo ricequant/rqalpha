@@ -1,5 +1,3 @@
-from rqalpha.api import *
-
 import numpy as np
 import talib
 import math
@@ -14,7 +12,7 @@ def get_extreme(array_high_price_result, array_low_price_result):
 
 
 def get_atr_and_unit(atr_array_result, atr_length_result, portfolio_value_result):
-    atr =  atr_array_result[atr_length_result-1]
+    atr = atr_array_result[atr_length_result - 1]
     unit = math.floor(portfolio_value_result * .01 / atr)
     return [atr, unit]
 
@@ -46,7 +44,7 @@ def handle_bar(context, bar_dict):
     high_price = history_bars(context.s, context.open_observe_time + 1, '1d', 'high')
     low_price_for_atr = history_bars(context.s, context.open_observe_time + 1, '1d', 'low')
     low_price_for_extreme = history_bars(context.s, context.close_observe_time + 1, '1d', 'low')
-    close_price = history_bars(context.s, context.open_observe_time + 2, '1d', 'close')
+    close_price = history_bars(context.s, context.open_observe_time+2, '1d', 'close')
     close_price_for_atr = close_price[:-1]
 
     atr_array = talib.ATR(high_price, low_price_for_atr, close_price_for_atr, timeperiod=context.atr_time)
@@ -113,3 +111,28 @@ def handle_bar(context, bar_dict):
                 context.units_hold = 0
 
     context.pre_trading_signal = context.trading_signal
+
+
+__config__ = {
+    "base": {
+        "securities": "stock",
+        "start_date": "2008-07-01",
+        "end_date": "2014-09-01",
+        "frequency": "1d",
+        "matching_type": "current_bar",
+        "stock_starting_cash": 1000000,
+        "benchmark": "000300.XSHG",
+    },
+    "extra": {
+        "log_level": "error",
+    },
+    "mod": {
+        "sys_progress": {
+            "enabled": True,
+            "show": True,
+        },
+        "sys_simulation": {
+            "signal": True,
+        }
+    },
+}

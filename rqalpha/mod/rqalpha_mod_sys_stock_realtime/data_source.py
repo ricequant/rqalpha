@@ -16,7 +16,6 @@
 
 import datetime
 
-from rqalpha.utils.logger import system_log
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
 from rqalpha.model.snapshot import SnapshotObject

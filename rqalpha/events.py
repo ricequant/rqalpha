@@ -20,9 +20,8 @@ from collections import defaultdict
 
 class Event(object):
     def __init__(self, event_type, **kwargs):
+        self.__dict__ = kwargs
         self.event_type = event_type
-        for k, v in kwargs.items():
-            setattr(self, k, v)
 
     def __repr__(self):
         return ' '.join('{}:{}'.format(k, v) for k, v in self.__dict__.items())

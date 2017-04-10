@@ -17,8 +17,7 @@
 from collections import defaultdict
 
 import numpy as np
-from rqalpha.const import ORDER_TYPE, SIDE, BAR_STATUS, MATCHING_TYPE
-from rqalpha.environment import Environment
+from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.utils.i18n import gettext as _
@@ -27,7 +26,7 @@ from .decider import CommissionDecider, SlippageDecider, TaxDecider
 
 
 class Matcher(object):
-    def __init__(self, mod_config):
+    def __init__(self, env, mod_config):
         self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
         self._slippage_decider = SlippageDecider(mod_config.slippage)
         self._tax_decider = TaxDecider()
@@ -37,22 +36,20 @@ class Matcher(object):
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._volume_limit = mod_config.volume_limit
-        self._env = Environment.get_instance()
+        self._env = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
-        if matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE:
-            return lambda order_book_id, side: self._env.bar_dict[order_book_id].close
-        elif matching_type == MATCHING_TYPE.NEXT_BAR_OPEN:
-            return lambda order_book_id, side: self._env.bar_dict[order_book_id].open
-        elif matching_type == MATCHING_TYPE.NEXT_TICK_LAST:
-            return lambda order_book_id, side: self._env.price_board.get_last_price(order_book_id)
-        elif matching_type == MATCHING_TYPE.NEXT_TICK_BEST_OWN:
-            return lambda order_book_id, side: (self._env.price_board.get_b1(order_book_id)
-                                                if side == SIDE.BUY else self._env.price_board.get_a1(order_book_id))
-        elif matching_type == MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY:
-            return lambda order_book_id, side: (self._env.price_board.get_a1(order_book_id)
-                                                if side == SIDE.BUY else self._env.price_board.get_b1(order_book_id))
+        decider_dict = {
+            MATCHING_TYPE.CURRENT_BAR_CLOSE: lambda order_book_id, side: self._env.bar_dict[order_book_id].close,
+            MATCHING_TYPE.NEXT_BAR_OPEN: lambda order_book_id, side: self._env.bar_dict[order_book_id].open,
+            MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(order_book_id),
+            MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: (
+                self._env.price_board.get_b1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_a1(order_book_id)),
+            MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
+                self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(order_book_id))
+        }
+        return decider_dict[matching_type]
 
     def update(self, calendar_dt, trading_dt):
         self._turnover.clear()
@@ -61,10 +58,9 @@ class Matcher(object):
 
     def match(self, open_orders):
         price_board = self._env.price_board
-        data_proxy = Environment.get_instance().data_proxy
         for account, order in open_orders:
             order_book_id = order.order_book_id
-            instrument = data_proxy.instruments(order_book_id)
+            instrument = self._env.get_instrument(order_book_id)
 
             if np.isnan(price_board.get_last_price(order_book_id)):
                 listed_date = instrument.listed_date.date()

@@ -48,7 +48,6 @@ def handle_bar(context, bar_dict):
         # 使用第n-1日的收盘价作为当前价
         current_price = Close[2]
 
-
         Range = max((HH - LC), (HC - LL))
         K1 = 0.9
         BuyLine = Openprice + K1 * Range

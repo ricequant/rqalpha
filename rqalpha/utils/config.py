@@ -20,9 +20,9 @@ import ruamel.yaml as yaml
 import datetime
 import logbook
 import locale
-from pprint import pformat
 import codecs
 import shutil
+from pprint import pformat
 
 from . import RqAttrDict, logger
 from .exception import patch_user_exc
@@ -48,6 +48,17 @@ def load_config(config_path, loader=yaml.Loader):
 def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
     with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
+
+
+def load_mod_config(config_path, loader=yaml.Loader):
+    mod_config = load_config(config_path, loader)
+    if mod_config is None or "mod" not in mod_config:
+        import os
+        os.remove(config_path)
+        config_path = get_mod_config_path()
+        return load_mod_config(config_path, loader)
+    else:
+        return mod_config
 
 
 def get_mod_config_path(generate=False):

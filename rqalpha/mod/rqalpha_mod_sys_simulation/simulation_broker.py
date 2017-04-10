@@ -20,7 +20,6 @@ from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
-from rqalpha.environment import Environment
 from rqalpha.model.order import Order
 
 from .matcher import Matcher
@@ -32,12 +31,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env = env
         self._mod_config = mod_config
 
-        self._matcher = Matcher(mod_config)
+        self._matcher = Matcher(env, mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []
-        self._board = None
-        self._turnover = {}
         self._delayed_orders = []
         self._frontend_validator = {}
 
@@ -79,7 +76,7 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._delayed_orders.append((account, o))
 
     def submit_order(self, order):
-        account = Environment.get_instance().get_account(order.order_book_id)
+        account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
         if order.is_final():
             return
@@ -93,7 +90,7 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._match()
 
     def cancel_order(self, order):
-        account = Environment.get_instance().get_account(order.order_book_id)
+        account = self._env.get_account(order.order_book_id)
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 
@@ -124,14 +121,12 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._delayed_orders = []
 
     def on_bar(self, event):
-        env = Environment.get_instance()
-        self._matcher.update(env.calendar_dt, env.trading_dt)
+        self._matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match()
 
     def on_tick(self, event):
         tick = event.tick
-        env = Environment.get_instance()
-        self._matcher.update(env.calendar_dt, env.trading_dt)
+        self._matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
