@@ -141,9 +141,9 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def fast_history(self, order_book_id, bar_count, frequency, field, dt):
         return self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended=False)
 
-    def history_bars(self, order_book_id, bar_count, frequency, field, dt, skip_suspended=True):
+    def history_bars(self, order_book_id, bar_count, frequency, field, dt, skip_suspended=True, include_now=False):
         instrument = self.instruments(order_book_id)
-        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt, skip_suspended)
+        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt, skip_suspended, include_now)
 
     def current_snapshot(self, order_book_id, frequency, dt):
         instrument = self.instruments(order_book_id)

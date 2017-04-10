@@ -327,7 +327,7 @@ def get_yield_curve(date=None, tenor=None):
              verify_that('frequency').is_in(('1m', '1d')),
              verify_that('fields').are_valid_fields(names.VALID_HISTORY_FIELDS, ignore_none=True),
              verify_that('skip_suspended').is_instance_of(bool))
-def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True):
+def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True, include_now=False):
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
 
@@ -413,7 +413,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
         # 在分钟回测获取日线数据, 应该推前一天，这里应该使用 trading date
         dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
 
-    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended)
+    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended, include_now)
 
 
 @export_as_api
