@@ -60,7 +60,7 @@ class SignalBroker(AbstractBroker):
         order_book_id = order.order_book_id
         price_board = self._env.price_board
 
-        last_price = price_board.get_last_price(order.order_book_id)
+        last_price = price_board.get_last_price(order_book_id)
 
         if np.isnan(last_price):
             instrument = self._env.get_instrument(order_book_id)
@@ -68,12 +68,12 @@ class SignalBroker(AbstractBroker):
             if listed_date == self._env.trading_dt.date():
                 reason = _(
                     "Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
-                    order_book_id=order.order_book_id,
+                    order_book_id=order_book_id,
                     listed_date=listed_date,
                 )
             else:
                 reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
-                    order_book_id=order.order_book_id)
+                    order_book_id=order_book_id)
             order.mark_rejected(reason)
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
             return
@@ -85,29 +85,28 @@ class SignalBroker(AbstractBroker):
 
         if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
             user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
-                order_book_id=order.order_book_id,
+                order_book_id=order_book_id,
                 quantity=order.quantity,
                 bar_status=BAR_STATUS.LIMIT_UP
             ))
         if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
             user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
-                order_book_id=order.order_book_id,
+                order_book_id=order_book_id,
                 quantity=order.quantity,
                 bar_status=BAR_STATUS.LIMIT_DOWN
             ))
 
-        deal_price = self._slippage_decider.get_trade_price(order.side, deal_price)
-
-        ct_amount = account.portfolio.positions.get_or_create(order.order_book_id).cal_close_today_amount(order.quantity, order.side)
+        ct_amount = account.positions.get_or_create(order_book_id).cal_close_today_amount(order.quantity, order.side)
+        trade_price = self._slippage_decider.get_trade_price(order.side, deal_price)
         trade = Trade.__from_create__(
             order_id=order.order_id,
             calendar_dt=self._env.calendar_dt,
             trading_dt=self._env.trading_dt,
-            price=deal_price,
+            price=trade_price,
             amount=order.quantity,
             side=order.side,
             position_effect=order.position_effect,
-            order_book_id=order.order_book_id,
+            order_book_id=order_book_id,
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
