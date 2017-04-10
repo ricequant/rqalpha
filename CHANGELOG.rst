@@ -2,6 +2,13 @@
 CHANGELOG
 ==================
 
+2.0.9
+==================
+
+- Fix [Issue 79](https://github.com/ricequant/rqalpha/issues/79)
+- Fix [Issue 82](https://github.com/ricequant/rqalpha/issues/82)
+- Fix :code:`rqalpha cmd` 失效
+
 2.0.8
 ==================
 
