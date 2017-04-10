@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
@@ -31,8 +33,9 @@ class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
         self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
-        self._slippage_decider = SlippageDecider(mod_config.slppage)
+        self._slippage_decider = SlippageDecider(mod_config.slippage)
         self._tax_decider = TaxDecider()
+        self._price_limit = mod_config.price_limit
 
     def get_portfolio(self):
         return init_portfolio(self._env)
@@ -54,14 +57,15 @@ class SignalBroker(AbstractBroker):
         return None
 
     def _match(self, account, order):
-        # TODO support tick cal
-        env = Environment.get_instance()
-        bar = env.get_bar(order.order_book_id)
-        bar_status = bar._bar_status
+        order_book_id = order.order_book_id
+        price_board = self._env.price_board
 
-        if bar_status == BAR_STATUS.ERROR:
-            listed_date = bar.instrument.listed_date.date()
-            if listed_date == self._trading_dt.date():
+        last_price = price_board.get_last_price(order.order_book_id)
+
+        if np.isnan(last_price):
+            instrument = self._env.get_instrument(order_book_id)
+            listed_date = instrument.listed_date.date()
+            if listed_date == self._env.trading_dt.date():
                 reason = _(
                     "Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
                     order_book_id=order.order_book_id,
@@ -74,28 +78,31 @@ class SignalBroker(AbstractBroker):
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
             return
 
-        if isinstance(order.style, LimitOrder):
-            deal_price = order.style.get_limit_price()
+        if isinstance(order.type, LimitOrder):
+            deal_price = order.frozen_price
         else:
-            deal_price = bar.close
+            deal_price = last_price
 
-        deal_price = min(deal_price, bar.high)
-        deal_price = max(deal_price, bar.low)
-
-        deal_price = self._slippage_decider.get_trade_price(order.side, deal_price)
-
-        if (order.side == SIDE.BUY and bar_status == BAR_STATUS.LIMIT_UP) or (
-                order.side == SIDE.SELL and bar_status == BAR_STATUS.LIMIT_DOWN):
+        if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
             user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
-                bar_status=bar_status
+                bar_status=BAR_STATUS.LIMIT_UP
             ))
+        if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+            user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+                order_book_id=order.order_book_id,
+                quantity=order.quantity,
+                bar_status=BAR_STATUS.LIMIT_DOWN
+            ))
+
+        deal_price = self._slippage_decider.get_trade_price(order.side, deal_price)
+
         ct_amount = account.portfolio.positions.get_or_create(order.order_book_id).cal_close_today_amount(order.quantity, order.side)
         trade = Trade.__from_create__(
             order_id=order.order_id,
-            calendar_dt=self._calendar_dt,
-            trading_dt=self._trading_dt,
+            calendar_dt=self._env.calendar_dt,
+            trading_dt=self._env.trading_dt,
             price=deal_price,
             amount=order.quantity,
             side=order.side,
@@ -108,4 +115,4 @@ class SignalBroker(AbstractBroker):
         trade._tax = self._tax_decider.get_tax(account.type, trade)
         order.fill(trade)
 
-        env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
+        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
