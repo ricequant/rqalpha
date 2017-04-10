@@ -59,10 +59,9 @@ class Matcher(object):
 
     def match(self, open_orders):
         price_board = self._env.price_board
-        data_proxy = Environment.get_instance().data_proxy
         for account, order in open_orders:
             order_book_id = order.order_book_id
-            instrument = data_proxy.instruments(order_book_id)
+            instrument = self._env.get_instrument(order_book_id)
 
             if np.isnan(price_board.get_last_price(order_book_id)):
                 listed_date = instrument.listed_date.date()
