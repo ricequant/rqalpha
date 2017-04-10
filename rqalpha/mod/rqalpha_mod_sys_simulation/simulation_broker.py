@@ -31,7 +31,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env = env
         self._mod_config = mod_config
 
-        self._matcher = Matcher(mod_config)
+        self._matcher = Matcher(env, mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []

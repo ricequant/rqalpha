@@ -18,7 +18,6 @@ from collections import defaultdict
 
 import numpy as np
 from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE
-from rqalpha.environment import Environment
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.utils.i18n import gettext as _
@@ -27,7 +26,7 @@ from .decider import CommissionDecider, SlippageDecider, TaxDecider
 
 
 class Matcher(object):
-    def __init__(self, mod_config):
+    def __init__(self, env, mod_config):
         self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
         self._slippage_decider = SlippageDecider(mod_config.slippage)
         self._tax_decider = TaxDecider()
@@ -37,7 +36,7 @@ class Matcher(object):
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._volume_limit = mod_config.volume_limit
-        self._env = Environment.get_instance()
+        self._env = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):

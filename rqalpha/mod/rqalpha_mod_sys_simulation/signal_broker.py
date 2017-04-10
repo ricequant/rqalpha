@@ -23,7 +23,6 @@ from rqalpha.events import EVENT, Event
 from rqalpha.model.order import LimitOrder
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE
-from rqalpha.environment import Environment
 
 from .decider import CommissionDecider, SlippageDecider, TaxDecider
 from .utils import init_portfolio
@@ -44,7 +43,7 @@ class SignalBroker(AbstractBroker):
         return []
 
     def submit_order(self, order):
-        account = Environment.get_instance().get_account(order.order_book_id)
+        account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
         if order.is_final():
             return

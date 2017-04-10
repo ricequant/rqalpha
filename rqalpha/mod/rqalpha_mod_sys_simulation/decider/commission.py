@@ -76,10 +76,11 @@ class FutureCommission(BaseCommission):
 
     def get_commission(self, trade):
         order_book_id = trade.order_book_id
-        info = Environment.get_instance().get_future_commission_info(order_book_id, self.hedge_type)
+        env = Environment.get_instance()
+        info = env.get_future_commission_info(order_book_id, self.hedge_type)
         commission = 0
         if info['commission_type'] == COMMISSION_TYPE.BY_MONEY:
-            contract_multiplier = Environment.get_instance().get_instrument(trade.order_book_id).contract_multiplier
+            contract_multiplier = env.get_instrument(trade.order_book_id).contract_multiplier
             if trade.position_effect == POSITION_EFFECT.OPEN:
                 commission += trade.last_price * trade.last_quantity * contract_multiplier * info['open_commission_ratio']
             else:
