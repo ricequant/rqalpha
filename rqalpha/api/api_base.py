@@ -27,6 +27,7 @@ import sys
 from collections import Iterable
 from functools import wraps
 from types import FunctionType
+# noinspection PyUnresolvedReferences
 from typing import List
 
 import pandas as pd
@@ -39,6 +40,7 @@ from ..execution_context import ExecutionContext
 from ..utils import to_industry_code, to_sector_name, unwrapper
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _
+# noinspection PyUnresolvedReferences
 from ..utils.logger import user_log as logger
 
 from ..model.instrument import SectorCodeItem, IndustryCodeItem

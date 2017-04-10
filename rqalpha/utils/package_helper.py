@@ -15,11 +15,11 @@
 # limitations under the License.
 
 from .logger import system_log
-from importlib import import_module
 
 
 def import_mod(mod_name):
     try:
+        from importlib import import_module
         return import_module(mod_name)
     except Exception as e:
         system_log.error("*" * 10)

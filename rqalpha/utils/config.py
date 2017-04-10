@@ -20,9 +20,9 @@ import ruamel.yaml as yaml
 import datetime
 import logbook
 import locale
-from pprint import pformat
 import codecs
 import shutil
+from pprint import pformat
 
 from . import RqAttrDict, logger
 from .exception import patch_user_exc

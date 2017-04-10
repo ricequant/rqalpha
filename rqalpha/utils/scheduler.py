@@ -21,14 +21,10 @@ from dateutil.parser import parse
 
 from ..execution_context import ExecutionContext
 from ..environment import Environment
-from ..utils.exception import patch_user_exc, ModifyExceptionFromType
 from ..const import EXC_TYPE, EXECUTION_PHASE
 from ..events import EVENT
-
-try:
-    from inspect import signature
-except ImportError:
-    from funcsigs import signature
+from ..utils.py2 import signature
+from ..utils.exception import patch_user_exc, ModifyExceptionFromType
 
 
 def market_close(hour=0, minute=0):

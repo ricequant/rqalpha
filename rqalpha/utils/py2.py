@@ -45,3 +45,8 @@ try:
     from functools import lru_cache
 except ImportError:
     from fastcache import lru_cache
+
+try:
+    from inspect import signature
+except ImportError:
+    from funcsigs import signature

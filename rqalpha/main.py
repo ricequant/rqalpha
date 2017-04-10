@@ -88,11 +88,11 @@ def _validate_benchmark(config, data_proxy):
     if instrument.listed_date.date() > start_date:
         raise patch_user_exc(ValueError(
             _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=benchmark,
-                                                                                  start_date=start_date)))
+                                                                                   start_date=start_date)))
     if instrument.de_listed_date.date() < end_date:
         raise patch_user_exc(ValueError(
             _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
-                                                                               end_date=end_date)))
+                                                                                end_date=end_date)))
 
 
 def create_benchmark_portfolio(env):
