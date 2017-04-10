@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import click
+import ruamel.yaml as yaml
 
 
 @click.group()
@@ -26,12 +27,11 @@ def cmd_cli(ctx, verbose):
 
 def entry_point():
     import six
-    import ruamel.yaml as yaml
     from rqalpha.mod import SYSTEM_MOD_LIST
-    from rqalpha.utils.config import get_default_config_path, load_config
+    from rqalpha.utils.config import get_mod_config_path, load_mod_config
     from rqalpha.utils.package_helper import import_mod
-    mod_config_path = get_default_config_path("mod_config")
-    mod_config = load_config(mod_config_path, loader=yaml.RoundTripLoader, verify_version=False)
+    mod_config_path = get_mod_config_path()
+    mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
     for mod_name, config in six.iteritems(mod_config['mod']):
         lib_name = "rqalpha_mod_{}".format(mod_name)
