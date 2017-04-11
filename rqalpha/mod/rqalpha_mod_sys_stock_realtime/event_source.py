@@ -75,22 +75,21 @@ class RealtimeEventSource(AbstractEventSource):
             time.sleep(1)
 
     def clock_worker(self):
-            
         while True:
             # wait for the first data ready
             if not data_board.realtime_quotes_df.empty:
                 break
             time.sleep(0.1)
-        
+
         while True:
             time.sleep(self.fps)
 
             if is_holiday_today():
                 time.sleep(60)
                 continue
-            
+
             dt = datetime.datetime.now()
-            
+
             if dt.strftime("%H:%M:%S") >= "08:30:00" and dt.date() > self.before_trading_fire_date:
                 self.event_queue.put((dt, EVENT.BEFORE_TRADING))
                 self.before_trading_fire_date = dt.date()
@@ -119,6 +118,6 @@ class RealtimeEventSource(AbstractEventSource):
                     break
                 except Empty:
                     continue
-        
+
             system_log.debug("real_dt {}, dt {}, event {}", real_dt, dt, event_type)
             yield Event(event_type, calendar_dt=real_dt, trading_dt=dt)
