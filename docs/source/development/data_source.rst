@@ -30,6 +30,8 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 *   请在 `init`, `before_trading`, `handle_bar`, `handle_tick`, `after_trading` 等函数中读取自有数据，而不要在函数外执行数据获取的代码，否则可能会产生异常。
 *   RQAlpha 是读取策略代码并执行的，因此实际当前路径是运行 `rqalpha` 命令的路径，策略使用相对路径容易产生异常。如果您需要根据策略路径来定位相对路径可以通过 `context.config.base.strategy_file` 来获取策略路径，从而获取相对策略文件的其他路径，具体使用方式请看下面的示例代码。
 
+`read_csv_as_df <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/read_csv_as_df.py>`_
+
 ..  code-block:: python3
 
     from rqalpha.api import *
@@ -87,7 +89,8 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 *   如果您的自定义模块是基于策略策略的相对路径，则需要在 `init` 函数中通过 `context.config.base.strategy_file` 获取到策略路径，然后再添加到 `sys.path` 中。
 *   RQAlpha 是读取策略代码并执行的，因此实际当前路径是执行 `rqalpha` 命令的路径，避免使用相对路径。
 
-get_csv_module.py
+`get_csv_module <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/get_csv_module.py>`_
+
 
 ..  code-block:: python3
 
@@ -104,7 +107,7 @@ get_csv_module.py
         csv_path = os.path.join(os.path.dirname(__file__), "./IF1706_20161108.csv")
         return read_csv_as_df(csv_path)
 
-import_get_csv_module.py
+`import_get_csv_module <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/import_get_csv_module.py>`_
 
 ..  code-block:: python3
 
