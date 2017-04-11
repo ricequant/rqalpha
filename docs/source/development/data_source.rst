@@ -274,7 +274,15 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
     ├── trading_dates.bcolz
     └── yield_curve.bcolz
 
-行情数据
+目前基础数据，比如 `Instruments`, `st_stocks`, `suspended_days`, `trading_dates` 都是全量数据，并且可以通过 `$ rqalpha update_bundle` 每天更新，因此没有相应的显式接口可以对其进行替换。
+
+您如果想要替换，可以使用如下两种方式:
+
+*   写脚本将自有数据源按照相同的格式生成对应的文件，并进行文件替换。
+*   实现 `AbstractDataSource <http://rqalpha.io/zh_CN/latest/development/basic_concept.html#datasource>`_ 对应的接口，您可以继承 `BaseDataSource <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/data/base_data_source.py>`_ 并 override 对应的接口即可完成替换。
+
+
+行情数据 - 五十行代码接入 tushare 行情数据
 ------------------------------------
 
 RQAlpha 支持自定义扩展数据源。得益于 RQAlpha 的 mod 机制，我们可以很方便的替换或者扩展默认的数据接口。
@@ -284,10 +292,6 @@ RQAlpha 将提供给用户的数据 API 和回测所需的基础数据抽象成�
 :class:`~DataSource` 类的完整文档，请参阅 :ref:`development-basic-concept`。下面将用一个简单的例子，为大家介绍如何用五十行左右的代码将默认的行情数据替换为 `TuShare`_ 的行情数据。
 
 .. _TuShare: http://tushare.org
-
-
-五十行代码接入 tushare 行情数据
-====================================
 
 TushareKDataMod 的作用是使用 tushare 提供的k线数据替换 data_bundle 中的行情数据，由于目前 tushare 仅仅开放了日线、周线和月线的历史数据，所以该 mod 仍然只能提供日回测的功能，若未来 tushare 开放了60分钟或5分钟线的历史数据，只需进行简单修改，便可通过该 mod 使 RQAlpha 实现5分钟回测。
 
