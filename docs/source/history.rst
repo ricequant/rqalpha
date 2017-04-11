@@ -4,6 +4,15 @@
 History
 ==================
 
+2.1.0
+==================
+
+- Fix `Issue 87 <https://github.com/ricequant/rqalpha/issues/87>`_
+- Fix `Issue 89 <https://github.com/ricequant/rqalpha/pull/89>`_
+- Fix 无法通过 :code:`env.config.mod` 获取全部 `mod` 的配置信息
+- 增加 :code:`context.config` 来获取配置信息
+- 提供 :code:`from rqalpha import export_as_api` 接口，方便扩展自定义 API
+
 2.0.9
 ==================
 
