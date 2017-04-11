@@ -56,6 +56,7 @@ class ModHandler(object):
 
             mod_config = RqAttrDict(copy.deepcopy(getattr(mod_module, "__config__", {})))
             mod_config.update(user_mod_config)
+            setattr(config.mod, mod_name, mod_config)
             self._mod_list[idx] = (mod_name, mod_config)
             self._mod_dict[mod_name] = mod
 
