@@ -4,6 +4,176 @@
 扩展数据源
 ==================
 
+在程序化交易的过程中，数据的获取是非常重要的一个环节，而数据又包含很多种不同类型的数据，有行情数据、财务数据、指标因子数据以及自定义类型数据。
+
+在实际交易过程中，对接数据源主要分为两种：
+
+*   增加自有数据源
+
+    *   直接在策略中读取自有数据
+    *   在策略中 `import` 自定义模块
+    *   扩展 RQAlpha API 来实现自有数据的API定义和读取
+
+*   替换已有数据源
+
+    *   基础数据
+    *   行情数据
+
+增加自有数据源
+====================================
+
+直接在策略中读取自有数据
+------------------------------------
+
+RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接在策略中读取文件、访问数据库等，但需要关注如下两个注意事项:
+
+*   请在 `init`, `before_trading`, `handle_bar`, `handle_tick`, `after_trading` 等函数中读取自有数据，而不要在函数外执行数据获取的代码，否则可能会产生异常。
+*   RQAlpha 是读取策略代码并执行的，因此实际当前路径是运行 `rqalpha` 命令的路径，策略使用相对路径容易产生异常。如果您需要根据策略路径来定位相对路径可以通过 `context.config.base.strategy_file` 来获取策略路径，从而获取相对策略文件的其他路径，具体使用方式请看下面的示例代码。
+
+..  code-block:: python3
+
+    from rqalpha.api import *
+
+
+    def read_csv_as_df(csv_path):
+        # 通过 pandas 读取 csv 文件，并生成 DataFrame
+        import pandas as pd
+        data = pd.read_csv(csv_path)
+        return data
+
+
+    def init(context):
+        import os
+        # 获取当前运行策略的文件路径
+        strategy_file_path = context.config.base.strategy_file
+        # 根据当前策略的文件路径寻找到相对路径为 "./IF1706_20161108.csv" 的 csv 文件
+        csv_path = os.path.join(os.path.dirname(strategy_file_path), "./IF1706_20161108.csv")
+        # 读取 csv 文件并生成 df
+        IF1706_df = read_csv_as_df(csv_path)
+        # 传入 context 中
+        context.IF1706_df = IF1706_df
+
+
+    def before_trading(context):
+        # 通过context 获取在 init 阶段读取的 csv 文件数据
+        logger.info(context.IF1706_df)
+
+
+    def handle_bar(context, bar):
+        pass
+
+
+    __config__ = {
+        "base": {
+            "securities": "future",
+            "start_date": "2015-01-09",
+            "end_date": "2015-01-10",
+            "frequency": "1d",
+            "matching_type": "current_bar",
+            "future_starting_cash": 1000000,
+            "benchmark": None,
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+    }
+
+在策略中 import 自定义模块
+------------------------------------
+
+如果您定义了自定义模块，希望在策略中引用，只需要在初始化的时候将模块对应的路径添加到 `sys.path` 即可，但需要关注如下两个注意事项:
+
+*   如果没有特殊原因，请在 `init` 阶段添加 `sys.path` 路径。
+*   如果您的自定义模块是基于策略策略的相对路径，则需要在 `init` 函数中通过 `context.config.base.strategy_file` 获取到策略路径，然后再添加到 `sys.path` 中。
+*   RQAlpha 是读取策略代码并执行的，因此实际当前路径是执行 `rqalpha` 命令的路径，避免使用相对路径。
+
+get_csv_module.py
+
+..  code-block:: python3
+
+    import os
+
+
+    def read_csv_as_df(csv_path):
+        import pandas as pd
+        data = pd.read_csv(csv_path)
+        return data
+
+
+    def get_csv():
+        csv_path = os.path.join(os.path.dirname(__file__), "./IF1706_20161108.csv")
+        return read_csv_as_df(csv_path)
+
+import_get_csv_module.py
+
+..  code-block:: python3
+
+    from rqalpha.api import *
+
+
+    def init(context):
+        import os
+        import sys
+        strategy_file_path = context.config.base.strategy_file
+        sys.path.append(os.path.realpath(os.path.dirname(strategy_file_path)))
+
+        from get_csv_module import get_csv
+
+        IF1706_df = get_csv()
+        context.IF1706_df = IF1706_df
+
+
+    def before_trading(context):
+        logger.info(context.IF1706_df)
+
+
+    __config__ = {
+        "base": {
+            "securities": "future",
+            "start_date": "2015-01-09",
+            "end_date": "2015-01-10",
+            "frequency": "1d",
+            "matching_type": "current_bar",
+            "future_starting_cash": 1000000,
+            "benchmark": None,
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+    }
+
+扩展 API 实现自有数据的读取
+------------------------------------
+
+To Be Continued
+
+替换已有数据源
+====================================
+
+基础数据
+------------------------------------
+
+通过 `$ rqalpha update_bundle` 下载的数据有如下文件：
+
+..  code-block:: bash
+
+    $ cd ~/.rqalpha/bundle & tree -A -d -L 1    
+
+    .
+    ├── adjusted_dividends.bcolz 
+    ├── funds.bcolz
+    ├── futures.bcolz
+    ├── indexes.bcolz
+    ├── original_dividends.bcolz
+    ├── st_stock_days.bcolz
+    ├── stocks.bcolz
+    ├── suspended_days.bcolz
+    ├── trading_dates.bcolz
+    └── yield_curve.bcolz
+
+行情数据
+------------------------------------
+
 RQAlpha 支持自定义扩展数据源。得益于 RQAlpha 的 mod 机制，我们可以很方便的替换或者扩展默认的数据接口。
 
 RQAlpha 将提供给用户的数据 API 和回测所需的基础数据抽象成了若干个函数，这些函数被封于 :class:`~DataSource` 类中，并将在需要的时候被调用。简单的说，我们只需要在自己定义的 mod 中扩展或重写默认的 :class:`~DataSource` 类，就可以替换掉默认的数据源，接入自有数据。
