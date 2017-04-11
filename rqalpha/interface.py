@@ -215,6 +215,7 @@ class AbstractDataSource(object):
         :param datetime.datetime dt: 时间
 
         :param bool skip_suspended: 是否跳过停牌日
+        :param bool include_now: 是否包含当天最新数据
 
         :return: `numpy.ndarray`
 
