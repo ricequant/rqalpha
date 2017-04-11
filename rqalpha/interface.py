@@ -157,7 +157,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True, include_now=False):
         """
         获取历史数据
 
@@ -188,6 +188,7 @@ class AbstractDataSource(object):
         :param datetime.datetime dt: 时间
 
         :param bool skip_suspended: 是否跳过停牌日
+        :param bool include_now: 是否包含当天最新数据
 
         :return: `numpy.ndarray`
 
