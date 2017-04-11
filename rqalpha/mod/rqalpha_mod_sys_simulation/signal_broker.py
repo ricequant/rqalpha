@@ -21,6 +21,7 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.model.order import LimitOrder
+from rqalpha.model.order import ORDER_TYPE
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE
 
@@ -77,7 +78,7 @@ class SignalBroker(AbstractBroker):
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
             return
 
-        if isinstance(order.type, LimitOrder):
+        if order.type == ORDER_TYPE.LIMIT:
             deal_price = order.frozen_price
         else:
             deal_price = last_price
