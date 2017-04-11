@@ -10,9 +10,9 @@
 
 *   增加自有数据源
 
-    *   直接在策略中读取自有数据
+    *   策略中直接读取自有数据
     *   在策略中 `import` 自定义模块
-    *   扩展 RQAlpha API 来实现自有数据的API定义和读取
+    *   扩展 API 实现自有数据的读取
 
 *   替换已有数据源
 
@@ -22,13 +22,13 @@
 增加自有数据源
 ====================================
 
-直接在策略中读取自有数据
+策略中直接读取自有数据
 ------------------------------------
 
 RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接在策略中读取文件、访问数据库等，但需要关注如下两个注意事项:
 
-*   请在 `init`, `before_trading`, `handle_bar`, `handle_tick`, `after_trading` 等函数中读取自有数据，而不要在函数外执行数据获取的代码，否则可能会产生异常。
-*   RQAlpha 是读取策略代码并执行的，因此实际当前路径是运行 `rqalpha` 命令的路径，策略使用相对路径容易产生异常。如果您需要根据策略路径来定位相对路径可以通过 `context.config.base.strategy_file` 来获取策略路径，从而获取相对策略文件的其他路径，具体使用方式请看下面的示例代码。
+*   请在 :code:`init`, :code:`before_trading`, :code:`handle_bar`, :code:`handle_tick`, :code:`after_trading` 等函数中读取自有数据，而不要在函数外执行数据获取的代码，否则可能会产生异常。
+*   RQAlpha 是读取策略代码并执行的，因此实际当前路径是运行 `rqalpha` 命令的路径，策略使用相对路径容易产生异常。如果您需要根据策略路径来定位相对路径可以通过 :code:`context.config.base.strategy_file` 来获取策略路径，从而获取相对策略文件的其他路径，具体使用方式请看下面的示例代码。
 
 `read_csv_as_df <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/read_csv_as_df.py>`_
 
@@ -48,8 +48,8 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
         import os
         # 获取当前运行策略的文件路径
         strategy_file_path = context.config.base.strategy_file
-        # 根据当前策略的文件路径寻找到相对路径为 "./IF1706_20161108.csv" 的 csv 文件
-        csv_path = os.path.join(os.path.dirname(strategy_file_path), "./IF1706_20161108.csv")
+        # 根据当前策略的文件路径寻找到相对路径为 "../IF1706_20161108.csv" 的 csv 文件
+        csv_path = os.path.join(os.path.dirname(strategy_file_path), "../IF1706_20161108.csv")
         # 读取 csv 文件并生成 df
         IF1706_df = read_csv_as_df(csv_path)
         # 传入 context 中
@@ -83,10 +83,10 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 在策略中 import 自定义模块
 ------------------------------------
 
-如果您定义了自定义模块，希望在策略中引用，只需要在初始化的时候将模块对应的路径添加到 `sys.path` 即可，但需要关注如下两个注意事项:
+如果您定义了自定义模块，希望在策略中引用，只需要在初始化的时候将模块对应的路径添加到 :code:`sys.path` 即可，但需要关注如下两个注意事项:
 
-*   如果没有特殊原因，请在 `init` 阶段添加 `sys.path` 路径。
-*   如果您的自定义模块是基于策略策略的相对路径，则需要在 `init` 函数中通过 `context.config.base.strategy_file` 获取到策略路径，然后再添加到 `sys.path` 中。
+*   如果没有特殊原因，请在 :code:`init` 阶段添加 :code:`sys.path` 路径。
+*   如果您的自定义模块是基于策略策略的相对路径，则需要在 :code:`init` 函数中通过 :code:`context.config.base.strategy_file` 获取到策略路径，然后再添加到 :code:`sys.path` 中。
 *   RQAlpha 是读取策略代码并执行的，因此实际当前路径是执行 `rqalpha` 命令的路径，避免使用相对路径。
 
 `get_csv_module <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/get_csv_module.py>`_
@@ -104,7 +104,7 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 
 
     def get_csv():
-        csv_path = os.path.join(os.path.dirname(__file__), "./IF1706_20161108.csv")
+        csv_path = os.path.join(os.path.dirname(__file__), "../IF1706_20161108.csv")
         return read_csv_as_df(csv_path)
 
 `import_get_csv_module <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/import_get_csv_module.py>`_
@@ -148,7 +148,107 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 扩展 API 实现自有数据的读取
 ------------------------------------
 
-To Be Continued
+我们通过创建一个 Mod 来实现扩展 API，启动策略时，只需要开启该 Mod, 对应的扩展 API 便可以生效，在策略中直接使用。
+
+`rqalpha_mod_extend_api_demo <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/extend_api/rqalpha_mod_extend_api_demo.py>`_
+
+..  code-block:: python3
+
+    import os
+    import pandas as pd
+    from rqalpha.interface import AbstractMod
+
+
+    __config__ = {
+        "csv_path": None
+    }
+
+
+    def load_mod():
+        return ExtendAPIDemoMod()
+
+
+    class ExtendAPIDemoMod(AbstractMod):
+        def __init__(self):
+            # 注入API 一定要在初始化阶段，否则无法成功注入
+            self._csv_path = None
+            self._inject_api()
+
+        def start_up(self, env, mod_config):
+            self._csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), mod_config.csv_path))
+
+        def tear_down(self, code, exception=None):
+            pass
+
+        def _inject_api(self):
+            from rqalpha import export_as_api
+            from rqalpha.execution_context import ExecutionContext
+            from rqalpha.const import EXECUTION_PHASE
+
+            @export_as_api
+            @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                            EXECUTION_PHASE.BEFORE_TRADING,
+                                            EXECUTION_PHASE.ON_BAR,
+                                            EXECUTION_PHASE.AFTER_TRADING,
+                                            EXECUTION_PHASE.SCHEDULED)
+            def get_csv_as_df():
+                data = pd.read_csv(self._csv_path)
+                return data
+
+
+如上代码，我们定义了 :code:`rqalpha_mod_extend_api_demo` Mod，该 Mod 接受一个参数: :code:`csv_path`， 其会转换为基于 Mod 的相对路径来获取对应的 csv 地址。
+
+在该Mod中通过 :code:`_inject_api` 方法，定义了 :code:`get_csv_ad_df` 函数，并通过 :code:`from rqalpha import export_as_api` 装饰器完成了 API 的注入。
+
+如果想限制扩展API所运行使用的范围，可以通过 :code:`ExecutionContext.enforce_phase` 来控制.
+
+接下来我们看一下如何在策略中使用该扩展API:
+
+`test_extend_api <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/extend_api/test_extend_api.py>`_
+
+..  code-block:: python3
+
+    from rqalpha.api import *
+
+
+    def init(context):
+        IF1706_df = get_csv_as_df()
+        context.IF1706_df = IF1706_df
+
+
+    def before_trading(context):
+        logger.info(context.IF1706_df)
+
+
+    __config__ = {
+        "base": {
+            "securities": "future",
+            "start_date": "2015-01-09",
+            "end_date": "2015-01-10",
+            "frequency": "1d",
+            "matching_type": "current_bar",
+            "future_starting_cash": 1000000,
+            "benchmark": None,
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+        "mod": {
+            "extend_api_demo": {
+                "enabled": True,
+                "lib": "rqalpha.examples.extend_api.rqalpha_mod_extend_api_demo",
+                "csv_path": "../IF1706_20161108.csv"
+            }
+        }
+    }
+
+如上述代码，首先配置信息中添加 `extend_api_demo` 对应的配置
+
+*   :code:`enabled`: True 表示开启该 Mod
+*   :code:`lib`: 指定该 Mod 对应的加载位置(rqlalpha 会自动去寻找 `rqalpha_mod_xxx` 对应的库，如果该库已经通过 `pip install` 安装，则无需显式指定 lib)
+*   :code:`csv_path`： 指定 csv 所在位置
+
+至此，我们就可以直接在策略中使用 `get_csv_as_df` 函数了。
 
 替换已有数据源
 ====================================

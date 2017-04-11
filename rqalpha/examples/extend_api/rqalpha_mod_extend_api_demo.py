@@ -42,8 +42,15 @@ class ExtendAPIDemoMod(AbstractMod):
 
     def _inject_api(self):
         from rqalpha import export_as_api
+        from rqalpha.execution_context import ExecutionContext
+        from rqalpha.const import EXECUTION_PHASE
 
         @export_as_api
+        @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                        EXECUTION_PHASE.BEFORE_TRADING,
+                                        EXECUTION_PHASE.ON_BAR,
+                                        EXECUTION_PHASE.AFTER_TRADING,
+                                        EXECUTION_PHASE.SCHEDULED)
         def get_csv_as_df():
             data = pd.read_csv(self._csv_path)
             return data
