@@ -224,6 +224,10 @@ class StrategyContext(object):
         return self.future_account
 
     @property
+    def config(self):
+        return Environment.get_instance().config
+
+    @property
     def slippage(self):
         raise NotImplementedError
 

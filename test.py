@@ -139,7 +139,7 @@ def is_enable_coverage():
 
 def test_api():
     # FIXME Error msg is hard to understand @zjuguxi
-    return
+    # return
 
     print(u"Testing API......")
     from rqalpha import run
@@ -333,7 +333,7 @@ if __name__ == '__main__':
     start_time = datetime.now()
 
     if len(sys.argv) >= 2:
-        if sys.argv[1] == 'mod':
+        if sys.argv[1] == 'api':
             test_api()
             end_time = datetime.now()
 

@@ -19,6 +19,7 @@ import inspect
 import re
 
 
+
 def get_code_block(func):
     lines = inspect.getsourcelines(func)[0][1:]
     return "".join([re.sub(r'^    ', '', line) for line in lines])
@@ -294,7 +295,6 @@ test_get_next_trading_date_code_new = get_code_block(test_get_next_trading_date)
 
 def test_get_dividend():
     from rqalpha.api import get_dividend
-    import pandas
 
     def init(context):
         pass
@@ -303,8 +303,8 @@ def test_get_dividend():
         df = get_dividend('000001.XSHE', start_date='20130104')
         df_to_assert = df.loc[df['book_closure_date'] == '	2013-06-19']
         assert df.shape >= (4, 5)
-        assert df_to_assert.iloc[0, 1] == 0.9838
-        assert df_to_assert.iloc[0, 3] == pandas.tslib.Timestamp('2013-06-20 00:00:00')
+        assert df_to_assert.iloc[0, 1] == 0.6149
+        assert str(df_to_assert.iloc[0, 3]) == '2013-06-20 00:00:00'
 test_get_dividend_code_new = get_code_block(test_get_dividend)
 
 # =================== 以下把代码写为纯字符串 ===================

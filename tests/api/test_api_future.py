@@ -32,13 +32,13 @@ def test_buy_open():
     def handle_bar(context, bar_dict):
         order_id = buy_open(context.f1, 1)
         order = get_order(order_id)
-        assert order.order_book_id == context.f1
-        assert order.quantity == 1
-        assert order.status == ORDER_STATUS.ACTIVE
-        assert order.unfilled_quantity == 1
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity
-        assert order.side == SIDE.BUY
-        assert order.position_effect == POSITION_EFFECT.OPEN
+        assert order.order_book_id == context.f1, 'Order_book_id is wrong'
+        assert order.quantity == 1, 'order.quantity is wrong'
+        assert order.status == ORDER_STATUS.FILLED, 'order.status is wrong'
+        assert order.unfilled_quantity == 0, 'order.unfilled_quantity is wrong'
+        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
+        assert order.side == SIDE.BUY, 'order.side is wrong'
+        assert order.position_effect == POSITION_EFFECT.OPEN, 'order.position_effect is wrong'
 test_buy_open_code_new = get_code_block(test_buy_open)
 
 
@@ -56,13 +56,13 @@ def test_sell_open():
     def handle_bar(context, bar_dict):
         order_id = sell_open(context.f1, 1)
         order = get_order(order_id)
-        assert order.order_book_id == context.f1
-        assert order.quantity == 1
-        assert order.status == ORDER_STATUS.ACTIVE
-        assert order.unfilled_quantity == 1
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity
-        assert order.side == SIDE.SELL
-        assert order.position_effect == POSITION_EFFECT.OPEN
+        assert order.order_book_id == context.f1, 'Order_book_id is wrong'
+        assert order.quantity == 1, 'order.quantity is wrong'
+        assert order.status == ORDER_STATUS.FILLED, 'order.status is wrong'
+        assert order.unfilled_quantity == 0, 'order.unfilled_quantity is wrong'
+        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
+        assert order.side == SIDE.SELL, 'order.side is wrong'
+        assert order.position_effect == POSITION_EFFECT.OPEN, 'order.position_effect is wrong'
 test_sell_open_code_new = get_code_block(test_sell_open)
 
 
@@ -80,13 +80,13 @@ def test_buy_close():
     def handle_bar(context, bar_dict):
         order_id = buy_close(context.f1, 1)
         order = get_order(order_id)
-        assert order.order_book_id == context.f1
-        assert order.quantity == 1
-        assert order.status == ORDER_STATUS.ACTIVE
-        assert order.unfilled_quantity == 1
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity
-        assert order.side == SIDE.BUY
-        assert order.position_effect == POSITION_EFFECT.CLOSE
+        assert order.order_book_id == context.f1, 'Order_book_id is wrong'
+        assert order.quantity == 1, 'order.quantity is wrong'
+        assert order.status == ORDER_STATUS.REJECTED, 'order.status is wrong'
+        assert order.unfilled_quantity == 1, 'order.unfilled_quantity is wrong'
+        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
+        assert order.side == SIDE.BUY, 'order.side is wrong'
+        assert order.position_effect == POSITION_EFFECT.CLOSE, 'order.position_effect is wrong'
 test_buy_close_code_new = get_code_block(test_buy_close)
 
 
@@ -106,7 +106,7 @@ def test_sell_close():
         order = get_order(order_id)
         assert order.order_book_id == context.f1
         assert order.quantity == 1
-        assert order.status == ORDER_STATUS.ACTIVE
+        assert order.status == ORDER_STATUS.REJECTED
         assert order.unfilled_quantity == 1
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
         assert order.side == SIDE.SELL
