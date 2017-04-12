@@ -45,3 +45,9 @@ class BarDictPriceBoard(AbstractPriceBoard):
 
     def _unlock_settlement(self, event):
         self._settlement_lock = False
+
+    def get_a1(self, order_book_id):
+        return None
+
+    def get_b1(self, order_book_id):
+        return None

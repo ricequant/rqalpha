@@ -24,7 +24,6 @@ import pandas as pd
 import six
 
 from rqalpha.const import EXIT_CODE, ACCOUNT_TYPE
-from rqalpha.environment import Environment
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.risk import Risk
@@ -39,6 +38,7 @@ class AnalyserMod(AbstractMod):
         self._orders = []
         self._trades = []
         self._total_portfolios = []
+        self._total_benchmark_portfolios = []
         self._sub_accounts = defaultdict(list)
         self._positions = defaultdict(list)
 
@@ -74,6 +74,7 @@ class AnalyserMod(AbstractMod):
             self._benchmark_daily_returns.append(0)
         else:
             self._benchmark_daily_returns.append(benchmark_portfolio.daily_returns)
+            self._total_benchmark_portfolios.append(self._to_portfolio_record(date, benchmark_portfolio))
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
             self._sub_accounts[account_type].append(self._to_account_record(date, account))
@@ -229,8 +230,14 @@ class AnalyserMod(AbstractMod):
             'total_portfolios': total_portfolios,
         }
 
-        if Environment.get_instance().plot_store is not None:
-            plots = Environment.get_instance().get_plot_store().get_plots()
+        if self._env.benchmark_portfolio is not None:
+            b_df = pd.DataFrame(self._total_benchmark_portfolios)
+            df['date'] = pd.to_datetime(df['date'])
+            benchmark_portfolios = b_df.set_index('date').sort_index()
+            result_dict['benchmark_portfolios'] = benchmark_portfolios
+
+        if self._env.plot_store is not None:
+            plots = self._env.get_plot_store().get_plots()
             plots_items = defaultdict(dict)
             for series_name, value_dict in six.iteritems(plots):
                 for date, value in six.iteritems(value_dict):

@@ -19,8 +19,6 @@ from rqalpha.__main__ import cli
 
 
 __config__ = {
-    # 可以指定回测的唯一ID，用户区分多次回测的结果
-    "run_id": 9999,
     # 是否开启信号模式
     "signal": False,
     # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
@@ -29,8 +27,10 @@ __config__ = {
     "slippage": 0,
     # 设置手续费乘数，默认为1
     "commission_multiplier": 1,
-    # bar_limit: 在处于涨跌停时，无法买进/卖出，默认开启
-    "bar_limit": True,
+    # price_limit: 在处于涨跌停时，无法买进/卖出，默认开启
+    "price_limit": True,
+    # 是否有成交量限制
+    "volume_limit": True,
     # 按照当前成交量的百分比进行撮合
     "volume_percent": 0.25,
 }
@@ -77,7 +77,7 @@ cli.commands['run'].params.append(
     # [Deprecated] using matching type
     click.Option(
         ('-me', '--match-engine', cli_prefix + "matching_type"),
-        type=click.Choice(['current_bar', 'next_bar']),
+        type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty']),
         help="[Deprecated][sys_simulation] set matching type"
     )
 )
@@ -85,15 +85,7 @@ cli.commands['run'].params.append(
 cli.commands['run'].params.append(
     click.Option(
         ('-mt', '--matching-type', cli_prefix + "matching_type"),
-        type=click.Choice(['current_bar', 'next_bar']),
+        type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty']),
         help="[sys_simulation] set matching type"
-    )
-)
-
-cli.commands['run'].params.append(
-    click.Option(
-        ('-r', '--rid', cli_prefix + "run_id"),
-        type=click.STRING,
-        help="[sys_simulation] set run id"
     )
 )

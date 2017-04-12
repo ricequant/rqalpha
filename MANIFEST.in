@@ -1,3 +1,4 @@
 include requirements.txt
+include requirements-py2.txt
 include rqalpha/VERSION.txt
 recursive-include rqalpha/resource *.png

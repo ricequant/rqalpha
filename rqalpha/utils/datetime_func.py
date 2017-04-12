@@ -13,8 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import datetime
 
+import datetime
 from collections import namedtuple
 
 from .py2 import lru_cache
@@ -41,6 +41,11 @@ def get_month_end_time(time=None):
 def get_last_date(trading_calendar, dt):
     idx = trading_calendar.searchsorted(dt)
     return trading_calendar[idx - 1]
+
+
+def convert_date_to_date_int(dt):
+    t = dt.year * 10000 + dt.month * 100 + dt.day
+    return t
 
 
 def convert_date_to_int(dt):
@@ -78,3 +83,15 @@ def convert_int_to_datetime(dt_int):
     hour, r = divmod(r, 10000)
     minute, second = divmod(r, 100)
     return datetime.datetime(year, month, day, hour, minute, second)
+
+
+def convert_date_time_ms_int_to_datetime(date_int, time_int):
+    date_int, time_int = int(date_int), int(time_int)
+    dt = _convert_int_to_date(date_int)
+
+    hours, r = divmod(time_int, 10000000)
+    minutes, r = divmod(r, 100000)
+    seconds, millisecond = divmod(r, 1000)
+
+    return dt.replace(hour=hours, minute=minutes, second=seconds,
+                      microsecond=millisecond * 1000)

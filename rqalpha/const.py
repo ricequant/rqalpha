@@ -47,10 +47,10 @@ class RUN_TYPE(CustomEnum):
 
 # noinspection PyPep8Naming
 class ACCOUNT_TYPE(CustomEnum):
-    TOTAL = "TOTAL"
-    BENCHMARK = "BENCHMARK"
-    STOCK = "STOCK"
-    FUTURE = "FUTURE"
+    TOTAL = 0
+    BENCHMARK = 1
+    STOCK = 2
+    FUTURE = 3
 
 
 # noinspection PyPep8Naming
@@ -65,6 +65,9 @@ class BAR_STATUS(CustomEnum):
 class MATCHING_TYPE(CustomEnum):
     CURRENT_BAR_CLOSE = "CURRENT_BAR_CLOSE"
     NEXT_BAR_OPEN = "NEXT_BAR_OPEN"
+    NEXT_TICK_LAST = "NEXT_TICK_LAST"
+    NEXT_TICK_BEST_OWN = "NEXT_TICK_BEST_OWN"
+    NEXT_TICK_BEST_COUNTERPARTY = "NEXT_TICK_BEST_COUNTERPARTY"
 
 
 # noinspection PyPep8Naming

@@ -27,6 +27,7 @@ import sys
 from collections import Iterable
 from functools import wraps
 from types import FunctionType
+# noinspection PyUnresolvedReferences
 from typing import List
 
 import pandas as pd
@@ -39,6 +40,8 @@ from ..execution_context import ExecutionContext
 from ..utils import to_industry_code, to_sector_name, unwrapper
 from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from ..utils.i18n import gettext as _
+# noinspection PyUnresolvedReferences
+from ..utils.logger import user_log as logger
 
 from ..model.instrument import SectorCodeItem, IndustryCodeItem
 from ..utils.arg_checker import apply_rules, verify_that
@@ -51,6 +54,7 @@ from ..model.order import Order, MarketOrder, LimitOrder
 
 
 __all__ = [
+    'logger',
     'sector_code',
     'industry_code',
     'LimitOrder',
@@ -116,6 +120,7 @@ def export_as_api(func):
     __all__.append(func.__name__)
 
     func = decorate_api_exc(func)
+    globals()[func.__name__] = func
 
     return func
 
@@ -325,7 +330,7 @@ def get_yield_curve(date=None, tenor=None):
              verify_that('frequency').is_in(('1m', '1d')),
              verify_that('fields').are_valid_fields(names.VALID_HISTORY_FIELDS, ignore_none=True),
              verify_that('skip_suspended').is_instance_of(bool))
-def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True):
+def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True, include_now=False):
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
 
@@ -406,12 +411,12 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     if frequency == '1m' and env.config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
 
-    if (env.config.base.frequency == '1m' and frequency == '1d') or \
-        (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
+    if ((env.config.base.frequency == '1m' and frequency == '1d') or
+        (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING)):
         # 在分钟回测获取日线数据, 应该推前一天，这里应该使用 trading date
         dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
 
-    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended)
+    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended, include_now)
 
 
 @export_as_api
@@ -669,7 +674,7 @@ def to_date(date):
             return date.date()
         except AttributeError:
             return date
-    
+
     raise RQInvalidArgument('unknown date value: {}'.format(date))
 
 
@@ -689,7 +694,7 @@ def get_dividend(order_book_id, start_date, adjusted=True):
     start_date = to_date(start_date)
     if start_date > dt:
         raise RQInvalidArgument(
-            _('in get_dividend, start_date {} is later than the previous test day {}').format(
+            _(u"in get_dividend, start_date {} is later than the previous test day {}").format(
                 start_date, dt
             ))
     order_book_id = assure_order_book_id(order_book_id)
@@ -740,6 +745,6 @@ def current_snapshot(id_or_symbol):
         Snapshot(order_book_id: '000001.XSHE', datetime: datetime.datetime(2016, 1, 4, 9, 33), open: 10.0, high: 10.025, low: 9.9667, last: 9.9917, volume: 2050320, total_turnover: 20485195, prev_close: 9.99)
     """
     env = Environment.get_instance()
-    frequency = Environment.get_instance().config.base.frequency
+    frequency = env.config.base.frequency
     order_book_id = assure_order_book_id(id_or_symbol)
     return env.data_proxy.current_snapshot(order_book_id, frequency, env.calendar_dt)

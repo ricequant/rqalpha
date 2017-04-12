@@ -17,6 +17,7 @@
 import os.path
 from gettext import NullTranslations, translation
 from .logger import system_log
+from .py2 import to_utf8
 
 
 class Localization(object):
@@ -55,7 +56,4 @@ localization = Localization()
 
 def gettext(message):
     trans_txt = localization.trans.gettext(message)
-    try:
-        return trans_txt.decode('utf-8')
-    except AttributeError:
-        return trans_txt
+    return to_utf8(trans_txt)

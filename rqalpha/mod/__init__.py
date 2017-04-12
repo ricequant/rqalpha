@@ -47,7 +47,7 @@ class ModHandler(object):
                 lib_name = "rqalpha.mod.rqalpha_mod_" + mod_name
             else:
                 lib_name = "rqalpha_mod_" + mod_name
-            system_log.debug(_('loading mod {}').format(lib_name))
+            system_log.debug(_(u"loading mod {}").format(lib_name))
             mod_module = import_mod(lib_name)
             if mod_module is None:
                 del self._mod_list[idx]
@@ -56,6 +56,7 @@ class ModHandler(object):
 
             mod_config = RqAttrDict(copy.deepcopy(getattr(mod_module, "__config__", {})))
             mod_config.update(user_mod_config)
+            setattr(config.mod, mod_name, mod_config)
             self._mod_list[idx] = (mod_name, mod_config)
             self._mod_dict[mod_name] = mod
 

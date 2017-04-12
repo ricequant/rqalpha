@@ -4,7 +4,124 @@
 History
 ==================
 
-2.0.0-beta
+2.1.0
+==================
+
+- Fix `Issue 87 <https://github.com/ricequant/rqalpha/issues/87>`_
+- Fix `Issue 89 <https://github.com/ricequant/rqalpha/pull/89>`_
+- Fix 无法通过 :code:`env.config.mod` 获取全部 `mod` 的配置信息
+- 增加 :code:`context.config` 来获取配置信息
+- 提供 :code:`from rqalpha import export_as_api` 接口，方便扩展自定义 API
+
+2.0.9
+==================
+
+- Fix [Issue 79](https://github.com/ricequant/rqalpha/issues/79)
+- Fix [Issue 82](https://github.com/ricequant/rqalpha/issues/82)
+- Fix :code:`rqalpha cmd` 失效
+
+2.0.8
+==================
+
+- Fix [Issue 81](https://github.com/ricequant/rqalpha/issues/81)
+- 解决 `mod_config.yml` 文件解析出错以后，所有的命令报错的问题
+- 默认在 Python 2.x 下 `sys.setdefaultencoding("utf-8")`
+- 优化 `UNIVERSE_CHANGED` 事件，现在只有在universe真正变化时才触发
+
+2.0.7
+==================
+
+- Fix [Issue 78](https://github.com/ricequant/rqalpha/issues/78)
+- `is_st_stock` | `is_suspended` 支持 `count` 参数
+- 解决大量 Python 2.x 下中文乱码问题
+
+2.0.6
+==================
+
+- 解决在 Python 2.x 下安装 RQAlpha 提示 `requirements-py2.txt Not Found` 的问题
+- 解决 `Benchmark` 无法显示的问题
+- 解决 `rqalpha mod list` 显示不正确的问题
+- 现在可以通过配置 `base.extra_vars` 向策略中预定义变量了。用法如下:
+
+.. code-block:: python3
+
+    from rqalpha import run
+
+    config = {
+      "base": {
+        "strategy_file": "strategy.py",
+        "start_date": "2016-06-01",
+        "end_date": "2016-07-01",
+        "stock_starting_cash":100000,
+        "benchmark": '000300.XSHG'
+      },  
+      "extra":{
+        "context_vars":{
+          "short":5,
+          "middle":10,
+          "long":21
+        }
+      }
+    }
+
+    result_dict = run(config)
+
+    # 以下是策略代码:
+
+    def handle_bar(context):
+        print(context.short)    # 5
+        print(context.middle)   # 10
+        print(context.long)     # 21
+
+2.0.2
+==================
+
+- 现在可以通过配置 `base.extra_vars` 向策略中预定义变量了。用法如下:
+
+.. code-block:: python3
+
+    from rqalpha import run
+
+    config = {
+      "base": {
+        "strategy_file": "strategy.py",
+        "start_date": "2016-06-01",
+        "end_date": "2016-07-01",
+        "stock_starting_cash":100000,
+        "benchmark": '000300.XSHG'
+      },  
+      "extra":{
+        "context_vars":{
+          "short":5,
+          "middle":10,
+          "long":21
+        }
+      }
+    }
+
+    result_dict = run(config)
+
+    # 以下是策略代码:
+
+    def handle_bar(context):
+        print(context.short)    # 5
+        print(context.middle)   # 10
+        print(context.long)     # 21
+
+2.0.1
+==================
+
+- 修改配置的读取方式，不再从 `~/.rqalpha/config.yml` 读取自定义配置信息，而是默认从当前路径读取 `config.yml`，如果没找到，则会读取系统默认配置信息
+- 现在不再对自定义信息进行版本检查
+- :code:`rqalpha generate_config` 现在会生成包含所有默认系统配置信息的 `config.yml` 文件。
+- :code:`RUN_TYPE` 增加 :code:`LIVE_TRADING`
+- 修复 :code:`history_bars` 获取日期错误产生的问题
+- 修复执行 :code:`context.run_info` 会报错的问题
+- 修复持久化报错的问题
+- 增加 Order Persist 相关内容
+
+
+2.0.0
 ==================
 
 2.0.0 详细修改内容请访问：`RQAlpha 2.0.0 <https://github.com/ricequant/rqalpha/issues/65>`_
@@ -13,18 +130,18 @@ History
 
 - 重新定义了 :code:`Portfolio`, :code:`Account` 和 :code:`Position` 的角色和关系
 - 删除大部分累计计算的属性，重新实现股票和期货的计算逻辑
-- 现在只有在 :code:`Portfolio` 层级进行净值/份额的计算，:code:`Account` 级别不再进行净值/份额/收益/相关的计算
+- 现在只有在 :code:`Portfolio` 层级进行净值/份额的计算，Account级别不再进行净值/份额/收益/相关的计算
 - 账户的恢复和初始化现在只需要 :code:`total_cash`, :code:`positions` 和 :code:`backward_trade_set` 即可完成
 - 精简 :code:`Position` 的初始化，可以从 :code:`real_broker` 直接进行恢复
 - :code:`Account` 提供 :code:`fast_forward` 函数，账户现在可以从任意时刻通过 :code:`orders` 和 :code:`trades` 快速前进至最新状态
-- 如果存在 Benchmark， 则创建一个 :code:`benchmark_portfolio`，其包含一个 :code:`benchmark_account`
+- 如果存在 Benchmark， 则创建一个 :code:`benchmark_portfolio`, 其包含一个 :code:`benchmark_account`
 - 策略在调用 :code:`context.portfolio.positions[some_security]` 时候，如果 position 不存在，不再每次都创建临时仓位，而是会缓存，从而提高回测速度和性能
 - 不再使用 :code:`clone` 方法
 - 不再使用 :code:`PortfolioProxy` 和 :code:`PositionProxy`
 
 **Event 相关**
 
-- 规范 Event 的生成和响应逻辑, 使用 Event object 来替换原来的 Enum
+- 规范 Event 的生成和相应逻辑, 使用 Event object 来替换原来的 Enum
 - 抽离事件执行相关逻辑为 :code:`Executor` 模块
 
 **Mod 相关**
@@ -68,8 +185,10 @@ History
 - 删除 :code:`DEFAULT_FUTURE_INFO` 变量，现在可以直接通过 :code:`data_proxy` 获取相关数据
 - 通过 `better_exceptions <https://github.com/Qix-/better-exceptions>`_ 提供更好的错误堆栈提示体验
 - 对字符串的处理进行了优化，现在可以正确在 Python2.x/3.x 下显示中文了
-- 修复 `update_bundle` 直接在代码中调用会报错的问题
+- 修复 :code:`update_bundle` 直接在代码中调用会报错的问题
 - 增加对于下单量为0的订单过滤，不再会创建订单，也不再会输出警报日志
+- 增加 :code:`is_suspended` 和 :code:`is_st_stock` API 的支持
+
 0.3.14
 ==================
 

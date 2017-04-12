@@ -75,7 +75,7 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
 
 class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
     """
-    RQAlpha多个地方需要使用最新价格，不同的数据源其最新价格获取的方式不尽相同
+    RQAlpha多个地方需要使用最新「行情」，不同的数据源其最新价格获取的方式不尽相同
 
     因此抽离出 `AbstractPriceBoard`, 您可以自行进行扩展并替换默认 PriceBoard
     """
@@ -92,6 +92,12 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
     def get_limit_down(self, order_book_id):
+        raise NotImplementedError
+
+    def get_a1(self, order_book_id):
+        raise NotImplementedError
+
+    def get_b1(self, order_book_id):
         raise NotImplementedError
 
 
@@ -178,7 +184,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True, include_now=False):
         """
         获取历史数据
 
@@ -264,6 +270,18 @@ class AbstractDataSource(object):
         :param instrument: 合约对象
         :param HEDGE_TYPE hedge_type: 枚举类型，账户对冲类型
         :return: dict
+        """
+        raise NotImplementedError
+
+    def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
+        """
+        获取合并的 ticks
+
+        :param list order_book_id_list: 合约名列表
+        :param datetime.date trading_date: 交易日
+        :param datetime.datetime last_dt: 仅返回 last_dt 之后的时间
+
+        :return: Tick
         """
         raise NotImplementedError
 

@@ -138,23 +138,44 @@ def is_enable_coverage():
 
 
 def test_api():
+    # FIXME Error msg is hard to understand @zjuguxi
+    # return
+
     print(u"Testing API......")
     from rqalpha import run
 
-    from tests.api.test_api_base import test_get_order_code_new, test_get_open_order_code_new, \
-        test_cancel_order_code_new, \
-        test_update_universe_code_new, test_subscribe_code_new, test_unsubscribe_code_new, \
-        test_get_yield_curve_code_new, \
-        test_history_bars_code_new, test_all_instruments_code_new, test_instruments_code_new, test_sector_code_new, \
-        test_concept_code_new, test_industry_code_new, test_get_trading_dates_code_new, \
-        test_get_previous_trading_date_code_new, test_get_next_trading_date_code_new, test_get_dividend_code_new
+    from tests.api.test_api_base import (
+        test_get_order_code_new,
+        test_get_open_order_code_new,
+        test_cancel_order_code_new,
+        test_update_universe_code_new,
+        test_subscribe_code_new,
+        test_unsubscribe_code_new,
+        test_get_yield_curve_code_new,
+        test_history_bars_code_new,
+        test_all_instruments_code_new,
+        test_instruments_code_new,
+        test_sector_code_new,
+        test_concept_code_new,
+        test_industry_code_new,
+        test_get_trading_dates_code_new,
+        test_get_previous_trading_date_code_new,
+        test_get_next_trading_date_code_new,
+        test_get_dividend_code_new,
+    )
 
-    from tests.api.test_api_stock import test_order_shares_code_new, test_order_lots_code_new, \
-        test_order_value_code_new, \
-        test_order_percent_code_new, test_order_target_value_code_new
+    from tests.api.test_api_stock import (
+        test_order_shares_code_new, test_order_lots_code_new,
+        test_order_value_code_new,
+        test_order_percent_code_new, test_order_target_value_code_new,
+    )
 
-    from tests.api.test_api_future import test_buy_open_code_new, test_sell_open_code_new, test_buy_close_code_new, \
-        test_sell_close_code_new
+    from tests.api.test_api_future import (
+        test_buy_open_code_new,
+        test_sell_open_code_new,
+        test_buy_close_code_new,
+        test_sell_close_code_new,
+    )
 
     base_api_config = {
         "base": {
@@ -171,7 +192,8 @@ def test_api():
         },
         "mod": {
             "sys_progress": {
-                "enabled": False,
+                "enabled": True,
+                "show": True,
             },
         },
     }
@@ -191,7 +213,8 @@ def test_api():
         },
         "mod": {
             "sys_progress": {
-                "enabled": False,
+                "enabled": True,
+                "show": True,
             },
         },
     }
@@ -211,42 +234,49 @@ def test_api():
         },
         "mod": {
             "sys_progress": {
-                "enabled": False,
+                "enabled": True,
+                "show": True,
             },
         },
     }
 
     # =================== Test Base API ===================
-    run(base_api_config, test_get_order_code_new)
-    run(base_api_config, test_get_open_order_code_new)
-    run(base_api_config, test_cancel_order_code_new)
-    run(base_api_config, test_update_universe_code_new)
-    run(base_api_config, test_subscribe_code_new)
-    run(base_api_config, test_unsubscribe_code_new)
-    run(base_api_config, test_get_yield_curve_code_new)
-    run(base_api_config, test_history_bars_code_new)
-    run(base_api_config, test_all_instruments_code_new)
-    run(base_api_config, test_instruments_code_new)
-    run(base_api_config, test_sector_code_new)
-    run(base_api_config, test_industry_code_new)
-    run(base_api_config, test_concept_code_new)
-    run(base_api_config, test_get_trading_dates_code_new)
-    run(base_api_config, test_get_previous_trading_date_code_new)
-    run(base_api_config, test_get_next_trading_date_code_new)
-    run(base_api_config, test_get_dividend_code_new)
+    tasks = []
+
+    tasks.append((base_api_config, test_get_order_code_new, "test_get_order_code_new"))
+    tasks.append((base_api_config, test_get_open_order_code_new, "test_get_open_order_code_new"))
+    tasks.append((base_api_config, test_cancel_order_code_new, "test_cancel_order_code_new"))
+    tasks.append((base_api_config, test_update_universe_code_new, "test_update_universe_code_new"))
+    tasks.append((base_api_config, test_subscribe_code_new, "test_subscribe_code_new"))
+    tasks.append((base_api_config, test_unsubscribe_code_new, "test_unsubscribe_code_new"))
+    tasks.append((base_api_config, test_get_yield_curve_code_new, "test_get_yield_curve_code_new"))
+    tasks.append((base_api_config, test_history_bars_code_new, "test_history_bars_code_new"))
+    tasks.append((base_api_config, test_all_instruments_code_new, "test_all_instruments_code_new"))
+    tasks.append((base_api_config, test_instruments_code_new, "test_instruments_code_new"))
+    tasks.append((base_api_config, test_sector_code_new, "test_sector_code_new"))
+    tasks.append((base_api_config, test_industry_code_new, "test_industry_code_new"))
+    tasks.append((base_api_config, test_concept_code_new, "test_concept_code_new"))
+    tasks.append((base_api_config, test_get_trading_dates_code_new, "test_get_trading_dates_code_new"))
+    tasks.append((base_api_config, test_get_previous_trading_date_code_new, "test_get_previous_trading_date_code_new"))
+    tasks.append((base_api_config, test_get_next_trading_date_code_new, "test_get_next_trading_date_code_new"))
+    tasks.append((base_api_config, test_get_dividend_code_new, "test_get_dividend_code_new"))
 
     # =================== Test Stock API ===================
-    run(stock_api_config, test_order_shares_code_new)
-    run(stock_api_config, test_order_lots_code_new)
-    run(stock_api_config, test_order_value_code_new)
-    run(stock_api_config, test_order_percent_code_new)
-    run(stock_api_config, test_order_target_value_code_new)
+    tasks.append((stock_api_config, test_order_shares_code_new, "test_order_shares_code_new"))
+    tasks.append((stock_api_config, test_order_lots_code_new, "test_order_lots_code_new"))
+    tasks.append((stock_api_config, test_order_value_code_new, "test_order_value_code_new"))
+    tasks.append((stock_api_config, test_order_percent_code_new, "test_order_percent_code_new"))
+    tasks.append((stock_api_config, test_order_target_value_code_new, "test_order_target_value_code_new"))
 
     # =================== Test Future API ===================
-    run(future_api_config, test_buy_open_code_new)
-    run(future_api_config, test_sell_open_code_new)
-    run(future_api_config, test_buy_close_code_new)
-    run(future_api_config, test_sell_close_code_new)
+    tasks.append((future_api_config, test_buy_open_code_new, "test_buy_open_code_new"))
+    tasks.append((future_api_config, test_sell_open_code_new, "test_sell_open_code_new"))
+    tasks.append((future_api_config, test_buy_close_code_new, "test_buy_close_code_new"))
+    tasks.append((future_api_config, test_sell_close_code_new, "test_sell_close_code_new"))
+
+    for cfg, source_code, name in tasks:
+        print("running", name)
+        run(cfg, source_code)
 
     print(u"API test ends.")
 
@@ -276,9 +306,14 @@ def write_csv(path, fields):
                 writer = csv.DictWriter(csv_file, fieldnames=fields)
                 writer.writerow({'date_time': end_time, 'time_spend': time_spend})
     else:
-        if 0 < len(old_test_times) < 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times))/len(old_test_times) * 1.1:
+        if 0 < len(old_test_times) < 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times)) / len(old_test_times) * 1.1:
+            print('Average time of last 5 runs:', float(sum(float(i['time_spend']) for i in old_test_times))/len(old_test_times))
+            print('Now time spend:', time_spend)
             raise RuntimeError('Performance regresses!')
-        elif len(old_test_times) >= 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times[-5:]))/5 * 1.1:
+        elif len(old_test_times) >= 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times[-5:])) / 5 * 1.1:
+            print('Average time of last 5 runs:',
+                  float(sum(float(i['time_spend']) for i in old_test_times[-5:])) / 5)
+            print('Now time spend:', time_spend)
             raise RuntimeError('Performance regresses!')
         else:
             with open(path, 'a') as csv_file:
@@ -298,7 +333,7 @@ if __name__ == '__main__':
     start_time = datetime.now()
 
     if len(sys.argv) >= 2:
-        if sys.argv[1] == 'mod':
+        if sys.argv[1] == 'api':
             test_api()
             end_time = datetime.now()
 

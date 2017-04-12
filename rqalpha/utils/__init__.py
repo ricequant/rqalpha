@@ -27,6 +27,7 @@ from ..const import EXC_TYPE, INSTRUMENT_TYPE, ACCOUNT_TYPE, UNDERLYING_SYMBOL_P
 from ..utils.datetime_func import TimeRange
 from ..utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
 from ..utils.i18n import gettext as _
+from ..utils.py2 import lru_cache
 
 
 def safe_round(value, ndigits=3):
@@ -57,11 +58,15 @@ class RqAttrDict(object):
         return pprint.pformat(self.__dict__)
 
     def __iter__(self):
-        for k, v in six.iteritems(self.__dict__):
-            yield k, v
+        return self.__dict__.__iter__()
 
     def update(self, other):
         RqAttrDict._update_dict_recursive(self, other)
+
+    def items(self):
+        return six.iteritems(self.__dict__)
+
+    iteritems = items
 
     @staticmethod
     def _update_dict_recursive(target, other):
@@ -209,6 +214,7 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
 ]
 
 
+@lru_cache(None)
 def get_account_type(order_book_id):
     from ..environment import Environment
     instrument = Environment.get_instance().get_instrument(order_book_id)

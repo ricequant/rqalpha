@@ -21,14 +21,10 @@ from dateutil.parser import parse
 
 from ..execution_context import ExecutionContext
 from ..environment import Environment
-from ..utils.exception import patch_user_exc, ModifyExceptionFromType
 from ..const import EXC_TYPE, EXECUTION_PHASE
 from ..events import EVENT
-
-try:
-    from inspect import signature
-except ImportError:
-    from funcsigs import signature
+from ..utils.py2 import signature
+from ..utils.exception import patch_user_exc, ModifyExceptionFromType
 
 
 def market_close(hour=0, minute=0):
@@ -217,7 +213,7 @@ class Scheduler(object):
 
     def _fill_week(self):
         weekday = self._today.isoweekday()
-        weekend = self._today + datetime.timedelta(days=7-weekday)
+        weekend = self._today + datetime.timedelta(days=7 - weekday)
         week_start = weekend - datetime.timedelta(days=6)
 
         left = self._TRADING_DATES.searchsorted(week_start)
@@ -226,9 +222,9 @@ class Scheduler(object):
 
     def _fill_month(self):
         try:
-            month_end = self._today.replace(month=self._today.month+1, day=1)
+            month_end = self._today.replace(month=self._today.month + 1, day=1)
         except ValueError:
-            month_end = self._today.replace(year=self._today.year+1, month=1, day=1)
+            month_end = self._today.replace(year=self._today.year + 1, month=1, day=1)
 
         month_begin = self._today.replace(day=1)
         left, right = self._TRADING_DATES.searchsorted(month_begin), self._TRADING_DATES.searchsorted(month_end)

@@ -20,7 +20,6 @@ from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
-from rqalpha.environment import Environment
 from rqalpha.model.order import Order
 
 from .matcher import Matcher
@@ -30,22 +29,21 @@ from .utils import init_portfolio
 class SimulationBroker(AbstractBroker, Persistable):
     def __init__(self, env, mod_config):
         self._env = env
+        self._mod_config = mod_config
 
-        self._matcher = Matcher(mod_config)
+        self._matcher = Matcher(env, mod_config)
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []
-        self._board = None
-        self._turnover = {}
         self._delayed_orders = []
         self._frontend_validator = {}
 
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
         # 该事件会触发策略的handle_bar函数
-        self._env.event_bus.add_listener(EVENT.BAR, self.bar)
+        self._env.event_bus.add_listener(EVENT.BAR, self.on_bar)
         # 该事件会触发策略的handel_tick函数
-        self._env.event_bus.add_listener(EVENT.TICK, self.tick)
+        self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
 
@@ -78,7 +76,7 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._delayed_orders.append((account, o))
 
     def submit_order(self, order):
-        account = Environment.get_instance().get_account(order.order_book_id)
+        account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
         if order.is_final():
             return
@@ -92,7 +90,7 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._match()
 
     def cancel_order(self, order):
-        account = Environment.get_instance().get_account(order.order_book_id)
+        account = self._env.get_account(order.order_book_id)
 
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
 
@@ -122,21 +120,20 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
 
-    def bar(self, event):
-        bar_dict = event.bar_dict
-        env = Environment.get_instance()
-        self._matcher.update(env.calendar_dt, env.trading_dt, bar_dict)
+    def on_bar(self, event):
+        self._matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match()
 
-    def tick(self, event):
-        # TODO support tick matching
-        pass
-        # env = Environment.get_instance()
-        # self._matcher.update(env.calendar_dt, env.trading_dt, tick)
-        # self._match()
+    def on_tick(self, event):
+        tick = event.tick
+        self._matcher.update(self._env.calendar_dt, self._env.trading_dt)
+        self._match(tick.order_book_id)
 
-    def _match(self):
-        self._matcher.match(self._open_orders)
+    def _match(self, order_book_id=None):
+        open_orders = self._open_orders
+        if order_book_id is not None:
+            open_orders = [(a, o) for (a, o) in self._open_orders if o.order_book_id == order_book_id]
+        self._matcher.match(open_orders)
         final_orders = [(a, o) for a, o in self._open_orders if o.is_final()]
         self._open_orders = [(a, o) for a, o in self._open_orders if not o.is_final()]
 

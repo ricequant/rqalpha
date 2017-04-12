@@ -64,7 +64,7 @@ def _adjust_start_date(config, data_proxy):
     config.base.end_date = min(end, config.base.end_date)
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
-        raise patch_user_exc(ValueError(_('There is no trading day between {start_date} and {end_date}.').format(
+        raise patch_user_exc(ValueError(_(u"There is no trading day between {start_date} and {end_date}.").format(
             start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
@@ -77,7 +77,7 @@ def _validate_benchmark(config, data_proxy):
         return
     instrument = data_proxy.instruments(benchmark)
     if instrument is None:
-        raise patch_user_exc(ValueError(_('invalid benchmark {}').format(benchmark)))
+        raise patch_user_exc(ValueError(_(u"invalid benchmark {}").format(benchmark)))
 
     if instrument.order_book_id == "000300.XSHG":
         # 000300.XSHG 数据进行了补齐，因此认为只要benchmark设置了000300.XSHG，就存在数据，不受限于上市日期。
@@ -88,11 +88,11 @@ def _validate_benchmark(config, data_proxy):
     if instrument.listed_date.date() > start_date:
         raise patch_user_exc(ValueError(
             _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=benchmark,
-                                                                                  start_date=start_date)))
+                                                                                   start_date=start_date)))
     if instrument.de_listed_date.date() < end_date:
         raise patch_user_exc(ValueError(
             _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
-                                                                               end_date=end_date)))
+                                                                                end_date=end_date)))
 
 
 def create_benchmark_portfolio(env):
@@ -152,7 +152,7 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     while True:
         url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
             day.year, day.month, day.day)
-        six.print_(_('try {} ...').format(url))
+        six.print_(_(u"try {} ...").format(url))
         r = requests.get(url, stream=True)
         if r.status_code != 200:
             day = day - datetime.timedelta(days=1)
@@ -161,7 +161,7 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
         out = open(tmp, 'wb')
         total_length = int(r.headers.get('content-length'))
 
-        with click.progressbar(length=total_length, label=_('downloading ...')) as bar:
+        with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
             for data in r.iter_content(chunk_size=8192):
                 bar.update(len(data))
                 out.write(data)
@@ -213,11 +213,12 @@ def run(config, source_code=None):
         assert event_source is not None
 
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
+        env.set_bar_dict(bar_dict)
+
         if env.price_board is None:
             from .core.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard(bar_dict)
 
-        env.set_bar_dict(bar_dict)
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
 
@@ -310,6 +311,7 @@ def run(config, source_code=None):
         exc_type, exc_val, exc_tb = sys.exc_info()
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, config.base.strategy_file)
 
+        better_exceptions.excepthook(exc_type, exc_val, exc_tb)
         user_system_log.error(user_exc.error)
         code = const.EXIT_CODE.EXIT_USER_ERROR
         if not is_user_exc(exc_val):

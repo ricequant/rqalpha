@@ -13,8 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import datetime
 
+import datetime
 import pandas as pd
 
 from ..utils.py2 import lru_cache
@@ -80,3 +80,11 @@ class TradingDatesMixin(object):
             return self._dates[pos - n]
         else:
             return self._dates[0]
+
+    def get_n_trading_dates_until(self, dt, n):
+        date = pd.Timestamp(dt).replace(hour=0, minute=0, second=0)
+        pos = self._dates.searchsorted(date)
+        if pos >= n:
+            return self._dates[pos-n:pos]
+
+        return self._dates[:pos]

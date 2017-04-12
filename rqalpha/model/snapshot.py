@@ -19,6 +19,7 @@ import datetime
 import numpy as np
 
 from ..utils.datetime_func import convert_int_to_datetime
+from ..model.tick import Tick
 
 
 class SnapshotObject(object):
@@ -166,6 +167,8 @@ class SnapshotObject(object):
         if isinstance(self._data, dict):
             # in pt
             base.extend([k, v] for k, v in six.iteritems(self._data) if k != 'datetime')
+        elif isinstance(self._data, Tick):
+            return repr(self._data).replace('Tick', 'Snapshot')
         else:
             base.extend((n, self._data[n]) for n in self._data.dtype.names if n != 'datetime')
         return "Snapshot({0})".format(', '.join('{0}: {1}'.format(k, v) for k, v in base))

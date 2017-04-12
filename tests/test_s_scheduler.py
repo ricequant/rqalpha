@@ -2,7 +2,7 @@ from rqalpha.api import *
 
 
 def init(context):
-    scheduler.run_weekly(rebalance, 1, time_rule = market_open(0, 0))
+    scheduler.run_weekly(rebalance, 1, time_rule=market_open(0, 0))
 
 
 def rebalance(context, bar_dict):

@@ -18,11 +18,12 @@ import datetime
 
 from rqalpha.interface import AbstractEventSource
 from rqalpha.events import Event, EVENT
-from rqalpha.environment import Environment
 from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.const import ACCOUNT_TYPE
+from rqalpha.utils.i18n import gettext as _
+
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
@@ -32,19 +33,20 @@ class SimulationEventSource(AbstractEventSource):
         self._env = env
         self._account_list = account_list
         self._universe_changed = False
-        Environment.get_instance().event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
+        self._env.event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
 
     def _on_universe_changed(self, event):
         self._universe_changed = True
 
     def _get_universe(self):
-        universe = Environment.get_instance().get_universe()
+        universe = self._env.get_universe()
         if len(universe) == 0 and ACCOUNT_TYPE.STOCK not in self._account_list:
             error = CustomError()
             error.set_msg("Current universe is empty. Please use subscribe function before trade")
             raise patch_user_exc(CustomException(error))
         return universe
 
+    # [BEGIN] minute event helper
     @staticmethod
     def _get_stock_trading_minutes(trading_date):
         trading_minutes = set()
@@ -80,6 +82,7 @@ class SimulationEventSource(AbstractEventSource):
             elif account_type == ACCOUNT_TYPE.FUTURE:
                 trading_minutes = trading_minutes.union(self._get_future_trading_minutes(trading_date))
         return sorted(list(trading_minutes))
+    # [END] minute event helper
 
     def events(self, start_date, end_date, frequency):
         if frequency == "1d":
@@ -95,7 +98,7 @@ class SimulationEventSource(AbstractEventSource):
 
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
                 yield Event(EVENT.SETTLEMENT, calendar_dt=dt_settlement, trading_dt=dt_settlement)
-        else:
+        elif frequency == '1m':
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
                 date = day.to_pydatetime()
@@ -139,3 +142,36 @@ class SimulationEventSource(AbstractEventSource):
 
                 dt = date.replace(hour=17, minute=0)
                 yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
+        elif frequency == "tick":
+            data_proxy = self._env.data_proxy
+            for day in data_proxy.get_trading_dates(start_date, end_date):
+                date = day.to_pydatetime()
+                last_tick = None
+                last_dt = None
+                while True:
+                    for tick in data_proxy.get_merge_ticks(self._get_universe(), date, last_dt):
+                        # find before trading time
+                        if last_tick is None:
+                            last_tick = tick
+                            dt = tick.datetime
+                            before_trading_dt = dt - datetime.timedelta(minutes=30)
+                            yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
+                                        trading_dt=before_trading_dt)
+
+                        dt = tick.datetime
+                        yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=dt, tick=tick)
+
+                        if self._universe_changed:
+                            self._universe_changed = False
+                            last_dt = dt
+                            break
+                    else:
+                        break
+
+                dt = date.replace(hour=15, minute=30)
+                yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
+
+                dt = date.replace(hour=17, minute=0)
+                yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
+        else:
+            raise NotImplementedError(_("Frequency {} is not support.").format(frequency))

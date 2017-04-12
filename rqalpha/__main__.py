@@ -17,14 +17,13 @@
 import errno
 import os
 import shutil
-from importlib import import_module
-
 import six
 import click
 import ruamel.yaml as yaml
+from importlib import import_module
 
 from .utils.click_helper import Date
-from .utils.config import parse_config, get_default_config_path, load_config, dump_config
+from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
 
 
 @click.group()
@@ -36,10 +35,9 @@ def cli(ctx, verbose):
 
 def entry_point():
     from rqalpha.mod import SYSTEM_MOD_LIST
-    from rqalpha.utils.config import get_default_config_path
     from rqalpha.utils.package_helper import import_mod
-    mod_config_path = get_default_config_path("mod_config")
-    mod_config = load_config(mod_config_path, loader=yaml.RoundTripLoader, verify_version=False)
+    mod_config_path = get_mod_config_path()
+    mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
     for mod_name, config in six.iteritems(mod_config['mod']):
         lib_name = "rqalpha_mod_{}".format(mod_name)
@@ -91,7 +89,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
 @click.option('-st', '--security', 'base__securities', multiple=True, type=click.Choice(['stock', 'future']))
-@click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m']))
+@click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
@@ -151,7 +149,7 @@ def generate_config(directory):
     """
     Generate default config file
     """
-    default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config_template.yml")
+    default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "default_config.yml")
     target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
     shutil.copy(default_config, target_config_path)
     print("Config file has been generated in", target_config_path)
@@ -183,8 +181,8 @@ def mod(cmd, params):
         from colorama import init, Fore
         from tabulate import tabulate
         init()
-        mod_config_path = get_default_config_path("mod_config")
-        mod_config = load_config(mod_config_path, loader=yaml.RoundTripLoader, verify_version=False)
+        mod_config_path = get_mod_config_path(generate=True)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
         table = []
 
@@ -231,8 +229,8 @@ def mod(cmd, params):
         pip_main(params)
 
         # Export config
-        mod_config_path = get_default_config_path("mod_config")
-        mod_config = load_config(mod_config_path, loader=yaml.RoundTripLoader, verify_version=False)
+        mod_config_path = get_mod_config_path(generate=True)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
         for mod_name in mod_list:
             mod_config['mod'][mod_name] = {}
@@ -270,8 +268,8 @@ def mod(cmd, params):
         pip_main(params)
 
         # Remove Mod Config
-        mod_config_path = get_default_config_path("mod_config")
-        mod_config = load_config(mod_config_path, loader=yaml.RoundTripLoader, verify_version=False)
+        mod_config_path = get_mod_config_path(generate=True)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
         for mod_name in mod_list:
             if "rqalpha_mod_" in mod_name:
@@ -297,11 +295,11 @@ def mod(cmd, params):
         except ImportError:
             install([module_name])
 
-        config_path = get_default_config_path("mod_config")
-        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
+        mod_config_path = get_mod_config_path(generate=True)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
-        config['mod'][mod_name]['enabled'] = True
-        dump_config(config_path, config)
+        mod_config['mod'][mod_name]['enabled'] = True
+        dump_config(mod_config_path, mod_config)
         list({})
 
     def disable(params):
@@ -313,11 +311,11 @@ def mod(cmd, params):
         if "rqalpha_mod_" in mod_name:
             mod_name = mod_name.replace("rqalpha_mod_", "")
 
-        config_path = get_default_config_path("mod_config")
-        config = load_config(config_path, loader=yaml.RoundTripLoader, verify_version=False)
+        mod_config_path = get_mod_config_path(generate=True)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
-        config['mod'][mod_name]['enabled'] = False
-        dump_config(config_path, config)
+        mod_config['mod'][mod_name]['enabled'] = False
+        dump_config(mod_config_path, mod_config)
         list({})
 
     locals()[cmd](params)

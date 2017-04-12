@@ -45,7 +45,7 @@ class ArgumentChecker(object):
         def check_is_instance_of(func_name, value):
             if not isinstance(value, types):
                 raise RQInvalidArgument(
-                    _('function {}: invalid {} argument, expect a value of type {}, got {} (type: {})').format(
+                    _(u"function {}: invalid {} argument, expect a value of type {}, got {} (type: {})").format(
                         func_name, self._arg_name, types, value, type(value)
                     ))
 
@@ -54,22 +54,22 @@ class ArgumentChecker(object):
 
     def raise_not_valid_instrument_error(self, func_name, arg_name, value):
         raise RQInvalidArgument(
-            _('function {}: invalid {} argument, expect a valid instrument/order_book_id/symbol, '
-              'got {} (type: {})').format(
+            _(u"function {}: invalid {} argument, expect a valid instrument/order_book_id/symbol, "
+              u"got {} (type: {})").format(
                 func_name, self._arg_name, value, type(value)
             ))
 
     def raise_not_valid_stock_error(self, func_name, arg_name, value):
         raise RQInvalidArgument(
-            _('function {}: invalid {} argument, expect a valid stock instrument/order_book_id/symbol, '
-              'got {} (type: {})').format(
+            _(u"function {}: invalid {} argument, expect a valid stock instrument/order_book_id/symbol, "
+              u"got {} (type: {})").format(
                 func_name, self._arg_name, value, type(value)
             ))
 
     def raise_not_valid_future_error(self, func_name, arg_name, value):
         raise RQInvalidArgument(
-            _('function {}: invalid {} argument, expect a valid future instrument/order_book_id/symbol, '
-              'got {} (type: {})').format(
+            _(u"function {}: invalid {} argument, expect a valid future instrument/order_book_id/symbol, "
+              u"got {} (type: {})").format(
                 func_name, self._arg_name, value, type(value)
             ))
 
@@ -152,7 +152,7 @@ class ArgumentChecker(object):
             v = float(value)
         except ValueError:
             raise RQInvalidArgument(
-                _('function {}: invalid {} argument, expect a number, got {} (type: {})').format(
+                _(u"function {}: invalid {} argument, expect a number, got {} (type: {})").format(
                     func_name, self._arg_name, value, type(value))
             )
 
@@ -167,10 +167,9 @@ class ArgumentChecker(object):
 
             if value not in valid_values:
                 raise RQInvalidArgument(
-                    _('function {}: invalid {} argument, valid: {}, got {} (type: {})').format(
+                    _(u"function {}: invalid {} argument, valid: {}, got {} (type: {})").format(
                         func_name, self._arg_name, repr(valid_values), value, type(value))
                 )
-            return
 
         self._rules.append(check_is_in)
         return self
@@ -182,7 +181,7 @@ class ArgumentChecker(object):
             if isinstance(fields, six.string_types):
                 if fields not in valid_fields:
                     raise RQInvalidArgument(
-                        _('function {}: invalid {} argument, valid fields are {}, got {} (type: {})').format(
+                        _(u"function {}: invalid {} argument, valid fields are {}, got {} (type: {})").format(
                             func_name, self._arg_name, repr(valid_fields), fields, type(fields)
                         ))
                 return
@@ -194,14 +193,16 @@ class ArgumentChecker(object):
                 invalid_fields = [field for field in fields if field not in valid_fields]
                 if invalid_fields:
                     raise RQInvalidArgument(
-                        _('function {}: invalid field {}, valid fields are {}, got {} (type: {})').format(
+                        _(u"function {}: invalid field {}, valid fields are {}, got {} (type: {})").format(
                             func_name, invalid_fields, repr(valid_fields), fields, type(fields)
                         ))
+                return
 
             raise RQInvalidArgument(
-                _('function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})').format(
+                _(u"function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
                     func_name, self._arg_name, repr(fields), type(fields)
                 ))
+
         self._rules.append(check_are_valid_fields)
         return self
 
@@ -216,7 +217,7 @@ class ArgumentChecker(object):
             return
 
         raise RQInvalidArgument(
-            _('function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})').format(
+            _(u"function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
                 func_name, self._arg_name, repr(values), type(values)
             ))
 
@@ -233,14 +234,15 @@ class ArgumentChecker(object):
             if isinstance(value, six.string_types):
                 try:
                     v = parse_date(value)
+                    return
                 except ValueError:
                     raise RQInvalidArgument(
-                        _('function {}: invalid {} argument, expect a valid date, got {} (type: {})').format(
+                        _(u"function {}: invalid {} argument, expect a valid date, got {} (type: {})").format(
                             func_name, self._arg_name, value, type(value)
                         ))
 
             raise RQInvalidArgument(
-                _('function {}: invalid {} argument, expect a valid date, got {} (type: {})').format(
+                _(u"function {}: invalid {} argument, expect a valid date, got {} (type: {})").format(
                     func_name, self._arg_name, value, type(value)
                 ))
 
@@ -251,7 +253,7 @@ class ArgumentChecker(object):
         def check_greater_or_equal_than(func_name, value):
             if value < low:
                 raise RQInvalidArgument(
-                    _('function {}: invalid {} argument, expect a value >= {}, got {} (type: {})').format(
+                    _(u"function {}: invalid {} argument, expect a value >= {}, got {} (type: {})").format(
                         func_name, self._arg_name, low, value, type(value)
                     ))
         self._rules.append(check_greater_or_equal_than)
@@ -261,7 +263,7 @@ class ArgumentChecker(object):
         def check_greater_than(func_name, value):
             if value <= low:
                 raise RQInvalidArgument(
-                    _('function {}: invalid {} argument, expect a value > {}, got {} (type: {})').format(
+                    _(u"function {}: invalid {} argument, expect a value > {}, got {} (type: {})").format(
                         func_name, self._arg_name, low, value, type(value)
                     ))
         self._rules.append(check_greater_than)
@@ -271,7 +273,7 @@ class ArgumentChecker(object):
         def check_less_or_equal_than(func_name, value):
             if value > high:
                 raise RQInvalidArgument(
-                    _('function {}: invalid {} argument, expect a value <= {}, got {} (type: {})').format(
+                    _(u"function {}: invalid {} argument, expect a value <= {}, got {} (type: {})").format(
                         func_name, self._arg_name, high, value, type(value)
                     ))
 
@@ -282,7 +284,7 @@ class ArgumentChecker(object):
         def check_less_than(func_name, value):
             if value >= high:
                 raise RQInvalidArgument(
-                    _('function {}: invalid {} argument, expect a value < {}, got {} (type: {})').format(
+                    _(u"function {}: invalid {} argument, expect a value < {}, got {} (type: {})").format(
                         func_name, self._arg_name, high, value, type(value)
                     ))
 
@@ -300,7 +302,7 @@ class ArgumentChecker(object):
         if not valid:
             raise RQInvalidArgument(
                 _(u"function {}: invalid {} argument, interval should be in form of '1d', '3m', '4q', '2y', "
-                  "got {} (type: {})").format(
+                  u"got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))
 
@@ -314,7 +316,7 @@ class ArgumentChecker(object):
             if not isinstance(e, InstrumentedAttribute):
                 raise RQInvalidArgument(
                     _(u"function {}: invalid {} argument, should be entity like "
-                      "Fundamentals.balance_sheet.total_equity, got {} (type: {})").format(
+                      u"Fundamentals.balance_sheet.total_equity, got {} (type: {})").format(
                         func_name, self.arg_name, e, type(e)
                     ))
 
@@ -323,7 +325,7 @@ class ArgumentChecker(object):
         return self
 
     def _is_valid_frequency(self, func_name, value):
-        valid = isinstance(value, six.string_types) and value[-1] in ('d', 'm')
+        valid = isinstance(value, six.string_types) and value[-1] in ("d", "m")
         if valid:
             try:
                 valid = int(value[:-1]) > 0
@@ -333,7 +335,7 @@ class ArgumentChecker(object):
         if not valid:
             raise RQInvalidArgument(
                 _(u"function {}: invalid {} argument, frequency should be in form of "
-                  "'1m', '5m', '1d', got {} (type: {})").format(
+                  u"'1m', '5m', '1d', got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))
 
@@ -369,13 +371,15 @@ def apply_rules(*rules):
                 try:
                     call_args = inspect.getcallargs(unwrapper(func), *args, **kwargs)
                 except TypeError as e:
-                    raise RQTypeError(*e.args).with_traceback(tb)
+                    six.reraise(RQTypeError, RQTypeError(*e.args), tb)
+                    return
 
                 try:
                     for r in rules:
                         r.verify(func.__name__, call_args[r.arg_name])
                 except RQInvalidArgument as e:
-                    raise e.with_traceback(tb)
+                    six.reraise(RQInvalidArgument, e, tb)
+                    return
 
                 raise
 
