@@ -1,17 +1,8 @@
 from rqalpha.api import *
 
 
-def read_csv_as_df(csv_path):
-    import pandas as pd
-    data = pd.read_csv(csv_path)
-    return data
-
-
 def init(context):
-    import os
-    strategy_file_path = context.config.base.strategy_file
-    csv_path = os.path.join(os.path.dirname(strategy_file_path), "../IF1706_20161108.csv")
-    IF1706_df = read_csv_as_df(csv_path)
+    IF1706_df = get_csv_as_df()
     context.IF1706_df = IF1706_df
 
 
@@ -32,4 +23,13 @@ __config__ = {
     "extra": {
         "log_level": "verbose",
     },
+    "mod": {
+        "extend_api_demo": {
+            "enabled": True,
+            "lib": "rqalpha.examples.extend_api.rqalpha_mod_extend_api_demo",
+            "csv_path": "../IF1706_20161108.csv"
+        }
+    }
 }
+
+

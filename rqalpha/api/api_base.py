@@ -120,6 +120,7 @@ def export_as_api(func):
     __all__.append(func.__name__)
 
     func = decorate_api_exc(func)
+    globals()[func.__name__] = func
 
     return func
 
