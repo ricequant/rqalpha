@@ -413,6 +413,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
         if ((sys_frequency == '1m' and not include_now) or
                 ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING):
             dt = data_proxy.get_previous_trading_date(ExecutionContext.get_current_trading_dt())
+            include_now = False
 
     return data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt,
                                    skip_suspended=skip_suspended, include_now=include_now)
