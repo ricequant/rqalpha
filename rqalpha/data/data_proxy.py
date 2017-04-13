@@ -93,7 +93,8 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def _get_prev_close(self, order_book_id, dt):
         prev_trading_date = self.get_previous_trading_date(dt)
         instrument = self.instruments(order_book_id)
-        bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date, False)
+        bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date,
+                                             skip_suspended=False)
         if bar is None or len(bar) == 0:
             return np.nan
         return bar[0]
@@ -104,7 +105,8 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     @lru_cache(10240)
     def _get_prev_settlement(self, instrument, dt):
         prev_trading_date = self.get_previous_trading_date(dt)
-        bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', prev_trading_date, False)
+        bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', prev_trading_date,
+                                             skip_suspended=False)
         if bar is None or len(bar) == 0:
             return np.nan
         return bar[0]
@@ -141,9 +143,11 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def fast_history(self, order_book_id, bar_count, frequency, field, dt):
         return self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended=False)
 
-    def history_bars(self, order_book_id, bar_count, frequency, field, dt, skip_suspended=True, include_now=False):
+    def history_bars(self, order_book_id, bar_count, frequency, field, dt,
+                     skip_suspended=True, include_now=False):
         instrument = self.instruments(order_book_id)
-        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt, skip_suspended, include_now)
+        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
+                                              skip_suspended=skip_suspended, include_now=include_now)
 
     def current_snapshot(self, order_book_id, frequency, dt):
         instrument = self.instruments(order_book_id)
