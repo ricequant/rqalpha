@@ -390,7 +390,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     settlement                  结算价（期货日线专用）
     prev_settlement             结算价（期货日线专用）
     =========================   ===================================================
-    
+
     :param bool skip_suspended: 是否跳过停牌数据
     :param bool include_now: 是否包含当前数据
 
@@ -420,6 +420,7 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
         if ((sys_frequency == '1m' and not include_now) or
                 ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
             dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
+            include_now = False
 
     return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt,
                                        skip_suspended=skip_suspended, include_now=include_now)
