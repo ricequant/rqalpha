@@ -64,6 +64,8 @@ class Portfolio(object):
                 self._accounts[ACCOUNT_TYPE.STOCK].set_state(v)
             elif k == 'ACCOUNT_TYPE.FUTURE':
                 self._accounts[ACCOUNT_TYPE.FUTURE].set_state(v)
+            elif k == 'ACCOUNT_TYPE.BENCHMARK':
+                self._accounts[ACCOUNT_TYPE.BENCHMARK].set_state(v)
             else:
                 raise NotImplementedError
 
