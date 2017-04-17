@@ -104,8 +104,9 @@ class StockAccount(BaseAccount):
         if event.account != self:
             return
         order = event.order
-        position = self._positions.get_or_create(order.order_book_id)
-        position.on_order_pending_new_(order)
+        position = self._positions.get(order.order_book_id, None)
+        if position is not None:
+            position.on_order_pending_new_(order)
         if order.side == SIDE.BUY:
             order_value = order.frozen_price * order.quantity
             self._frozen_cash += order_value
