@@ -310,6 +310,28 @@ class ArgumentChecker(object):
         self._rules.append(self._is_valid_interval)
         return self
 
+    def _is_valid_quarter(self, func_name, value):
+        if value is None:
+            valid = True
+        else:
+            valid = isinstance(value, six.string_types) and value[-2] == 'q'
+            if valid:
+                try:
+                    valid =  1990 <= int(value[:-2]) <= 2050 and 1 <= int(value[-1]) <= 4
+                except ValueError:
+                    valid = False
+
+        if not valid:
+            raise RQInvalidArgument(
+                _(u"function {}: invalid {} argument, quarter should be in form of '2012q3', "
+                  u"got {} (type: {})").format(
+                    func_name, self.arg_name, value, type(value)
+                ))
+
+    def is_valid_quarter(self):
+        self._rules.append(self._is_valid_quarter)
+        return self
+
     def _are_valid_query_entities(self, func_name, entities):
         from sqlalchemy.orm.attributes import InstrumentedAttribute
         for e in entities:
