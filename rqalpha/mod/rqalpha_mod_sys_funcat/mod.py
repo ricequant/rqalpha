@@ -81,7 +81,7 @@ class FuncatAPIMod(AbstractMod):
 
                 start = get_date_from_int(start)
                 end = get_date_from_int(end)
-                bar_count = max(5, (end - start).days)
+                bar_count = (end - start).days
 
                 # TODO: this is slow, make it run faster
                 # bar_count = 1000
