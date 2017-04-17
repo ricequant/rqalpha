@@ -21,6 +21,7 @@ import numpy as np
 from rqalpha.interface import AbstractMod
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
+from rqalpha.utils.logger import system_log
 
 
 class FuncatAPIMod(AbstractMod):
@@ -46,14 +47,14 @@ class FuncatAPIMod(AbstractMod):
 
             def __init__(self):
                 from rqalpha.api import (
-                    history_bars,
+                    # history_bars,
                     all_instruments,
                     instruments,
                 )
 
                 self.set_current_date = set_current_date
 
-                self.history_bars = history_bars
+                # self.history_bars = history_bars
                 self.all_instruments = all_instruments
                 self.instruments = instruments
                 self.rqalpha_env = Environment.get_instance()
@@ -77,26 +78,20 @@ class FuncatAPIMod(AbstractMod):
                 :returns:
                 :rtype: numpy.rec.array
                 """
-                assert freq == "1d"
-
                 start = get_date_from_int(start)
                 end = get_date_from_int(end)
+
                 bar_count = (end - start).days
 
-                # TODO: this is slow, make it run faster
-                # bar_count = 1000
-
-                origin_bars = bars = self.rqalpha_env.data_proxy.history_bars(
+                dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
+                system_log.info("get_price 1, dt {}", dt)
+                bars = self.rqalpha_env.data_proxy.history_bars(
                     order_book_id, bar_count, freq, field=None,
-                    dt=datetime.datetime.combine(end, datetime.time(23, 59, 59)))
+                    dt=dt)
 
                 if bars is None or len(bars) == 0:
                     raise KeyError("empty bars {}".format(order_book_id))
-                origin_bars = bars = bars.copy()
-                bars = rfn.rename_fields(bars, {"datetime": "date"})
-
-                bars["date"] = origin_bars["datetime"] / 1000000
-                bars = rfn.append_fields(bars, "time", np.zeros(len(bars), dtype="<u8"), usemask=False)
+                bars = bars.copy()
 
                 return bars
 
