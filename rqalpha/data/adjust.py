@@ -38,18 +38,17 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
     if ex_factors is None:
         return bars if fields is None else bars[fields]
 
+    dates = ex_factors['start_date']
+    ex_cum_factors = ex_factors['ex_cum_factor']
+
     if adjust_type == 'pre':
         adjust_orig_dt = np.uint64(convert_date_to_int(adjust_orig))
-        base_adjust_rate = _factor_for_date(
-            ex_factors['start_date'], ex_factors['ex_cum_factor'], adjust_orig_dt)
+        base_adjust_rate = _factor_for_date(dates, ex_cum_factors, adjust_orig_dt)
     else:
         base_adjust_rate = 1.0
 
     start_date = bars['datetime'][0]
     end_date = bars['datetime'][-1]
-
-    dates = ex_factors['start_date']
-    ex_cum_factors = ex_factors['ex_cum_factor']
 
     if (_factor_for_date(dates, ex_cum_factors, start_date) == base_adjust_rate and
             _factor_for_date(dates, ex_cum_factors, end_date) == base_adjust_rate):
