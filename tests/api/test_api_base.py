@@ -239,8 +239,8 @@ def test_concept():
     def handle_bar(context, bar_dict):
         ins = instruments(context.s1)
         concept_list = concept(ins.concept_names[:4])  # 取 concept_names 的前4个字，即 context.s1 的第一个概念
-        assert context.s1 in concept_list
-        assert len(concept_list) >= 90
+        assert context.s1 in concept_list, 'context.s1 not in concept_list'
+        assert len(concept('深圳本地')) >= 55, 'len(concept_list) < 55, length: {}, concept_list: {}'.format(len(concept_list), ins.concept_names[:4])
 test_concept_code_new = get_code_block(test_concept)
 
 
