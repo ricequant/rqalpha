@@ -4,6 +4,287 @@
 扩展数据源
 ==================
 
+在程序化交易的过程中，数据的获取是非常重要的一个环节，而数据又包含很多种不同类型的数据，有行情数据、财务数据、指标因子数据以及自定义类型数据。
+
+在实际交易过程中，对接数据源主要分为两种：
+
+*   增加自有数据源
+
+    *   策略中直接读取自有数据
+    *   在策略中 `import` 自定义模块
+    *   扩展 API 实现自有数据的读取
+
+*   替换已有数据源
+
+    *   基础数据
+    *   行情数据
+
+增加自有数据源
+====================================
+
+策略中直接读取自有数据
+------------------------------------
+
+RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接在策略中读取文件、访问数据库等，但需要关注如下两个注意事项:
+
+*   请在 :code:`init`, :code:`before_trading`, :code:`handle_bar`, :code:`handle_tick`, :code:`after_trading` 等函数中读取自有数据，而不要在函数外执行数据获取的代码，否则可能会产生异常。
+*   RQAlpha 是读取策略代码并执行的，因此实际当前路径是运行 `rqalpha` 命令的路径，策略使用相对路径容易产生异常。如果您需要根据策略路径来定位相对路径可以通过 :code:`context.config.base.strategy_file` 来获取策略路径，从而获取相对策略文件的其他路径，具体使用方式请看下面的示例代码。
+
+`read_csv_as_df <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/read_csv_as_df.py>`_
+
+..  code-block:: python3
+
+    from rqalpha.api import *
+
+
+    def read_csv_as_df(csv_path):
+        # 通过 pandas 读取 csv 文件，并生成 DataFrame
+        import pandas as pd
+        data = pd.read_csv(csv_path)
+        return data
+
+
+    def init(context):
+        import os
+        # 获取当前运行策略的文件路径
+        strategy_file_path = context.config.base.strategy_file
+        # 根据当前策略的文件路径寻找到相对路径为 "../IF1706_20161108.csv" 的 csv 文件
+        csv_path = os.path.join(os.path.dirname(strategy_file_path), "../IF1706_20161108.csv")
+        # 读取 csv 文件并生成 df
+        IF1706_df = read_csv_as_df(csv_path)
+        # 传入 context 中
+        context.IF1706_df = IF1706_df
+
+
+    def before_trading(context):
+        # 通过context 获取在 init 阶段读取的 csv 文件数据
+        logger.info(context.IF1706_df)
+
+
+    def handle_bar(context, bar):
+        pass
+
+
+    __config__ = {
+        "base": {
+            "securities": "future",
+            "start_date": "2015-01-09",
+            "end_date": "2015-01-10",
+            "frequency": "1d",
+            "matching_type": "current_bar",
+            "future_starting_cash": 1000000,
+            "benchmark": None,
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+    }
+
+在策略中 import 自定义模块
+------------------------------------
+
+如果您定义了自定义模块，希望在策略中引用，只需要在初始化的时候将模块对应的路径添加到 :code:`sys.path` 即可，但需要关注如下两个注意事项:
+
+*   如果没有特殊原因，请在 :code:`init` 阶段添加 :code:`sys.path` 路径。
+*   如果您的自定义模块是基于策略策略的相对路径，则需要在 :code:`init` 函数中通过 :code:`context.config.base.strategy_file` 获取到策略路径，然后再添加到 :code:`sys.path` 中。
+*   RQAlpha 是读取策略代码并执行的，因此实际当前路径是执行 `rqalpha` 命令的路径，避免使用相对路径。
+
+`get_csv_module <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/get_csv_module.py>`_
+
+
+..  code-block:: python3
+
+    import os
+
+
+    def read_csv_as_df(csv_path):
+        import pandas as pd
+        data = pd.read_csv(csv_path)
+        return data
+
+
+    def get_csv():
+        csv_path = os.path.join(os.path.dirname(__file__), "../IF1706_20161108.csv")
+        return read_csv_as_df(csv_path)
+
+`import_get_csv_module <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/data_source/import_get_csv_module.py>`_
+
+..  code-block:: python3
+
+    from rqalpha.api import *
+
+
+    def init(context):
+        import os
+        import sys
+        strategy_file_path = context.config.base.strategy_file
+        sys.path.append(os.path.realpath(os.path.dirname(strategy_file_path)))
+
+        from get_csv_module import get_csv
+
+        IF1706_df = get_csv()
+        context.IF1706_df = IF1706_df
+
+
+    def before_trading(context):
+        logger.info(context.IF1706_df)
+
+
+    __config__ = {
+        "base": {
+            "securities": "future",
+            "start_date": "2015-01-09",
+            "end_date": "2015-01-10",
+            "frequency": "1d",
+            "matching_type": "current_bar",
+            "future_starting_cash": 1000000,
+            "benchmark": None,
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+    }
+
+扩展 API 实现自有数据的读取
+------------------------------------
+
+我们通过创建一个 Mod 来实现扩展 API，启动策略时，只需要开启该 Mod, 对应的扩展 API 便可以生效，在策略中直接使用。
+
+`rqalpha_mod_extend_api_demo <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/extend_api/rqalpha_mod_extend_api_demo.py>`_
+
+..  code-block:: python3
+
+    import os
+    import pandas as pd
+    from rqalpha.interface import AbstractMod
+
+
+    __config__ = {
+        "csv_path": None
+    }
+
+
+    def load_mod():
+        return ExtendAPIDemoMod()
+
+
+    class ExtendAPIDemoMod(AbstractMod):
+        def __init__(self):
+            # 注入API 一定要在初始化阶段，否则无法成功注入
+            self._csv_path = None
+            self._inject_api()
+
+        def start_up(self, env, mod_config):
+            self._csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), mod_config.csv_path))
+
+        def tear_down(self, code, exception=None):
+            pass
+
+        def _inject_api(self):
+            from rqalpha import export_as_api
+            from rqalpha.execution_context import ExecutionContext
+            from rqalpha.const import EXECUTION_PHASE
+
+            @export_as_api
+            @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                            EXECUTION_PHASE.BEFORE_TRADING,
+                                            EXECUTION_PHASE.ON_BAR,
+                                            EXECUTION_PHASE.AFTER_TRADING,
+                                            EXECUTION_PHASE.SCHEDULED)
+            def get_csv_as_df():
+                data = pd.read_csv(self._csv_path)
+                return data
+
+
+如上代码，我们定义了 :code:`rqalpha_mod_extend_api_demo` Mod，该 Mod 接受一个参数: :code:`csv_path`， 其会转换为基于 Mod 的相对路径来获取对应的 csv 地址。
+
+在该Mod中通过 :code:`_inject_api` 方法，定义了 :code:`get_csv_ad_df` 函数，并通过 :code:`from rqalpha import export_as_api` 装饰器完成了 API 的注入。
+
+如果想限制扩展API所运行使用的范围，可以通过 :code:`ExecutionContext.enforce_phase` 来控制.
+
+接下来我们看一下如何在策略中使用该扩展API:
+
+`test_extend_api <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/examples/extend_api/test_extend_api.py>`_
+
+..  code-block:: python3
+
+    from rqalpha.api import *
+
+
+    def init(context):
+        IF1706_df = get_csv_as_df()
+        context.IF1706_df = IF1706_df
+
+
+    def before_trading(context):
+        logger.info(context.IF1706_df)
+
+
+    __config__ = {
+        "base": {
+            "securities": "future",
+            "start_date": "2015-01-09",
+            "end_date": "2015-01-10",
+            "frequency": "1d",
+            "matching_type": "current_bar",
+            "future_starting_cash": 1000000,
+            "benchmark": None,
+        },
+        "extra": {
+            "log_level": "verbose",
+        },
+        "mod": {
+            "extend_api_demo": {
+                "enabled": True,
+                "lib": "rqalpha.examples.extend_api.rqalpha_mod_extend_api_demo",
+                "csv_path": "../IF1706_20161108.csv"
+            }
+        }
+    }
+
+如上述代码，首先配置信息中添加 `extend_api_demo` 对应的配置
+
+*   :code:`enabled`: True 表示开启该 Mod
+*   :code:`lib`: 指定该 Mod 对应的加载位置(rqlalpha 会自动去寻找 `rqalpha_mod_xxx` 对应的库，如果该库已经通过 `pip install` 安装，则无需显式指定 lib)
+*   :code:`csv_path`： 指定 csv 所在位置
+
+至此，我们就可以直接在策略中使用 `get_csv_as_df` 函数了。
+
+替换已有数据源
+====================================
+
+基础数据
+------------------------------------
+
+通过 `$ rqalpha update_bundle` 下载的数据有如下文件：
+
+..  code-block:: bash
+
+    $ cd ~/.rqalpha/bundle & tree -A -d -L 1    
+
+    .
+    ├── adjusted_dividends.bcolz 
+    ├── funds.bcolz
+    ├── futures.bcolz
+    ├── indexes.bcolz
+    ├── original_dividends.bcolz
+    ├── st_stock_days.bcolz
+    ├── stocks.bcolz
+    ├── suspended_days.bcolz
+    ├── trading_dates.bcolz
+    └── yield_curve.bcolz
+
+目前基础数据，比如 `Instruments`, `st_stocks`, `suspended_days`, `trading_dates` 都是全量数据，并且可以通过 `$ rqalpha update_bundle` 每天更新，因此没有相应的显式接口可以对其进行替换。
+
+您如果想要替换，可以使用如下两种方式:
+
+*   写脚本将自有数据源按照相同的格式生成对应的文件，并进行文件替换。
+*   实现 `AbstractDataSource <http://rqalpha.io/zh_CN/latest/development/basic_concept.html#datasource>`_ 对应的接口，您可以继承 `BaseDataSource <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/data/base_data_source.py>`_ 并 override 对应的接口即可完成替换。
+
+
+行情数据 - 五十行代码接入 tushare 行情数据
+------------------------------------------
+
 RQAlpha 支持自定义扩展数据源。得益于 RQAlpha 的 mod 机制，我们可以很方便的替换或者扩展默认的数据接口。
 
 RQAlpha 将提供给用户的数据 API 和回测所需的基础数据抽象成了若干个函数，这些函数被封于 :class:`~DataSource` 类中，并将在需要的时候被调用。简单的说，我们只需要在自己定义的 mod 中扩展或重写默认的 :class:`~DataSource` 类，就可以替换掉默认的数据源，接入自有数据。
@@ -11,10 +292,6 @@ RQAlpha 将提供给用户的数据 API 和回测所需的基础数据抽象成�
 :class:`~DataSource` 类的完整文档，请参阅 :ref:`development-basic-concept`。下面将用一个简单的例子，为大家介绍如何用五十行左右的代码将默认的行情数据替换为 `TuShare`_ 的行情数据。
 
 .. _TuShare: http://tushare.org
-
-
-五十行代码接入 tushare 行情数据
-====================================
 
 TushareKDataMod 的作用是使用 tushare 提供的k线数据替换 data_bundle 中的行情数据，由于目前 tushare 仅仅开放了日线、周线和月线的历史数据，所以该 mod 仍然只能提供日回测的功能，若未来 tushare 开放了60分钟或5分钟线的历史数据，只需进行简单修改，便可通过该 mod 使 RQAlpha 实现5分钟回测。
 

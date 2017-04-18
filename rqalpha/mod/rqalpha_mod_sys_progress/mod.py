@@ -44,3 +44,4 @@ class ProgressMod(AbstractMod):
     def tear_down(self, success, exception=None):
         if self._show:
             self.progress_bar.render_finish()
+

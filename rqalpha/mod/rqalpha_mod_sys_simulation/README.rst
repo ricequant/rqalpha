@@ -71,7 +71,7 @@ RQAlpha 回测 Mod，启用该模块开启回测功能。
 
 在启用该 Mod 的情况下，您可以使用如下功能:
 
-*   `rqalpha run` 命令增加 `--signal` 选项，您可以指定使用信号方式来直接按照下单价格成交，从而屏蔽订单细节。
-*   `rqalpha run` 命令增加 `--slippage`/`-sp` 选项，您可以指定成交所产生的滑点，目前支持按照当前价格的百分比的方式计算滑点。
-*   `rqalpha run` 命令增加 `--commission-multiplier`/`--cm` 选项，您可以指定手续费乘数
-*   `rqalpha run` 命令增加 `--matching-type`/`--mt` 选项，您可以指定撮合的锚定价格及对应的方式
+*   :code:`rqalpha run` 命令增加 :code:`--signal` 选项，您可以指定使用信号方式来直接按照下单价格成交，从而屏蔽订单细节。
+*   :code:`rqalpha run` 命令增加 :code:`--slippage` / :code:`-sp` 选项，您可以指定成交所产生的滑点，目前支持按照当前价格的百分比的方式计算滑点。
+*   :code:`rqalpha run` 命令增加 :code:`--commission-multiplier` / :code:`--cm` 选项，您可以指定手续费乘数
+*   :code:`rqalpha run` 命令增加 :code:`--matching-type` / :code:`--mt` 选项，您可以指定撮合的锚定价格及对应的方式

@@ -138,7 +138,8 @@ class BaseDataSource(AbstractDataSource):
         return self._ex_cum_factor.get_factors(order_book_id)
 
     def history_bars(self, instrument, bar_count, frequency, fields, dt,
-                     skip_suspended, adjust_type, adjust_orig):
+                     skip_suspended=True, include_now=False,
+                     adjust_type='pre', adjust_orig=None):
         if frequency != '1d':
             raise NotImplementedError
 

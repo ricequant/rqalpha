@@ -221,16 +221,21 @@ class Order(object):
         return self._frozen_price
 
     def is_final(self):
-        if self.status == ORDER_STATUS.PENDING_NEW or self.status == ORDER_STATUS.ACTIVE:
-            return False
-        else:
-            return True
+        return self._status not in {
+            ORDER_STATUS.PENDING_NEW,
+            ORDER_STATUS.ACTIVE,
+            ORDER_STATUS.PENDING_CANCEL
+        }
 
     def is_active(self):
         return self.status == ORDER_STATUS.ACTIVE
 
     def active(self):
         self._status = ORDER_STATUS.ACTIVE
+
+    def set_pending_cancel(self):
+        if not self.is_final():
+            self._status = ORDER_STATUS.PENDING_CANCEL
 
     def fill(self, trade):
         quantity = trade.last_quantity

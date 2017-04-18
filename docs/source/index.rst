@@ -71,6 +71,7 @@ Mod名                      说明
 `sys_simulation`_         【系统模块】支持回测、撮合、滑点控制等
 `sys_stock_realtime`_     【系统模块】Demo 模块，用于展示如何接入自有行情进行回测/模拟/实盘
 `vnpy`_                   【第三方模块】通过 VNPY 对接期货实盘行情和实盘交易 
+`sentry`_                 【第三方模块】集成 sentry 的扩展，实现错误日志全自动采集、处理
 `tushare`_                【第三方模块】Demo Mod，用于展示如何通过tushare 获取实时Bar数据并组装以供RQAlpha使用
 `shipane`_                【第三方模块】集成实盘易SDK，用于对接股票实盘跟单交易
 ======================    ==============================================================================================================
@@ -102,6 +103,10 @@ Feature Status
     * ✅ 定义 Mod 编写规范, workflow && Doc
     * ✅ 提供 Mod Demo && Tutorial
     * ✅ 提供 `rqalpha install xx_mod` 等命令 加载第三方 Mod
+
+*   Third-party Tools Integration
+
+    * ✅ 集成 Sentry --> `sentry`_
 
 *   i18n
 
@@ -161,6 +166,7 @@ Feature Status
 .. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
 .. _sys_stock_realtime: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_stock_realtime/README.rst
 .. _vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
+.. _sentry: https://github.com/ricequant/rqalpha-mod-sentry
 .. _tushare: https://github.com/ricequant/rqalpha-mod-tushare
 .. _shipane: https://github.com/wh1100717/rqalpha-mod-ShiPanE
 

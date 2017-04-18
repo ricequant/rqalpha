@@ -1,13 +1,13 @@
-# rqalpha run -f rqalpha/examples/technical_analysis/dma.py -sc 100000 -p -bm 000300.XSHG -mc funcat_api.enabled True
+# Run `rqalpha mod enable sys_funcat` first.
 from rqalpha.api import *
 
 
 def init(context):
     context.s1 = "600275.XSHG"
-    S(context.s1)
 
 
 def handle_bar(context, bar_dict):
+    S(context.s1)
     # 自己实现 DMA指标（Different of Moving Average）
     M1 = 5
     M2 = 89
@@ -25,5 +25,5 @@ def handle_bar(context, bar_dict):
         order_target_percent(context.s1, 0)
 
     if (HHV(MAX(O, C), 50) / LLV(MIN(O, C), 50) < 2
-        and cross(DDD, AMA) and cur_position == 0):
+        and CROSS(DDD, AMA) and cur_position == 0):
         order_target_percent(context.s1, 1)

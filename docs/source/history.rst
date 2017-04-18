@@ -4,10 +4,26 @@
 History
 ==================
 
+2.1.0
+==================
+
+- Fix `Issue 87 <https://github.com/ricequant/rqalpha/issues/87>`_
+- Fix `Issue 89 <https://github.com/ricequant/rqalpha/pull/89>`_
+- Fix 无法通过 :code:`env.config.mod` 获取全部 `mod` 的配置信息
+- 增加 :code:`context.config` 来获取配置信息
+- 提供 :code:`from rqalpha import export_as_api` 接口，方便扩展自定义 API
+
+2.0.9
+==================
+
+- Fix `Issue 79 <https://github.com/ricequant/rqalpha/issues/79>`_
+- Fix `Issue 82 <https://github.com/ricequant/rqalpha/issues/82>`_
+- Fix :code:`rqalpha cmd` 失效
+
 2.0.8
 ==================
 
-- Fix [Issue 81](https://github.com/ricequant/rqalpha/issues/81)
+- Fix `Issue 81 <https://github.com/ricequant/rqalpha/issues/81>`_
 - 解决 `mod_config.yml` 文件解析出错以后，所有的命令报错的问题
 - 默认在 Python 2.x 下 `sys.setdefaultencoding("utf-8")`
 - 优化 `UNIVERSE_CHANGED` 事件，现在只有在universe真正变化时才触发
@@ -15,7 +31,7 @@ History
 2.0.7
 ==================
 
-- Fix [Issue 78](https://github.com/ricequant/rqalpha/issues/78)
+- Fix `Issue 78 <https://github.com/ricequant/rqalpha/issues/78>`_
 - `is_st_stock` | `is_suspended` 支持 `count` 参数
 - 解决大量 Python 2.x 下中文乱码问题
 
@@ -38,42 +54,7 @@ History
         "end_date": "2016-07-01",
         "stock_starting_cash":100000,
         "benchmark": '000300.XSHG'
-      },  
-      "extra":{
-        "context_vars":{
-          "short":5,
-          "middle":10,
-          "long":21
-        }
-      }
-    }
-
-    result_dict = run(config)
-
-    # 以下是策略代码:
-
-    def handle_bar(context):
-        print(context.short)    # 5
-        print(context.middle)   # 10
-        print(context.long)     # 21
-
-2.0.2
-==================
-
-- 现在可以通过配置 `base.extra_vars` 向策略中预定义变量了。用法如下:
-
-.. code-block:: python3
-
-    from rqalpha import run
-
-    config = {
-      "base": {
-        "strategy_file": "strategy.py",
-        "start_date": "2016-06-01",
-        "end_date": "2016-07-01",
-        "stock_starting_cash":100000,
-        "benchmark": '000300.XSHG'
-      },  
+      },
       "extra":{
         "context_vars":{
           "short":5,
@@ -103,7 +84,6 @@ History
 - 修复执行 :code:`context.run_info` 会报错的问题
 - 修复持久化报错的问题
 - 增加 Order Persist 相关内容
-
 
 2.0.0
 ==================

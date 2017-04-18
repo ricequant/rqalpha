@@ -17,11 +17,10 @@
 import errno
 import os
 import shutil
-from importlib import import_module
-
 import six
 import click
 import ruamel.yaml as yaml
+from importlib import import_module
 
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config

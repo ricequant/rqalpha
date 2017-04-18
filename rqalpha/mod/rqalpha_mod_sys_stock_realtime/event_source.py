@@ -39,6 +39,7 @@ class RealtimeEventSource(AbstractEventSource):
 
         self.before_trading_fire_date = datetime.date(2000, 1, 1)
         self.after_trading_fire_date = datetime.date(2000, 1, 1)
+        self.settlement_fire_date = datetime.date(2000, 1, 1)
 
         self.quotation_engine_thread = Thread(target=self.quotation_worker)
         self.quotation_engine_thread.daemon = True
@@ -50,11 +51,13 @@ class RealtimeEventSource(AbstractEventSource):
         persist_dict = rq_json.convert_json_to_dict(state.decode('utf-8'))
         self.before_trading_fire_date = persist_dict['before_trading_fire_date']
         self.after_trading_fire_date = persist_dict['after_trading_fire_date']
+        self.settlement_fire_date = persist_dict['settlement_fire_date']
 
     def get_state(self):
         return rq_json.convert_dict_to_json({
             "before_trading_fire_date": self.before_trading_fire_date,
             "after_trading_fire_date": self.after_trading_fire_date,
+            "settlement_fire_date": self.settlement_fire_date,
         }).encode('utf-8')
 
     def quotation_worker(self):
@@ -93,6 +96,10 @@ class RealtimeEventSource(AbstractEventSource):
             elif dt.strftime("%H:%M:%S") >= "15:10:00" and dt.date() > self.after_trading_fire_date:
                 self.event_queue.put((dt, EVENT.AFTER_TRADING))
                 self.after_trading_fire_date = dt.date()
+            elif dt.strftime("%H:%M:%S") >= "15:10:00" and dt.date() > self.settlement_fire_date:
+            #or (dt.date()-self.settlement_fire_date).days >= 2:
+                self.event_queue.put((dt, EVENT.SETTLEMENT))
+                self.settlement_fire_date = dt.date()
 
             if is_tradetime_now():
                 self.event_queue.put((dt, EVENT.BAR))

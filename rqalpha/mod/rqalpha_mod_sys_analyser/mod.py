@@ -24,7 +24,6 @@ import pandas as pd
 import six
 
 from rqalpha.const import EXIT_CODE, ACCOUNT_TYPE
-from rqalpha.environment import Environment
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.risk import Risk
@@ -237,8 +236,8 @@ class AnalyserMod(AbstractMod):
             benchmark_portfolios = b_df.set_index('date').sort_index()
             result_dict['benchmark_portfolios'] = benchmark_portfolios
 
-        if Environment.get_instance().plot_store is not None:
-            plots = Environment.get_instance().get_plot_store().get_plots()
+        if self._env.plot_store is not None:
+            plots = self._env.get_plot_store().get_plots()
             plots_items = defaultdict(dict)
             for series_name, value_dict in six.iteritems(plots):
                 for date, value in six.iteritems(value_dict):

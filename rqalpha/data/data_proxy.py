@@ -95,8 +95,14 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     @lru_cache(10240)
     def _get_prev_close(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
+<<<<<<< HEAD
         bar = self._data_source.history_bars(instrument, 2, '1d', 'close', dt, False)
         if bar is None or len(bar) < 2:
+=======
+        bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date,
+                                             skip_suspended=False)
+        if bar is None or len(bar) == 0:
+>>>>>>> develop
             return np.nan
         return bar[0]
 
@@ -106,7 +112,8 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     @lru_cache(10240)
     def _get_prev_settlement(self, instrument, dt):
         prev_trading_date = self.get_previous_trading_date(dt)
-        bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', prev_trading_date, False)
+        bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', prev_trading_date,
+                                             skip_suspended=False)
         if bar is None or len(bar) == 0:
             return np.nan
         return bar[0]
@@ -141,10 +148,17 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
                                  adjust_type='pre', adjust_orig=dt)
 
     def history_bars(self, order_book_id, bar_count, frequency, field, dt,
+<<<<<<< HEAD
                      skip_suspended, adjust_type, adjust_orig):
         instrument = self.instruments(order_book_id)
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
                                               skip_suspended, adjust_type, adjust_orig)
+=======
+                     skip_suspended=True, include_now=False):
+        instrument = self.instruments(order_book_id)
+        return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
+                                              skip_suspended=skip_suspended, include_now=include_now)
+>>>>>>> develop
 
     def current_snapshot(self, order_book_id, frequency, dt):
         instrument = self.instruments(order_book_id)
@@ -175,14 +189,14 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     def is_suspended(self, order_book_id, dt, count=1):
         if count == 1:
-            return self._data_source.is_suspended(order_book_id, [dt])
+            return self._data_source.is_suspended(order_book_id, [dt])[0]
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_suspended(order_book_id, trading_dates)
 
     def is_st_stock(self, order_book_id, dt, count=1):
         if count == 1:
-            return self._data_source.is_st_stock(order_book_id, [dt])
+            return self._data_source.is_st_stock(order_book_id, [dt])[0]
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_st_stock(order_book_id, trading_dates)

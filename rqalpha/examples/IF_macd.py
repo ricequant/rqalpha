@@ -14,7 +14,7 @@ def init(context):
     context.SMOOTHPERIOD = 9
     context.OBSERVATION = 50
 
-    #初始化时订阅合约行情。订阅之后的合约行情会在handle_bar中进行更新
+    # 初始化时订阅合约行情。订阅之后的合约行情会在handle_bar中进行更新
     subscribe(context.s1)
 
 

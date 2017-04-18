@@ -64,24 +64,24 @@ RQAlpha 策略分析 Mod。
 
 在启用该 Mod 的情况下，您可以使用如下功能:
 
-*   `rqalpha run` 命令增加 `--report target_csv_path` 选项，您可以指定将报告以 `csv` 格式输出至 `target_csv_path` 路径
-*   `rqalpha run` 命令增加 `--output-file target_pickle_path` / `-o target_pickle_path` 选项，您可以将每日 `Portfolio`/`Trade` 数据以 `pickle` 文件格式输出到 `target_pickle_path` 路径
-*   `rqalpha run` 命令增加 `--plot/--no-plot` / `-p` 选项，您可以以图形的方式显示收益曲线图
-*   `rqalpha run` 命令增加 `--plot-save target_plot_img_path`选项，您可以将收益曲线图输出至 `target_plot img_path` 路径
+*   :code:`rqalpha run` 命令增加 :code:`--report target_csv_path` 选项，您可以指定将报告以 :code:`csv` 格式输出至 :code:`target_csv_path` 路径
+*   :code:`rqalpha run` 命令增加 :code:`--output-file target_pickle_path` / :code:`-o target_pickle_path` 选项，您可以将每日  :code:`Portfolio` / :code:`Trade` 数据以 :code:`pickle` 文件格式输出到 :code:`target_pickle_path` 路径
+*   :code:`rqalpha run` 命令增加 :code:`--plot/--no-plot` / :code:`-p` 选项，您可以以图形的方式显示收益曲线图
+*   :code:`rqalpha run` 命令增加 :code:`--plot-save target_plot_img_path` 选项，您可以将收益曲线图输出至 :code:`target_plot img_path` 路径
 
 ..  code-block:: bash
 
     $ rqalpha run -f strategy.py --report target_csv_path -o target_pickle_path --plot --plot-save target_plot_img_path
 
-*   增加 `rqalpha plot` 命令，根据生成的 `pickle` 文件来显示收益曲线图
-    *   `--show/--hide` 选项，是否显示收益曲线图
-    *   `--plot-save target_plot_img_path` 选项，您可以将收益曲线图输出至 `target_plot img_path` 路径
+*   增加 :code:`rqalpha plot` 命令，根据生成的 :code:`pickle` 文件来显示收益曲线图
+    *   :code:`--show/--hide` 选项，是否显示收益曲线图
+    *   :code:`--plot-save target_plot_img_path` 选项，您可以将收益曲线图输出至 :code:`target_plot img_path` 路径
 
 ..  code-block:: bash
 
     $ rqalpha plot result_pickle_file_path --hide --plot-save target_plot_img_path
 
-*   增加 `rqalpha report` 命令，根据生成的 `pickle` 文件来生成报告 `csv` 文件
+*   增加 :code:`rqalpha report` 命令，根据生成的 :code:`pickle` 文件来生成报告 :code:`csv` 文件
 
 ..  code-block:: bash
 
