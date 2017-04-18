@@ -14,14 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import datetime
 
-import numpy as np
 from rqalpha.interface import AbstractMod
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
-from rqalpha.utils.logger import system_log
 
 
 class FuncatAPIMod(AbstractMod):
@@ -34,7 +31,6 @@ class FuncatAPIMod(AbstractMod):
             print("-" * 50)
             raise
 
-        from numpy.lib import recfunctions as rfn
         from funcat.data.backend import DataBackend
         from funcat.context import set_current_date
         from funcat.utils import get_date_from_int
@@ -47,14 +43,11 @@ class FuncatAPIMod(AbstractMod):
 
             def __init__(self):
                 from rqalpha.api import (
-                    # history_bars,
                     all_instruments,
                     instruments,
                 )
 
                 self.set_current_date = set_current_date
-
-                # self.history_bars = history_bars
                 self.all_instruments = all_instruments
                 self.instruments = instruments
                 self.rqalpha_env = Environment.get_instance()
@@ -84,7 +77,6 @@ class FuncatAPIMod(AbstractMod):
                 bar_count = (end - start).days
 
                 dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
-                system_log.info("get_price 1, dt {}", dt)
                 bars = self.rqalpha_env.data_proxy.history_bars(
                     order_book_id, bar_count, freq, field=None,
                     dt=dt)
