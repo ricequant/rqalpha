@@ -21,6 +21,12 @@ Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQ
 1.  官方下载：https://www.continuum.io/downloads  （我们不是特别建议，因为官方下载的速度较慢，但是如果您非常认可官方的可信度可以考虑...）
 2.  清华的官方镜像下载：https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/  ，找最新的anaconda版本下载即可
 
+然后尝试一下运行 `conda -V` 命令行看是否已经安装成功，如果返回对应的版本信息，则说明安装成功。
+
+.. code-block:: bash
+
+    conda -V
+
 For CentOS
 ------------------------------------
 
@@ -76,6 +82,8 @@ For CentOS
 
 安装中文字体: 将 :code:`WenQuanYi Micro Hei.ttf` 放到 :code:`/usr/share/fonts/chinese`
 
+在执行以下命令如出现问题，请参考 :ref:`FAQ-chinese-fonts-mac`
+
 .. code-block:: bash
 
     mkdir /usr/share/fonts/chinese
@@ -102,6 +110,8 @@ conda 官方的服务器在国外，因此国内的网络环境使用 :code:`con
 
 设置好源后，就可以使用 :code:`conda install 【包名】` 安装需要的 Python 库了。大部分情况下，建议使用 :code:`conda` 来安装 Python 数据分析相关的库，因为 conda 做了很多的优化和版本依赖关系的管理。如果没有相关的库，则使用 :code:`pip install 【包名】` 的方式来安装。
 
+.. _intro-detail-create-env:
+
 conda 虚拟环境
 ------------------------------------
 
@@ -113,11 +123,17 @@ conda 虚拟环境
 
 一下有几个常用的虚拟环境命令可以使用:
 
-*   创建 conda 虚拟环境
+*   创建 conda 虚拟环境（ :code:`env_name` 是您希望创建的虚拟环境名）
 
 .. code-block:: bash
 
     conda create --name env_name python=3.5
+
+*   如您想创建一个名为rqalpha的虚拟环境
+
+.. code-block:: bash
+
+    conda create --name rqalpha python=3.5
 
 *   使用 conda 虚拟环境
 

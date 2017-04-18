@@ -11,7 +11,9 @@
 
 我们从 :ref:`intro-examples` 中选取 :ref:`intro-examples-buy-and-hold` 来进行回测。
 
-在进行回测的过程中需要明确以下几个回测要素：
+如果对于策略、数据路径存在疑问，请参考：:ref:`FAQ-examples-path`
+
+在进行回测的过程中需要明确以下几个回测要素，您可通过生成config.yml传参 :ref:`intro-config` 或者通过命令行传参：
 
 *   数据源路径
 *   策略文件路径
