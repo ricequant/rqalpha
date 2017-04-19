@@ -383,7 +383,7 @@ class FuturePosition(BasePosition):
                     consumed_quantity = left_quantity
                     self._sell_old_holding_list = [(old_price, old_quantity - left_quantity)]
                 else:
-                    consumed_quantity = left_quantity
+                    consumed_quantity = old_quantity
                 left_quantity -= consumed_quantity
                 delta += self._cal_realized_pnl(old_price, trade.last_price, trade.side, consumed_quantity)
             # 再平进仓
@@ -406,7 +406,7 @@ class FuturePosition(BasePosition):
                     consumed_quantity = left_quantity
                     self._buy_old_holding_list = [(old_price, old_quantity - left_quantity)]
                 else:
-                    consumed_quantity = left_quantity
+                    consumed_quantity = old_quantity
                 left_quantity -= consumed_quantity
                 delta += self._cal_realized_pnl(old_price, trade.last_price, trade.side, consumed_quantity)
             # 再平今仓
