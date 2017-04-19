@@ -95,14 +95,9 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     @lru_cache(10240)
     def _get_prev_close(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
-<<<<<<< HEAD
-        bar = self._data_source.history_bars(instrument, 2, '1d', 'close', dt, False)
+        bar = self._data_source.history_bars(instrument, 2, '1d', 'close', dt,
+                                             skip_suspended=False, include_now=False)
         if bar is None or len(bar) < 2:
-=======
-        bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date,
-                                             skip_suspended=False)
-        if bar is None or len(bar) == 0:
->>>>>>> develop
             return np.nan
         return bar[0]
 
