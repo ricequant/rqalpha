@@ -4,6 +4,14 @@
 History
 ==================
 
+2.1.2
+==================
+
+- 提供 :code:`from rqalpha import cli` 方便第三方 Mod 扩展 `rqalpha` command
+- :code:`history_bars` 增加 :code:`include_now` option
+- Fix `Issue 90 <https://github.com/ricequant/rqalpha/issues/90>`_
+- Fix `Issue 94 <https://github.com/ricequant/rqalpha/issues/94>`_
+
 2.1.0
 ==================
 
