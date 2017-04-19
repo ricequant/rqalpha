@@ -74,7 +74,10 @@ class FuncatAPIMod(AbstractMod):
                 start = get_date_from_int(start)
                 end = get_date_from_int(end)
 
-                bar_count = (end - start).days
+                scale = 1
+                if freq[-1] == "m":
+                    scale *= 240. / int(freq[:-1])
+                bar_count = int((end - start).days * scale)
 
                 dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
                 bars = self.rqalpha_env.data_proxy.history_bars(
