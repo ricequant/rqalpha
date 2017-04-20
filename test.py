@@ -36,7 +36,7 @@ TEST_OUT = os.path.abspath("./tests/outs/")
 pd.set_option("display.width", 160)
 
 
-def get_test_files(file_path=None):
+def run_tests(file_path=None):
     if file_path is not None:
         files = [file_path]
     else:
@@ -282,7 +282,7 @@ def test_api():
 
 
 def test_strategy():
-    get_test_files()
+    run_tests()
 
 
 def write_csv(path, fields):
@@ -351,12 +351,12 @@ if __name__ == '__main__':
 
         else:
             target_file = sys.argv[1]
-            get_test_files(target_file)
+            run_tests(target_file)
             end_time = datetime.now()
 
     else:
         test_api()
-        error_count = get_test_files()
+        error_count = run_tests()
         end_time = datetime.now()
         if error_count == 0:
             time_csv_file_path = os.path.join(TEST_OUT, "time.csv")

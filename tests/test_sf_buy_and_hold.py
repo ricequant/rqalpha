@@ -53,7 +53,7 @@ __config__ = {
         "benchmark": None,
     },
     "extra": {
-        "log_level": "verbose",
+        "log_level": "error",
     },
     "mod": {
         "sys_progress": {
