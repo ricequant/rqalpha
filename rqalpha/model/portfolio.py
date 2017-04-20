@@ -144,7 +144,7 @@ class Portfolio(object):
         """
         [float] 累计年化收益率
         """
-        current_date = Environment.get_instance().calendar_dt.date()
+        current_date = Environment.get_instance().trading_dt.date()
         return self.unit_net_value ** (DAYS_CNT.DAYS_A_YEAR / float((current_date - self.start_date).days + 1)) - 1
 
     @property
