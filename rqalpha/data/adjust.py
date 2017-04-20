@@ -72,5 +72,5 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
         if f in PRICE_FIELDS:
             result[f] *= factors
         elif f == 'volume':
-            result[f] /= factors
+            result[f] *= (1 / factors)
     return result

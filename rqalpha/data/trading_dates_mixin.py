@@ -36,7 +36,7 @@ class TradingDatesMixin(object):
         date = pd.Timestamp(date).replace(hour=0, minute=0, second=0)
         return self._get_previous_trading_date(date)
 
-    @lru_cache(128)
+    @lru_cache(None)
     def _get_previous_trading_date(self, date):
         pos = self._dates.searchsorted(date)
         if pos > 0:
