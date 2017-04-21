@@ -192,6 +192,18 @@ class Portfolio(object):
         """
         return sum(account.market_value for account in six.itervalues(self._accounts))
 
+    @property
+    def pnl(self):
+        return (self.unit_net_value - 1) * self.units
+
+    @property
+    def starting_cash(self):
+        return self.units
+
+    @property
+    def frozen_cash(self):
+        return sum(account.fronzen_cash for account in six.itervalues(self._accounts))
+
 
 class MixedPositions(dict):
 
