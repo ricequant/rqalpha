@@ -202,7 +202,7 @@ class Portfolio(object):
 
     @property
     def frozen_cash(self):
-        return sum(account.fronzen_cash for account in six.itervalues(self._accounts))
+        return sum(account.frozen_cash for account in six.itervalues(self._accounts))
 
 
 class MixedPositions(dict):
