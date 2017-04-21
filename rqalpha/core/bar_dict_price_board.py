@@ -29,7 +29,7 @@ class BarDictPriceBoard(AbstractPriceBoard):
             self._env.event_bus.add_listener(EVENT.POST_BEFORE_TRADING, self._unlock_settlement)
 
     def get_last_price(self, order_book_id):
-        if self._settlement_lock:
+        if self._settlement_lock and self._env.get_instrument(order_book_id).type == 'Future':
             return self._env.data_proxy.get_settle_price(order_book_id, self._env.trading_dt)
         else:
             return self._bar_dict[order_book_id].last
