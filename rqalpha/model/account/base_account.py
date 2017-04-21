@@ -94,4 +94,4 @@ class BaseAccount(object):
         """
         [float] 总费用
         """
-        raise self._transaction_cost
+        return self._transaction_cost
