@@ -29,12 +29,12 @@ class SnapshotObject(object):
         ('high', np.float64),
         ('low', np.float64),
         ('last', np.float64),
-        ('volume', np.uint32),
-        ('total_turnover', np.uint64),
+        ('volume', np.int32),
+        ('total_turnover', np.int64),
         ('prev_close', np.float64)
     ]
 
-    _FUTURE_FIELDS = _STOCK_FIELDS + [('open_interest', np.uint32), ('prev_settlement', np.float64)]
+    _FUTURE_FIELDS = _STOCK_FIELDS + [('open_interest', np.int32), ('prev_settlement', np.float64)]
 
     _STOCK_FIELD_NAMES = [_n for _n, _ in _STOCK_FIELDS]
     _FUTURE_FIELD_NAMES = [_n for _n, _ in _FUTURE_FIELDS]
