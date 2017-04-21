@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-04-10 11:37+0800\n"
+"POT-Creation-Date: 2017-04-21 11:17+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -67,17 +67,17 @@ msgstr ""
 msgid "strategy execute exception"
 msgstr ""
 
-#: rqalpha/api/api_base.py:133 rqalpha/api/api_base.py:233
-#: rqalpha/api/api_base.py:264 rqalpha/api/api_future.py:185
+#: rqalpha/api/api_base.py:134 rqalpha/api/api_base.py:234
+#: rqalpha/api/api_base.py:265 rqalpha/api/api_future.py:185
 #: rqalpha/api/api_stock.py:420
 msgid "unsupported order_book_id type"
 msgstr ""
 
-#: rqalpha/api/api_base.py:177
+#: rqalpha/api/api_base.py:178
 msgid "Cancel order fail: invalid order id"
 msgstr ""
 
-#: rqalpha/api/api_base.py:696
+#: rqalpha/api/api_base.py:704
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr ""
 
@@ -128,9 +128,9 @@ msgid ""
 msgstr ""
 
 #: rqalpha/core/strategy_context.py:218 rqalpha/core/strategy_context.py:223
-#: rqalpha/core/strategy_context.py:248 rqalpha/core/strategy_context.py:252
-#: rqalpha/core/strategy_context.py:256 rqalpha/core/strategy_context.py:260
-#: rqalpha/core/strategy_context.py:264
+#: rqalpha/core/strategy_context.py:252 rqalpha/core/strategy_context.py:256
+#: rqalpha/core/strategy_context.py:260 rqalpha/core/strategy_context.py:264
+#: rqalpha/core/strategy_context.py:268
 msgid "[deprecated] {} is no longer used."
 msgstr ""
 
@@ -257,14 +257,14 @@ msgid ""
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:68
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:68
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:67
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
 "listed date [{listed_date}]"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:73
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:74
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:73
 msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
 msgstr ""
 
@@ -302,12 +302,12 @@ msgstr ""
 msgid "Not supported matching type {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:55
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:54
 msgid "cancel_order function is not supported in signal mode"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:86
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:92
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:85
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:91
 msgid "You have traded {order_book_id} with {quantity} lots in {bar_status}"
 msgstr ""
 
@@ -332,7 +332,7 @@ msgid "id_or_symbols {} does not exist"
 msgstr ""
 
 #: rqalpha/model/account/future_account.py:142
-#: rqalpha/model/account/stock_account.py:137
+#: rqalpha/model/account/stock_account.py:138
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
@@ -420,13 +420,19 @@ msgid ""
 "'3m', '4q', '2y', got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:318
+#: rqalpha/utils/arg_checker.py:326
+msgid ""
+"function {}: invalid {} argument, quarter should be in form of '2012q3', "
+"got {} (type: {})"
+msgstr ""
+
+#: rqalpha/utils/arg_checker.py:340
 msgid ""
 "function {}: invalid {} argument, should be entity like "
 "Fundamentals.balance_sheet.total_equity, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:337
+#: rqalpha/utils/arg_checker.py:359
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
 "'5m', '1d', got {} (type: {})"
