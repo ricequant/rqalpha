@@ -134,7 +134,8 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True, include_now=False):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt,
+                     skip_suspended=True, include_now=False):
         if frequency != '1d':
             raise NotImplementedError
 

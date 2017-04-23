@@ -327,10 +327,12 @@ def get_yield_curve(date=None, tenor=None):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
              verify_that('bar_count').is_instance_of(int).is_greater_than(0),
-             verify_that('frequency').is_in(('1m', '1d')),
+             verify_that('frequency').is_valid_frequency(),
              verify_that('fields').are_valid_fields(names.VALID_HISTORY_FIELDS, ignore_none=True),
-             verify_that('skip_suspended').is_instance_of(bool))
-def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True, include_now=False):
+             verify_that('skip_suspended').is_instance_of(bool),
+             verify_that('include_now').is_instance_of(bool))
+def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True,
+                 include_now=False):
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
 
@@ -389,6 +391,9 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     prev_settlement             结算价（期货日线专用）
     =========================   ===================================================
 
+    :param bool skip_suspended: 是否跳过停牌数据
+    :param bool include_now: 是否包含当前数据
+
     :return: `ndarray`, 方便直接与talib等计算库对接，效率较history返回的DataFrame更高。
 
     :example:
@@ -405,18 +410,20 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     """
     order_book_id = assure_order_book_id(order_book_id)
     env = Environment.get_instance()
-
     dt = env.calendar_dt
 
-    if frequency == '1m' and env.config.base.frequency == '1d':
+    if frequency[-1] == 'm' and Environment.get_instance().config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
 
-    if ((env.config.base.frequency == '1m' and frequency == '1d') or
-        (frequency == '1d' and ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING)):
-        # 在分钟回测获取日线数据, 应该推前一天，这里应该使用 trading date
-        dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
+    if frequency == '1d':
+        sys_frequency = Environment.get_instance().config.base.frequency
+        if ((sys_frequency == '1m' and not include_now) or
+                ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
+            dt = env.data_proxy.get_previous_trading_date(env.trading_dt)
+            include_now = False
 
-    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt, skip_suspended, include_now)
+    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt,
+                                       skip_suspended=skip_suspended, include_now=include_now)
 
 
 @export_as_api

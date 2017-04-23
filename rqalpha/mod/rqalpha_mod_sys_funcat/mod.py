@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
-
-import numpy as np
+import datetime
 
 from rqalpha.interface import AbstractMod
 from rqalpha.environment import Environment
@@ -33,10 +31,9 @@ class FuncatAPIMod(AbstractMod):
             print("-" * 50)
             raise
 
-        import warnings
-        from numpy.lib import recfunctions as rfn
         from funcat.data.backend import DataBackend
         from funcat.context import set_current_date
+        from funcat.utils import get_date_from_int
 
         class RQAlphaDataBackend(DataBackend):
             """
@@ -46,14 +43,11 @@ class FuncatAPIMod(AbstractMod):
 
             def __init__(self):
                 from rqalpha.api import (
-                    history_bars,
                     all_instruments,
                     instruments,
                 )
 
                 self.set_current_date = set_current_date
-
-                self.history_bars = history_bars
                 self.all_instruments = all_instruments
                 self.instruments = instruments
                 self.rqalpha_env = Environment.get_instance()
@@ -69,7 +63,7 @@ class FuncatAPIMod(AbstractMod):
                 calendar_date = self.rqalpha_env.calendar_dt.date()
                 self.set_current_date(calendar_date)
 
-            def get_price(self, order_book_id, start, end):
+            def get_price(self, order_book_id, start, end, freq):
                 """
                 :param order_book_id: e.g. 000002.XSHE
                 :param start: 20160101
@@ -77,20 +71,22 @@ class FuncatAPIMod(AbstractMod):
                 :returns:
                 :rtype: numpy.rec.array
                 """
-                # start = get_date_from_int(start)
-                # end = get_date_from_int(end)
-                # bar_count = (end - start).days
+                start = get_date_from_int(start)
+                end = get_date_from_int(end)
 
-                # TODO: this is slow, make it run faster
-                bar_count = 1000
-                origin_bars = bars = self.history_bars(order_book_id, bar_count, "1d")
+                scale = 1
+                if freq[-1] == "m":
+                    scale *= 240. / int(freq[:-1])
+                bar_count = int((end - start).days * scale)
 
-                dtype = copy.deepcopy(bars.dtype)
-                names = list(dtype.names)
-                names[0] = "date"
-                dtype.names = names
-                bars = rfn.rename_fields(bars, {"datetime": "date"})
-                bars["date"] = origin_bars["datetime"] / 1000000
+                dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
+                bars = self.rqalpha_env.data_proxy.history_bars(
+                    order_book_id, bar_count, freq, field=None,
+                    dt=dt)
+
+                if bars is None or len(bars) == 0:
+                    raise KeyError("empty bars {}".format(order_book_id))
+                bars = bars.copy()
 
                 return bars
 

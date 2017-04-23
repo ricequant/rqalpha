@@ -23,6 +23,7 @@ class BaseAccount(object):
         self._frozen_cash = 0
         self._total_cash = total_cash
         self._backward_trade_set = backward_trade_set
+        self._transaction_cost = 0
         if register_event:
             self.register_event()
 
@@ -93,5 +94,4 @@ class BaseAccount(object):
         """
         [float] 总费用
         """
-        return sum(position.transaction_cost for position in six.itervalues(self._positions))
-
+        return self._transaction_cost

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-04-10 11:37+0800\n"
+"POT-Creation-Date: 2017-04-21 11:17+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -75,17 +75,17 @@ msgstr "策略运行成功，正常退出"
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
-#: rqalpha/api/api_base.py:133 rqalpha/api/api_base.py:233
-#: rqalpha/api/api_base.py:264 rqalpha/api/api_future.py:185
+#: rqalpha/api/api_base.py:134 rqalpha/api/api_base.py:234
+#: rqalpha/api/api_base.py:265 rqalpha/api/api_future.py:185
 #: rqalpha/api/api_stock.py:420
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
-#: rqalpha/api/api_base.py:177
+#: rqalpha/api/api_base.py:178
 msgid "Cancel order fail: invalid order id"
 msgstr "撤单失败: 无效的order id"
 
-#: rqalpha/api/api_base.py:696
+#: rqalpha/api/api_base.py:704
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
@@ -136,9 +136,9 @@ msgid ""
 msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
 
 #: rqalpha/core/strategy_context.py:218 rqalpha/core/strategy_context.py:223
-#: rqalpha/core/strategy_context.py:248 rqalpha/core/strategy_context.py:252
-#: rqalpha/core/strategy_context.py:256 rqalpha/core/strategy_context.py:260
-#: rqalpha/core/strategy_context.py:264
+#: rqalpha/core/strategy_context.py:252 rqalpha/core/strategy_context.py:256
+#: rqalpha/core/strategy_context.py:260 rqalpha/core/strategy_context.py:264
+#: rqalpha/core/strategy_context.py:268
 msgid "[deprecated] {} is no longer used."
 msgstr "[deprecated] {} 已经不再使用。"
 
@@ -265,14 +265,14 @@ msgid ""
 msgstr "订单被拒单: 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:68
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:68
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:67
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
 "listed date [{listed_date}]"
 msgstr "订单被撤销: [{order_book_id}] 上市首日无法交易。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:73
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:74
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:73
 msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
@@ -310,12 +310,12 @@ msgstr "无效的 保证金乘数 设置: 其值范围为 (0, +∞]"
 msgid "Not supported matching type {}"
 msgstr "不支持撮合类型: {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:55
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:54
 msgid "cancel_order function is not supported in signal mode"
 msgstr "在 Signal 模式下，不支持 cancel_order 函数。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:86
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:92
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:85
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:91
 msgid "You have traded {order_book_id} with {quantity} lots in {bar_status}"
 msgstr "您在 {bar_status} 下成交 {quantity} 手 {order_book_id} (请尽量避免涨跌停时下单)"
 
@@ -340,7 +340,7 @@ msgid "id_or_symbols {} does not exist"
 msgstr "您选择的证券[{}]不存在。"
 
 #: rqalpha/model/account/future_account.py:142
-#: rqalpha/model/account/stock_account.py:137
+#: rqalpha/model/account/stock_account.py:138
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓。"
 
@@ -428,13 +428,19 @@ msgid ""
 "'3m', '4q', '2y', got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:318
+#: rqalpha/utils/arg_checker.py:326
+msgid ""
+"function {}: invalid {} argument, quarter should be in form of '2012q3', "
+"got {} (type: {})"
+msgstr ""
+
+#: rqalpha/utils/arg_checker.py:340
 msgid ""
 "function {}: invalid {} argument, should be entity like "
 "Fundamentals.balance_sheet.total_equity, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:337
+#: rqalpha/utils/arg_checker.py:359
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
 "'5m', '1d', got {} (type: {})"
@@ -497,17 +503,5 @@ msgstr "无效的 persist mode: {persist_mode}"
 #~ msgstr "拆股 {order_book_id}, {series}"
 
 #~ msgid ""
-#~ "\n"
-#~ "Your current config file {config_file_path}"
-#~ " is too old and may cause "
-#~ "RQAlpha running error.\n"
-#~ "RQAlpha has replaced the config file with the newest one.\n"
-#~ "the backup config file has been saved in {back_config_file_path}.\n"
-#~ "        "
 #~ msgstr ""
-#~ "\n"
-#~ "您使用的配置文件 {config_file_path} \n"
-#~ "版本过久，可能会导致RQAlpha运行错误。\n"
-#~ "已为您替换为新的配置文件，旧的配置文件备份存储于 {back_config_file_path}\n"
-#~ "        "
 

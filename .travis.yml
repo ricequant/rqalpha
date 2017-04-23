@@ -30,6 +30,7 @@ install:
   - pip install coveralls
   - pip install -U setuptools
   - pip install funcat
+  - pip install ipython==5.3.0
   - pip install .
 script:
   - ls -al $HOME/.rqalpha/

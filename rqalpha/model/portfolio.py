@@ -64,6 +64,8 @@ class Portfolio(object):
                 self._accounts[ACCOUNT_TYPE.STOCK].set_state(v)
             elif k == 'ACCOUNT_TYPE.FUTURE':
                 self._accounts[ACCOUNT_TYPE.FUTURE].set_state(v)
+            elif k == 'ACCOUNT_TYPE.BENCHMARK':
+                self._accounts[ACCOUNT_TYPE.BENCHMARK].set_state(v)
             else:
                 raise NotImplementedError
 
@@ -142,7 +144,7 @@ class Portfolio(object):
         """
         [float] 累计年化收益率
         """
-        current_date = Environment.get_instance().calendar_dt.date()
+        current_date = Environment.get_instance().trading_dt.date()
         return self.unit_net_value ** (DAYS_CNT.DAYS_A_YEAR / float((current_date - self.start_date).days + 1)) - 1
 
     @property
@@ -189,6 +191,18 @@ class Portfolio(object):
         [float] 市值
         """
         return sum(account.market_value for account in six.itervalues(self._accounts))
+
+    @property
+    def pnl(self):
+        return (self.unit_net_value - 1) * self.units
+
+    @property
+    def starting_cash(self):
+        return self.units
+
+    @property
+    def frozen_cash(self):
+        return sum(account.frozen_cash for account in six.itervalues(self._accounts))
 
 
 class MixedPositions(dict):

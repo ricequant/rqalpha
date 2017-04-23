@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
+import sys
 from os.path import dirname, join
 from pip.req import parse_requirements
 
@@ -30,7 +30,7 @@ with open(join(dirname(__file__), 'rqalpha/VERSION.txt'), 'rb') as f:
 
 requirements = [str(ir.req) for ir in parse_requirements("requirements.txt", session=False)]
 
-if six.PY2:
+if sys.version_info.major == 2:
     requirements += [str(ir.req) for ir in parse_requirements("requirements-py2.txt", session=False)]
 
 setup(
