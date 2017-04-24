@@ -87,43 +87,44 @@ class Matcher(object):
                     continue
                 if order.side == SIDE.SELL and order.price > deal_price:
                     continue
+                # 是否限制涨跌停不成交
+                if self._price_limit:
+                    if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                        continue
+                    if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                        continue
+                if self._liquidity_limit:
+                    if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
+                        continue
+                    if order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
+                        continue
             else:
-                if self._price_limit and order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-                    reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-                elif self._price_limit and order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                    reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-                elif self._liquidity_limit and order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
-                    reason = _(
-                        "Order Cancelled: [{order_book_id}] has no liquidity."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-                elif self._liquidity_limit and order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
-                    reason = _(
-                        "Order Cancelled: [{order_book_id}] has no liquidity."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-
-            # 是否限制涨跌停不成交
-            if self._price_limit:
-                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-                    continue
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                    continue
-            if self._liquidity_limit:
-                if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
-                    continue
-                if order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
-                    continue
+                if self._price_limit:
+                    if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                        reason = _(
+                            "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
+                    if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                        reason = _(
+                            "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
+                if self._liquidity_limit:
+                    if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
+                        reason = _(
+                            "Order Cancelled: [{order_book_id}] has no liquidity."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
+                    if order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
+                        reason = _(
+                            "Order Cancelled: [{order_book_id}] has no liquidity."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
 
             if self._volume_limit:
                 bar = self._env.bar_dict[order_book_id]
