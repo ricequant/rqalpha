@@ -113,6 +113,7 @@ def run(**kwargs):
     config_path = kwargs.get('config_path', None)
     if config_path is not None:
         config_path = os.path.abspath(config_path)
+        kwargs.pop('config_path')
 
     from . import main
     main.run(parse_config(kwargs, config_path))
