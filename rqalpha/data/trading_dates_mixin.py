@@ -85,6 +85,6 @@ class TradingDatesMixin(object):
         date = pd.Timestamp(dt).replace(hour=0, minute=0, second=0)
         pos = self._dates.searchsorted(date)
         if pos >= n:
-            return self._dates[pos-n:pos]
+            return self._dates[pos - n:pos]
 
         return self._dates[:pos]
