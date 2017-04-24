@@ -422,7 +422,6 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
         sys_frequency = Environment.get_instance().config.base.frequency
         if (sys_frequency in ['1m', 'tick'] or ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING):
             dt = env.data_proxy.get_previous_trading_date(env.trading_dt.date())
-            include_now = False
 
     return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt,
                                        skip_suspended=skip_suspended, include_now=include_now,
