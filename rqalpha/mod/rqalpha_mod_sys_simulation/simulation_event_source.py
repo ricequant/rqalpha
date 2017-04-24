@@ -148,6 +148,7 @@ class SimulationEventSource(AbstractEventSource):
                 date = day.to_pydatetime()
                 last_tick = None
                 last_dt = None
+                dt_before_day_trading = date.replace(hour=8, minute=30)
                 while True:
                     for tick in data_proxy.get_merge_ticks(self._get_universe(), date, last_dt):
                         # find before trading time
@@ -159,7 +160,13 @@ class SimulationEventSource(AbstractEventSource):
                                         trading_dt=before_trading_dt)
 
                         dt = tick.datetime
-                        yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=dt, tick=tick)
+
+                        if dt < dt_before_day_trading:
+                            trading_dt = dt.replace(year=date.year, month=date.month, day=date.day)
+                        else:
+                            trading_dt = dt
+
+                        yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=trading_dt, tick=tick)
 
                         if self._universe_changed:
                             self._universe_changed = False
