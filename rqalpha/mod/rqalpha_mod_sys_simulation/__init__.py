@@ -29,6 +29,8 @@ __config__ = {
     "commission_multiplier": 1,
     # price_limit: 在处于涨跌停时，无法买进/卖出，默认开启
     "price_limit": True,
+    # liquidity_limit: 当对手盘没有流动性的时候，无法买进/卖出，默认关闭
+    "liquidity_limit": False,
     # 是否有成交量限制
     "volume_limit": True,
     # 按照当前成交量的百分比进行撮合

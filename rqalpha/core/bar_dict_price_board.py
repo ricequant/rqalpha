@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import numpy as np
+
 from ..interface import AbstractPriceBoard
 from ..environment import Environment
 from ..events import EVENT
@@ -47,7 +49,7 @@ class BarDictPriceBoard(AbstractPriceBoard):
         self._settlement_lock = False
 
     def get_a1(self, order_book_id):
-        return None
+        return np.nan
 
     def get_b1(self, order_book_id):
-        return None
+        return np.nan

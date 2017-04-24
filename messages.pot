@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-04-21 11:17+0800\n"
+"POT-Creation-Date: 2017-04-24 13:33+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -256,33 +256,38 @@ msgid ""
 "{limit_down}."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:68
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:74
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:67
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
 "listed date [{listed_date}]"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:73
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:79
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:73
 msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:86
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:92
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:92
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:98
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:112
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:104
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:110
+msgid "Order Cancelled: [{order_book_id}] has no liquidity."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:135
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} due "
 "to volume limit"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:147
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:170
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
 "larger than 25 percent of current bar volume, fill {filled_volume} "
@@ -331,8 +336,8 @@ msgstr ""
 msgid "id_or_symbols {} does not exist"
 msgstr ""
 
-#: rqalpha/model/account/future_account.py:142
-#: rqalpha/model/account/stock_account.py:138
+#: rqalpha/model/account/future_account.py:144
+#: rqalpha/model/account/stock_account.py:141
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
