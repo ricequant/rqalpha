@@ -218,6 +218,9 @@ class MixedPositions(dict):
                 return self._accounts[a_type].positions[key]
         return None
 
+    def __contains__(self, item):
+        return item in self.keys()
+
     def __repr__(self):
         keys = []
         for account in six.itervalues(self._accounts):

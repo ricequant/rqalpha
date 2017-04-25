@@ -86,7 +86,7 @@ def get_user_config_path(config_path=None):
     if config_path is None:
         if os.path.exists(os.path.abspath(os.path.join(os.getcwd(), "config.yml"))):
             return os.path.abspath(os.path.join(os.getcwd(), "config.yml"))
-        if os.path.abspath(os.path.join(os.getcwd(), "config.json")):
+        if os.path.exists(os.path.abspath(os.path.join(os.getcwd(), "config.json"))):
             return os.path.abspath(os.path.join(os.getcwd(), "config.json"))
         return None
     else:
