@@ -41,7 +41,7 @@ class Portfolio(object):
         注册事件
         """
         event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
     def get_state(self):
         return jsonpickle.encode({
@@ -69,7 +69,7 @@ class Portfolio(object):
             else:
                 raise NotImplementedError
 
-    def _post_settlement(self, event):
+    def _pre_before_trading(self, event):
         self._static_unit_net_value = self.unit_net_value
 
     @property
