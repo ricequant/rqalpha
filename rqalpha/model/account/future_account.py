@@ -148,6 +148,7 @@ class FutureAccount(BaseAccount):
             else:
                 position.apply_settlement()
         self._total_cash = self._total_cash + (old_margin - self.margin) + old_daily_pnl
+        self._transaction_cost = 0
 
         self._backward_trade_set.clear()
 
