@@ -135,7 +135,7 @@ class FutureAccount(BaseAccount):
 
     def _settlement(self, event):
         old_margin = self.margin
-        old_daily_pnl = self.daily_pnl + self.transaction_cost
+        old_holding_pnl = self.holding_pnl
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.buy_quantity + position.sell_quantity != 0:
@@ -147,7 +147,7 @@ class FutureAccount(BaseAccount):
                 del self._positions[order_book_id]
             else:
                 position.apply_settlement()
-        self._total_cash = self._total_cash + (old_margin - self.margin) + old_daily_pnl
+        self._total_cash = self._total_cash + (old_margin - self.margin) + old_holding_pnl
         self._transaction_cost = 0
 
         self._backward_trade_set.clear()
