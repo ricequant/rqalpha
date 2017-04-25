@@ -145,6 +145,7 @@ class StockAccount(BaseAccount):
             else:
                 position.apply_settlement()
 
+        self._transaction_cost = 0
         self._backward_trade_set.clear()
         self._handle_dividend_book_closure(event.trading_dt.date())
 
