@@ -19,4 +19,4 @@ ruamel.yaml>=0.13.14
 
 better_exceptions
 tabulate
-colorama
+colorama==0.3.6
