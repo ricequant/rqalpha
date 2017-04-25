@@ -27,8 +27,6 @@ import sys
 from collections import Iterable
 from functools import wraps
 from types import FunctionType
-# noinspection PyUnresolvedReferences
-from typing import List
 
 import pandas as pd
 import six
