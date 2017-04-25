@@ -4,6 +4,21 @@
 History
 ==================
 
+2.1.3
+==================
+
+- Fix `Issue 101 <https://github.com/ricequant/rqalpha/issues/101>`_
+- Fix `Issue 105 <https://github.com/ricequant/rqalpha/issues/105>`_
+- 解决运行 RQAlpha 时缺少 `six` | `requests` 库依赖的问题
+- 解决安装RQAlpha时在某些情况下报错的问题
+- 解决第三方 Mod 安装后配置文件路径有误的问题
+- 现在可以通过 `rqalpha mod install -e .` 的方式来安装依赖 Mod 了
+- 现在运行策略时会检测当前目录是否存在 `config.yml` 或者 `config.json` 来作为配置文件
+- 解决股票下单就存在 `position` 的问题，现在只有成交后才会产生 `position` 了。
+- 修复 `portfolio` 和 `future_account` 计算逻辑的一些问题
+- 修复 `transaction_cost` 在某个 position 清空以后计算不准确的问题
+- 在信号模式下 `price_limit` 表示是否输出涨跌停买入/卖出的报警信息，但不会阻止其买入/卖出
+
 2.1.2
 ==================
 
