@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import rqalpha
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext
-import rqalpha
 
 
 def plot_result(result_dict, show_windows=True, savefile=None):
@@ -45,6 +45,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         system_log.warn("Missing Chinese fonts. Fallback to English.")
 
     summary = result_dict["summary"]
+
     title = summary['strategy_file']
 
     total_portfolios = result_dict["total_portfolios"]
@@ -59,7 +60,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     max_dd_end = np.argmax(np.maximum.accumulate(xs) / xs)
     if max_dd_end == 0:
         max_dd_end = len(xs) - 1
-    max_dd_start = np.argmax(xs[:max_dd_end])
+    max_dd_start = np.argmax(xs[:max_dd_end]) if max_dd_end > 0 else 0
 
     # maxdrawdown duration
     al_cum = np.maximum.accumulate(xs)
