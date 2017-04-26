@@ -146,6 +146,8 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
                      skip_suspended=True, include_now=False,
                      adjust_type='pre', adjust_orig=None):
         instrument = self.instruments(order_book_id)
+        if adjust_orig is None:
+            adjust_orig = dt
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
                                               skip_suspended=skip_suspended, include_now=include_now,
                                               adjust_type=adjust_type, adjust_orig=adjust_orig)
