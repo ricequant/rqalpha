@@ -158,8 +158,7 @@ class FutureAccount(BaseAccount):
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         if self.total_value <= 0:
-            for order_book_id in self._positions.keys():
-                del self._positions[order_book_id]
+            self._positions.clear()
             self._total_cash = 0
 
         self._backward_trade_set.clear()
