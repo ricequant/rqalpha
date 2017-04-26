@@ -698,9 +698,9 @@ def to_date(date):
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
-             verify_that('start_date').is_valid_date(ignore_none=False),
-             verify_that('adjusted').is_instance_of(bool))
-def get_dividend(order_book_id, start_date, adjusted=True):
+             verify_that('start_date').is_valid_date(ignore_none=False))
+def get_dividend(order_book_id, start_date, *args, **kwargs):
+    # adjusted 参数在不复权数据回测时不再提供
     env = Environment.get_instance()
     dt = env.trading_dt.date() - datetime.timedelta(days=1)
     start_date = to_date(start_date)
@@ -710,7 +710,7 @@ def get_dividend(order_book_id, start_date, adjusted=True):
                 start_date, dt
             ))
     order_book_id = assure_order_book_id(order_book_id)
-    df = env.data_proxy.get_dividend(order_book_id, adjusted)
+    df = env.data_proxy.get_dividend(order_book_id)
     return df[start_date:dt]
 
 
