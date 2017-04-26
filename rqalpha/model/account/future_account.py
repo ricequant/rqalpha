@@ -150,6 +150,12 @@ class FutureAccount(BaseAccount):
         self._total_cash = self._total_cash + (old_margin - self.margin) + old_holding_pnl
         self._transaction_cost = 0
 
+        # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
+        if self.total_value <= 0:
+            for order_book_id in self._positions.keys():
+                del self._positions[order_book_id]
+            self._total_cash = 0
+
         self._backward_trade_set.clear()
 
     def _on_order_pending_new(self, event):
