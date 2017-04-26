@@ -136,6 +136,20 @@ class FuturePosition(BasePosition):
         return self.buy_realized_pnl + self.sell_realized_pnl
 
     @property
+    def buy_daily_pnl(self):
+        """
+        [float] 当日买方向盈亏
+        """
+        return self.buy_holding_pnl + self.buy_realized_pnl
+
+    @property
+    def sell_daily_pnl(self):
+        """
+        [float] 当日卖方向盈亏
+        """
+        return self.sell_holding_pnl + self.sell_realized_pnl
+
+    @property
     def daily_pnl(self):
         """
         [float] 当日盈亏

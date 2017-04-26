@@ -187,3 +187,21 @@ class FutureAccount(BaseAccount):
             self._total_cash -= margin_of(order_book_id, trade.last_quantity, trade.last_price)
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
+
+    # ------------------------------------ Abandon Property ------------------------------------
+
+    @property
+    def daily_holding_pnl(self):
+        """
+        [已弃用] 请使用 holding_pnl
+        """
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('future_account.daily_holding_pnl'))
+        return self.holding_pnl
+
+    @property
+    def daily_realized_pnl(self):
+        """
+        [已弃用] 请使用 realized_pnl
+        """
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('future_account.daily_realized_pnl'))
+        return self.realized_pnl
