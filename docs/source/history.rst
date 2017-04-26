@@ -4,6 +4,15 @@
 History
 ==================
 
+2.1.4
+==================
+
+- 解决 history_bars 在 before_trading 获取的是未来数据的问题
+- 解决 before_trading 获取结算价是当前交易日结算价的问题
+- 增加 RQAlpha 向前兼容(0.3.x) `Issue 100 <https://github.com/ricequant/rqalpha/issues/100>`_
+- 期货增加强平机制: 及当前账户权益<=0时，清空仓位，资金置0 `Issue 108 <https://github.com/ricequant/rqalpha/issues/108>`_
+- 解决回测时只有一个交易日时，只有回测数据显示的问题
+
 2.1.3
 ==================
 
