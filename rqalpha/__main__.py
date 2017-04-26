@@ -92,7 +92,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
-@click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")

@@ -32,9 +32,6 @@ class DataSource(BaseDataSource):
         bar = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         return bar
 
-    def get_last_price(self, instrument, dt):
-        return data_board.realtime_quotes_df.loc[instrument.order_book_id]['last']
-
     def current_snapshot(self, instrument, frequency, dt):
         snapshot_dict = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         snapshot_dict["last"] = snapshot_dict["price"]

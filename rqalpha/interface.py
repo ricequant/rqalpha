@@ -135,12 +135,11 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_dividend(self, order_book_id, adjusted=True):
+    def get_dividend(self, order_book_id):
         """
         获取股票/基金分红信息
 
         :param str order_book_id: 合约名
-        :param bool adjusted: 是否经过前复权处理
         :return:
         """
         raise NotImplementedError
@@ -184,7 +183,8 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True, include_now=False):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True,
+                     include_now=False, adjust_type='pre', adjust_orig=None):
         """
         获取历史数据
 
@@ -213,9 +213,10 @@ class AbstractDataSource(object):
         =========================   ===================================================
 
         :param datetime.datetime dt: 时间
-
         :param bool skip_suspended: 是否跳过停牌日
         :param bool include_now: 是否包含当天最新数据
+        :param str adjust_type: 复权类型，'pre', 'none', 'post'
+        :param datetime.datetime adjust_orig: 复权起点；
 
         :return: `numpy.ndarray`
 
@@ -242,7 +243,6 @@ class AbstractDataSource(object):
 
     def get_trading_minutes_for(self, instrument, trading_dt):
         """
-
         获取证券某天的交易时段，用于期货回测
 
         :param instrument: 合约对象
