@@ -251,7 +251,7 @@ class BarObject(object):
         env = Environment.get_instance()
         dt = env.calendar_dt
 
-        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING:
+        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
             dt = env.data_proxy.get_previous_trading_date(env.calendar_dt.date())
         bars = env.data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, 'close', dt)
@@ -267,7 +267,7 @@ class BarObject(object):
         env = Environment.get_instance()
         dt = env.calendar_dt
 
-        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase == EXECUTION_PHASE.BEFORE_TRADING:
+        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
             dt = env.data_proxy.get_previous_trading_date(env.calendar_dt.date())
         bars = env.data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, ['close', 'volume'], dt)
