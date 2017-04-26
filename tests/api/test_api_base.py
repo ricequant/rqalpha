@@ -192,13 +192,11 @@ def test_instruments_code():
         pass
 
     def handle_bar(context, bar_dict):
-        print('hello')
         ins = instruments(context.s1)
         assert ins.sector_code_name == '金融'
         assert ins.symbol == '平安银行'
         assert ins.order_book_id == context.s1
         assert ins.type == 'CS'
-        print('world')
 test_instruments_code_new = get_code_block(test_instruments_code)
 
 
