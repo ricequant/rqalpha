@@ -79,11 +79,17 @@ class FutureAccount(BaseAccount):
 
     @staticmethod
     def _frozen_cash_of_order(order):
-        return margin_of(order.order_book_id, order.unfilled_quantity, order.frozen_price)
+        if order.position_effect == POSITION_EFFECT.OPEN:
+            return margin_of(order.order_book_id, order.unfilled_quantity, order.frozen_price)
+        else:
+            return 0
 
     @staticmethod
     def _frozen_cash_of_trade(trade):
-        return margin_of(trade.order_book_id, trade.last_quantity, trade.frozen_price)
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            return margin_of(trade.order_book_id, trade.last_quantity, trade.frozen_price)
+        else:
+            return 0
 
     @property
     def total_value(self):
