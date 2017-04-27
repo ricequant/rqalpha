@@ -92,7 +92,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
-@click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
@@ -113,6 +112,7 @@ def run(**kwargs):
     config_path = kwargs.get('config_path', None)
     if config_path is not None:
         config_path = os.path.abspath(config_path)
+        kwargs.pop('config_path')
 
     from . import main
     main.run(parse_config(kwargs, config_path))
@@ -220,7 +220,6 @@ def mod(cmd, params):
                 return
             if "rqalpha_mod_" in mod_name:
                 lib_name = mod_name
-                mod_name = lib_name.replace("rqalpha_mod_", "")
             else:
                 lib_name = "rqalpha_mod_" + mod_name
             params[mod_name_index] = lib_name
@@ -232,7 +231,22 @@ def mod(cmd, params):
         mod_config_path = get_mod_config_path(generate=True)
         mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
 
+        if len(mod_list) == 0:
+            """
+            主要是方便 `pip install -e .` 这种方式 本地调试 Mod 使用，需要满足以下条件:
+            1.  `rqalpha mod install -e .` 命令是在对应 自定义 Mod 的根目录下
+            2.  该 Mod 必须包含 `setup.py` 文件（否则也不能正常的 `pip install -e .` 来安装）
+            3.  该 Mod 包名必须按照 RQAlpha 的规范来命名，具体规则如下
+                *   必须以 `rqalpha-mod-` 来开头，比如 `rqalpha-mod-xxx-yyy`
+                *   对应import的库名必须要 `rqalpha_mod_` 来开头，并且需要和包名后半部分一致，但是 `-` 需要替换为 `_`, 比如 `rqalpha_mod_xxx_yyy`
+            """
+            mod_name = _detect_package_name_from_dir()
+            mod_name = mod_name.replace("-", "_").replace("rqalpha_mod_", "")
+            mod_list.append(mod_name)
+
         for mod_name in mod_list:
+            if "rqalpha_mod_" in mod_name:
+                mod_name = mod_name.replace("rqalpha_mod_", "")
             mod_config['mod'][mod_name] = {}
             mod_config['mod'][mod_name]['enabled'] = False
 
@@ -319,6 +333,13 @@ def mod(cmd, params):
         list({})
 
     locals()[cmd](params)
+
+
+def _detect_package_name_from_dir():
+    setup_path = os.path.join(os.path.abspath('.'), 'setup.py')
+    if not os.path.exists(setup_path):
+        return None
+    return os.path.split(os.path.dirname(setup_path))[1]
 
 
 if __name__ == '__main__':

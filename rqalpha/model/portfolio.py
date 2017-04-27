@@ -41,7 +41,7 @@ class Portfolio(object):
         注册事件
         """
         event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
     def get_state(self):
         return jsonpickle.encode({
@@ -69,7 +69,7 @@ class Portfolio(object):
             else:
                 raise NotImplementedError
 
-    def _post_settlement(self, event):
+    def _pre_before_trading(self, event):
         self._static_unit_net_value = self.unit_net_value
 
     @property
@@ -144,7 +144,7 @@ class Portfolio(object):
         """
         [float] 累计年化收益率
         """
-        current_date = Environment.get_instance().calendar_dt.date()
+        current_date = Environment.get_instance().trading_dt.date()
         return self.unit_net_value ** (DAYS_CNT.DAYS_A_YEAR / float((current_date - self.start_date).days + 1)) - 1
 
     @property
@@ -192,6 +192,18 @@ class Portfolio(object):
         """
         return sum(account.market_value for account in six.itervalues(self._accounts))
 
+    @property
+    def pnl(self):
+        return (self.unit_net_value - 1) * self.units
+
+    @property
+    def starting_cash(self):
+        return self.units
+
+    @property
+    def frozen_cash(self):
+        return sum(account.frozen_cash for account in six.itervalues(self._accounts))
+
 
 class MixedPositions(dict):
 
@@ -205,6 +217,9 @@ class MixedPositions(dict):
             if a_type == account_type:
                 return self._accounts[a_type].positions[key]
         return None
+
+    def __contains__(self, item):
+        return item in self.keys()
 
     def __repr__(self):
         keys = []

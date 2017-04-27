@@ -214,16 +214,6 @@ class StrategyContext(object):
         return self.portfolio.accounts[ACCOUNT_TYPE.FUTURE]
 
     @property
-    def stock_portfolio(self):
-        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.stock_portfolio'))
-        return self.stock_account
-
-    @property
-    def future_portfolio(self):
-        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.future_portfolio'))
-        return self.future_account
-
-    @property
     def config(self):
         return Environment.get_instance().config
 
@@ -247,22 +237,34 @@ class StrategyContext(object):
     def short_selling_allowed(self):
         raise NotImplementedError
 
+    # ------------------------------------ Abandon Property ------------------------------------
+
+    @property
+    def stock_portfolio(self):
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('context.stock_portfolio'))
+        return self.stock_account
+
+    @property
+    def future_portfolio(self):
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('context.future_portfolio'))
+        return self.future_account
+
     @slippage.setter
     def slippage(self, value):
-        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.slippage'))
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('context.slippage'))
 
     @benchmark.setter
     def benchmark(self, value):
-        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.benchmark'))
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('context.benchmark'))
 
     @margin_rate.setter
     def margin_rate(self, value):
-        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.margin_rate'))
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('context.margin_rate'))
 
     @commission.setter
     def commission(self, value):
-        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.commission'))
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('context.commission'))
 
     @short_selling_allowed.setter
     def short_selling_allowed(self, value):
-        user_system_log.warn(_(u"[deprecated] {} is no longer used.").format('context.short_selling_allowed'))
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('context.short_selling_allowed'))

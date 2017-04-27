@@ -157,7 +157,7 @@ def test_history_bars():
     def handle_bar(context, bar_dict):
         return_list = history_bars(context.s1, 5, '1d', 'close')
         if str(context.now.date()) == '2016-12-29':
-            assert return_list.tolist() == [9.08, 9.1199, 9.08, 9.06, 9.08]
+            assert return_list.tolist() == [9.08, 9.12, 9.08, 9.06, 9.08]
 test_history_bars_code_new = get_code_block(test_history_bars)
 
 
@@ -192,13 +192,11 @@ def test_instruments_code():
         pass
 
     def handle_bar(context, bar_dict):
-        print('hello')
         ins = instruments(context.s1)
         assert ins.sector_code_name == '金融'
         assert ins.symbol == '平安银行'
         assert ins.order_book_id == context.s1
         assert ins.type == 'CS'
-        print('world')
 test_instruments_code_new = get_code_block(test_instruments_code)
 
 
@@ -303,7 +301,7 @@ def test_get_dividend():
         df = get_dividend('000001.XSHE', start_date='20130104')
         df_to_assert = df.loc[df['book_closure_date'] == '	2013-06-19']
         assert df.shape >= (4, 5)
-        assert df_to_assert.iloc[0, 1] == 0.6149
+        assert df_to_assert.iloc[0, 1] == 1.7
         assert str(df_to_assert.iloc[0, 3]) == '2013-06-20 00:00:00'
 test_get_dividend_code_new = get_code_block(test_get_dividend)
 

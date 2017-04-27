@@ -17,6 +17,7 @@
 import six
 import os
 import ruamel.yaml as yaml
+import simplejson as json
 import datetime
 import logbook
 import locale
@@ -40,8 +41,13 @@ def load_config(config_path, loader=yaml.Loader):
     if not os.path.exists(config_path):
         system_log.error(_(u"config.yml not found in {config_path}").format(config_path))
         return False
-    with codecs.open(config_path, encoding="utf-8") as stream:
-        config = yaml.load(stream, loader)
+    if ".json" in config_path:
+        with codecs.open(config_path, encoding="utf-8") as f:
+            json_config = f.read()
+        config = json.loads(json_config)
+    else:
+        with codecs.open(config_path, encoding="utf-8") as stream:
+            config = yaml.load(stream, loader)
     return config
 
 
@@ -78,13 +84,15 @@ def get_mod_config_path(generate=False):
 
 def get_user_config_path(config_path=None):
     if config_path is None:
-        config_path = os.path.abspath(os.path.join(os.getcwd(), "config.yml"))
+        if os.path.exists(os.path.abspath(os.path.join(os.getcwd(), "config.yml"))):
+            return os.path.abspath(os.path.join(os.getcwd(), "config.yml"))
+        if os.path.exists(os.path.abspath(os.path.join(os.getcwd(), "config.json"))):
+            return os.path.abspath(os.path.join(os.getcwd(), "config.json"))
+        return None
     else:
         if not os.path.exists(config_path):
             system_log.error(_("config path: {config_path} does not exist.").format(config_path=config_path))
-    if not os.path.exists(config_path):
-        return None
-    else:
+            return None
         return config_path
 
 
@@ -141,8 +149,6 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     # use config_args to extend config
     if click_type:
         for key, value in six.iteritems(config_args):
-            if key in ["config_path"]:
-                continue
             if config_args[key] is not None:
                 keys = key.split("__")
                 keys.reverse()
@@ -205,7 +211,6 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
             user_system_log.handlers.append(user_std_handler)
 
     if extra_config.context_vars:
-        import simplejson as json
         if isinstance(extra_config.context_vars, six.string_types):
             extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
 

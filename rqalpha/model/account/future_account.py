@@ -60,12 +60,14 @@ class FutureAccount(BaseAccount):
             'frozen_cash': self._frozen_cash,
             'total_cash': self._total_cash,
             'backward_trade_set': list(self._backward_trade_set),
+            'transaction_cost': self._transaction_cost,
         }
 
     def set_state(self, state):
         self._frozen_cash = state['frozen_cash']
         self._total_cash = state['total_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
+        self._transaction_cost = state['transaction_cost']
         self._positions.clear()
         for order_book_id, v in six.iteritems(state['positions']):
             position = self._positions.get_or_create(order_book_id)
@@ -77,11 +79,17 @@ class FutureAccount(BaseAccount):
 
     @staticmethod
     def _frozen_cash_of_order(order):
-        return margin_of(order.order_book_id, order.unfilled_quantity, order.frozen_price)
+        if order.position_effect == POSITION_EFFECT.OPEN:
+            return margin_of(order.order_book_id, order.unfilled_quantity, order.frozen_price)
+        else:
+            return 0
 
     @staticmethod
     def _frozen_cash_of_trade(trade):
-        return margin_of(trade.order_book_id, trade.last_quantity, trade.frozen_price)
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            return margin_of(trade.order_book_id, trade.last_quantity, trade.frozen_price)
+        else:
+            return 0
 
     @property
     def total_value(self):
@@ -133,7 +141,7 @@ class FutureAccount(BaseAccount):
 
     def _settlement(self, event):
         old_margin = self.margin
-        old_daily_pnl = self.daily_pnl + self.transaction_cost
+        old_holding_pnl = self.holding_pnl
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.buy_quantity + position.sell_quantity != 0:
@@ -145,7 +153,13 @@ class FutureAccount(BaseAccount):
                 del self._positions[order_book_id]
             else:
                 position.apply_settlement()
-        self._total_cash = self._total_cash + (old_margin - self.margin) + old_daily_pnl
+        self._total_cash = self._total_cash + (old_margin - self.margin) + old_holding_pnl
+        self._transaction_cost = 0
+
+        # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
+        if self.total_value <= 0:
+            self._positions.clear()
+            self._total_cash = 0
 
         self._backward_trade_set.clear()
 
@@ -174,12 +188,28 @@ class FutureAccount(BaseAccount):
             return
         order_book_id = trade.order_book_id
         position = self._positions.get_or_create(order_book_id)
-        position.apply_trade(trade)
+        delta_cash = position.apply_trade(trade)
 
+        self._transaction_cost += trade.transaction_cost
         self._total_cash -= trade.transaction_cost
-        if trade.position_effect != POSITION_EFFECT.OPEN:
-            self._total_cash += margin_of(order_book_id, trade.last_quantity, trade.last_price)
-        else:
-            self._total_cash -= margin_of(order_book_id, trade.last_quantity, trade.last_price)
+        self._total_cash += delta_cash
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
+
+    # ------------------------------------ Abandon Property ------------------------------------
+
+    @property
+    def daily_holding_pnl(self):
+        """
+        [已弃用] 请使用 holding_pnl
+        """
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('future_account.daily_holding_pnl'))
+        return self.holding_pnl
+
+    @property
+    def daily_realized_pnl(self):
+        """
+        [已弃用] 请使用 realized_pnl
+        """
+        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('future_account.daily_realized_pnl'))
+        return self.realized_pnl
