@@ -19,7 +19,7 @@ import six
 import numpy as np
 
 from ..utils.py2 import lru_cache
-from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
+from ..utils.datetime_func import convert_date_to_int, convert_int_to_date, convert_date_to_date_int
 from ..interface import AbstractDataSource
 from .future_info_cn import CN_FUTURE_INFO
 from .converter import StockBarConverter, IndexBarConverter
@@ -73,6 +73,10 @@ class BaseDataSource(AbstractDataSource):
 
     def is_suspended(self, order_book_id, dates):
         return self._suspend_days.contains(order_book_id, dates)
+
+    def _suspended_instruemnts(self, date):
+        date = convert_date_to_date_int(date)
+        return self._suspend_days._date_map.get(date)
 
     def is_st_stock(self, order_book_id, dates):
         return self._st_stock_days.contains(order_book_id, dates)

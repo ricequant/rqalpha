@@ -25,6 +25,13 @@ class DateSet(object):
         dates = bcolz.open(f, 'r')
         self._index = dates.attrs['line_map']
         self._dates = [int(d) for d in dates]
+        self._date_map = dict()
+        for k, v in self._index.items():
+            s, e = v
+            for date in self._dates[s:e]:
+                if not self._date_map.get(date):
+                    self._date_map[date] = list()
+                self._date_map[date].append(k)
 
     @lru_cache(None)
     def _get_set(self, s, e):

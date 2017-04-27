@@ -438,8 +438,9 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('type').is_in(names.VALID_INSTRUMENT_TYPES, ignore_none=True))
-def all_instruments(type=None):
+@apply_rules(verify_that('type').are_valid_fields(names.VALID_INSTRUMENT_TYPES, ignore_none=True))
+@apply_rules(verify_that('date').is_valid_date(ignore_none=True))
+def all_instruments(type=None, date=None):
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
@@ -482,7 +483,12 @@ def all_instruments(type=None):
         ...
 
     """
-    return Environment.get_instance().data_proxy.all_instruments(type)
+    current_date = Environment.get_instance().trading_dt.date()
+    if date is None:
+        date = current_date
+    else:
+        date = min(to_date(date), current_date)
+    return Environment.get_instance().data_proxy.all_instruments(type, date)
 
 
 @export_as_api

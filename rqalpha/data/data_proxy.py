@@ -17,6 +17,7 @@
 import six
 import numpy as np
 import pandas as pd
+import datetime
 
 from . import risk_free_helper
 from .instrument_mixin import InstrumentMixin
@@ -192,3 +193,56 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_st_stock(order_book_id, trading_dates)
+
+    def all_instruments(self, itype, date):
+        from ..api import names
+        if itype is None:
+            itypes = names.VALID_INSTRUMENT_TYPES
+            itypes.remove('Stock')
+            itypes.remove('Index')
+            itypes.remove('Fund')
+        elif isinstance(itype, six.string_types):
+            if itype == 'Stock':
+                itypes = ['CS']
+            elif itype == 'Fund':
+                itypes = ['ETF', 'LOF', 'FenjiMu', 'FenjiA', 'FenjiB', 'SF']
+            elif itype == 'Index':
+                itypes = ['INDX']
+            else:
+                itypes = [itype]
+        else:
+            itypes = set()
+            for t in itype:
+                if t == 'Stock':
+                    itypes.add('CS')
+                elif t == 'Fund':
+                    itypes.union({'ETF', 'LOF', 'FenjiMu', 'FenjiA', 'FenjiB', 'SF'})
+                elif t == 'Index':
+                    itypes.add('INDX')
+                else:
+                    itypes.add(t)
+            itypes = list(itypes)
+        if len(itypes) == 1:
+            df = pd.DataFrame([v.__dict__ for v in self._instruments.values() if v.type == itypes[0]])
+        else:
+            df = pd.DataFrame(
+                [[v.order_book_id, v.symbol, v.abbrev_symbol, v.type, v.listed_date, v.de_listed_date]
+                 for v in self._instruments.values() if v.type in itypes], columns=[
+                    'order_book_id', 'symbol', 'abbrev_symbol', 'type', 'listed_date', 'de_listed_date'
+                ])
+        dt = datetime.datetime.combine(date, datetime.time.min)
+        df = df[(df.listed_date <= dt) & (df.de_listed_date >= dt)]
+        if 'CS' not in itypes:
+            return df
+        rtn = self._data_source._suspended_instruemnts(date)
+        if rtn:
+            l = list()
+            ids = set(rtn)
+            order_book_ids = list(df.order_book_id)
+            for i in range(len(order_book_ids)):
+                if order_book_ids[i] in ids:
+                    l.append(i)
+            if l:
+                df.drop(df.index[l], inplace=True)
+        df.reset_index(inplace=True)
+        return df
