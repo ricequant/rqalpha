@@ -165,7 +165,7 @@ class Matcher(object):
             order.fill(trade)
             self._turnover[order.order_book_id] += fill
 
-            self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
+            self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
 
             if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
                 reason = _(
