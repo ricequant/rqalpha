@@ -135,7 +135,7 @@ class EVENT(Enum):
     ORDER_UNSOLICITED_UPDATE = 'order_unsolicited_update'
 
     # 成交
-    # trade(accout, trade)
+    # trade(accout, trade, order)
     TRADE = 'trade'
 
     ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'

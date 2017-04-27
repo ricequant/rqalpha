@@ -118,4 +118,4 @@ class SignalBroker(AbstractBroker):
         trade._tax = self._tax_decider.get_tax(account.type, trade)
         order.fill(trade)
 
-        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
+        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
