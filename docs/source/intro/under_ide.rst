@@ -18,7 +18,7 @@
 
 安装好以后我们十分建议您将主题颜色更改为【Darcula】，没有什么，就是看着爽。
 
-.. image:: ../_static/pycharm-theme.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/pycharm-theme.png
 
 
 在PyCharm下搭建开发环境
@@ -48,7 +48,7 @@ PyCharm Community Edition → Preferences → Project: rqalpha-strategy → Proj
 
 在test.py策略里面import所有的rqalpha支持的API: :code:`from rqalpha.api import *`，那么可以享受到代码的自动补全了:
 
-策略必须添加 :code:`init,before_trading,handle_bar` 函数来补全整个策略：
+策略必须添加 :code:`init,before_trading,ha`ndle_bar` 函数来补全整个策略：
 
 .. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/import.jpeg
 
