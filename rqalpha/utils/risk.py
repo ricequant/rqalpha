@@ -101,7 +101,7 @@ class Risk(object):
             self._beta = np.nan
             return np.nan
 
-        self._alpha = np.mean(self._portfolio - self._daily_risk_free_rate + self.beta * (
+        self._alpha = np.mean(self._portfolio - self._daily_risk_free_rate - self.beta * (
                     self._benchmark - self._daily_risk_free_rate
                 )) * self._annual_factor
         return self._alpha
@@ -132,8 +132,8 @@ class Risk(object):
 
     def _calc_volatility(self):
         if len(self._portfolio) < 2:
-            self._volatility = 0
-            self._annual_volatility = 0
+            self._volatility = 0.
+            self._annual_volatility = 0.
         else:
             # std = self._portfolio.std(ddof=1)
             self._volatility = self._portfolio.std(ddof=1)
@@ -157,8 +157,8 @@ class Risk(object):
 
     def _calc_benchmark_volatility(self):
         if len(self._benchmark) < 2:
-            self._benchmark_volatility = 0
-            self._benchmark_annual_volatility = 0
+            self._benchmark_volatility = 0.
+            self._benchmark_annual_volatility = 0.
         else:
             # std = self._benchmark.std(ddof=1)
             self._benchmark_volatility = self._benchmark.std(ddof=1)
@@ -196,8 +196,8 @@ class Risk(object):
 
     def _calc_tracking_error(self):
         if len(self._portfolio) < 2:
-            self._tracking_error = 0
-            self._annual_tracking_error = 0
+            self._tracking_error = 0.
+            self._annual_tracking_error = 0.
             return 0
 
         active_return = self._portfolio - self._benchmark
@@ -258,11 +258,11 @@ class Risk(object):
 
     def _calc_downside_risk(self):
         if len(self._portfolio) < 2:
-            self._annual_downside_risk = 0
-            self._downside_risk = 0
+            self._annual_downside_risk = 0.
+            self._downside_risk = 0.
             return 0
         diff = self._portfolio - self._benchmark
-        diff[diff > 0] = 0
+        diff[diff > 0] = 0.
         sum_mean_squares = np.sum(np.square(diff))
         # self._annual_downside_risk = (sum_mean_squares ** 0.5) * \
         #                              ((self._annual_factor / (len(self._portfolio) - 1)) ** 0.5)

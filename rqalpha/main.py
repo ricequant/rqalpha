@@ -150,7 +150,7 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
 
     while True:
-        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v2/rqbundle_%04d%02d%02d.tar.bz2' % (
+        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2' % (
             day.year, day.month, day.day)
         six.print_(_(u"try {} ...").format(url))
         r = requests.get(url, stream=True)

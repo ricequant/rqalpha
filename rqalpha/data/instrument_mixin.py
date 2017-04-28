@@ -42,7 +42,7 @@ class InstrumentMixin(object):
         return [v.order_book_id for v in self._instruments.values()
                 if v.type == 'CS' and any(c in v.concept_names.split('|') for c in concepts)]
 
-    def all_instruments(self, itype='CS'):
+    def _all_instruments(self, itype='CS'):
         if itype is None:
             return pd.DataFrame([[v.order_book_id, v.symbol, v.abbrev_symbol, v.type]
                                  for v in self._instruments.values()],

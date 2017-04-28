@@ -35,6 +35,7 @@ class Matcher(object):
         self._trading_dt = None
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
+        self._liquidity_limit = mod_config.liquidity_limit
         self._volume_limit = mod_config.volume_limit
         self._env = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
@@ -44,12 +45,17 @@ class Matcher(object):
             MATCHING_TYPE.CURRENT_BAR_CLOSE: lambda order_book_id, side: self._env.bar_dict[order_book_id].close,
             MATCHING_TYPE.NEXT_BAR_OPEN: lambda order_book_id, side: self._env.bar_dict[order_book_id].open,
             MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(order_book_id),
-            MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: (
-                self._env.price_board.get_b1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_a1(order_book_id)),
+            MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: self._best_own_price_decider(order_book_id, side),
             MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
                 self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(order_book_id))
         }
         return decider_dict[matching_type]
+
+    def _best_own_price_decider(self, order_book_id, side):
+        price = self._env.price_board.get_b1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_a1(order_book_id)
+        if price == 0:
+            price = self._env.price_board.get_last_price(order_book_id)
+        return price
 
     def update(self, calendar_dt, trading_dt):
         self._turnover.clear()
@@ -81,26 +87,44 @@ class Matcher(object):
                     continue
                 if order.side == SIDE.SELL and order.price > deal_price:
                     continue
+                # 是否限制涨跌停不成交
+                if self._price_limit:
+                    if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                        continue
+                    if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                        continue
+                if self._liquidity_limit:
+                    if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
+                        continue
+                    if order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
+                        continue
             else:
-                if self._price_limit and order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-                    reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-                elif self._price_limit and order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                    reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    continue
-
-            # 是否限制涨跌停不成交
-            if self._price_limit:
-                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-                    continue
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                    continue
+                if self._price_limit:
+                    if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                        reason = _(
+                            "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
+                    if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                        reason = _(
+                            "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
+                if self._liquidity_limit:
+                    if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
+                        reason = _(
+                            "Order Cancelled: [{order_book_id}] has no liquidity."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
+                    if order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
+                        reason = _(
+                            "Order Cancelled: [{order_book_id}] has no liquidity."
+                        ).format(order_book_id=order.order_book_id)
+                        order.mark_rejected(reason)
+                        continue
 
             if self._volume_limit:
                 bar = self._env.bar_dict[order_book_id]
@@ -141,7 +165,7 @@ class Matcher(object):
             order.fill(trade)
             self._turnover[order.order_book_id] += fill
 
-            self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
+            self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
 
             if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
                 reason = _(

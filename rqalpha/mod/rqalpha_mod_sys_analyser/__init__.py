@@ -18,10 +18,15 @@ import click
 from rqalpha.__main__ import cli
 
 __config__ = {
+    # 当不输出csv/pickle/plot 等内容时，可以通过 record 来决定是否执行该 Mod 的计算逻辑
     "record": True,
+    # 如果指定路径，则输出计算后的 pickle 文件
     "output_file": None,
+    # 如果指定路径，则输出 report csv 文件
     "report_save_path": None,
+    # 画图
     'plot': False,
+    # 如果指定路径，则输出 plot 对应的图片文件
     'plot_save_file': None,
 }
 
@@ -70,14 +75,14 @@ cli.commands['run'].params.append(
 @click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
 @click.option('--show/--hide', 'show', default=True)
 @click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
-def plot(result_dict_file, show, plot_save_file):
+def plot(result_pickle_file_path, show, plot_save_file):
     """
     [sys_analyser] draw result DataFrame
     """
     import pandas as pd
     from .plot import plot_result
 
-    result_dict = pd.read_pickle(result_dict_file)
+    result_dict = pd.read_pickle(result_pickle_file_path)
     plot_result(result_dict, show, plot_save_file)
 
 

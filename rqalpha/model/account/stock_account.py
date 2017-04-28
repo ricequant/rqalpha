@@ -50,6 +50,7 @@ class StockAccount(BaseAccount):
             'total_cash': self._total_cash,
             'backward_trade_set': list(self._backward_trade_set),
             'dividend_receivable': self._dividend_receivable,
+            'transaction_cost': self._transaction_cost,
         }
 
     def set_state(self, state):
@@ -57,6 +58,7 @@ class StockAccount(BaseAccount):
         self._total_cash = state['total_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
         self._dividend_receivable = state['dividend_receivable']
+        self._transaction_cost = state['transaction_cost']
         self._positions.clear()
         for order_book_id, v in six.iteritems(state['positions']):
             position = self._positions.get_or_create(order_book_id)
@@ -92,6 +94,7 @@ class StockAccount(BaseAccount):
 
         position = self._positions.get_or_create(trade.order_book_id)
         position.apply_trade(trade)
+        self._transaction_cost += trade.transaction_cost
         self._total_cash -= trade.transaction_cost
         if trade.side == SIDE.BUY:
             self._total_cash -= trade.last_quantity * trade.last_price
@@ -125,8 +128,7 @@ class StockAccount(BaseAccount):
     def _before_trading(self, event):
         trading_date = Environment.get_instance().trading_dt.date()
         self._handle_dividend_payable(trading_date)
-        if Environment.get_instance().config.base.handle_split:
-            self._handle_split(trading_date)
+        self._handle_split(trading_date)
 
     def _on_settlement(self, event):
         for position in list(self._positions.values()):
@@ -143,6 +145,7 @@ class StockAccount(BaseAccount):
             else:
                 position.apply_settlement()
 
+        self._transaction_cost = 0
         self._backward_trade_set.clear()
         self._handle_dividend_book_closure(event.trading_dt.date())
 
@@ -160,8 +163,9 @@ class StockAccount(BaseAccount):
             del self._dividend_receivable[order_book_id]
 
     def _handle_dividend_book_closure(self, trading_date):
+        data_proxy = Environment.get_instance().data_proxy
         for order_book_id, position in six.iteritems(self._positions):
-            dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
+            dividend = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
                 continue
 
@@ -173,11 +177,11 @@ class StockAccount(BaseAccount):
             }
 
     def _handle_split(self, trading_date):
+        data_proxy = Environment.get_instance().data_proxy
         for order_book_id, position in six.iteritems(self._positions):
-            split = Environment.get_instance().data_proxy.get_split_by_ex_date(order_book_id, trading_date)
-            if split is None:
+            ratio = data_proxy.get_split_by_ex_date(order_book_id, trading_date)
+            if ratio is None:
                 continue
-            ratio = split['split_coefficient_to'] / split['split_coefficient_from']
             position.split_(ratio)
 
     @property

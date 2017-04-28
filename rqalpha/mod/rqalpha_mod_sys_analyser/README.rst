@@ -29,11 +29,16 @@ RQAlpha 策略分析 Mod。
 ..  code-block:: python
 
     {
+        # 当不输出csv/pickle/plot 等内容时，可以通过 record 来决定是否执行该 Mod 的计算逻辑
         "record": True,
+        # 如果指定路径，则输出计算后的 pickle 文件
         "output_file": None,
+        # 如果指定路径，则输出 report csv 文件
         "report_save_path": None,
+        # 画图
         'plot': False,
-        'plot_save_file': None,
+        # 如果指定路径，则输出 plot 对应的图片文件
+        'plot_save_file': None
     }
 
 您可以通过如下方式来修改模块的配置信息，比如下面的示例中介绍了如何开启显示回测收益曲线图

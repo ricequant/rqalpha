@@ -81,18 +81,24 @@ class SignalBroker(AbstractBroker):
         else:
             deal_price = last_price
 
-        if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-            user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
-                order_book_id=order_book_id,
-                quantity=order.quantity,
-                bar_status=BAR_STATUS.LIMIT_UP
-            ))
-        if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-            user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
-                order_book_id=order_book_id,
-                quantity=order.quantity,
-                bar_status=BAR_STATUS.LIMIT_DOWN
-            ))
+        if self._price_limit:
+            """
+            在 Signal 模式下，不再阻止涨跌停是否买进，price_limit 参数表示是否给出警告提示。
+            """
+            if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+                    order_book_id=order_book_id,
+                    quantity=order.quantity,
+                    bar_status=BAR_STATUS.LIMIT_UP
+                ))
+                return
+            if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+                    order_book_id=order_book_id,
+                    quantity=order.quantity,
+                    bar_status=BAR_STATUS.LIMIT_DOWN
+                ))
+                return
 
         ct_amount = account.positions.get_or_create(order_book_id).cal_close_today_amount(order.quantity, order.side)
         trade_price = self._slippage_decider.get_trade_price(order.side, deal_price)
@@ -112,4 +118,4 @@ class SignalBroker(AbstractBroker):
         trade._tax = self._tax_decider.get_tax(account.type, trade)
         order.fill(trade)
 
-        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade))
+        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))

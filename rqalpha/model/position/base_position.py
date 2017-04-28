@@ -16,6 +16,8 @@
 
 from ...utils.repr import property_repr
 from ...environment import Environment
+from ...utils.i18n import gettext as _
+from ...utils.logger import user_system_log
 
 
 class BasePosition(object):
@@ -70,3 +72,16 @@ class BasePosition(object):
 
     def apply_trade(self, trade):
         raise NotImplementedError
+
+    @property
+    def total_orders(self):
+        """abandon"""
+        user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('position.total_orders'))
+        return 0
+
+    @property
+    def total_trades(self):
+        """abandon"""
+        user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('position.total_trades'))
+        return 0
+
