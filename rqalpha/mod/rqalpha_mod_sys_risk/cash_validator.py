@@ -32,12 +32,14 @@ class CashValidator(AbstractFrontendValidator):
         if cost_money <= account.cash:
             return True
 
-        order.mark_rejected(_(
-            "Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-            order_book_id=order.order_book_id,
-            cost_money=cost_money,
-            cash=account.cash,
-        ))
+        order.mark_rejected(
+            _("Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, "
+              "cash {cash:.2f}").format(
+                order_book_id=order.order_book_id,
+                cost_money=cost_money,
+                cash=account.cash,
+            )
+        )
         return False
 
     def _future_validator(self, account, order):
@@ -45,18 +47,21 @@ class CashValidator(AbstractFrontendValidator):
             return True
 
         instrument = self._env.get_instrument(order.order_book_id)
-        margin_rate = self._env.get_future_margin_rate(order.order_book_id)
+        margin_info = self._env.data_proxy.get_margin_info(order.order_book_id)
+        margin_rate = margin_info['long_margin_ratio' if order.side == 'BUY' else 'short_margin_ratio']
         margin = order.frozen_price * order.quantity * instrument.contract_multiplier * margin_rate
         cost_money = margin * self._env.config.base.margin_multiplier
         if cost_money <= account.cash:
             return True
 
-        order.mark_rejected(_(
-            "Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-            order_book_id=order.order_book_id,
-            cost_money=cost_money,
-            cash=account.cash,
-        ))
+        order.mark_rejected(
+            _("Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
+              " cash {cash:.2f}").format(
+                order_book_id=order.order_book_id,
+                cost_money=cost_money,
+                cash=account.cash,
+            )
+        )
         return False
 
     def can_submit_order(self, account, order):
