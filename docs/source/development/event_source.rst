@@ -64,7 +64,7 @@ RQAlpha 大部分的组件是以 :code:`add_listener` 的方式进行事件的�
 
 ProgressMod 需要实现的需求非常的简单：在命令行输出目前回测的进度条。
 
-.. image:: ../_static/progress_bar.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/progress_bar.png
 
 
 首先定义一个 ProgressMod 类，继承与接口类 :class:`~AbstractMod`

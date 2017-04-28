@@ -36,7 +36,7 @@
 
     rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG --plot
 
-.. image:: ../_static/buy_and_hold.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/buy_and_hold.png
 
 如果想把回测的数据保存下来，可以通过 :code:`-o` 参数将结果保存成 :code:`pkl` 文件。
 
@@ -258,4 +258,4 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
     $ rqalpha run -s 2014-01-01 -e 2016-01-01 -f rqalpha/examples/golden_cross.py -sc 100000 -p -bm 000001.XSHE
 
 
-.. image:: ../_static/golden_cross.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/golden_cross.png

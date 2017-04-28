@@ -178,6 +178,7 @@ Feature Status
     intro/install
     intro/detail_install
     intro/tutorial
+    intro/under_ide
     intro/optimizing_parameters
     intro/examples
     intro/virtual_machine
@@ -189,6 +190,7 @@ Feature Status
     api/config
     api/base_api
     api/extend_api
+
 
 .. toctree::
     :caption: Development

@@ -2,7 +2,7 @@
 RQAlpha
 =======
 
-..  image:: https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/source/_static/logo.jpg
+..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/logo.jpg
 
 ..  image:: https://img.shields.io/travis/ricequant/rqalpha/master.svg
     :target: https://travis-ci.org/ricequant/rqalpha/branches
@@ -96,7 +96,7 @@ Mod名                      说明
 机构版
 ============================
 
-..  image:: https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/source/_static/rqalpha_plus.png
+..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/rqalpha_plus.png
 
 目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以联系我们的机构端产品销售获得机构端产品功能支持。「销售电话」：0755-33967716 「QQ」：4848371
 

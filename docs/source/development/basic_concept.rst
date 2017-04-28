@@ -17,7 +17,7 @@
 *   数据源模块(AbstractDataSource): 日线数据、分钟线数据、财务数据、债务数据等等都可以通过该模块进行扩展和使用。
 *   券商代理模块(AbstractBroker): 用户的所有下单、账户、撮合逻辑其实都来自于券商+交易所，即使是回测，也实际是一个回测模拟交易所。因此可以通过扩展该模块来自定义Broker，也可以通过该模块扩展实盘交易等。
 
-.. image:: ../_static/RQAlpha_structure.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/RQAlpha_structure.png
 
 详细的 RQAlpha 结构图请查看 `Processon RQAlpha Structure`_
 
