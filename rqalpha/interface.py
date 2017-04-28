@@ -264,13 +264,20 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_future_info(self, instrument, hedge_type):
+    def get_margin_info(self, instrument):
         """
-        获取期货合约手续费、保证金等数据
-
-        :param instrument: 合约对象
-        :param HEDGE_TYPE hedge_type: 枚举类型，账户对冲类型
+        获取合约的保证金数据
+        
+        :param instrument: 合约对象 
         :return: dict
+        """
+        raise NotImplementedError
+
+    def get_commission_info(self, instrument):
+        """
+        获取合约的手续费信息
+        :param instrument: 
+        :return: 
         """
         raise NotImplementedError
 
