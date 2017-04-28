@@ -499,7 +499,7 @@ def all_instruments(type=None, date=None):
             if t == 'Stock':
                 types.add('CS')
             elif t == 'Fund':
-                types = types.union(['ETF', 'LOF', 'SF', 'FenjiA', 'FenjiB', 'FenjiMu'])
+                types.update(['ETF', 'LOF', 'SF', 'FenjiA', 'FenjiB', 'FenjiMu'])
             else:
                 types.add(t)
     else:
