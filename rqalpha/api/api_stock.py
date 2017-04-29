@@ -137,6 +137,14 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     return r_order
 
 
+def _sell_all_stock(order_book_id, amount, style):
+    env = Environment.get_instance()
+    order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, SIDE.SELL, style, None)
+    if env.can_submit_order(order):
+        env.broker.submit_order(order)
+    return order
+
+
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.SCHEDULED)
@@ -303,6 +311,9 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()):
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
     position = account.positions[order_book_id]
 
+    if cash_amount == 0:
+        return _sell_all_stock(order_book_id, position.quantity, style)
+
     return order_value(order_book_id, cash_amount - position.market_value, style)
 
 
@@ -350,6 +361,9 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
 
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
     position = account.positions[order_book_id]
+
+    if percent == 0:
+        return _sell_all_stock(order_book_id, position.quantity, style)
 
     return order_value(order_book_id, account.total_value * percent - position.market_value, style)
 
