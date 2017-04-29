@@ -63,6 +63,9 @@ class SimulationBroker(AbstractBroker, Persistable):
         }).encode('utf-8')
 
     def set_state(self, state):
+        self._open_orders.clear()
+        self._delayed_orders.clear()
+
         value = jsonpickle.loads(state.decode('utf-8'))
         for v in value['open_orders']:
             o = Order()
