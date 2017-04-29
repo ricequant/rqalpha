@@ -168,21 +168,25 @@ def test_all_instruments():
         pass
 
     def handle_bar(context, bar_dict):
-        df = all_instruments('FenjiA')
-        df_to_assert = df.loc[df['order_book_id'] == '150247.XSHE']
-        assert df_to_assert.iloc[0, 0] == 'CMAJ'
-        assert df_to_assert.iloc[0, 7] == '工银中证传媒A'
-        assert all_instruments().shape >= (4500, 6)
-        assert all_instruments('CS').shape >= (2700, 16)
-        assert all_instruments('ETF').shape >= (140, 9)
-        assert all_instruments('LOF').shape >= (160, 9)
-        assert all_instruments('FenjiMu').shape >= (10, 9)
-        assert all_instruments('FenjiA').shape >= (120, 9)
-        assert all_instruments('FenjiB').shape >= (140, 9)
-        assert all_instruments('INDX').shape >= (500, 8)
-        assert all_instruments('Future').shape >= (550, 16)
-        assert all_instruments('Fund').shape >= (600, 6)
-        assert all_instruments(['Stock', 'Index']).shape >= (2700, 6)
+        date = context.now.replace(hour=0, minute=0, second=0)
+        df = all_instruments('CS')
+        assert (df['listed_date'] <= date).all()
+        assert (df['de_listed_date'] >= date).all()
+        assert all(not is_suspended(o) for o in df['order_book_id'])
+        assert (df['type'] == 'CS').all()
+
+        df1 = all_instruments('Stock')
+        assert sorted(df['order_book_id']) == sorted(df1['order_book_id'])
+
+        df2 = all_instruments('Future')
+
+        assert (df2['type'] == 'Future').all()
+        assert (df2['listed_date'] <= date).all()
+        assert (df2['de_listed_date'] >= date).all()
+
+        df3 = all_instruments(['Future', 'Stock'])
+        assert sorted(list(df['order_book_id']) + list(df2['order_book_id'])) == sorted(df3['order_book_id'])
+
 test_all_instruments_code_new = get_code_block(test_all_instruments)
 
 
