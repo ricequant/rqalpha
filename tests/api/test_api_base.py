@@ -172,15 +172,17 @@ def test_all_instruments():
         df_to_assert = df.loc[df['order_book_id'] == '150247.XSHE']
         assert df_to_assert.iloc[0, 0] == 'CMAJ'
         assert df_to_assert.iloc[0, 7] == '工银中证传媒A'
-        assert all_instruments().shape >= (8000, 4)
-        assert all_instruments('CS').shape >= (3000, 16)
-        assert all_instruments('ETF').shape >= (120, 9)
-        assert all_instruments('LOF').shape >= (130, 9)
+        assert all_instruments().shape >= (4500, 6)
+        assert all_instruments('CS').shape >= (2700, 16)
+        assert all_instruments('ETF').shape >= (140, 9)
+        assert all_instruments('LOF').shape >= (160, 9)
         assert all_instruments('FenjiMu').shape >= (10, 9)
         assert all_instruments('FenjiA').shape >= (120, 9)
         assert all_instruments('FenjiB').shape >= (140, 9)
         assert all_instruments('INDX').shape >= (500, 8)
-        assert all_instruments('Future').shape >= (3500, 16)
+        assert all_instruments('Future').shape >= (550, 16)
+        assert all_instruments('Fund').shape >= (600, 6)
+        assert all_instruments(['Stock', 'Index']).shape >= (2700, 6)
 test_all_instruments_code_new = get_code_block(test_all_instruments)
 
 
