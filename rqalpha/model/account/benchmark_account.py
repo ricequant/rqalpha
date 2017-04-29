@@ -29,6 +29,7 @@ class BenchmarkAccount(StockAccount):
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
         event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
         event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
 
@@ -56,9 +57,3 @@ class BenchmarkAccount(StockAccount):
             position._quantity = quantity
             position._avg_price = price
             self._total_cash -= quantity * price
-
-    def _on_settlement(self, event):
-        """
-        回测中的Benchmark 不处理退市相关的内容。如果退市则不再更新last_price
-        """
-        self._handle_dividend_book_closure(event.trading_dt.date())
