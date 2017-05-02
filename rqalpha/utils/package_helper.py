@@ -26,4 +26,4 @@ def import_mod(mod_name):
         system_log.error("Mod Import Error: {}", mod_name)
         system_log.error(e)
         system_log.error("*" * 10)
-        return None
+        raise
