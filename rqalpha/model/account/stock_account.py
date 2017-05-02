@@ -166,12 +166,11 @@ class StockAccount(BaseAccount):
             del self._dividend_receivable[order_book_id]
 
     def _handle_dividend_book_closure(self, trading_date):
-        data_proxy = Environment.get_instance().data_proxy
         for order_book_id, position in six.iteritems(self._positions):
             if position.quantity == 0:
                 continue
 
-            dividend = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
+            dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
                 continue
 
