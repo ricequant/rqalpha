@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import six
+import datetime
 from collections import defaultdict
 
 from .base_account import BaseAccount
@@ -163,6 +164,12 @@ class StockAccount(BaseAccount):
         for order_book_id in to_be_removed:
             del self._dividend_receivable[order_book_id]
 
+    @staticmethod
+    def _int_to_date(d):
+        r, d = divmod(d, 100)
+        y, m = divmod(r, 100)
+        return datetime.date(year=y, month=m, day=d)
+
     def _handle_dividend_book_closure(self, trading_date):
         for order_book_id, position in six.iteritems(self._positions):
             if position.quantity == 0:
@@ -176,7 +183,7 @@ class StockAccount(BaseAccount):
             self._dividend_receivable[order_book_id] = {
                 'quantity': position.quantity,
                 'dividend_per_share': dividend_per_share,
-                'payable_date': dividend['payable_date'].date()
+                'payable_date': self._int_to_date(dividend['payable_date']),
             }
 
     def _handle_split(self, trading_date):

@@ -299,10 +299,11 @@ def test_get_dividend():
 
     def handle_bar(context, bar_dict):
         df = get_dividend('000001.XSHE', start_date='20130104')
-        df_to_assert = df.loc[df['book_closure_date'] == '	2013-06-19']
-        assert df.shape >= (4, 5)
-        assert df_to_assert.iloc[0, 1] == 0.6149
-        assert str(df_to_assert.iloc[0, 3]) == '2013-06-20 00:00:00'
+        df_to_assert = df[df['book_closure_date'] == 20130619]
+        assert len(df) >= 4
+        assert df_to_assert[0]['dividend_cash_before_tax'] == 0.6149
+        assert df_to_assert[0]['payable_date'] == 20130620
+
 test_get_dividend_code_new = get_code_block(test_get_dividend)
 
 # =================== 以下把代码写为纯字符串 ===================
