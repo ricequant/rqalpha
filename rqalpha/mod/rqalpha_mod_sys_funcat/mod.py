@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import datetime
+import six
 
 from rqalpha.interface import AbstractMod
 from rqalpha.environment import Environment
@@ -26,9 +27,9 @@ class FuncatAPIMod(AbstractMod):
         try:
             import funcat
         except ImportError:
-            print("-" * 50)
-            print(">>> Missing funcat. Please run `pip install funcat`")
-            print("-" * 50)
+            six.print_(u"-" * 50)
+            six.print_(u">>> Missing funcat. Please run `pip install funcat`")
+            six.print_(u"-" * 50)
             raise
 
         from funcat.data.backend import DataBackend

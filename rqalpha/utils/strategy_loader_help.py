@@ -16,8 +16,7 @@
 
 import sys
 import traceback
-
-from six import exec_
+import six
 
 from .exception import patch_user_exc, CustomError, CustomException
 
@@ -25,7 +24,7 @@ from .exception import patch_user_exc, CustomError, CustomException
 def compile_strategy(source_code, strategy, scope):
     try:
         code = compile(source_code, strategy, 'exec')
-        exec_(code, scope)
+        six.exec_(code, scope)
         return scope
     except Exception as e:
         exc_type, exc_val, exc_tb = sys.exc_info()
@@ -34,7 +33,7 @@ def compile_strategy(source_code, strategy, scope):
             msg = str(exc_val)
         except Exception as e1:
             msg = ""
-            print(e1)
+            six.print_(e1)
 
         error = CustomError()
         error.set_msg(msg)

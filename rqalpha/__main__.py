@@ -130,7 +130,7 @@ def examples(directory):
         shutil.copytree(source_dir, os.path.join(directory, "examples"))
     except OSError as e:
         if e.errno == errno.EEXIST:
-            print("Folder examples is exists.")
+            six.print_("Folder examples is exists.")
 
 
 @cli.command()
@@ -140,7 +140,7 @@ def version(**kwargs):
     Output Version Info
     """
     from rqalpha import version_info
-    print("Current Version: ", version_info)
+    six.print_("Current Version: ", version_info)
 
 
 @cli.command()
@@ -152,7 +152,7 @@ def generate_config(directory):
     default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "default_config.yml")
     target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
     shutil.copy(default_config, target_config_path)
-    print("Config file has been generated in", target_config_path)
+    six.print_("Config file has been generated in", target_config_path)
 
 
 # For Mod Cli
@@ -197,8 +197,8 @@ def mod(cmd, params):
             Fore.CYAN + "status" + Fore.RESET
         ]
 
-        print(tabulate(table, headers=headers, tablefmt="psql"))
-        print(Fore.LIGHTYELLOW_EX + "You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
+        six.print_(tabulate(table, headers=headers, tablefmt="psql"))
+        six.print_(Fore.LIGHTYELLOW_EX + "You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
 
     def install(params):
         """
@@ -216,7 +216,7 @@ def mod(cmd, params):
         for mod_name in mod_list:
             mod_name_index = params.index(mod_name)
             if mod_name.startswith("rqalpha_mod_sys_"):
-                print('System Mod can not be installed or uninstalled')
+                six.print_('System Mod can not be installed or uninstalled')
                 return
             if "rqalpha_mod_" in mod_name:
                 lib_name = mod_name
@@ -270,7 +270,7 @@ def mod(cmd, params):
         for mod_name in mod_list:
             mod_name_index = params.index(mod_name)
             if mod_name.startswith("rqalpha_mod_sys_"):
-                print('System Mod can not be installed or uninstalled')
+                six.print_('System Mod can not be installed or uninstalled')
                 return
             if "rqalpha_mod_" in mod_name:
                 lib_name = mod_name
