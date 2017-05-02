@@ -23,7 +23,7 @@ def import_mod(mod_name):
         return import_module(mod_name)
     except Exception as e:
         system_log.error("*" * 10)
-        system_log.error("Mod Import Error: ")
+        system_log.error("Mod Import Error: {}", mod_name)
         system_log.error(e)
         system_log.error("*" * 10)
         return None
