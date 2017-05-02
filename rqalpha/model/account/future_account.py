@@ -26,13 +26,20 @@ from ...utils.logger import user_system_log
 
 def margin_of(order_book_id, quantity, price):
     env = Environment.get_instance()
-    contract_multiplier = env.get_instrument(order_book_id).contract_multiplier
-    margin_rate = env.get_future_margin_rate(order_book_id)
+    margin_info = env.data_proxy.get_margin_info(order_book_id)
     margin_multiplier = env.config.base.margin_multiplier
-    return quantity * price * margin_multiplier * margin_rate * contract_multiplier
+    margin_rate = margin_info['long_margin_ratio'] * margin_multiplier
+    contract_multiplier = env.get_instrument(order_book_id).contract_multiplier
+    return quantity * contract_multiplier * price * margin_rate
 
 
 class FutureAccount(BaseAccount):
+
+    __abandon_properties__ = [
+        "daily_holding_pnl",
+        "daily_realized_pnl"
+    ]
+
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)

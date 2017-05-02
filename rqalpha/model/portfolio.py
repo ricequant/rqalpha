@@ -43,13 +43,21 @@ class Portfolio(object):
         event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
+    @staticmethod
+    def _enum_to_str(v):
+        return v.name
+
+    @staticmethod
+    def _str_to_enum(enum_class, s):
+        return enum_class.__members__[s]
+
     def get_state(self):
         return jsonpickle.encode({
             'start_date': self._start_date,
             'static_unit_net_value': self._static_unit_net_value,
             'units': self._units,
             'accounts': {
-                name: account.get_state() for name, account in six.iteritems(self._accounts)
+                self._enum_to_str(name): account.get_state() for name, account in six.iteritems(self._accounts)
             }
         }).encode('utf-8')
 
@@ -60,14 +68,7 @@ class Portfolio(object):
         self._static_unit_net_value = value['static_unit_net_value']
         self._units = value['units']
         for k, v in six.iteritems(value['accounts']):
-            if k == 'ACCOUNT_TYPE.STOCK':
-                self._accounts[ACCOUNT_TYPE.STOCK].set_state(v)
-            elif k == 'ACCOUNT_TYPE.FUTURE':
-                self._accounts[ACCOUNT_TYPE.FUTURE].set_state(v)
-            elif k == 'ACCOUNT_TYPE.BENCHMARK':
-                self._accounts[ACCOUNT_TYPE.BENCHMARK].set_state(v)
-            else:
-                raise NotImplementedError
+            self._accounts[self._str_to_enum(ACCOUNT_TYPE, k)].set_state(v)
 
     def _pre_before_trading(self, event):
         self._static_unit_net_value = self.unit_net_value

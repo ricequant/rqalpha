@@ -22,6 +22,15 @@ from ...utils.logger import user_system_log
 
 
 class StockPosition(BasePosition):
+
+    __abandon_properties__ = [
+        "bought_quantity",
+        "sold_quantity",
+        "bought_value",
+        "sold_value",
+        "average_cost"
+    ]
+
     def __init__(self, order_book_id):
         super(StockPosition, self).__init__(order_book_id)
         self._quantity = 0

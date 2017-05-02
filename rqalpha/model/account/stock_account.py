@@ -26,6 +26,9 @@ from ...const import SIDE, ACCOUNT_TYPE
 
 
 class StockAccount(BaseAccount):
+
+    __abandon_properties__ = []
+
     def __init__(self, total_cash, positions, backward_trade_set=set(), dividend_receivable=None, register_event=True):
         super(StockAccount, self).__init__(total_cash, positions, backward_trade_set, register_event)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
@@ -165,6 +168,9 @@ class StockAccount(BaseAccount):
 
     def _handle_dividend_book_closure(self, trading_date):
         for order_book_id, position in six.iteritems(self._positions):
+            if position.quantity == 0:
+                continue
+
             dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
                 continue

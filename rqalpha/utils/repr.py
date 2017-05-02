@@ -36,8 +36,12 @@ def dict_repr(inst):
 def properties(inst):
     result = {}
     for cls in inst.__class__.mro():
+        abandon_properties = getattr(cls, '__abandon_properties__', [])
         for varname in iter_properties_of_class(cls):
             if varname[0] == "_":
+                continue
+            if varname in abandon_properties:
+                # 如果 设置了 __abandon_properties__ 属性，则过滤其中的property，不输出相关内容
                 continue
             # FIXME 这里getattr在iter_properties_of_class中掉用过了，性能比较差，可以优化
             tmp = getattr(inst, varname)

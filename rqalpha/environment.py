@@ -126,19 +126,6 @@ class Environment(object):
     def get_instrument(self, order_book_id):
         return self.data_proxy.instruments(order_book_id)
 
-    def get_future_commission_info(self, order_book_id, hedge_type):
-        return self.data_proxy.get_future_info(order_book_id, hedge_type)
-
-    def get_future_margin_rate(self, order_book_id):
-        # FIXME
-        try:
-            return self.data_proxy.instruments(order_book_id).margin_rate
-        except NotImplementedError:
-            return self.data_proxy.get_future_info(order_book_id)['long_margin_ratio']
-
-    def get_future_info(self, order_book_id, hedge_type):
-        return self.data_proxy.get_future_info(order_book_id, hedge_type)
-
     def get_account(self, order_book_id):
         account_type = get_account_type(order_book_id)
         return self.portfolio.accounts[account_type]
