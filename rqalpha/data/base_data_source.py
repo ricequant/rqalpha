@@ -18,6 +18,7 @@ import os
 import six
 import numpy as np
 
+from ..const import MARGIN_TYPE, COMMISSION_TYPE
 from ..utils.py2 import lru_cache
 from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
 from ..interface import AbstractDataSource
@@ -174,8 +175,15 @@ class BaseDataSource(AbstractDataSource):
 
         raise NotImplementedError
 
-    def get_future_info(self, instrument, hedge_type):
-        return CN_FUTURE_INFO[instrument.underlying_symbol][hedge_type.value]
+    def get_margin_info(self, instrument):
+        return {
+            'margin_type': MARGIN_TYPE.BY_MONEY,
+            'long_margin_ratio': instrument.margin_rate,
+            'short_margin_ratio': instrument.margin_rate,
+        }
+
+    def get_commission_info(self, instrument):
+        return CN_FUTURE_INFO[instrument.underlying_symbol]['speculation']
 
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError

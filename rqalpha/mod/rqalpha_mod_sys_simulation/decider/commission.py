@@ -77,7 +77,7 @@ class FutureCommission(BaseCommission):
     def get_commission(self, trade):
         order_book_id = trade.order_book_id
         env = Environment.get_instance()
-        info = env.get_future_commission_info(order_book_id, self.hedge_type)
+        info = env.data_proxy.get_commission_info(order_book_id)
         commission = 0
         if info['commission_type'] == COMMISSION_TYPE.BY_MONEY:
             contract_multiplier = env.get_instrument(trade.order_book_id).contract_multiplier

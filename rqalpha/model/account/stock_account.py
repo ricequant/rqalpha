@@ -168,6 +168,9 @@ class StockAccount(BaseAccount):
 
     def _handle_dividend_book_closure(self, trading_date):
         for order_book_id, position in six.iteritems(self._positions):
+            if position.quantity == 0:
+                continue
+
             dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
                 continue
