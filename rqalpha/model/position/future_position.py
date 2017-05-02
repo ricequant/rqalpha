@@ -28,6 +28,9 @@ def margin_of(order_book_id, quantity, price):
 
 
 class FuturePosition(BasePosition):
+
+    __abandon_properties__ = []
+
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
 

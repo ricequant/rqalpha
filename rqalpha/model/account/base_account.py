@@ -15,11 +15,24 @@
 # limitations under the License.
 
 import six
+
+from ...utils.repr import property_repr
 from ...utils.i18n import gettext as _
 from ...utils.logger import user_system_log
 
 
 class BaseAccount(object):
+
+    __abandon_properties__ = [
+        "portfolio_value",
+        "starting_cash",
+        "daily_returns",
+        "total_returns",
+        "pnl"
+    ]
+
+    __repr__ = property_repr
+
     def __init__(self, total_cash, positions, backward_trade_set=set(), register_event=True):
         self._positions = positions
         self._frozen_cash = 0
