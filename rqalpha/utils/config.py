@@ -231,7 +231,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     if base_config.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
 
-    system_log.debug("\n" + pformat(config))
+    system_log.debug("\n" + pformat(config.convert_to_dict()))
 
     return config
 
