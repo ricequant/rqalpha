@@ -16,7 +16,7 @@
 
 import six
 import os
-import ruamel.yaml as yaml
+import yaml
 import simplejson as json
 import datetime
 import logbook
@@ -51,7 +51,7 @@ def load_config(config_path, loader=yaml.Loader):
     return config
 
 
-def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
+def dump_config(config_path, config, dumper=yaml.Dumper):
     with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
 

@@ -19,7 +19,7 @@ import os
 import shutil
 import six
 import click
-import ruamel.yaml as yaml
+import yaml
 from importlib import import_module
 
 from .utils.click_helper import Date
@@ -37,10 +37,13 @@ def entry_point():
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.package_helper import import_mod
     mod_config_path = get_mod_config_path()
-    mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
+    mod_config = load_mod_config(mod_config_path)
 
     for mod_name, config in six.iteritems(mod_config['mod']):
-        lib_name = "rqalpha_mod_{}".format(mod_name)
+        if 'lib' in config:
+            lib_name = config["lib"]
+        else:
+            lib_name = "rqalpha_mod_{}".format(mod_name)
         if not config['enabled']:
             continue
         if mod_name in SYSTEM_MOD_LIST:
@@ -49,19 +52,6 @@ def entry_point():
         else:
             # inject third part mod
             import_mod(lib_name)
-
-    # 原本是注入系统中所有的Mod对应的命令，现在修改为只注入用户启动的Mod对应的命令
-
-    # from . import mod
-    # from pkgutil import iter_modules
-    # from rqalpha.utils.package_helper import import_mod
-    # # inject system mod
-    # for package_name in mod.SYSTEM_MOD_LIST:
-    #     import_mod("rqalpha.mod.rqalpha_mod_" + package_name)
-    # # inject user mod
-    # for package in iter_modules():
-    #     if "rqalpha_mod_" in package[1]:
-    #         import_mod(package[1])
 
     cli(obj={})
 
@@ -183,7 +173,7 @@ def mod(cmd, params):
         from tabulate import tabulate
         init()
         mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
         table = []
 
@@ -230,7 +220,7 @@ def mod(cmd, params):
 
         # Export config
         mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
         if len(mod_list) == 0:
             """
@@ -284,7 +274,7 @@ def mod(cmd, params):
 
         # Remove Mod Config
         mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
         for mod_name in mod_list:
             if "rqalpha_mod_" in mod_name:
@@ -311,7 +301,7 @@ def mod(cmd, params):
             install([module_name])
 
         mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
         mod_config['mod'][mod_name]['enabled'] = True
         dump_config(mod_config_path, mod_config)
@@ -327,7 +317,7 @@ def mod(cmd, params):
             mod_name = mod_name.replace("rqalpha_mod_", "")
 
         mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
+        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
         mod_config['mod'][mod_name]['enabled'] = False
         dump_config(mod_config_path, mod_config)
