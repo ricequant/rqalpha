@@ -83,6 +83,14 @@ class RqAttrDict(object):
                 target[k] = other[k]
         return target
 
+    def convert_to_dict(self):
+        result_dict = {}
+        for k, v in list(six.iteritems(self.__dict__)):
+            if isinstance(v, RqAttrDict):
+                v = v.convert_to_dict()
+            result_dict[k] = v
+        return result_dict
+
 
 def dummy_func(*args, **kwargs):
     return None

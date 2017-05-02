@@ -15,7 +15,7 @@ simplejson>=3.10.0
 dill==0.2.5
 XlsxWriter>=0.9.6
 line-profiler>=2.0
-ruamel.yaml>=0.13.14
+PyYAML>=3.12
 
 better_exceptions
 tabulate

@@ -16,7 +16,7 @@
 
 import six
 import os
-import ruamel.yaml as yaml
+import yaml
 import simplejson as json
 import datetime
 import logbook
@@ -51,7 +51,7 @@ def load_config(config_path, loader=yaml.Loader):
     return config
 
 
-def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
+def dump_config(config_path, config, dumper=yaml.Dumper):
     with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
 
@@ -231,7 +231,7 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
     if base_config.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
 
-    system_log.debug("\n" + pformat(config))
+    system_log.debug("\n" + pformat(config.convert_to_dict()))
 
     return config
 

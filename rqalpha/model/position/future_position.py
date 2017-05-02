@@ -20,6 +20,9 @@ from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
 
 
 class FuturePosition(BasePosition):
+
+    __abandon_properties__ = []
+
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
 

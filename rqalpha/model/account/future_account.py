@@ -34,6 +34,12 @@ def margin_of(order_book_id, quantity, price):
 
 
 class FutureAccount(BaseAccount):
+
+    __abandon_properties__ = [
+        "daily_holding_pnl",
+        "daily_realized_pnl"
+    ]
+
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)

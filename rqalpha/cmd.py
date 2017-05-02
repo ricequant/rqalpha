@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import click
-import ruamel.yaml as yaml
+import yaml
 
 
 @click.group()
@@ -31,7 +31,7 @@ def entry_point():
     from rqalpha.utils.config import get_mod_config_path, load_mod_config
     from rqalpha.utils.package_helper import import_mod
     mod_config_path = get_mod_config_path()
-    mod_config = load_mod_config(mod_config_path, loader=yaml.RoundTripLoader)
+    mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
     for mod_name, config in six.iteritems(mod_config['mod']):
         lib_name = "rqalpha_mod_{}".format(mod_name)
