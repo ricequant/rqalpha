@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
 import traceback
 import logbook
 import better_exceptions
@@ -58,7 +59,7 @@ def user_std_handler_log_formatter(record, handler):
     try:
         dt = Environment.get_instance().calendar_dt.strftime(DATETIME_FORMAT)
     except Exception:
-        dt = "0000-00-00"
+        dt = datetime.now().strftime(DATETIME_FORMAT)
 
     log = "{dt} {level} {msg}".format(
         dt=dt,
