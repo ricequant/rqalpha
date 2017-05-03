@@ -217,7 +217,7 @@ def run(config, source_code=None):
 
         if env.price_board is None:
             from .core.bar_dict_price_board import BarDictPriceBoard
-            env.price_board = BarDictPriceBoard(bar_dict)
+            env.price_board = BarDictPriceBoard()
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
