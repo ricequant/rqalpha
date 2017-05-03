@@ -64,10 +64,9 @@ class BaseDataSource(AbstractDataSource):
 
             self.get_yield_curve = self._yield_curve.get_yield_curve
             self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
-        except IOError:
-            user_system_log.error(
+        except IOError as e:
+            raise RuntimeError(
                 _(u"Bundle is out of date, please use `rqalpha update_bundle` to renew your bundle data."))
-            sys.exit(1)
 
     def get_dividend(self, order_book_id):
         return self._dividends.get_dividend(order_book_id)

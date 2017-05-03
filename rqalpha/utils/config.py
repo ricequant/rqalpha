@@ -40,8 +40,7 @@ def load_config(config_path, loader=yaml.Loader):
     if config_path is None:
         return {}
     if not os.path.exists(config_path):
-        system_log.error(_(u"config.yml not found in {config_path}").format(config_path))
-        sys.exit(1)
+        raise RuntimeError(_(u"config.yml not found in {config_path}").format(config_path))
     if ".json" in config_path:
         with codecs.open(config_path, encoding="utf-8") as f:
             json_config = f.read()
@@ -192,15 +191,13 @@ def parse_config(config_args, config_path=None, click_type=True, source_code=Non
         base_config.data_bundle_path = os.path.join(base_config.data_bundle_path, "./bundle")
 
     if not os.path.exists(base_config.data_bundle_path):
-        system_log.error(
+        raise RuntimeError(
             _(u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
                 bundle_path=base_config.data_bundle_path))
-        sys.exit(1)
 
     if source_code is None and not os.path.exists(base_config.strategy_file):
-        system_log.error(
+        raise RuntimeError(
             _(u"strategy file not found in {strategy_file}").format(strategy_file=base_config.strategy_file))
-        sys.exit(1)
 
     base_config.run_type = parse_run_type(base_config.run_type)
     base_config.account_list = parse_account_list(base_config.securities)
@@ -256,8 +253,7 @@ def parse_user_config_from_code(config, source_code=None):
             deep_update(sub_dict, config[sub_key])
 
     except Exception as e:
-        system_log.error(_(u"in parse_user_config, exception: {e}").format(e=e))
-        sys.exit(1)
+        raise RuntimeError(_(u"in parse_user_config, exception: {e}").format(e=e))
     finally:
         return config
 
