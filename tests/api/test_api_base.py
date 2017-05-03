@@ -307,7 +307,7 @@ def test_get_dividend():
         df = get_dividend('000001.XSHE', start_date='20130104')
         df_to_assert = df[df['book_closure_date'] == 20130619]
         assert len(df) >= 4
-        assert df_to_assert[0]['dividend_cash_before_tax'] == 0.6149
+        assert df_to_assert[0]['dividend_cash_before_tax'] == 1.7
         assert df_to_assert[0]['payable_date'] == 20130620
 test_get_dividend_code_new = get_code_block(test_get_dividend)
 
