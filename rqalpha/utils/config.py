@@ -263,8 +263,15 @@ def parse_user_config_from_code(config, source_code=None):
 
 
 def parse_account_list(securities):
+    security_set = set()
     if isinstance(securities, (tuple, list)):
-        return [ACCOUNT_TYPE[security.upper()] for security in securities]
+        for security in securities:
+            if "_" in security:
+                for s in security.split("_"):
+                    security_set.add(s)
+            else:
+                security_set.add(security)
+        return [ACCOUNT_TYPE[security.upper()] for security in security_set]
     elif isinstance(securities, six.string_types):
         return [ACCOUNT_TYPE[securities.upper()]]
     else:
