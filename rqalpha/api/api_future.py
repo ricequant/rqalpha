@@ -65,6 +65,11 @@ def order(id_or_ins, amount, side, position_effect, style):
     order_book_id = assure_future_order_book_id(id_or_ins)
     env = Environment.get_instance()
     price = env.get_last_price(order_book_id)
+    if np.isnan(price):
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        return
+
     amount = int(amount)
 
     r_order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, side, style,
