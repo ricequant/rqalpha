@@ -253,9 +253,6 @@ def test_get_trading_dates():
     import datetime
 
     def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
         trading_dates_list = get_trading_dates('2016-12-15', '2017-01-03')
         correct_dates_list = [datetime.date(2016, 12, 15), datetime.date(2016, 12, 16), datetime.date(2016, 12, 19),
                               datetime.date(2016, 12, 20), datetime.date(2016, 12, 21), datetime.date(2016, 12, 22),
@@ -265,6 +262,9 @@ def test_get_trading_dates():
         assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted(
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
+
+    def handle_bar(context, bar_dict):
+        pass
 test_get_trading_dates_code_new = get_code_block(test_get_trading_dates)
 
 
@@ -272,9 +272,6 @@ def test_get_previous_trading_date():
     from rqalpha.api import get_previous_trading_date
 
     def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
         assert str(get_previous_trading_date('2017-01-03').date()) == '2016-12-30'
         assert str(get_previous_trading_date('2016-01-03').date()) == '2015-12-31'
         assert str(get_previous_trading_date('2015-01-03').date()) == '2014-12-31'
@@ -282,6 +279,9 @@ def test_get_previous_trading_date():
         assert str(get_previous_trading_date('2010-01-03').date()) == '2009-12-31'
         assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
         assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
+
+    def handle_bar(context, bar_dict):
+        pass
 test_get_previous_trading_date_code_new = get_code_block(test_get_previous_trading_date)
 
 
@@ -289,11 +289,11 @@ def test_get_next_trading_date():
     from rqalpha.api import get_next_trading_date
 
     def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
         assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
         assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
+
+    def handle_bar(context, bar_dict):
+        pass
 test_get_next_trading_date_code_new = get_code_block(test_get_next_trading_date)
 
 
