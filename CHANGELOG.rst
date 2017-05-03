@@ -2,6 +2,20 @@
 CHANGELOG
 ==================
 
+2.2.0
+==================
+
+- 增加 :code:`order` 和 :code:`order_to` 高阶下单函数
+- 更新数据源，现在使用原始数据和复权因子的方式进行回测
+- 不再使用 `ruamel.yaml` 该库在某些情况下无法正确解析 yml 配置文件
+- 解决 `six` 库依赖多次引用导致安装出错的问题
+- 解决 :code:`rqalpha run` 的时候指定 :code:`-st` | :code:`--kind` 时报错的问题
+- :code:`--security` / :code:`-st` 现在支持多种模式，可以使用 :code:`-st stock -st future` 也可以使用 :code:`-st stock_future` 来设置security
+- 更新 BarDictPriceBoard `Issue 115 <https://github.com/ricequant/rqalpha/issues/115>`_
+- 解决 :code:`print(context.portfolio)` 时因为调用了 `abandon property` 会报 warning 的问题 `Issue 114 <https://github.com/ricequant/rqalpha/issues/114>`_
+- 解决 :code:`rqalpha mod install xx` 不存在的 Mod 也会导致 mod_config.yml 更新的问题 `Issue 111 <https://github.com/ricequant/rqalpha/issues/111>`_
+- 解决 :code:`rqalpha plot` 无法画图的问题 `Issue 109 <https://github.com/ricequant/rqalpha/issues/109>`_
+
 2.1.4
 ==================
 
