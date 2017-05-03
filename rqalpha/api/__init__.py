@@ -18,3 +18,4 @@
 from .api_base import *
 from .api_stock import *
 from .api_future import *
+from .api_extension import *
