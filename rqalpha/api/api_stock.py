@@ -22,6 +22,7 @@ https://www.ricequant.com/api/python/chn
 from decimal import Decimal, getcontext
 
 import six
+import numpy as np
 
 from .api_base import decorate_api_exc, instruments
 from ..const import ACCOUNT_TYPE
@@ -101,6 +102,10 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
+    if np.isnan(price):
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        return
 
     if amount > 0:
         side = SIDE.BUY
@@ -222,6 +227,10 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
+    if np.isnan(price):
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        return
 
     if price == 0:
         return order_shares(order_book_id, 0, style)
