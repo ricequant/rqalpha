@@ -103,6 +103,8 @@ def run(**kwargs):
     if config_path is not None:
         config_path = os.path.abspath(config_path)
         kwargs.pop('config_path')
+    if not kwargs.get('base__securities', None):
+        kwargs.pop('base__securities', None)
 
     from . import main
     main.run(parse_config(kwargs, config_path))

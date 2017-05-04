@@ -267,6 +267,8 @@ def parse_account_list(securities):
                     security_set.add(s)
             else:
                 security_set.add(security)
+        if len(security_set) == 0:
+            raise RuntimeError(_(u"securities can not be empty, using `--security stock/future` to specific security type"))
         return [ACCOUNT_TYPE[security.upper()] for security in security_set]
     elif isinstance(securities, six.string_types):
         return [ACCOUNT_TYPE[securities.upper()]]
