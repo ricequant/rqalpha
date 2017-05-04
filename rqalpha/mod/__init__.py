@@ -83,5 +83,5 @@ SYSTEM_MOD_LIST = [
     "sys_risk",
     "sys_simulation",
     "sys_stock_realtime",
-    "sys_fundamentals",
+    "sys_jqapi",
 ]

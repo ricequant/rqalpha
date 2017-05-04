@@ -19,11 +19,10 @@ def before_trading(context):
 def handle_bar(context, bar_dict):
     # 开始编写你的主要的算法逻辑
 
-    #print get_extras('is_st', ['000001.XSHE','000018.XSHE'])
-    #print type(is_st_stock('000001.XSHE', 10))
-    #print get_industry_stocks('I64')
     #df = get_fundamentals(query(valuation.day, valuation.capitalization, cash_flow.net_deposit_increase, indicator.eps, income.pubDate, income.interest_income).filter(income.code=='002626')) 
-    df = get_fundamentals(query(indicator.inc_net_profit_to_shareholders_annual, indicator.statDate)) 
+    #df = get_fundamentals(query(valuation.day, cash_flow.pubDate,indicator.inc_net_profit_to_shareholders_annual, indicator.statDate,income.interest_income).filter(income.code=='000001'), '2014-4-3')
+    
+    df = history(1,'1d','close',['000002.XSHE]',True)
     print df
     return
 
