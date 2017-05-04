@@ -107,7 +107,7 @@ def run(**kwargs):
         kwargs.pop('base__securities', None)
 
     from . import main
-    main.run(parse_config(kwargs, config_path))
+    main.run(parse_config(kwargs, config_path=config_path, click_type=True))
 
 
 @cli.command()
