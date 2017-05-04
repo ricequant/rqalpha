@@ -90,7 +90,8 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
         #购买1000股的平安银行股票，并以限价单发送，价格为￥10：
         order_shares('000001.XSHG', 1000, style=LimitOrder(10))
     """
-    if amount is 0:
+    amount = int(amount)
+    if amount == 0:
         # 如果下单量为0，则认为其并没有发单，则直接返回None
         return None
     if not isinstance(style, OrderStyle):
