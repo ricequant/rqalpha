@@ -173,6 +173,10 @@ class AnalyserMod(AbstractMod):
         if code != EXIT_CODE.EXIT_SUCCESS or not self._enabled:
             return
 
+        # 当 PRE_SETTLEMENT 事件没有被触发当时候，self._total_portfolio 为空list
+        if len(self._total_portfolios) == 0:
+            return
+
         strategy_name = os.path.basename(self._env.config.base.strategy_file).split(".")[0]
         data_proxy = self._env.data_proxy
 
@@ -222,10 +226,7 @@ class AnalyserMod(AbstractMod):
 
         df = pd.DataFrame(self._total_portfolios)
 
-        try:
-            df['date'] = pd.to_datetime(df['date'])
-        except KeyError:
-            return
+        df['date'] = pd.to_datetime(df['date'])
 
         total_portfolios = df.set_index('date').sort_index()
 
