@@ -221,7 +221,12 @@ class AnalyserMod(AbstractMod):
             trades = trades.set_index('datetime')
 
         df = pd.DataFrame(self._total_portfolios)
-        df['date'] = pd.to_datetime(df['date'])
+
+        try:
+            df['date'] = pd.to_datetime(df['date'])
+        except KeyError:
+            return
+
         total_portfolios = df.set_index('date').sort_index()
 
         result_dict = {
