@@ -46,6 +46,80 @@ def export_as_api(func):
     return func
 
 
+def smart_order(order_book_id, quantity, style):
+    position = Environment.get_instance().portfolio.positions[order_book_id]
+    orders = []
+    if quantity > 0:
+        # 平昨仓
+        if position.sell_old_quantity > 0:
+            orders.append(order(
+                order_book_id,
+                min(quantity, position.sell_old_quantity),
+                SIDE.BUY,
+                POSITION_EFFECT.CLOSE,
+                style
+            ))
+            quantity -= position.sell_old_quantity
+        if quantity <= 0:
+            return orders
+        # 平今仓
+        if position.sell_today_quantity > 0:
+            orders.append(order(
+                order_book_id,
+                min(quantity, position.sell_today_quantity),
+                SIDE.BUY,
+                POSITION_EFFECT.CLOSE_TODAY,
+                style
+            ))
+            quantity -= position.sell_today_quantity
+        if quantity <= 0:
+            return orders
+        # 开多仓
+        orders.append(order(
+            order_book_id,
+            quantity,
+            SIDE.BUY,
+            POSITION_EFFECT.OPEN,
+            style
+        ))
+        return orders
+    else:
+        # 平昨仓
+        quantity *= -1
+        if position.buy_old_quantity > 0:
+            order.append(order(
+                order_book_id,
+                min(quantity, position.buy_old_quantity),
+                SIDE.SELL,
+                POSITION_EFFECT.CLOSE,
+                style
+            ))
+            quantity -= position.buy_old_quantity
+        if quantity <= 0:
+            return orders
+        # 平今仓
+        if position.buy_today_quantity > 0:
+            orders.append(order(
+                order_book_id,
+                min(quantity, position.buy_today_quantity),
+                SIDE.SELL,
+                POSITION_EFFECT.CLOSE_TODAY,
+                style
+            ))
+            quantity -= position.buy_today_quantity
+        if quantity <= 0:
+            return orders
+        # 开空仓
+        orders.append(order(
+            order_book_id,
+            quantity,
+            SIDE.SELL,
+            POSITION_EFFECT.OPEN,
+            style
+        ))
+        return orders
+
+
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
@@ -65,6 +139,11 @@ def order(id_or_ins, amount, side, position_effect, style):
     order_book_id = assure_future_order_book_id(id_or_ins)
     env = Environment.get_instance()
     price = env.get_last_price(order_book_id)
+    if np.isnan(price):
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        return
+
     amount = int(amount)
 
     r_order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, side, style,

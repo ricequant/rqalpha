@@ -217,7 +217,7 @@ def run(config, source_code=None):
 
         if env.price_board is None:
             from .core.bar_dict_price_board import BarDictPriceBoard
-            env.price_board = BarDictPriceBoard(bar_dict)
+            env.price_board = BarDictPriceBoard()
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
@@ -341,10 +341,9 @@ def enable_profiler(env, scope):
 
 
 def output_profile_result(env):
-    from six import StringIO
-    stdout_trap = StringIO()
+    stdout_trap = six.StringIO()
     env.profile_deco.print_stats(stdout_trap)
     profile_output = stdout_trap.getvalue()
     profile_output = profile_output.rstrip()
-    print(profile_output)
+    six.print_(profile_output)
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))

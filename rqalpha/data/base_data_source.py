@@ -13,14 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
 
+import sys
+import os
 import six
 import numpy as np
 
+from ..interface import AbstractDataSource
+from ..const import MARGIN_TYPE
 from ..utils.py2 import lru_cache
 from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
-from ..interface import AbstractDataSource
+from ..utils.i18n import gettext as _
+from ..utils.logger import user_system_log
+
 from .future_info_cn import CN_FUTURE_INFO
 from .converter import StockBarConverter, IndexBarConverter
 from .converter import FutureDayBarConverter, FundDayBarConverter
@@ -39,25 +44,29 @@ class BaseDataSource(AbstractDataSource):
         def _p(name):
             return os.path.join(path, name)
 
-        self._day_bars = [
-            DayBarStore(_p('stocks.bcolz'), StockBarConverter),
-            DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
-            DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
-            DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
-        ]
+        try:
+            self._day_bars = [
+                DayBarStore(_p('stocks.bcolz'), StockBarConverter),
+                DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
+                DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
+                DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
+            ]
 
-        self._instruments = InstrumentStore(_p('instruments.pk'))
-        self._dividends = DividendStore(_p('original_dividends.bcolz'))
-        self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
-        self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
-        self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
-        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
+            self._instruments = InstrumentStore(_p('instruments.pk'))
+            self._dividends = DividendStore(_p('original_dividends.bcolz'))
+            self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
+            self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
+            self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
+            self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
 
-        self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
-        self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+            self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
+            self._suspend_days = DateSet(_p('suspended_days.bcolz'))
 
-        self.get_yield_curve = self._yield_curve.get_yield_curve
-        self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+            self.get_yield_curve = self._yield_curve.get_yield_curve
+            self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+        except IOError as e:
+            raise RuntimeError(
+                _(u"Bundle is out of date, please use `rqalpha update_bundle` to renew your bundle data."))
 
     def get_dividend(self, order_book_id):
         return self._dividends.get_dividend(order_book_id)
@@ -184,8 +193,15 @@ class BaseDataSource(AbstractDataSource):
 
         raise NotImplementedError
 
-    def get_future_info(self, instrument, hedge_type):
-        return CN_FUTURE_INFO[instrument.underlying_symbol][hedge_type.value]
+    def get_margin_info(self, instrument):
+        return {
+            'margin_type': MARGIN_TYPE.BY_MONEY,
+            'long_margin_ratio': instrument.margin_rate,
+            'short_margin_ratio': instrument.margin_rate,
+        }
+
+    def get_commission_info(self, instrument):
+        return CN_FUTURE_INFO[instrument.underlying_symbol]['speculation']
 
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError

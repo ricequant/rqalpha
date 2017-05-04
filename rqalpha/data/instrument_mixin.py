@@ -42,16 +42,9 @@ class InstrumentMixin(object):
         return [v.order_book_id for v in self._instruments.values()
                 if v.type == 'CS' and any(c in v.concept_names.split('|') for c in concepts)]
 
-    def all_instruments(self, itype='CS'):
-        if itype is None:
-            return pd.DataFrame([[v.order_book_id, v.symbol, v.abbrev_symbol, v.type]
-                                 for v in self._instruments.values()],
-                                columns=['order_book_id', 'symbol', 'abbrev_symbol', 'type'])
-
-        if itype not in ['CS', 'ETF', 'LOF', 'FenjiA', 'FenjiB', 'FenjiMu', 'INDX', 'Future']:
-            raise ValueError('Unknown type {}'.format(itype))
-
-        return pd.DataFrame([v.__dict__ for v in self._instruments.values() if v.type == itype])
+    def all_instruments(self, types, date):
+        return [i for i in self._instruments.values() if i.listed_date <= date <= i.de_listed_date
+                and (types is None or i.type in types)]
 
     def _instrument(self, sym_or_id):
         try:

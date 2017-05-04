@@ -28,8 +28,11 @@ RQAlpha 本身支持不同周期的回测和实盘交易，但是目前只开放
 
 RQAlpha 安装
 ==================
+我们强烈建议您在虚拟环境下安装RQAlpha
 
-请参考 :ref:`intro-install`
+虚拟环境的安装，请参考 :ref:`intro-detail-install`
+
+RQAlpha安装，请参考 :ref:`intro-install`
 
 数据获取
 ==================
@@ -48,7 +51,7 @@ RQAlpha 安装
 运行回测
 ==================
 
-运行 RQAlpha 需要传递一些参数，可以通过命令 `rqalpha help` 查看，或者查看文档 :ref: `intro-config` 来获取相关信息。
+运行 RQAlpha 需要传递一些参数，可以通过命令 `rqalpha help` 查看，或者查看文档 :ref:`intro-config` 来获取相关信息。
 
 运行如下命令:
 

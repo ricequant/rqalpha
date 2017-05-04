@@ -15,28 +15,29 @@
 # limitations under the License.
 
 import bcolz
-import pandas as pd
-
-from ..utils.py2 import lru_cache
+import numpy as np
 
 
 class DividendStore(object):
     def __init__(self, f):
-        self._table = bcolz.open(f, 'r')
-        self._index = self._table.attrs['line_map']
+        ct = bcolz.open(f, 'r')
+        self._index = ct.attrs['line_map']
+        self._table = np.empty((len(ct), ), dtype=np.dtype([
+            ('announcement_date', '<u4'), ('book_closure_date', '<u4'),
+            ('ex_dividend_date', '<u4'), ('payable_date', '<u4'),
+            ('dividend_cash_before_tax', np.float), ('round_lot', '<u4')
+        ]))
+        self._table['announcement_date'][:] = ct['announcement_date']
+        self._table['book_closure_date'][:] = ct['closure_date']
+        self._table['ex_dividend_date'][:] = ct['ex_date']
+        self._table['payable_date'][:] = ct['payable_date']
+        self._table['dividend_cash_before_tax'] = ct['cash_before_tax'][:] / 10000.0
+        self._table['round_lot'][:] = ct['round_lot']
 
-    @lru_cache(128)
     def get_dividend(self, order_book_id):
         try:
             s, e = self._index[order_book_id]
         except KeyError:
-            return pd.DataFrame()
+            return None
 
-        dividends = self._table[s:e]
-        return pd.DataFrame({
-            'book_closure_date': pd.Index(pd.Timestamp(str(d)) for d in dividends['closure_date']),
-            'ex_dividend_date': pd.Index(pd.Timestamp(str(d)) for d in dividends['ex_date']),
-            'payable_date': pd.Index(pd.Timestamp(str(d)) for d in dividends['payable_date']),
-            'dividend_cash_before_tax': dividends['cash_before_tax'] / 10000.0,
-            'round_lot': dividends['round_lot']
-        }, index=pd.Index(pd.Timestamp(str(d)) for d in dividends['announcement_date']))
+        return self._table[s:e]

@@ -438,8 +438,9 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('type').is_in(names.VALID_INSTRUMENT_TYPES, ignore_none=True))
-def all_instruments(type=None):
+@apply_rules(verify_that('type').are_valid_fields(names.VALID_INSTRUMENT_TYPES, ignore_none=True),
+             verify_that('date').is_valid_date(ignore_none=True))
+def all_instruments(type=None, date=None):
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
@@ -482,7 +483,36 @@ def all_instruments(type=None):
         ...
 
     """
-    return Environment.get_instance().data_proxy.all_instruments(type)
+    env = Environment.get_instance()
+    current_date = datetime.datetime(env.trading_dt.year, env.trading_dt.month, env.trading_dt.day)
+    if date is None:
+        date = current_date
+    else:
+        date = min(pd.Timestamp(date).to_pydatetime(), current_date)
+
+    if type is not None:
+        if isinstance(type, six.string_types):
+            type = [type]
+
+        types = set()
+        for t in type:
+            if t == 'Stock':
+                types.add('CS')
+            elif t == 'Fund':
+                types.update(['ETF', 'LOF', 'SF', 'FenjiA', 'FenjiB', 'FenjiMu'])
+            else:
+                types.add(t)
+    else:
+        types = None
+
+    result = [i for i in env.data_proxy.all_instruments(types, date)
+              if i.type != 'CS' or not env.data_proxy.is_suspended(i.order_book_id, date)]
+    if types is not None and len(types) == 1:
+        return pd.DataFrame([i.__dict__ for i in result])
+
+    return pd.DataFrame(
+        [[i.order_book_id, i.symbol, i.abbrev_symbol, i.type, i.listed_date, i.de_listed_date] for i in result],
+        columns=['order_book_id', 'symbol', 'abbrev_symbol', 'type', 'listed_date', 'de_listed_date'])
 
 
 @export_as_api
@@ -711,7 +741,12 @@ def get_dividend(order_book_id, start_date, *args, **kwargs):
             ))
     order_book_id = assure_order_book_id(order_book_id)
     df = env.data_proxy.get_dividend(order_book_id)
-    return df[start_date:dt]
+    if df is None:
+        return None
+
+    sd = start_date.year*10000 + start_date.month*100 + start_date.day
+    ed = dt.year*10000 + dt.month*100 + dt.day
+    return df[(df['announcement_date'] >= sd) & (df['announcement_date'] <= ed)]
 
 
 @export_as_api

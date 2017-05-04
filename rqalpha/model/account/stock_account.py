@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import six
+import datetime
 from collections import defaultdict
 
 from .base_account import BaseAccount
@@ -26,6 +27,9 @@ from ...const import SIDE, ACCOUNT_TYPE
 
 
 class StockAccount(BaseAccount):
+
+    __abandon_properties__ = []
+
     def __init__(self, total_cash, positions, backward_trade_set=set(), dividend_receivable=None, register_event=True):
         super(StockAccount, self).__init__(total_cash, positions, backward_trade_set, register_event)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
@@ -162,10 +166,18 @@ class StockAccount(BaseAccount):
         for order_book_id in to_be_removed:
             del self._dividend_receivable[order_book_id]
 
+    @staticmethod
+    def _int_to_date(d):
+        r, d = divmod(d, 100)
+        y, m = divmod(r, 100)
+        return datetime.date(year=y, month=m, day=d)
+
     def _handle_dividend_book_closure(self, trading_date):
-        data_proxy = Environment.get_instance().data_proxy
         for order_book_id, position in six.iteritems(self._positions):
-            dividend = data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
+            if position.quantity == 0:
+                continue
+
+            dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)
             if dividend is None:
                 continue
 
@@ -173,7 +185,7 @@ class StockAccount(BaseAccount):
             self._dividend_receivable[order_book_id] = {
                 'quantity': position.quantity,
                 'dividend_per_share': dividend_per_share,
-                'payable_date': dividend['payable_date'].date()
+                'payable_date': self._int_to_date(dividend['payable_date']),
             }
 
     def _handle_split(self, trading_date):

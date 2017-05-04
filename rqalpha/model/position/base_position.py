@@ -22,6 +22,8 @@ from ...utils.logger import user_system_log
 
 class BasePosition(object):
 
+    __abandon_properties__ = ["total_orders", "total_trades"]
+
     __repr__ = property_repr
 
     def __init__(self, order_book_id):
@@ -72,6 +74,8 @@ class BasePosition(object):
 
     def apply_trade(self, trade):
         raise NotImplementedError
+
+    # ------------------------------------ Abandon Property ------------------------------------
 
     @property
     def total_orders(self):

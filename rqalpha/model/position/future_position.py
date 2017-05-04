@@ -19,15 +19,10 @@ from ...environment import Environment
 from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
 
 
-def margin_of(order_book_id, quantity, price):
-    env = Environment.get_instance()
-    contract_multiplier = env.get_instrument(order_book_id).contract_multiplier
-    margin_rate = env.get_future_margin_rate(order_book_id)
-    margin_multiplier = env.config.base.margin_multiplier
-    return quantity * price * margin_multiplier * margin_rate * contract_multiplier
-
-
 class FuturePosition(BasePosition):
+
+    __abandon_properties__ = []
+
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
 
@@ -76,9 +71,10 @@ class FuturePosition(BasePosition):
 
     @property
     def margin_rate(self):
-        margin_rate = Environment.get_instance().get_future_margin_rate(self.order_book_id)
-        margin_multiplier = Environment.get_instance().config.base.margin_multiplier
-        return margin_rate * margin_multiplier
+        env = Environment.get_instance()
+        margin_info = env.data_proxy.get_margin_info(self.order_book_id)
+        margin_multiplier = env.config.base.margin_multiplier
+        return margin_info['long_margin_ratio'] * margin_multiplier
 
     @property
     def market_value(self):
@@ -370,6 +366,11 @@ class FuturePosition(BasePosition):
         self._buy_realized_pnl = 0.
         self._sell_realized_pnl = 0.
 
+    def _margin_of(self, quantity, price):
+        env = Environment.get_instance()
+        instrument = env.data_proxy.instruments(self.order_book_id)
+        return quantity * instrument.contract_multiplier * price * self.margin_rate
+
     def apply_trade(self, trade):
         trade_quantity = trade.last_quantity
         if trade.side == SIDE.BUY:
@@ -378,7 +379,7 @@ class FuturePosition(BasePosition):
                                             trade_quantity * trade.last_price) / (self.buy_quantity + trade_quantity)
                 self._buy_transaction_cost += trade.transaction_cost
                 self._buy_today_holding_list.insert(0, (trade.last_price, trade_quantity))
-                return -1 * margin_of(self.order_book_id, trade_quantity, trade.last_price)
+                return -1 * self._margin_of(trade_quantity, trade.last_price)
             else:
                 old_margin = self.margin
                 self._sell_transaction_cost += trade.transaction_cost
@@ -391,7 +392,7 @@ class FuturePosition(BasePosition):
                                              trade_quantity * trade.last_price) / (self.sell_quantity + trade_quantity)
                 self._sell_transaction_cost += trade.transaction_cost
                 self._sell_today_holding_list.insert(0, (trade.last_price, trade_quantity))
-                return -1 * margin_of(self.order_book_id, trade_quantity, trade.last_price)
+                return -1 * self._margin_of(trade_quantity, trade.last_price)
             else:
                 old_margin = self.margin
                 self._buy_transaction_cost += trade.transaction_cost

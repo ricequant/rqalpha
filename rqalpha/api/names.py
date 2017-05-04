@@ -33,7 +33,8 @@ VALID_TENORS = [
 ]
 
 VALID_INSTRUMENT_TYPES = [
-    'CS', 'Future', 'INDX', 'ETF', 'LOF', 'SF', 'FenjiA', 'FenjiB', 'FenjiMu'
+    'CS', 'Future', 'INDX', 'ETF', 'LOF', 'SF', 'FenjiA', 'FenjiB', 'FenjiMu',
+    'Stock', 'Fund', 'Index'
 ]
 
 VALID_XUEQIU_FIELDS = [

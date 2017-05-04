@@ -16,6 +16,9 @@
 
 import bcolz
 import numpy as np
+import six
+
+from ..utils.i18n import gettext as _
 
 
 class DayBarStore(object):
@@ -35,7 +38,7 @@ class DayBarStore(object):
         try:
             s, e = self._index[order_book_id]
         except KeyError:
-            print('No data for {}'.format(order_book_id))
+            six.print_(_(u"No data for {}").format(order_book_id))
             return
 
         if fields is None:

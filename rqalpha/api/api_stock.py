@@ -22,10 +22,10 @@ https://www.ricequant.com/api/python/chn
 from decimal import Decimal, getcontext
 
 import six
+import numpy as np
 
 from .api_base import decorate_api_exc, instruments
-from ..const import ACCOUNT_TYPE
-from ..const import EXECUTION_PHASE, SIDE, ORDER_TYPE
+from ..const import ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE
 from ..environment import Environment
 from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
@@ -60,6 +60,7 @@ def export_as_api(func):
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
@@ -101,6 +102,10 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
+    if np.isnan(price):
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        return
 
     if amount > 0:
         side = SIDE.BUY
@@ -137,8 +142,17 @@ def order_shares(id_or_ins, amount, style=MarketOrder()):
     return r_order
 
 
+def _sell_all_stock(order_book_id, amount, style):
+    env = Environment.get_instance()
+    order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, SIDE.SELL, style, None)
+    if env.can_submit_order(order):
+        env.broker.submit_order(order)
+    return order
+
+
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
@@ -176,6 +190,7 @@ def order_lots(id_or_ins, amount, style=MarketOrder()):
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
@@ -214,6 +229,10 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
+    if np.isnan(price):
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
+        return
 
     if price == 0:
         return order_shares(order_book_id, 0, style)
@@ -240,6 +259,7 @@ def order_value(id_or_ins, cash_amount, style=MarketOrder()):
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
@@ -274,6 +294,7 @@ def order_percent(id_or_ins, percent, style=MarketOrder()):
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
@@ -303,11 +324,15 @@ def order_target_value(id_or_ins, cash_amount, style=MarketOrder()):
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
     position = account.positions[order_book_id]
 
+    if cash_amount == 0:
+        return _sell_all_stock(order_book_id, position.quantity, style)
+
     return order_value(order_book_id, cash_amount - position.market_value, style)
 
 
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
@@ -351,6 +376,9 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
     position = account.positions[order_book_id]
 
+    if percent == 0:
+        return _sell_all_stock(order_book_id, position.quantity, style)
+
     return order_value(order_book_id, account.total_value * percent - position.market_value, style)
 
 
@@ -358,6 +386,7 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
@@ -381,6 +410,7 @@ def is_suspended(order_book_id, count=1):
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument())

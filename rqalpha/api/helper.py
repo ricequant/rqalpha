@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import api_base, api_future, api_stock
+from . import api_base, api_future, api_stock, api_extension
 from ..const import ACCOUNT_TYPE
 
 
@@ -25,4 +25,5 @@ def get_apis(account_list):
             apis.update((name, getattr(api_stock, name)) for name in api_stock.__all__)
         elif account_type == ACCOUNT_TYPE.FUTURE:
             apis.update((name, getattr(api_future, name)) for name in api_future.__all__)
+    apis.update((name, getattr(api_extension, name)) for name in api_extension.__all__)
     return apis

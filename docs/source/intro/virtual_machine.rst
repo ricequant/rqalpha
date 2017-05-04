@@ -23,7 +23,7 @@
 
 *   选择刚刚创建好的虚拟机，点击启动。
 
-.. image:: ../_static/virtualBox_1.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/virtualBox_1.png
 
 *   选中创建好的虚拟机，点击 "启动"
 
@@ -69,4 +69,4 @@
 
 *   点击右边的小虫子图标，运行期间可点击代码行号的右侧增加断点，点击左下方的箭头图标控制代码运行。
 
-.. image:: ../_static/pycharm_1.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/pycharm_1.png

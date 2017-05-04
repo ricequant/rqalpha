@@ -17,6 +17,7 @@
 import six
 import numpy as np
 import pandas as pd
+import datetime
 
 from . import risk_free_helper
 from .instrument_mixin import InstrumentMixin
@@ -59,26 +60,24 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         rate = yc.values[0, 0]
         return 0 if np.isnan(rate) else rate
 
-    @lru_cache(128)
     def get_dividend(self, order_book_id):
         return self._data_source.get_dividend(order_book_id)
 
-    @lru_cache(128)
     def get_split(self, order_book_id):
         return self._data_source.get_split(order_book_id)
 
     def get_dividend_by_book_date(self, order_book_id, date):
-        df = self.get_dividend(order_book_id)
-        if df is None or df.empty:
+        table = self._data_source.get_dividend(order_book_id)
+        if table is None or len(table) == 0:
             return
 
-        dt = np.datetime64(date)
-        dates = df['book_closure_date'].values
+        dt = date.year*10000 + date.month*100 + date.day
+        dates = table['book_closure_date']
         pos = dates.searchsorted(dt)
         if pos == len(dates) or dt != dates[pos]:
             return None
 
-        return df.iloc[pos]
+        return table[pos]
 
     def get_split_by_ex_date(self, order_book_id, date):
         df = self.get_split(order_book_id)
@@ -168,9 +167,13 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def available_data_range(self, frequency):
         return self._data_source.available_data_range(frequency)
 
-    def get_future_info(self, order_book_id, hedge_type=HEDGE_TYPE.SPECULATION):
+    def get_margin_info(self, order_book_id):
         instrument = self.instruments(order_book_id)
-        return self._data_source.get_future_info(instrument, hedge_type)
+        return self._data_source.get_margin_info(instrument)
+
+    def get_commission_info(self, order_book_id):
+        instrument = self.instruments(order_book_id)
+        return self._data_source.get_commission_info(instrument)
 
     def get_ticks(self, order_book_id, date):
         instrument = self.instruments(order_book_id)

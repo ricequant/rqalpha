@@ -18,6 +18,7 @@ from rqalpha.const import ACCOUNT_TYPE
 from rqalpha.model.account import StockAccount, FutureAccount
 from rqalpha.model.position import Positions, StockPosition, FuturePosition
 from rqalpha.model.portfolio import Portfolio
+from rqalpha.utils.i18n import gettext as _
 
 
 def init_portfolio(env):
@@ -28,10 +29,14 @@ def init_portfolio(env):
     for account_type in config.base.account_list:
         if account_type == ACCOUNT_TYPE.STOCK:
             stock_starting_cash = config.base.stock_starting_cash
+            if stock_starting_cash == 0:
+                raise RuntimeError(_(u"stock starting cash can not be 0, using `--stock-starting-cash 100000`"))
             accounts[ACCOUNT_TYPE.STOCK] = StockAccount(stock_starting_cash, Positions(StockPosition))
             total_cash += stock_starting_cash
         elif account_type == ACCOUNT_TYPE.FUTURE:
             future_starting_cash = config.base.future_starting_cash
+            if future_starting_cash == 0:
+                raise RuntimeError(_(u"future starting cash can not be 0, using `--future-starting-cash 100000`"))
             accounts[ACCOUNT_TYPE.FUTURE] = FutureAccount(future_starting_cash, Positions(FuturePosition))
             total_cash += future_starting_cash
         else:

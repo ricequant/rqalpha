@@ -168,19 +168,25 @@ def test_all_instruments():
         pass
 
     def handle_bar(context, bar_dict):
-        df = all_instruments('FenjiA')
-        df_to_assert = df.loc[df['order_book_id'] == '150247.XSHE']
-        assert df_to_assert.iloc[0, 0] == 'CMAJ'
-        assert df_to_assert.iloc[0, 7] == '工银中证传媒A'
-        assert all_instruments().shape >= (8000, 4)
-        assert all_instruments('CS').shape >= (3000, 16)
-        assert all_instruments('ETF').shape >= (120, 9)
-        assert all_instruments('LOF').shape >= (130, 9)
-        assert all_instruments('FenjiMu').shape >= (10, 9)
-        assert all_instruments('FenjiA').shape >= (120, 9)
-        assert all_instruments('FenjiB').shape >= (140, 9)
-        assert all_instruments('INDX').shape >= (500, 8)
-        assert all_instruments('Future').shape >= (3500, 16)
+        date = context.now.replace(hour=0, minute=0, second=0)
+        df = all_instruments('CS')
+        assert (df['listed_date'] <= date).all()
+        assert (df['de_listed_date'] >= date).all()
+        assert all(not is_suspended(o) for o in df['order_book_id'])
+        assert (df['type'] == 'CS').all()
+
+        df1 = all_instruments('Stock')
+        assert sorted(df['order_book_id']) == sorted(df1['order_book_id'])
+
+        df2 = all_instruments('Future')
+
+        assert (df2['type'] == 'Future').all()
+        assert (df2['listed_date'] <= date).all()
+        assert (df2['de_listed_date'] >= date).all()
+
+        df3 = all_instruments(['Future', 'Stock'])
+        assert sorted(list(df['order_book_id']) + list(df2['order_book_id'])) == sorted(df3['order_book_id'])
+
 test_all_instruments_code_new = get_code_block(test_all_instruments)
 
 
@@ -247,9 +253,6 @@ def test_get_trading_dates():
     import datetime
 
     def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
         trading_dates_list = get_trading_dates('2016-12-15', '2017-01-03')
         correct_dates_list = [datetime.date(2016, 12, 15), datetime.date(2016, 12, 16), datetime.date(2016, 12, 19),
                               datetime.date(2016, 12, 20), datetime.date(2016, 12, 21), datetime.date(2016, 12, 22),
@@ -259,6 +262,9 @@ def test_get_trading_dates():
         assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted(
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
+
+    def handle_bar(context, bar_dict):
+        pass
 test_get_trading_dates_code_new = get_code_block(test_get_trading_dates)
 
 
@@ -266,9 +272,6 @@ def test_get_previous_trading_date():
     from rqalpha.api import get_previous_trading_date
 
     def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
         assert str(get_previous_trading_date('2017-01-03').date()) == '2016-12-30'
         assert str(get_previous_trading_date('2016-01-03').date()) == '2015-12-31'
         assert str(get_previous_trading_date('2015-01-03').date()) == '2014-12-31'
@@ -276,6 +279,9 @@ def test_get_previous_trading_date():
         assert str(get_previous_trading_date('2010-01-03').date()) == '2009-12-31'
         assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
         assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
+
+    def handle_bar(context, bar_dict):
+        pass
 test_get_previous_trading_date_code_new = get_code_block(test_get_previous_trading_date)
 
 
@@ -283,11 +289,11 @@ def test_get_next_trading_date():
     from rqalpha.api import get_next_trading_date
 
     def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
         assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
         assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
+
+    def handle_bar(context, bar_dict):
+        pass
 test_get_next_trading_date_code_new = get_code_block(test_get_next_trading_date)
 
 
@@ -299,10 +305,10 @@ def test_get_dividend():
 
     def handle_bar(context, bar_dict):
         df = get_dividend('000001.XSHE', start_date='20130104')
-        df_to_assert = df.loc[df['book_closure_date'] == '	2013-06-19']
-        assert df.shape >= (4, 5)
-        assert df_to_assert.iloc[0, 1] == 1.7
-        assert str(df_to_assert.iloc[0, 3]) == '2013-06-20 00:00:00'
+        df_to_assert = df[df['book_closure_date'] == 20130619]
+        assert len(df) >= 4
+        assert df_to_assert[0]['dividend_cash_before_tax'] == 1.7
+        assert df_to_assert[0]['payable_date'] == 20130620
 test_get_dividend_code_new = get_code_block(test_get_dividend)
 
 # =================== 以下把代码写为纯字符串 ===================
