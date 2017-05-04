@@ -90,7 +90,7 @@ def get_fundamentals(query_object, date=None, statDate=None):
         #date = dt.date.today()-dt.timedelta(1)
         #print date
         today_str = dt.date.today()
-        date = get_previous_trading_date(today_str)#-dt.timedelta(6)
+        date = get_previous_trading_date(today_str)-dt.timedelta(6)
         #减小查询量 只查询指定日期一年内    
         left_date = dt.date.today()-dt.timedelta(365)
     
