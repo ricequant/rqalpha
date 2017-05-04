@@ -47,7 +47,7 @@ __config__ = {
         "end_date": "2016-10-05",
         "frequency": "1d",
         "matching_type": "current_bar",
-        "future_starting_cash": 1000000,
+        "stock_starting_cash": 1000000,
         "future_starting_cash": 1000000,
         "benchmark": None,
     },
