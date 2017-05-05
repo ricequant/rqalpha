@@ -22,7 +22,7 @@ from .api_future import smart_order as order_future
 from ..environment import Environment
 from ..const import ACCOUNT_TYPE
 from ..utils.arg_checker import apply_rules, verify_that
-from ..model.order import LimitOrder, MarketOrder
+from ..model.order import LimitOrder, MarketOrder, Order
 
 __all__ = [
     'order',
@@ -89,11 +89,14 @@ def order(order_book_id, quantity, price=None):
     order_style = MarketOrder() if price is None else LimitOrder(price)
     position = Environment.get_instance().portfolio.positions[order_book_id]
     if position.type == ACCOUNT_TYPE.STOCK:
-        return order_stock(order_book_id, quantity, order_style)
+        orders = order_stock(order_book_id, quantity, order_style)
     elif position.type == ACCOUNT_TYPE.FUTURE:
-        return order_future(order_book_id, quantity, order_style)
+        orders = order_future(order_book_id, quantity, order_style)
     else:
         raise NotImplementedError
+    if isinstance(orders, Order):
+        return [orders]
+    return orders
 
 
 @export_as_api
@@ -107,7 +110,7 @@ def order_to(order_book_id, quantity, price=None):
     如果 order_book_id 是股票，则表示仓位调整到多少股
 
     如果 order_book_id 是期货，则进行智能调仓:
-    
+
         *   quantity 表示调整至某个仓位
         *   quantity 如果为正数，则先平 SELL 方向仓位，再 BUY 方向开仓 quantity 手
         *   quantity 如果为负数，则先平 BUY 方向仓位，再 SELL 方向开仓 -quantity 手
@@ -135,8 +138,11 @@ def order_to(order_book_id, quantity, price=None):
     order_style = MarketOrder() if price is None else LimitOrder(price)
     position = Environment.get_instance().portfolio.positions[order_book_id]
     if position.type == ACCOUNT_TYPE.STOCK:
-        return order_stock(order_book_id, quantity - position.quantity, order_style)
+        orders = order_stock(order_book_id, quantity - position.quantity, order_style)
     elif position.type == ACCOUNT_TYPE.FUTURE:
-        return order_future(order_book_id, quantity - position.buy_quantity + position.sell_quantity, order_style)
+        orders = order_future(order_book_id, quantity - position.buy_quantity + position.sell_quantity, order_style)
     else:
         raise NotImplementedError
+    if isinstance(orders, Order):
+        return [orders]
+    return orders
