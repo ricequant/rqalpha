@@ -42,12 +42,12 @@ class FutureAccount(BaseAccount):
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
-        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
-        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.TRADE, self._on_trade)
+        event_bus.prepend_listener(EVENT.SETTLEMENT, self._settlement)
+        event_bus.prepend_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
+        event_bus.prepend_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
+        event_bus.prepend_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.prepend_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.prepend_listener(EVENT.TRADE, self._on_trade)
 
     def fast_forward(self, orders, trades=list()):
         # 计算 Positions
