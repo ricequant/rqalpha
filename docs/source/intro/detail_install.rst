@@ -21,10 +21,10 @@ Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQ
 
     conda -V
 
-For CentOS
+For GNU/Linux
 ------------------------------------
 
-如果您使用 GNU/Linux 系统，可以使用如下方式进行 Anaconda 环境的安装，以下以 CentOS 为例:
+如果您使用 GNU/Linux 系统，可以使用如下方式进行 Anaconda 环境的安装，下面以 CentOS 为例:
 
 .. code-block:: bash
 
