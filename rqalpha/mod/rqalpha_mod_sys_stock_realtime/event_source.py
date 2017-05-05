@@ -28,6 +28,7 @@ from rqalpha.utils import rq_json
 from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
 from . import data_board
 
+
 class RealtimeEventSource(AbstractEventSource):
     MARKET_DATA_EVENT = "RealtimeEventSource.MARKET_DATA_EVENT"
 
