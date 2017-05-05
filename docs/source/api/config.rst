@@ -125,8 +125,6 @@ N/A           `- -` signal                    [sys_simulation]开启信号模式
       # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
       persist: false
       persist_mode: real_time
-      # 选择是否开启自动处理, 默认不开启
-      handle_split: false
 
     extra:
       # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，

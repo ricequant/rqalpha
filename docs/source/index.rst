@@ -188,6 +188,7 @@ Feature Status
     intro/install
     intro/detail_install
     intro/tutorial
+    intro/run_algorithm
     intro/under_ide
     intro/optimizing_parameters
     intro/examples
