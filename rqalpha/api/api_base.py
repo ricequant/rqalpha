@@ -440,13 +440,15 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('type').are_valid_fields(names.VALID_INSTRUMENT_TYPES, ignore_none=True),
              verify_that('date').is_valid_date(ignore_none=True))
-def all_instruments(type=None, dt=None):
+def all_instruments(type=None, date=None):
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
     :param str type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
-    :param dt: 查询时间点
-    :type dt: `datetime`
+
+    :param date: 查询时间点
+    :type date: `str` | `datetime` | `date`
+
 
     :return: `pandas DataFrame` 所有合约的基本信息。
 
@@ -486,9 +488,10 @@ def all_instruments(type=None, dt=None):
 
     """
     env = Environment.get_instance()
-    if dt is None:
+    if date is None:
         dt = env.trading_dt
     else:
+        dt = pd.Timestamp(date).to_pydatetime()
         dt = min(dt, env.trading_dt)
 
     if type is not None:
@@ -745,8 +748,8 @@ def get_dividend(order_book_id, start_date, *args, **kwargs):
     if df is None:
         return None
 
-    sd = start_date.year*10000 + start_date.month*100 + start_date.day
-    ed = dt.year*10000 + dt.month*100 + dt.day
+    sd = start_date.year * 10000 + start_date.month * 100 + start_date.day
+    ed = dt.year * 10000 + dt.month * 100 + dt.day
     return df[(df['announcement_date'] >= sd) & (df['announcement_date'] <= ed)]
 
 

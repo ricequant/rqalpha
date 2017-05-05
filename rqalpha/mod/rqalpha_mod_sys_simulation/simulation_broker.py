@@ -63,10 +63,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         }).encode('utf-8')
 
     def set_state(self, state):
-        #clear()方法是3.3新加的。。请关照2.7老人
-        #self._open_orders.clear()
+        # clear()方法是3.3新加的。。请关照2.7老人
+        # self._open_orders.clear()
+        # self._delayed_orders.clear()
         self._open_orders = []
-        #self._delayed_orders.clear()
         self._delayed_orders = []
 
         value = jsonpickle.loads(state.decode('utf-8'))
