@@ -484,7 +484,8 @@ def all_instruments(type=None, date=None):
 
     """
     env = Environment.get_instance()
-    current_date = datetime.datetime(env.trading_dt.year, env.trading_dt.month, env.trading_dt.day)
+    current_date = env.trading_dt
+
     if date is None:
         date = current_date
     else:
