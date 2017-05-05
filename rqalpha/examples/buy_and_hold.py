@@ -18,7 +18,6 @@ def before_trading(context):
 def handle_bar(context, bar_dict):
     # 开始编写你的主要的算法逻辑
 
-
     # bar_dict[order_book_id] 可以拿到某个证券的bar信息
     # context.portfolio 可以拿到现在的投资组合状态信息
 
