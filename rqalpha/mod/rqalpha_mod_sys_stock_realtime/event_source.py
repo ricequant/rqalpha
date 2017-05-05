@@ -63,7 +63,9 @@ class RealtimeEventSource(AbstractEventSource):
     def quotation_worker(self):
         while True:
             if not is_holiday_today() and is_tradetime_now():
-                order_book_id_list = sorted(Environment.get_instance().data_proxy.all_instruments("CS").order_book_id.tolist())
+                current_date = datetime.datetime(self._env.trading_dt.year, self._env.trading_dt.month, self._env.trading_dt.day)
+                #order_book_id_list = sorted(Environment.get_instance().data_proxy.all_instruments("CS",current_date).order_book_id.tolist())
+                order_book_id_list = sorted([instruments.order_book_id for instruments in Environment.get_instance().data_proxy.all_instruments("CS", current_date)])
                 code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
 
                 try:
