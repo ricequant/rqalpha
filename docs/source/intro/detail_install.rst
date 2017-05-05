@@ -7,21 +7,15 @@
 Anaconda
 ====================================
 
-安装
-------------------------------------
-
-**如果您已经安装好了 Anaconda 环境，可以跳过这个环节**
-
 Anaconda 是一个用于科学计算的 Python 发行版，支持 Linux, Mac, Windows, 包含了众多流行的科学计算、数据分析的 Python 包。
 
 Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQAlpha 有很多模块是依赖于这些科学计算库的，因此下载 Anaconda 可以轻松搭建出一个强大的 Python 量化研发的基础环境。
 
-安装 Anaconda 需要新下载最新的安装包。我们建议您下载最新的 Python 3.5 Anaconda 安装包，具体地址如下:
+.. note::
 
-1.  官方下载：https://www.continuum.io/downloads  （我们不是特别建议，因为官方下载的速度较慢，但是如果您非常认可官方的可信度可以考虑...）
-2.  清华的官方镜像下载：https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/  ，找最新的anaconda版本下载即可
+    安装 Anaconda 需要下载 `最新的安装包 <https://www.continuum.io/downloads>`_, 如果速度比较慢，建议从 `清华源 <https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/>`_ 下载。
 
-然后尝试一下运行 `conda -V` 命令行看是否已经安装成功，如果返回对应的版本信息，则说明安装成功。
+当安装成功后，执行如下命令来查看是否安装成功:
 
 .. code-block:: bash
 
@@ -30,27 +24,20 @@ Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQ
 For CentOS
 ------------------------------------
 
-首先从清华的官方镜像下载 anaconda Linux64版本
+如果您使用 GNU/Linux 系统，可以使用如下方式进行 Anaconda 环境的安装，以下以 CentOS 为例:
 
 .. code-block:: bash
 
-    wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-4.2.0-Linux-x86_64.sh
+    # 首先从清华的官方镜像下载 anaconda Linux64版本
+    $ wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-4.2.0-Linux-x86_64.sh
 
-修改权限让脚本可以运行
+    # 修改权限让脚本可以运行
+    $ chmod +x Anaconda3-4.2.0-Linux-x86_64.sh
 
-.. code-block:: bash
+    # 运行该安装脚本
+    $ ./Anaconda3-4.2.0-Linux-x86_64.sh
 
-    chmod +x Anaconda3-4.2.0-Linux-x86_64.sh
-
-运行该安装脚本
-
-.. code-block:: bash
-
-    ./Anaconda3-4.2.0-Linux-x86_64.sh
-
-剩下就是一路Yes或者Enter好了...
-
-.. code-block:: bash
+    # 剩下就是一路Yes或者Enter好了...
 
     Welcome to Anaconda3 4.2.0 (by Continuum Analytics, Inc.)
 
@@ -62,23 +49,16 @@ For CentOS
     Please, press ENTER to continue
     >>>
 
-重新加载一下 bash 就可以使用 `conda` 命令了
+    # 重新加载一下 bash 就可以使用 `conda` 命令了
+    $ source ~/.bashrc
 
-.. code-block:: bash
+    #然后尝试一下运行 `conda -V` 命令行看是否已经安装成功，如果返回对应的版本信息，则说明安装成功。
 
-    source ~/.bashrc
+    $ conda -V
+    conda 4.2.13
 
-然后尝试一下运行 `conda -V` 命令行看是否已经安装成功，如果返回对应的版本信息，则说明安装成功。
-
-.. code-block:: bash
-
-    conda -V
-
-设置matplotlib的backend（没有图形化界面的情况下）
-
-.. code-block:: bash
-
-    echo "backend: Agg" > ~/.config/matplotlib/matplotlibrc
+    #设置matplotlib的backend（没有图形化界面的情况下）
+    $ echo "backend: Agg" > ~/.config/matplotlib/matplotlibrc
 
 安装中文字体: 将 :code:`WenQuanYi Micro Hei.ttf` 放到 :code:`/usr/share/fonts/chinese`
 
@@ -123,40 +103,28 @@ conda 虚拟环境
 
 一下有几个常用的虚拟环境命令可以使用:
 
-*   创建 conda 虚拟环境（ :code:`env_name` 是您希望创建的虚拟环境名）
+
 
 .. code-block:: bash
 
-    conda create --name env_name python=3.5
+    # 创建 conda 虚拟环境（ :code:`env_name` 是您希望创建的虚拟环境名）
+    $ conda create --name env_name python=3.5
 
-*   如您想创建一个名为rqalpha的虚拟环境
+    # 如您想创建一个名为rqalpha的虚拟环境
+    $ conda create --name rqalpha python=3.5
 
-.. code-block:: bash
+    # 使用 conda 虚拟环境
+    $ source activate env_name
+    # 如果是 Windows 环境下 直接执行 activcate
+    $ activate env_name
 
-    conda create --name rqalpha python=3.5
+    # 退出 conda 虚拟环境
+    $ source deactivate env_name
+    # 如果是 Windows 环境下 直接执行 deactivate
+    $ deactivate env_name
 
-*   使用 conda 虚拟环境
-
-.. code-block:: bash
-
-    source activate env_name
-
-*   退出 conda 虚拟环境
-
-.. code-block:: bash
-
-    source deactivate env_name
-
-*   删除 conda 虚拟环境
-
-    conda-env remove --name env_name
-
-注意: **Windows下无需加上 source**
-
-安装 RQAlpha
-====================================
-
-RQAlpha 的相关安装 请参考 :ref:`intro-install`
+    # 删除 conda 虚拟环境
+    $ conda-env remove --name env_name
 
 .. _intro-detail-install-talib:
 

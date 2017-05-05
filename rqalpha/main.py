@@ -30,7 +30,7 @@ import better_exceptions
 
 from . import const
 from .api import helper as api_helper
-from .core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader
+from .core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
 from .core.strategy import Strategy
 from .core.strategy_universe import StrategyUniverse
 from .core.global_var import GlobalVars
@@ -178,14 +178,19 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
-def run(config, source_code=None):
+def run(config, source_code=None, user_funcs=None):
     env = Environment(config)
     persist_helper = None
     init_succeed = False
     mod_handler = ModHandler()
 
     try:
-        env.set_strategy_loader(FileStrategyLoader() if source_code is None else SourceCodeStrategyLoader())
+        if source_code is not None:
+            env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
+        elif user_funcs is not None:
+            env.set_strategy_loader(UserFuncStrategyLoader(user_funcs))
+        else:
+            env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
         env.set_global_vars(GlobalVars())
         mod_handler.set_env(env)
         mod_handler.start_up()
@@ -237,7 +242,7 @@ def run(config, source_code=None):
         apis = api_helper.get_apis(config.base.account_list)
         scope.update(apis)
 
-        scope = env.strategy_loader.load(env.config.base.strategy_file if source_code is None else source_code, scope)
+        scope = env.strategy_loader.load(scope)
 
         if env.config.extra.enable_profiler:
             enable_profiler(env, scope)
