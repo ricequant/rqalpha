@@ -57,7 +57,6 @@
     result_dict.keys()
     # [out]dict_keys(['total_portfolios', 'summary', 'benchmark_portfolios', 'benchmark_positions', 'stock_positions', 'trades', 'stock_portfolios'])
 
-更多参数配置请查看 :ref:`api-config`
 
 策略编写流程
 ------------------------------------------------------

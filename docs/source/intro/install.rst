@@ -89,8 +89,6 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 
     $ rqalpha run -d target_bundle_path .....
 
-详细参数配置请查看 :ref:`api-config`
-
 .. _intro-config:
 
 获取配置文件
