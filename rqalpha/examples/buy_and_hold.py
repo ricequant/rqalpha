@@ -1,5 +1,4 @@
 from rqalpha.api import *
-import datetime as dt
 
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
@@ -19,13 +18,6 @@ def before_trading(context):
 def handle_bar(context, bar_dict):
     # 开始编写你的主要的算法逻辑
 
-    #print get_extras('is_st', ['000001.XSHE','000018.XSHE'])
-    #print type(is_st_stock('000001.XSHE', 10))
-    #print get_industry_stocks('I64')
-    #df = get_fundamentals(query(valuation.day, valuation.capitalization, cash_flow.net_deposit_increase, indicator.eps, income.pubDate, income.interest_income).filter(income.code=='002626')) 
-    df = get_fundamentals(query(indicator.inc_net_profit_to_shareholders_annual, indicator.statDate)) 
-    print df
-    return
 
     # bar_dict[order_book_id] 可以拿到某个证券的bar信息
     # context.portfolio 可以拿到现在的投资组合状态信息
