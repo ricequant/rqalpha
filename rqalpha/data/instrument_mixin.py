@@ -44,7 +44,7 @@ class InstrumentMixin(object):
 
     def all_instruments(self, types, dt=None):
         return [i for i in self._instruments.values()
-                if ((dt is None or i.listed_date <= dt <= i.de_listed_date) and
+                if ((dt is None or i.listed_date.date() <= dt.date() <= i.de_listed_date.date()) and
                     (types is None or i.type in types))]
 
     def _instrument(self, sym_or_id):
