@@ -440,11 +440,12 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('type').are_valid_fields(names.VALID_INSTRUMENT_TYPES, ignore_none=True),
              verify_that('date').is_valid_date(ignore_none=True))
-def all_instruments(type=None, date=None):
+def all_instruments(type=None, dt=None):
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
     :param str type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
+    :param datetime dt: 查询时间点
 
     :return: `pandas DataFrame` 所有合约的基本信息。
 
@@ -484,11 +485,10 @@ def all_instruments(type=None, date=None):
 
     """
     env = Environment.get_instance()
-    current_date = datetime.datetime(env.trading_dt.year, env.trading_dt.month, env.trading_dt.day)
-    if date is None:
-        date = current_date
+    if dt is None:
+        dt = env.trading_dt
     else:
-        date = min(pd.Timestamp(date).to_pydatetime(), current_date)
+        dt = min(dt, env.trading_dt)
 
     if type is not None:
         if isinstance(type, six.string_types):
@@ -505,8 +505,8 @@ def all_instruments(type=None, date=None):
     else:
         types = None
 
-    result = [i for i in env.data_proxy.all_instruments(types, date)
-              if i.type != 'CS' or not env.data_proxy.is_suspended(i.order_book_id, date)]
+    result = [i for i in env.data_proxy.all_instruments(types, dt)
+              if i.type != 'CS' or not env.data_proxy.is_suspended(i.order_book_id, dt)]
     if types is not None and len(types) == 1:
         return pd.DataFrame([i.__dict__ for i in result])
 
