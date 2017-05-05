@@ -187,7 +187,7 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
 ::
 
     # see more config
-    # http://rqalpha.readthedocs.io/zh_CN/stable/api/config.html
+    # http://rqalpha.readthedocs.io/zh_CN/stable/intro/run_algorithm.html
     version: 0.1.5
 
     # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目

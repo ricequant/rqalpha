@@ -156,7 +156,6 @@ Feature Status
 .. _10分钟学会 RQAlpha: http://rqalpha.readthedocs.io/zh_CN/latest/intro/tutorial.html
 .. _策略示例: http://rqalpha.readthedocs.io/zh_CN/latest/intro/examples.html
 
-.. _参数配置: http://rqalpha.readthedocs.io/zh_CN/latest/api/config.html
 .. _API: http://rqalpha.readthedocs.io/zh_CN/latest/api/base_api.html
 
 .. _如何贡献代码: http://rqalpha.readthedocs.io/zh_CN/latest/development/make_contribute.html
@@ -181,30 +180,35 @@ Feature Status
 .. _shipane: https://github.com/wh1100717/rqalpha-mod-ShiPanE
 
 .. toctree::
-    :caption: 快速指引
+    :caption: 基础
     :hidden:
 
     intro/overview
     intro/install
-    intro/detail_install
     intro/tutorial
-    intro/run_algorithm
-    intro/under_ide
-    intro/optimizing_parameters
     intro/examples
+    intro/detail_install
     intro/virtual_machine
 
 .. toctree::
     :caption: API
     :hidden:
 
-    api/config
     api/base_api
     api/extend_api
 
 
 .. toctree::
-    :caption: Development
+    :caption: 进阶
+    :hidden:
+
+    intro/run_algorithm
+    intro/under_ide
+    intro/optimizing_parameters
+
+
+.. toctree::
+    :caption: 开发
     :hidden:
 
     development/make_contribute
@@ -214,7 +218,7 @@ Feature Status
     development/data_source
 
 .. toctree::
-    :caption: Extra
+    :caption: 其他
     :hidden:
 
     history

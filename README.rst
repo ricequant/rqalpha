@@ -59,7 +59,6 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
 RQAlpha API
 ============================
 
-*   `参数配置`_ : 启动 RQAlpha 参数配置
 *   `API`_ : RQAlpha API 文档
 
 Mod
@@ -194,7 +193,6 @@ Feature Status
 .. _10分钟学会 RQAlpha: http://rqalpha.readthedocs.io/zh_CN/latest/intro/tutorial.html
 .. _策略示例: http://rqalpha.readthedocs.io/zh_CN/latest/intro/examples.html
 
-.. _参数配置: http://rqalpha.readthedocs.io/zh_CN/latest/api/config.html
 .. _API: http://rqalpha.readthedocs.io/zh_CN/latest/api/base_api.html
 
 .. _如何贡献代码: http://rqalpha.readthedocs.io/zh_CN/latest/development/make_contribute.html
