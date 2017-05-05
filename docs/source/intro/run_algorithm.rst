@@ -1,4 +1,4 @@
-.. _intro-run-alogirhtm
+.. _intro-run-alogirhtm:
 
 ====================
 多种方式运行策略
@@ -148,6 +148,7 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
     我们假设在当前目录下存在 `buy_and_hold.py` 策略文件
 
 ::
+
     # config.yml
     base:
       # 启动的策略文件路径
@@ -299,7 +300,7 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
 
 .. note::
 
-及时通过代码方式启动策略，RQAlpha 也会寻找代码执行目录是否存在 `config.yml` / `config.json` 文件，作为用户配置文件来加载配置。但代码中传入的 `config` 优先级更高。
+  即使通过代码方式启动策略，RQAlpha 也会寻找代码执行目录是否存在 `config.yml` / `config.json` 文件，作为用户配置文件来加载配置。但代码中传入的 `config` 优先级更高。
 
 使用 :code:`run_file` 函数来运行策略
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
