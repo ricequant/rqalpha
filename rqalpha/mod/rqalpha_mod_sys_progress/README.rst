@@ -8,15 +8,15 @@ RQAlpha 控制台进度条 Mod
 
 该模块是系统模块，不可删除
 
-开启或关闭策略分析 Mod
+开启或关闭进度条 Mod
 ===============================
 
 ..  code-block:: bash
 
-    # 关闭策略分析 Mod
+    # 关闭进度条 Mod
     $ rqalpha mod disable sys_progress
 
-    # 启用策略分析 Mod
+    # 启用进度条 Mod
     $ rqalpha mod enable sys_progress
 
 模块配置项

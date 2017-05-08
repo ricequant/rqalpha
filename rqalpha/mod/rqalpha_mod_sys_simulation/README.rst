@@ -6,15 +6,15 @@ RQAlpha 回测 Mod，启用该模块开启回测功能。
 
 该模块是系统模块，不可删除
 
-开启或关闭策略分析 Mod
+开启或关闭策略回测/模拟 Mod
 ===============================
 
 ..  code-block:: bash
 
-    # 关闭策略分析 Mod
+    # 关闭策略回测/模拟 Mod
     $ rqalpha mod disable sys_simulation
 
-    # 启用策略分析 Mod
+    # 启用策略回测/模拟 Mod
     $ rqalpha mod enable sys_simulation
 
 模块配置项

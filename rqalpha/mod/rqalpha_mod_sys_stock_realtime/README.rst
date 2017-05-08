@@ -14,10 +14,10 @@ RQAlpha 接受实时行情并触发事件 Mod
 
 ..  code-block:: bash
 
-    # 关闭策略分析 Mod
+    # 关闭 Mod
     $ rqalpha mod disable sys_stock_realtime
 
-    # 启用策略分析 Mod
+    # 启用 Mod
     $ rqalpha mod enable sys_stock_realtime
 
 使用方式
