@@ -2,6 +2,38 @@
 CHANGELOG
 ==================
 
+2.2.2
+==================
+
+- 增加 :code:`run_file` | :code:`run_code` | :code:`run_func` API, 详情请参见 `多种方式运行策略 <http://rqalpha.io/zh_CN/latest/intro/run_algorithm.html>`_
+- Breaking Change: 更改 :code:`AbstractStrategyLoader:load` 函数的传入参数，现在不需要 :code:`strategy` 了。
+- 增加 :code:`UserFuncStrategyLoader` 类
+- 根据 `Issue 116 <https://github.com/ricequant/rqalpha/issues/116>`_ 增加如下内容:
+
+  - :code:`POSITION_EFFECT` 增加 :code:`CLOSE_TODAY` 类型
+  - 增加调仓函数 :code:`order(order_book_id, quantity, price=None)` API
+
+    - 如果不传入 price 则认为执行的是 MarketOrder 类型订单，否则下 LimitOrder 订单
+    - 期货
+
+      - quantity > 0: 往 BUY 方向调仓 quantity 手
+      - quantity < 0: 往 SELL 方向调仓 quantity 手
+
+    - 股票
+
+      - 相当于 order_shares 函数
+
+  - 增加调仓函数 :code:`order_to(order_book_id, quantity, price=None)` API
+
+    - 基本逻辑和 :code:`order` 函数一致
+    - 区别在于 quantity 表示调仓对应的最终仓位
+
+  - 现有所有下单函数，增加 `price` option，具体行为和 :code:`order` | :code:`order_to` 一致
+
+- Fix bug in :code:`all_instruments` `PR 123 <https://github.com/ricequant/rqalpha/pull/123>`_
+- Fix "运行不满一天的情况下 sys_analyser 报 KeyError" `PR 118 <https://github.com/ricequant/rqalpha/pull/118>`_
+- sys_analyser 生成 report 对应的字段进行调整，具体调整内容请查看 commit `d9d19f <https://github.com/ricequant/rqalpha/commit/f6e4c24fde2f086cc09b45b2cc4d2cfe0cd9d19f>`_
+
 2.2.0
 ==================
 
