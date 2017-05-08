@@ -16,7 +16,7 @@
 
 import six
 
-from .api_base import decorate_api_exc, instruments
+from .api_base import decorate_api_exc, instruments, cal_style
 from .api_stock import order_shares as order_stock
 from .api_future import smart_order as order_future
 from ..environment import Environment
@@ -52,7 +52,7 @@ def now_time_str(str_format="%H:%M:%S"):
 
 @export_as_api
 @apply_rules(verify_that('quantity').is_number())
-def order(order_book_id, quantity, price=None):
+def order(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数
 
@@ -73,6 +73,9 @@ def order(order_book_id, quantity, price=None):
 
     :param float price: 下单价格
 
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
     :return: list[:class:`~Order`]
 
     :example:
@@ -86,12 +89,12 @@ def order(order_book_id, quantity, price=None):
         # RB1710 空方向调仓3手：先平多方向2手 在开空方向1手，调整后变为 SELL 1手
         order('RB1710', -3)
     """
-    order_style = MarketOrder() if price is None else LimitOrder(price)
     position = Environment.get_instance().portfolio.positions[order_book_id]
+    style = cal_style(price, style)
     if position.type == ACCOUNT_TYPE.STOCK:
-        orders = order_stock(order_book_id, quantity, order_style)
+        orders = order_stock(order_book_id, quantity, style)
     elif position.type == ACCOUNT_TYPE.FUTURE:
-        orders = order_future(order_book_id, quantity, order_style)
+        orders = order_future(order_book_id, quantity, style)
     else:
         raise NotImplementedError
     if isinstance(orders, Order):
@@ -101,7 +104,7 @@ def order(order_book_id, quantity, price=None):
 
 @export_as_api
 @apply_rules(verify_that('quantity').is_number())
-def order_to(order_book_id, quantity, price=None):
+def order_to(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数
 
@@ -122,6 +125,9 @@ def order_to(order_book_id, quantity, price=None):
 
     :param float price: 下单价格
 
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
     :return: list[:class:`~Order`]
 
     :example:
@@ -135,12 +141,12 @@ def order_to(order_book_id, quantity, price=None):
         # RB1710 调仓至 SELL 1手
         order_to('RB1710'， -1)
     """
-    order_style = MarketOrder() if price is None else LimitOrder(price)
     position = Environment.get_instance().portfolio.positions[order_book_id]
+    style = cal_style(price, style)
     if position.type == ACCOUNT_TYPE.STOCK:
-        orders = order_stock(order_book_id, quantity - position.quantity, order_style)
+        orders = order_stock(order_book_id, quantity - position.quantity, style)
     elif position.type == ACCOUNT_TYPE.FUTURE:
-        orders = order_future(order_book_id, quantity - position.buy_quantity + position.sell_quantity, order_style)
+        orders = order_future(order_book_id, quantity - position.buy_quantity + position.sell_quantity, style)
     else:
         raise NotImplementedError
     if isinstance(orders, Order):

@@ -48,7 +48,7 @@ from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCo
 # noinspection PyUnresolvedReferences
 from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
 # noinspection PyUnresolvedReferences
-from ..model.order import Order, MarketOrder, LimitOrder
+from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
 
 
 __all__ = [
@@ -132,6 +132,22 @@ def assure_order_book_id(id_or_ins):
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
     return order_book_id
+
+
+def cal_style(price, style):
+    if price is None and style is None:
+        return MarketOrder()
+
+    if style is not None:
+        if not isinstance(style, OrderStyle):
+            raise RuntimeError
+        return style
+
+    if isinstance(price, OrderStyle):
+        # 为了 order_xxx('RB1710', 10, MarketOrder()) 这种写法
+        return price
+
+    return LimitOrder(price)
 
 
 @export_as_api
