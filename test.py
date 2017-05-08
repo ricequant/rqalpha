@@ -74,7 +74,7 @@ def run_test(filename):
     }
     print(u"Start test: " + str(config["base"]["strategy_file"]))
     result_dict = run(config)['sys_analyser']
-    df = result_dict["total_portfolios"]
+    df = result_dict["portfolio"]
     # del df['positions']
 
     old_pickle_file = os.path.join(TEST_OUT, filename.replace(".py", ".pkl"))
@@ -88,7 +88,7 @@ def run_test(filename):
         old_result_dict = pd.read_pickle(old_pickle_file)
 
         # 比较 portfolios
-        old_df = old_result_dict["total_portfolios"]
+        old_df = old_result_dict["portfolio"]
         old_df = old_df.fillna(0)
         old_df = old_df.replace([np.inf, -np.inf], 0)
         df = df.fillna(0)
