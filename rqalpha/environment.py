@@ -121,7 +121,7 @@ class Environment(object):
         return self.bar_dict[order_book_id]
 
     def get_last_price(self, order_book_id):
-        return self.price_board.get_last_price(order_book_id)
+        return float(self.price_board.get_last_price(order_book_id))
 
     def get_instrument(self, order_book_id):
         return self.data_proxy.instruments(order_book_id)
