@@ -36,7 +36,7 @@ class ModHandler(object):
 
         for mod_name in config.mod.__dict__:
             mod_config = getattr(config.mod, mod_name)
-            if not mod_config.enabled:
+            if not mod_config.__dict__.get('enabled'):
                 continue
             self._mod_list.append((mod_name, mod_config))
 
