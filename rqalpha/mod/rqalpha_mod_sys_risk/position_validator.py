@@ -46,9 +46,6 @@ class PositionValidator(AbstractFrontendValidator):
 
         position = account.positions[order.order_book_id]
 
-        if order.position_effect == POSITION_EFFECT.CLOSE_TODAY:
-            if order.side == SIDE.BUY and order.quantity > position.clo
-
         if order.side == SIDE.BUY and order.quantity > position.closable_sell_quantity:
             order.mark_rejected(_(
                 "Order Rejected: not enough securities {order_book_id} to buy close, target"
