@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import click
-from rqalpha.__main__ import cli
+from rqalpha import cli
 
 
 __config__ = {

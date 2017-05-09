@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import click
-from rqalpha.__main__ import cli
+from rqalpha import cli
 
 __config__ = {
     # 当不输出csv/pickle/plot 等内容时，可以通过 record 来决定是否执行该 Mod 的计算逻辑

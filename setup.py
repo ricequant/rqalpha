@@ -47,8 +47,7 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "rqalpha = rqalpha.__main__:entry_point",
-            "rqalpha-cmd = rqalpha.cmd:entry_point",
+            "rqalpha = rqalpha.__main__:entry_point"
         ]
     },
     classifiers=[
