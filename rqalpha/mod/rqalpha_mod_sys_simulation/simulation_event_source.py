@@ -124,9 +124,9 @@ class SimulationEventSource(AbstractEventSource):
                             trading_dt = calendar_dt
                         if before_trading_flag:
                             before_trading_flag = False
-                            before_trading_dt = trading_dt - datetime.timedelta(minutes=30)
-                            yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
-                                        trading_dt=before_trading_dt)
+                            yield Event(EVENT.BEFORE_TRADING,
+                                        calendar_dt=calendar_dt - datetime.timedelta(minutes=30),
+                                        trading_dt=trading_dt - datetime.timedelta(minutes=30))
                         if self._universe_changed:
                             self._universe_changed = False
                             last_dt = calendar_dt
