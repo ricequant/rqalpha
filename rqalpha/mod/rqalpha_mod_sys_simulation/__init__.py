@@ -55,7 +55,7 @@ cli.commands['run'].params.append(
     click.Option(
         ('--signal', cli_prefix + "signal"),
         is_flag=True,
-        help="[sys_simulation]exclude match engine",
+        help="[sys_simulation] exclude match engine",
     )
 )
 
@@ -63,7 +63,7 @@ cli.commands['run'].params.append(
     click.Option(
         ('-sp', '--slippage', cli_prefix + "slippage"),
         type=click.FLOAT,
-        help="[sys_simulation]set slippage"
+        help="[sys_simulation] set slippage"
     )
 )
 
