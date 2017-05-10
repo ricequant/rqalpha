@@ -152,7 +152,6 @@ class FutureAccount(BaseAccount):
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.buy_quantity + position.sell_quantity != 0:
-                self._total_cash += position.market_value * position.margin_rate
                 user_system_log.warn(
                     _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
                 del self._positions[order_book_id]
