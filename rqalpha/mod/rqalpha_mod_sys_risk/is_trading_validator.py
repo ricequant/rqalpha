@@ -37,7 +37,7 @@ class IsTradingValidator(AbstractFrontendValidator):
             ))
             return False
 
-        if self._env.data_proxy.is_suspended(order.order_book_id, self._env.trading_dt):
+        if instrument.type == 'CS' and self._env.data_proxy.is_suspended(order.order_book_id, self._env.trading_dt):
             order.mark_rejected(_(u"security {order_book_id} is suspended on {date}").format(
                 order_book_id=order.order_book_id,
                 date=self._env.trading_dt
