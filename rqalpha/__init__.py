@@ -105,3 +105,15 @@ def run_func(**kwargs):
 
     config = parse_config(config, click_type=False)
     return main.run(config, user_funcs=user_funcs)
+
+
+def subscribe_event(event_type, handler):
+    import types
+    from .events import EVENT
+    from .environment import Environment
+
+    assert isinstance(handler, types.FunctionType)
+    assert isinstance(event_type, EVENT)
+
+    env = Environment.get_instance()
+    env.event_bus.add_listener(event_type, handler)

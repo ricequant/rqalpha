@@ -49,6 +49,8 @@ from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCo
 from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
 # noinspection PyUnresolvedReferences
 from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
+# noinspection PyUnresolvedReferences
+from ..events import EVENT
 
 
 __all__ = [
@@ -63,6 +65,7 @@ __all__ = [
     'ORDER_TYPE',
     'RUN_TYPE',
     'MATCHING_TYPE',
+    'EVENT',
 ]
 
 
