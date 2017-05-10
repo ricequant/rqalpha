@@ -27,7 +27,7 @@ from .api_base import decorate_api_exc, instruments, cal_style
 from ..execution_context import ExecutionContext
 from ..environment import Environment
 from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from ..const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE
+from ..const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
 from ..model.instrument import Instrument
 from ..utils.exception import RQInvalidArgument
 from ..utils.logger import user_system_log
@@ -136,6 +136,12 @@ def order(id_or_ins, amount, side, position_effect, style):
 
     order_book_id = assure_future_order_book_id(id_or_ins)
     env = Environment.get_instance()
+    if env.config.base.run_type != RUN_TYPE.BACKTEST:
+        if "88" in order_book_id:
+            raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
+        if "99" in order_book_id:
+            raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
+
     price = env.get_last_price(order_book_id)
     if np.isnan(price):
         user_system_log.warn(
