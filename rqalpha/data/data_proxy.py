@@ -17,7 +17,6 @@
 import six
 import numpy as np
 import pandas as pd
-import datetime
 
 from . import risk_free_helper
 from .instrument_mixin import InstrumentMixin
@@ -26,7 +25,6 @@ from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
 from ..utils.py2 import lru_cache
 from ..utils.datetime_func import convert_int_to_datetime, convert_date_to_int
-from ..const import HEDGE_TYPE
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):
