@@ -5,8 +5,16 @@ from rqalpha import subscribe_event
 def on_trade_handler(event):
     trade = event.trade
     order = event.order
+    account = event.account
     logger.info("*" * 10 + "Trade Handler" + "*" * 10)
     logger.info(trade)
+    logger.info(order)
+    logger.info(account)
+
+
+def on_order_handler(event):
+    order = event.order
+    logger.info("*" * 10 + "Order Handler" + "*" * 10)
     logger.info(order)
 
 
@@ -18,6 +26,7 @@ def init(context):
     # 是否已发送了order
     context.fired = False
     subscribe_event(EVENT.TRADE, on_trade_handler)
+    subscribe_event(EVENT.ORDER_CREATION_PASS, on_order_handler)
 
 
 def before_trading(context):
