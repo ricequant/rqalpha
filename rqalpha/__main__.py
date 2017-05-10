@@ -94,8 +94,8 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
 # -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 3.0.0
 @click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT, help="[Deprecated]")
-@click.option('-k', '--kind', 'base__securities', type=click.Choice(['stock', 'future', 'stock_future']), help="[Deprecated]")
-@click.option('--strategy-type', 'base__securities', type=click.Choice(['stock', 'future']), help="[Deprecated]")
+@click.option('-k', '--kind', 'base__securities', multiple=True, type=click.Choice(['stock', 'future', 'stock_future']), help="[Deprecated]")
+@click.option('--strategy-type', 'base__securities', multiple=True, type=click.Choice(['stock', 'future']), help="[Deprecated]")
 def run(**kwargs):
     """
     Start to run a strategy
