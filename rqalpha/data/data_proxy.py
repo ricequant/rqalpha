@@ -25,7 +25,6 @@ from ..model.bar import BarObject
 from ..model.snapshot import SnapshotObject
 from ..utils.py2 import lru_cache
 from ..utils.datetime_func import convert_int_to_datetime
-from ..const import HEDGE_TYPE
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):
