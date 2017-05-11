@@ -20,7 +20,8 @@ from rqalpha.const import RUN_TYPE, PERSIST_MODE
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 
-from .data_source import DataSource
+from .direct_data_source import DirectDataSource
+from .redis_data_source import RedisDataSource
 from .event_source import RealtimeEventSource
 
 
@@ -30,7 +31,11 @@ class RealtimeTradeMod(AbstractMod):
 
         if env.config.base.run_type in (RUN_TYPE.PAPER_TRADING, RUN_TYPE.LIVE_TRADING):
             user_system_log.warn(_("[Warning] When you use this version of RealtimeTradeMod, history_bars can only get data from yesterday."))
-            env.set_data_source(DataSource(env.config.base.data_bundle_path))
+
+            if mod_config.redis_uri:
+                env.set_data_source(RedisDataSource(env.config.base.data_bundle_path, mod_config.redis_uri))
+            else:
+                env.set_data_source(DirectDataSource(env.config.base.data_bundle_path))
             env.set_event_source(RealtimeEventSource(mod_config.fps))
 
             # add persist

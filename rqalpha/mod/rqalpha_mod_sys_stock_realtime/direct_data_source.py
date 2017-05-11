@@ -25,9 +25,9 @@ from rqalpha.model.snapshot import SnapshotObject
 from . import data_board
 
 
-class DataSource(BaseDataSource):
+class DirectDataSource(BaseDataSource):
     def __init__(self, path):
-        super(DataSource, self).__init__(path)
+        super(DirectDataSource, self).__init__(path)
         self._env = Environment.get_instance()
 
     def get_bar(self, instrument, dt, frequency):
