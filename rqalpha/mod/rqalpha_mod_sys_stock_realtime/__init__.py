@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import click
+from rqalpha import cli
+from rqalpha.data.base_data_source import BaseDataSource
+from rqalpha.utils.config import parse_config
+from rqalpha.utils.logger import system_log
+
 
 __config__ = {
     "priority": 200,
@@ -25,3 +31,36 @@ __config__ = {
 def load_mod():
     from .mod import RealtimeTradeMod
     return RealtimeTradeMod()
+
+
+@cli.command()
+@click.argument('redis_url', required=True)
+def quotation(redis_url):
+    """
+    [sys_stock_realtime] quotation service, download market data into redis
+    """
+    import redis
+    import time
+    import json
+
+    from .utils import get_realtime_quotes
+
+    redis_client = redis.from_url(redis_url)
+
+    from rqalpha.data.data_proxy import DataProxy
+    config = parse_config({})
+
+    data_source = BaseDataSource(config.base.data_bundle_path)
+    data_proxy = DataProxy(data_source)
+
+    order_book_id_list = data_proxy.all_instruments("CS")
+
+    def record_market_data(total_df):
+        for order_book_id, item in total_df.iterrows():
+            redis_client[order_book_id] = json.dumps(item.to_dict())
+
+    while True:
+        total_df = get_realtime_quotes(order_book_id_list, include_limit=True)
+        system_log.info("Fetching snapshots, size {}", len(total_df))
+        record_market_data(total_df)
+        time.sleep(1)
