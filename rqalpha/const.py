@@ -42,6 +42,7 @@ class RUN_TYPE(CustomEnum):
     BACKTEST = "BACKTEST"
     # Paper Trading
     PAPER_TRADING = "PAPER_TRADING"
+    # Live Trading
     LIVE_TRADING = 'LIVE_TRADING'
 
 

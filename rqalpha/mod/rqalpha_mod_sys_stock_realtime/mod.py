@@ -26,7 +26,7 @@ class RealtimeTradeMod(AbstractMod):
 
     def start_up(self, env, mod_config):
 
-        if env.config.base.run_type == RUN_TYPE.PAPER_TRADING:
+        if env.config.base.run_type in (RUN_TYPE.PAPER_TRADING, RUN_TYPE.LIVE_TRADING):
             env.set_data_source(DataSource(env.config.base.data_bundle_path))
             env.set_event_source(RealtimeEventSource(mod_config.fps))
 

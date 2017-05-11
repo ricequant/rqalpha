@@ -64,10 +64,8 @@ class RealtimeEventSource(AbstractEventSource):
         while True:
             if not is_holiday_today() and is_tradetime_now():
                 order_book_id_list = sorted([instruments.order_book_id for instruments in self._env.data_proxy.all_instruments("CS", self._env.trading_dt)])
-                code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
-
                 try:
-                    data_board.realtime_quotes_df = get_realtime_quotes(code_list)
+                    data_board.realtime_quotes_df = get_realtime_quotes(order_book_id_list)
                 except Exception as e:
                     system_log.exception("get_realtime_quotes fail")
                     continue

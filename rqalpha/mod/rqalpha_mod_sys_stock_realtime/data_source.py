@@ -16,6 +16,8 @@
 
 import datetime
 
+import pandas as pd
+
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
 from rqalpha.model.snapshot import SnapshotObject
@@ -35,7 +37,8 @@ class DataSource(BaseDataSource):
     def current_snapshot(self, instrument, frequency, dt):
         snapshot_dict = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         snapshot_dict["last"] = snapshot_dict["price"]
-        return SnapshotObject(instrument, snapshot_dict)
+        dt = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
+        return SnapshotObject(instrument, snapshot_dict, dt=dt)
 
     def available_data_range(self, frequency):
         return datetime.date(2017, 1, 1), datetime.date.max

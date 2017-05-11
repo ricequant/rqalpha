@@ -38,6 +38,8 @@ def load_mod():
 def quotation_server(redis_url):
     """
     [sys_stock_realtime] quotation service, download market data into redis
+
+    Multiple RQAlpha instance can use single market data service.
     """
     import redis
     import time
