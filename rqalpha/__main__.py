@@ -27,13 +27,6 @@ from .utils.config import parse_config, get_mod_config_path, dump_config, load_m
 from .utils.config import default_dir_path
 
 
-@click.group()
-@click.option('-v', '--verbose', count=True)
-@click.pass_context
-def cli(ctx, verbose):
-    ctx.obj["VERBOSE"] = verbose
-
-
 def entry_point():
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.package_helper import import_mod
@@ -55,6 +48,13 @@ def entry_point():
             import_mod(lib_name)
 
     cli(obj={})
+
+
+@click.group()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def cli(ctx, verbose):
+    ctx.obj["VERBOSE"] = verbose
 
 
 @cli.command()
