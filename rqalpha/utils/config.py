@@ -36,6 +36,9 @@ from ..utils.py2 import to_utf8
 from ..mod.utils import mod_config_value_parse
 
 
+rqalpha_path = "~/.rqalpha"
+
+
 def load_config(config_path, loader=yaml.Loader):
     if config_path is None:
         return {}
@@ -68,7 +71,7 @@ def load_mod_config(config_path, loader=yaml.Loader):
 
 
 def get_mod_config_path(generate=False):
-    mod_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/mod_config.yml"))
+    mod_config_path = os.path.abspath(os.path.expanduser(os.path.join(rqalpha_path, "mod_config.yml")))
     mod_template_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../mod_config_template.yml"))
     if not os.path.exists(mod_config_path):
         if generate:
@@ -184,7 +187,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         base_config.end_date = base_config.end_date.date()
 
     if base_config.data_bundle_path is None:
-        base_config.data_bundle_path = os.path.expanduser("~/.rqalpha")
+        base_config.data_bundle_path = os.path.expanduser(rqalpha_path)
 
     base_config.data_bundle_path = os.path.abspath(base_config.data_bundle_path)
 
