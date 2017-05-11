@@ -34,10 +34,10 @@ class RealtimeTradeMod(AbstractMod):
 
             if mod_config.redis_uri:
                 env.set_data_source(RedisDataSource(env.config.base.data_bundle_path, mod_config.redis_uri))
-                system_log.info("RealtimeTradeMod using market from redis")
+                system_log.info(_("RealtimeTradeMod using market from redis"))
             else:
                 env.set_data_source(DirectDataSource(env.config.base.data_bundle_path))
-                system_log.info("RealtimeTradeMod using market from network")
+                system_log.info(_("RealtimeTradeMod using market from network"))
 
             env.set_event_source(RealtimeEventSource(mod_config.fps, mod_config))
 

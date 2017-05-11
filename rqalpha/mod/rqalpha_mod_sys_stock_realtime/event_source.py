@@ -25,6 +25,7 @@ from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
 from rqalpha.events import Event, EVENT
 from rqalpha.utils import rq_json
+from rqalpha.utils.i18n import gettext as _
 from .utils import get_realtime_quotes, is_holiday_today, is_tradetime_now
 from . import data_board
 
@@ -69,7 +70,7 @@ class RealtimeEventSource(AbstractEventSource):
                 try:
                     data_board.realtime_quotes_df = get_realtime_quotes(order_book_id_list)
                 except Exception as e:
-                    system_log.exception("get_realtime_quotes fail")
+                    system_log.exception(_("get_realtime_quotes fail"))
                     continue
 
             time.sleep(1)
@@ -80,6 +81,7 @@ class RealtimeEventSource(AbstractEventSource):
         while True:
             # wait for the first data ready
             if data_proxy.current_snapshot("000001.XSHG", None, None).datetime.date() == datetime.date.today():
+                system_log.info(_("Market data is ready, start to work now!"))
                 break
             time.sleep(0.1)
 

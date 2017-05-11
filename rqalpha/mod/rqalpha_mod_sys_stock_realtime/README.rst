@@ -33,10 +33,16 @@ RQAlpha 接受实时行情并触发事件 Mod
 使用方式
 ===============================
 
-在启动该 Mod 的情况下，
+在启动该 Mod 的情况下（可以通过 rqalpha mod list 确认是否启动），
 
 使用 :code:`--run-type` 或者 :code:`-rt` 为 :code:`p` (PaperTrading)，就可以激活改 mod。
 
 .. code-block:: bash
 
-    rqalpha run -fq 1m -rt p -f ~/tmp/test_a.py -sc 100000 -l verbose -mc sys_stock_realtime.enabled True
+    rqalpha run -fq 1m -rt p -f ~/strategy.py -sc 100000 -l verbose
+
+在启用了 redis 服务后，可以让 rqalpha 连接 redis ，从 redis 读取实时行情数据。只需要增加参数 --redis-uri ，填入启动 quotation_server 的 uri，既可以将两者连通。
+
+.. code-block:: bash
+
+    rqalpha run -fq 1m -rt p -f ~/strategy.py -sc 100000 -l verbose --redis-uri redis://localhost/1
