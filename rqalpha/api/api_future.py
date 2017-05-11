@@ -162,8 +162,6 @@ def order(id_or_ins, amount, side, position_effect, style):
                 if sell_old_quantity != 0:
                     # 如果有昨仓，则创建一个 POSITION_EFFECT.CLOSE 的平仓单
                     orders.append(Order.__from_create__(
-                        env.calendar_dt,
-                        env.trading_dt,
                         order_book_id,
                         sell_old_quantity,
                         side,
@@ -172,8 +170,6 @@ def order(id_or_ins, amount, side, position_effect, style):
                     ))
                 # 剩下还有仓位，则创建一个 POSITION_EFFECT.CLOSE_TODAY 的平今单
                 orders.append(Order.__from_create__(
-                    env.calendar_dt,
-                    env.trading_dt,
                     order_book_id,
                     amount - sell_old_quantity,
                     side,
@@ -183,8 +179,6 @@ def order(id_or_ins, amount, side, position_effect, style):
             else:
                 # 创建 POSITION_EFFECT.CLOSE 的平仓单
                 orders.append(Order.__from_create__(
-                    env.calendar_dt,
-                    env.trading_dt,
                     order_book_id,
                     amount,
                     side,
@@ -202,8 +196,6 @@ def order(id_or_ins, amount, side, position_effect, style):
             if amount > buy_old_quantity:
                 if buy_old_quantity != 0:
                     orders.append(Order.__from_create__(
-                        env.calendar_dt,
-                        env.trading_dt,
                         order_book_id,
                         buy_old_quantity,
                         side,
@@ -211,8 +203,6 @@ def order(id_or_ins, amount, side, position_effect, style):
                         POSITION_EFFECT.CLOSE
                     ))
                 orders.append(Order.__from_create__(
-                    env.calendar_dt,
-                    env.trading_dt,
                     order_book_id,
                     amount - buy_old_quantity,
                     side,
@@ -221,8 +211,6 @@ def order(id_or_ins, amount, side, position_effect, style):
                 ))
             else:
                 orders.append(Order.__from_create__(
-                    env.calendar_dt,
-                    env.trading_dt,
                     order_book_id,
                     amount,
                     side,
@@ -231,8 +219,6 @@ def order(id_or_ins, amount, side, position_effect, style):
                 ))
     else:
         orders.append(Order.__from_create__(
-            env.calendar_dt,
-            env.trading_dt,
             order_book_id,
             amount,
             side,
