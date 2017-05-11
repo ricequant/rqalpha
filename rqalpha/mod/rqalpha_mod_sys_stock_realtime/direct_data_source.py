@@ -35,7 +35,10 @@ class DirectDataSource(BaseDataSource):
         return bar
 
     def current_snapshot(self, instrument, frequency, dt):
-        snapshot_dict = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
+        try:
+            snapshot_dict = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
+        except KeyError:
+            return SnapshotObject(instrument, None)
         snapshot_dict["last"] = snapshot_dict["price"]
         dt = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
         return SnapshotObject(instrument, snapshot_dict, dt=dt)

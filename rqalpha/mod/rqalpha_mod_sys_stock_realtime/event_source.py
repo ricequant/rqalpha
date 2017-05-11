@@ -25,15 +25,16 @@ from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
 from rqalpha.events import Event, EVENT
 from rqalpha.utils import rq_json
-from .utils import get_realtime_quotes, order_book_id_2_tushare_code, is_holiday_today, is_tradetime_now
+from .utils import get_realtime_quotes, is_holiday_today, is_tradetime_now
 from . import data_board
 
 
 class RealtimeEventSource(AbstractEventSource):
     MARKET_DATA_EVENT = "RealtimeEventSource.MARKET_DATA_EVENT"
 
-    def __init__(self, fps):
+    def __init__(self, fps, mod_config):
         self._env = Environment.get_instance()
+        self.mod_config = mod_config
         self.fps = fps
         self.event_queue = Queue()
 
@@ -41,8 +42,9 @@ class RealtimeEventSource(AbstractEventSource):
         self.after_trading_fire_date = datetime.date(2000, 1, 1)
         self.settlement_fire_date = datetime.date(2000, 1, 1)
 
-        self.quotation_engine_thread = Thread(target=self.quotation_worker)
-        self.quotation_engine_thread.daemon = True
+        if not mod_config.redis_uri:
+            self.quotation_engine_thread = Thread(target=self.quotation_worker)
+            self.quotation_engine_thread.daemon = True
 
         self.clock_engine_thread = Thread(target=self.clock_worker)
         self.clock_engine_thread.daemon = True
@@ -73,9 +75,11 @@ class RealtimeEventSource(AbstractEventSource):
             time.sleep(1)
 
     def clock_worker(self):
+        data_proxy = self._env.data_proxy
+
         while True:
             # wait for the first data ready
-            if not data_board.realtime_quotes_df.empty:
+            if data_proxy.current_snapshot("000001.XSHG", None, None).datetime.date() == datetime.date.today():
                 break
             time.sleep(0.1)
 
@@ -105,7 +109,9 @@ class RealtimeEventSource(AbstractEventSource):
         running = True
 
         self.clock_engine_thread.start()
-        self.quotation_engine_thread.start()
+
+        if not self.mod_config.redis_uri:
+            self.quotation_engine_thread.start()
 
         while running:
             real_dt = datetime.datetime.now()

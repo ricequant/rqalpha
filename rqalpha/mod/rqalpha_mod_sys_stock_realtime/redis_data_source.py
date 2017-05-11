@@ -38,11 +38,11 @@ class RedisDataSource(BaseDataSource):
         return snapshot
 
     def get_bar(self, instrument, dt, frequency):
-        snapshot_dict = self._get_snapshot_dict(instrument.order_book_id).to_dict()
+        snapshot_dict = self._get_snapshot_dict(instrument.order_book_id)
         return snapshot_dict
 
     def current_snapshot(self, instrument, frequency, dt):
-        snapshot_dict = self._get_snapshot_dict(instrument.order_book_id).to_dict()
+        snapshot_dict = self._get_snapshot_dict(instrument.order_book_id)
         dt = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
         return SnapshotObject(instrument, snapshot_dict, dt=dt)
 

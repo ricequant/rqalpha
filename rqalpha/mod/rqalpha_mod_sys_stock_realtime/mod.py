@@ -17,7 +17,7 @@
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.disk_persist_provider import DiskPersistProvider
 from rqalpha.const import RUN_TYPE, PERSIST_MODE
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.utils.i18n import gettext as _
 
 from .direct_data_source import DirectDataSource
@@ -34,9 +34,12 @@ class RealtimeTradeMod(AbstractMod):
 
             if mod_config.redis_uri:
                 env.set_data_source(RedisDataSource(env.config.base.data_bundle_path, mod_config.redis_uri))
+                system_log.info("RealtimeTradeMod using market from redis")
             else:
                 env.set_data_source(DirectDataSource(env.config.base.data_bundle_path))
-            env.set_event_source(RealtimeEventSource(mod_config.fps))
+                system_log.info("RealtimeTradeMod using market from network")
+
+            env.set_event_source(RealtimeEventSource(mod_config.fps, mod_config))
 
             # add persist
             persist_provider = DiskPersistProvider(mod_config.persist_path)
