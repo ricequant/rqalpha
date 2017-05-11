@@ -22,16 +22,10 @@ import click
 import yaml
 from importlib import import_module
 
+from .cli import cli
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
 from .utils.config import default_dir_path
-
-
-@click.group()
-@click.option('-v', '--verbose', count=True)
-@click.pass_context
-def cli(ctx, verbose):
-    ctx.obj["VERBOSE"] = verbose
 
 
 def entry_point():
