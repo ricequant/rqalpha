@@ -60,7 +60,11 @@ def quotation_server(redis_url):
             redis_client[order_book_id] = json.dumps(item.to_dict())
 
     while True:
-        total_df = get_realtime_quotes(order_book_id_list, include_limit=True)
+        try:
+            total_df = get_realtime_quotes(order_book_id_list, include_limit=True)
+        except Exception as e:
+            system_log.exception("get_realtime_quotes fail. {}", e)
+            continue
         system_log.info("Fetching snapshots, size {}", len(total_df))
         record_market_data(total_df)
         time.sleep(1)
