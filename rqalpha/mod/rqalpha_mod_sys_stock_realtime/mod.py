@@ -17,6 +17,8 @@
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.disk_persist_provider import DiskPersistProvider
 from rqalpha.const import RUN_TYPE, PERSIST_MODE
+from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.i18n import gettext as _
 
 from .data_source import DataSource
 from .event_source import RealtimeEventSource
@@ -27,6 +29,7 @@ class RealtimeTradeMod(AbstractMod):
     def start_up(self, env, mod_config):
 
         if env.config.base.run_type in (RUN_TYPE.PAPER_TRADING, RUN_TYPE.LIVE_TRADING):
+            user_system_log.warn(_("[Warning] When you use this version of RealtimeTradeMod, history_bars can only get data from yesterday."))
             env.set_data_source(DataSource(env.config.base.data_bundle_path))
             env.set_event_source(RealtimeEventSource(mod_config.fps))
 
