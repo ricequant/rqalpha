@@ -21,16 +21,23 @@ from rqalpha.utils.config import parse_config
 from rqalpha.utils.logger import system_log
 
 
+cli_prefix = "mod__sys_stock_realtime__"
+
 __config__ = {
     "priority": 200,
     "persist_path": "./persist/strategy/",
     "fps": 3,
+    "redis_uri": None,
 }
 
 
-def load_mod():
-    from .mod import RealtimeTradeMod
-    return RealtimeTradeMod()
+cli.commands['run'].params.append(
+    click.Option(
+        ('--redis-uri', cli_prefix + 'redis_uri'),
+        type=click.STRING,
+        help="[sys_stock_realtime] market data redis uri",
+    )
+)
 
 
 @cli.command()
@@ -70,3 +77,8 @@ def quotation_server(redis_url):
         system_log.info("Fetching snapshots, size {}", len(total_df))
         record_market_data(total_df)
         time.sleep(1)
+
+
+def load_mod():
+    from .mod import RealtimeTradeMod
+    return RealtimeTradeMod()

@@ -24,6 +24,8 @@ RQAlpha 接受实时行情并触发事件 Mod
 ===============================
 提供一个行情下载服务，启动该服务，会实时往 redis 中写入全市场股票行情数据。多个 RQAlpha 可以连接该 redis 获取实时盘口数据，就不需要重复获取数据。
 
+您本地需要安装 redis 服务，然后将 redis 的 uri 填入到 quotation_server 的参数中，行情服务就会将实时行情数据写入到 redis 中。
+
 .. code-block:: bash
 
     rqalpha quotation_server redis://localhost/1
