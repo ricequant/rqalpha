@@ -116,9 +116,9 @@ def get_realtime_quotes(order_book_id_list, open_only=False, include_limit=False
 
     if include_limit:
         total_df["limit_up"] = total_df.apply(
-            lambda row: row.pre_close * (1.1 if "ST" not in row["name"] else 1.05), axis=1).round(2)
+            lambda row: row.prev_close * (1.1 if "ST" not in row["name"] else 1.05), axis=1).round(2)
         total_df["limit_down"] = total_df.apply(
-            lambda row: row.pre_close * (0.9 if "ST" not in row["name"] else 0.95), axis=1).round(2)
+            lambda row: row.prev_close * (0.9 if "ST" not in row["name"] else 0.95), axis=1).round(2)
 
     if open_only:
         total_df = total_df[total_df.open > 0]
