@@ -35,7 +35,7 @@ def load_mod():
 
 @cli.command()
 @click.argument('redis_url', required=True)
-def quotation(redis_url):
+def quotation_server(redis_url):
     """
     [sys_stock_realtime] quotation service, download market data into redis
     """
@@ -48,12 +48,12 @@ def quotation(redis_url):
     redis_client = redis.from_url(redis_url)
 
     from rqalpha.data.data_proxy import DataProxy
-    config = parse_config({})
+    config = parse_config({}, valid_config=False)
 
     data_source = BaseDataSource(config.base.data_bundle_path)
     data_proxy = DataProxy(data_source)
 
-    order_book_id_list = data_proxy.all_instruments("CS")
+    order_book_id_list = sorted(ins.order_book_id for ins in data_proxy.all_instruments("CS"))
 
     def record_market_data(total_df):
         for order_book_id, item in total_df.iterrows():
