@@ -28,10 +28,10 @@ class BenchmarkAccount(StockAccount):
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
-        event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
-        event_bus.add_listener(EVENT.PRE_BAR, self._on_bar)
-        event_bus.add_listener(EVENT.PRE_TICK, self._on_tick)
+        event_bus.prepend_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
+        event_bus.prepend_listener(EVENT.PRE_BAR, self._on_bar)
+        event_bus.prepend_listener(EVENT.TICK, self._on_tick)
 
     def _on_bar(self, event):
         # run once

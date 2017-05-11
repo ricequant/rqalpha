@@ -19,7 +19,7 @@ from .test_api_base import get_code_block
 
 
 def test_buy_open():
-    from rqalpha.api import buy_open, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+    from rqalpha.api import buy_open, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
 
     def init(context):
         context.f1 = 'P88'
@@ -30,8 +30,8 @@ def test_buy_open():
         context.order = None
 
     def handle_bar(context, bar_dict):
-        order_id = buy_open(context.f1, 1)
-        order = get_order(order_id)
+        order = buy_open(context.f1, 1)
+
         assert order.order_book_id == context.f1, 'Order_book_id is wrong'
         assert order.quantity == 1, 'order.quantity is wrong'
         assert order.status == ORDER_STATUS.FILLED, 'order.status is wrong'
@@ -43,7 +43,7 @@ test_buy_open_code_new = get_code_block(test_buy_open)
 
 
 def test_sell_open():
-    from rqalpha.api import sell_open, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+    from rqalpha.api import sell_open, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
 
     def init(context):
         context.f1 = 'P88'
@@ -54,8 +54,8 @@ def test_sell_open():
         context.order = None
 
     def handle_bar(context, bar_dict):
-        order_id = sell_open(context.f1, 1)
-        order = get_order(order_id)
+        order = sell_open(context.f1, 1)
+
         assert order.order_book_id == context.f1, 'Order_book_id is wrong'
         assert order.quantity == 1, 'order.quantity is wrong'
         assert order.status == ORDER_STATUS.FILLED, 'order.status is wrong'
@@ -67,7 +67,7 @@ test_sell_open_code_new = get_code_block(test_sell_open)
 
 
 def test_buy_close():
-    from rqalpha.api import buy_close, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+    from rqalpha.api import buy_close, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
 
     def init(context):
         context.f1 = 'P88'
@@ -78,20 +78,22 @@ def test_buy_close():
         context.order = None
 
     def handle_bar(context, bar_dict):
-        order_id = buy_close(context.f1, 1)
-        order = get_order(order_id)
-        assert order.order_book_id == context.f1, 'Order_book_id is wrong'
-        assert order.quantity == 1, 'order.quantity is wrong'
-        assert order.status == ORDER_STATUS.REJECTED, 'order.status is wrong'
-        assert order.unfilled_quantity == 1, 'order.unfilled_quantity is wrong'
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.side == SIDE.BUY, 'order.side is wrong'
-        assert order.position_effect == POSITION_EFFECT.CLOSE, 'order.position_effect is wrong'
+        orders = buy_close(context.f1, 1)
+        # TODO Add More Sell Close Test
+        assert len(orders) == 0
+
+        # assert order.order_book_id == context.f1, 'Order_book_id is wrong'
+        # assert order.quantity == 1, 'order.quantity is wrong'
+        # assert order.status == ORDER_STATUS.REJECTED, 'order.status is wrong'
+        # assert order.unfilled_quantity == 1, 'order.unfilled_quantity is wrong'
+        # assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
+        # assert order.side == SIDE.BUY, 'order.side is wrong'
+        # assert order.position_effect == POSITION_EFFECT.CLOSE, 'order.position_effect is wrong'
 test_buy_close_code_new = get_code_block(test_buy_close)
 
 
 def test_sell_close():
-    from rqalpha.api import sell_close, subscribe, get_order, ORDER_STATUS, POSITION_EFFECT, SIDE
+    from rqalpha.api import sell_close, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
 
     def init(context):
         context.f1 = 'P88'
@@ -102,13 +104,15 @@ def test_sell_close():
         context.order = None
 
     def handle_bar(context, bar_dict):
-        order_id = sell_close(context.f1, 1)
-        order = get_order(order_id)
-        assert order.order_book_id == context.f1
-        assert order.quantity == 1
-        assert order.status == ORDER_STATUS.REJECTED
-        assert order.unfilled_quantity == 1
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity
-        assert order.side == SIDE.SELL
-        assert order.position_effect == POSITION_EFFECT.CLOSE
+        orders = sell_close(context.f1, 1)
+        # TODO Add More Sell Close Test
+        assert len(orders) == 0
+
+        # assert order.order_book_id == context.f1
+        # assert order.quantity == 1
+        # assert order.status == ORDER_STATUS.REJECTED
+        # assert order.unfilled_quantity == 1
+        # assert order.unfilled_quantity + order.filled_quantity == order.quantity
+        # assert order.side == SIDE.SELL
+        # assert order.position_effect == POSITION_EFFECT.CLOSE
 test_sell_close_code_new = get_code_block(test_sell_close)

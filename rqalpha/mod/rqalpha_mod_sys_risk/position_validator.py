@@ -41,10 +41,11 @@ class PositionValidator(AbstractFrontendValidator):
 
     @staticmethod
     def _future_validator(account, order):
-        if order.position_effect != POSITION_EFFECT.CLOSE:
+        if order.position_effect == POSITION_EFFECT.OPEN:
             return True
 
         position = account.positions[order.order_book_id]
+
         if order.side == SIDE.BUY and order.quantity > position.closable_sell_quantity:
             order.mark_rejected(_(
                 "Order Rejected: not enough securities {order_book_id} to buy close, target"

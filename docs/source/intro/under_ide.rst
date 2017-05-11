@@ -36,6 +36,10 @@ File→ New Project, 比如项目叫做rqalpha-strategy
 
 .. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/create-project.jpeg
 
+.. warning::
+
+    在 Windows 环境下，并不存在 `bin` 目录，Interpreter 请指定 `\\anaconda\\envs\\rqalpha\\Scripts\\python.exe` 
+
 
 2.对项目进行对应的python解释器的虚拟环境配置：
 ---------------------------------------------------
@@ -55,6 +59,16 @@ PyCharm Community Edition → Preferences → Project: rqalpha-strategy → Proj
 
 3.配置运行的命令行rqalpha的在conda环境中的位置：
 ----------------------------------------------------
+
+.. warning::
+
+    在 Windows 环境下
+
+    如果是 Python 2.7 则没有对应的入口脚本，需要找到对应的 `__main__.py` 文件，参考路径: `c:\\Users\\xxx\\Anaconda2\\envs\\rqalpha2_7\\lib\\site-packages\\rqalpha\\__init__.py`
+
+    如果是 Python 3.5 及以上，在 `/Scripts/` 目录下是存在 `rqalpha-script.py` 文件的，其可以作为入口文件。参考路径: `C:\\Users\\xxx\\Anaconda2\\envs\\rqalpha3_5\\Scripts\\rqalpha-script.py`
+
+    相关 issue 讨论 请参考 `Issue 7 <https://github.com/ricequant/rqalpha/issues/7>`_
 
 Run/Debug Configurations → 选择策略文件 → Configuration → Script → 找到对应的conda环境的rqalpha命令
 

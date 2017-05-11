@@ -52,7 +52,7 @@ class ArgumentChecker(object):
         self._rules.append(check_is_instance_of)
         return self
 
-    def raise_not_valid_instrument_error(self, func_name, arg_name, value):
+    def raise_invalid_instrument_error(self, func_name, arg_name, value):
         raise RQInvalidArgument(
             _(u"function {}: invalid {} argument, expect a valid instrument/order_book_id/symbol, "
               u"got {} (type: {})").format(
@@ -74,74 +74,65 @@ class ArgumentChecker(object):
             ))
 
     def _is_valid_instrument(self, func_name, value):
-        config = Environment.get_instance().config
-        global index_contract_warning_flag
+        instrument = None
         if isinstance(value, six.string_types):
+            instrument = Environment.get_instance().get_instrument(value)
+        elif isinstance(value, Instrument):
+            instrument = Instrument
+
+        if instrument is None:
+            self.raise_invalid_instrument_error(func_name, self._arg_name, value)
+
+        if instrument.type == 'Future' and ('88' in instrument.order_book_id or '99' in instrument.order_book_id):
+            config = Environment.get_instance().config
             if config.base.run_type == RUN_TYPE.PAPER_TRADING:
-                if "88" in value:
+                if "88" in instrument.order_book_id:
                     raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
-                if "99" in value:
+                if "99" in instrument.order_book_id:
                     raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
             else:
-                if "88" in value:
+                if "88" in instrument.order_book_id:
                     global main_contract_warning_flag
                     if main_contract_warning_flag:
                         main_contract_warning_flag = False
                         user_system_log.warn(_(u"Main Future contracts[88] are not supported in paper trading."))
-                if "99" in value:
+                if "99" in instrument.order_book_id:
                     global index_contract_warning_flag
                     if index_contract_warning_flag:
                         index_contract_warning_flag = False
                         user_system_log.warn(_(u"Index Future contracts[99] are not supported in paper trading."))
-            instrument = Environment.get_instance().get_instrument(value)
-            if instrument is None:
-                self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
-            return
-
-        if isinstance(value, Instrument):
-            return
-
-        self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
 
     def is_valid_instrument(self):
         self._rules.append(self._is_valid_instrument)
         return self
 
     def _is_valid_stock(self, func_name, value):
+        instrument = None
         if isinstance(value, six.string_types):
             instrument = Environment.get_instance().get_instrument(value)
-            if instrument is None:
-                self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
-            if instrument.enum_type not in INST_TYPE_IN_STOCK_ACCOUNT:
-                self.raise_not_valid_stock_error(func_name, self._arg_name, value)
-            return
+        elif isinstance(value, Instrument):
+            instrument = Instrument
 
-        if isinstance(value, Instrument):
-            if value.enum_type not in INST_TYPE_IN_STOCK_ACCOUNT:
-                self.raise_not_valid_stock_error(func_name, self._arg_name, value)
-            else:
-                return
-
-        self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
+        if instrument is None:
+            self.raise_invalid_instrument_error(func_name, self._arg_name, value)
+        if instrument.enum_type not in INST_TYPE_IN_STOCK_ACCOUNT:
+            self.raise_not_valid_stock_error(func_name, self._arg_name, value)
 
     def is_valid_stock(self):
         self._rules.append(self._is_valid_stock)
         return self
 
     def _is_valid_future(self, func_name, value):
+        instrument = None
         if isinstance(value, six.string_types):
             instrument = Environment.get_instance().get_instrument(value)
-            if instrument is None:
-                self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
-            if instrument.enum_type != INSTRUMENT_TYPE.FUTURE:
-                self.raise_not_valid_future_error(func_name, self._arg_name, value)
-            return
-        if isinstance(value, Instrument):
-            if value.enum_type != INSTRUMENT_TYPE.FUTURE:
-                self.raise_not_valid_future_error(func_name, self._arg_name, value)
-            else:
-                return
-        self.raise_not_valid_instrument_error(func_name, self._arg_name, value)
+        elif isinstance(value, Instrument):
+            instrument = Instrument
+
+        if instrument is None:
+            self.raise_invalid_instrument_error(func_name, self._arg_name, value)
+        if instrument.enum_type != INSTRUMENT_TYPE.FUTURE:
+            self.raise_not_valid_future_error(func_name, self._arg_name, value)
 
     def is_valid_future(self):
         self._rules.append(self._is_valid_future)
