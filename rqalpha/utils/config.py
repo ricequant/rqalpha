@@ -129,7 +129,7 @@ def set_locale(lc):
     localization.set_locale([lc])
 
 
-def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
+def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None, valid_config=True):
     mod_configs = config_args.pop("mod_configs", [])
     for cfg, value in mod_configs:
         key = "mod__{}".format(cfg.replace(".", "__"))
@@ -212,15 +212,6 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         if isinstance(extra_config.context_vars, six.string_types):
             extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
 
-    if base_config.stock_starting_cash < 0:
-        raise patch_user_exc(ValueError(_(u"invalid stock starting cash: {}").format(base_config.stock_starting_cash)))
-
-    if base_config.future_starting_cash < 0:
-        raise patch_user_exc(ValueError(_(u"invalid future starting cash: {}").format(base_config.future_starting_cash)))
-
-    if base_config.stock_starting_cash + base_config.future_starting_cash == 0:
-        raise patch_user_exc(ValueError(_(u"stock starting cash and future starting cash can not be both 0.")))
-
     system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
     std_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
     user_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
@@ -228,6 +219,16 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
 
     if base_config.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
+
+    if valid_config:
+        if base_config.stock_starting_cash < 0:
+            raise patch_user_exc(ValueError(_(u"invalid stock starting cash: {}").format(base_config.stock_starting_cash)))
+
+        if base_config.future_starting_cash < 0:
+            raise patch_user_exc(ValueError(_(u"invalid future starting cash: {}").format(base_config.future_starting_cash)))
+
+        if base_config.stock_starting_cash + base_config.future_starting_cash == 0:
+            raise patch_user_exc(ValueError(_(u"stock starting cash and future starting cash can not be both 0.")))
 
     system_log.debug("\n" + pformat(config.convert_to_dict()))
 
