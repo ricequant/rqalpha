@@ -4,13 +4,43 @@
 Mod
 ====================================
 
-目前内置了几个简单的 mod 示例，在 :code:`rqalpha/mod/` 目录下面。
+创建您的第一个Mod
+================
+每一个Mod都遵循扩展事件源的细则，通过对接接口即可实现各种逻辑的组合，而 Mod 接口是扩展事件源的标准格式，下面我们将创建一个最简单的Mod帮助大家理解。
+
+.. warning:: 在克隆RQAlpha的时候发现我们有一些系统集成的 Mod 在 RQAlpha 里，这是为了大家可以能更好了解Mod逻辑，但是在开发Mod的过程里我们不建议您在原有的 RQAlpha 项目中做更改，而是将 Mod 以独立的项目进行开发。
 
 
-Hello World
-===============
+Mod开发环境搭建
+----------------
 
-我们在 :code:`rqalpha/mod/` 下面创建一个 :code:`hello_world` 文件夹。进入 :code:`hello_world` 文件夹，创建 :code:`__init__.py` ，填入以下代码：
+首先我们创建独立的开发虚拟环境：
+
+.. code-block:: bash
+
+    $ conda create rqalpha-mod-hello
+
+在虚拟环境下将 RQAlpha 安装好：
+
+如有问题请参考：:ref:`intro-install`
+
+创建Mod项目
+-----------------
+
+假设在新的环境中已经可以成功运行 RQAlpha ，便按照Mod的标准命名格式创建项目 :code:`rqalpha-mod-hello`。进入 :code:`rqalpha-mod-hello` 文件夹，创建 :code:`__init__.py`，填入以下代码：
+
+.. code-block:: python3
+
+    __config__ = {
+        "url": None,
+
+    }
+
+    def load_mod():
+        from rqalpha_mod_hello.mod import HelloWorldMod
+        return HelloWorldMod()
+
+创建 :code:`mod.py` ，填入以下代码：
 
 .. code-block:: python3
 
@@ -24,29 +54,83 @@ Hello World
         def tear_down(self, success, exception=None):
             print(">>> HelloWorldMod.tear_down")
 
+我们第一个 Mod 就写好了，接下来我们需要写一个 :code:`setup.py` 以便我们以PyPI的形式发布以及安装。
 
-    def load_mod():
-        return HelloWorldMod()
+PyPI方式安装Mod
+------------------------
 
+在项目 :code:`rqalpha-mod-hello` 下新建 :code:`setup.py` ，按照以下格式填入代码。
 
-于是我们的第一个 Mod 就写好了，现在我们需要修改配置，以让我们的 mod 生效，我们创建一个新的配置文件，在 mod 下面
-
-.. code-block:: yaml
-
-    mod:
-      hello_world:
-        lib: 'rqalpha.mod.hello_world'
-        enabled: true
-        priority: 100
+.. code-block:: python3
 
 
-然后运行命令，就会输出一下内容
+    from pip.req import parse_requirements
+
+    from setuptools import (
+        find_packages,
+        setup,
+    )
+
+    setup(
+        name='rqalpha-mod-hello',     #mod名
+        version="0.1.0",
+        description='RQAlpha Mod to say hello',
+        packages=find_packages(exclude=[]),
+        author='your name',
+        author_email='your email address',
+        license='Apache License v2',
+        package_data={'': ['*.*']},
+        url='https://github.com/johnsonchak/rqalpha-mod-hello',
+        install_requires=[str(ir.req) for ir in parse_requirements("requirements.txt", session=False)],
+        zip_safe=False,
+        classifiers=[
+            'Programming Language :: Python',
+            'Operating System :: Microsoft :: Windows',
+            'Operating System :: Unix',
+            'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
+        ],
+    )
+
+在完成 :code:`setup.py` 文件的同时需要为Mod添加版本信息 :code:`VERSION.txt` 以及运行所需环境说明文件 :code:`requirements.txt` :
+
+完成以后即可在命令进入Mod项目的 :code:`setup.py` 所在路径下进行安装:
 
 .. code-block:: bash
 
-    $ rqalpha run -f rqalpha/examples/buy_and_hold.py -sc 100000
-    >>> HelloWorldMod.start_up
-    >>> HelloWorldMod.tear_down
+    $ rqalpha mod install -e .
+
+.. note::
+
+    .. code-block:: bash
+
+        $ rqalpha mod install -e .
+
+    会扫描当前目录下的 :code:`setup.py` 文件执行安装，同时直接修改项目内文件就可以实现修改对应Mod。
+
+安装成功后将看到下图：
+
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-install-success.png
+
+
+激活以及使用Mod
+--------------------
+
+对 Mod 进行激活：
+
+.. code-block:: bash
+
+    $ rqalpha mod enable hello
+
+运行RQAlpha即可看到如下：
+
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-run-success.png
+
+.. note::
+
+    至此，完成了第一个Mod的创建以及安装，如您想与RQAlpha用户分享自己的Mod，您需要遵守一些发布格式，以便他人进行管理及使用。
+
+    :ref:`development-release-mod`
 
 
 扩展 RQAlpha API
@@ -84,7 +168,9 @@ Hello World
         def tear_down(self, code, exception=None):
             pass
 
-以独立 Pypi 包作为 Mod
+.. _development-release-mod:
+
+发布独立 Pypi 包作为 Mod
 ================================
 
 RQAlpha 支持安装、卸载、启用、停止第三方Mod。
@@ -171,5 +257,8 @@ RQAlpha 支持安装、卸载、启用、停止第三方Mod。
     )
 
 按此编写好 Mod 并发布到 Pypi 上以后，就可以直接使用RQAlpha的命令来安装和启用该Mod了。
+
+如您不熟悉PyPI发布的流程，请参考官方文档：https://packaging.python.org/distributing/
+
 
 如果您希望更多人使用您的Mod，您也可以联系我们，我们审核通过后，会在 RQAlpha 项目介绍和文档中增加您的Mod的介绍和推荐。
