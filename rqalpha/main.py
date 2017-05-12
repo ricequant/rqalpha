@@ -49,7 +49,7 @@ from .utils.i18n import gettext as _
 from .utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log
 from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from .utils.scheduler import Scheduler
-from .utils.config import set_locale
+from .utils.config import set_locale, default_dir_path
 
 
 jsonpickle_numpy.register_handlers()
@@ -133,7 +133,7 @@ def create_base_scope():
 
 def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
     set_locale(locale)
-    default_bundle_path = os.path.abspath(os.path.expanduser("~/.rqalpha/bundle/"))
+    default_bundle_path = os.path.join(default_dir_path, 'bundle')
     if data_bundle_path is None:
         data_bundle_path = default_bundle_path
     else:

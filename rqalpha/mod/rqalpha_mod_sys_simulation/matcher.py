@@ -150,8 +150,6 @@ class Matcher(object):
             price = self._slippage_decider.get_trade_price(order.side, deal_price)
             trade = Trade.__from_create__(
                 order_id=order.order_id,
-                calendar_dt=self._calendar_dt,
-                trading_dt=self._trading_dt,
                 price=price,
                 amount=fill,
                 side=order.side,

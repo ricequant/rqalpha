@@ -19,6 +19,7 @@ RQAlpha - a Algorithm Trading System
 """
 
 import pkgutil
+
 from .__main__ import cli
 from .api.api_base import export_as_api
 

@@ -121,7 +121,7 @@ def order_shares(id_or_ins, amount, price=None, style=None):
     except ValueError:
         amount = 0
 
-    r_order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, side, style, None)
+    r_order = Order.__from_create__(order_book_id, amount, side, style, None)
 
     if price == 0:
         user_system_log.warn(
@@ -145,7 +145,7 @@ def order_shares(id_or_ins, amount, price=None, style=None):
 
 def _sell_all_stock(order_book_id, amount, style):
     env = Environment.get_instance()
-    order = Order.__from_create__(env.calendar_dt, env.trading_dt, order_book_id, amount, SIDE.SELL, style, None)
+    order = Order.__from_create__(order_book_id, amount, SIDE.SELL, style, None)
     if env.can_submit_order(order):
         env.broker.submit_order(order)
     return order

@@ -63,8 +63,10 @@ def order_book_id_2_tushare_code(order_book_id):
     return order_book_id.split(".")[0]
 
 
-def get_realtime_quotes(code_list, open_only=False):
+def get_realtime_quotes(order_book_id_list, open_only=False, include_limit=False):
     import tushare as ts
+
+    code_list = [order_book_id_2_tushare_code(code) for code in order_book_id_list]
 
     max_len = 800
     loop_cnt = int(math.ceil(float(len(code_list)) / max_len))
@@ -92,15 +94,31 @@ def get_realtime_quotes(code_list, open_only=False):
     total_df["order_book_id"] = total_df["order_book_id"].apply(tushare_code_2_order_book_id)
 
     total_df = total_df.set_index("order_book_id").sort_index()
+    total_df["order_book_id"] = total_df.index
 
     total_df["datetime"] = total_df["date"] + " " + total_df["time"]
-    total_df["datetime"] = total_df["datetime"].apply(lambda x: convert_dt_to_int(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")))
+    # total_df["datetime"] = total_df["datetime"].apply(
+    #     lambda x: convert_dt_to_int(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")))
 
     total_df["close"] = total_df["price"]
     total_df["last"] = total_df["price"]
 
-    total_df["limit_up"] = total_df.apply(lambda row: row.pre_close * (1.1 if "ST" not in row["name"] else 1.05), axis=1).round(2)
-    total_df["limit_down"] = total_df.apply(lambda row: row.pre_close * (0.9 if "ST" not in row["name"] else 0.95), axis=1).round(2)
+    total_df = total_df.rename(columns={
+        "{}{}_p".format(base_name, i): "{}{}".format(base_name, i)
+        for i in range(1, 6) for base_name in ["a", "b"]
+    })
+    total_df = total_df.rename(columns={"pre_close": "prev_close"})
+
+    del total_df["code"]
+    del total_df["is_index"]
+    del total_df["date"]
+    del total_df["time"]
+
+    if include_limit:
+        total_df["limit_up"] = total_df.apply(
+            lambda row: row.prev_close * (1.1 if "ST" not in row["name"] else 1.05), axis=1).round(2)
+        total_df["limit_down"] = total_df.apply(
+            lambda row: row.prev_close * (0.9 if "ST" not in row["name"] else 0.95), axis=1).round(2)
 
     if open_only:
         total_df = total_df[total_df.open > 0]

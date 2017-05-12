@@ -20,6 +20,7 @@ from ..const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
 from ..utils import id_gen
 from ..utils.repr import property_repr, properties
 from ..utils.logger import user_system_log
+from ..environment import Environment
 
 
 class Order(object):
@@ -86,11 +87,12 @@ class Order(object):
         self._type = self._str_to_enum(ORDER_TYPE, d['type'])
 
     @classmethod
-    def __from_create__(cls, calendar_dt, trading_dt, order_book_id, quantity, side, style, position_effect):
+    def __from_create__(cls, order_book_id, quantity, side, style, position_effect):
+        env = Environment.get_instance()
         order = cls()
         order._order_id = next(order.order_id_gen)
-        order._calendar_dt = calendar_dt
-        order._trading_dt = trading_dt
+        order._calendar_dt = env.calendar_dt
+        order._trading_dt = env.trading_dt
         order._quantity = quantity
         order._order_book_id = order_book_id
         order._side = side

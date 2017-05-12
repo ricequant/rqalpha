@@ -15,27 +15,34 @@
 # limitations under the License.
 
 import datetime
+import json
+
+import pandas as pd
 
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
 from rqalpha.model.snapshot import SnapshotObject
 
-from . import data_board
 
-
-class DataSource(BaseDataSource):
-    def __init__(self, path):
-        super(DataSource, self).__init__(path)
+class RedisDataSource(BaseDataSource):
+    def __init__(self, path, redis_uri):
+        super(RedisDataSource, self).__init__(path)
         self._env = Environment.get_instance()
+        import redis
+        self._redis_client = redis.from_url(redis_uri)
+
+    def _get_snapshot_dict(self, order_book_id):
+        snapshot = json.loads(self._redis_client[order_book_id].decode())
+        return snapshot
 
     def get_bar(self, instrument, dt, frequency):
-        bar = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
-        return bar
+        snapshot_dict = self._get_snapshot_dict(instrument.order_book_id)
+        return snapshot_dict
 
     def current_snapshot(self, instrument, frequency, dt):
-        snapshot_dict = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
-        snapshot_dict["last"] = snapshot_dict["price"]
-        return SnapshotObject(instrument, snapshot_dict)
+        snapshot_dict = self._get_snapshot_dict(instrument.order_book_id)
+        dt = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
+        return SnapshotObject(instrument, snapshot_dict, dt=dt)
 
     def available_data_range(self, frequency):
         return datetime.date(2017, 1, 1), datetime.date.max

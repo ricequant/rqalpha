@@ -24,13 +24,7 @@ from importlib import import_module
 
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
-
-
-@click.group()
-@click.option('-v', '--verbose', count=True)
-@click.pass_context
-def cli(ctx, verbose):
-    ctx.obj["VERBOSE"] = verbose
+from .utils.config import default_dir_path
 
 
 def entry_point():
@@ -56,8 +50,15 @@ def entry_point():
     cli(obj={})
 
 
+@click.group()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def cli(ctx, verbose):
+    ctx.obj["VERBOSE"] = verbose
+
+
 @cli.command()
-@click.option('-d', '--data-bundle-path', default=os.path.expanduser("~/.rqalpha"), type=click.Path(file_okay=False))
+@click.option('-d', '--data-bundle-path', default=default_dir_path, type=click.Path(file_okay=False))
 @click.option('--locale', 'locale', type=click.STRING, default="zh_Hans_CN")
 def update_bundle(data_bundle_path, locale):
     """
@@ -300,6 +301,8 @@ def mod(cmd, params):
 
         # check whether is installed
         module_name = "rqalpha_mod_" + mod_name
+        if module_name.startswith("rqalpha_mod_sys_"):
+            module_name = "rqalpha.mod." + module_name
         try:
             import_module(module_name)
         except ImportError:
