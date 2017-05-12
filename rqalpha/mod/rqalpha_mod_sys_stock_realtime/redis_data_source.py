@@ -23,8 +23,6 @@ from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
 from rqalpha.model.snapshot import SnapshotObject
 
-from . import data_board
-
 
 class RedisDataSource(BaseDataSource):
     def __init__(self, path, redis_uri):
