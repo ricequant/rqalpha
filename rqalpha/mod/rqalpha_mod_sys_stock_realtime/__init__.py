@@ -57,7 +57,7 @@ def quotation_server(redis_url):
     redis_client = redis.from_url(redis_url)
 
     from rqalpha.data.data_proxy import DataProxy
-    config = parse_config({}, valid_config=False)
+    config = parse_config({}, verify_config=False)
 
     data_source = BaseDataSource(config.base.data_bundle_path)
     data_proxy = DataProxy(data_source)

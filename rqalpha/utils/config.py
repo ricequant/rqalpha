@@ -129,7 +129,7 @@ def set_locale(lc):
     localization.set_locale([lc])
 
 
-def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None, valid_config=True):
+def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None, verify_config=True):
     mod_configs = config_args.pop("mod_configs", [])
     for cfg, value in mod_configs:
         key = "mod__{}".format(cfg.replace(".", "__"))
@@ -220,7 +220,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     if base_config.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
 
-    if valid_config:
+    if verify_config:
         if base_config.stock_starting_cash < 0:
             raise patch_user_exc(ValueError(_(u"invalid stock starting cash: {}").format(base_config.stock_starting_cash)))
 
