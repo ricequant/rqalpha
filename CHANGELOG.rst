@@ -19,7 +19,7 @@ CHANGELOG
   order_shares("000001.XSHE", 100, style=LimitOrder(200))
 
 - :code:`buy_close` 和 :code:`sell_close` API 增加 :code:`close_today` 参数，现在您现在可以指定发平今单了。
-- Breaking Chnage: 原本期货中的 :code:`buy_close` 和 :code:`sell_close` API 返回的 :code:`Order` 对象。但实际交易过程中，涉及到昨仓今仓的时候，可能会存在发单被拒单的情况，RQAlpha 进行平昨/平今智能拆单的处理，因此在一些情况下会生成多个订单，对应也会返回一个订单列表。期货平仓更新的内容请参考 `Issue 116 <https://github.com/ricequant/rqalpha/issues/116>`_
+- Breaking Change: 原本期货中的 :code:`buy_close` 和 :code:`sell_close` API 返回的 :code:`Order` 对象。但实际交易过程中，涉及到昨仓今仓的时候，可能会存在发单被拒单的情况，RQAlpha 进行平昨/平今智能拆单的处理，因此在一些情况下会生成多个订单，对应也会返回一个订单列表。期货平仓更新的内容请参考 `Issue 116 <https://github.com/ricequant/rqalpha/issues/116>`_
 - Breaking Change: 取消 :code:`Order` | :code:`Trade` 对应的 :code:`__from_create__` 函数中 :code:`calendar_dt` 和 :code:`trading_dt` 的传入，对接第三方交易源，构建订单和成交的 Mod 可能会产生影响，需要进行修改.
 
 .. code-block:: python
