@@ -27,6 +27,21 @@ Mod开发环境搭建
 创建Mod项目
 -----------------
 
+我们以 `rqalpha-mod-hello <https://github.com/johnsonchak/rqalpha-mod-hello>`_ 项目为例，介绍如何实现一个简单的 Mod
+
+项目结构:
+
+.. code-block:: bash
+
+    rqalpha-mod-hello
+    ├── __init__.py
+    ├── requirements.txt
+    ├── README.rst
+    ├── setup.py
+    └── rqalpha_mod_hello
+        ├── __init__.py
+        └── mod.py
+
 假设在新的环境中已经可以成功运行 RQAlpha ，便按照Mod的标准命名格式创建项目 :code:`rqalpha-mod-hello`。进入 :code:`rqalpha-mod-hello` 文件夹，创建 :code:`__init__.py`，填入以下代码：
 
 .. code-block:: python3
@@ -37,7 +52,7 @@ Mod开发环境搭建
     }
 
     def load_mod():
-        from rqalpha_mod_hello.mod import HelloWorldMod
+        from .mod import HelloWorldMod
         return HelloWorldMod()
 
 创建 :code:`mod.py` ，填入以下代码：
