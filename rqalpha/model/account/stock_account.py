@@ -183,6 +183,7 @@ class StockAccount(BaseAccount):
                 continue
 
             dividend_per_share = dividend['dividend_cash_before_tax'] / dividend['round_lot']
+            position.dividend_(dividend_per_share)
             self._dividend_receivable[order_book_id] = {
                 'quantity': position.quantity,
                 'dividend_per_share': dividend_per_share,
