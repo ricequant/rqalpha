@@ -89,6 +89,10 @@ class StockPosition(BasePosition):
         # split 发生时，这两个值理论上应该都是0
         self._frozen *= ratio
         self._non_closable *= ratio
+        self._avg_price /= ratio
+
+    def dividend_(self, dividend_per_share):
+        self._avg_price -= dividend_per_share
 
     def on_order_pending_new_(self, order):
         if order.side == SIDE.SELL:
