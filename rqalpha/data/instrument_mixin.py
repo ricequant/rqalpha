@@ -70,6 +70,7 @@ class InstrumentMixin(object):
         return [i for i in [self._instrument(sid) for sid in sym_or_ids] if i is not None]
 
     def get_future_contracts(self, underlying, date):
+        date = date.replace(hour=0, minute=0, second=0)
         futures = [v for o, v in six.iteritems(self._instruments)
                    if v.type == 'Future' and v.underlying_symbol == underlying and
                    not o.endswith('88') and not o.endswith('99')]
