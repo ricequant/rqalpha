@@ -79,7 +79,7 @@ class Order(object):
             self._position_effect = None
         else:
             self._position_effect = self._str_to_enum(POSITION_EFFECT, d['position_effect'])
-        self._message = d['messages']
+        self._message = d['message']
         self._filled_quantity = d['filled_quantity']
         self._status = self._str_to_enum(ORDER_STATUS, d['status'])
         self._frozen_price = d['frozen_price']
