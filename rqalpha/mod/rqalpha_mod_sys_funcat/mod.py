@@ -19,6 +19,8 @@ import datetime
 from rqalpha.interface import AbstractMod
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.const import EXECUTION_PHASE
 
 
 class FuncatAPIMod(AbstractMod):
@@ -34,6 +36,8 @@ class FuncatAPIMod(AbstractMod):
         from funcat.data.backend import DataBackend
         from funcat.context import set_current_date
         from funcat.utils import get_date_from_int
+
+        from rqalpha.api import history_bars
 
         class RQAlphaDataBackend(DataBackend):
             """
@@ -79,10 +83,15 @@ class FuncatAPIMod(AbstractMod):
                     scale *= 240. / int(freq[:-1])
                 bar_count = int((end - start).days * scale)
 
-                dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
-                bars = self.rqalpha_env.data_proxy.history_bars(
-                    order_book_id, bar_count, freq, field=None,
-                    dt=dt)
+                sys_frequency = Environment.get_instance().config.base.frequency
+                if sys_frequency == "1d" and ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING:
+                    bars = history_bars(
+                        order_book_id, bar_count, freq, fields=None)
+                else:
+                    dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
+                    bars = self.rqalpha_env.data_proxy.history_bars(
+                        order_book_id, bar_count, freq, field=None,
+                        dt=dt)
 
                 if bars is None or len(bars) == 0:
                     raise KeyError("empty bars {}".format(order_book_id))

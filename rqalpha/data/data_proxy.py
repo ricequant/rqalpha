@@ -70,7 +70,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         if table is None or len(table) == 0:
             return
 
-        dt = date.year*10000 + date.month*100 + date.day
+        dt = date.year * 10000 + date.month * 100 + date.day
         dates = table['book_closure_date']
         pos = dates.searchsorted(dt)
         if pos == len(dates) or dt != dates[pos]:
