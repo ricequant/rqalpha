@@ -298,12 +298,16 @@ def run(config, source_code=None):
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
 
-        user_detail_log.exception(_(u"strategy execute exception"))
-        user_system_log.error(e.error)
-
         better_exceptions.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
+        user_system_log.error(e.error)
+        if not is_user_exc(e.error.exc_val):
+            code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
+            system_log.exception(_(u"strategy execute exception"))
+        else:
+            code = const.EXIT_CODE.EXIT_USER_ERROR
+            user_detail_log.exception(_(u"strategy execute exception"))
 
-        mod_handler.tear_down(const.EXIT_CODE.EXIT_USER_ERROR, e)
+        mod_handler.tear_down(code, e)
     except Exception as e:
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
@@ -313,11 +317,11 @@ def run(config, source_code=None):
 
         better_exceptions.excepthook(exc_type, exc_val, exc_tb)
         user_system_log.error(user_exc.error)
-        code = const.EXIT_CODE.EXIT_USER_ERROR
         if not is_user_exc(exc_val):
-            system_log.exception(_(u"strategy execute exception"))
             code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
+            system_log.exception(_(u"strategy execute exception"))
         else:
+            code = const.EXIT_CODE.EXIT_USER_ERROR
             user_detail_log.exception(_(u"strategy execute exception"))
 
         mod_handler.tear_down(code, user_exc)

@@ -378,7 +378,7 @@ def apply_rules(*rules):
                 return func(*args, **kwargs)
             except RQInvalidArgument:
                 raise
-            except Exception:
+            except Exception as e:
                 exc_info = sys.exc_info()
                 t, v, tb = exc_info
 
