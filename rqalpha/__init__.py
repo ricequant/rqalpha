@@ -56,8 +56,17 @@ def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
 
 
 def run_ipython_cell(line, cell=None):
+    from rqalpha.__main__ import run
+    args = line.split()
+    try:
+        run.main(args, standalone_mode=True)
+    except SystemExit as e:
+        pass
+
     print(line)
+    print('-' * 40)
     print(cell)
+    print('-' * 40)
 
 
 def run_file(strategy_file_path, config=None):
