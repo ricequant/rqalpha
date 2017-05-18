@@ -78,11 +78,10 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-fc', '--future-starting-cash', 'base__future_starting_cash', type=click.FLOAT)
 @click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
-@click.option('-st', '--security', 'base__securities', multiple=True, type=click.Choice(['stock', 'future']))
+@click.option('-st', '--security', 'base__securities', multiple=True, type=click.Choice(['stock', 'future', 'stock_future']))
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
-@click.option('--handle-split/--not-handle-split', 'base__handle_split', default=None, help="handle split")
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
@@ -94,8 +93,8 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
 # -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 3.0.0
 @click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT, help="[Deprecated]")
-@click.option('-k', '--kind', 'base__securities', multiple=True, type=click.Choice(['stock', 'future', 'stock_future']), help="[Deprecated]")
-@click.option('--strategy-type', 'base__securities', multiple=True, type=click.Choice(['stock', 'future']), help="[Deprecated]")
+@click.option('-k', '--kind', 'base__securities', help="[Deprecated]", multiple=True, type=click.Choice(['stock', 'future', 'stock_future']))
+@click.option('--strategy-type', 'base__securities', help="[Deprecated]", multiple=True, type=click.Choice(['stock', 'future', 'stock_future']))
 def run(**kwargs):
     """
     Start to run a strategy
@@ -104,9 +103,11 @@ def run(**kwargs):
     if config_path is not None:
         config_path = os.path.abspath(config_path)
         kwargs.pop('config_path')
+    if not kwargs.get('base__securities', None):
+        kwargs.pop('base__securities', None)
 
     from . import main
-    main.run(parse_config(kwargs, config_path))
+    main.run(parse_config(kwargs, config_path=config_path, click_type=True))
 
 
 @cli.command()
