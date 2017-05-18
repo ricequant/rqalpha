@@ -64,11 +64,6 @@ def run_ipython_cell(line, cell=None):
     except SystemExit as e:
         pass
 
-    print(line)
-    print('-' * 40)
-    print(cell)
-    print('-' * 40)
-
 
 def run_file(strategy_file_path, config=None):
     from .utils.config import parse_config
