@@ -21,13 +21,27 @@ from ..utils.strategy_loader_help import compile_strategy
 
 
 class FileStrategyLoader(AbstractStrategyLoader):
-    def load(self, strategy, scope):
-        with codecs.open(strategy, encoding="utf-8") as f:
+    def __init__(self, strategy_file_path):
+        self._strategy_file_path = strategy_file_path
+
+    def load(self, scope):
+        with codecs.open(self._strategy_file_path, encoding="utf-8") as f:
             source_code = f.read()
 
-        return compile_strategy(source_code, strategy, scope)
+        return compile_strategy(source_code, self._strategy_file_path, scope)
 
 
 class SourceCodeStrategyLoader(AbstractStrategyLoader):
-    def load(self, strategy, scope):
-        return compile_strategy(strategy, "strategy.py", scope)
+    def __init__(self, code):
+        self._code = code
+
+    def load(self, scope):
+        return compile_strategy(self._code, "strategy.py", scope)
+
+
+class UserFuncStrategyLoader(AbstractStrategyLoader):
+    def __init__(self, user_funcs):
+        self._user_funcs = user_funcs
+
+    def load(self, scope):
+        return self._user_funcs
