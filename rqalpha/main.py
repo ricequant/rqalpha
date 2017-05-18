@@ -30,7 +30,7 @@ import better_exceptions
 
 from . import const
 from .api import helper as api_helper
-from .core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader
+from .core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
 from .core.strategy import Strategy
 from .core.strategy_universe import StrategyUniverse
 from .core.global_var import GlobalVars
