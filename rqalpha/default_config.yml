@@ -10,6 +10,8 @@ base:
   data_bundle_path: ~
   # 启动的策略文件路径
   strategy_file: strategy.py
+  # 策略源代码
+  source_code: ~
   # 回测起始日期
   start_date: 2015-06-01
   # 回测结束日期(如果是实盘，则忽略该配置)

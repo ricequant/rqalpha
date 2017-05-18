@@ -302,3 +302,11 @@ def unwrapper(func):
         if f2 is None:
             break
     return f
+
+
+def is_run_from_ipython():
+    try:
+        __IPYTHON__
+        return True
+    except NameError:
+        return False
