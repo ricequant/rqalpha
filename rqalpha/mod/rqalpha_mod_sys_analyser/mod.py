@@ -98,13 +98,9 @@ class AnalyserMod(AbstractMod):
         return {
             'date': date,
             'cash': self._safe_convert(portfolio.cash),
-            'total_returns': self._safe_convert(portfolio.total_returns),
-            'daily_returns': self._safe_convert(portfolio.daily_returns),
-            'daily_pnl': self._safe_convert(portfolio.daily_pnl),
             'total_value': self._safe_convert(portfolio.total_value),
             'market_value': self._safe_convert(portfolio.market_value),
-            'annualized_returns': self._safe_convert(portfolio.annualized_returns),
-            'unit_net_value': self._safe_convert(portfolio.unit_net_value),
+            'unit_net_value': self._safe_convert(portfolio.unit_net_value, 6),
             'units': portfolio.units,
             'static_unit_net_value': self._safe_convert(portfolio.static_unit_net_value),
         }
@@ -117,7 +113,7 @@ class AnalyserMod(AbstractMod):
     def _to_account_record(self, date, account):
         data = {
             'date': date,
-            'total_cash': self._safe_convert(account.cash + account.frozen_cash),
+            'cash': self._safe_convert(account.cash),
             'transaction_cost': self._safe_convert(account.transaction_cost),
             'market_value': self._safe_convert(account.market_value),
             'total_value': self._safe_convert(account.total_value),
@@ -130,14 +126,12 @@ class AnalyserMod(AbstractMod):
 
     POSITION_FIELDS_MAP = {
         ACCOUNT_TYPE.STOCK: [
-            'quantity', 'last_price', 'avg_price', 'market_value', 'sellable'
+            'quantity', 'last_price', 'avg_price', 'market_value'
         ],
         ACCOUNT_TYPE.FUTURE: [
-            'pnl', 'daily_pnl', 'holding_pnl', 'realized_pnl', 'margin', 'market_value',
-            'buy_pnl', 'sell_pnl', 'closable_buy_quantity', 'buy_margin', 'buy_today_quantity',
-            'buy_avg_open_price', 'buy_avg_holding_price', 'closable_sell_quantity',
-            'sell_margin', 'sell_today_quantity', 'sell_quantity', 'sell_avg_open_price',
-            'sell_avg_holding_price'
+            'margin', 'margin_rate', 'contract_multiplier', 'last_price',
+            'buy_pnl', 'buy_margin', 'buy_quantity', 'buy_avg_open_price',
+            'sell_pnl', 'sell_margin', 'sell_quantity', 'sell_avg_open_price'
         ],
     }
 
@@ -173,6 +167,10 @@ class AnalyserMod(AbstractMod):
         if code != EXIT_CODE.EXIT_SUCCESS or not self._enabled:
             return
 
+        # 当 PRE_SETTLEMENT 事件没有被触发当时候，self._total_portfolio 为空list
+        if len(self._total_portfolios) == 0:
+            return
+
         strategy_name = os.path.basename(self._env.config.base.strategy_file).split(".")[0]
         data_proxy = self._env.data_proxy
 
@@ -181,10 +179,10 @@ class AnalyserMod(AbstractMod):
             'start_date': self._env.config.base.start_date.strftime('%Y-%m-%d'),
             'end_date': self._env.config.base.end_date.strftime('%Y-%m-%d'),
             'strategy_file': self._env.config.base.strategy_file,
-            'securities': self._env.config.base.securities,
             'run_type': self._env.config.base.run_type.value,
             'stock_starting_cash': self._env.config.base.stock_starting_cash,
             'future_starting_cash': self._env.config.base.future_starting_cash,
+            'benchmark': self._env.config.base.benchmark,
         }
 
         risk = Risk(np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns),
@@ -221,20 +219,22 @@ class AnalyserMod(AbstractMod):
             trades = trades.set_index('datetime')
 
         df = pd.DataFrame(self._total_portfolios)
+
         df['date'] = pd.to_datetime(df['date'])
+
         total_portfolios = df.set_index('date').sort_index()
 
         result_dict = {
             'summary': summary,
             'trades': trades,
-            'total_portfolios': total_portfolios,
+            'portfolio': total_portfolios,
         }
 
         if self._env.benchmark_portfolio is not None:
             b_df = pd.DataFrame(self._total_benchmark_portfolios)
             df['date'] = pd.to_datetime(df['date'])
             benchmark_portfolios = b_df.set_index('date').sort_index()
-            result_dict['benchmark_portfolios'] = benchmark_portfolios
+            result_dict['benchmark_portfolio'] = benchmark_portfolios
 
         if self._env.plot_store is not None:
             plots = self._env.get_plot_store().get_plots()
@@ -254,8 +254,8 @@ class AnalyserMod(AbstractMod):
             portfolios_list = self._sub_accounts[account_type]
             df = pd.DataFrame(portfolios_list)
             df["date"] = pd.to_datetime(df["date"])
-            portfolios_df = df.set_index("date").sort_index()
-            result_dict["{}_portfolios".format(account_name)] = portfolios_df
+            account_df = df.set_index("date").sort_index()
+            result_dict["{}_account".format(account_name)] = account_df
 
             positions_list = self._positions[account_type]
             positions_df = pd.DataFrame(positions_list)

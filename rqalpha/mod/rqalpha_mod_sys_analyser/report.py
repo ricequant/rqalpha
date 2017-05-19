@@ -41,7 +41,7 @@ def generate_report(result_dict, target_report_csv_path):
     with open(os.path.join(output_path, "summary.csv"), 'w') as csvfile:
         csvfile.write(csv_txt.getvalue())
 
-    for name in ["total_portfolios", "stock_portfolios", "future_portfolios",
+    for name in ["portfolio", "stock_account", "future_account",
                  "stock_positions", "future_positions", "trades"]:
         try:
             df = result_dict[name]

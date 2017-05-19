@@ -48,15 +48,15 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     title = summary['strategy_file']
 
-    total_portfolios = result_dict["total_portfolios"]
-    benchmark_portfolios = result_dict.get("benchmark_portfolios")
+    portfolio = result_dict["portfolio"]
+    benchmark_portfolio = result_dict.get("benchmark_portfolio")
 
-    index = total_portfolios.index
+    index = portfolio.index
 
     # maxdrawdown
-    portfolio_value = total_portfolios.unit_net_value * total_portfolios.units
+    portfolio_value = portfolio.unit_net_value * portfolio.units
     xs = portfolio_value.values
-    rt = total_portfolios.total_returns.values
+    rt = portfolio.unit_net_value.values
     max_dd_end = np.argmax(np.maximum.accumulate(xs) / xs)
     if max_dd_end == 0:
         max_dd_end = len(xs) - 1
@@ -149,9 +149,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     ax.grid(b=True, which='major', linewidth=1)
 
     # plot two lines
-    ax.plot(total_portfolios["total_returns"], label=_(u"strategy"), alpha=1, linewidth=2, color=red)
-    if benchmark_portfolios is not None:
-        ax.plot(benchmark_portfolios["total_returns"], label=_(u"benchmark"), alpha=1, linewidth=2, color=blue)
+    ax.plot(portfolio["unit_net_value"], label=_(u"strategy"), alpha=1, linewidth=2, color=red)
+    if benchmark_portfolio is not None:
+        ax.plot(benchmark_portfolio["unit_net_value"], label=_(u"benchmark"), alpha=1, linewidth=2, color=blue)
 
     # plot MaxDD/MaxDDD
     ax.plot([index[max_dd_end], index[max_dd_start]], [rt[max_dd_end], rt[max_dd_start]],
