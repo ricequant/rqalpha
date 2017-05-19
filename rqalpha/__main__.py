@@ -114,7 +114,15 @@ def run(**kwargs):
     from . import main
     cfg = parse_config(kwargs, config_path=config_path, click_type=True)
     source_code = cfg.base.source_code
-    main.run(cfg, source_code=source_code)
+    results = main.run(cfg, source_code=source_code)
+
+    # store results into ipython when running in ipython
+    from .utils import is_run_from_ipython
+    if is_run_from_ipython():
+        import IPython
+        ipy = IPython.get_ipython()
+        report = results.get("sys_analyser", None)
+        ipy.user_global_ns["report"] = report
 
 
 @cli.command()
