@@ -33,7 +33,7 @@ def cli(ctx, verbose):
     ctx.obj["VERBOSE"] = verbose
 
 
-def entry_point():
+def inject_mod_commands():
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.package_helper import import_mod
     mod_config_path = get_mod_config_path()
@@ -52,6 +52,10 @@ def entry_point():
         else:
             # inject third part mod
             import_mod(lib_name)
+
+
+def entry_point():
+    inject_mod_commands()
 
     cli(obj={})
 
