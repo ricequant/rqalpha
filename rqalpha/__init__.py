@@ -63,6 +63,7 @@ def run_ipython_cell(line, cell=None):
     args = line.split()
     args.extend(["--source-code", cell if cell is not None else ""])
     try:
+        # It raise exception every time
         run.main(args, standalone_mode=True)
     except SystemExit as e:
         pass

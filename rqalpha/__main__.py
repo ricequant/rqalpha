@@ -120,9 +120,10 @@ def run(**kwargs):
     from .utils import is_run_from_ipython
     if is_run_from_ipython():
         import IPython
+        from .utils import RqAttrDict
         ipy = IPython.get_ipython()
-        report = results.get("sys_analyser", None)
-        ipy.user_global_ns["report"] = report
+        report = results.get("sys_analyser", {})
+        ipy.user_global_ns["report"] = RqAttrDict(report)
 
 
 @cli.command()
