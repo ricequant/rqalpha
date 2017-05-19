@@ -82,6 +82,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
+@click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
@@ -107,7 +108,9 @@ def run(**kwargs):
         kwargs.pop('base__securities', None)
 
     from . import main
-    main.run(parse_config(kwargs, config_path=config_path, click_type=True))
+    cfg = parse_config(kwargs, config_path=config_path, click_type=True)
+    source_code = cfg.base.source_code
+    main.run(cfg, source_code=source_code)
 
 
 @cli.command()

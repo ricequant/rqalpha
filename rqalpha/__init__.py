@@ -38,6 +38,11 @@ __main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
 del pkgutil
 
 
+def load_ipython_extension(ipython):
+    """call by ipython"""
+    ipython.register_magic_function(run_ipython_cell, 'line_cell', 'rqalpha')
+
+
 def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
     from . import main
     main.update_bundle(data_bundle_path=data_bundle_path, locale=locale, confirm=confirm)
@@ -50,6 +55,16 @@ def run(config, source_code=None):
 
     config = parse_config(config, source_code=source_code)
     return main.run(config, source_code=source_code)
+
+
+def run_ipython_cell(line, cell=None):
+    from rqalpha.__main__ import run
+    args = line.split()
+    args.extend(["--source-code", cell if cell is not None else ""])
+    try:
+        run.main(args, standalone_mode=True)
+    except SystemExit as e:
+        pass
 
 
 def run_file(strategy_file_path, config=None):
