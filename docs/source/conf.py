@@ -38,6 +38,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
+    'nbsphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -95,7 +96,9 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = [
+    '**.ipynb_checkpoints',
+]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -215,7 +218,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #
 # html_domain_indices = True
 
-#If false, no index is generated.
+# If false, no index is generated.
 
 html_use_index = True
 
@@ -227,11 +230,11 @@ html_use_index = True
 #
 # html_show_sourcelink = True
 
-#If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 
 html_show_sphinx = False
 
-#If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 
 html_show_copyright = True
 
@@ -265,3 +268,11 @@ html_show_copyright = True
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'rqalphadoc'
 
+# Use this kernel instead of the one stored in the notebook metadata:
+nbsphinx_kernel_name = 'python3'
+
+# Execute notebooks before conversion: 'always', 'never', 'auto' (default)
+nbsphinx_execute = 'never'
+
+# If window is narrower than this, input/output prompts are on separate lines:
+# nbsphinx_responsive_width = '800px'

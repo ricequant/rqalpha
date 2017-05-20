@@ -13,11 +13,12 @@ Requirements
 *   Sphinx
 *   watchdog
 *   sphinx_rtd_theme
-
+*   nbsphinx
+*   jupyter_client
 
 .. code-block:: bash
 
-    pip install Sphinx watchdog sphinx_rtd_theme
+    pip install Sphinx watchdog sphinx_rtd_theme nbsphinx jupyter_client
 
 Usage
 -----
