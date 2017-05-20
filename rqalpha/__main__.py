@@ -130,6 +130,7 @@ def run(**kwargs):
         from .utils import RqAttrDict
         ipy = IPython.get_ipython()
         report = results.get("sys_analyser", {})
+        ipy.user_global_ns["results"] = results
         ipy.user_global_ns["report"] = RqAttrDict(report)
 
 
