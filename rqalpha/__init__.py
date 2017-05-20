@@ -40,6 +40,9 @@ del pkgutil
 
 def load_ipython_extension(ipython):
     """call by ipython"""
+    from rqalpha.__main__ import inject_mod_commands
+    inject_mod_commands()
+
     ipython.register_magic_function(run_ipython_cell, 'line_cell', 'rqalpha')
 
 
@@ -62,6 +65,7 @@ def run_ipython_cell(line, cell=None):
     args = line.split()
     args.extend(["--source-code", cell if cell is not None else ""])
     try:
+        # It raise exception every time
         run.main(args, standalone_mode=True)
     except SystemExit as e:
         pass

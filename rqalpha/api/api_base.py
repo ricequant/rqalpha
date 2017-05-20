@@ -400,7 +400,6 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     close                       收盘价
     volume                      成交量
     total_turnover              成交额
-    datetime                    int类型时间戳
     open_interest               持仓量（期货专用）
     basis_spread                期现差（股指期货专用）
     settlement                  结算价（期货日线专用）
@@ -444,6 +443,9 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
         if sys_frequency == "1d":
             # 日回测不支持 include_now
             include_now = False
+
+    if fields is None:
+        fields = ["datetime", "open", "high", "low", "close", "volume"]
 
     return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt,
                                        skip_suspended=skip_suspended, include_now=include_now,

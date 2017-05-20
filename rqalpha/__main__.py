@@ -26,7 +26,14 @@ from .utils.click_helper import Date
 from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
 
 
-def entry_point():
+@click.group()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def cli(ctx, verbose):
+    ctx.obj["VERBOSE"] = verbose
+
+
+def inject_mod_commands():
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.package_helper import import_mod
     mod_config_path = get_mod_config_path()
@@ -45,6 +52,10 @@ def entry_point():
         else:
             # inject third part mod
             import_mod(lib_name)
+
+
+def entry_point():
+    inject_mod_commands()
 
     cli(obj={})
 
@@ -110,7 +121,16 @@ def run(**kwargs):
     from . import main
     cfg = parse_config(kwargs, config_path=config_path, click_type=True)
     source_code = cfg.base.source_code
-    main.run(cfg, source_code=source_code)
+    results = main.run(cfg, source_code=source_code)
+
+    # store results into ipython when running in ipython
+    from .utils import is_run_from_ipython
+    if is_run_from_ipython():
+        import IPython
+        from .utils import RqAttrDict
+        ipy = IPython.get_ipython()
+        report = results.get("sys_analyser", {})
+        ipy.user_global_ns["report"] = RqAttrDict(report)
 
 
 @cli.command()

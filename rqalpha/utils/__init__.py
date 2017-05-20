@@ -68,6 +68,9 @@ class RqAttrDict(object):
 
     iteritems = items
 
+    def keys(self):
+        return self.__dict__.keys()
+
     @staticmethod
     def _update_dict_recursive(target, other):
         if isinstance(other, RqAttrDict):
