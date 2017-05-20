@@ -2,6 +2,26 @@
 CHANGELOG
 ==================
 
+2.2.5
+==================
+
+- 增加 IPython Magic 方便在 IPython 中运行回测 `run-rqalpha-in-ipython.ipynb <https://github.com/ricequant/rqalpha/blob/master/docs/source/notebooks/run-rqalpha-in-ipython.ipynb>`_ 。运行完回测后，会将所有的 mod 的输出结果保存在 results 变量中，并且会将回测报告存储在 report 对象中。
+- 修复系统异常、用户异常的区分判断
+- 增加 :code:`--source-code` 参数可以直接在命令行中传入策略源代码进行回测，这个选项目前主要给 IPython 使用。
+- 对于 :code:`history_bars` 当 fields 为 None 的时候，指定为 ["datetime", "open", "high", "low", "close", "volume"] 。
+- 重构 rqalpha_mod_sys_funcat 的数据获取
+- 修复 order 的 set_state 的 bug
+- 优化分红计算
+- 提取 inject_mod_commands 给 click 参数注入
+
+.. code-block:: python
+
+  # 加载 rqalpha 插件
+  %load_ext rqalpha
+
+  # 运行回测
+  %% rqalpha -s 20160101 -e 20170101 -sc 100000
+
 2.2.4
 ==================
 
@@ -222,7 +242,7 @@ CHANGELOG
         "end_date": "2016-07-01",
         "stock_starting_cash":100000,
         "benchmark": '000300.XSHG'
-      },  
+      },
       "extra":{
         "context_vars":{
           "short":5,
