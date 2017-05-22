@@ -137,6 +137,38 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
+    @staticmethod
+    def _resample_k_bars(bars, fields, frequency):
+        fds = fields
+        if isinstance(fds, six.string_types):
+            fds = [fds]
+        if "datetime" not in fds:
+            fds.append("datetime")
+
+        handler = {
+            "datetime": "last",
+            "open": "first",
+            "high": "max",
+            "low": "min",
+            "close": "last",
+            "volume": "sum",
+            "total_turnover": "sum",
+        }
+        bars_df = pd.DataFrame(bars)
+        bars_df["dt"] = bars_df["datetime"].apply(convert_int_to_datetime)
+        bars_df.set_index("dt", inplace=True)
+        agg = bars_df.resample(frequency)
+
+        df = pd.DataFrame()
+        for field in fds:
+            df[field] = getattr(agg[field], handler[field])()
+
+        df = df.dropna()
+        df["datetime"] = df["datetime"].astype(np.uint64)
+        bars = df.to_records(index=False)
+
+        return bars
+
     def history_bars(self, instrument, bar_count, frequency, fields, dt,
                      skip_suspended=True, include_now=False):
         if frequency not in ['1d', "W", "M"]:
@@ -151,33 +183,9 @@ class BaseDataSource(AbstractDataSource):
             return None
 
         if frequency == "W":
-            fds = fields
-            if isinstance(fds, six.string_types):
-                fds = [fds]
-            if "datetime" not in fds:
-                fds.append("datetime")
-
-            handler = {
-                "datetime": "last",
-                "open": "first",
-                "high": "max",
-                "low": "min",
-                "close": "last",
-                "volume": "sum",
-                "total_turnover": "sum",
-            }
-            bars_df = pd.DataFrame(bars)
-            bars_df["dt"] = bars_df["datetime"].apply(convert_int_to_datetime)
-            bars_df.set_index("dt", inplace=True)
-            agg = bars_df.resample("W-Fri")
-
-            df = pd.DataFrame()
-            for field in fds:
-                df[field] = getattr(agg[field], handler[field])()
-
-            df = df.dropna()
-            df["datetime"] = df["datetime"].astype(np.uint64)
-            bars = df.to_records(index=False)
+            bars = self._resample_k_bars(bars, fields, "W-Fri")
+        if frequency == "M":
+            bars = self._resample_k_bars(bars, fields, "M")
 
         dt = convert_date_to_int(dt)
         i = bars['datetime'].searchsorted(dt, side='right')
