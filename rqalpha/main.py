@@ -43,6 +43,8 @@ from .execution_context import ExecutionContext
 from .interface import Persistable
 from .mod import ModHandler
 from .model.bar import BarMap
+from .model.portfolio import Portfolio
+from .model.base_position import Positions
 from .utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from .utils.exception import CustomException, is_user_exc, patch_user_exc
 from .utils.i18n import gettext as _
@@ -50,7 +52,6 @@ from .utils.logger import user_log, user_system_log, system_log, user_print, use
 from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from .utils.scheduler import Scheduler
 from .utils.config import set_locale
-
 
 jsonpickle_numpy.register_handlers()
 
@@ -99,12 +100,8 @@ def create_benchmark_portfolio(env):
     if env.config.base.benchmark is None:
         return None
 
-    from .const import ACCOUNT_TYPE
-    from .model.portfolio import Portfolio
-    from .model.base_position import Positions
-
-    BenchmarkAccount = env.get_account_model(ACCOUNT_TYPE.BENCHMARK)
-    BenchmarkPosition = env.get_position_model(ACCOUNT_TYPE.BENCHMARK)
+    BenchmarkAccount = env.get_account_model(const.ACCOUNT_TYPE.BENCHMARK)
+    BenchmarkPosition = env.get_position_model(const.ACCOUNT_TYPE.BENCHMARK)
 
     accounts = {}
     config = env.config
@@ -113,7 +110,7 @@ def create_benchmark_portfolio(env):
     portfolio = env.portfolio
     for account_type in config.base.account_list:
         total_cash += portfolio.accounts[account_type].total_value
-    accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
+    accounts[const.ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
     return Portfolio(start_date, 1, total_cash, accounts)
 
 
@@ -177,6 +174,14 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
+def register_smart_order(env):
+    from .api.api_stock import smart_order as order_stock
+    from .api.api_future import smart_order as order_future
+
+    env.set_smart_order(const.ACCOUNT_TYPE.STOCK, order_stock)
+    env.set_smart_order(const.ACCOUNT_TYPE.FUTURE, order_future)
+
+
 def run(config, source_code=None, user_funcs=None):
     env = Environment(config)
     persist_helper = None
@@ -191,6 +196,7 @@ def run(config, source_code=None, user_funcs=None):
         else:
             env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
         env.set_global_vars(GlobalVars())
+        register_smart_order(env)
         mod_handler.set_env(env)
         mod_handler.start_up()
 

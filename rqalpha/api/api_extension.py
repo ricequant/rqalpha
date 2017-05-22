@@ -17,10 +17,7 @@
 import six
 
 from .api_base import decorate_api_exc, instruments, cal_style
-from .api_stock import order_shares as order_stock
-from .api_future import smart_order as order_future
 from ..environment import Environment
-from ..const import ACCOUNT_TYPE
 from ..utils.arg_checker import apply_rules, verify_that
 from ..model.order import LimitOrder, MarketOrder, Order
 
@@ -89,14 +86,12 @@ def order(order_book_id, quantity, price=None, style=None):
         # RB1710 空方向调仓3手：先平多方向2手 在开空方向1手，调整后变为 SELL 1手
         order('RB1710', -3)
     """
-    position = Environment.get_instance().portfolio.positions[order_book_id]
+    env = Environment.get_instance()
+    position = env.portfolio.positions[order_book_id]
     style = cal_style(price, style)
-    if position.type == ACCOUNT_TYPE.STOCK:
-        orders = order_stock(order_book_id, quantity, style)
-    elif position.type == ACCOUNT_TYPE.FUTURE:
-        orders = order_future(order_book_id, quantity, style)
-    else:
-        raise NotImplementedError
+    smart_order = env.get_smart_order(position.type)
+    orders = smart_order(order_book_id, quantity, style)
+
     if isinstance(orders, Order):
         return [orders]
     return orders
@@ -141,14 +136,12 @@ def order_to(order_book_id, quantity, price=None, style=None):
         # RB1710 调仓至 SELL 1手
         order_to('RB1710'， -1)
     """
-    position = Environment.get_instance().portfolio.positions[order_book_id]
+    env = Environment.get_instance()
+    position = env.portfolio.positions[order_book_id]
     style = cal_style(price, style)
-    if position.type == ACCOUNT_TYPE.STOCK:
-        orders = order_stock(order_book_id, quantity - position.quantity, style)
-    elif position.type == ACCOUNT_TYPE.FUTURE:
-        orders = order_future(order_book_id, quantity - position.buy_quantity + position.sell_quantity, style)
-    else:
-        raise NotImplementedError
+    smart_order = env.get_smart_order(position.type)
+    orders = smart_order(order_book_id, quantity, style, target=True)
+
     if isinstance(orders, Order):
         return [orders]
     return orders

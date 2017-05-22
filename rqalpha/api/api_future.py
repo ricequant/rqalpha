@@ -46,8 +46,11 @@ def export_as_api(func):
     return func
 
 
-def smart_order(order_book_id, quantity, style):
+def smart_order(order_book_id, quantity, style, target=False):
     position = Environment.get_instance().portfolio.positions[order_book_id]
+    if target:
+        # For order_to
+        quantity = quantity - position.buy_quantity + position.sell_quantity
     orders = []
     if quantity > 0:
         # 平昨仓

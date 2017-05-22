@@ -58,6 +58,14 @@ def export_as_api(func):
     return func
 
 
+def smart_order(order_book_id, quantity, style, target=False):
+    position = Environment.get_instance().portfolio.positions[order_book_id]
+    if target:
+        # For order_to
+        quantity = quantity - position.quantity
+    return order_shares(order_book_id, quantity, style=style)
+
+
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,

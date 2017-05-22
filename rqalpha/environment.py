@@ -50,6 +50,7 @@ class Environment(object):
         self._frontend_validators = []
         self._account_model_dict = {}
         self._position_model_dict = {}
+        self._smart_order_dict = {}
 
     @classmethod
     def get_instance(cls):
@@ -103,6 +104,14 @@ class Environment(object):
         if account_type not in self._position_model_dict:
             raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
         return self._position_model_dict[account_type]
+
+    def set_smart_order(self, account_type, smart_order):
+        self._smart_order_dict[account_type] = smart_order
+
+    def get_smart_order(self, account_type):
+        if account_type not in self._smart_order_dict:
+            raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
+        return self._smart_order_dict[account_type]
 
     def can_submit_order(self, order):
         account = self.get_account(order.order_book_id)
