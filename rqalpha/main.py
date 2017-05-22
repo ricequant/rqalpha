@@ -100,9 +100,12 @@ def create_benchmark_portfolio(env):
         return None
 
     from .const import ACCOUNT_TYPE
-    from .model.account import BenchmarkAccount
-    from .model.position import Positions, StockPosition
     from .model.portfolio import Portfolio
+    from .model.base_position import Positions
+
+    BenchmarkAccount = env.get_account_model(ACCOUNT_TYPE.BENCHMARK)
+    BenchmarkPosition = env.get_position_model(ACCOUNT_TYPE.BENCHMARK)
+
     accounts = {}
     config = env.config
     start_date = config.base.start_date
@@ -114,7 +117,7 @@ def create_benchmark_portfolio(env):
             total_cash += config.base.future_starting_cash
         else:
             raise NotImplementedError
-    accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(StockPosition))
+    accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
     return Portfolio(start_date, 1, total_cash, accounts)
 
 

@@ -16,12 +16,12 @@
 
 import six
 
-from .base_account import BaseAccount
-from ...environment import Environment
-from ...events import EVENT
-from ...const import ACCOUNT_TYPE, POSITION_EFFECT
-from ...utils.i18n import gettext as _
-from ...utils.logger import user_system_log
+from rqalpha.model.base_account import BaseAccount
+from rqalpha.environment import Environment
+from rqalpha.events import EVENT
+from rqalpha.const import ACCOUNT_TYPE, POSITION_EFFECT
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 
 def margin_of(order_book_id, quantity, price):

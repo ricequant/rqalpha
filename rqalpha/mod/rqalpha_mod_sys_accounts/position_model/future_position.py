@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_position import BasePosition
-from ...environment import Environment
-from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
+from rqalpha.model.base_position import BasePosition
+from rqalpha.environment import Environment
+from rqalpha.const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
 
 
 class FuturePosition(BasePosition):

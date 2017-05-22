@@ -17,6 +17,7 @@
 from .events import EventBus
 from .utils import get_account_type
 from .utils.logger import system_log, user_log, user_detail_log
+from .utils.i18n import gettext as _
 
 
 class Environment(object):
@@ -47,6 +48,8 @@ class Environment(object):
         self.plot_store = None
         self.bar_dict = None
         self._frontend_validators = []
+        self._account_model_dict = {}
+        self._position_model_dict = {}
 
     @classmethod
     def get_instance(cls):
@@ -84,6 +87,22 @@ class Environment(object):
 
     def add_frontend_validator(self, validator):
         self._frontend_validators.append(validator)
+
+    def set_account_model(self, account_type, account_model):
+        self._account_model_dict[account_type] = account_model
+
+    def get_account_model(self, account_type):
+        if account_type not in self._account_model_dict:
+            raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
+        return self._account_model_dict[account_type]
+
+    def set_position_model(self, account_type, position_model):
+        self._position_model_dict[account_type] = position_model
+
+    def get_position_model(self, account_type):
+        if account_type not in self._position_model_dict:
+            raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
+        return self._position_model_dict[account_type]
 
     def can_submit_order(self, order):
         account = self.get_account(order.order_book_id)

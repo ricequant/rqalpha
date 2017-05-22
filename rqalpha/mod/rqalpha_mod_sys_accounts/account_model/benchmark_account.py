@@ -17,8 +17,8 @@
 import numpy as np
 
 from .stock_account import StockAccount
-from ...environment import Environment
-from ...events import EVENT
+from rqalpha.environment import Environment
+from rqalpha.events import EVENT
 
 
 class BenchmarkAccount(StockAccount):

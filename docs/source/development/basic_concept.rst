@@ -21,6 +21,17 @@
 
 详细的 RQAlpha 结构图请查看 `Processon RQAlpha Structure`_
 
+Account
+------------------
+
+.. autoclass:: AbstractAccount
+    :members:
+
+Position
+------------------
+
+.. autoclass:: AbstractPosition
+    :members:
 
 StrategyLoader
 ------------------

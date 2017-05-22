@@ -67,6 +67,13 @@ def load_mod_config(config_path, loader=yaml.Loader):
         config_path = get_mod_config_path()
         return load_mod_config(config_path, loader)
     else:
+        # FIXME 因为增加了 sys_accounts 所以临时增加了对应 mod_config.yml 的更新
+        # TODO 这里应该更改为 mod_config.yml 和 mod_config_template.yml 的同步检查。
+        if 'sys_accounts' not in mod_config['mod']:
+            mod_config['mod']['sys_accounts'] = {
+                'enabled': True
+            }
+            dump_config(config_path, mod_config)
         return mod_config
 
 
@@ -143,7 +150,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     # load default config from rqalpha
     config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
     # load mod config
-    mod_config = load_config(mod_config_path)
+    mod_config = load_mod_config(mod_config_path)
     deep_update(mod_config, config)
     # load user config
     user_config = load_config(user_config_path)

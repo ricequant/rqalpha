@@ -18,12 +18,12 @@ import six
 import datetime
 from collections import defaultdict
 
-from .base_account import BaseAccount
-from ...events import EVENT
-from ...environment import Environment
-from ...utils.logger import user_system_log
-from ...utils.i18n import gettext as _
-from ...const import SIDE, ACCOUNT_TYPE
+from rqalpha.model.base_account import BaseAccount
+from rqalpha.events import EVENT
+from rqalpha.environment import Environment
+from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import SIDE, ACCOUNT_TYPE
 
 
 class StockAccount(BaseAccount):
