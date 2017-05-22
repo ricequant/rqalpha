@@ -188,7 +188,7 @@ def test_api():
             "strategy_file": 'rqalpha/__init__.py'
         },
         "extra": {
-            "log_level": "verbose",
+            "log_level": "error",
         },
         "mod": {
             "sys_progress": {
