@@ -153,6 +153,9 @@ class BaseDataSource(AbstractDataSource):
             "close": "last",
             "volume": "sum",
             "total_turnover": "sum",
+            "open_interest": "sum",
+            "settlement": "last",
+            "prev_settlement": "first",
         }
         bars_df = pd.DataFrame(bars)
         bars_df["dt"] = bars_df["datetime"].apply(convert_int_to_datetime)
