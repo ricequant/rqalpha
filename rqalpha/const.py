@@ -50,8 +50,16 @@ class RUN_TYPE(CustomEnum):
 class ACCOUNT_TYPE(CustomEnum):
     TOTAL = 0
     BENCHMARK = 1
+    # 股票
     STOCK = 2
+    # 期货
     FUTURE = 3
+    # 期权
+    OPTION = 4
+    # 货币
+    CURRENCY = 5
+    # 火币
+    HUOBI = 6
 
 
 # noinspection PyPep8Naming
