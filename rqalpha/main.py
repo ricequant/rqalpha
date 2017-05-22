@@ -110,13 +110,9 @@ def create_benchmark_portfolio(env):
     config = env.config
     start_date = config.base.start_date
     total_cash = 0
+    portfolio = env.portfolio
     for account_type in config.base.account_list:
-        if account_type == ACCOUNT_TYPE.STOCK:
-            total_cash += config.base.stock_starting_cash
-        elif account_type == ACCOUNT_TYPE.FUTURE:
-            total_cash += config.base.future_starting_cash
-        else:
-            raise NotImplementedError
+        total_cash += portfolio.accounts[account_type].total_value
     accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
     return Portfolio(start_date, 1, total_cash, accounts)
 
