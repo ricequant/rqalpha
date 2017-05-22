@@ -48,6 +48,11 @@ class RUN_TYPE(CustomEnum):
 
 # noinspection PyPep8Naming
 class ACCOUNT_TYPE(CustomEnum):
+    """
+    关于 ACCOUNT_TYPE，目前主要表示为交易账户。STOCK / FUTURE / OPTION 目前均表示为中国 对应的交易账户。
+    ACCOUNT_TYPE 不区分交易所，比如 A 股区分上海交易所和深圳交易所，但对应的都是一个账户，因此统一为 STOCK
+    而 Bitcoin 对应很多不同的交易所，所以需要指定交易所来进行账户的区分
+    """
     TOTAL = 0
     BENCHMARK = 1
     # 股票
@@ -58,8 +63,8 @@ class ACCOUNT_TYPE(CustomEnum):
     OPTION = 4
     # 货币
     CURRENCY = 5
-    # 火币
-    HUOBI = 6
+    # 火币交易所
+    HUOBI_ALTCOIN = 6
 
 
 # noinspection PyPep8Naming
