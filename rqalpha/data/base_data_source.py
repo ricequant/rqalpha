@@ -17,17 +17,19 @@ import os
 
 import six
 import numpy as np
+import pandas as pd
 
 from ..const import MARGIN_TYPE, COMMISSION_TYPE
-from ..utils.py2 import lru_cache
-from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
 from ..interface import AbstractDataSource
-from .future_info_cn import CN_FUTURE_INFO
-from .converter import StockBarConverter, IndexBarConverter
+from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
+from ..utils.datetime_func import convert_int_to_datetime
+from ..utils.py2 import lru_cache
 from .converter import FutureDayBarConverter, FundDayBarConverter
-from .daybar_store import DayBarStore
+from .converter import StockBarConverter, IndexBarConverter
 from .date_set import DateSet
+from .daybar_store import DayBarStore
 from .dividend_store import DividendStore
+from .future_info_cn import CN_FUTURE_INFO
 from .instrument_store import InstrumentStore
 from .trading_dates_store import TradingDatesStore
 from .yield_curve_store import YieldCurveStore
@@ -137,7 +139,7 @@ class BaseDataSource(AbstractDataSource):
 
     def history_bars(self, instrument, bar_count, frequency, fields, dt,
                      skip_suspended=True, include_now=False):
-        if frequency != '1d':
+        if frequency not in ['1d', "W", "M"]:
             raise NotImplementedError
 
         if skip_suspended and instrument.type == 'CS':
@@ -147,6 +149,35 @@ class BaseDataSource(AbstractDataSource):
 
         if bars is None or not self._are_fields_valid(fields, bars.dtype.names):
             return None
+
+        if frequency == "W":
+            fds = fields
+            if isinstance(fds, six.string_types):
+                fds = [fds]
+            if "datetime" not in fds:
+                fds.append("datetime")
+
+            handler = {
+                "datetime": "last",
+                "open": "first",
+                "high": "max",
+                "low": "min",
+                "close": "last",
+                "volume": "sum",
+                "total_turnover": "sum",
+            }
+            bars_df = pd.DataFrame(bars)
+            bars_df["dt"] = bars_df["datetime"].apply(convert_int_to_datetime)
+            bars_df.set_index("dt", inplace=True)
+            agg = bars_df.resample("W-Fri")
+
+            df = pd.DataFrame()
+            for field in fds:
+                df[field] = getattr(agg[field], handler[field])()
+
+            df = df.dropna()
+            df["datetime"] = df["datetime"].astype(np.uint64)
+            bars = df.to_records(index=False)
 
         dt = convert_date_to_int(dt)
         i = bars['datetime'].searchsorted(dt, side='right')
