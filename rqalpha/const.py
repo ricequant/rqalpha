@@ -158,6 +158,26 @@ class DAYS_CNT(object):
     TRADING_DAYS_A_YEAR = 252
 
 
+class CURRENCY(CustomEnum):
+    CNY = "CNY"     # 人民币
+    USD = "USD"     # 美元
+    EUR = "EUR"     # 欧元
+    HKD = "HKD"     # 港币
+    GBP = "GBP"     # 英镑
+    JPY = "JPY"     # 日元
+    KRW = "KWR"     # 韩元
+    CAD = "CAD"     # 加元
+    AUD = "AUD"     # 澳元
+    CHF = "CHF"     # 瑞郎
+    SGD = "SGD"     # 新加坡元
+    MYR = "MYR"     # 马拉西亚币
+    IDR = "IDR"     # 印尼币
+    NZD = "NZD"     # 新西兰币
+    VND = "VND"     # 越南盾
+    THB = "THB"     # 泰铢
+    PHP = "PHP"     # 菲律宾币
+
+
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"
 
 NIGHT_TRADING_NS = ["CU", "AL", "ZN", "PB", "SN", "NI", "RB", "HC", "BU", "RU", "AU", "AG", "Y", "M", "A", "B", "P",
