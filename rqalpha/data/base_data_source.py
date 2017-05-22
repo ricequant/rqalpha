@@ -185,18 +185,22 @@ class BaseDataSource(AbstractDataSource):
         if bars is None or not self._are_fields_valid(fields, bars.dtype.names):
             return None
 
-        if frequency == "W":
-            bars = self._resample_k_bars(bars, fields, "W-Fri")
-        if frequency == "M":
-            bars = self._resample_k_bars(bars, fields, "M")
-
         dt = convert_date_to_int(dt)
         i = bars['datetime'].searchsorted(dt, side='right')
-        left = i - bar_count if i >= bar_count else 0
+        bars = bars[:i]
+
+        if frequency in ("W", "M"):
+            freq = frequency if frequency == "M" else "W-Fri"
+            resampled_bars = self._resample_k_bars(bars, fields, freq)
+            if not include_now:
+                if bars["datetime"][-1] == resampled_bars["datetime"][-1]:
+                    resampled_bars = resampled_bars[:-1]
+            bars = resampled_bars
+
         if fields is None:
-            return bars[left:i]
+            return bars[-bar_count:]
         else:
-            return bars[left:i][fields]
+            return bars[-bar_count:][fields]
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor)

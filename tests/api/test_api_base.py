@@ -163,6 +163,11 @@ def test_history_bars():
             return_list = history_bars(context.s1, 5, 'M', 'close')
             assert return_list.tolist() == [2979.34, 3085.49, 3004.7, 3100.49, 3250.03]
 
+            return_list = history_bars(context.s1, 5, 'W', 'close', include_now=True)
+            assert return_list.tolist() == [3243.84, 3232.88, 3122.98, 3110.15, 3096.1]
+            return_list = history_bars(context.s1, 5, 'M', 'close', include_now=True)
+            assert return_list.tolist() == [3085.49, 3004.7, 3100.49, 3250.03, 3096.1]
+
 test_history_bars_code_new = get_code_block(test_history_bars)
 
 
