@@ -151,13 +151,18 @@ def test_history_bars():
     from rqalpha.api import history_bars
 
     def init(context):
-        context.s1 = '000001.XSHE'
+        context.s1 = '000001.XSHG'
         pass
 
     def handle_bar(context, bar_dict):
-        return_list = history_bars(context.s1, 5, '1d', 'close')
         if str(context.now.date()) == '2016-12-29':
-            assert return_list.tolist() == [9.08, 9.1199, 9.08, 9.06, 9.08]
+            return_list = history_bars(context.s1, 5, '1d', 'close')
+            assert return_list.tolist() == [3110.15, 3122.57, 3114.66, 3102.24, 3096.1]
+            return_list = history_bars(context.s1, 5, 'W', 'close')
+            assert return_list.tolist() == [3261.94, 3243.84, 3232.88, 3122.98, 3110.15]
+            return_list = history_bars(context.s1, 5, 'M', 'close')
+            assert return_list.tolist() == [2979.34, 3085.49, 3004.7, 3100.49, 3250.03]
+
 test_history_bars_code_new = get_code_block(test_history_bars)
 
 
