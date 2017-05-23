@@ -70,9 +70,14 @@ class FuncatAPIMod(AbstractMod):
                 self.set_current_date(calendar_date)
 
             def _history_bars(self, order_book_id, bar_count, freq, dt):
-                if self.fetch_data_by_api:
-                    bars = history_bars(
-                        order_book_id, bar_count, freq, fields=None)
+                if self.fetch_data_by_api and ExecutionContext.phase() in (
+                        EXECUTION_PHASE.BEFORE_TRADING,
+                        EXECUTION_PHASE.ON_BAR,
+                        EXECUTION_PHASE.ON_TICK,
+                        EXECUTION_PHASE.AFTER_TRADING,
+                        EXECUTION_PHASE.SCHEDULED):
+                        bars = history_bars(
+                            order_book_id, bar_count, freq, fields=None)
                 else:
                     bars = self.rqalpha_env.data_proxy.history_bars(
                         order_book_id, bar_count, freq, field=None,
