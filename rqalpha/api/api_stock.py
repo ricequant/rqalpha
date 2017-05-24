@@ -198,7 +198,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
 
     style = cal_style(price, style)
 
-    return order_shares(id_or_ins, amount * round_lot, style)
+    return order_shares(id_or_ins, amount * round_lot, style=style)
 
 
 @export_as_api
@@ -270,7 +270,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
     position = account.positions[order_book_id]
     amount = downsize_amount(amount, position)
 
-    return order_shares(order_book_id, amount, style)
+    return order_shares(order_book_id, amount, style=style)
 
 
 @export_as_api
@@ -308,7 +308,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
 
     style = cal_style(price, style)
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
-    return order_value(id_or_ins, account.total_value * percent, style)
+    return order_value(id_or_ins, account.total_value * percent, style=style)
 
 
 @export_as_api
@@ -349,7 +349,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     if cash_amount == 0:
         return _sell_all_stock(order_book_id, position.quantity, style)
 
-    return order_value(order_book_id, cash_amount - position.market_value, style)
+    return order_value(order_book_id, cash_amount - position.market_value, style=style)
 
 
 @export_as_api
@@ -405,7 +405,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     if percent == 0:
         return _sell_all_stock(order_book_id, position.quantity, style)
 
-    return order_value(order_book_id, account.total_value * percent - position.market_value, style)
+    return order_value(order_book_id, account.total_value * percent - position.market_value, style=style)
 
 
 @export_as_api
