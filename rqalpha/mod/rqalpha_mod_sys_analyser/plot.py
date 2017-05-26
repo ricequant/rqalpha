@@ -149,15 +149,16 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     ax.grid(b=True, which='major', linewidth=1)
 
     # plot two lines
-    ax.plot(portfolio["unit_net_value"], label=_(u"strategy"), alpha=1, linewidth=2, color=red)
+    ax.plot(portfolio["unit_net_value"] - 1.0, label=_(u"strategy"), alpha=1, linewidth=2, color=red)
     if benchmark_portfolio is not None:
-        ax.plot(benchmark_portfolio["unit_net_value"], label=_(u"benchmark"), alpha=1, linewidth=2, color=blue)
+        ax.plot(benchmark_portfolio["unit_net_value"] - 1.0, label=_(u"benchmark"), alpha=1, linewidth=2, color=blue)
 
     # plot MaxDD/MaxDDD
-    ax.plot([index[max_dd_end], index[max_dd_start]], [rt[max_dd_end], rt[max_dd_start]],
+    ax.plot([index[max_dd_end], index[max_dd_start]], [rt[max_dd_end] - 1.0, rt[max_dd_start] - 1.0],
             'v', color='Green', markersize=8, alpha=.7, label=_(u"MaxDrawdown"))
     ax.plot([index[max_ddd_start_day], index[max_ddd_end_day]],
-            [rt[max_ddd_start_day], rt[max_ddd_end_day]], 'D', color='Blue', markersize=8, alpha=.7, label=_(u"MaxDDD"))
+            [rt[max_ddd_start_day] - 1.0, rt[max_ddd_end_day] - 1.0], 'D', color='Blue', markersize=8, alpha=.7,
+            label=_(u"MaxDDD"))
 
     # place legend
     leg = plt.legend(loc="best")
