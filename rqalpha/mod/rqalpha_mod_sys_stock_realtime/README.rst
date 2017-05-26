@@ -35,7 +35,7 @@ RQAlpha 接受实时行情并触发事件 Mod
 
 在启动该 Mod 的情况下（可以通过 rqalpha mod list 确认是否启动），
 
-使用 :code:`--run-type` 或者 :code:`-rt` 为 :code:`p` (PaperTrading)，就可以激活改 mod。
+使用 :code:`--run-type` 或者 :code:`-rt` 为 :code:`p` (PaperTrading)，就可以激活该 mod。
 
 .. code-block:: bash
 
