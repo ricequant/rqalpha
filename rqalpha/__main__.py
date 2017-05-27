@@ -46,12 +46,15 @@ def inject_mod_commands():
             lib_name = "rqalpha_mod_{}".format(mod_name)
         if not config['enabled']:
             continue
-        if mod_name in SYSTEM_MOD_LIST:
-            # inject system mod
-            import_mod("rqalpha.mod." + lib_name)
-        else:
-            # inject third part mod
-            import_mod(lib_name)
+        try:
+            if mod_name in SYSTEM_MOD_LIST:
+                # inject system mod
+                import_mod("rqalpha.mod." + lib_name)
+            else:
+                # inject third part mod
+                import_mod(lib_name)
+        except Exception as e:
+            pass
 
 
 def entry_point():
@@ -299,7 +302,6 @@ def mod(cmd, params):
 
         # Uninstall Mod
         uninstalled_result = pip_main(params)
-
         # Remove Mod Config
         mod_config_path = get_mod_config_path(generate=True)
         mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
