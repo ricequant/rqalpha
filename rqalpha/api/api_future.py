@@ -130,7 +130,7 @@ def smart_order(order_book_id, quantity, style, target=False):
              verify_that('amount').is_greater_than(0),
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
-             verify_that('style').is_instance_of((LimitOrder, MarketOrder)))
+             verify_that('style').is_instance_of((LimitOrder, MarketOrder, type(None))))
 def order(id_or_ins, amount, side, position_effect, style):
     if amount <= 0:
         raise RuntimeError
