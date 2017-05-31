@@ -35,6 +35,9 @@ def init_portfolio(env):
             accounts[ACCOUNT_TYPE.STOCK] = StockAccount(stock_starting_cash, Positions(StockPosition))
             total_cash += stock_starting_cash
         elif account_type == ACCOUNT_TYPE.FUTURE:
+            if config.base.frequency != '1d':
+                StockAccount.AGGRESSIVE_UPDATE_LAST_PRICE = True
+                FutureAccount.AGGRESSIVE_UPDATE_LAST_PRICE = True
             future_starting_cash = config.base.future_starting_cash
             if future_starting_cash == 0:
                 raise RuntimeError(_(u"future starting cash can not be 0, using `--future-starting-cash 100000`"))
