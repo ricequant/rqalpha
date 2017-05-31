@@ -43,6 +43,8 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        if self.AGGRESSIVE_UPDATE_LAST_PRICE:
+            event_bus.add_listener(EVENT.BAR, self._on_bar)
 
     def get_state(self):
         return {
@@ -136,10 +138,13 @@ class StockAccount(BaseAccount):
             self._handle_split(trading_date)
 
     def _on_settlement(self, event):
+        env = Environment.get_instance()
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
+            if self.AGGRESSIVE_UPDATE_LAST_PRICE:
+                position.update_last_price()
             if position.is_de_listed() and position.quantity != 0:
-                if Environment.get_instance().config.validator.cash_return_by_stock_delisted:
+                if env.config.validator.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
                 user_system_log.warn(
                     _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
@@ -153,6 +158,10 @@ class StockAccount(BaseAccount):
         self._transaction_cost = 0
         self._backward_trade_set.clear()
         self._handle_dividend_book_closure(event.trading_dt.date())
+
+    def _on_bar(self, event):
+        for position in self._positions.values():
+            position.update_last_price()
 
     @property
     def type(self):

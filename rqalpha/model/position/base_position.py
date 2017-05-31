@@ -21,13 +21,14 @@ from ...utils.logger import user_system_log
 
 
 class BasePosition(object):
-
     __abandon_properties__ = ["total_orders", "total_trades"]
+    NaN = float('NaN')
 
     __repr__ = property_repr
 
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
+        self._last_price = self.NaN
 
     def get_state(self):
         raise NotImplementedError
@@ -56,7 +57,13 @@ class BasePosition(object):
 
     @property
     def last_price(self):
-        return Environment.get_instance().get_last_price(self._order_book_id)
+        return (self._last_price if self._last_price == self._last_price else
+                Environment.get_instance().get_last_price(self._order_book_id))
+
+    def update_last_price(self):
+        price = Environment.get_instance().get_last_price(self._order_book_id)
+        if price == price:  # nan 过滤掉
+            self._last_price = price
 
     # -- Function
     def is_de_listed(self):

@@ -17,4 +17,3 @@
 from .benchmark_account import BenchmarkAccount
 from .future_account import FutureAccount
 from .stock_account import StockAccount
-
