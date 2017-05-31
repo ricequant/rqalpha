@@ -43,7 +43,7 @@ class SimulationEventSource(AbstractEventSource):
         if len(universe) == 0 and ACCOUNT_TYPE.STOCK not in self._account_list:
             error = CustomError()
             error.set_msg("Current universe is empty. Please use subscribe function before trade")
-            raise patch_user_exc(CustomException(error))
+            raise patch_user_exc(CustomException(error), force=True)
         return universe
 
     # [BEGIN] minute event helper
