@@ -60,13 +60,6 @@ def entry_point():
     cli(obj={})
 
 
-@click.group()
-@click.option('-v', '--verbose', count=True)
-@click.pass_context
-def cli(ctx, verbose):
-    ctx.obj["VERBOSE"] = verbose
-
-
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--locale', 'locale', type=click.STRING, default="zh_Hans_CN")
