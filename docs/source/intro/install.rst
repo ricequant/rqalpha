@@ -116,6 +116,13 @@ FAQ
 
 不进行编译安装，访问 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载 :code:`bcolz` 直接进行安装。
 
+如果您按照 :ref:`intro-detail-install` 进行环境搭建并安装了 `anaconda` 您可以使用如下方式进行免编译安装
+
+.. code-block:: bash
+
+    $ conda install bcolz -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+
+
 2.  Matplotlib 相关问题
 ------------------------------------------------------
 
