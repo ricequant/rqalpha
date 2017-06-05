@@ -17,7 +17,7 @@
 import six
 import pickle
 
-from ..const import ACCOUNT_TYPE
+from ..const import DEFAULT_ACCOUNT_TYPE
 from ..environment import Environment
 from ..utils.logger import user_system_log, system_log
 from ..utils.i18n import gettext as _
@@ -207,11 +207,11 @@ class StrategyContext(object):
 
     @property
     def stock_account(self):
-        return self.portfolio.accounts[ACCOUNT_TYPE.STOCK]
+        return self.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
 
     @property
     def future_account(self):
-        return self.portfolio.accounts[ACCOUNT_TYPE.FUTURE]
+        return self.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.FUTURE.name]
 
     @property
     def config(self):

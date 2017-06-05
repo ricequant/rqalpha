@@ -29,7 +29,7 @@ from pprint import pformat
 from . import RqAttrDict, logger
 from .exception import patch_user_exc
 from .logger import user_log, user_system_log, system_log, std_log, user_std_handler
-from ..const import RUN_TYPE, PERSIST_MODE, ACCOUNT_TYPE
+from ..const import RUN_TYPE, PERSIST_MODE
 from ..utils.i18n import gettext as _, localization
 from ..utils.dict_func import deep_update
 from ..utils.py2 import to_utf8
@@ -277,9 +277,9 @@ def parse_account_list(securities):
                 security_set.add(security)
         if len(security_set) == 0:
             raise RuntimeError(_(u"securities can not be empty, using `--security stock/future` to specific security type"))
-        return [ACCOUNT_TYPE[security.upper()] for security in security_set]
+        return [security.upper() for security in security_set]
     elif isinstance(securities, six.string_types):
-        return [ACCOUNT_TYPE[securities.upper()]]
+        return [securities.upper()]
     else:
         raise NotImplementedError
 

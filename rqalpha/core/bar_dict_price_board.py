@@ -18,7 +18,7 @@ import numpy as np
 from ..interface import AbstractPriceBoard
 from ..environment import Environment
 from ..events import EVENT
-from ..const import ACCOUNT_TYPE
+from ..const import DEFAULT_ACCOUNT_TYPE
 
 
 class BarDictPriceBoard(AbstractPriceBoard):
@@ -26,7 +26,7 @@ class BarDictPriceBoard(AbstractPriceBoard):
         self._settlement_lock = False
         self._settlement_dt = None
         self._env = Environment.get_instance()
-        if ACCOUNT_TYPE.FUTURE in self._env.config.base.account_list:
+        if DEFAULT_ACCOUNT_TYPE.FUTURE.name in self._env.config.base.account_list:
             self._env.event_bus.prepend_listener(EVENT.PRE_SETTLEMENT, self._lock_settlement)
             self._env.event_bus.prepend_listener(EVENT.POST_BEFORE_TRADING, self._unlock_settlement)
 

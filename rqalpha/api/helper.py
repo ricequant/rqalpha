@@ -15,15 +15,15 @@
 # limitations under the License.
 
 from . import api_base, api_future, api_stock, api_extension
-from ..const import ACCOUNT_TYPE
+from ..const import DEFAULT_ACCOUNT_TYPE
 
 
 def get_apis(account_list):
     apis = {name: getattr(api_base, name) for name in api_base.__all__}
     for account_type in account_list:
-        if account_type == ACCOUNT_TYPE.STOCK:
+        if account_type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
             apis.update((name, getattr(api_stock, name)) for name in api_stock.__all__)
-        elif account_type == ACCOUNT_TYPE.FUTURE:
+        elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
             apis.update((name, getattr(api_future, name)) for name in api_future.__all__)
     apis.update((name, getattr(api_extension, name)) for name in api_extension.__all__)
     return apis

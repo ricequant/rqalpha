@@ -16,7 +16,7 @@
 
 from rqalpha.model.base_position import BasePosition
 from rqalpha.environment import Environment
-from rqalpha.const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
+from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
 
 
 class FuturePosition(BasePosition):
@@ -67,7 +67,7 @@ class FuturePosition(BasePosition):
 
     @property
     def type(self):
-        return ACCOUNT_TYPE.FUTURE
+        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
 
     @property
     def margin_rate(self):

@@ -100,8 +100,8 @@ def create_benchmark_portfolio(env):
     if env.config.base.benchmark is None:
         return None
 
-    BenchmarkAccount = env.get_account_model(const.ACCOUNT_TYPE.BENCHMARK)
-    BenchmarkPosition = env.get_position_model(const.ACCOUNT_TYPE.BENCHMARK)
+    BenchmarkAccount = env.get_account_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
+    BenchmarkPosition = env.get_position_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
 
     accounts = {}
     config = env.config
@@ -110,7 +110,7 @@ def create_benchmark_portfolio(env):
     portfolio = env.portfolio
     for account_type in config.base.account_list:
         total_cash += portfolio.accounts[account_type].total_value
-    accounts[const.ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
+    accounts[const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name] = BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
     return Portfolio(start_date, 1, total_cash, accounts)
 
 
@@ -178,8 +178,8 @@ def register_smart_order(env):
     from .api.api_stock import smart_order as order_stock
     from .api.api_future import smart_order as order_future
 
-    env.set_smart_order(const.ACCOUNT_TYPE.STOCK, order_stock)
-    env.set_smart_order(const.ACCOUNT_TYPE.FUTURE, order_future)
+    env.set_smart_order(const.DEFAULT_ACCOUNT_TYPE.STOCK.name, order_stock)
+    env.set_smart_order(const.DEFAULT_ACCOUNT_TYPE.FUTURE.name, order_future)
 
 
 def run(config, source_code=None, user_funcs=None):

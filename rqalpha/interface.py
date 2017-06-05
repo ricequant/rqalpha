@@ -23,8 +23,8 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     """
     账户接口，主要用于构建账户信息
     
-    您可以在 Mod 的 start_up 阶段通过 env.set_account_model(ACCOUNT_TYPE, AccountModel) 来注入和修改 AccountModel
-    您也可以通过 env.get_account_model(ACCOUNT_TYPE) 来获取指定类型的 AccountModel
+    您可以在 Mod 的 start_up 阶段通过 env.set_account_model(account_type, AccountModel) 来注入和修改 AccountModel
+    您也可以通过 env.get_account_model(account_type) 来获取指定类型的 AccountModel
     """
     @abc.abstractmethod
     def fast_forward(self, orders, trades):
@@ -61,9 +61,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         """
         [Required]
         
-        返回当前 Account 的类型，需要是 ACCOUNT_TYPE Enum 中包含的类型
-        
-        :return: ACCOUNT_TYPE
+        返回 String 类型的账户类型标示
         """
         raise NotImplementedError
 
@@ -119,8 +117,8 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
     仓位接口，主要用于构建仓位信息
     
-    您可以在 Mod 的 start_up 阶段通过 env.set_position_model(ACCOUNT_TYPE, PositionModel) 来注入和修改 PositionModel
-    您也可以通过 env.get_position_model(ACCOUNT_TYPE) 来获取制定类型的 PositionModel
+    您可以在 Mod 的 start_up 阶段通过 env.set_position_model(account_type, PositionModel) 来注入和修改 PositionModel
+    您也可以通过 env.get_position_model(account_type) 来获取制定类型的 PositionModel
     """
 
     @abc.abstractmethod
@@ -155,9 +153,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
         """
         [Required]
 
-        返回当前 Position 的类型，需要是 ACCOUNT_TYPE Enum 中包含的类型
-
-        :return: ACCOUNT_TYPE
+        返回 String 类型的账户类型标示
         """
         raise NotImplementedError
 

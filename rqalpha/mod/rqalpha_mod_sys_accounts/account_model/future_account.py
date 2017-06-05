@@ -19,7 +19,7 @@ import six
 from rqalpha.model.base_account import BaseAccount
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
-from rqalpha.const import ACCOUNT_TYPE, POSITION_EFFECT
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_EFFECT
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
 
@@ -84,7 +84,7 @@ class FutureAccount(BaseAccount):
 
     @property
     def type(self):
-        return ACCOUNT_TYPE.FUTURE
+        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
 
     @staticmethod
     def _frozen_cash_of_order(order):

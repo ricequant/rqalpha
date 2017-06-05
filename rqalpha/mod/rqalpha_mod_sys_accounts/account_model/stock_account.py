@@ -23,7 +23,7 @@ from rqalpha.events import EVENT
 from rqalpha.environment import Environment
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import SIDE, ACCOUNT_TYPE
+from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE
 
 
 class StockAccount(BaseAccount):
@@ -164,7 +164,7 @@ class StockAccount(BaseAccount):
 
     @property
     def type(self):
-        return ACCOUNT_TYPE.STOCK
+        return DEFAULT_ACCOUNT_TYPE.STOCK.name
 
     def _handle_dividend_payable(self, trading_date):
         to_be_removed = []

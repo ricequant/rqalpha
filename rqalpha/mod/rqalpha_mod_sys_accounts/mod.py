@@ -16,7 +16,7 @@
 
 
 from rqalpha.interface import AbstractMod
-from rqalpha.const import ACCOUNT_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 
 from .account_model import *
 from .position_model import *
@@ -25,13 +25,13 @@ from .position_model import *
 class AccountMod(AbstractMod):
 
     def start_up(self, env, mod_config):
-        env.set_account_model(ACCOUNT_TYPE.STOCK, StockAccount)
-        env.set_account_model(ACCOUNT_TYPE.FUTURE, FutureAccount)
-        env.set_account_model(ACCOUNT_TYPE.BENCHMARK, BenchmarkAccount)
+        env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount)
+        env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount)
+        env.set_account_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, BenchmarkAccount)
 
-        env.set_position_model(ACCOUNT_TYPE.STOCK, StockPosition)
-        env.set_position_model(ACCOUNT_TYPE.FUTURE, FuturePosition)
-        env.set_position_model(ACCOUNT_TYPE.BENCHMARK, StockPosition)
+        env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPosition)
+        env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePosition)
+        env.set_position_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, StockPosition)
 
     def tear_down(self, code, exception=None):
         pass

@@ -14,18 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''
-更多描述请见
-https://www.ricequant.com/api/python/chn
-'''
-
 from decimal import Decimal, getcontext
 
 import six
 import numpy as np
 
 from .api_base import decorate_api_exc, instruments, cal_style
-from ..const import ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE
+from ..const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE
 from ..environment import Environment
 from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
@@ -253,7 +248,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
     if price == 0:
         return order_shares(order_book_id, 0, style)
 
-    account = env.portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
     round_lot = int(env.get_instrument(order_book_id).round_lot)
 
     if cash_amount > 0:
@@ -307,7 +302,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
         raise RQInvalidArgument(_(u"percent should between -1 and 1"))
 
     style = cal_style(price, style)
-    account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
     return order_value(id_or_ins, account.total_value * percent, style=style)
 
 
@@ -342,7 +337,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
         order_target_value('000001.XSHE', 10000)
     """
     order_book_id = assure_stock_order_book_id(id_or_ins)
-    account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
     position = account.positions[order_book_id]
 
     style = cal_style(price, style)
@@ -399,7 +394,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 
     style = cal_style(price, style)
 
-    account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
+    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
     position = account.positions[order_book_id]
 
     if percent == 0:

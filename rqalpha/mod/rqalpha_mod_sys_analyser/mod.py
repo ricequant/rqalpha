@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import six
 
-from rqalpha.const import EXIT_CODE, ACCOUNT_TYPE
+from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.risk import Risk
@@ -106,8 +106,8 @@ class AnalyserMod(AbstractMod):
         }
 
     ACCOUNT_FIELDS_MAP = {
-        ACCOUNT_TYPE.STOCK: ['dividend_receivable'],
-        ACCOUNT_TYPE.FUTURE: ['holding_pnl', 'realized_pnl', 'daily_pnl', 'margin'],
+        DEFAULT_ACCOUNT_TYPE.STOCK.name: ['dividend_receivable'],
+        DEFAULT_ACCOUNT_TYPE.FUTURE.name: ['holding_pnl', 'realized_pnl', 'daily_pnl', 'margin'],
     }
 
     def _to_account_record(self, date, account):
@@ -125,10 +125,10 @@ class AnalyserMod(AbstractMod):
         return data
 
     POSITION_FIELDS_MAP = {
-        ACCOUNT_TYPE.STOCK: [
+        DEFAULT_ACCOUNT_TYPE.STOCK.name: [
             'quantity', 'last_price', 'avg_price', 'market_value'
         ],
-        ACCOUNT_TYPE.FUTURE: [
+        DEFAULT_ACCOUNT_TYPE.FUTURE.name: [
             'margin', 'margin_rate', 'contract_multiplier', 'last_price',
             'buy_pnl', 'buy_margin', 'buy_quantity', 'buy_avg_open_price',
             'sell_pnl', 'sell_margin', 'sell_quantity', 'sell_avg_open_price'
@@ -250,7 +250,7 @@ class AnalyserMod(AbstractMod):
             result_dict["plots"] = df
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
-            account_name = account_type.name.lower()
+            account_name = account_type.lower()
             portfolios_list = self._sub_accounts[account_type]
             df = pd.DataFrame(portfolios_list)
             df["date"] = pd.to_datetime(df["date"])
