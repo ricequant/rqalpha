@@ -18,16 +18,16 @@ from __future__ import division
 import six
 import numpy as np
 
-from .api_base import decorate_api_exc, instruments, cal_style
-from ..execution_context import ExecutionContext
-from ..environment import Environment
-from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from ..const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
-from ..model.instrument import Instrument
-from ..utils.exception import RQInvalidArgument
-from ..utils.logger import user_system_log
-from ..utils.i18n import gettext as _
-from ..utils.arg_checker import apply_rules, verify_that
+from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.environment import Environment
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
+from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
+from rqalpha.model.instrument import Instrument
+from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.arg_checker import apply_rules, verify_that
 
 __all__ = [
 ]
@@ -297,7 +297,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
 
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
-    
+
     :param bool close_today: 是否指定发平进仓单，默认为False，发送平仓单
 
     :return: :class:`~Order` object | list[:class:`~Order`]

@@ -174,14 +174,6 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
-def register_smart_order(env):
-    from .api.api_stock import smart_order as order_stock
-    from .api.api_future import smart_order as order_future
-
-    env.set_smart_order(const.DEFAULT_ACCOUNT_TYPE.STOCK.name, order_stock)
-    env.set_smart_order(const.DEFAULT_ACCOUNT_TYPE.FUTURE.name, order_future)
-
-
 def run(config, source_code=None, user_funcs=None):
     env = Environment(config)
     persist_helper = None
@@ -196,7 +188,6 @@ def run(config, source_code=None, user_funcs=None):
         else:
             env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
         env.set_global_vars(GlobalVars())
-        register_smart_order(env)
         mod_handler.set_env(env)
         mod_handler.start_up()
 

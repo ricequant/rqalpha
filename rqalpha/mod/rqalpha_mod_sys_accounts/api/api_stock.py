@@ -19,21 +19,21 @@ from decimal import Decimal, getcontext
 import six
 import numpy as np
 
-from .api_base import decorate_api_exc, instruments, cal_style
-from ..const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE
-from ..environment import Environment
-from ..execution_context import ExecutionContext
-from ..model.instrument import Instrument
-from ..model.order import Order, OrderStyle, MarketOrder, LimitOrder
-from ..utils.arg_checker import apply_rules, verify_that
+from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE
+from rqalpha.environment import Environment
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.model.instrument import Instrument
+from rqalpha.model.order import Order, OrderStyle, MarketOrder, LimitOrder
+from rqalpha.utils.arg_checker import apply_rules, verify_that
 # noinspection PyUnresolvedReferences
-from ..utils.exception import patch_user_exc, RQInvalidArgument
-from ..utils.i18n import gettext as _
-from ..utils.logger import user_system_log
+from rqalpha.utils.exception import patch_user_exc, RQInvalidArgument
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 # noinspection PyUnresolvedReferences
-from ..utils.scheduler import market_close, market_open
+from rqalpha.utils.scheduler import market_close, market_open
 # noinspection PyUnresolvedReferences
-from ..utils import scheduler
+from rqalpha.utils import scheduler
 
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10

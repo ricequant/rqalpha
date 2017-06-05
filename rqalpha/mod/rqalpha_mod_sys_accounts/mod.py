@@ -17,21 +17,40 @@
 
 from rqalpha.interface import AbstractMod
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE
+from rqalpha import export_as_api
 
 from .account_model import *
 from .position_model import *
+from .api import api_future, api_stock
 
 
 class AccountMod(AbstractMod):
 
     def start_up(self, env, mod_config):
+
+        # 注入 Account
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount)
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount)
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, BenchmarkAccount)
 
+        # 注入 Position
         env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPosition)
         env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePosition)
         env.set_position_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, StockPosition)
+
+        # 注入 API
+        if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.account_list:
+            # 注入期货API
+            for export_name in api_future.__all__:
+                export_as_api(getattr(api_future, export_name))
+            # 注入 smart order
+            env.set_smart_order(DEFAULT_ACCOUNT_TYPE.FUTURE.name, api_future.smart_order)
+        if DEFAULT_ACCOUNT_TYPE.STOCK.name in env.config.base.account_list:
+            # 注入股票API
+            for export_name in api_stock.__all__:
+                export_as_api(getattr(api_stock, export_name))
+            # 注入 smart order
+            env.set_smart_order(DEFAULT_ACCOUNT_TYPE.STOCK.name, api_stock.smart_order)
 
     def tear_down(self, code, exception=None):
         pass
