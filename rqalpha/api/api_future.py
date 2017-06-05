@@ -50,15 +50,18 @@ def export_as_api(func):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('id_or_ins').is_valid_future(),
-             verify_that('amount').is_greater_than(0),
+             verify_that('amount').is_greater_or_equal_than(0),
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
              verify_that('style').is_instance_of((LimitOrder, MarketOrder)))
 def order(id_or_ins, amount, side, position_effect, style):
     if not isinstance(style, OrderStyle):
         raise RuntimeError
-    if amount <= 0:
+    if amount < 0:
         raise RuntimeError
+    if amount == 0:
+        user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
+        return None
     if isinstance(style, LimitOrder) and style.get_limit_price() <= 0:
         raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
