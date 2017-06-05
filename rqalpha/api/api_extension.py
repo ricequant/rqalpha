@@ -77,7 +77,8 @@ def order(order_book_id, quantity, price=None, style=None):
 
     :example:
 
-    .. code-block:: python
+    ..  code-block:: python3
+        :linenos:
 
         # 当前仓位为0
         # RB1710 多方向调仓2手：调整后变为 BUY 2手
@@ -85,6 +86,7 @@ def order(order_book_id, quantity, price=None, style=None):
 
         # RB1710 空方向调仓3手：先平多方向2手 在开空方向1手，调整后变为 SELL 1手
         order('RB1710', -3)
+
     """
     env = Environment.get_instance()
     position = env.portfolio.positions[order_book_id]
@@ -127,7 +129,8 @@ def order_to(order_book_id, quantity, price=None, style=None):
 
     :example:
 
-    .. code-block:: python
+    ..  code-block:: python3
+        :linenos:
 
         # 当前仓位为0
         # RB1710 调仓至 BUY 2手
@@ -135,6 +138,7 @@ def order_to(order_book_id, quantity, price=None, style=None):
 
         # RB1710 调仓至 SELL 1手
         order_to('RB1710'， -1)
+
     """
     env = Environment.get_instance()
     position = env.portfolio.positions[order_book_id]

@@ -22,8 +22,7 @@ init
 
     :example:
 
-    ..  code-block:: python3
-        :linenos:
+    ..  code-block:: python
 
         def init(context):
             # cash_limit的属性是根据用户需求自己定义的，你可以定义无限多种自己随后需要的属性，ricequant的系统默认只是会占用context.portfolio的关键字来调用策略的投资组合信息
@@ -46,8 +45,7 @@ handle_bar
 
     :example:
 
-    ..  code-block:: python3
-        :linenos:
+    ..  code-block:: python
 
         def handle_bar(context, bar_dict):
             # put all your algorithm main logic here.
@@ -71,8 +69,7 @@ before_trading
 
     :example:
 
-    ..  code-block:: python3
-        :linenos:
+    ..  code-block:: python
 
         def before_trading(context, bar_dict):
             logger.info("This is before trading")
@@ -722,7 +719,7 @@ Portfolio
 StockAccount
 ------------------------------------------------------
 
-.. module:: rqalpha.model.account.stock_account
+.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.account_model.stock_account
 
 .. autoclass:: StockAccount
     :members:
@@ -732,7 +729,7 @@ StockAccount
 FutureAccount
 ------------------------------------------------------
 
-.. module:: rqalpha.model.account.future_account
+.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.account_model.future_account
 
 .. autoclass:: FutureAccount
     :members:
@@ -741,7 +738,7 @@ FutureAccount
 
 StockPosition
 ------------------------------------------------------
-..  module:: rqalpha.model.position.stock_position
+.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model.stock_position
 
 ..  autoclass:: StockPosition
     :members:
@@ -750,7 +747,7 @@ StockPosition
 
 FuturePosition
 ------------------------------------------------------
-..  module:: rqalpha.model.position.future_position
+.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model.future_position
 
 ..  autoclass:: FuturePosition
     :members:

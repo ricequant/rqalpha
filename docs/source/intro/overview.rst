@@ -6,6 +6,9 @@
 
 .. _Ricequant: https://www.ricequant.com/algorithms
 .. _Ricequant 社区: https://www.ricequant.com/community
+.. _RQAlpha 文档: http://rqalpha.io
+.. _Ricequant 文档: https://www.ricequant.com/api/python/chn
+
 
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。
 
