@@ -84,24 +84,24 @@ class ArgumentChecker(object):
         if instrument is None:
             self.raise_invalid_instrument_error(func_name, self._arg_name, value)
 
-        if instrument.type == 'Future' and ('88' in instrument.order_book_id or '99' in instrument.order_book_id):
-            config = Environment.get_instance().config
-            if config.base.run_type == RUN_TYPE.PAPER_TRADING:
-                if "88" in instrument.order_book_id:
-                    raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
-                if "99" in instrument.order_book_id:
-                    raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
-            else:
-                if "88" in instrument.order_book_id:
-                    global main_contract_warning_flag
-                    if main_contract_warning_flag:
-                        main_contract_warning_flag = False
-                        user_system_log.warn(_(u"Main Future contracts[88] are not supported in paper trading."))
-                if "99" in instrument.order_book_id:
-                    global index_contract_warning_flag
-                    if index_contract_warning_flag:
-                        index_contract_warning_flag = False
-                        user_system_log.warn(_(u"Index Future contracts[99] are not supported in paper trading."))
+        # if instrument.type == 'Future' and ('88' in instrument.order_book_id or '99' in instrument.order_book_id):
+        #     config = Environment.get_instance().config
+        #     if config.base.run_type == RUN_TYPE.PAPER_TRADING:
+        #         if "88" in instrument.order_book_id:
+        #             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
+        #         if "99" in instrument.order_book_id:
+        #             raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
+        #     else:
+        #         if "88" in instrument.order_book_id:
+        #             global main_contract_warning_flag
+        #             if main_contract_warning_flag:
+        #                 main_contract_warning_flag = False
+        #                 user_system_log.warn(_(u"Main Future contracts[88] are not supported in paper trading."))
+        #         if "99" in instrument.order_book_id:
+        #             global index_contract_warning_flag
+        #             if index_contract_warning_flag:
+        #                 index_contract_warning_flag = False
+        #                 user_system_log.warn(_(u"Index Future contracts[99] are not supported in paper trading."))
 
     def is_valid_instrument(self):
         self._rules.append(self._is_valid_instrument)
