@@ -209,7 +209,7 @@ class StockAccount(BaseAccount):
 
     @property
     def total_value(self):
-        return self.market_value + self._total_cash
+        return self.market_value + self._total_cash + self.dividend_receivable
 
     @property
     def dividend_receivable(self):
