@@ -1,0 +1,4 @@
+ipython==5.3.0
+enum34>=1.1.6
+fastcache>=1.0.2
+funcsigs

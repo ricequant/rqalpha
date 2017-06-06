@@ -1,0 +1,48 @@
+language: python
+dist: trusty
+sudo: required
+branches:
+  only:
+    - develop
+    - master
+matrix:
+  include:
+    - python: 2.7
+    - python: 3.4
+    - python: 3.5
+    - python: 3.6
+install:
+  # Install TA-Lib
+  - wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+  - tar -xzvf ta-lib-0.4.0-src.tar.gz
+  - cd ta-lib
+  - ./configure --prefix=/usr
+  - make
+  - sudo make install
+  - cd ..
+
+  # Install bcolz
+  - pip install Cython
+  - pip install bcolz
+
+  # Install Test Deps
+  - pip install TA-Lib
+  - pip install coveralls
+  - pip install -U setuptools
+  - pip install funcat
+  - pip install ipython==5.3.0
+  - pip install .
+script:
+  - ls -al $HOME/.rqalpha/
+  - ls -al $HOME/.rqalpha/bundle/
+  - |
+      if [ ! -d $HOME/.rqalpha/bundle/ex_cum_factor.bcolz ]; then
+        rqalpha update_bundle
+      fi
+  - coverage run --source=rqalpha test.py
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.rqalpha/bundle
+after_success:
+  coveralls

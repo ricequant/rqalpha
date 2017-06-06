@@ -1,0 +1,19 @@
+# WARNING: DO NOT EDIT
+
+mod:
+  # 回测 / 模拟交易 支持 Mod
+  sys_simulation:
+    enabled: true
+  # 开启该选项，可以在命令行查看回测进度
+  sys_progress:
+    enabled: true
+  sys_risk:
+    enabled: true
+  sys_analyser:
+    enabled: true
+  # 技术分析API
+  sys_funcat:
+    enabled: false
+  # 接收实时行情运行
+  sys_stock_realtime:
+    enabled: false
