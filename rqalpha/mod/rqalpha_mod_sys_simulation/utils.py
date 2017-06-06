@@ -25,15 +25,17 @@ def init_portfolio(env):
     config = env.config
     start_date = config.base.start_date
     total_cash = 0
+
+    if ACCOUNT_TYPE.FUTURE in config.base.account_list and config.base.frequency != '1d':
+        StockAccount.AGGRESSIVE_UPDATE_LAST_PRICE = True
+        FutureAccount.AGGRESSIVE_UPDATE_LAST_PRICE = True
+
     for account_type in config.base.account_list:
         if account_type == ACCOUNT_TYPE.STOCK:
             stock_starting_cash = config.base.stock_starting_cash
             accounts[ACCOUNT_TYPE.STOCK] = StockAccount(stock_starting_cash, Positions(StockPosition))
             total_cash += stock_starting_cash
         elif account_type == ACCOUNT_TYPE.FUTURE:
-            if config.base.frequency != '1d':
-                StockAccount.AGGRESSIVE_UPDATE_LAST_PRICE = True
-                FutureAccount.AGGRESSIVE_UPDATE_LAST_PRICE = True
             future_starting_cash = config.base.future_starting_cash
             accounts[ACCOUNT_TYPE.FUTURE] = FutureAccount(future_starting_cash, Positions(FuturePosition))
             total_cash += future_starting_cash

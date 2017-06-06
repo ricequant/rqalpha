@@ -62,7 +62,8 @@ class BasePosition(object):
 
     def update_last_price(self):
         price = Environment.get_instance().get_last_price(self._order_book_id)
-        if price == price:  # nan 过滤掉
+        if price == price:
+            # 过滤掉 nan
             self._last_price = price
 
     # -- Function
