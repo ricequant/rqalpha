@@ -36,7 +36,7 @@ class Environment(object):
         self.strategy_loader = None
         self.global_vars = None
         self.persist_provider = None
-        self.broker = None
+        self.prime_broker = None
         self.profile_deco = None
         self.system_log = system_log
         self.user_log = user_log
@@ -92,8 +92,8 @@ class Environment(object):
     def set_event_source(self, event_source):
         self.event_source = event_source
 
-    def set_broker(self, broker):
-        self.broker = broker
+    def set_broker(self, broker_type, broker):
+        self.prime_broker.register_broker(broker_type, broker)
 
     def add_frontend_validator(self, validator):
         self._frontend_validators.append(validator)
@@ -179,4 +179,4 @@ class Environment(object):
         return self.portfolio.accounts[account_type]
 
     def get_open_orders(self, order_book_id=None):
-        return self.broker.get_open_orders(order_book_id)
+        return self.prime_broker.get_open_orders(order_book_id)

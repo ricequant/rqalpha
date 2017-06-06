@@ -188,6 +188,7 @@ def run(config, source_code=None, user_funcs=None):
         else:
             env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
         env.set_global_vars(GlobalVars())
+
         mod_handler.set_env(env)
         mod_handler.start_up()
 
@@ -205,9 +206,9 @@ def run(config, source_code=None, user_funcs=None):
 
         _validate_benchmark(env.config, env.data_proxy)
 
-        broker = env.broker
-        assert broker is not None
-        env.portfolio = broker.get_portfolio()
+        prime_broker = env.prime_broker
+        assert prime_broker is not None
+        env.portfolio = prime_broker.get_portfolio()
         env.benchmark_portfolio = create_benchmark_portfolio(env)
 
         event_source = env.event_source
@@ -270,9 +271,9 @@ def run(config, source_code=None, user_funcs=None):
             for name, module in six.iteritems(env.mod_dict):
                 if isinstance(module, Persistable):
                     persist_helper.register('mod_{}'.format(name), module)
-            # broker will restore open orders from account
-            if isinstance(broker, Persistable):
-                persist_helper.register('broker', broker)
+            # prime_broker will restore open orders from account
+            if isinstance(prime_broker, Persistable):
+                persist_helper.register('prime_broker', prime_broker)
 
             persist_helper.restore()
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))

@@ -461,13 +461,13 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
     """
 
     @abc.abstractmethod
-    def get_portfolio(self):
+    def get_account(self):
         """
         [Required]
+        
+        获取账户对象。系统初始化时，会调用此接口，获取包含账户、持仓等信息
 
-        获取投资组合。系统初始化时，会调用此接口，获取包含账户信息、净值、份额等内容的投资组合
-
-        :return: Portfolio
+        :return: Account
         """
 
     @abc.abstractmethod
