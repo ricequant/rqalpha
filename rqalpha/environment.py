@@ -57,6 +57,12 @@ class Environment(object):
 
     @classmethod
     def get_instance(cls):
+        """
+        返回已经创建的 Environment 对象
+        """
+        if Environment._env is None:
+            raise RuntimeError(
+                _(u"Environment has not been created. Please Use `Environment.get_instance()` after RQAlpha init"))
         return Environment._env
 
     def set_data_proxy(self, data_proxy):
