@@ -25,8 +25,14 @@ from importlib import import_module
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
 
+CONTEXT_SETTINGS = {
+    'default_map': {
+        'run': {
+        }
+    }
+}
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
 def cli(ctx, verbose):
