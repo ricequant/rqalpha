@@ -338,7 +338,11 @@ def mod(cmd, params):
         mod_config_path = get_mod_config_path(generate=True)
         mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
-        mod_config['mod'][mod_name]['enabled'] = True
+        try:
+            mod_config['mod'][mod_name]['enabled'] = True
+        except KeyError:
+            mod_config['mod'][mod_name] = {'enabled': True}
+
         dump_config(mod_config_path, mod_config)
         list({})
 
@@ -354,7 +358,10 @@ def mod(cmd, params):
         mod_config_path = get_mod_config_path(generate=True)
         mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
-        mod_config['mod'][mod_name]['enabled'] = False
+        try:
+            mod_config['mod'][mod_name]['enabled'] = False
+        except KeyError:
+            pass
         dump_config(mod_config_path, mod_config)
         list({})
 
