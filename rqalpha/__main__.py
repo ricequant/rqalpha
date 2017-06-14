@@ -119,7 +119,8 @@ def run(**kwargs):
         kwargs.pop('base__securities', None)
 
     from . import main
-    cfg = parse_config(kwargs, config_path=config_path, click_type=True)
+    source_code = kwargs.get("base__source_code")
+    cfg = parse_config(kwargs, config_path=config_path, click_type=True, source_code=source_code)
     source_code = cfg.base.source_code
     results = main.run(cfg, source_code=source_code)
 
