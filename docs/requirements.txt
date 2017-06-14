@@ -1,0 +1,5 @@
+Sphinx
+watchdog
+sphinx_rtd_theme
+nbsphinx
+jupyter_client

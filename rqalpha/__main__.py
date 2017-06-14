@@ -24,10 +24,16 @@ from importlib import import_module
 
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
-from .utils.config import default_dir_path
 
 
-def entry_point():
+@click.group()
+@click.option('-v', '--verbose', count=True)
+@click.pass_context
+def cli(ctx, verbose):
+    ctx.obj["VERBOSE"] = verbose
+
+
+def inject_mod_commands():
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.package_helper import import_mod
     mod_config_path = get_mod_config_path()
@@ -40,12 +46,19 @@ def entry_point():
             lib_name = "rqalpha_mod_{}".format(mod_name)
         if not config['enabled']:
             continue
-        if mod_name in SYSTEM_MOD_LIST:
-            # inject system mod
-            import_mod("rqalpha.mod." + lib_name)
-        else:
-            # inject third part mod
-            import_mod(lib_name)
+        try:
+            if mod_name in SYSTEM_MOD_LIST:
+                # inject system mod
+                import_mod("rqalpha.mod." + lib_name)
+            else:
+                # inject third part mod
+                import_mod(lib_name)
+        except Exception as e:
+            pass
+
+
+def entry_point():
+    inject_mod_commands()
 
     cli(obj={})
 
@@ -58,7 +71,7 @@ def cli(ctx, verbose):
 
 
 @cli.command()
-@click.option('-d', '--data-bundle-path', default=default_dir_path, type=click.Path(file_okay=False))
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--locale', 'locale', type=click.STRING, default="zh_Hans_CN")
 def update_bundle(data_bundle_path, locale):
     """
@@ -83,6 +96,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
+@click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
@@ -108,7 +122,19 @@ def run(**kwargs):
         kwargs.pop('base__securities', None)
 
     from . import main
-    main.run(parse_config(kwargs, config_path=config_path, click_type=True))
+    cfg = parse_config(kwargs, config_path=config_path, click_type=True)
+    source_code = cfg.base.source_code
+    results = main.run(cfg, source_code=source_code)
+
+    # store results into ipython when running in ipython
+    from .utils import is_run_from_ipython
+    if is_run_from_ipython():
+        import IPython
+        from .utils import RqAttrDict
+        ipy = IPython.get_ipython()
+        report = results.get("sys_analyser", {})
+        ipy.user_global_ns["results"] = results
+        ipy.user_global_ns["report"] = RqAttrDict(report)
 
 
 @cli.command()
@@ -276,7 +302,6 @@ def mod(cmd, params):
 
         # Uninstall Mod
         uninstalled_result = pip_main(params)
-
         # Remove Mod Config
         mod_config_path = get_mod_config_path(generate=True)
         mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)

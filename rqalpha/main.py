@@ -49,7 +49,7 @@ from .utils.i18n import gettext as _
 from .utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log
 from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from .utils.scheduler import Scheduler
-from .utils.config import set_locale, default_dir_path
+from .utils.config import set_locale
 
 
 jsonpickle_numpy.register_handlers()
@@ -133,7 +133,7 @@ def create_base_scope():
 
 def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
     set_locale(locale)
-    default_bundle_path = os.path.join(default_dir_path, 'bundle')
+    default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
     if data_bundle_path is None:
         data_bundle_path = default_bundle_path
     else:
@@ -303,12 +303,9 @@ def run(config, source_code=None, user_funcs=None):
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
 
-        user_detail_log.exception(_(u"strategy execute exception"))
-        user_system_log.error(e.error)
+        code = _exception_handler(e)
 
-        better_exceptions.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
-
-        mod_handler.tear_down(const.EXIT_CODE.EXIT_USER_ERROR, e)
+        mod_handler.tear_down(code, e)
     except Exception as e:
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
@@ -316,16 +313,22 @@ def run(config, source_code=None, user_funcs=None):
         exc_type, exc_val, exc_tb = sys.exc_info()
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, config.base.strategy_file)
 
-        better_exceptions.excepthook(exc_type, exc_val, exc_tb)
-        user_system_log.error(user_exc.error)
-        code = const.EXIT_CODE.EXIT_USER_ERROR
-        if not is_user_exc(exc_val):
-            system_log.exception(_(u"strategy execute exception"))
-            code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
-        else:
-            user_detail_log.exception(_(u"strategy execute exception"))
+        code = _exception_handler(user_exc)
 
         mod_handler.tear_down(code, user_exc)
+
+
+def _exception_handler(e):
+    better_exceptions.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
+    user_system_log.error(e.error)
+    if not is_user_exc(e.error.exc_val):
+        code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
+        system_log.exception(_(u"strategy execute exception"))
+    else:
+        code = const.EXIT_CODE.EXIT_USER_ERROR
+        user_detail_log.exception(_(u"strategy execute exception"))
+
+    return code
 
 
 def enable_profiler(env, scope):

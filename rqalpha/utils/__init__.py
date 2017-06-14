@@ -68,6 +68,9 @@ class RqAttrDict(object):
 
     iteritems = items
 
+    def keys(self):
+        return self.__dict__.keys()
+
     @staticmethod
     def _update_dict_recursive(target, other):
         if isinstance(other, RqAttrDict):
@@ -302,3 +305,11 @@ def unwrapper(func):
         if f2 is None:
             break
     return f
+
+
+def is_run_from_ipython():
+    try:
+        __IPYTHON__
+        return True
+    except NameError:
+        return False

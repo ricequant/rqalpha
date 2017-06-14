@@ -55,7 +55,7 @@ RQAlpha 提供了极具拓展性的 Mod Hook 接口，这意味着开发者可�
 您可以通过如下方式使用 安装和使用Mod:
 
 ..  code-block:: bash
-    
+
     # 查看当前安装的 Mod 列表及状态
     $ rqalpha mod list
     # 安装 Mod
@@ -137,7 +137,6 @@ Feature Status
 
 关于RQAlpha的任何问题可以通过以下途径来获取帮助
 
-*  查看 `FAQ`_ 页面找寻常见问题及解答
 *  可以通过 `索引`_ 或者使用搜索功能来查找特定问题
 *  在 `Github Issue`_ 中提交issue
 *  RQAlpha 交流群「487188429」
@@ -190,12 +189,22 @@ Feature Status
     intro/detail_install
     intro/virtual_machine
 
+
 .. toctree::
     :caption: API
     :hidden:
 
     api/base_api
     api/extend_api
+
+
+.. toctree::
+    :caption: IPython
+    :hidden:
+    :maxdepth: 3
+    :glob:
+
+    notebooks/run-rqalpha-in-ipython.ipynb
 
 
 .. toctree::
@@ -216,6 +225,7 @@ Feature Status
     development/mod
     development/event_source
     development/data_source
+
 
 .. toctree::
     :caption: 其他
