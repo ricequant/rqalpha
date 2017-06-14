@@ -108,6 +108,8 @@ std_log = Logger("std_log")
 def init_logger():
     system_log.handlers = [ColorizedStderrHandler(bubble=True)]
     std_log.handlers = [ColorizedStderrHandler(bubble=True)]
+    user_log.handlers = []
+    user_system_log.handlers = []
 
 
 def user_print(*args, **kwargs):
