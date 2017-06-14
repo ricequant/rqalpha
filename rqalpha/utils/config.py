@@ -210,11 +210,6 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     base_config.account_list = parse_account_list(base_config.securities)
     base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
 
-    if extra_config.log_level.upper() != "NONE":
-        user_log.handlers.append(user_std_handler)
-        if not extra_config.user_system_log_disabled:
-            user_system_log.handlers.append(user_std_handler)
-
     if extra_config.context_vars:
         if isinstance(extra_config.context_vars, six.string_types):
             extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
