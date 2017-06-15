@@ -254,9 +254,10 @@ def parse_user_config_from_code(config, source_code=None):
             if sub_key not in config["whitelist"]:
                 continue
             deep_update(sub_dict, config[sub_key])
-        return config
     except Exception as e:
-        raise RuntimeError(_(u"in parse_user_config, exception: {e}").format(e=e))
+        system_log.error(_(u"in parse_user_config, exception: {e}").format(e=e))
+    finally:
+        return config
 
 
 def parse_account_list(securities):
