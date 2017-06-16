@@ -27,7 +27,7 @@ class BarDictPriceBoard(AbstractPriceBoard):
         self._settlement_dt = None
         self._env = Environment.get_instance()
         if DEFAULT_ACCOUNT_TYPE.FUTURE.name in self._env.config.base.account_list:
-            self._env.event_bus.prepend_listener(EVENT.PRE_SETTLEMENT, self._lock_settlement)
+            self._env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._lock_settlement)
             self._env.event_bus.prepend_listener(EVENT.POST_BEFORE_TRADING, self._unlock_settlement)
 
     @property

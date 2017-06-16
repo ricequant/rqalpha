@@ -50,7 +50,7 @@ class FutureAccount(BaseAccount):
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
         if self.AGGRESSIVE_UPDATE_LAST_PRICE:
             event_bus.add_listener(EVENT.BAR, self._update_last_price)
-            event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._update_last_price)
+            event_bus.prepend_listener(EVENT.PRE_SETTLEMENT, self._update_last_price)
 
     def fast_forward(self, orders, trades=list()):
         # 计算 Positions
