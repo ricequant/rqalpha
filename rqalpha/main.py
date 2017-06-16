@@ -240,7 +240,7 @@ def run(config, source_code=None, user_funcs=None):
             "g": env.global_vars
         })
 
-        apis = api_helper.get_apis(config.base.account_list)
+        apis = api_helper.get_apis()
         scope.update(apis)
 
         scope = env.strategy_loader.load(scope)

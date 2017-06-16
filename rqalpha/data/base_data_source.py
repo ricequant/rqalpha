@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
 import six
 import numpy as np
@@ -24,7 +23,6 @@ from ..const import MARGIN_TYPE
 from ..utils.py2 import lru_cache
 from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
 from ..utils.i18n import gettext as _
-from ..utils.logger import user_system_log
 
 from .future_info_cn import CN_FUTURE_INFO
 from .converter import StockBarConverter, IndexBarConverter

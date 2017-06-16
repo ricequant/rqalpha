@@ -19,6 +19,7 @@ import six
 from .api_base import decorate_api_exc, instruments, cal_style
 from ..environment import Environment
 from ..utils.arg_checker import apply_rules, verify_that
+# noinspection PyUnresolvedReferences
 from ..model.order import LimitOrder, MarketOrder, Order
 
 __all__ = [

@@ -353,8 +353,9 @@ class FuturePosition(BasePosition):
         return max(close_today_amount, 0)
 
     def apply_settlement(self):
-        data_proxy = Environment.get_instance().data_proxy
-        trading_date = Environment.get_instance().trading_dt.date()
+        env = Environment.get_instance()
+        data_proxy = env.data_proxy
+        trading_date = env.trading_dt.date()
         settle_price = data_proxy.get_settle_price(self.order_book_id, trading_date)
         self._buy_old_holding_list = [(settle_price, self.buy_quantity)]
         self._sell_old_holding_list = [(settle_price, self.sell_quantity)]

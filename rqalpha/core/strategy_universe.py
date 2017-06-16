@@ -14,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import json
 import copy
-
-import six
 
 from ..events import EVENT, Event
 from ..environment import Environment

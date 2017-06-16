@@ -15,10 +15,10 @@
 # limitations under the License.
 
 import numpy as np
-
-from .stock_account import StockAccount
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
+
+from .stock_account import StockAccount
 
 
 class BenchmarkAccount(StockAccount):

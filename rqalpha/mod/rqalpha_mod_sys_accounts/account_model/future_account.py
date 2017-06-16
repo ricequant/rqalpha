@@ -50,7 +50,6 @@ class FutureAccount(BaseAccount):
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
         if self.AGGRESSIVE_UPDATE_LAST_PRICE:
             event_bus.add_listener(EVENT.BAR, self._update_last_price)
-            event_bus.prepend_listener(EVENT.PRE_SETTLEMENT, self._update_last_price)
 
     def fast_forward(self, orders, trades=list()):
         # 计算 Positions
@@ -150,8 +149,8 @@ class FutureAccount(BaseAccount):
         return sum(position.realized_pnl for position in six.itervalues(self._positions))
 
     def _settlement(self, event):
-        old_margin = self.margin
-        old_holding_pnl = self.holding_pnl
+        total_value = self.total_value
+
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.buy_quantity + position.sell_quantity != 0:
@@ -162,11 +161,10 @@ class FutureAccount(BaseAccount):
                 del self._positions[order_book_id]
             else:
                 position.apply_settlement()
-        self._total_cash = self._total_cash + (old_margin - self.margin) + old_holding_pnl
-        self._transaction_cost = 0
+        self._total_cash = total_value - self.margin
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
-        if self.total_value <= 0:
+        if total_value <= 0:
             self._positions.clear()
             self._total_cash = 0
 

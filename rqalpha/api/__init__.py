@@ -16,6 +16,8 @@
 
 
 from .api_base import *
-from ..mod.rqalpha_mod_sys_accounts.api.api_stock import *
-from ..mod.rqalpha_mod_sys_accounts.api.api_future import *
 from .api_extension import *
+# noinspection PyUnresolvedReferences
+from ..mod.rqalpha_mod_sys_accounts.api.api_stock import *
+# noinspection PyUnresolvedReferences
+from ..mod.rqalpha_mod_sys_accounts.api.api_future import *
