@@ -40,11 +40,12 @@ RQAlpha 控制台进度条 Mod
     config = {
         "base": {
             "strategy_file": "strategy.py",
-            "securities": ["stock"],
             "start_date": "2015-01-09",
             "end_date": "2015-03-09",
             "frequency": "1d",
-            "stock_starting_cash": 100000,
+            "accounts": {
+                "stock": 100000
+            }
         }
         "mod": {
             "sys_progress": {

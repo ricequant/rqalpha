@@ -40,13 +40,13 @@ CHANGELOG
           env.set_position_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, StockPosition)
 
           # 注入 API
-          if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.account_list:
+          if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.accounts:
               # 注入期货API
               for export_name in api_future.__all__:
                   export_as_api(getattr(api_future, export_name))
               # 注入 smart order
               env.set_smart_order(DEFAULT_ACCOUNT_TYPE.FUTURE.name, api_future.smart_order)
-          if DEFAULT_ACCOUNT_TYPE.STOCK.name in env.config.base.account_list:
+          if DEFAULT_ACCOUNT_TYPE.STOCK.name in env.config.base.accounts:
               # 注入股票API
               for export_name in api_stock.__all__:
                   export_as_api(getattr(api_stock, export_name))

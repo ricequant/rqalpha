@@ -207,7 +207,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
                 bundle_path=base_config.data_bundle_path))
 
     base_config.run_type = parse_run_type(base_config.run_type)
-    base_config.account_list = parse_account_list(base_config.securities)
+    base_config.accounts = parse_accounts(base_config.accounts)
     base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
 
     if extra_config.context_vars:
@@ -221,16 +221,6 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
 
     if base_config.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
-
-    if verify_config:
-        if base_config.stock_starting_cash < 0:
-            raise patch_user_exc(ValueError(_(u"invalid stock starting cash: {}").format(base_config.stock_starting_cash)))
-
-        if base_config.future_starting_cash < 0:
-            raise patch_user_exc(ValueError(_(u"invalid future starting cash: {}").format(base_config.future_starting_cash)))
-
-        if base_config.stock_starting_cash + base_config.future_starting_cash == 0:
-            raise patch_user_exc(ValueError(_(u"stock starting cash and future starting cash can not be both 0.")))
 
     system_log.debug("\n" + pformat(config.convert_to_dict()))
 
@@ -260,22 +250,16 @@ def parse_user_config_from_code(config, source_code=None):
         return config
 
 
-def parse_account_list(securities):
-    security_set = set()
-    if isinstance(securities, (tuple, list)):
-        for security in securities:
-            if "_" in security:
-                for s in security.split("_"):
-                    security_set.add(s)
-            else:
-                security_set.add(security)
-        if len(security_set) == 0:
-            raise RuntimeError(_(u"securities can not be empty, using `--security stock/future` to specific security type"))
-        return [security.upper() for security in security_set]
-    elif isinstance(securities, six.string_types):
-        return [securities.upper()]
-    else:
-        raise NotImplementedError
+def parse_accounts(accounts):
+    a = {}
+    for account_type, starting_cash in six.iteritems(accounts):
+        if starting_cash is None:
+            continue
+        starting_cash = float(starting_cash)
+        a[account_type.upper()] = starting_cash
+    if len(a) == 0:
+        raise RuntimeError(_(u"None account type has been selected."))
+    return a
 
 
 def parse_run_type(rt_str):

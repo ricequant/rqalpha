@@ -26,9 +26,10 @@ config = {
   "base": {
     "start_date": "2016-06-01",
     "end_date": "2016-12-01",
-    "securities": ['stock'],
-    "stock_starting_cash": 100000,
-    "benchmark": "000300.XSHG"
+    "benchmark": "000300.XSHG",
+    "accounts": {
+      "stock": 100000
+    }
   },
   "extra": {
     "log_level": "verbose",

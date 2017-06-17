@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import os
 import pickle
-from collections import defaultdict
-from enum import Enum
-
 import numpy as np
 import pandas as pd
-import six
+
+from collections import defaultdict
+from enum import Enum
 
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.events import EVENT
@@ -180,10 +180,10 @@ class AnalyserMod(AbstractMod):
             'end_date': self._env.config.base.end_date.strftime('%Y-%m-%d'),
             'strategy_file': self._env.config.base.strategy_file,
             'run_type': self._env.config.base.run_type.value,
-            'stock_starting_cash': self._env.config.base.stock_starting_cash,
-            'future_starting_cash': self._env.config.base.future_starting_cash,
             'benchmark': self._env.config.base.benchmark,
         }
+        for account_type, starting_cash in six.iteritems(self._env.config.base.accounts):
+            summary[account_type] = starting_cash
 
         risk = Risk(np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns),
                     data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date),

@@ -29,9 +29,9 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 
 class SimulationEventSource(AbstractEventSource):
-    def __init__(self, env, account_list):
+    def __init__(self, env):
         self._env = env
-        self._account_list = account_list
+        self._config = env.config
         self._universe_changed = False
         self._env.event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
 
@@ -40,7 +40,7 @@ class SimulationEventSource(AbstractEventSource):
 
     def _get_universe(self):
         universe = self._env.get_universe()
-        if len(universe) == 0 and DEFAULT_ACCOUNT_TYPE.STOCK.name not in self._account_list:
+        if len(universe) == 0 and DEFAULT_ACCOUNT_TYPE.STOCK.name not in self._config.base.accounts:
             error = CustomError()
             error.set_msg("Current universe is empty. Please use subscribe function before trade")
             raise patch_user_exc(CustomException(error), force=True)
@@ -76,7 +76,7 @@ class SimulationEventSource(AbstractEventSource):
 
     def _get_trading_minutes(self, trading_date):
         trading_minutes = set()
-        for account_type in self._account_list:
+        for account_type in self._config.base.accounts:
             if account_type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
                 trading_minutes = trading_minutes.union(self._get_stock_trading_minutes(trading_date))
             elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:

@@ -262,9 +262,9 @@ def merge_trading_period(trading_period):
     return result
 
 
-def get_trading_period(universe, account_list):
+def get_trading_period(universe, accounts):
     trading_period = []
-    if DEFAULT_ACCOUNT_TYPE.STOCK.name in account_list:
+    if DEFAULT_ACCOUNT_TYPE.STOCK.name in accounts:
         trading_period += STOCK_TRADING_PERIOD
 
     for order_book_id in universe:

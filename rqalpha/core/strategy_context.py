@@ -34,8 +34,8 @@ class RunInfo(object):
         self._start_date = config.base.start_date
         self._end_date = config.base.end_date
         self._frequency = config.base.frequency
-        self._stock_starting_cash = config.base.stock_starting_cash
-        self._future_starting_cash = config.base.future_starting_cash
+        self._stock_starting_cash = config.base.accounts.get(DEFAULT_ACCOUNT_TYPE.STOCK.name, 0)
+        self._future_starting_cash = config.base.accounts.get(DEFAULT_ACCOUNT_TYPE.FUTURE.name, 0)
         self._benchmark = config.base.benchmark
         self._margin_multiplier = config.base.margin_multiplier
         self._run_type = config.base.run_type

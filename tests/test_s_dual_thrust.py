@@ -64,14 +64,14 @@ def handle_bar(context, bar_dict):
 
 __config__ = {
     "base": {
-        "securities": "stock",
         "start_date": "2013-01-01",
         "end_date": "2015-12-29",
         "frequency": "1d",
         "matching_type": "current_bar",
-        "stock_starting_cash": 1000000,
         "benchmark": "000300.XSHG",
-        "slippage": 0.00123,
+        "accounts": {
+            "stock": 1000000
+        }
     },
     "extra": {
         "log_level": "error",
