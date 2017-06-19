@@ -97,8 +97,9 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
+@click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log stdout')
+@click.option('--disable-user-log', 'extra__user_log_disabled', is_flag=True, help='disable user log stdout')
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
-@click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log')
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
