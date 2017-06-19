@@ -41,6 +41,7 @@ def format_exception(exc, value, tb):
 
     return full_trace
 
+
 better_exceptions.format_exception = format_exception
 
 

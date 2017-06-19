@@ -366,6 +366,7 @@ def output_profile_result(env):
 def add_log_handlers(config):
     extra_config = config.extra
     if extra_config.log_level.upper() != "NONE":
-        user_log.handlers.append(user_std_handler)
+        if not extra_config.user_log_disabled:
+            user_log.handlers.append(user_std_handler)
         if not extra_config.user_system_log_disabled:
             user_system_log.handlers.append(user_std_handler)
