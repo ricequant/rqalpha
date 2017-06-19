@@ -19,8 +19,8 @@ from rqalpha.interface import AbstractMod
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 from rqalpha import export_as_api
 
-from .account_model import *
-from .position_model import *
+from .account_model import StockAccount, FutureAccount, BenchmarkAccount
+from .position_model import StockPosition, FuturePosition
 from .api import api_future, api_stock
 
 
