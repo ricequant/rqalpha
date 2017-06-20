@@ -25,6 +25,8 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE
 
+from ..api.api_stock import order_shares
+
 
 class StockAccount(BaseAccount):
 
@@ -45,6 +47,13 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
         if self.AGGRESSIVE_UPDATE_LAST_PRICE:
             event_bus.add_listener(EVENT.BAR, self._on_bar)
+
+    def order(self, order_book_id, quantity, style, target=False):
+        position = self.positions[order_book_id]
+        if target:
+            # For order_to
+            quantity = quantity - position.quantity
+        return order_shares(order_book_id, quantity, style=style)
 
     def get_state(self):
         return {

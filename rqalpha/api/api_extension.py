@@ -89,11 +89,8 @@ def order(order_book_id, quantity, price=None, style=None):
         order('RB1710', -3)
 
     """
-    env = Environment.get_instance()
-    position = env.portfolio.positions[order_book_id]
     style = cal_style(price, style)
-    smart_order = env.get_smart_order(position.type)
-    orders = smart_order(order_book_id, quantity, style)
+    orders = Environment.get_instance().portfolio.order(order_book_id, quantity, style)
 
     if isinstance(orders, Order):
         return [orders]
@@ -141,11 +138,8 @@ def order_to(order_book_id, quantity, price=None, style=None):
         order_to('RB1710'， -1)
 
     """
-    env = Environment.get_instance()
-    position = env.portfolio.positions[order_book_id]
     style = cal_style(price, style)
-    smart_order = env.get_smart_order(position.type)
-    orders = smart_order(order_book_id, quantity, style, target=True)
+    orders = Environment.get_instance().portfolio.order(order_book_id, quantity, style, target=True)
 
     if isinstance(orders, Order):
         return [orders]

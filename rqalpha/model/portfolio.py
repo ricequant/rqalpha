@@ -43,6 +43,10 @@ class Portfolio(object):
         event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
+    def order(self, order_book_id, quantity, style, target=False):
+        account_type = get_account_type(order_book_id)
+        return self.accounts[account_type].order(quantity, style, target)
+
     def get_state(self):
         return jsonpickle.encode({
             'start_date': self._start_date,
