@@ -64,7 +64,8 @@ def _adjust_start_date(config, data_proxy):
     config.base.end_date = min(end, config.base.end_date)
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
-        raise patch_user_exc(ValueError(_(u"There is no trading day between {start_date} and {end_date}.").format(
+        raise patch_user_exc(ValueError(_(u"There is not data between {start_date} and {end_date}. Please check your"
+                                          u" data bundle or select other backtest period.").format(
             start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
