@@ -194,12 +194,9 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         base_config.end_date = base_config.end_date.date()
 
     if base_config.data_bundle_path is None:
-        base_config.data_bundle_path = os.path.expanduser(rqalpha_path)
+        base_config.data_bundle_path = os.path.join(os.path.expanduser(rqalpha_path), "bundle")
 
     base_config.data_bundle_path = os.path.abspath(base_config.data_bundle_path)
-
-    if os.path.basename(base_config.data_bundle_path) != "bundle":
-        base_config.data_bundle_path = os.path.join(base_config.data_bundle_path, "./bundle")
 
     if not os.path.exists(base_config.data_bundle_path):
         raise RuntimeError(
