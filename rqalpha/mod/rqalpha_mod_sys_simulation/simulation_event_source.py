@@ -21,7 +21,7 @@ from rqalpha.events import Event, EVENT
 from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import CustomException, CustomError, patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
-from rqalpha.const import ACCOUNT_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -29,9 +29,9 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 
 class SimulationEventSource(AbstractEventSource):
-    def __init__(self, env, account_list):
+    def __init__(self, env):
         self._env = env
-        self._account_list = account_list
+        self._config = env.config
         self._universe_changed = False
         self._env.event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
 
@@ -40,10 +40,10 @@ class SimulationEventSource(AbstractEventSource):
 
     def _get_universe(self):
         universe = self._env.get_universe()
-        if len(universe) == 0 and ACCOUNT_TYPE.STOCK not in self._account_list:
+        if len(universe) == 0 and DEFAULT_ACCOUNT_TYPE.STOCK.name not in self._config.base.accounts:
             error = CustomError()
             error.set_msg("Current universe is empty. Please use subscribe function before trade")
-            raise patch_user_exc(CustomException(error))
+            raise patch_user_exc(CustomException(error), force=True)
         return universe
 
     # [BEGIN] minute event helper
@@ -69,17 +69,17 @@ class SimulationEventSource(AbstractEventSource):
         trading_minutes = set()
         universe = self._get_universe()
         for order_book_id in universe:
-            if get_account_type(order_book_id) == ACCOUNT_TYPE.STOCK:
+            if get_account_type(order_book_id) == DEFAULT_ACCOUNT_TYPE.STOCK.name:
                 continue
             trading_minutes.update(self._env.data_proxy.get_trading_minutes_for(order_book_id, trading_date))
         return set([convert_int_to_datetime(minute) for minute in trading_minutes])
 
     def _get_trading_minutes(self, trading_date):
         trading_minutes = set()
-        for account_type in self._account_list:
-            if account_type == ACCOUNT_TYPE.STOCK:
+        for account_type in self._config.base.accounts:
+            if account_type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
                 trading_minutes = trading_minutes.union(self._get_stock_trading_minutes(trading_date))
-            elif account_type == ACCOUNT_TYPE.FUTURE:
+            elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
                 trading_minutes = trading_minutes.union(self._get_future_trading_minutes(trading_date))
         return sorted(list(trading_minutes))
     # [END] minute event helper

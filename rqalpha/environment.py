@@ -14,9 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 from .events import EventBus
-from .utils import get_account_type
+from .utils import get_account_type, generate_account_type_dict
 from .utils.logger import system_log, user_log, user_detail_log
+from .utils.i18n import gettext as _
 
 
 class Environment(object):
@@ -46,10 +49,19 @@ class Environment(object):
         self.mod_dict = None
         self.plot_store = None
         self.bar_dict = None
+        self.account_type_dict = generate_account_type_dict()
         self._frontend_validators = []
+        self._account_model_dict = {}
+        self._position_model_dict = {}
 
     @classmethod
     def get_instance(cls):
+        """
+        返回已经创建的 Environment 对象
+        """
+        if Environment._env is None:
+            raise RuntimeError(
+                _(u"Environment has not been created. Please Use `Environment.get_instance()` after RQAlpha init"))
         return Environment._env
 
     def set_data_proxy(self, data_proxy):
@@ -84,6 +96,29 @@ class Environment(object):
 
     def add_frontend_validator(self, validator):
         self._frontend_validators.append(validator)
+
+    def register_account_type(self, account_type, value):
+        for k, v in six.iteritems(self.account_type_dict):
+            if v == value:
+                raise RuntimeError(
+                    _(u"value {value} has been used for {original_key}").format(value=value, original_key=k))
+        self.account_type_dict[account_type] = value
+
+    def set_account_model(self, account_type, account_model):
+        self._account_model_dict[account_type] = account_model
+
+    def get_account_model(self, account_type):
+        if account_type not in self._account_model_dict:
+            raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
+        return self._account_model_dict[account_type]
+
+    def set_position_model(self, account_type, position_model):
+        self._position_model_dict[account_type] = position_model
+
+    def get_position_model(self, account_type):
+        if account_type not in self._position_model_dict:
+            raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
+        return self._position_model_dict[account_type]
 
     def can_submit_order(self, order):
         account = self.get_account(order.order_book_id)
@@ -125,6 +160,10 @@ class Environment(object):
 
     def get_instrument(self, order_book_id):
         return self.data_proxy.instruments(order_book_id)
+
+    def get_account_type(self, order_book_id):
+        # 如果新的account_type 可以通过重写该函数来进行扩展
+        return get_account_type(order_book_id)
 
     def get_account(self, order_book_id):
         account_type = get_account_type(order_book_id)

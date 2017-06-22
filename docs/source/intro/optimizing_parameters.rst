@@ -57,14 +57,15 @@
 		    "log_level": "error",
 		},
 		"base": {
-		    "securities": "stock",
 		    "matching_type": "current_bar",
 		    "start_date": "2015-01-01",
 		    "end_date": "2016-01-01",
-		    "stock_starting_cash": 100000,
 		    "benchmark": "000001.XSHE",
 		    "frequency": "1d",
 		    "strategy_file": "rqalpha/examples/golden_cross.py",
+            "accounts": {
+                "stock": 100000
+            }
 		},
 		"mod": {
 		    "sys_progress": {

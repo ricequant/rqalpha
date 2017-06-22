@@ -1,6 +1,6 @@
 # see more config
 # http://rqalpha.readthedocs.io/zh_CN/stable/intro/run_algorithm.html
-version: 0.1.5
+version: 0.1.6
 
 # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
 whitelist: [base, extra, validator, mod]
@@ -16,12 +16,6 @@ base:
   start_date: 2015-06-01
   # 回测结束日期(如果是实盘，则忽略该配置)
   end_date: 2050-01-01
-  # 股票起始资金，默认为0
-  stock_starting_cash: 0
-  # 期货起始资金，默认为0
-  future_starting_cash: 0
-  # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)
-  securities: [stock]
   # 设置保证金乘数，默认为1
   margin_multiplier: 1
   # 运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易。
@@ -36,12 +30,18 @@ base:
   # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
   persist: false
   persist_mode: real_time
+  # 设置策略可交易品种，目前支持 `stock` (股票账户)、`future` (期货账户)，您也可以自行扩展
+  accounts:
+    # 如果想设置使用某个账户，只需要增加对应的初始资金即可
+    stock: ~
+    future: ~
 
 extra:
   # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
   # 或者设置 `error` 只查看错误级别的日志输出
   log_level: info
   user_system_log_disabled: false
+  user_log_disabled: false
   # 通过该参数可以将预定义变量传入 `context` 内。
   context_vars: ~
   # force_run_init_when_pt_resume: 在PT的resume模式时，是否强制执行用户init。主要用于用户改代码。

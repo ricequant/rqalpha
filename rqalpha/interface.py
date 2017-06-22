@@ -19,6 +19,172 @@ import abc
 from six import with_metaclass
 
 
+class AbstractAccount(with_metaclass(abc.ABCMeta)):
+    """
+    账户接口，主要用于构建账户信息
+    
+    您可以在 Mod 的 start_up 阶段通过 env.set_account_model(account_type, AccountModel) 来注入和修改 AccountModel
+    您也可以通过 env.get_account_model(account_type) 来获取指定类型的 AccountModel
+    """
+    @abc.abstractmethod
+    def fast_forward(self, orders, trades):
+        """
+        [Required]
+        
+        fast_forward 函数接受当日订单数据和成交数据，从而将当前的持仓快照快速推进到最新持仓状态
+        
+        :param list orders: 当日订单列表
+        :param list trades: 当日成交列表
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def order(self, order_book_id, quantity, style, target=False):
+        """
+        [Required]
+
+        系统下单函数会调用该函数来完成下单操作
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_state(self):
+        """
+        [Required]
+        
+        主要用于进行持久化时候，提供对应需要持久化的数据
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def set_state(self, state):
+        """
+        [Requried]
+        
+        主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def type(self):
+        """
+        [Required]
+        
+        返回 String 类型的账户类型标示
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def positions(self):
+        """
+        [Required]
+        
+        返回当前账户的持仓数据
+
+        :return: Positions(PositionModel)
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def frozen_cash(self):
+        """
+        [Required]
+        
+        返回当前账户的冻结资金
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def cash(self):
+        """
+        [Required]
+        
+        返回当前账户的可用资金
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def market_value(self):
+        """
+        [Required]
+        
+        返回当前账户的市值
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def transaction_cost(self):
+        """
+        [Required]
+        
+        返回当前账户的当日交易费用
+        """
+        raise NotImplementedError
+
+
+class AbstractPosition(with_metaclass(abc.ABCMeta)):
+    """
+    仓位接口，主要用于构建仓位信息
+    
+    您可以在 Mod 的 start_up 阶段通过 env.set_position_model(account_type, PositionModel) 来注入和修改 PositionModel
+    您也可以通过 env.get_position_model(account_type) 来获取制定类型的 PositionModel
+    """
+
+    @abc.abstractmethod
+    def get_state(self):
+        """
+        [Required]
+
+        主要用于进行持久化时候，提供对应需要持久化的数据
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def set_state(self, state):
+        """
+        [Requried]
+
+        主要用于持久化恢复时，根据提供的持久化数据进行恢复 Position 的实现
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def order_book_id(self):
+        """
+        [Required]
+        
+        返回当前持仓的 order_book_id
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def type(self):
+        """
+        [Required]
+
+        返回 String 类型的账户类型标示
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def market_value(self):
+        """
+        [Required]
+
+        返回当前持仓的市值
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def transaction_cost(self):
+        """
+        [Required]
+
+        返回当前持仓的当日交易费用
+        """
+        raise NotImplementedError
+
+
 class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     """
     策略加载器，其主要作用是加载策略，并将策略运行所需要的域环境传递给策略执行代码。

@@ -25,8 +25,15 @@ from importlib import import_module
 from .utils.click_helper import Date
 from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
 
+CONTEXT_SETTINGS = {
+    'default_map': {
+        'run': {
+        }
+    }
+}
 
-@click.group()
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
 def cli(ctx, verbose):
@@ -63,13 +70,6 @@ def entry_point():
     cli(obj={})
 
 
-@click.group()
-@click.option('-v', '--verbose', count=True)
-@click.pass_context
-def cli(ctx, verbose):
-    ctx.obj["VERBOSE"] = verbose
-
-
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--locale', 'locale', type=click.STRING, default="zh_Hans_CN")
@@ -88,28 +88,23 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-f', '--strategy-file', 'base__strategy_file', type=click.Path(exists=True))
 @click.option('-s', '--start-date', 'base__start_date', type=Date())
 @click.option('-e', '--end-date', 'base__end_date', type=Date())
-@click.option('-sc', '--stock-starting-cash', 'base__stock_starting_cash', type=click.FLOAT)
-@click.option('-fc', '--future-starting-cash', 'base__future_starting_cash', type=click.FLOAT)
 @click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
-@click.option('-st', '--security', 'base__securities', multiple=True, type=click.Choice(['stock', 'future', 'stock_future']))
+@click.option('-a', '--account', 'base__accounts', nargs=2, multiple=True, help="set account type with starting cash")
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
+@click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log stdout')
+@click.option('--disable-user-log', 'extra__user_log_disabled', is_flag=True, help='disable user log stdout')
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
-@click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log')
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
-# -- DEPRECATED ARGS && WILL BE REMOVED AFTER VERSION 3.0.0
-@click.option('-i', '--init-cash', 'base__stock_starting_cash', type=click.FLOAT, help="[Deprecated]")
-@click.option('-k', '--kind', 'base__securities', help="[Deprecated]", multiple=True, type=click.Choice(['stock', 'future', 'stock_future']))
-@click.option('--strategy-type', 'base__securities', help="[Deprecated]", multiple=True, type=click.Choice(['stock', 'future', 'stock_future']))
 def run(**kwargs):
     """
     Start to run a strategy
@@ -122,7 +117,8 @@ def run(**kwargs):
         kwargs.pop('base__securities', None)
 
     from . import main
-    cfg = parse_config(kwargs, config_path=config_path, click_type=True)
+    source_code = kwargs.get("base__source_code")
+    cfg = parse_config(kwargs, config_path=config_path, click_type=True, source_code=source_code)
     source_code = cfg.base.source_code
     results = main.run(cfg, source_code=source_code)
 
@@ -338,7 +334,11 @@ def mod(cmd, params):
         mod_config_path = get_mod_config_path(generate=True)
         mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
-        mod_config['mod'][mod_name]['enabled'] = True
+        try:
+            mod_config['mod'][mod_name]['enabled'] = True
+        except KeyError:
+            mod_config['mod'][mod_name] = {'enabled': True}
+
         dump_config(mod_config_path, mod_config)
         list({})
 
@@ -354,7 +354,10 @@ def mod(cmd, params):
         mod_config_path = get_mod_config_path(generate=True)
         mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
-        mod_config['mod'][mod_name]['enabled'] = False
+        try:
+            mod_config['mod'][mod_name]['enabled'] = False
+        except KeyError:
+            pass
         dump_config(mod_config_path, mod_config)
         list({})
 

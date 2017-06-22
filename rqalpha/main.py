@@ -43,14 +43,15 @@ from .execution_context import ExecutionContext
 from .interface import Persistable
 from .mod import ModHandler
 from .model.bar import BarMap
+from .model.portfolio import Portfolio
+from .model.base_position import Positions
 from .utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from .utils.exception import CustomException, is_user_exc, patch_user_exc
 from .utils.i18n import gettext as _
-from .utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log
+from .utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log, init_logger, user_std_handler
 from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from .utils.scheduler import Scheduler
 from .utils.config import set_locale
-
 
 jsonpickle_numpy.register_handlers()
 
@@ -64,7 +65,8 @@ def _adjust_start_date(config, data_proxy):
     config.base.end_date = min(end, config.base.end_date)
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
-        raise patch_user_exc(ValueError(_(u"There is no trading day between {start_date} and {end_date}.").format(
+        raise patch_user_exc(ValueError(_(u"There is not data between {start_date} and {end_date}. Please check your"
+                                          u" data bundle or select other backtest period.").format(
             start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
@@ -99,22 +101,14 @@ def create_benchmark_portfolio(env):
     if env.config.base.benchmark is None:
         return None
 
-    from .const import ACCOUNT_TYPE
-    from .model.account import BenchmarkAccount
-    from .model.position import Positions, StockPosition
-    from .model.portfolio import Portfolio
-    accounts = {}
-    config = env.config
-    start_date = config.base.start_date
-    total_cash = 0
-    for account_type in config.base.account_list:
-        if account_type == ACCOUNT_TYPE.STOCK:
-            total_cash += config.base.stock_starting_cash
-        elif account_type == ACCOUNT_TYPE.FUTURE:
-            total_cash += config.base.future_starting_cash
-        else:
-            raise NotImplementedError
-    accounts[ACCOUNT_TYPE.BENCHMARK] = BenchmarkAccount(total_cash, Positions(StockPosition))
+    BenchmarkAccount = env.get_account_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
+    BenchmarkPosition = env.get_position_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
+
+    start_date = env.config.base.start_date
+    total_cash = sum(env.config.base.accounts.values())
+    accounts = {
+        const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name: BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
+    }
     return Portfolio(start_date, 1, total_cash, accounts)
 
 
@@ -185,6 +179,11 @@ def run(config, source_code=None, user_funcs=None):
     mod_handler = ModHandler()
 
     try:
+        # avoid register handlers everytime
+        # when running in ipython
+        init_logger()
+        add_log_handlers(config)
+
         if source_code is not None:
             env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
         elif user_funcs is not None:
@@ -239,7 +238,7 @@ def run(config, source_code=None, user_funcs=None):
             "g": env.global_vars
         })
 
-        apis = api_helper.get_apis(config.base.account_list)
+        apis = api_helper.get_apis()
         scope.update(apis)
 
         scope = env.strategy_loader.load(scope)
@@ -355,3 +354,12 @@ def output_profile_result(env):
     profile_output = profile_output.rstrip()
     six.print_(profile_output)
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))
+
+
+def add_log_handlers(config):
+    extra_config = config.extra
+    if extra_config.log_level.upper() != "NONE":
+        if not extra_config.user_log_disabled:
+            user_log.handlers.append(user_std_handler)
+        if not extra_config.user_system_log_disabled:
+            user_system_log.handlers.append(user_std_handler)

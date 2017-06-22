@@ -2,6 +2,67 @@
 CHANGELOG
 ==================
 
+2.3.0
+==================
+
+**[WARN]Breaking Change**: 本次更新可能导致已实现 Mod 无法正常使用，请按照文档升级您的 Mod，或者使用 2.2.x 版本 RQAlpha
+
+在通过 Mod 扩展 RQAlpha 的时候，由于 RQAlpha 直接定义了 `Account` 和 `Position` 相关的 Model, 增加新的 `account` 和 `position` 变得非常的困难，想扩展更多类型是一件很麻烦的事情，因此我们决定重构该模块从而解决这些问题。
+
+主要进行如下更改:
+
+- 增加 :code:`AbstractAccount` 和 :code:`AbstractPosition`, 用户可以基于该抽象类进行扩展。
+- :code:`const.ACCOUNT_TYPE` 修改为 :code:`const.DEFAULT_ACCOUNT_TYPE`，并且不再直接使用，您可以通过 :code:`Environment.get_instance().account_type_dict` 来获取包括 Mod 注入的账户类型。
+- 原先所有使用 `ACCOUNT_TYPE` 作为 key 的地方，不再使用 Enum 类型作为 Key, 而是修改为对应 Enum 的 name 作为key。比如说原本使用 :code:`portfolio.accounts[ACCOUNT_TYPE.STOCK]` 更改为 :code:`portfolio.accounts['STOCK']`
+- :code:`Environment` 提供 :code:`set_account_model` | :code:`get_account_model` | :code:`set_position_model` | :code:`get_position_model` API 来注入 自定义Model。
+- :code:`Environment` 提供 :code:`set_smart_order` API 来注入自定义账户类型的智能下单函数，从而通过通用的 :code:`order` | :code:`order_to` API 便可以交易对应自定义账户类型。
+- RQAlpha 将已有的 AccountModel, PositionModel 和 API 抽离至 `rqalpha_mod_sys_accounts` 中，通过如下方式注入:
+
+.. code-block:: python
+
+  from .account_model import *
+  from .position_model import *
+  from .api import api_future, api_stock
+
+
+  class AccountMod(AbstractMod):
+
+      def start_up(self, env, mod_config):
+
+          # 注入 Account
+          env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount)
+          env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount)
+          env.set_account_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, BenchmarkAccount)
+
+          # 注入 Position
+          env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPosition)
+          env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePosition)
+          env.set_position_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, StockPosition)
+
+          # 注入 API
+          if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.accounts:
+              # 注入期货API
+              for export_name in api_future.__all__:
+                  export_as_api(getattr(api_future, export_name))
+              # 注入 smart order
+              env.set_smart_order(DEFAULT_ACCOUNT_TYPE.FUTURE.name, api_future.smart_order)
+          if DEFAULT_ACCOUNT_TYPE.STOCK.name in env.config.base.accounts:
+              # 注入股票API
+              for export_name in api_stock.__all__:
+                  export_as_api(getattr(api_stock, export_name))
+              # 注入 smart order
+              env.set_smart_order(DEFAULT_ACCOUNT_TYPE.STOCK.name, api_stock.smart_order)
+
+      def tear_down(self, code, exception=None):
+          pass
+
+
+2.2.7
+==================
+
+- 解决当存在无效 Mod 时，RQAlpha 崩溃无法启动的问题
+- 修复期货下单函数默认 style 为 None 导致报错退出的问题
+
 2.2.5
 ==================
 

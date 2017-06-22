@@ -122,13 +122,14 @@ def handle_bar(context, bar_dict):
 
 __config__ = {
     "base": {
-        "securities": "future",
         "start_date": "2014-06-01",
         "end_date": "2015-08-01",
         "frequency": "1d",
         "matching_type": "next_bar",
-        "future_starting_cash": 1000000,
         "benchmark": None,
+        "accounts": {
+            "future": 1000000
+        }
     },
     "extra": {
         "log_level": "error",

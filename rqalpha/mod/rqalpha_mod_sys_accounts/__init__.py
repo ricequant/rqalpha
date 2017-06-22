@@ -15,9 +15,6 @@
 # limitations under the License.
 
 
-from .api_base import *
-from .api_extension import *
-# noinspection PyUnresolvedReferences
-from ..mod.rqalpha_mod_sys_accounts.api.api_stock import *
-# noinspection PyUnresolvedReferences
-from ..mod.rqalpha_mod_sys_accounts.api.api_future import *
+def load_mod():
+    from .mod import AccountMod
+    return AccountMod()

@@ -42,14 +42,15 @@ def after_trading(context):
 
 __config__ = {
     "base": {
-        "securities": ["stock", "future"],
         "start_date": "2016-06-01",
         "end_date": "2016-10-05",
         "frequency": "1d",
         "matching_type": "current_bar",
-        "stock_starting_cash": 1000000,
-        "future_starting_cash": 1000000,
         "benchmark": None,
+        "accounts": {
+            "stock": 1000000,
+            "future": 1000000
+        }
     },
     "extra": {
         "log_level": "error",

@@ -23,7 +23,7 @@ import collections
 from contextlib import contextmanager
 
 from .exception import CustomError, CustomException
-from ..const import EXC_TYPE, INSTRUMENT_TYPE, ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
+from ..const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
 from ..utils.datetime_func import TimeRange
 from ..utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
 from ..utils.i18n import gettext as _
@@ -231,9 +231,9 @@ def get_account_type(order_book_id):
     instrument = Environment.get_instance().get_instrument(order_book_id)
     enum_type = instrument.enum_type
     if enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
-        return ACCOUNT_TYPE.STOCK
+        return DEFAULT_ACCOUNT_TYPE.STOCK.name
     elif enum_type == INSTRUMENT_TYPE.FUTURE:
-        return ACCOUNT_TYPE.FUTURE
+        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
     else:
         raise NotImplementedError
 
@@ -262,13 +262,13 @@ def merge_trading_period(trading_period):
     return result
 
 
-def get_trading_period(universe, account_list):
+def get_trading_period(universe, accounts):
     trading_period = []
-    if ACCOUNT_TYPE.STOCK in account_list:
+    if DEFAULT_ACCOUNT_TYPE.STOCK.name in accounts:
         trading_period += STOCK_TRADING_PERIOD
 
     for order_book_id in universe:
-        if get_account_type(order_book_id) == ACCOUNT_TYPE.STOCK:
+        if get_account_type(order_book_id) == DEFAULT_ACCOUNT_TYPE.STOCK.name:
             continue
         underlying_symbol = get_upper_underlying_symbol(order_book_id)
         trading_period += TRADING_PERIOD_DICT[underlying_symbol]
@@ -313,3 +313,10 @@ def is_run_from_ipython():
         return True
     except NameError:
         return False
+
+
+def generate_account_type_dict():
+    account_type_dict = {}
+    for key, a_type in six.iteritems(DEFAULT_ACCOUNT_TYPE.__members__):
+        account_type_dict[key] = a_type.value
+    return account_type_dict

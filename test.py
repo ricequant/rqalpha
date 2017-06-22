@@ -179,13 +179,14 @@ def test_api():
 
     base_api_config = {
         "base": {
-            "securities": "stock",
             "start_date": "2016-12-01",
             "end_date": "2016-12-31",
             "frequency": "1d",
             "matching_type": "next_bar",
-            "stock_starting_cash": 1000000,
-            "strategy_file": 'rqalpha/__init__.py'
+            "strategy_file": 'rqalpha/__init__.py',
+            "accounts": {
+                "stock": 1000000
+            }
         },
         "extra": {
             "log_level": "error",
@@ -200,13 +201,14 @@ def test_api():
 
     stock_api_config = {
         "base": {
-            "securities": "stock",
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "frequency": "1d",
             "matching_type": "next_bar",
-            "stock_starting_cash": 100000000,
-            "strategy_file": 'rqalpha/__init__.py'
+            "strategy_file": 'rqalpha/__init__.py',
+            "accounts": {
+                "stock": 100000000
+            }
         },
         "extra": {
             "log_level": "error",
@@ -221,13 +223,14 @@ def test_api():
 
     future_api_config = {
         "base": {
-            "securities": "future",
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "frequency": "1d",
             "matching_type": "next_bar",
-            "future_starting_cash": 10000000000,
-            "strategy_file": 'rqalpha/__init__.py'
+            "strategy_file": 'rqalpha/__init__.py',
+            "accounts": {
+                "future": 10000000000
+            }
         },
         "extra": {
             "log_level": "error",

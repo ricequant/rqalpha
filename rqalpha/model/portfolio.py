@@ -18,7 +18,7 @@ import six
 import jsonpickle
 
 from ..environment import Environment
-from ..const import DAYS_CNT, ACCOUNT_TYPE
+from ..const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE
 from ..utils import get_account_type, merge_dicts
 from ..utils.repr import property_repr
 from ..events import EVENT
@@ -43,13 +43,9 @@ class Portfolio(object):
         event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
-    @staticmethod
-    def _enum_to_str(v):
-        return v.name
-
-    @staticmethod
-    def _str_to_enum(enum_class, s):
-        return enum_class.__members__[s]
+    def order(self, order_book_id, quantity, style, target=False):
+        account_type = get_account_type(order_book_id)
+        return self.accounts[account_type].order(quantity, style, target)
 
     def get_state(self):
         return jsonpickle.encode({
@@ -57,7 +53,7 @@ class Portfolio(object):
             'static_unit_net_value': self._static_unit_net_value,
             'units': self._units,
             'accounts': {
-                self._enum_to_str(name): account.get_state() for name, account in six.iteritems(self._accounts)
+                name: account.get_state() for name, account in six.iteritems(self._accounts)
             }
         }).encode('utf-8')
 
@@ -68,7 +64,7 @@ class Portfolio(object):
         self._static_unit_net_value = value['static_unit_net_value']
         self._units = value['units']
         for k, v in six.iteritems(value['accounts']):
-            self._accounts[self._str_to_enum(ACCOUNT_TYPE, k)].set_state(v)
+            self._accounts[k].set_state(v)
 
     def _pre_before_trading(self, event):
         self._static_unit_net_value = self.unit_net_value
@@ -85,14 +81,14 @@ class Portfolio(object):
         """
         [StockAccount] 股票账户
         """
-        return self._accounts.get(ACCOUNT_TYPE.STOCK, None)
+        return self._accounts.get(DEFAULT_ACCOUNT_TYPE.STOCK.name, None)
 
     @property
     def future_account(self):
         """
         [FutureAccount] 期货账户
         """
-        return self._accounts.get(ACCOUNT_TYPE.FUTURE, None)
+        return self._accounts.get(DEFAULT_ACCOUNT_TYPE.FUTURE.name, None)
 
     @property
     def start_date(self):

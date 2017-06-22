@@ -77,6 +77,7 @@ class ModHandler(object):
 
 
 SYSTEM_MOD_LIST = [
+    "sys_accounts",
     "sys_analyser",
     "sys_progress",
     "sys_funcat",

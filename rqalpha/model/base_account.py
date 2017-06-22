@@ -16,12 +16,13 @@
 
 import six
 
-from ...utils.repr import property_repr
-from ...utils.i18n import gettext as _
-from ...utils.logger import user_system_log
+from ..interface import AbstractAccount
+from ..utils.repr import property_repr
+from ..utils.i18n import gettext as _
+from ..utils.logger import user_system_log
 
 
-class BaseAccount(object):
+class BaseAccount(AbstractAccount):
 
     __abandon_properties__ = [
         "portfolio_value",
@@ -30,6 +31,8 @@ class BaseAccount(object):
         "total_returns",
         "pnl"
     ]
+
+    AGGRESSIVE_UPDATE_LAST_PRICE = False
 
     __repr__ = property_repr
 

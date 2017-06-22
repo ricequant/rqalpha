@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_position import BasePosition
-from ...const import ACCOUNT_TYPE, SIDE
-from ...environment import Environment
-from ...utils.i18n import gettext as _
-from ...utils.logger import user_system_log
+from rqalpha.model.base_position import BasePosition
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, SIDE
+from rqalpha.environment import Environment
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 
 class StockPosition(BasePosition):
@@ -82,7 +82,7 @@ class StockPosition(BasePosition):
 
     @property
     def type(self):
-        return ACCOUNT_TYPE.STOCK
+        return DEFAULT_ACCOUNT_TYPE.STOCK.name
 
     def split_(self, ratio):
         self._quantity *= ratio
@@ -145,9 +145,9 @@ class StockPosition(BasePosition):
         [float] 获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
         """
         accounts = Environment.get_instance().portfolio.accounts
-        if ACCOUNT_TYPE.STOCK not in accounts:
+        if DEFAULT_ACCOUNT_TYPE.STOCK.name not in accounts:
             return 0
-        total_value = accounts[ACCOUNT_TYPE.STOCK].total_value
+        total_value = accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name].total_value
         return 0 if total_value == 0 else self.market_value / total_value
 
     # ------------------------------------ Abandon Property ------------------------------------
