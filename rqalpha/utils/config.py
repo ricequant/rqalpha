@@ -136,7 +136,7 @@ def set_locale(lc):
     localization.set_locale([lc])
 
 
-def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None, verify_config=True):
+def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
     mod_configs = config_args.pop("mod_configs", [])
     for cfg, value in mod_configs:
         key = "mod__{}".format(cfg.replace(".", "__"))
@@ -175,7 +175,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         deep_update(config_args, config)
 
     # config from user code
-    if user_funcs is None:
+    if user_funcs is not None:
         config = parse_user_config_from_code(config, source_code)
     config = RqAttrDict(config)
 
