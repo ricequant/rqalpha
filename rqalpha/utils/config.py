@@ -131,6 +131,7 @@ def set_locale(lc):
 
 def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None, verify_config=True):
     mod_configs = config_args.pop("mod_configs", [])
+
     for cfg, value in mod_configs:
         key = "mod__{}".format(cfg.replace(".", "__"))
         config_args[key] = mod_config_value_parse(value)
@@ -194,11 +195,6 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     if os.path.basename(base_config.data_bundle_path) != "bundle":
         base_config.data_bundle_path = os.path.join(base_config.data_bundle_path, "./bundle")
 
-    if not os.path.exists(base_config.data_bundle_path):
-        raise RuntimeError(
-            _(u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
-                bundle_path=base_config.data_bundle_path))
-
     base_config.run_type = parse_run_type(base_config.run_type)
     base_config.account_list = parse_account_list(base_config.securities)
     base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
@@ -231,6 +227,8 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
             raise patch_user_exc(ValueError(_(u"stock starting cash and future starting cash can not be both 0.")))
 
     system_log.debug("\n" + pformat(config.convert_to_dict()))
+
+    print('################ {}'.format(config))
 
     return config
 

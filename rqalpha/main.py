@@ -179,6 +179,7 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
 
 
 def run(config, source_code=None, user_funcs=None):
+    print('xxxxxxxxxxxxxxx {}'.format(config))
     env = Environment(config)
     persist_helper = None
     init_succeed = False
