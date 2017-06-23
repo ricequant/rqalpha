@@ -195,8 +195,8 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         base_config.data_bundle_path = os.path.join(base_config.data_bundle_path, "./bundle")
 
     if not os.path.exists(base_config.data_bundle_path):
-        raise RuntimeError(
-            _(u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
+        sys.stderr.write(
+            u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.".format(
                 bundle_path=base_config.data_bundle_path))
 
     base_config.run_type = parse_run_type(base_config.run_type)
