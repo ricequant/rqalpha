@@ -249,6 +249,9 @@ def parse_user_config_from_code(config, source_code=None):
 
 def parse_accounts(accounts):
     a = {}
+    if isinstance(accounts, tuple):
+        accounts = {account_type: starting_cash for account_type, starting_cash in accounts}
+
     for account_type, starting_cash in six.iteritems(accounts):
         if starting_cash is None:
             continue
