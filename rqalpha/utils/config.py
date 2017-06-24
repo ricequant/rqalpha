@@ -173,7 +173,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         deep_update(config_args, config)
 
     # config from user code
-    if user_funcs is not None:
+    if user_funcs is None:
         config = parse_user_config_from_code(config, source_code)
     config = RqAttrDict(config)
 

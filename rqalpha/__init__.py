@@ -115,6 +115,7 @@ def run_func(**kwargs):
     from . import main
 
     config = kwargs.get('config', kwargs.get('__config__', None))
+
     user_funcs = {
         'init': kwargs.get('init', dummy_func),
         'handle_bar': kwargs.get('handle_bar', dummy_func),
@@ -122,8 +123,15 @@ def run_func(**kwargs):
         'before_trading': kwargs.get('before_trading', dummy_func),
         'after_trading': kwargs.get('after_trading', dummy_func)
     }
-
-    config = parse_config(config, click_type=False)
+    if config is None:
+        config = {}
+    else:
+        assert isinstance(config, dict)
+        try:
+            del config["base"]["strategy_file"]
+        except:
+            pass
+    config = parse_config(config, user_funcs=user_funcs)
     return main.run(config, user_funcs=user_funcs)
 
 
