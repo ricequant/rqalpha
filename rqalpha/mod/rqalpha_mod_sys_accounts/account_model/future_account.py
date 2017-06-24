@@ -239,7 +239,7 @@ class FutureAccount(BaseAccount):
                 del self._positions[order_book_id]
             else:
                 position.apply_settlement()
-        self._total_cash = total_value - self.margin
+        self._total_cash = total_value - self.margin - self.holding_pnl
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         if total_value <= 0:
