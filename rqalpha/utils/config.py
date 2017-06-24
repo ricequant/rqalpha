@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import six
 import os
 import yaml
@@ -27,8 +26,7 @@ import shutil
 from pprint import pformat
 
 from . import RqAttrDict, logger
-from .exception import patch_user_exc
-from .logger import user_log, user_system_log, system_log, std_log, user_std_handler
+from .logger import user_log, user_system_log, system_log, std_log
 from ..const import RUN_TYPE, PERSIST_MODE
 from ..utils.i18n import gettext as _, localization
 from ..utils.dict_func import deep_update

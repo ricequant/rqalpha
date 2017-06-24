@@ -2,12 +2,108 @@
 CHANGELOG
 ==================
 
-2.3.0
+3.0.0
 ==================
 
-**[WARN]Breaking Change**: 本次更新可能导致已实现 Mod 无法正常使用，请按照文档升级您的 Mod，或者使用 2.2.x 版本 RQAlpha
+**[For 开发/运行策略的用户]**
+
+3.x 相比 2.x 进行了如下更改，如果您升级到 3.x 版本，请务必阅读以下内容，保证您的策略可以顺利启动和执行:
+
+- 命令行参数做出如下调整
+  
+  - 不再使用 :code:`-sc/--stock-starting-cash` 参数
+  - 不再使用 :code:`-fc/--future-starting-cash` 参数
+  - 不再使用 :code:`-i/--init-cash` 参数
+  - 不再使用 :code:`-s/--security` 参数
+  - 不再使用 :code:`-k/--kind` 参数
+  - 不再使用 :code:`--strategy-type` 参数
+  - **使用** :code:`--account` 来替代，具体用法如下
+
+.. code-block:: bash
+
+  # 策略通过命令行运行，设置可交易类型是股票，起始资金为 10000
+  $ rqalpha run --account stock 10000
+  # 策略通过命令行运行，设置可交易类型为期货，起始资金为 50000
+  $ rqalpha run --account future 50000
+  # 策略通过命令行运行，设置可交易类型为期货和股票，起始资金分别为 股票 10000, 期货 50000
+  $ rqalpha run --account stock 10000 --account future 50000
+  # 如果您通过 Mod 扩展，自定义了一种可交易类型(假设是huobi)，您也可以增加对于火币的支持和起始资金设置
+  $ rqalpha run --account stock 10000 --account future 50000 --account huobi 20000
+
+- 相应，如果您通过 :code:`run_file | run_code | run_func` 来启动策略，配置文件及配置信息也做了对应的调整:
+
+  - 不再使用 :code:`base.stock_starting_cash`
+  - 不再使用 :code:`base.future_starting_cash`
+  - 不再使用 :code:`base.securities`
+  - **使用** :code:`base.accounts` 来替代，具体用法如下:
+
+.. code-block:: python
+
+  # 策略通过配置，设置可交易类型是股票，起始资金为 10000
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "stock": 10000
+      }
+    }
+  }
+  # 策略通过配置，设置可交易类型是期货，起始资金为 50000
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "future": 50000
+      }
+    }
+  }
+  # 策略通过配置，设置可交易类型为期货和股票，起始资金分别为 股票 10000, 期货 50000
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "stock": 10000,
+        "future": 50000
+      }
+    }
+  }
+  # 如果您通过 Mod 扩展，自定义了一种可交易类型(假设是huobi)，您也可以增加对于火币的支持和起始资金设置
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "stock": 10000,
+        "future": 50000,
+        "huobi": 20000
+      }
+    }
+  }
+
+
+
+**[For Mod developer]**
+
+本次更新可能导致已实现 Mod 无法正常使用，请按照文档升级您的 Mod，或者使用 2.2.x 版本 RQAlpha
 
 在通过 Mod 扩展 RQAlpha 的时候，由于 RQAlpha 直接定义了 `Account` 和 `Position` 相关的 Model, 增加新的 `account` 和 `position` 变得非常的困难，想扩展更多类型是一件很麻烦的事情，因此我们决定重构该模块从而解决这些问题。
+
+详情请查看: https://github.com/ricequant/rqalpha/issues/160
 
 主要进行如下更改:
 
