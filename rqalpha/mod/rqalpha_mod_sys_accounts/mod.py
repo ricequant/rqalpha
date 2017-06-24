@@ -28,6 +28,8 @@ class AccountMod(AbstractMod):
 
     def start_up(self, env, mod_config):
 
+        StockPosition.stock_t1 = mod_config.stock_t1
+
         # 注入 Account
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount)
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount)

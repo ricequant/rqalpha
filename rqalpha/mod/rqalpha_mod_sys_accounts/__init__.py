@@ -14,7 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import click
+from rqalpha import cli
+
+
+__config__ = {
+    # 开启/关闭 股票 T+1， 默认开启
+    "stock_t1": True
+}
+
 
 def load_mod():
     from .mod import AccountMod
     return AccountMod()
+
+
+cli_prefix = "mod__sys_accounts__"
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('--stock-t1/--no-stock-t1', cli_prefix + "stock_t1"),
+        default=None,
+        help="[sys_accounts] enable/disable stock T+1"
+    )
+)
