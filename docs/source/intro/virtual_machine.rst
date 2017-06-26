@@ -56,7 +56,7 @@
 
 .. code-block:: bash
 
-    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG --plot
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot
 
 使用 PyCharm 进行断点调试
 ------------------------------------------------------

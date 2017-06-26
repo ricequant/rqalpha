@@ -76,7 +76,7 @@ RQAlpha 安装
 .. code-block:: bash
 
     $ cd examples
-    $ rqalpha run -f rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot --progress --stock-starting-cash 100000
+    $ rqalpha run -f rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot --progress --account stock 100000
 
 等待回测结束后，将显示您的收益率和Risk。
 

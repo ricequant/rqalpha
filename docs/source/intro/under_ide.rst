@@ -82,7 +82,7 @@ Python interpreter 内容可按以下格式并修改您对应的参数:
 
 .. code-block:: bash
 
-    run -f rqalpha-strategy/test.py -d /Users/your_count/.rqalpha/bundle -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG
+    run -f rqalpha-strategy/test.py -d /Users/your_count/.rqalpha/bundle -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG
 
 注意：您需要运行的策略应当填写您当前project目录下的策略，bundle目录您可以通过在命令行中获取绝对路径填入。
 
