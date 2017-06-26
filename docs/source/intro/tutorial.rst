@@ -254,7 +254,7 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
 
 .. code-block:: bash
 
-    $ rqalpha run -s 2014-01-01 -e 2016-01-01 -f rqalpha/examples/golden_cross.py -sc 100000 -p -bm 000001.XSHE
+    $ rqalpha run -s 2014-01-01 -e 2016-01-01 -f rqalpha/examples/golden_cross.py --account stock 100000 -p -bm 000001.XSHE
 
 
 .. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/golden_cross.png

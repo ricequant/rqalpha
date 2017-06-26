@@ -58,7 +58,7 @@ N/A           `- -` config                    设置配置文件路径
 
 .. code-block:: python3
 
-   rqalpha run -rt p -fq 1m -f strategy.py -sc 100000 -mc sys_stock_realtime.enabled True -mc sys_stock_realtime.fps 60
+   rqalpha run -rt p -fq 1m -f strategy.py --account stock 100000 -mc sys_stock_realtime.enabled True -mc sys_stock_realtime.fps 60
 
 系统内置 Mod Option扩展
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
