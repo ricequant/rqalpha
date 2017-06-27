@@ -161,7 +161,10 @@ class Tick(object):
         for name in dir(self):
             if name.startswith("_"):
                 continue
-            items.append((name, getattr(self, name)))
+            try:
+                items.append((name, getattr(self, name)))
+            except:
+                pass
         return "Tick({0})".format(', '.join('{0}: {1}'.format(k, v) for k, v in items))
 
     def __getitem__(self, key):
