@@ -75,7 +75,7 @@ class BarObject(object):
     def limit_up(self):
         try:
             v = self._data['limit_up']
-            return v if v != 0 else np.nan
+            return v
         except (KeyError, ValueError):
             return np.nan
 
@@ -83,7 +83,7 @@ class BarObject(object):
     def limit_down(self):
         try:
             v = self._data['limit_down']
-            return v if v != 0 else np.nan
+            return v
         except (KeyError, ValueError):
             return np.nan
 
