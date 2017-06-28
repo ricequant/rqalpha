@@ -264,6 +264,8 @@ def mod(cmd, params):
             for mod_name in mod_list:
                 if "rqalpha_mod_" in mod_name:
                     mod_name = mod_name.replace("rqalpha_mod_", "")
+                if "==" in mod_name:
+                    mod_name = mod_name.split('==')[0]
                 mod_config['mod'][mod_name] = {}
                 mod_config['mod'][mod_name]['enabled'] = False
 
