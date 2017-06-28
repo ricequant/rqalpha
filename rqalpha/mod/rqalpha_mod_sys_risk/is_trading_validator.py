@@ -17,6 +17,7 @@
 from rqalpha.interface import AbstractFrontendValidator
 
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import SIDE
 
 
 class IsTradingValidator(AbstractFrontendValidator):
@@ -43,6 +44,22 @@ class IsTradingValidator(AbstractFrontendValidator):
                 date=self._env.trading_dt
             ))
             return False
+
+        if instrument.type == 'PublicFund':
+            if order.side == SIDE.BUY and self._env.data_proxy.non_subscribable(order.order_book_id,
+                                                                                self._env.trading_dt):
+                order.mark_rejected(_(u"security {order_book_id} cannot be subscribed on {date}").format(
+                    order_book_id=order.order_book_id,
+                    date=self._env.trading_dt
+                ))
+                return False
+            elif order.side == SIDE.SELL and self._env.data_proxy.non_redeemable(order.order_book_id,
+                                                                                 self._env.trading_dt):
+                order.mark_rejected(_(u"security {order_book_id} cannot be redeemed on {date}").format(
+                    order_book_id=order.order_book_id,
+                    date=self._env.trading_dt
+                ))
+                return False
 
         return True
 
