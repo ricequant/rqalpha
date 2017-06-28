@@ -196,9 +196,9 @@ class StockAccount(BaseAccount):
 
             config = Environment.get_instance().config
             if config.extra.dividend_reinvestment:
-                last_price = Environment.get_instance().get_last_price('order_book_id')
-                shares = dividend['quantity'] * dividend['dividend_per_share'] / last_price
-                position.quantity += shares
+                last_price = Environment.get_instance().data_proxy.get_bar(order_book_id, trading_date).close
+                shares = position.quantity * dividend_per_share / last_price
+                position._quantity += shares
             else:
                 self._dividend_receivable[order_book_id] = {
                     'quantity': position.quantity,
