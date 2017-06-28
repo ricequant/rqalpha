@@ -212,7 +212,7 @@ class BaseDataSource(AbstractDataSource):
         if buy:
             return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Buy']
         else:
-            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Buy']
+            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Sell']
 
     def non_subscribable(self, order_book_id, dates):
         return self._non_subscribable_days.contains(order_book_id, dates)
