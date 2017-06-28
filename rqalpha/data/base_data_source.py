@@ -25,7 +25,7 @@ from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
 from ..utils.datetime_func import convert_int_to_datetime
 from ..utils.py2 import lru_cache
 from .converter import FutureDayBarConverter, FundDayBarConverter
-from .converter import StockBarConverter, IndexBarConverter
+from .converter import StockBarConverter, IndexBarConverter, PublicFundDayBarConverter
 from .date_set import DateSet
 from .daybar_store import DayBarStore
 from .dividend_store import DividendStore
@@ -33,6 +33,7 @@ from .future_info_cn import CN_FUTURE_INFO
 from .instrument_store import InstrumentStore
 from .trading_dates_store import TradingDatesStore
 from .yield_curve_store import YieldCurveStore
+from .public_fund_commission import PUBLIC_FUND_COMMISSION
 
 
 class BaseDataSource(AbstractDataSource):
@@ -45,6 +46,7 @@ class BaseDataSource(AbstractDataSource):
             DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
             DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
             DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
+            DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter),
         ]
 
         self._instruments = InstrumentStore(_p('instruments.pk'))
@@ -56,10 +58,16 @@ class BaseDataSource(AbstractDataSource):
         self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
         self._suspend_days = DateSet(_p('suspended_days.bcolz'))
 
+        self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
+        self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
+        self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
+
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
 
-    def get_dividend(self, order_book_id, adjusted=True):
+    def get_dividend(self, order_book_id, adjusted=True, public_fund=False):
+        if public_fund:
+            return self._public_fund_dividends.get_dividend(order_book_id)
         if adjusted:
             return self._adjusted_dividends.get_dividend(order_book_id)
         else:
@@ -89,6 +97,7 @@ class BaseDataSource(AbstractDataSource):
         'FenjiA': 3,
         'FenjiB': 3,
         'FenjiMu': 3,
+        'PublicFund': 4
     }
 
     def _index_of(self, instrument):
@@ -233,3 +242,15 @@ class BaseDataSource(AbstractDataSource):
 
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError
+
+    def public_fund_commission(self, instrument, buy):
+        if buy:
+            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Buy']
+        else:
+            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Buy']
+
+    def non_subscribable(self, order_book_id, dates):
+        return self._non_subscribable_days.contains(order_book_id, dates)
+
+    def non_redeemable(self, order_book_id, dates):
+        return self._non_redeemable_days.contains(order_book_id, dates)

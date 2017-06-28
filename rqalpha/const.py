@@ -117,6 +117,7 @@ class INSTRUMENT_TYPE(CustomEnum):
     FENJI_MU = "FENJI_MU"
     FENJI_A = "FENJI_A"
     FENJI_B = "FENJI_B"
+    PUBLIC_FUND= 'PublicFund'
 
 
 # noinspection PyPep8Naming

@@ -210,6 +210,8 @@ def instrument_type_str2enum(type_str):
         return INSTRUMENT_TYPE.FENJI_A
     elif type_str == "FenjiB":
         return INSTRUMENT_TYPE.FENJI_B
+    elif type_str == 'PublicFund':
+        return INSTRUMENT_TYPE.PUBLIC_FUND
     else:
         raise NotImplementedError
 
@@ -221,7 +223,8 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
     INSTRUMENT_TYPE.INDX,
     INSTRUMENT_TYPE.FENJI_MU,
     INSTRUMENT_TYPE.FENJI_A,
-    INSTRUMENT_TYPE.FENJI_B
+    INSTRUMENT_TYPE.FENJI_B,
+    INSTRUMENT_TYPE.PUBLIC_FUND
 ]
 
 

@@ -60,13 +60,18 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     @lru_cache(None)
     def get_dividend(self, order_book_id, adjusted=True):
+        if self.instruments(order_book_id).type == 'PublicFund':
+            return self._data_source.get_dividend(order_book_id, adjusted, public_fund=True)
         return self._data_source.get_dividend(order_book_id, adjusted)
 
     def get_split(self, order_book_id):
         return self._data_source.get_split(order_book_id)
 
     def get_dividend_by_book_date(self, order_book_id, date, adjusted=True):
-        table = self._data_source.get_dividend(order_book_id, adjusted)
+        if self.instruments(order_book_id).type == 'PublicFund':
+            table = self._data_source.get_dividend(order_book_id, adjusted, public_fund=True)
+        else:
+            table = self._data_source.get_dividend(order_book_id, adjusted)
         if table is None or len(table) == 0:
             return
 
@@ -191,3 +196,21 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_st_stock(order_book_id, trading_dates)
+
+    def non_subscribable(self, order_book_id, dt, count=1):
+        if count == 1:
+            return self._data_source.non_subscribable(order_book_id, [dt])[0]
+
+        trading_dates = self.get_n_trading_dates_until(dt, count)
+        return self._data_source.non_subscribable(order_book_id, trading_dates)
+
+    def non_redeemable(self, order_book_id, dt, count=1):
+        if count == 1:
+            return self._data_source.non_redeemable(order_book_id, [dt])[0]
+
+        trading_dates = self.get_n_trading_dates_until(dt, count)
+        return self._data_source.non_redeemable(order_book_id, trading_dates)
+
+    def public_fund_commission(self, order_book_id, buy):
+        instrument = self.instruments(order_book_id)
+        return self._data_source.public_fund_commission(instrument, buy)
