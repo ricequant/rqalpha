@@ -760,13 +760,13 @@ def get_dividend(order_book_id, start_date, *args, **kwargs):
                 start_date, dt
             ))
     order_book_id = assure_order_book_id(order_book_id)
-    df = env.data_proxy.get_dividend(order_book_id)
-    if df is None:
+    array = env.data_proxy.get_dividend(order_book_id)
+    if array is None:
         return None
 
     sd = start_date.year * 10000 + start_date.month * 100 + start_date.day
     ed = dt.year * 10000 + dt.month * 100 + dt.day
-    return df[(df['announcement_date'] >= sd) & (df['announcement_date'] <= ed)]
+    return array[(array['announcement_date'] >= sd) & (array['announcement_date'] <= ed)]
 
 
 @export_as_api
