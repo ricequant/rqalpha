@@ -172,7 +172,7 @@ class Matcher(object):
                 ).format(
                     order_book_id=order.order_book_id,
                     order_volume=order.quantity,
-                    filled_volume=order.filled_quantity
+                    filled_volume=order.filled_quantity,
                     volume_percent_limit=self._volume_percent * 100.0
                 )
                 order.mark_cancelled(reason)
