@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from bisect import bisect_right
 
 import numpy as np
 
@@ -31,7 +32,7 @@ def _factor_for_date(dates, factors, d):
         return 1
     if d > dates[-1]:
         return factors[-1]
-    pos = dates.searchsorted(d, side='right')
+    pos = bisect_right(dates, d)
     return factors[pos-1]
 
 
