@@ -32,8 +32,7 @@ from ..execution_context import ExecutionContext
 from ..model.instrument import Instrument
 from ..model.order import Order, OrderStyle, MarketOrder, LimitOrder
 from ..utils.arg_checker import apply_rules, verify_that
-# noinspection PyUnresolvedReferences
-from ..utils.exception import patch_user_exc, RQInvalidArgument
+from ..utils.exception import RQInvalidArgument
 from ..utils.i18n import gettext as _
 from ..utils.logger import user_system_log
 # noinspection PyUnresolvedReferences
