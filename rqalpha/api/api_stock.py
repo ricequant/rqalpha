@@ -278,7 +278,7 @@ def order_percent(id_or_ins, percent, style=MarketOrder()):
         #买入等于现有投资组合50%价值的平安银行股票。如果现在平安银行的股价是￥10/股并且现在的投资组合总价值是￥2000，那么将会买入200股的平安银行股票。（不包含交易成本和滑点的损失）：
         order_percent('000001.XSHG', 0.5)
     """
-    if percent < -1 or percent > 1:
+    if percent < -1 or percent > 1 or percent != percent:
         raise RQInvalidArgument(_(u"percent should between -1 and 1"))
 
     account = Environment.get_instance().portfolio.accounts[ACCOUNT_TYPE.STOCK]
@@ -359,7 +359,7 @@ def order_target_percent(id_or_ins, percent, style=MarketOrder()):
         #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会买入平安银行股票最终使其占据投资组合价值的15%：
         order_target_percent('000001.XSHE', 0.15)
     """
-    if percent < 0 or percent > 1:
+    if percent < 0 or percent > 1 or percent != percent:
         raise RQInvalidArgument(_(u"percent should between 0 and 1"))
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
