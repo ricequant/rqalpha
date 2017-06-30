@@ -45,8 +45,7 @@ class BaseDataSource(AbstractDataSource):
             DayBarStore(_p('stocks.bcolz'), StockBarConverter),
             DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
             DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
-            DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
-            DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter),
+            DayBarStore(_p('funds.bcolz'), FundDayBarConverter)
         ]
 
         self._instruments = InstrumentStore(_p('instruments.pk'))
@@ -58,12 +57,14 @@ class BaseDataSource(AbstractDataSource):
         self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
         self._suspend_days = DateSet(_p('suspended_days.bcolz'))
 
-        self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
-        self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
-        self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
-
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+
+        if os.path.exists(_p('public_funds.bcolz')):
+            self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
+            self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
+            self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
+            self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
 
     def get_dividend(self, order_book_id, adjusted=True, public_fund=False):
         if public_fund:
