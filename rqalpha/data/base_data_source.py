@@ -69,7 +69,7 @@ class BaseDataSource(AbstractDataSource):
     def get_dividend(self, order_book_id):
         return self._dividends.get_dividend(order_book_id)
 
-    def get_trading_minutes_for(self, order_book_id, trading_dt):
+    def get_trading_minutes_for(self, instrument, trading_dt):
         raise NotImplementedError
 
     def get_trading_calendar(self):
