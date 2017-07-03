@@ -56,8 +56,7 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
             _factor_for_date(dates, ex_cum_factors, end_date) == base_adjust_rate):
         return bars if fields is None else bars[fields]
 
-    factors = np.array([_factor_for_date(dates, ex_cum_factors, d) for d in bars['datetime']],
-                       dtype=np.float64)
+    factors = ex_cum_factors.take(dates.searchsorted(bars['datetime'], side='right') - 1)
 
     # 复权
     factors /= base_adjust_rate
@@ -65,7 +64,7 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
         if fields in PRICE_FIELDS:
             return bars[fields] * factors
         elif fields == 'volume':
-            return bars[fields] / factors
+            return bars[fields] * (1 / factors)
         # should not got here
         return bars[fields]
 
