@@ -60,6 +60,8 @@ def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
 
 def run_ipython_cell(line, cell=None):
     from rqalpha.__main__ import run
+    from .utils.py2 import clear_all_cached_functions
+    clear_all_cached_functions()
     args = line.split()
     args.extend(["--source-code", cell if cell is not None else ""])
     try:
@@ -71,6 +73,7 @@ def run_ipython_cell(line, cell=None):
 
 def run_file(strategy_file_path, config=None):
     from .utils.config import parse_config
+    from .utils.py2 import clear_all_cached_functions
     from . import main
 
     if config is None:
@@ -88,11 +91,13 @@ def run_file(strategy_file_path, config=None):
                 "strategy_file": strategy_file_path
             }
     config = parse_config(config)
+    clear_all_cached_functions()
     return main.run(config)
 
 
 def run_code(code, config=None):
     from .utils.config import parse_config
+    from .utils.py2 import clear_all_cached_functions
     from . import main
 
     if config is None:
@@ -104,11 +109,13 @@ def run_code(code, config=None):
         except:
             pass
     config = parse_config(config, source_code=code)
+    clear_all_cached_functions()
     return main.run(config, source_code=code)
 
 
 def run_func(**kwargs):
     from .utils import dummy_func
+    from .utils.py2 import clear_all_cached_functions
     from .utils.config import parse_config
     from . import main
 
@@ -130,5 +137,5 @@ def run_func(**kwargs):
         except:
             pass
     config = parse_config(config, user_funcs=user_funcs)
-
+    clear_all_cached_functions()
     return main.run(config, user_funcs=user_funcs)
