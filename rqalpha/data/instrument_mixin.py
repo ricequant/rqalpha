@@ -44,9 +44,9 @@ class InstrumentMixin(object):
 
     def all_instruments(self, itype='CS'):
         if itype is None:
-            return pd.DataFrame([[v.order_book_id, v.symbol, v.abbrev_symbol, v.type]
+            return pd.DataFrame([[v.order_book_id, v.symbol, v.type]
                                  for v in self._instruments.values()],
-                                columns=['order_book_id', 'symbol', 'abbrev_symbol', 'type'])
+                                columns=['order_book_id', 'symbol', 'type'])
 
         if itype not in ['CS', 'ETF', 'LOF', 'FenjiA', 'FenjiB', 'FenjiMu', 'INDX', 'Future']:
             raise ValueError('Unknown type {}'.format(itype))
