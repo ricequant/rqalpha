@@ -366,9 +366,9 @@ msgstr ""
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:169
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
-"larger than 25 percent of current bar volume, fill {filled_volume} "
+"larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} "
 "actually"
-msgstr "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的25%，实际成交 {filled_volume}。"
+msgstr "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 {volume_percent_limit}%，实际成交 {filled_volume}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:36
 msgid "invalid commission multiplier value: value range is [0, +∞)"
@@ -593,4 +593,3 @@ msgstr "无效的 persist mode: {persist_mode}"
 #~ "`--security stock/future` to specific security"
 #~ " type"
 #~ msgstr "交易标的不能为空，请通过 `--security stock/future` 来设置您策略的交易标的。"
-

@@ -390,7 +390,7 @@ get_dividend - 分红数据
     :param date: 查询日期，默认为策略当前日期。如指定，则应保证该日期不晚于策略当前日期
     :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
 
-    :return: `pandas.DataFrame` - 查询时间段内某个股票的分红数据
+    :return: `numpy.ndarray` - 查询时间段内某个股票的分红数据
 
         *   declaration_announcement_date: 分红宣布日，上市公司一般会提前一段时间公布未来的分红派息事件
         *   book_closure_date: 股权登记日
@@ -408,12 +408,12 @@ get_dividend - 分红数据
 
         get_dividend('000001.XSHE', start_date='20130104')
         #[Out]
-        #                              book_closure_date  dividend_cash_before_tax  \
-        #declaration_announcement_date
-        #2013-06-14                           2013-06-19                    0.9838
-        #                              ex_dividend_date payable_date  round_lot
-        #declaration_announcement_date
-        #2013-06-14                          2013-06-20   2013-06-20       10.0
+        #array([(20130614, 20130619, 20130620, 20130620,  1.7 , 10),
+        #       (20140606, 20140611, 20140612, 20140612,  1.6 , 10),
+        #       (20150407, 20150410, 20150413, 20150413,  1.74, 10),
+        #       (20160608, 20160615, 20160616, 20160616,  1.53, 10)],
+        #      dtype=[('announcement_date', '<u4'), ('book_closure_date', '<u4'), ('ex_dividend_date', '<u4'), ('payable_date', '<u4'), ('dividend_cash_before_tax', '<f8'), ('round_lot', '<u4')])
+
 
 get_split - 拆分数据
 ------------------------------------------------------
