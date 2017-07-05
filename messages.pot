@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-06-21 21:05+0800\n"
+"POT-Creation-Date: 2017-07-05 16:53+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -86,7 +86,7 @@ msgstr ""
 #: rqalpha/api/api_base.py:130 rqalpha/api/api_base.py:246
 #: rqalpha/api/api_base.py:277
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:293
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:463
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:453
 msgid "unsupported order_book_id type"
 msgstr ""
 
@@ -181,7 +181,6 @@ msgid ""
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:286
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:458
 msgid "{order_book_id} is not supported in current strategy type"
 msgstr ""
 
@@ -358,8 +357,8 @@ msgstr ""
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:169
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
-"larger than 25 percent of current bar volume, fill {filled_volume} "
-"actually"
+"larger than {volume_percent_limit} percent of current bar volume, fill "
+"{filled_volume} actually"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:36
@@ -528,29 +527,29 @@ msgid ""
 "'5m', '1d', got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/config.py:46
+#: rqalpha/utils/config.py:44
 msgid "config.yml not found in {config_path}"
 msgstr ""
 
-#: rqalpha/utils/config.py:104
+#: rqalpha/utils/config.py:102
 msgid "config path: {config_path} does not exist."
 msgstr ""
 
-#: rqalpha/utils/config.py:203
+#: rqalpha/utils/config.py:201
 msgid ""
 "data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to "
 "download data bundle."
 msgstr ""
 
-#: rqalpha/utils/config.py:245
+#: rqalpha/utils/config.py:243
 msgid "in parse_user_config, exception: {e}"
 msgstr ""
 
-#: rqalpha/utils/config.py:258
+#: rqalpha/utils/config.py:259
 msgid "None account type has been selected."
 msgstr ""
 
-#: rqalpha/utils/config.py:281
+#: rqalpha/utils/config.py:282
 msgid "unknown persist mode: {persist_mode}"
 msgstr ""
 
