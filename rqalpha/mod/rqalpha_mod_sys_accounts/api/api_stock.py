@@ -19,7 +19,7 @@ from decimal import Decimal, getcontext
 import six
 import numpy as np
 
-from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
+from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style, register_api
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
@@ -43,6 +43,9 @@ __all__ = [
     'market_close',
     'scheduler',
 ]
+
+
+register_api("scheduler", scheduler)
 
 
 def export_as_api(func):
