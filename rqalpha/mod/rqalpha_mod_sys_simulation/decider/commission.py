@@ -53,6 +53,7 @@ class StockCommission(BaseCommission):
         if env.data_proxy.instruments(order_book_id).type == 'PublicFund':
             if trade.side == SIDE.BUY:
                 rate = env.data_proxy.public_fund_commission(order_book_id, True)
+                rate = rate / (1 + rate)
             else:
                 rate = env.data_proxy.public_fund_commission(order_book_id, False)
             cost_money = trade.last_price * trade.last_quantity * rate * self.multiplier
