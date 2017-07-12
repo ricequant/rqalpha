@@ -82,7 +82,8 @@ class FuncatAPIMod(AbstractMod):
                             order_book_id, bar_count, freq, fields=None)
                 else:
                     bars = self.rqalpha_env.data_proxy.history_bars(
-                        order_book_id, bar_count, freq, field=None,
+                        order_book_id, bar_count, freq,
+                        field=["datetime", "open", "high", "low", "close", "volume"],
                         dt=dt)
                 return bars
 
