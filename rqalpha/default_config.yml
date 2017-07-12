@@ -48,6 +48,8 @@ extra:
   force_run_init_when_pt_resume: false
   # enable_profiler: 是否启动性能分析
   enable_profiler: false
+  # 选择是否开启分红再投资
+  dividend_reinvestment: false
   is_hold: false
   locale: zh_Hans_CN
 

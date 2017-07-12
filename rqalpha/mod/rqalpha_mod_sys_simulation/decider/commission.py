@@ -18,7 +18,7 @@ import abc
 from six import with_metaclass
 from collections import defaultdict
 
-from rqalpha.const import HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
+from rqalpha.const import HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 
 
@@ -48,6 +48,16 @@ class StockCommission(BaseCommission):
             4.2 如果commission 不等于 min_commission， 说明不是第一笔trade, 之前的trade中min_commission已经收过了，所以返回0.
         """
         order_id = trade.order_id
+        order_book_id = trade.order_book_id
+        env = Environment.get_instance()
+        if env.data_proxy.instruments(order_book_id).type == 'PublicFund':
+            if trade.side == SIDE.BUY:
+                rate = env.data_proxy.public_fund_commission(order_book_id, True)
+                rate = rate / (1 + rate)
+            else:
+                rate = env.data_proxy.public_fund_commission(order_book_id, False)
+            cost_money = trade.last_price * trade.last_quantity * rate * self.multiplier
+            return cost_money
         commission = self.commission_map[order_id]
         cost_money = trade.last_price * trade.last_quantity * self.rate * self.multiplier
         if cost_money > commission:

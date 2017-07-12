@@ -26,7 +26,7 @@ from ..utils.i18n import gettext as _
 
 from .future_info_cn import CN_FUTURE_INFO
 from .converter import StockBarConverter, IndexBarConverter
-from .converter import FutureDayBarConverter, FundDayBarConverter
+from .converter import FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
 from .daybar_store import DayBarStore
 from .date_set import DateSet
 from .dividend_store import DividendStore
@@ -35,6 +35,7 @@ from .trading_dates_store import TradingDatesStore
 from .yield_curve_store import YieldCurveStore
 from .simple_factor_store import SimpleFactorStore
 from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
+from .public_fund_commission import PUBLIC_FUND_COMMISSION
 
 
 class BaseDataSource(AbstractDataSource):
@@ -62,14 +63,21 @@ class BaseDataSource(AbstractDataSource):
 
             self.get_yield_curve = self._yield_curve.get_yield_curve
             self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+            if os.path.exists(_p('public_funds.bcolz')):
+                self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
+                self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
+                self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
+                self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
         except IOError as e:
             raise RuntimeError(
                 _(u"Bundle is out of date, please use `rqalpha update_bundle` to renew your bundle data."))
 
-    def get_dividend(self, order_book_id):
+    def get_dividend(self, order_book_id, public_fund=False):
+        if public_fund:
+            return self._public_fund_dividends.get_dividend(order_book_id)
         return self._dividends.get_dividend(order_book_id)
 
-    def get_trading_minutes_for(self, instrument, trading_dt):
+    def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
 
     def get_trading_calendar(self):
@@ -93,6 +101,7 @@ class BaseDataSource(AbstractDataSource):
         'FenjiA': 3,
         'FenjiB': 3,
         'FenjiMu': 3,
+        'PublicFund': 4
     }
 
     def _index_of(self, instrument):
@@ -203,3 +212,15 @@ class BaseDataSource(AbstractDataSource):
 
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError
+
+    def public_fund_commission(self, instrument, buy):
+        if buy:
+            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Buy']
+        else:
+            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Sell']
+
+    def non_subscribable(self, order_book_id, dates):
+        return self._non_subscribable_days.contains(order_book_id, dates)
+
+    def non_redeemable(self, order_book_id, dates):
+        return self._non_redeemable_days.contains(order_book_id, dates)

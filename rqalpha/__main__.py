@@ -102,6 +102,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
+@click.option("--dividend-reinvestment", "extra__dividend_reinvestment", is_flag=True, help="enable dividend reinvestment")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
