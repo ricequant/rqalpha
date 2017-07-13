@@ -101,7 +101,7 @@ class FuncatAPIMod(AbstractMod):
                 scale = 1
                 if freq[-1] == "m":
                     scale *= 240. / int(freq[:-1])
-                bar_count = int((end - start).days * scale)
+                bar_count = int(((end - start).days + 1) * scale)
 
                 dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
                 bars = self._history_bars(order_book_id, bar_count, freq, dt)
