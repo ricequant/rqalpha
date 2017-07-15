@@ -37,7 +37,7 @@ def _factor_for_date(dates, factors, d):
 
 
 def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
-    if ex_factors is None:
+    if ex_factors is None or len(bars) == 0:
         return bars if fields is None else bars[fields]
 
     dates = ex_factors['start_date']
