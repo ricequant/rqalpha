@@ -127,6 +127,9 @@ class Scheduler(object):
         if time_rule == 'before_trading':
             return lambda: self._is_before_trading()
 
+        if not isinstance(time_rule, int):
+            raise patch_user_exc(ValueError('invalid time_rule, "before_trading" or int expected, got {}'.format(repr(time_rule))))
+
         time_rule = time_rule if time_rule else self._minutes_since_midnight(9, 31)
         return lambda: self._should_trigger(time_rule)
 
