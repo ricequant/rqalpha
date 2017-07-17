@@ -160,11 +160,15 @@ class Scheduler(object):
         _verify_function('run_monthly', func)
         if tradingday is None and 'monthday' in kwargs:
             tradingday = kwargs.pop('monthday')
+
         if kwargs:
             raise patch_user_exc(ValueError('unknown argument: {}'.format(kwargs)))
 
         if tradingday is None:
             raise patch_user_exc(ValueError('tradingday is required'))
+
+        if not isinstance(tradingday, int):
+            raise patch_user_exc(ValueError('tradingday: <int> excpected, {} got'.format(repr(tradingday))))
 
         if tradingday > 23 or tradingday < -23 or tradingday == 0:
             raise patch_user_exc(ValueError('invalid tradingday, should be in [-23, 0), (0, 23]'))
