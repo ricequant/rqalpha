@@ -105,7 +105,7 @@ Mod名                      说明
 
 ..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/RQPro.jpeg
 
-目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以联系我们的机构端产品销售获得机构端产品功能支持，也可通过 `RQPro `_ 登记试用。「销售电话」：0755-33967716 「QQ」：4848371
+目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以联系我们的机构端产品销售获得机构端产品功能支持，也可通过 `RQPro`_ 登记试用。「销售电话」：0755-33967716 「QQ」：4848371
 
 RQPro产品功能：
 
@@ -187,7 +187,7 @@ Feature Status
 .. _Ricequant 社区: https://www.ricequant.com/community/category/all/
 .. _FAQ: http://rqalpha.readthedocs.io/zh_CN/latest/faq.html
 .. _索引: http://rqalpha.readthedocs.io/zh_CN/latest/genindex.html
-.. _RQPro : https://www.ricequant.com/rqpro_propaganda
+.. _RQPro: https://www.ricequant.com/rqpro_propaganda
 
 .. _RQAlpha 介绍: http://rqalpha.readthedocs.io/zh_CN/latest/intro/overview.html
 .. _安装指南: http://rqalpha.readthedocs.io/zh_CN/latest/intro/install.html
