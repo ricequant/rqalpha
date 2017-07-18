@@ -40,6 +40,9 @@ class StockPosition(BasePosition):
         self._frozen = 0            # 冻结量
         self._transaction_cost = 0  # 交易费用
 
+    def __repr__(self):
+        return 'StockPosition({})'.format(self.__dict__)
+
     def get_state(self):
         return {
             'order_book_id': self._order_book_id,
