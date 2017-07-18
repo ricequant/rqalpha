@@ -98,7 +98,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def _get_prev_close(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
         bar = self._data_source.history_bars(instrument, 2, '1d', 'close', dt,
-                                             skip_suspended=False, include_now=False)
+                                             skip_suspended=False, include_now=False, adjust_orig=dt)
         if bar is None or len(bar) < 2:
             return np.nan
         return bar[0]
@@ -110,7 +110,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def _get_prev_settlement(self, instrument, dt):
         prev_trading_date = self.get_previous_trading_date(dt)
         bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', prev_trading_date,
-                                             skip_suspended=False)
+                                             skip_suspended=False, adjust_orig=dt)
         if bar is None or len(bar) == 0:
             return np.nan
         return bar[0]
@@ -135,7 +135,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
         data = self.history_bars(order_book_id, bar_count, frequency,
-                                 ['datetime', field], dt, skip_suspended=False)
+                                 ['datetime', field], dt, skip_suspended=False, adjust_orig=dt)
         if data is None:
             return None
         return pd.Series(data[field], index=[convert_int_to_datetime(t) for t in data['datetime']])
