@@ -532,8 +532,8 @@ def all_instruments(type=None, date=None):
         return pd.DataFrame([i.__dict__ for i in result])
 
     return pd.DataFrame(
-        [[i.order_book_id, i.symbol, i.abbrev_symbol, i.type, i.listed_date, i.de_listed_date] for i in result],
-        columns=['order_book_id', 'symbol', 'abbrev_symbol', 'type', 'listed_date', 'de_listed_date'])
+        [[i.order_book_id, i.symbol, i.type, i.listed_date, i.de_listed_date] for i in result],
+        columns=['order_book_id', 'symbol', 'type', 'listed_date', 'de_listed_date'])
 
 
 @export_as_api
