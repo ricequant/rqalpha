@@ -27,6 +27,9 @@ class StrategyUniverse(object):
     def __init__(self):
         self._set = set()
         Environment.get_instance().event_bus.prepend_listener(EVENT.AFTER_TRADING, self._clear_de_listed)
+        Environment.get_instance().event_bus.add_listener(
+            EVENT.ORDER_PENDING_NEW, lambda e: self._set.add(e.order.order_book_id)
+        )
 
     def get_state(self):
         return json.dumps(sorted(self._set)).encode('utf-8')
@@ -36,9 +39,10 @@ class StrategyUniverse(object):
         self.update(l)
 
     def update(self, universe):
+        current_positions = Environment.get_instance().portfolio.positions
         if isinstance(universe, (six.string_types, Instrument)):
             universe = [universe]
-        new_set = set(universe)
+        new_set = set(universe).union(current_positions)
         if new_set != self._set:
             self._set = new_set
             Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_UNIVERSE_CHANGED, universe=self._set))
