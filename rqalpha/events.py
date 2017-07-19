@@ -140,6 +140,9 @@ class EVENT(Enum):
 
     ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'
 
+    # 计时器事件
+    TIMER = 'timer'
+
 
 def parse_event(event_str):
     return EVENT.__members__.get(event_str.upper(), None)

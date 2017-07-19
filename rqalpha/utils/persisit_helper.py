@@ -56,7 +56,7 @@ class PersistHelper(object):
             event_bus.add_listener(EVENT.POST_BEFORE_TRADING, self.persist)
             event_bus.add_listener(EVENT.POST_AFTER_TRADING, self.persist)
             event_bus.add_listener(EVENT.POST_BAR, self.persist)
-            event_bus.add_listener(EVENT.POST_TICK, self.persist)
+            event_bus.add_listener(EVENT.TIMER, self.persist)
             event_bus.add_listener(EVENT.POST_SETTLEMENT, self.persist)
 
     def persist(self, *args):
