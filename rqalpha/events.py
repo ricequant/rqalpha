@@ -141,7 +141,7 @@ class EVENT(Enum):
     ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'
 
     # 计时器事件
-    TIMER = 'timer'
+    DO_PERSIST = 'do_persist'
 
 
 def parse_event(event_str):
