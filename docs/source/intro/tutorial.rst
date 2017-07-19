@@ -190,7 +190,7 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
     *   :func:`order_target_percent`: 【股票专用】按照目标比例下单
     *   :func:`buy_open`: 【期货专用】买开
     *   :func:`sell_close`:【期货专用】 平买仓
-    *   :func:`sell_opem`: 【期货专用】卖开
+    *   :func:`sell_open`: 【期货专用】卖开
     *   :func:`buy_close`: 【期货专用】平卖仓
     *   :func:`cancel_order`: 撤单
     *   :func:`get_open_orders`: 获取未成交订单数据
