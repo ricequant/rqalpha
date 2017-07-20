@@ -18,6 +18,7 @@ import six
 import json
 import copy
 
+from ..utils.logger import user_system_log
 from ..events import EVENT, Event
 from ..environment import Environment
 from ..model.instrument import Instrument
@@ -43,6 +44,8 @@ class StrategyUniverse(object):
         if isinstance(universe, (six.string_types, Instrument)):
             universe = [universe]
         new_set = set(universe).union(current_positions)
+        if new_set != universe:
+            user_system_log.warn('Instruments in positions should always be in universe. Universe has been updated automatically.')
         if new_set != self._set:
             self._set = new_set
             Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_UNIVERSE_CHANGED, universe=self._set))
