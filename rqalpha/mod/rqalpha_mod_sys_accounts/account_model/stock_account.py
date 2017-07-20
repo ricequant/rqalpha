@@ -46,8 +46,8 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
         if self.AGGRESSIVE_UPDATE_LAST_PRICE:
-            event_bus.add_listener(EVENT.BAR, self._update_last_price)
-            event_bus.add_listener(EVENT.TICK, self._update_last_price)
+            event_bus.add_listener(EVENT.BAR, self._on_bar)
+            event_bus.add_listener(EVENT.TICK, self._on_tick)
 
     def order(self, order_book_id, quantity, style, target=False):
         position = self.positions[order_book_id]
@@ -168,9 +168,13 @@ class StockAccount(BaseAccount):
         self._backward_trade_set.clear()
         self._handle_dividend_book_closure(event.trading_dt.date())
 
-    def _update_last_price(self, event):
+    def _on_bar(self, event):
         for position in self._positions.values():
             position.update_last_price()
+
+    def _on_tick(self, event):
+        if event.tick.order_book_id in self._positions:
+            self._positions[event.tick.order_book_id]._last_price = event.tick.last
 
     @property
     def type(self):
