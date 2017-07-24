@@ -644,8 +644,8 @@ def concept(*concept_names):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('start_date').is_valid_date(ignore_none=False))
-@apply_rules(verify_that('end_date').is_valid_date(ignore_none=False))
+@apply_rules(verify_that('start_date').is_valid_date(ignore_none=False),
+             verify_that('end_date').is_valid_date(ignore_none=False))
 def get_trading_dates(start_date, end_date):
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
@@ -677,13 +677,15 @@ def get_trading_dates(start_date, end_date):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('date').is_valid_date(ignore_none=False))
-def get_previous_trading_date(date):
+@apply_rules(verify_that('date').is_valid_date(ignore_none=False),
+             verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
+def get_previous_trading_date(date, n=1):
     """
-    获取指定日期的上一交易日。
+    获取指定日期的之前的第 n 个交易日。
 
     :param date: 指定日期
     :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
+    :param n:
 
     :return: `datetime.date`
 
@@ -696,7 +698,7 @@ def get_previous_trading_date(date):
         [Out]
         [datetime.date(2016, 4, 29)]
     """
-    return Environment.get_instance().data_proxy.get_previous_trading_date(date)
+    return Environment.get_instance().data_proxy.get_previous_trading_date(date, n)
 
 
 @export_as_api
@@ -706,13 +708,15 @@ def get_previous_trading_date(date):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('date').is_valid_date(ignore_none=False))
-def get_next_trading_date(date):
+@apply_rules(verify_that('date').is_valid_date(ignore_none=False),
+             verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
+def get_next_trading_date(date, n=1):
     """
-    获取指定日期的下一交易日
+    获取指定日期之后的第 n 个交易日
 
     :param date: 指定日期
     :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
+    :param n:
 
     :return: `datetime.date`
 
@@ -725,7 +729,7 @@ def get_next_trading_date(date):
         [Out]
         [datetime.date(2016, 5, 3)]
     """
-    return Environment.get_instance().data_proxy.get_next_trading_date(date)
+    return Environment.get_instance().data_proxy.get_next_trading_date(date, n)
 
 
 def to_date(date):
