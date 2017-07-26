@@ -72,6 +72,11 @@ def load_mod_config(config_path, loader=yaml.Loader):
                 'enabled': True
             }
             dump_config(config_path, mod_config)
+        if 'sys_stat' not in mod_config['mod']:
+            mod_config['mod']['sys_stat'] = {
+                'enabled': False
+            }
+            dump_config(config_path, mod_config)
         return mod_config
 
 
