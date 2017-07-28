@@ -168,7 +168,7 @@ class FutureAccount(BaseAccount):
     @staticmethod
     def _frozen_cash_of_order(order):
         if order.position_effect == POSITION_EFFECT.OPEN:
-            return margin_of(order.order_book_id, order.quantity, order.frozen_price)
+            return margin_of(order.order_book_id, order.unfilled_quantity, order.frozen_price)
         else:
             return 0
 
