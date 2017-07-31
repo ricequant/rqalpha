@@ -296,6 +296,7 @@ def run(config, source_code=None, user_funcs=None):
             output_profile_result(env)
 
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
+        # NOTE should NOT append any code below
         system_log.debug(_(u"strategy run successfully, normal exit"))
         return result
     except CustomException as e:

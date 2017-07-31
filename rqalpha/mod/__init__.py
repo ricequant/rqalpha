@@ -70,7 +70,11 @@ class ModHandler(object):
     def tear_down(self, *args):
         result = {}
         for mod_name, __ in reversed(self._mod_list):
-            ret = self._mod_dict[mod_name].tear_down(*args)
+            try:
+                ret = self._mod_dict[mod_name].tear_down(*args)
+            except Exception as e:
+                system_log.exception("tear down fail for {}", mod_name)
+                continue
             if ret is not None:
                 result[mod_name] = ret
         return result
