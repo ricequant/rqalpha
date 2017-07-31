@@ -16,8 +16,9 @@
 
 import os.path
 from gettext import NullTranslations, translation
-from .logger import system_log
-from .py2 import to_utf8
+
+from rqalpha.utils.logger import system_log
+from rqalpha.utils.py2 import to_utf8
 
 
 class Localization(object):

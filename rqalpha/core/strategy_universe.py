@@ -18,10 +18,10 @@ import six
 import json
 import copy
 
-from ..utils.logger import user_system_log
-from ..events import EVENT, Event
-from ..environment import Environment
-from ..model.instrument import Instrument
+from rqalpha.utils.logger import user_system_log
+from rqalpha.events import EVENT, Event
+from rqalpha.environment import Environment
+from rqalpha.model.instrument import Instrument
 
 
 class StrategyUniverse(object):

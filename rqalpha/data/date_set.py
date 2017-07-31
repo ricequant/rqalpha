@@ -17,7 +17,7 @@
 import bcolz
 import numpy as np
 
-from ..utils.py2 import lru_cache
+from rqalpha.utils.py2 import lru_cache
 
 
 class DateSet(object):

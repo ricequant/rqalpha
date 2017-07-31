@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import api_base, api_extension
+from rqalpha.api import api_base, api_extension
 
 
 def get_apis():

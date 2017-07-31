@@ -14,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..interface import AbstractPosition
-from ..environment import Environment
-from ..utils.repr import property_repr
-from ..utils.i18n import gettext as _
-from ..utils.logger import user_system_log
+from rqalpha.interface import AbstractPosition
+from rqalpha.environment import Environment
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 
 class Positions(dict):

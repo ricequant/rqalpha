@@ -17,7 +17,7 @@
 import datetime
 from collections import namedtuple
 
-from .py2 import lru_cache
+from rqalpha.utils.py2 import lru_cache
 
 
 TimeRange = namedtuple('TimeRange', ['start', 'end'])

@@ -17,11 +17,11 @@
 import six
 import pickle
 
-from ..const import DEFAULT_ACCOUNT_TYPE
-from ..environment import Environment
-from ..utils.logger import user_system_log, system_log
-from ..utils.i18n import gettext as _
-from ..utils.repr import property_repr
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE
+from rqalpha.environment import Environment
+from rqalpha.utils.logger import user_system_log, system_log
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.repr import property_repr
 
 
 class RunInfo(object):

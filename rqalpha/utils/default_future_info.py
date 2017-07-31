@@ -16,7 +16,7 @@
 
 from datetime import time
 
-from .datetime_func import TimeRange
+from rqalpha.utils.datetime_func import TimeRange
 
 
 NIGHT_UNDERLYING_SYMBOL = ["CU", "AL", "ZN", "PB", "SN", "NI", "RB", "HC", "BU", "RU", "AU", "AG", "Y", "M", "A", "B",

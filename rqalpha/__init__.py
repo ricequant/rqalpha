@@ -20,8 +20,8 @@ RQAlpha - a Algorithm Trading System
 
 import pkgutil
 
-from .__main__ import cli
-from .api.api_base import export_as_api
+from rqalpha.__main__ import cli
+from rqalpha.api.api_base import export_as_api
 
 __all__ = [
     '__version__',
@@ -47,14 +47,14 @@ def load_ipython_extension(ipython):
 
 
 def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
-    from . import main
+    from rqalpha import main
     main.update_bundle(data_bundle_path=data_bundle_path, locale=locale, confirm=confirm)
 
 
 def run(config, source_code=None):
     # [Deprecated]
-    from .utils.config import parse_config
-    from . import main
+    from rqalpha.utils.config import parse_config
+    from rqalpha import main
 
     config = parse_config(config, source_code=source_code)
     return main.run(config, source_code=source_code)
@@ -62,7 +62,7 @@ def run(config, source_code=None):
 
 def run_ipython_cell(line, cell=None):
     from rqalpha.__main__ import run
-    from .utils.py2 import clear_all_cached_functions
+    from rqalpha.utils.py2 import clear_all_cached_functions
     clear_all_cached_functions()
     args = line.split()
     args.extend(["--source-code", cell if cell is not None else ""])
@@ -74,9 +74,9 @@ def run_ipython_cell(line, cell=None):
 
 
 def run_file(strategy_file_path, config=None):
-    from .utils.config import parse_config
-    from .utils.py2 import clear_all_cached_functions
-    from . import main
+    from rqalpha.utils.config import parse_config
+    from rqalpha.utils.py2 import clear_all_cached_functions
+    from rqalpha import main
 
     if config is None:
         config = {
@@ -98,9 +98,9 @@ def run_file(strategy_file_path, config=None):
 
 
 def run_code(code, config=None):
-    from .utils.config import parse_config
-    from .utils.py2 import clear_all_cached_functions
-    from . import main
+    from rqalpha.utils.config import parse_config
+    from rqalpha.utils.py2 import clear_all_cached_functions
+    from rqalpha import main
 
     if config is None:
         config = {}
@@ -116,10 +116,10 @@ def run_code(code, config=None):
 
 
 def run_func(**kwargs):
-    from .utils import dummy_func
-    from .utils.py2 import clear_all_cached_functions
-    from .utils.config import parse_config
-    from . import main
+    from rqalpha.utils import dummy_func
+    from rqalpha.utils.py2 import clear_all_cached_functions
+    from rqalpha.utils.config import parse_config
+    from rqalpha import main
 
     config = kwargs.get('config', kwargs.get('__config__', None))
 
@@ -145,8 +145,8 @@ def run_func(**kwargs):
 
 def subscribe_event(event_type, handler):
     import types
-    from .events import EVENT
-    from .environment import Environment
+    from rqalpha.events import EVENT
+    from rqalpha.environment import Environment
 
     assert isinstance(handler, types.FunctionType)
     assert isinstance(event_type, EVENT)

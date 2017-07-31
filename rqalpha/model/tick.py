@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..utils.datetime_func import convert_date_time_ms_int_to_datetime
+from rqalpha.utils.datetime_func import convert_date_time_ms_int_to_datetime
 
 
 class Tick(object):

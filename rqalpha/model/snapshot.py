@@ -18,8 +18,8 @@ import six
 import datetime
 import numpy as np
 
-from ..utils.datetime_func import convert_int_to_datetime
-from ..model.tick import Tick
+from rqalpha.utils.datetime_func import convert_int_to_datetime
+from rqalpha.model.tick import Tick
 
 
 class SnapshotObject(object):

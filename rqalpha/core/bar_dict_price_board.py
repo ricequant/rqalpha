@@ -16,8 +16,8 @@
 
 import numpy as np
 
-from ..interface import AbstractPriceBoard
-from ..environment import Environment
+from rqalpha.interface import AbstractPriceBoard
+from rqalpha.environment import Environment
 
 
 class BarDictPriceBoard(AbstractPriceBoard):

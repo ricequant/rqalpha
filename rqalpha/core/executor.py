@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..events import EVENT, Event
+from rqalpha.events import EVENT, Event
 
 PRE_BEFORE_TRADING = Event(EVENT.PRE_BEFORE_TRADING)
 POST_BEFORE_TRADING = Event(EVENT.POST_BEFORE_TRADING)

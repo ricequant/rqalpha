@@ -20,9 +20,9 @@ from collections import OrderedDict
 
 import jsonpickle
 
-from ..events import EVENT
-from .logger import system_log
-from ..const import PERSIST_MODE
+from rqalpha.events import EVENT
+from rqalpha.const import PERSIST_MODE
+from rqalpha.utils.logger import system_log
 
 
 class CoreObjectsPersistProxy(object):

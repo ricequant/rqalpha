@@ -21,7 +21,7 @@ import better_exceptions
 from logbook import Logger
 from logbook.more import ColorizedStderrHandler
 
-from .py2 import to_utf8, from_utf8
+from rqalpha.utils.py2 import to_utf8, from_utf8
 
 logbook.set_datetime_format("local")
 
@@ -56,7 +56,7 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.00"
 
 
 def user_std_handler_log_formatter(record, handler):
-    from ..environment import Environment
+    from rqalpha.environment import Environment
     try:
         dt = Environment.get_instance().calendar_dt.strftime(DATETIME_FORMAT)
     except Exception:

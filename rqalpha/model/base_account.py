@@ -16,10 +16,10 @@
 
 import six
 
-from ..interface import AbstractAccount
-from ..utils.repr import property_repr
-from ..utils.i18n import gettext as _
-from ..utils.logger import user_system_log
+from rqalpha.interface import AbstractAccount
+from rqalpha.utils.repr import property_repr
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 
 class BaseAccount(AbstractAccount):

@@ -16,11 +16,11 @@
 
 import time
 
-from ..const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
-from ..utils import id_gen
-from ..utils.repr import property_repr, properties
-from ..utils.logger import user_system_log
-from ..environment import Environment
+from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
+from rqalpha.utils import id_gen
+from rqalpha.utils.repr import property_repr, properties
+from rqalpha.utils.logger import user_system_log
+from rqalpha.environment import Environment
 
 
 class Order(object):

@@ -25,13 +25,13 @@ import codecs
 import shutil
 from pprint import pformat
 
-from . import RqAttrDict, logger
-from .logger import user_log, user_system_log, system_log, std_log
-from ..const import RUN_TYPE, PERSIST_MODE
-from ..utils.i18n import gettext as _, localization
-from ..utils.dict_func import deep_update
-from ..utils.py2 import to_utf8
-from ..mod.utils import mod_config_value_parse
+from rqalpha.const import RUN_TYPE, PERSIST_MODE
+from rqalpha.utils import RqAttrDict, logger
+from rqalpha.utils.i18n import gettext as _, localization
+from rqalpha.utils.dict_func import deep_update
+from rqalpha.utils.py2 import to_utf8
+from rqalpha.utils.logger import user_log, user_system_log, system_log, std_log
+from rqalpha.mod.utils import mod_config_value_parse
 
 
 rqalpha_path = "~/.rqalpha"

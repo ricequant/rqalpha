@@ -22,8 +22,8 @@ import click
 import yaml
 from importlib import import_module
 
-from .utils.click_helper import Date
-from .utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
+from rqalpha.utils.click_helper import Date
+from rqalpha.utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
 
 CONTEXT_SETTINGS = {
     'default_map': {
@@ -77,7 +77,7 @@ def update_bundle(data_bundle_path, locale):
     """
     Sync Data Bundle
     """
-    from . import main
+    from rqalpha import main
     main.update_bundle(data_bundle_path, locale)
 
 
@@ -117,17 +117,17 @@ def run(**kwargs):
     if not kwargs.get('base__securities', None):
         kwargs.pop('base__securities', None)
 
-    from . import main
+    from rqalpha import main
     source_code = kwargs.get("base__source_code")
     cfg = parse_config(kwargs, config_path=config_path, click_type=True, source_code=source_code)
     source_code = cfg.base.source_code
     results = main.run(cfg, source_code=source_code)
 
     # store results into ipython when running in ipython
-    from .utils import is_run_from_ipython
+    from rqalpha.utils import is_run_from_ipython
     if is_run_from_ipython():
         import IPython
-        from .utils import RqAttrDict
+        from rqalpha.utils import RqAttrDict
         ipy = IPython.get_ipython()
         report = results.get("sys_analyser", {})
         ipy.user_global_ns["results"] = results

@@ -27,25 +27,25 @@ import pandas as pd
 import six
 from dateutil.parser import parse
 
-from . import names
-from ..environment import Environment
-from ..execution_context import ExecutionContext
-from ..utils import to_industry_code, to_sector_name, unwrapper
-from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
-from ..utils.i18n import gettext as _
+from rqalpha.api import names
+from rqalpha.environment import Environment
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.utils import to_industry_code, to_sector_name, unwrapper
+from rqalpha.utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
+from rqalpha.utils.i18n import gettext as _
 # noinspection PyUnresolvedReferences
-from ..utils.logger import user_log as logger
+from rqalpha.utils.logger import user_log as logger
 
-from ..model.instrument import SectorCodeItem, IndustryCodeItem
-from ..utils.arg_checker import apply_rules, verify_that
+from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
+from rqalpha.utils.arg_checker import apply_rules, verify_that
 # noinspection PyUnresolvedReferences
-from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
+from rqalpha.model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
 # noinspection PyUnresolvedReferences
-from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
+from rqalpha.const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
 # noinspection PyUnresolvedReferences
-from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 # noinspection PyUnresolvedReferences
-from ..events import EVENT
+from rqalpha.events import EVENT
 
 
 __all__ = [
