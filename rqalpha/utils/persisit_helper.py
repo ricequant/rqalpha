@@ -60,15 +60,18 @@ class PersistHelper(object):
             event_bus.add_listener(EVENT.POST_SETTLEMENT, self.persist)
 
     def persist(self, *args):
-        for key, obj in six.iteritems(self._objects):
-            state = obj.get_state()
-            if not state:
-                continue
-            md5 = hashlib.md5(state).hexdigest()
-            if self._last_state.get(key) == md5:
-                continue
-            self._persist_provider.store(key, state)
-            self._last_state[key] = md5
+        try:
+            for key, obj in six.iteritems(self._objects):
+                state = obj.get_state()
+                if not state:
+                    continue
+                md5 = hashlib.md5(state).hexdigest()
+                if self._last_state.get(key) == md5:
+                    continue
+                self._persist_provider.store(key, state)
+                self._last_state[key] = md5
+        except Exception as e:
+            system_log.exception("PersistHelper.persist fail")
 
     def register(self, key, obj):
         if key in self._objects:
