@@ -48,77 +48,77 @@ class RunInfo(object):
     @property
     def start_date(self):
         """
-        :property getter: 策略的开始日期
+        [datetime.date] 策略的开始日期
         """
         return self._start_date
 
     @property
     def end_date(self):
         """
-        :property getter: 策略的结束日期
+        [datetime.date] 策略的结束日期
         """
         return self._end_date
 
     @property
     def frequency(self):
         """
-        :property getter: 策略频率，'1d'或'1m'
+        [str] 策略频率，'1d'或'1m'
         """
         return self._frequency
 
     @property
     def stock_starting_cash(self):
         """
-        :property getter: 股票账户初始资金
+        [float] 股票账户初始资金
         """
         return self._stock_starting_cash
 
     @property
     def future_starting_cash(self):
         """
-        :property getter: 期货账户初始资金
+        [float] 期货账户初始资金
         """
         return self._future_starting_cash
 
     @property
     def slippage(self):
         """
-        :property getter: 滑点水平
+        [float] 滑点水平
         """
         return self._slippage
 
     @property
     def benchmark(self):
         """
-        :property getter: 基准合约代码
+        [str] 基准合约代码
         """
         return self._benchmark
 
     @property
     def matching_type(self):
         """
-        :property getter: 撮合方式
+        [str] 撮合方式
         """
         return self._matching_type
 
     @property
     def commission_multiplier(self):
         """
-        :property getter: 手续费倍率
+        [float] 手续费倍率
         """
         return self._commission_multiplier
 
     @property
     def margin_multiplier(self):
         """
-        :property getter: 保证金倍率
+        [float] 保证金倍率
         """
         return self._margin_multiplier
 
     @property
     def run_type(self):
         """
-        :property getter: 运行类型
+        [str] 运行类型
         """
         return self._run_type
 
@@ -156,25 +156,25 @@ class StrategyContext(object):
     @property
     def universe(self):
         """
+        list[`str`]
+
         在运行 :func:`update_universe`, :func:`subscribe` 或者 :func:`unsubscribe` 的时候，合约池会被更新。
 
         需要注意，合约池内合约的交易时间（包含股票的策略默认会在股票交易时段触发）是handle_bar被触发的依据。
-
-        :property getter: list[`str`]
         """
         return Environment.get_instance().get_universe()
 
     @property
     def now(self):
         """
-        使用以上的方式就可以在handle_bar中拿到当前的bar的时间，比如day bar的话就是那天的时间，minute bar的话就是这一分钟的时间点。
+        [datetime.datetime] 当前 Bar 所对应的时间
         """
         return Environment.get_instance().calendar_dt
 
     @property
     def run_info(self):
         """
-        :property getter: :class:`~RunInfo`
+        [:class:`~RunInfo`] 运行信息
         """
         config = Environment.get_instance().config
         return RunInfo(config)
@@ -182,7 +182,7 @@ class StrategyContext(object):
     @property
     def portfolio(self):
         """
-        投资组合
+        [:class:`~Portfolio`] 投资组合
 
         =========================   =========================   ==============================================================================
         属性                         类型                        注释
@@ -201,7 +201,6 @@ class StrategyContext(object):
         market_value                float                       投资组合当前的市场价值，为子组合市场价值的加总
         =========================   =========================   ==============================================================================
 
-        :property getter: :class:`~Portfolio`
         """
         return Environment.get_instance().portfolio
 
