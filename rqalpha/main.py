@@ -294,11 +294,6 @@ def run(config, source_code=None, user_funcs=None):
 
         if env.profile_deco:
             output_profile_result(env)
-
-        result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
-        # NOTE should NOT append any code below
-        system_log.debug(_(u"strategy run successfully, normal exit"))
-        return result
     except CustomException as e:
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
@@ -316,6 +311,10 @@ def run(config, source_code=None, user_funcs=None):
         code = _exception_handler(user_exc)
 
         mod_handler.tear_down(code, user_exc)
+    else:
+        result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
+        system_log.debug(_(u"strategy run successfully, normal exit"))
+        return result
 
 
 def _exception_handler(e):
