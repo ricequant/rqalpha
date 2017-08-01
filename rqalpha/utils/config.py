@@ -228,7 +228,10 @@ def parse_user_config_from_code(config, source_code=None):
             with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
                 source_code = f.read()
 
-        scope = {}
+        # FIXME hardcode for parametric mod
+        def noop(*args, **kwargs):
+            pass
+        scope = {'define_parameter': noop}
 
         code = compile(source_code, config["base"]["strategy_file"], 'exec')
         six.exec_(code, scope)
