@@ -23,7 +23,7 @@ import yaml
 from importlib import import_module
 
 from rqalpha.utils.click_helper import Date
-from rqalpha.utils.config import parse_config, get_mod_config_path, dump_config, load_mod_config
+from rqalpha.utils.config import parse_config, dump_config
 
 CONTEXT_SETTINGS = {
     'default_map': {
@@ -41,10 +41,10 @@ def cli(ctx, verbose):
 
 
 def inject_mod_commands():
+    from rqalpha.utils.config import get_mod_conf
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.package_helper import import_mod
-    mod_config_path = get_mod_config_path()
-    mod_config = load_mod_config(mod_config_path)
+    mod_config = get_mod_conf()
 
     for mod_name, config in six.iteritems(mod_config['mod']):
         if 'lib' in config:
@@ -196,16 +196,16 @@ def mod(cmd, params):
         """
         from colorama import init, Fore
         from tabulate import tabulate
+        from rqalpha.utils.config import get_mod_conf
         init()
-        mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
 
+        mod_config = get_mod_conf()
         table = []
 
         for mod_name, mod in six.iteritems(mod_config['mod']):
             table.append([
                 Fore.RESET + mod_name,
-                Fore.GREEN + "enabled" + Fore.RESET if mod['enabled'] else Fore.RED + "disabled" + Fore.RESET
+                (Fore.GREEN + "enabled" if mod['enabled'] else Fore.RED + "disabled") + Fore.RESET
             ])
 
         headers = [
@@ -244,8 +244,8 @@ def mod(cmd, params):
         installed_result = pip_main(params)
 
         # Export config
-        mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
+        from rqalpha.utils.config import load_yaml, user_mod_conf_path
+        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
 
         if installed_result == 0:
             # 如果为0，则说明安装成功
@@ -267,11 +267,11 @@ def mod(cmd, params):
                     mod_name = mod_name.replace("rqalpha_mod_", "")
                 if "==" in mod_name:
                     mod_name = mod_name.split('==')[0]
-                mod_config['mod'][mod_name] = {}
-                mod_config['mod'][mod_name]['enabled'] = False
+                user_conf['mod'][mod_name] = {}
+                user_conf['mod'][mod_name]['enabled'] = False
 
-            dump_config(mod_config_path, mod_config)
-        list({})
+            dump_config(user_mod_conf_path(), user_conf)
+
         return installed_result
 
     def uninstall(params):
@@ -302,17 +302,16 @@ def mod(cmd, params):
         # Uninstall Mod
         uninstalled_result = pip_main(params)
         # Remove Mod Config
-        mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
+        from rqalpha.utils.config import user_mod_conf_path, load_yaml
+        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
 
         for mod_name in mod_list:
             if "rqalpha_mod_" in mod_name:
                 mod_name = mod_name.replace("rqalpha_mod_", "")
 
-            del mod_config['mod'][mod_name]
+            del user_conf['mod'][mod_name]
 
-        dump_config(mod_config_path, mod_config)
-        list({})
+        dump_config(user_mod_conf_path(), user_conf)
         return uninstalled_result
 
     def enable(params):
@@ -334,16 +333,15 @@ def mod(cmd, params):
             if installed_result != 0:
                 return
 
-        mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
+        from rqalpha.utils.config import user_mod_conf_path, load_yaml
+        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
 
         try:
-            mod_config['mod'][mod_name]['enabled'] = True
+            user_conf['mod'][mod_name]['enabled'] = True
         except KeyError:
-            mod_config['mod'][mod_name] = {'enabled': True}
+            user_conf['mod'][mod_name] = {'enabled': True}
 
-        dump_config(mod_config_path, mod_config)
-        list({})
+        dump_config(user_mod_conf_path(), user_conf)
 
     def disable(params):
         """
@@ -354,15 +352,15 @@ def mod(cmd, params):
         if "rqalpha_mod_" in mod_name:
             mod_name = mod_name.replace("rqalpha_mod_", "")
 
-        mod_config_path = get_mod_config_path(generate=True)
-        mod_config = load_mod_config(mod_config_path, loader=yaml.Loader)
+        from rqalpha.utils.config import user_mod_conf_path, load_yaml
+        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
 
         try:
-            mod_config['mod'][mod_name]['enabled'] = False
+            user_conf['mod'][mod_name]['enabled'] = False
         except KeyError:
-            pass
-        dump_config(mod_config_path, mod_config)
-        list({})
+            user_conf['mod'][mod_name] = {'enabled': False}
+
+        dump_config(user_mod_conf_path(), user_conf)
 
     locals()[cmd](params)
 

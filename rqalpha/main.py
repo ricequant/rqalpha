@@ -299,7 +299,6 @@ def run(config, source_code=None, user_funcs=None):
             persist_helper.persist()
 
         code = _exception_handler(e)
-
         mod_handler.tear_down(code, e)
     except Exception as e:
         if init_succeed and env.config.base.persist and persist_helper:
@@ -309,7 +308,6 @@ def run(config, source_code=None, user_funcs=None):
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, config.base.strategy_file)
 
         code = _exception_handler(user_exc)
-
         mod_handler.tear_down(code, user_exc)
     else:
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
