@@ -137,10 +137,11 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     deep_update(user_config(), conf)
     deep_update(project_config(), conf)
 
-    if 'base__strategy_file' in config_args:
+    if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
         # ugly, we need this to get code
         conf['base']['strategy_file'] = config_args['base__strategy_file']
-    elif 'base' in config_args and 'strategy_file' in config_args['base']:
+    elif ('base' in config_args and 'strategy_file' in config_args['base'] and
+          config_args['base']['strategy_file']):
         conf['base']['strategy_file'] = config_args['base']['strategy_file']
 
     if user_funcs is None:
