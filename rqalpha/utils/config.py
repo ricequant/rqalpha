@@ -70,6 +70,7 @@ def get_mod_conf():
 
 def default_config():
     base = load_yaml(default_config_path)
+    base['base']['source_code'] = None
     mod = load_yaml(default_mod_config_path)
     deep_update(mod, base)
     return base
@@ -147,10 +148,18 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
             if k in conf['whitelist']:
                 deep_update(v, conf[k])
 
+    mod_configs = config_args.pop('mod_configs', [])
+    for k, v in mod_configs:
+        key = 'mod__{}'.format(k.replace('.', '__'))
+        config_args[key] = v
+
     if click_type:
         for k, v in six.iteritems(config_args):
             if v is None:
                 continue
+            if k == 'base__accounts' and not v:
+                continue
+
             key_path = k.split('__')
             sub_dict = conf
             for p in key_path[:-1]:
@@ -165,15 +174,13 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
 
     set_locale(config.extra.locale)
 
-    def to_date(v):
+    def _to_date(v):
         if isinstance(v, six.string_types):
             return datetime_parser(v).date()
-        if isinstance(v, datetime.date):
-            return v
         return v.date()
 
-    config.base.start_date = to_date(config.base.start_date)
-    config.base.end_date = to_date(config.base.end_date)
+    config.base.start_date = _to_date(config.base.start_date)
+    config.base.end_date = _to_date(config.base.end_date)
 
     if config.base.data_bundle_path is None:
         config.base.data_bundle_path = os.path.join(os.path.expanduser(rqalpha_path), "bundle")
