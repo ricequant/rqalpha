@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-06-21 21:05+0800\n"
+"POT-Creation-Date: 2017-07-05 16:53+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -94,7 +94,7 @@ msgstr "策略运行产生异常"
 #: rqalpha/api/api_base.py:130 rqalpha/api/api_base.py:246
 #: rqalpha/api/api_base.py:277
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:293
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:463
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:453
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
@@ -155,7 +155,7 @@ msgstr "{order_book_id} 已退市/交割，系统自动平仓。"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:58
 msgid "Order Creation Failed: Order amount is 0."
-msgstr ""
+msgstr "订单创建失败: 下单量为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:61
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:96
@@ -186,10 +186,9 @@ msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 msgid ""
 "Order Creation Failed: close amount {amount} is larger than position "
 "quantity {quantity}"
-msgstr ""
+msgstr "订单创建失败: 平仓量 {amount} 大于当前持仓量 {quantity}"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:286
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:458
 msgid "{order_book_id} is not supported in current strategy type"
 msgstr "当前策略类型不支持 {order_book_id} 合约。"
 
@@ -366,9 +365,11 @@ msgstr ""
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:169
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
-"larger than 25 percent of current bar volume, fill {filled_volume} "
-"actually"
-msgstr "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的25%，实际成交 {filled_volume}。"
+"larger than {volume_percent_limit} percent of current bar volume, fill "
+"{filled_volume} actually"
+msgstr ""
+"{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
+"{volume_percent_limit}%，实际成交 {filled_volume}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:36
 msgid "invalid commission multiplier value: value range is [0, +∞)"
@@ -406,11 +407,11 @@ msgstr "不支持回测频率: {}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:38
 msgid "stock starting cash can not be 0, using `--account stock 100000`"
-msgstr ""
+msgstr "股票起始资金不能为 0，请使用 `--account stock 100000` 来设置您的起始资金"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:45
 msgid "future starting cash can not be 0, using `--account future 100000`"
-msgstr ""
+msgstr "期货起始资金不能为 0，请使用 `--account future 100000` 来设置您的起始资金"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/decider/slippage.py:38
 msgid "invalid slippage rate value: value range is [0, 1)"
@@ -536,29 +537,29 @@ msgid ""
 "'5m', '1d', got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/config.py:46
+#: rqalpha/utils/config.py:44
 msgid "config.yml not found in {config_path}"
 msgstr "没有在 {config_path} 找到 config.yml 文件"
 
-#: rqalpha/utils/config.py:104
+#: rqalpha/utils/config.py:102
 msgid "config path: {config_path} does not exist."
 msgstr "配置文件路径: {config_path} 不存在"
 
-#: rqalpha/utils/config.py:203
+#: rqalpha/utils/config.py:201
 msgid ""
 "data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to "
 "download data bundle."
 msgstr "没有在 {bundle_path} 找到数据源相关文件，请运行 `rqalpha update_bundle` 下载最新数据。"
 
-#: rqalpha/utils/config.py:245
+#: rqalpha/utils/config.py:243
 msgid "in parse_user_config, exception: {e}"
 msgstr "在执行 parse_user_config 时，产生异常: {e}"
 
-#: rqalpha/utils/config.py:258
+#: rqalpha/utils/config.py:259
 msgid "None account type has been selected."
-msgstr ""
+msgstr "请设置账户及初始资金"
 
-#: rqalpha/utils/config.py:281
+#: rqalpha/utils/config.py:282
 msgid "unknown persist mode: {persist_mode}"
 msgstr "无效的 persist mode: {persist_mode}"
 
@@ -572,9 +573,7 @@ msgstr "无效的 persist mode: {persist_mode}"
 #~ msgstr "股票起始资金不能为0，请通过 `--stock-starting-cash 10000` 来设置起始资金。"
 
 #~ msgid ""
-#~ "future starting cash can not be 0,"
-#~ " using `--future-starting-cash 100000`"
-#~ msgstr "期货起始资金不能为0，请通过 `--future-starting-cash 10000` 来设置其实资金"
+#~ msgstr "交易标的不能为空，请通过 `--security stock/future` 来设置您策略的交易标的。"
 
 #~ msgid "strategy file not found in {strategy_file}"
 #~ msgstr "没有在 {strategy_file} 找到 策略文件。"
@@ -587,10 +586,4 @@ msgstr "无效的 persist mode: {persist_mode}"
 
 #~ msgid "stock starting cash and future starting cash can not be both 0."
 #~ msgstr "初始资金需要大于0。"
-
-#~ msgid ""
-#~ "securities can not be empty, using "
-#~ "`--security stock/future` to specific security"
-#~ " type"
-#~ msgstr "交易标的不能为空，请通过 `--security stock/future` 来设置您策略的交易标的。"
 

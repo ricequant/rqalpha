@@ -37,6 +37,8 @@ bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比�
 
     *   Windows 环境下因为默认没有安装 `Visual C++ Compiler`, 需要自行下载并安装 `visual-cpp-build-tools`，如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 :code:`bcolz wheel` 包，直接安装编译后的 bcolz 版本。
 
+    *   除了 bcolz 库以外，line-profiler 安装时也同样需要 C++ 编译器，如果出现安装失败，也可以同样下载 :code:`line-profiler wheel` 包来进行安装。
+
     *   Mac OS 环境下默认没有安装`X-code`，需要自行运行安装以添加一个轻量级的C/C++ clang编译器，可在Terminal下输入：
 
         .. code-block:: bash

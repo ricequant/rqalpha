@@ -446,17 +446,7 @@ def is_st_stock(order_book_id, count=1):
 
 def assure_stock_order_book_id(id_or_symbols):
     if isinstance(id_or_symbols, Instrument):
-        order_book_id = id_or_symbols.order_book_id
-        """
-        这所以使用XSHG和XSHE来判断是否可交易是因为股票类型策略支持很多种交易类型，比如CS, ETF, LOF, FenjiMU, FenjiA, FenjiB,
-        INDX等，但实际其中部分由不能交易，所以不能直接按照类型区分该合约是否可以交易。而直接通过判断其后缀可以比较好的区分是否可以进行交易
-        """
-        if "XSHG" in order_book_id or "XSHE" in order_book_id or "INDX" in order_book_id:
-            return order_book_id
-        else:
-            raise RQInvalidArgument(
-                _(u"{order_book_id} is not supported in current strategy type").format(
-                    order_book_id=order_book_id))
+        return id_or_symbols.order_book_id
     elif isinstance(id_or_symbols, six.string_types):
         return assure_stock_order_book_id(instruments(id_or_symbols))
     else:

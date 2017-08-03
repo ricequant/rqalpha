@@ -2,6 +2,17 @@
 CHANGELOG
 ==================
 
+3.0.2
+==================
+
+- 取消在股票下单函数中对 `order_book_id` 类型的检查，现在您可以交易 `ETF`, `LOF`, `FenjiMu`, `FenjiA`, `FenjiB`, `INDX` 了
+- Merge `PR 170 <https://github.com/ricequant/rqalpha/pull/170>`_ 解决自定义 `volume limit` 时显示数值不正确的问题。
+- Fix `Issue 148 <https://github.com/ricequant/rqalpha/issues/148>`_ `get_dividend()方法返回的类型是numpy.ndarray，而非pandas.DataFrame`
+- Fix `Issue 169 <https://github.com/ricequant/rqalpha/issues/169>`_ 执行 `rqalpha mod install ctp==0.2.0dev0` 时错误的记录了库信息的问题
+- Fix `Issue 158 <https://github.com/ricequant/rqalpha/issues/158>`_ 多次循环 `run_file` / `run_code` 时导致的内存泄漏的问题
+- Enhance `Issue 166 <https://github.com/ricequant/rqalpha/issues/166>`_ 启动参数支持 `--no-stock-t1` 来屏蔽股票 T + 1 导致今仓的限制
+- 性能提升: 使用 `bisect_right` 代替 `searchsorted`
+
 3.0.0
 ==================
 
