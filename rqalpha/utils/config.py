@@ -231,21 +231,24 @@ def parse_accounts(accounts):
 
 def parse_run_type(rt_str):
     assert isinstance(rt_str, six.string_types)
-    if rt_str == "b":
-        return RUN_TYPE.BACKTEST
-    elif rt_str == "p":
-        return RUN_TYPE.PAPER_TRADING
-    elif rt_str == 'r':
-        return RUN_TYPE.LIVE_TRADING
-    else:
-        raise NotImplementedError
+    mapping = {
+        "b": RUN_TYPE.BACKTEST,
+        "p": RUN_TYPE.PAPER_TRADING,
+        "r": RUN_TYPE.LIVE_TRADING,
+    }
+    try:
+        return mapping[rt_str]
+    except KeyError:
+        raise RuntimeError(_(u"unknown run type: {}").format(rt_str))
 
 
 def parse_persist_mode(persist_mode):
     assert isinstance(persist_mode, six.string_types)
-    if persist_mode == 'real_time':
-        return PERSIST_MODE.REAL_TIME
-    elif persist_mode == 'on_crash':
-        return PERSIST_MODE.ON_CRASH
-    else:
-        raise RuntimeError(_(u"unknown persist mode: {persist_mode}").format(persist_mode=persist_mode))
+    mapping = {
+        "real_time": PERSIST_MODE.REAL_TIME,
+        "on_crash": PERSIST_MODE.ON_CRASH,
+    }
+    try:
+        return mapping[persist_mode]
+    except KeyError:
+        raise RuntimeError(_(u"unknown persist mode: {}").format(persist_mode))
