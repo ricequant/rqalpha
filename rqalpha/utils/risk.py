@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import division
-
+import warnings
 import numpy as np
 
 APPROX_BDAYS_PER_MONTH = 21
@@ -46,10 +46,13 @@ def _annual_factor(period):
 
 class Risk(object):
     def __init__(self, daily_returns, benchmark_daily_returns, risk_free_rate, days, period=DAILY):
-        assert(len(daily_returns) == len(benchmark_daily_returns))
-
-        self._portfolio = daily_returns
-        self._benchmark = benchmark_daily_returns
+        assert (len(daily_returns) == len(benchmark_daily_returns))
+        where = ~(np.isnan(daily_returns) | np.isnan(benchmark_daily_returns))
+        na_num = len(where) - where.sum()
+        if na_num:
+            warnings.warn("Can't find data of %s bars! Please check the completeness of your data." % na_num)
+        self._portfolio = daily_returns[where]
+        self._benchmark = benchmark_daily_returns[where]
         self._risk_free_rate = risk_free_rate
         self._annual_factor = _annual_factor(period)
         self._daily_risk_free_rate = self._risk_free_rate / self._annual_factor
@@ -102,8 +105,8 @@ class Risk(object):
             return np.nan
 
         self._alpha = np.mean(self._portfolio - self._daily_risk_free_rate - self.beta * (
-                    self._benchmark - self._daily_risk_free_rate
-                )) * self._annual_factor
+            self._benchmark - self._daily_risk_free_rate
+        )) * self._annual_factor
         return self._alpha
 
     @property
