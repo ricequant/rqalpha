@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import codecs
 
 from ..interface import AbstractStrategyLoader
 from ..utils.strategy_loader_help import compile_strategy
+
+ENCODING_RE = re.compile("#.*coding[:=]\s*([-\w.]+)")
 
 
 class FileStrategyLoader(AbstractStrategyLoader):
@@ -26,7 +29,14 @@ class FileStrategyLoader(AbstractStrategyLoader):
 
     def load(self, scope):
         with codecs.open(self._strategy_file_path, encoding="utf-8") as f:
-            source_code = f.read()
+            raw_first_line = f.readline()
+            raw_second_line = f.readline()
+            # a little bit tricky, ensure track of stack refer to the right line.
+            first_line = "" if ENCODING_RE.match(
+                raw_first_line) else raw_first_line  # for shell comment, ex: #!/bin/bash
+            second_line = "" if ENCODING_RE.match(
+                raw_second_line) else raw_second_line  # for encoding comment, ex: # coding: utf-8
+            source_code = "\n".join([first_line, second_line, f.read()])
 
         return compile_strategy(source_code, self._strategy_file_path, scope)
 
