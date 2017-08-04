@@ -19,11 +19,11 @@ import locale
 import codecs
 from pprint import pformat
 
+import pandas as pd
 import logbook
 import yaml
 import simplejson as json
 import six
-from dateutil.parser import parse as datetime_parser
 
 from rqalpha.const import RUN_TYPE, PERSIST_MODE
 from rqalpha.utils import RqAttrDict, logger
@@ -176,9 +176,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     set_locale(config.extra.locale)
 
     def _to_date(v):
-        if isinstance(v, six.string_types):
-            return datetime_parser(v).date()
-        return v.date()
+        return pd.Timestamp(v).date()
 
     config.base.start_date = _to_date(config.base.start_date)
     config.base.end_date = _to_date(config.base.end_date)

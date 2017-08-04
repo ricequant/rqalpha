@@ -60,7 +60,6 @@ def _adjust_start_date(config, data_proxy):
     origin_start_date, origin_end_date = config.base.start_date, config.base.end_date
     start, end = data_proxy.available_data_range(config.base.frequency)
 
-    # print(repr(start), repr(end))
     config.base.start_date = max(start, config.base.start_date)
     config.base.end_date = min(end, config.base.end_date)
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
