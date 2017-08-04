@@ -66,7 +66,6 @@ class AnalyserMod(AbstractMod):
         date = self._env.calendar_dt.date()
         portfolio = self._env.portfolio
         benchmark_portfolio = self._env.benchmark_portfolio
-
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
 
