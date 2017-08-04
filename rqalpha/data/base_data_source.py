@@ -40,37 +40,36 @@ from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
 
 class BaseDataSource(AbstractDataSource):
     def __init__(self, path):
+        if not os.path.exists(path):
+            raise RuntimeError('bundle path {} not exist'.format(os.path.abspath))
+
         def _p(name):
             return os.path.join(path, name)
 
-        try:
-            self._day_bars = [
-                DayBarStore(_p('stocks.bcolz'), StockBarConverter),
-                DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
-                DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
-                DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
-            ]
+        self._day_bars = [
+            DayBarStore(_p('stocks.bcolz'), StockBarConverter),
+            DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
+            DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
+            DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
+        ]
 
-            self._instruments = InstrumentStore(_p('instruments.pk'))
-            self._dividends = DividendStore(_p('original_dividends.bcolz'))
-            self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
-            self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
-            self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
-            self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
+        self._instruments = InstrumentStore(_p('instruments.pk'))
+        self._dividends = DividendStore(_p('original_dividends.bcolz'))
+        self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
+        self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
+        self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
+        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
 
-            self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
-            self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+        self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
+        self._suspend_days = DateSet(_p('suspended_days.bcolz'))
 
-            self.get_yield_curve = self._yield_curve.get_yield_curve
-            self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
-            if os.path.exists(_p('public_funds.bcolz')):
-                self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
-                self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
-                self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
-                self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
-        except IOError as e:
-            raise RuntimeError(
-                _(u"Bundle is out of date, please use `rqalpha update_bundle` to renew your bundle data."))
+        self.get_yield_curve = self._yield_curve.get_yield_curve
+        self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+        if os.path.exists(_p('public_funds.bcolz')):
+            self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
+            self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
+            self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
+            self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
 
     def get_dividend(self, order_book_id, public_fund=False):
         if public_fund:

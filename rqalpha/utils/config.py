@@ -187,13 +187,6 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     if config.base.data_bundle_path is None:
         config.base.data_bundle_path = os.path.join(os.path.expanduser(rqalpha_path), "bundle")
 
-    config.base.data_bundle_path = os.path.abspath(config.base.data_bundle_path)
-
-    if not os.path.exists(config.base.data_bundle_path):
-        system_log.error(
-            _(u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
-                bundle_path=config.base.data_bundle_path))
-
     config.base.run_type = parse_run_type(config.base.run_type)
     config.base.accounts = parse_accounts(config.base.accounts)
     config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
