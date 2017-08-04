@@ -22,7 +22,7 @@ from six import with_metaclass
 class AbstractAccount(with_metaclass(abc.ABCMeta)):
     """
     账户接口，主要用于构建账户信息
-    
+
     您可以在 Mod 的 start_up 阶段通过 env.set_account_model(account_type, AccountModel) 来注入和修改 AccountModel
     您也可以通过 env.get_account_model(account_type) 来获取指定类型的 AccountModel
     """
@@ -30,9 +30,9 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def fast_forward(self, orders, trades):
         """
         [Required]
-        
+
         fast_forward 函数接受当日订单数据和成交数据，从而将当前的持仓快照快速推进到最新持仓状态
-        
+
         :param list orders: 当日订单列表
         :param list trades: 当日成交列表
         """
@@ -51,7 +51,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def get_state(self):
         """
         [Required]
-        
+
         主要用于进行持久化时候，提供对应需要持久化的数据
         """
         raise NotImplementedError
@@ -60,7 +60,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def set_state(self, state):
         """
         [Requried]
-        
+
         主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
         """
         raise NotImplementedError
@@ -69,7 +69,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def type(self):
         """
         [Required]
-        
+
         返回 String 类型的账户类型标示
         """
         raise NotImplementedError
@@ -78,7 +78,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def positions(self):
         """
         [Required]
-        
+
         返回当前账户的持仓数据
 
         :return: Positions(PositionModel)
@@ -89,7 +89,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def frozen_cash(self):
         """
         [Required]
-        
+
         返回当前账户的冻结资金
         """
         raise NotImplementedError
@@ -98,7 +98,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def cash(self):
         """
         [Required]
-        
+
         返回当前账户的可用资金
         """
         raise NotImplementedError
@@ -107,7 +107,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def market_value(self):
         """
         [Required]
-        
+
         返回当前账户的市值
         """
         raise NotImplementedError
@@ -116,7 +116,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def transaction_cost(self):
         """
         [Required]
-        
+
         返回当前账户的当日交易费用
         """
         raise NotImplementedError
@@ -125,7 +125,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
     仓位接口，主要用于构建仓位信息
-    
+
     您可以在 Mod 的 start_up 阶段通过 env.set_position_model(account_type, PositionModel) 来注入和修改 PositionModel
     您也可以通过 env.get_position_model(account_type) 来获取制定类型的 PositionModel
     """
@@ -152,7 +152,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     def order_book_id(self):
         """
         [Required]
-        
+
         返回当前持仓的 order_book_id
         """
         raise NotImplementedError
@@ -432,8 +432,8 @@ class AbstractDataSource(object):
     def get_margin_info(self, instrument):
         """
         获取合约的保证金数据
-        
-        :param instrument: 合约对象 
+
+        :param instrument: 合约对象
         :return: dict
         """
         raise NotImplementedError
@@ -441,8 +441,8 @@ class AbstractDataSource(object):
     def get_commission_info(self, instrument):
         """
         获取合约的手续费信息
-        :param instrument: 
-        :return: 
+        :param instrument:
+        :return:
         """
         raise NotImplementedError
 
@@ -593,10 +593,10 @@ class Persistable(with_metaclass(abc.ABCMeta)):
 class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def can_submit_order(self, account, order):
-        # FIXME need a better name
+        # FIXME: need a better name
         raise NotImplementedError
 
     @abc.abstractmethod
     def can_cancel_order(self, account, order):
-        # FIXME need a better name
+        # FIXME: need a better name
         raise NotImplementedError

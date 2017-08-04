@@ -37,7 +37,7 @@ class EXECUTION_PHASE(CustomEnum):
 
 # noinspection PyPep8Naming
 class RUN_TYPE(CustomEnum):
-    # TODO 取消 RUN_TYPE, 取而代之的是使用开启哪些Mod来控制策略所运行的类型
+    # TODO: 取消 RUN_TYPE, 取而代之的是使用开启哪些Mod来控制策略所运行的类型
     # Back Test
     BACKTEST = "BACKTEST"
     # Paper Trading

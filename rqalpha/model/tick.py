@@ -67,7 +67,7 @@ class Tick(object):
     def prev_settlement(self):
         return self._tick['prev_settlement']
 
-    # FIXME use dynamic creation
+    # FIXME: use dynamic creation
     @property
     def b1(self):
         return self._tick['b1']

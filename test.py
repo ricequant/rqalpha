@@ -138,7 +138,7 @@ def is_enable_coverage():
 
 
 def test_api():
-    # FIXME Error msg is hard to understand @zjuguxi
+    # FIXME: Error msg is hard to understand @zjuguxi
     # return
 
     print(u"Testing API......")

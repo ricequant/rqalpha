@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import os
-import datetime
 import locale
 import codecs
 from pprint import pformat
@@ -102,7 +101,7 @@ def code_config(config, source_code=None):
             with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
                 source_code = f.read()
 
-        # FIXME hardcode for parametric mod
+        # FIXME: hardcode for parametric mod
         def noop(*args, **kwargs):
             pass
         scope = {'define_parameter': noop}
@@ -119,6 +118,7 @@ def code_config(config, source_code=None):
 def dump_config(config_path, config, dumper=yaml.Dumper):
     with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
+
 
 def set_locale(lc):
     # FIXME: It should depends on the system and locale config
@@ -138,7 +138,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     deep_update(project_config(), conf)
 
     if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
-        # ugly, we need this to get code
+        # FIXME: ugly, we need this to get code
         conf['base']['strategy_file'] = config_args['base__strategy_file']
     elif ('base' in config_args and 'strategy_file' in config_args['base'] and
           config_args['base']['strategy_file']):
