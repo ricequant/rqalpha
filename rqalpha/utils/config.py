@@ -152,7 +152,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     mod_configs = config_args.pop('mod_configs', [])
     for k, v in mod_configs:
         key = 'mod__{}'.format(k.replace('.', '__'))
-        config_args[key] = v
+        config_args[key] = mod_config_value_parse(v)
 
     if click_type:
         for k, v in six.iteritems(config_args):
