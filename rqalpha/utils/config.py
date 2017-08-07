@@ -116,6 +116,9 @@ def code_config(config, source_code=None):
 
 
 def dump_config(config_path, config, dumper=yaml.Dumper):
+    dirname = os.path.dirname(config_path)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
     with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
 
