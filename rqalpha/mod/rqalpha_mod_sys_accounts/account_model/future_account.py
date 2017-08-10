@@ -254,8 +254,8 @@ class FutureAccount(BaseAccount):
             position.update_last_price()
 
     def _on_tick(self, event):
-        if event.tick.order_book_id in self._positions:
-            self._positions[event.tick.order_book_id]._last_price = event.tick.last
+        for position in self._positions.values():
+            position.update_last_price()
 
     def _on_order_pending_new(self, event):
         if self != event.account:
