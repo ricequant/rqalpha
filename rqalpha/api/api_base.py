@@ -179,7 +179,8 @@ def get_open_orders():
                                 EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 def cancel_order(order):
     """
     撤单

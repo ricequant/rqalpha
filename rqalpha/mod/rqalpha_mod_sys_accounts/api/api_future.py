@@ -43,7 +43,8 @@ def export_as_api(func):
 
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_future(),
              verify_that('amount').is_greater_or_equal_than(0),
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),

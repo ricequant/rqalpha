@@ -59,7 +59,8 @@ def export_as_api(func):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
@@ -156,7 +157,8 @@ def _sell_all_stock(order_book_id, amount, style):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
@@ -198,7 +200,8 @@ def order_lots(id_or_ins, amount, price=None, style=None):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
@@ -270,7 +273,8 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
@@ -308,7 +312,8 @@ def order_percent(id_or_ins, percent, price=None, style=None):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
@@ -349,7 +354,8 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
