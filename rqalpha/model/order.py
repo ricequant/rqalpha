@@ -68,6 +68,7 @@ class Order(object):
             'frozen_price': self._frozen_price,
             'type': self._enum_to_str(self._type),
             'transaction_cost': self._transaction_cost,
+            'avg_price': self._avg_price,
         }
 
     def set_state(self, d):
@@ -87,6 +88,7 @@ class Order(object):
         self._frozen_price = d['frozen_price']
         self._type = self._str_to_enum(ORDER_TYPE, d['type'])
         self._transaction_cost = d['transaction_cost']
+        self._avg_price = d['avg_price']
 
     @classmethod
     def __from_create__(cls, order_book_id, quantity, side, style, position_effect):
