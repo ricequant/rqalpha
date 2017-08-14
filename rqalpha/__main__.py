@@ -125,7 +125,7 @@ def run(**kwargs):
 
     # store results into ipython when running in ipython
     from rqalpha.utils import is_run_from_ipython
-    if is_run_from_ipython():
+    if results is not None and is_run_from_ipython():
         import IPython
         from rqalpha.utils import RqAttrDict
         ipy = IPython.get_ipython()
