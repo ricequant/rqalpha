@@ -76,7 +76,7 @@ class TradingDatesMixin(object):
 
     def get_n_trading_dates_until(self, dt, n):
         date = pd.Timestamp(dt).replace(hour=0, minute=0, second=0)
-        pos = self._dates.searchsorted(date)
+        pos = self._dates.searchsorted(date, side='right')
         if pos >= n:
             return self._dates[pos - n:pos]
 
