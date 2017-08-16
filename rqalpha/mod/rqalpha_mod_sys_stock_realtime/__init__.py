@@ -76,15 +76,19 @@ def quotation_server(redis_url):
         for order_book_id, item in total_df.iterrows():
             redis_client[order_book_id] = json.dumps(item.to_dict())
 
+    retry_cnt = 0
     while True:
         try:
             total_df = get_realtime_quotes(order_book_id_list, include_limit=True)
-        except Exception as e:
-            system_log.exception("get_realtime_quotes fail. {}", e)
+        except (OSError, IOError) as e:
+            system_log.exception("get_realtime_quotes socket error. retry {} {}", retry_cnt, e)
+            time.sleep(retry_cnt * 2)
+            retry_cnt += 1
             continue
         system_log.info("Fetching snapshots, size {}", len(total_df))
         record_market_data(total_df)
         time.sleep(1)
+        retry_cnt = 0
 
 
 def load_mod():
