@@ -143,6 +143,11 @@ class EVENT(Enum):
     # persist immediantly
     DO_PERSIST = 'do_persist'
 
+    # 策略被暂停
+    STRATEGY_HOLD_SET = 'strategy_hold_set'
+    # 策略被恢复
+    STRATEGY_HOLD_CANCELLED = 'strategy_hold_canceled'
+
 
 def parse_event(event_str):
     return EVENT.__members__.get(event_str.upper(), None)
