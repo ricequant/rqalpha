@@ -2,6 +2,20 @@
 CHANGELOG
 ==================
 
+3.0.6
+==================
+
+- import 修改相对引用为绝对引用
+- 重构配置文件读取功能，分为默认配置，用户配置，项目配置
+- 重构 `main()` 的 `tear_down` 的调用
+- get_previous_trading_date(date, n=1) 增加参数 n
+- 增加公募基金数据处理相关逻辑
+- 修改 `mod.tear_down` ，如果单个 mod 在 tear_down 抛异常后，不影响其他 mod 继续 tear_down
+- scheduler bugfix
+- 处理 persist 遇到的异常
+- 修复 order get_state / set_state 缺失 transaction_cost, avg_price
+- 修复 mod_sys_stock_realtime
+
 3.0.2
 ==================
 
@@ -21,7 +35,7 @@ CHANGELOG
 3.x 相比 2.x 进行了如下更改，如果您升级到 3.x 版本，请务必阅读以下内容，保证您的策略可以顺利启动和执行:
 
 - 命令行参数做出如下调整
-  
+
   - 不再使用 :code:`-sc/--stock-starting-cash` 参数
   - 不再使用 :code:`-fc/--future-starting-cash` 参数
   - 不再使用 :code:`-i/--init-cash` 参数
