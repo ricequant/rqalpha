@@ -121,6 +121,8 @@ class Environment(object):
         return self._position_model_dict[account_type]
 
     def can_submit_order(self, order):
+        if Environment.get_instance().config.extra.is_hold:
+            return False
         account = self.get_account(order.order_book_id)
         for v in self._frontend_validators:
             if not v.can_submit_order(account, order):
