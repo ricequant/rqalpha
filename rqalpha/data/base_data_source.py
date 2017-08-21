@@ -170,6 +170,12 @@ class BaseDataSource(AbstractDataSource):
         i = bars['datetime'].searchsorted(dt, side='right')
         left = i - bar_count if i >= bar_count else 0
         bars = bars[left:i]
+        # fix-bug:当bars为空list时，返回None，否则后面调用adjust_bars会出现out of index错误
+        # author:brieftime
+        # date:2017.8.5
+        if len(bars) == 0:
+            return None
+        # fix-bug end
         if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
             # 期货及指数无需复权
             return bars if fields is None else bars[fields]
