@@ -413,6 +413,16 @@ msgstr "股票起始资金不能为 0，请使用 `--account stock 100000` 来�
 msgid "future starting cash can not be 0, using `--account future 100000`"
 msgstr "期货起始资金不能为 0，请使用 `--account future 100000` 来设置您的起始资金"
 
+#: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:71
+#: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:100
+msgid "{order_book_id} is invalid, please check your positions setting."
+msgstr "{order_book_id}合约无效，请检查您的仓位设置。"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:74
+#: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:103
+msgid "{order_book_id} is not listed or has been delisted, please check you positions setting."
+msgstr "{order_book_id}合约退市或未上市，请检查您的仓位设置。 "
+
 #: rqalpha/mod/rqalpha_mod_sys_simulation/decider/slippage.py:38
 msgid "invalid slippage rate value: value range is [0, 1)"
 msgstr "无效的 滑点 设置: 其值范围为 [0, 1]"

@@ -201,6 +201,7 @@ def run(config, source_code=None, user_funcs=None):
             env.set_data_source(BaseDataSource(config.base.data_bundle_path))
 
         env.set_data_proxy(DataProxy(env.data_source))
+
         Scheduler.set_trading_dates_(env.data_source.get_trading_calendar())
         scheduler = Scheduler(config.base.frequency)
         mod_scheduler._scheduler = scheduler
@@ -210,6 +211,10 @@ def run(config, source_code=None, user_funcs=None):
         _adjust_start_date(env.config, env.data_proxy)
 
         _validate_benchmark(env.config, env.data_proxy)
+
+        start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
+        env.calendar_dt = start_dt
+        env.trading_dt = start_dt
 
         broker = env.broker
         assert broker is not None
@@ -230,9 +235,9 @@ def run(config, source_code=None, user_funcs=None):
         ctx._push()
 
         # FIXME
-        start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
-        env.calendar_dt = start_dt
-        env.trading_dt = start_dt
+        # start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
+        # env.calendar_dt = start_dt
+        # env.trading_dt = start_dt
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 

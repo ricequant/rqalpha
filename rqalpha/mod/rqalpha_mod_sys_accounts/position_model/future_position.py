@@ -26,11 +26,10 @@ class FuturePosition(BasePosition):
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
 
-        self._buy_old_holding_list = []
-        self._sell_old_holding_list = []
         self._buy_today_holding_list = []
         self._sell_today_holding_list = []
-
+        self._buy_old_holding_list = []
+        self._sell_old_holding_list = []
         self._buy_transaction_cost = 0.
         self._sell_transaction_cost = 0.
         self._buy_realized_pnl = 0.
@@ -41,6 +40,14 @@ class FuturePosition(BasePosition):
 
     def __repr__(self):
         return 'FuturePosition({})'.format(self.__dict__)
+
+    def _init_position(self, quantity, last_price):
+        if quantity is not None:
+                self._buy_today_holding_list = [(quantity, last_price)] if quantity > 0 else []
+                self._sell_today_holding_list = [(quantity, last_price)] if quantity < 0 else []
+        else:
+            self._sell_today_holding_list = []
+            self._buy_today_holding_list = []
 
     def get_state(self):
         return {
@@ -67,6 +74,9 @@ class FuturePosition(BasePosition):
         self._sell_transaction_cost = state['sell_transaction_cost']
         self._buy_avg_open_price = state['buy_avg_open_price']
         self._sell_avg_open_price = state['sell_avg_open_price']
+
+    def set_last_price(self, last_price):
+        self._last_price = last_price
 
     @property
     def type(self):

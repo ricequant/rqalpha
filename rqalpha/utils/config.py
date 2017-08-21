@@ -187,6 +187,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
 
     config.base.run_type = parse_run_type(config.base.run_type)
     config.base.accounts = parse_accounts(config.base.accounts)
+    config.base.init_positions = parse_init_positions(config.base.init_positions)
     config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
 
     if config.extra.context_vars:
@@ -212,6 +213,31 @@ def parse_accounts(accounts):
     if len(a) == 0:
         raise RuntimeError(_(u"None account type has been selected."))
     return a
+
+
+def parse_init_positions(init_positions):
+    p = {}
+
+    if isinstance(init_positions, tuple):
+        init_positions = {position_type: positions for position_type, positions in init_positions}
+
+    for position_type, positions in six.iteritems(init_positions):
+        p[position_type.upper()] = str_to_list(positions)
+    return p
+
+
+def str_to_list(positions):
+    l = []
+    positions = positions.split(',')
+    for position in positions:
+        position = position.split(':')
+        try:
+            l.append((position[0], int(position[1])))
+        except IndexError:
+            raise RuntimeError(_(u"The format of init positions arguments is 'order_book_id:quantity'."))
+        except ValueError:
+            raise RuntimeError(_(u"The quantity should be number."))
+    return l
 
 
 def parse_run_type(rt_str):
