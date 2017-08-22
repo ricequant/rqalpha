@@ -346,7 +346,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
 
     style = cal_style(price, style)
     if cash_amount == 0:
-        return _sell_all_stock(order_book_id, position.quantity, style)
+        return _sell_all_stock(order_book_id, position.sellable, style)
 
     return order_value(order_book_id, cash_amount - position.market_value, style=style)
 
@@ -403,7 +403,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     position = account.positions[order_book_id]
 
     if percent == 0:
-        return _sell_all_stock(order_book_id, position.quantity, style)
+        return _sell_all_stock(order_book_id, position.sellable, style)
 
     return order_value(order_book_id, account.total_value * percent - position.market_value, style=style)
 
