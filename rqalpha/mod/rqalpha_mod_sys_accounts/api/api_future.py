@@ -289,7 +289,7 @@ def assure_future_order_book_id(id_or_symbols):
         else:
             return id_or_symbols.order_book_id
     elif isinstance(id_or_symbols, six.string_types):
-        return assure_future_order_book_id(instruments(id_or_symbols))
+        return assure_future_order_book_id(Environment.get_instance().data_proxy.instruments(id_or_symbols))
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
