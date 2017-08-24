@@ -65,7 +65,9 @@ class ModHandler(object):
 
     def start_up(self):
         for mod_name, mod_config in self._mod_list:
+            system_log.debug(_(u"mod {} start_up start").format(mod_name))
             self._mod_dict[mod_name].start_up(self._env, mod_config)
+            system_log.debug(_(u"mod {} start_up finish").format(mod_name))
 
     def tear_down(self, *args):
         result = {}
