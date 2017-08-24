@@ -19,8 +19,10 @@ import sys
 import tarfile
 import tempfile
 import datetime
-
 import shutil
+from pprint import pformat
+
+import logbook
 import click
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import pytz
@@ -48,10 +50,11 @@ from rqalpha.model.base_position import Positions
 from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log, init_logger, user_std_handler
 from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from rqalpha.utils.scheduler import Scheduler
 from rqalpha.utils.config import set_locale
+from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
+
 
 jsonpickle_numpy.register_handlers()
 
@@ -113,6 +116,7 @@ def create_benchmark_portfolio(env):
 
 def create_base_scope():
     import copy
+    from rqalpha.utils.logger import user_print, user_log
 
     from . import user_module
     scope = copy.copy(user_module.__dict__)
@@ -180,8 +184,8 @@ def run(config, source_code=None, user_funcs=None):
     try:
         # avoid register handlers everytime
         # when running in ipython
-        init_logger()
-        add_log_handlers(config)
+        set_loggers(config)
+        basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         if source_code is not None:
             env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
@@ -353,10 +357,22 @@ def output_profile_result(env):
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))
 
 
-def add_log_handlers(config):
+def set_loggers(config):
+    from rqalpha.utils.logger import user_log, user_system_log, user_detail_log, system_log, basic_system_log, std_log
+    from rqalpha.utils.logger import user_std_handler, init_logger
+    from rqalpha.utils import logger
     extra_config = config.extra
+
+    init_logger()
+
+    for log in [basic_system_log, system_log, std_log, user_log, user_system_log, user_detail_log]:
+        log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
+
     if extra_config.log_level.upper() != "NONE":
         if not extra_config.user_log_disabled:
             user_log.handlers.append(user_std_handler)
         if not extra_config.user_system_log_disabled:
             user_system_log.handlers.append(user_std_handler)
+
+    for logger_name, level in extra_config.logger:
+        getattr(logger, logger_name).level = getattr(logbook, level.upper())
