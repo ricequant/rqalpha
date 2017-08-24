@@ -52,6 +52,7 @@ extra:
   dividend_reinvestment: false
   is_hold: false
   locale: zh_Hans_CN
+  logger: []
 
 validator:
   # cash_return_by_stock_delisted: 开启该项，当持仓股票退市时，按照退市价格返还现金
