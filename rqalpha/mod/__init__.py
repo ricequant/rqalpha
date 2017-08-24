@@ -65,15 +65,17 @@ class ModHandler(object):
 
     def start_up(self):
         for mod_name, mod_config in self._mod_list:
-            system_log.debug(_(u"mod {} start_up start").format(mod_name))
+            system_log.debug(_(u"mod start_up [START] {}").format(mod_name))
             self._mod_dict[mod_name].start_up(self._env, mod_config)
-            system_log.debug(_(u"mod {} start_up finish").format(mod_name))
+            system_log.debug(_(u"mod start_up [END]   {}").format(mod_name))
 
     def tear_down(self, *args):
         result = {}
         for mod_name, __ in reversed(self._mod_list):
             try:
+                system_log.debug(_(u"mod tear_down [START] {}").format(mod_name))
                 ret = self._mod_dict[mod_name].tear_down(*args)
+                system_log.debug(_(u"mod tear_down [END]   {}").format(mod_name))
             except Exception as e:
                 system_log.exception("tear down fail for {}", mod_name)
                 continue
