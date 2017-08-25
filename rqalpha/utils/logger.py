@@ -58,9 +58,9 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 def user_std_handler_log_formatter(record, handler):
     from rqalpha.environment import Environment
     try:
-        dt = Environment.get_instance().calendar_dt.strftime(DATETIME_FORMAT)[:-3]
+        dt = Environment.get_instance().calendar_dt.strftime(DATETIME_FORMAT)
     except Exception:
-        dt = datetime.now().strftime(DATETIME_FORMAT)[:-3]
+        dt = datetime.now().strftime(DATETIME_FORMAT)
 
     log = "{dt} {level} {msg}".format(
         dt=dt,
