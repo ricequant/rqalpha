@@ -216,28 +216,27 @@ def parse_accounts(accounts):
 
 
 def parse_init_positions(init_positions):
-    p = {}
+    # --position stock 000001.XSHE:1000,000003.XSHE:200
+    # --position future IF1701:-1,IF1701:2
+    def to_position_list(positions):
+        result = []
+        for s in positions.split(','):
+            try:
+                order_book_id, quantity = s.split(':')
+            except ValueError:
+                raise RuntimeError(_(u"The format of init positions arguments is 'order_book_id:quantity'."))
 
-    if isinstance(init_positions, tuple):
-        init_positions = {position_type: positions for position_type, positions in init_positions}
+            try:
+                result.append(order_book_id, float(quantity))
+            except ValueError:
+                raise RuntimeError(_(u"The quantity should be number."))
 
-    for position_type, positions in six.iteritems(init_positions):
-        p[position_type.upper()] = str_to_list(positions)
-    return p
+        return result
 
-
-def str_to_list(positions):
-    l = []
-    positions = positions.split(',')
-    for position in positions:
-        position = position.split(':')
-        try:
-            l.append((position[0], int(position[1])))
-        except IndexError:
-            raise RuntimeError(_(u"The format of init positions arguments is 'order_book_id:quantity'."))
-        except ValueError:
-            raise RuntimeError(_(u"The quantity should be number."))
-    return l
+    return {
+        account_type.upper(): to_position_list(positions)
+        for account_type, positions in init_positions
+    }
 
 
 def parse_run_type(rt_str):

@@ -61,9 +61,6 @@ class StockPosition(BasePosition):
         self._frozen = state['frozen']
         self._transaction_cost = state['transaction_cost']
 
-    def set_last_price(self, last_price):
-        self._last_price = last_price
-
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost
         if trade.side == SIDE.BUY:
