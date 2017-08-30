@@ -224,12 +224,13 @@ def parse_init_positions(init_positions):
             try:
                 order_book_id, quantity = s.split(':')
             except ValueError:
-                raise RuntimeError(_(u"The format of init positions arguments is 'order_book_id:quantity'."))
+                raise RuntimeError(_(u"invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
 
             try:
                 result.append((order_book_id, float(quantity)))
             except ValueError:
-                raise RuntimeError(_(u"The quantity should be number."))
+                raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
+                    order_book_id=order_book_id, quantity=quantity))
 
         return result
 
