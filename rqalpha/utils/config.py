@@ -227,7 +227,7 @@ def parse_init_positions(init_positions):
                 raise RuntimeError(_(u"The format of init positions arguments is 'order_book_id:quantity'."))
 
             try:
-                result.append(order_book_id, float(quantity))
+                result.append((order_book_id, float(quantity)))
             except ValueError:
                 raise RuntimeError(_(u"The quantity should be number."))
 

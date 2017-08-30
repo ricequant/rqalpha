@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import datetime
 import six
 
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE
@@ -35,7 +35,7 @@ def _fake_trade(order_book_id, quantity, price):
 def init_portfolio(env):
     accounts = {}
     config = env.config
-    start_date = config.base.start_date
+    start_date = datetime.datetime.combine(config.base.start_date, datetime.time.min)
     units = 0
 
     if config.base.init_positions or (DEFAULT_ACCOUNT_TYPE.FUTURE.name in config.base.accounts and
@@ -52,13 +52,13 @@ def init_portfolio(env):
 
         if account_type in config.base.init_positions:
             for order_book_id, quantity in config.base.init_positions[account_type]:
-                instrument = env.data_proxy.get_instrument(order_book_id)
+                instrument = env.get_instrument(order_book_id)
                 if instrument is None:
                     raise RuntimeError(_(u'invalid order book id {} in initial positions').format(order_book_id))
                 if not instrument.listing:
                     raise RuntimeError(_(u'instrument {} in initial positions is not listing').format(order_book_id))
 
-                price = env.data_proxy.get_prev_close(order_book_id, config.base.start_date)
+                price = env.data_proxy.get_prev_close(order_book_id, start_date)
                 trade = _fake_trade(order_book_id, quantity, price)
                 if order_book_id not in positions:
                     positions[order_book_id] = position_model(order_book_id)
@@ -70,5 +70,5 @@ def init_portfolio(env):
         units += account.total_value
         accounts[account_type] = account
 
-    return Portfolio(start_date, 1, units, accounts)
+    return Portfolio(config.base.start_date, 1, units, accounts)
 
