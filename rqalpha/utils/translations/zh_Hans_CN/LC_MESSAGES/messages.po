@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-08-30 15:51+0800\n"
+"POT-Creation-Date: 2017-08-31 15:50+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.3.4\n"
+"Generated-By: Babel 2.4.0\n"
 
 #: rqalpha/environment.py:64
 msgid ""
@@ -314,11 +314,11 @@ msgstr "{order_book_id} 在 {date} 时停牌。"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/is_trading_validator.py:51
 msgid "security {order_book_id} cannot be subscribed on {date}"
-msgstr ""
+msgstr "基金{order_book_id}在{date}不能申购。"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/is_trading_validator.py:58
 msgid "security {order_book_id} cannot be redeemed on {date}"
-msgstr ""
+msgstr "基金{order_book_id}在{date}不能赎回。"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/position_validator.py:33
 msgid ""
@@ -420,7 +420,11 @@ msgstr "订单 {order_id} 被手动取消。"
 msgid "Order Rejected: {order_book_id} can not match. Market close."
 msgstr "订单被拒单: {order_book_id} 当天交易结束，订单无法成交。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:184
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:44
+msgid "Current universe is empty. Please use subscribe function before trade"
+msgstr "当前合约池为空。请使用 subscribe 订阅合约。"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:182
 msgid "Frequency {} is not support."
 msgstr "不支持回测频率: {}"
 
@@ -598,5 +602,4 @@ msgstr ""
 
 #~ msgid "unknown persist mode: {persist_mode}"
 #~ msgstr "无效的 persist mode: {persist_mode}"
-
 

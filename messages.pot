@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-08-30 15:51+0800\n"
+"POT-Creation-Date: 2017-08-31 15:50+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.3.4\n"
+"Generated-By: Babel 2.4.0\n"
 
 #: rqalpha/environment.py:64
 msgid ""
@@ -410,7 +410,11 @@ msgstr ""
 msgid "Order Rejected: {order_book_id} can not match. Market close."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:184
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:44
+msgid "Current universe is empty. Please use subscribe function before trade"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:182
 msgid "Frequency {} is not support."
 msgstr ""
 
