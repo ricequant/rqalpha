@@ -17,14 +17,14 @@
 import six
 import numpy as np
 
-from ..execution_context import ExecutionContext
-from ..environment import Environment
-from ..const import RUN_TYPE
-from ..utils.datetime_func import convert_int_to_datetime
-from ..utils.i18n import gettext as _
-from ..utils.logger import system_log
-from ..utils.exception import patch_user_exc
-from ..const import EXECUTION_PHASE, BAR_STATUS
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.environment import Environment
+from rqalpha.const import RUN_TYPE
+from rqalpha.utils.datetime_func import convert_int_to_datetime
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import system_log
+from rqalpha.utils.exception import patch_user_exc
+from rqalpha.const import EXECUTION_PHASE, BAR_STATUS
 
 
 NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down', 'volume', 'total_turnover',

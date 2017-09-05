@@ -14,20 +14,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ...utils.repr import property_repr
-from ...environment import Environment
-from ...utils.i18n import gettext as _
-from ...utils.logger import user_system_log
+from rqalpha.interface import AbstractPosition
+from rqalpha.environment import Environment
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 
-class BasePosition(object):
+class Positions(dict):
+    def __init__(self, position_cls):
+        super(Positions, self).__init__()
+        self._position_cls = position_cls
+        self._cached_positions = {}
 
+    def __missing__(self, key):
+        if key not in self._cached_positions:
+            self._cached_positions[key] = self._position_cls(key)
+        return self._cached_positions[key]
+
+    def get_or_create(self, key):
+        if key not in self:
+            self[key] = self._position_cls(key)
+        return self[key]
+
+
+class BasePosition(AbstractPosition):
     __abandon_properties__ = ["total_orders", "total_trades"]
-
-    __repr__ = property_repr
+    NaN = float('NaN')
 
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
+        self._last_price = self.NaN
 
     def get_state(self):
         raise NotImplementedError
@@ -56,7 +72,14 @@ class BasePosition(object):
 
     @property
     def last_price(self):
-        return Environment.get_instance().get_last_price(self._order_book_id)
+        return (self._last_price if self._last_price == self._last_price else
+                Environment.get_instance().get_last_price(self._order_book_id))
+
+    def update_last_price(self):
+        price = Environment.get_instance().get_last_price(self._order_book_id)
+        if price == price:
+            # 过滤掉 nan
+            self._last_price = price
 
     # -- Function
     def is_de_listed(self):

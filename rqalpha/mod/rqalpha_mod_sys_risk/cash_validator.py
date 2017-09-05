@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from rqalpha.interface import AbstractFrontendValidator
-from rqalpha.const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
+from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -65,9 +65,9 @@ class CashValidator(AbstractFrontendValidator):
         return False
 
     def can_submit_order(self, account, order):
-        if account.type == ACCOUNT_TYPE.STOCK:
+        if account.type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
             return self._stock_validator(account, order)
-        elif account.type == ACCOUNT_TYPE.FUTURE:
+        elif account.type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
             return self._future_validator(account, order)
         else:
             raise NotImplementedError

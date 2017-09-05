@@ -115,13 +115,14 @@ def handle_bar(context, bar_dict):
 
 __config__ = {
     "base": {
-        "securities": "stock",
         "start_date": "2008-07-01",
         "end_date": "2014-09-01",
         "frequency": "1d",
         "matching_type": "current_bar",
-        "stock_starting_cash": 1000000,
         "benchmark": "000300.XSHG",
+        "accounts": {
+            "stock": 1000000
+        }
     },
     "extra": {
         "log_level": "error",

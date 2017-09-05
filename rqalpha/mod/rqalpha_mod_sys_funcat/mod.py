@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import datetime
+
 import six
 
 from rqalpha.interface import AbstractMod
@@ -29,9 +30,9 @@ class FuncatAPIMod(AbstractMod):
         try:
             import funcat
         except ImportError:
-            six.print_(u"-" * 50)
-            six.print_(u">>> Missing funcat. Please run `pip install funcat`")
-            six.print_(u"-" * 50)
+            six.print_("-" * 50)
+            six.print_(">>> Missing funcat. Please run `pip install funcat`")
+            six.print_("-" * 50)
             raise
 
         from funcat.data.backend import DataBackend
@@ -71,12 +72,18 @@ class FuncatAPIMod(AbstractMod):
                 self.set_current_date(calendar_date)
 
             def _history_bars(self, order_book_id, bar_count, freq, dt):
-                if self.fetch_data_by_api:
-                    bars = history_bars(
-                        order_book_id, bar_count, freq, fields=None)
+                if self.fetch_data_by_api and ExecutionContext.phase() in (
+                        EXECUTION_PHASE.BEFORE_TRADING,
+                        EXECUTION_PHASE.ON_BAR,
+                        EXECUTION_PHASE.ON_TICK,
+                        EXECUTION_PHASE.AFTER_TRADING,
+                        EXECUTION_PHASE.SCHEDULED):
+                        bars = history_bars(
+                            order_book_id, bar_count, freq, fields=None)
                 else:
                     bars = self.rqalpha_env.data_proxy.history_bars(
-                        order_book_id, bar_count, freq, field=None,
+                        order_book_id, bar_count, freq,
+                        field=["datetime", "open", "high", "low", "close", "volume"],
                         dt=dt)
                 return bars
 
@@ -94,7 +101,7 @@ class FuncatAPIMod(AbstractMod):
                 scale = 1
                 if freq[-1] == "m":
                     scale *= 240. / int(freq[:-1])
-                bar_count = int((end - start).days * scale)
+                bar_count = int(((end - start).days + 1) * scale)
 
                 dt = datetime.datetime.combine(end, datetime.time(23, 59, 59))
                 bars = self._history_bars(order_book_id, bar_count, freq, dt)
@@ -112,7 +119,6 @@ class FuncatAPIMod(AbstractMod):
 
             def get_trading_dates(self, start, end):
                 """获取所有的交易日
-
                 :param start: 20160101
                 :param end: 20160201
                 """

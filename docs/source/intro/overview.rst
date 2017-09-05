@@ -6,6 +6,9 @@
 
 .. _Ricequant: https://www.ricequant.com/algorithms
 .. _Ricequant 社区: https://www.ricequant.com/community
+.. _RQAlpha 文档: http://rqalpha.io
+.. _Ricequant 文档: https://www.ricequant.com/api/python/chn
+
 
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。
 
@@ -73,7 +76,7 @@ RQAlpha 安装
 .. code-block:: bash
 
     $ cd examples
-    $ rqalpha run -f rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot --progress --stock-starting-cash 100000
+    $ rqalpha run -f rsi.py -s 2014-01-01 -e 2016-01-01 -o result.pkl --plot --progress --account stock 100000
 
 等待回测结束后，将显示您的收益率和Risk。
 
@@ -127,7 +130,6 @@ RQAlpha可以输出一个 pickle 文件，里面为一个 dict 。keys 包括
     #  'end_date': datetime.date(2017, 1, 19),
     #  'frequency': '1d',
     #  'frozen_cash': 0.0,
-    #  'future_starting_cash': 0,
     #  'information_ratio': 0.45700000000000002,
     #  'margin_multiplier': 1,
     #  'market_value': 1027242.0,
@@ -140,8 +142,6 @@ RQAlpha可以输出一个 pickle 文件，里面为一个 dict 。keys 包括
     #  'slippage': 0,
     #  'sortino': 0.014,
     #  'start_date': datetime.date(2016, 1, 4),
-    #  'starting_cash': 1000000.0,
-    #  'stock_starting_cash': 1000000.0,
     #  'strategy_file': 'rqalpha/examples/simple_macd.py',
     #  'strategy_name': 'simple_macd',
     #  'strategy_type': 'stock',

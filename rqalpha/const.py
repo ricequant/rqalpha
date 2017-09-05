@@ -37,7 +37,7 @@ class EXECUTION_PHASE(CustomEnum):
 
 # noinspection PyPep8Naming
 class RUN_TYPE(CustomEnum):
-    # TODO 取消 RUN_TYPE, 取而代之的是使用开启哪些Mod来控制策略所运行的类型
+    # TODO: 取消 RUN_TYPE, 取而代之的是使用开启哪些Mod来控制策略所运行的类型
     # Back Test
     BACKTEST = "BACKTEST"
     # Paper Trading
@@ -47,11 +47,20 @@ class RUN_TYPE(CustomEnum):
 
 
 # noinspection PyPep8Naming
-class ACCOUNT_TYPE(CustomEnum):
+class DEFAULT_ACCOUNT_TYPE(CustomEnum):
+    """
+    *   关于 ACCOUNT_TYPE，目前主要表示为交易账户。STOCK / FUTURE / OPTION 目前均表示为中国 对应的交易账户。
+    *   ACCOUNT_TYPE 不区分交易所，比如 A 股区分上海交易所和深圳交易所，但对应的都是一个账户，因此统一为 STOCK
+    *   目前暂时不添加其他 DEFAULT_ACCOUNT_TYPE 类型，如果需要增加自定义账户及类型，请参考 https://github.com/ricequant/rqalpha/issues/160
+    """
     TOTAL = 0
     BENCHMARK = 1
+    # 股票
     STOCK = 2
+    # 期货
     FUTURE = 3
+    # 期权
+    OPTION = 4
 
 
 # noinspection PyPep8Naming
@@ -118,6 +127,7 @@ class INSTRUMENT_TYPE(CustomEnum):
     FENJI_MU = "FENJI_MU"
     FENJI_A = "FENJI_A"
     FENJI_B = "FENJI_B"
+    PUBLIC_FUND = 'PublicFund'
 
 
 # noinspection PyPep8Naming
@@ -156,6 +166,26 @@ class HEDGE_TYPE(CustomEnum):
 class DAYS_CNT(object):
     DAYS_A_YEAR = 365
     TRADING_DAYS_A_YEAR = 252
+
+
+class CURRENCY(CustomEnum):
+    CNY = "CNY"     # 人民币
+    USD = "USD"     # 美元
+    EUR = "EUR"     # 欧元
+    HKD = "HKD"     # 港币
+    GBP = "GBP"     # 英镑
+    JPY = "JPY"     # 日元
+    KRW = "KWR"     # 韩元
+    CAD = "CAD"     # 加元
+    AUD = "AUD"     # 澳元
+    CHF = "CHF"     # 瑞郎
+    SGD = "SGD"     # 新加坡元
+    MYR = "MYR"     # 马拉西亚币
+    IDR = "IDR"     # 印尼币
+    NZD = "NZD"     # 新西兰币
+    VND = "VND"     # 越南盾
+    THB = "THB"     # 泰铢
+    PHP = "PHP"     # 菲律宾币
 
 
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"

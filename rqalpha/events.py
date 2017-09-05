@@ -140,6 +140,9 @@ class EVENT(Enum):
 
     ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'
 
+    # persist immediantly
+    DO_PERSIST = 'do_persist'
+
 
 def parse_event(event_str):
     return EVENT.__members__.get(event_str.upper(), None)

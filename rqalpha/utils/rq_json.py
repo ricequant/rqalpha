@@ -17,7 +17,7 @@
 import simplejson as json
 import datetime
 
-from .. import const
+from rqalpha import const
 
 
 def convert_dict_to_json(dict_obj):

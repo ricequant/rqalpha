@@ -19,12 +19,12 @@ import json
 
 from dateutil.parser import parse
 
-from ..execution_context import ExecutionContext
-from ..environment import Environment
-from ..const import EXC_TYPE, EXECUTION_PHASE
-from ..events import EVENT
-from ..utils.py2 import signature
-from ..utils.exception import patch_user_exc, ModifyExceptionFromType
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.environment import Environment
+from rqalpha.const import EXC_TYPE, EXECUTION_PHASE
+from rqalpha.events import EVENT
+from rqalpha.utils.py2 import signature
+from rqalpha.utils.exception import patch_user_exc, ModifyExceptionFromType
 
 
 def market_close(hour=0, minute=0):
@@ -127,6 +127,9 @@ class Scheduler(object):
         if time_rule == 'before_trading':
             return lambda: self._is_before_trading()
 
+        if time_rule is not None and not isinstance(time_rule, int):
+            raise patch_user_exc(ValueError('invalid time_rule, "before_trading" or int expected, got {}'.format(repr(time_rule))))
+
         time_rule = time_rule if time_rule else self._minutes_since_midnight(9, 31)
         return lambda: self._should_trigger(time_rule)
 
@@ -160,11 +163,15 @@ class Scheduler(object):
         _verify_function('run_monthly', func)
         if tradingday is None and 'monthday' in kwargs:
             tradingday = kwargs.pop('monthday')
+
         if kwargs:
             raise patch_user_exc(ValueError('unknown argument: {}'.format(kwargs)))
 
         if tradingday is None:
             raise patch_user_exc(ValueError('tradingday is required'))
+
+        if not isinstance(tradingday, int):
+            raise patch_user_exc(ValueError('tradingday: <int> excpected, {} got'.format(repr(tradingday))))
 
         if tradingday > 23 or tradingday < -23 or tradingday == 0:
             raise patch_user_exc(ValueError('invalid tradingday, should be in [-23, 0), (0, 23]'))

@@ -14,61 +14,66 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
 import six
 import numpy as np
 
-from ..interface import AbstractDataSource
-from ..const import MARGIN_TYPE
-from ..utils.py2 import lru_cache
-from ..utils.datetime_func import convert_date_to_int, convert_int_to_date
-from ..utils.i18n import gettext as _
-from ..utils.logger import user_system_log
+from rqalpha.interface import AbstractDataSource
+from rqalpha.const import MARGIN_TYPE
+from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
+from rqalpha.utils.i18n import gettext as _
 
-from .future_info_cn import CN_FUTURE_INFO
-from .converter import StockBarConverter, IndexBarConverter
-from .converter import FutureDayBarConverter, FundDayBarConverter
-from .daybar_store import DayBarStore
-from .date_set import DateSet
-from .dividend_store import DividendStore
-from .instrument_store import InstrumentStore
-from .trading_dates_store import TradingDatesStore
-from .yield_curve_store import YieldCurveStore
-from .simple_factor_store import SimpleFactorStore
-from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
+from rqalpha.data.future_info_cn import CN_FUTURE_INFO
+from rqalpha.data.converter import StockBarConverter, IndexBarConverter
+from rqalpha.data.converter import FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
+from rqalpha.data.daybar_store import DayBarStore
+from rqalpha.data.date_set import DateSet
+from rqalpha.data.dividend_store import DividendStore
+from rqalpha.data.instrument_store import InstrumentStore
+from rqalpha.data.trading_dates_store import TradingDatesStore
+from rqalpha.data.yield_curve_store import YieldCurveStore
+from rqalpha.data.simple_factor_store import SimpleFactorStore
+from rqalpha.data.adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
+from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
 
 
 class BaseDataSource(AbstractDataSource):
     def __init__(self, path):
+        if not os.path.exists(path):
+            raise RuntimeError('bundle path {} not exist'.format(os.path.abspath))
+
         def _p(name):
             return os.path.join(path, name)
 
-        try:
-            self._day_bars = [
-                DayBarStore(_p('stocks.bcolz'), StockBarConverter),
-                DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
-                DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
-                DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
-            ]
+        self._day_bars = [
+            DayBarStore(_p('stocks.bcolz'), StockBarConverter),
+            DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
+            DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
+            DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
+        ]
 
-            self._instruments = InstrumentStore(_p('instruments.pk'))
-            self._dividends = DividendStore(_p('original_dividends.bcolz'))
-            self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
-            self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
-            self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
-            self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
+        self._instruments = InstrumentStore(_p('instruments.pk'))
+        self._dividends = DividendStore(_p('original_dividends.bcolz'))
+        self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
+        self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
+        self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
+        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
 
-            self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
-            self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+        self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
+        self._suspend_days = DateSet(_p('suspended_days.bcolz'))
 
-            self.get_yield_curve = self._yield_curve.get_yield_curve
-            self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
-        except IOError as e:
-            raise RuntimeError(
-                _(u"Bundle is out of date, please use `rqalpha update_bundle` to renew your bundle data."))
+        self.get_yield_curve = self._yield_curve.get_yield_curve
+        self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+        if os.path.exists(_p('public_funds.bcolz')):
+            self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
+            self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
+            self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
+            self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
 
-    def get_dividend(self, order_book_id):
+    def get_dividend(self, order_book_id, public_fund=False):
+        if public_fund:
+            return self._public_fund_dividends.get_dividend(order_book_id)
         return self._dividends.get_dividend(order_book_id)
 
     def get_trading_minutes_for(self, order_book_id, trading_dt):
@@ -95,6 +100,7 @@ class BaseDataSource(AbstractDataSource):
         'FenjiA': 3,
         'FenjiB': 3,
         'FenjiMu': 3,
+        'PublicFund': 4
     }
 
     def _index_of(self, instrument):
@@ -205,3 +211,15 @@ class BaseDataSource(AbstractDataSource):
 
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError
+
+    def public_fund_commission(self, instrument, buy):
+        if buy:
+            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Buy']
+        else:
+            return PUBLIC_FUND_COMMISSION[instrument.fund_type]['Sell']
+
+    def non_subscribable(self, order_book_id, dates):
+        return self._non_subscribable_days.contains(order_book_id, dates)
+
+    def non_redeemable(self, order_book_id, dates):
+        return self._non_redeemable_days.contains(order_book_id, dates)

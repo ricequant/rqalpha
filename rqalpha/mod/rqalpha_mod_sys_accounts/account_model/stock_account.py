@@ -18,12 +18,14 @@ import six
 import datetime
 from collections import defaultdict
 
-from .base_account import BaseAccount
-from ...events import EVENT
-from ...environment import Environment
-from ...utils.logger import user_system_log
-from ...utils.i18n import gettext as _
-from ...const import SIDE, ACCOUNT_TYPE
+from rqalpha.model.base_account import BaseAccount
+from rqalpha.events import EVENT
+from rqalpha.environment import Environment
+from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE
+
+from ..api.api_stock import order_shares
 
 
 class StockAccount(BaseAccount):
@@ -36,13 +38,23 @@ class StockAccount(BaseAccount):
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
-        event_bus.prepend_listener(EVENT.TRADE, self._on_trade)
-        event_bus.prepend_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.prepend_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
-        event_bus.prepend_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
-        event_bus.prepend_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
-        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
-        event_bus.prepend_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.add_listener(EVENT.TRADE, self._on_trade)
+        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
+        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
+        event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        if self.AGGRESSIVE_UPDATE_LAST_PRICE:
+            event_bus.add_listener(EVENT.BAR, self._on_bar)
+            event_bus.add_listener(EVENT.TICK, self._on_tick)
+
+    def order(self, order_book_id, quantity, style, target=False):
+        position = self.positions[order_book_id]
+        if target:
+            # For order_to
+            quantity = quantity - position.quantity
+        return order_shares(order_book_id, quantity, style=style)
 
     def get_state(self):
         return {
@@ -135,10 +147,13 @@ class StockAccount(BaseAccount):
         self._handle_split(trading_date)
 
     def _on_settlement(self, event):
+        env = Environment.get_instance()
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
+            if self.AGGRESSIVE_UPDATE_LAST_PRICE:
+                position.update_last_price()
             if position.is_de_listed() and position.quantity != 0:
-                if Environment.get_instance().config.validator.cash_return_by_stock_delisted:
+                if env.config.validator.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
                 user_system_log.warn(
                     _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
@@ -153,9 +168,17 @@ class StockAccount(BaseAccount):
         self._backward_trade_set.clear()
         self._handle_dividend_book_closure(event.trading_dt.date())
 
+    def _on_bar(self, event):
+        for position in self._positions.values():
+            position.update_last_price()
+
+    def _on_tick(self, event):
+        for position in self._positions.values():
+            position.update_last_price()
+
     @property
     def type(self):
-        return ACCOUNT_TYPE.STOCK
+        return DEFAULT_ACCOUNT_TYPE.STOCK.name
 
     def _handle_dividend_payable(self, trading_date):
         to_be_removed = []
@@ -183,11 +206,18 @@ class StockAccount(BaseAccount):
 
             dividend_per_share = dividend['dividend_cash_before_tax'] / dividend['round_lot']
             position.dividend_(dividend_per_share)
-            self._dividend_receivable[order_book_id] = {
-                'quantity': position.quantity,
-                'dividend_per_share': dividend_per_share,
-                'payable_date': self._int_to_date(dividend['payable_date']),
-            }
+
+            config = Environment.get_instance().config
+            if config.extra.dividend_reinvestment:
+                last_price = Environment.get_instance().data_proxy.get_bar(order_book_id, trading_date).close
+                shares = position.quantity * dividend_per_share / last_price
+                position._quantity += shares
+            else:
+                self._dividend_receivable[order_book_id] = {
+                    'quantity': position.quantity,
+                    'dividend_per_share': dividend_per_share,
+                    'payable_date': self._int_to_date(dividend['payable_date']),
+                }
 
     def _handle_split(self, trading_date):
         data_proxy = Environment.get_instance().data_proxy
@@ -199,7 +229,7 @@ class StockAccount(BaseAccount):
 
     @property
     def total_value(self):
-        return self.market_value + self._total_cash
+        return self.market_value + self._total_cash + self.dividend_receivable
 
     @property
     def dividend_receivable(self):

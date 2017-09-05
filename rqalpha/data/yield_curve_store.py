@@ -18,7 +18,7 @@ import bcolz
 import pandas as pd
 import numpy as np
 
-from . import risk_free_helper
+from rqalpha.data import risk_free_helper
 
 
 class YieldCurveStore(object):

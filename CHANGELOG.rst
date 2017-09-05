@@ -2,6 +2,188 @@
 CHANGELOG
 ==================
 
+3.0.6
+==================
+
+- import 修改相对引用为绝对引用
+- 重构配置文件读取功能，分为默认配置，用户配置，项目配置
+- 重构 `main()` 的 `tear_down` 的调用
+- get_previous_trading_date(date, n=1) 增加参数 n
+- 增加公募基金数据处理相关逻辑
+- 修改 `mod.tear_down` ，如果单个 mod 在 tear_down 抛异常后，不影响其他 mod 继续 tear_down
+- scheduler bugfix
+- 处理 persist 遇到的异常
+- 修复 order get_state / set_state 缺失 transaction_cost, avg_price
+- 修复 mod_sys_stock_realtime
+
+3.0.2
+==================
+
+- 取消在股票下单函数中对 `order_book_id` 类型的检查，现在您可以交易 `ETF`, `LOF`, `FenjiMu`, `FenjiA`, `FenjiB`, `INDX` 了
+- Merge `PR 170 <https://github.com/ricequant/rqalpha/pull/170>`_ 解决自定义 `volume limit` 时显示数值不正确的问题。
+- Fix `Issue 148 <https://github.com/ricequant/rqalpha/issues/148>`_ `get_dividend()方法返回的类型是numpy.ndarray，而非pandas.DataFrame`
+- Fix `Issue 169 <https://github.com/ricequant/rqalpha/issues/169>`_ 执行 `rqalpha mod install ctp==0.2.0dev0` 时错误的记录了库信息的问题
+- Fix `Issue 158 <https://github.com/ricequant/rqalpha/issues/158>`_ 多次循环 `run_file` / `run_code` 时导致的内存泄漏的问题
+- Enhance `Issue 166 <https://github.com/ricequant/rqalpha/issues/166>`_ 启动参数支持 `--no-stock-t1` 来屏蔽股票 T + 1 导致今仓的限制
+- 性能提升: 使用 `bisect_right` 代替 `searchsorted`
+
+3.0.0
+==================
+
+**[For 开发/运行策略的用户]**
+
+3.x 相比 2.x 进行了如下更改，如果您升级到 3.x 版本，请务必阅读以下内容，保证您的策略可以顺利启动和执行:
+
+- 命令行参数做出如下调整
+
+  - 不再使用 :code:`-sc/--stock-starting-cash` 参数
+  - 不再使用 :code:`-fc/--future-starting-cash` 参数
+  - 不再使用 :code:`-i/--init-cash` 参数
+  - 不再使用 :code:`-s/--security` 参数
+  - 不再使用 :code:`-k/--kind` 参数
+  - 不再使用 :code:`--strategy-type` 参数
+  - **使用** :code:`--account` 来替代，具体用法如下
+
+.. code-block:: bash
+
+  # 策略通过命令行运行，设置可交易类型是股票，起始资金为 10000
+  $ rqalpha run --account stock 10000
+  # 策略通过命令行运行，设置可交易类型为期货，起始资金为 50000
+  $ rqalpha run --account future 50000
+  # 策略通过命令行运行，设置可交易类型为期货和股票，起始资金分别为 股票 10000, 期货 50000
+  $ rqalpha run --account stock 10000 --account future 50000
+  # 如果您通过 Mod 扩展，自定义了一种可交易类型(假设是huobi)，您也可以增加对于火币的支持和起始资金设置
+  $ rqalpha run --account stock 10000 --account future 50000 --account huobi 20000
+
+- 相应，如果您通过 :code:`run_file | run_code | run_func` 来启动策略，配置文件及配置信息也做了对应的调整:
+
+  - 不再使用 :code:`base.stock_starting_cash`
+  - 不再使用 :code:`base.future_starting_cash`
+  - 不再使用 :code:`base.securities`
+  - **使用** :code:`base.accounts` 来替代，具体用法如下:
+
+.. code-block:: python
+
+  # 策略通过配置，设置可交易类型是股票，起始资金为 10000
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "stock": 10000
+      }
+    }
+  }
+  # 策略通过配置，设置可交易类型是期货，起始资金为 50000
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "future": 50000
+      }
+    }
+  }
+  # 策略通过配置，设置可交易类型为期货和股票，起始资金分别为 股票 10000, 期货 50000
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "stock": 10000,
+        "future": 50000
+      }
+    }
+  }
+  # 如果您通过 Mod 扩展，自定义了一种可交易类型(假设是huobi)，您也可以增加对于火币的支持和起始资金设置
+  config = {
+    "base": {
+      "start_date": "...",
+      "end_date": "...",
+      "frequency": "...",
+      "matching_type": "...",
+      "benchmark": "...",
+      "accounts": {
+        "stock": 10000,
+        "future": 50000,
+        "huobi": 20000
+      }
+    }
+  }
+
+
+
+**[For Mod developer]**
+
+本次更新可能导致已实现 Mod 无法正常使用，请按照文档升级您的 Mod，或者使用 2.2.x 版本 RQAlpha
+
+在通过 Mod 扩展 RQAlpha 的时候，由于 RQAlpha 直接定义了 `Account` 和 `Position` 相关的 Model, 增加新的 `account` 和 `position` 变得非常的困难，想扩展更多类型是一件很麻烦的事情，因此我们决定重构该模块从而解决这些问题。
+
+详情请查看: https://github.com/ricequant/rqalpha/issues/160
+
+主要进行如下更改:
+
+- 增加 :code:`AbstractAccount` 和 :code:`AbstractPosition`, 用户可以基于该抽象类进行扩展。
+- :code:`const.ACCOUNT_TYPE` 修改为 :code:`const.DEFAULT_ACCOUNT_TYPE`，并且不再直接使用，您可以通过 :code:`Environment.get_instance().account_type_dict` 来获取包括 Mod 注入的账户类型。
+- 原先所有使用 `ACCOUNT_TYPE` 作为 key 的地方，不再使用 Enum 类型作为 Key, 而是修改为对应 Enum 的 name 作为key。比如说原本使用 :code:`portfolio.accounts[ACCOUNT_TYPE.STOCK]` 更改为 :code:`portfolio.accounts['STOCK']`
+- :code:`Environment` 提供 :code:`set_account_model` | :code:`get_account_model` | :code:`set_position_model` | :code:`get_position_model` API 来注入 自定义Model。
+- :code:`Environment` 提供 :code:`set_smart_order` API 来注入自定义账户类型的智能下单函数，从而通过通用的 :code:`order` | :code:`order_to` API 便可以交易对应自定义账户类型。
+- RQAlpha 将已有的 AccountModel, PositionModel 和 API 抽离至 `rqalpha_mod_sys_accounts` 中，通过如下方式注入:
+
+.. code-block:: python
+
+  from .account_model import *
+  from .position_model import *
+  from .api import api_future, api_stock
+
+
+  class AccountMod(AbstractMod):
+
+      def start_up(self, env, mod_config):
+
+          # 注入 Account
+          env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount)
+          env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount)
+          env.set_account_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, BenchmarkAccount)
+
+          # 注入 Position
+          env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPosition)
+          env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePosition)
+          env.set_position_model(DEFAULT_ACCOUNT_TYPE.BENCHMARK.name, StockPosition)
+
+          # 注入 API
+          if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.accounts:
+              # 注入期货API
+              for export_name in api_future.__all__:
+                  export_as_api(getattr(api_future, export_name))
+              # 注入 smart order
+              env.set_smart_order(DEFAULT_ACCOUNT_TYPE.FUTURE.name, api_future.smart_order)
+          if DEFAULT_ACCOUNT_TYPE.STOCK.name in env.config.base.accounts:
+              # 注入股票API
+              for export_name in api_stock.__all__:
+                  export_as_api(getattr(api_stock, export_name))
+              # 注入 smart order
+              env.set_smart_order(DEFAULT_ACCOUNT_TYPE.STOCK.name, api_stock.smart_order)
+
+      def tear_down(self, code, exception=None):
+          pass
+
+
+2.2.7
+==================
+
+- 解决当存在无效 Mod 时，RQAlpha 崩溃无法启动的问题
+- 修复期货下单函数默认 style 为 None 导致报错退出的问题
+
 2.2.5
 ==================
 

@@ -16,7 +16,7 @@
 
 import six
 
-from .. import const
+from rqalpha import const
 
 
 class CustomError(object):

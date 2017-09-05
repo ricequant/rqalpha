@@ -18,7 +18,7 @@ import bcolz
 import numpy as np
 import six
 
-from ..utils.i18n import gettext as _
+from rqalpha.utils.i18n import gettext as _
 
 
 class DayBarStore(object):

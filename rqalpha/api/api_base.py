@@ -14,11 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''
-更多描述请见
-https://www.ricequant.com/api/python/chn
-'''
-
 from __future__ import division
 
 import datetime
@@ -32,25 +27,25 @@ import pandas as pd
 import six
 from dateutil.parser import parse
 
-from . import names
-from ..environment import Environment
-from ..execution_context import ExecutionContext
-from ..utils import to_industry_code, to_sector_name, unwrapper
-from ..utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
-from ..utils.i18n import gettext as _
+from rqalpha.api import names
+from rqalpha.environment import Environment
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.utils import to_industry_code, to_sector_name, unwrapper
+from rqalpha.utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
+from rqalpha.utils.i18n import gettext as _
 # noinspection PyUnresolvedReferences
-from ..utils.logger import user_log as logger
+from rqalpha.utils.logger import user_log as logger
 
-from ..model.instrument import SectorCodeItem, IndustryCodeItem
-from ..utils.arg_checker import apply_rules, verify_that
+from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
+from rqalpha.utils.arg_checker import apply_rules, verify_that
 # noinspection PyUnresolvedReferences
-from ..model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
+from rqalpha.model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
 # noinspection PyUnresolvedReferences
-from ..const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
+from rqalpha.const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
 # noinspection PyUnresolvedReferences
-from ..model.order import Order, MarketOrder, LimitOrder, OrderStyle
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 # noinspection PyUnresolvedReferences
-from ..events import EVENT
+from rqalpha.events import EVENT
 
 
 __all__ = [
@@ -120,7 +115,8 @@ def register_api(name, func):
 def export_as_api(func):
     __all__.append(func.__name__)
 
-    func = decorate_api_exc(func)
+    if isinstance(func, FunctionType):
+        func = decorate_api_exc(func)
     globals()[func.__name__] = func
 
     return func
@@ -183,7 +179,8 @@ def get_open_orders():
                                 EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 def cancel_order(order):
     """
     撤单
@@ -536,8 +533,8 @@ def all_instruments(type=None, date=None):
         return pd.DataFrame([i.__dict__ for i in result])
 
     return pd.DataFrame(
-        [[i.order_book_id, i.symbol, i.abbrev_symbol, i.type, i.listed_date, i.de_listed_date] for i in result],
-        columns=['order_book_id', 'symbol', 'abbrev_symbol', 'type', 'listed_date', 'de_listed_date'])
+        [[i.order_book_id, i.symbol, i.type, i.listed_date, i.de_listed_date] for i in result],
+        columns=['order_book_id', 'symbol', 'type', 'listed_date', 'de_listed_date'])
 
 
 @export_as_api
@@ -648,8 +645,8 @@ def concept(*concept_names):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('start_date').is_valid_date(ignore_none=False))
-@apply_rules(verify_that('end_date').is_valid_date(ignore_none=False))
+@apply_rules(verify_that('start_date').is_valid_date(ignore_none=False),
+             verify_that('end_date').is_valid_date(ignore_none=False))
 def get_trading_dates(start_date, end_date):
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
@@ -681,13 +678,15 @@ def get_trading_dates(start_date, end_date):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('date').is_valid_date(ignore_none=False))
-def get_previous_trading_date(date):
+@apply_rules(verify_that('date').is_valid_date(ignore_none=False),
+             verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
+def get_previous_trading_date(date, n=1):
     """
-    获取指定日期的上一交易日。
+    获取指定日期的之前的第 n 个交易日。
 
     :param date: 指定日期
     :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
+    :param n:
 
     :return: `datetime.date`
 
@@ -700,7 +699,7 @@ def get_previous_trading_date(date):
         [Out]
         [datetime.date(2016, 4, 29)]
     """
-    return Environment.get_instance().data_proxy.get_previous_trading_date(date)
+    return Environment.get_instance().data_proxy.get_previous_trading_date(date, n)
 
 
 @export_as_api
@@ -710,13 +709,15 @@ def get_previous_trading_date(date):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('date').is_valid_date(ignore_none=False))
-def get_next_trading_date(date):
+@apply_rules(verify_that('date').is_valid_date(ignore_none=False),
+             verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
+def get_next_trading_date(date, n=1):
     """
-    获取指定日期的下一交易日
+    获取指定日期之后的第 n 个交易日
 
     :param date: 指定日期
     :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
+    :param n:
 
     :return: `datetime.date`
 
@@ -729,7 +730,7 @@ def get_next_trading_date(date):
         [Out]
         [datetime.date(2016, 5, 3)]
     """
-    return Environment.get_instance().data_proxy.get_next_trading_date(date)
+    return Environment.get_instance().data_proxy.get_next_trading_date(date, n)
 
 
 def to_date(date):
@@ -765,13 +766,13 @@ def get_dividend(order_book_id, start_date, *args, **kwargs):
                 start_date, dt
             ))
     order_book_id = assure_order_book_id(order_book_id)
-    df = env.data_proxy.get_dividend(order_book_id)
-    if df is None:
+    array = env.data_proxy.get_dividend(order_book_id)
+    if array is None:
         return None
 
     sd = start_date.year * 10000 + start_date.month * 100 + start_date.day
     ed = dt.year * 10000 + dt.month * 100 + dt.day
-    return df[(df['announcement_date'] >= sd) & (df['announcement_date'] <= ed)]
+    return array[(array['announcement_date'] >= sd) & (array['announcement_date'] <= ed)]
 
 
 @export_as_api

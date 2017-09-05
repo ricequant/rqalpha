@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_position import BasePosition
-from ...environment import Environment
-from ...const import SIDE, POSITION_EFFECT, ACCOUNT_TYPE
+from rqalpha.model.base_position import BasePosition
+from rqalpha.environment import Environment
+from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
 
 
 class FuturePosition(BasePosition):
@@ -38,6 +38,9 @@ class FuturePosition(BasePosition):
 
         self._buy_avg_open_price = 0.
         self._sell_avg_open_price = 0.
+
+    def __repr__(self):
+        return 'FuturePosition({})'.format(self.__dict__)
 
     def get_state(self):
         return {
@@ -67,7 +70,7 @@ class FuturePosition(BasePosition):
 
     @property
     def type(self):
-        return ACCOUNT_TYPE.FUTURE
+        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
 
     @property
     def margin_rate(self):
@@ -290,7 +293,7 @@ class FuturePosition(BasePosition):
         """
         [float] 保证金
         """
-        # TODO 需要添加单向大边相关的处理逻辑
+        # TODO: 需要添加单向大边相关的处理逻辑
         return self.buy_margin + self.sell_margin
 
     @property
@@ -353,8 +356,9 @@ class FuturePosition(BasePosition):
         return max(close_today_amount, 0)
 
     def apply_settlement(self):
-        data_proxy = Environment.get_instance().data_proxy
-        trading_date = Environment.get_instance().trading_dt.date()
+        env = Environment.get_instance()
+        data_proxy = env.data_proxy
+        trading_date = env.trading_dt.date()
         settle_price = data_proxy.get_settle_price(self.order_book_id, trading_date)
         self._buy_old_holding_list = [(settle_price, self.buy_quantity)]
         self._sell_old_holding_list = [(settle_price, self.sell_quantity)]

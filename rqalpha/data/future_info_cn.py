@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..const import COMMISSION_TYPE, MARGIN_TYPE
+from rqalpha.const import COMMISSION_TYPE, MARGIN_TYPE
 
 
 CN_FUTURE_INFO = {

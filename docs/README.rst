@@ -10,6 +10,7 @@ RQAlpha 使用 Sphinx 进行文档编写。
 Requirements
 ------------
 
+*   pandoc: http://pandoc.org/installing.html
 *   Sphinx
 *   watchdog
 *   sphinx_rtd_theme

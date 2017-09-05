@@ -1,6 +1,9 @@
 # WARNING: DO NOT EDIT
 
 mod:
+  # 载入 Account 和 Postion Model
+  sys_accounts:
+    enabled: true
   # 回测 / 模拟交易 支持 Mod
   sys_simulation:
     enabled: true

@@ -17,18 +17,18 @@
 import bcolz
 import numpy as np
 
-from ..utils.py2 import lru_cache
+from rqalpha.utils.py2 import lru_cache
 
 
 class DateSet(object):
     def __init__(self, f):
         dates = bcolz.open(f, 'r')
         self._index = dates.attrs['line_map']
-        self._dates = [int(d) for d in dates]
+        self._dates = dates[:]
 
     @lru_cache(None)
     def _get_set(self, s, e):
-        return set(self._dates[s:e])
+        return set(self._dates[s:e].tolist())
 
     def get_days(self, order_book_id):
         try:

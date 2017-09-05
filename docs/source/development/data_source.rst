@@ -67,13 +67,14 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 
     __config__ = {
         "base": {
-            "securities": "future",
             "start_date": "2015-01-09",
             "end_date": "2015-01-10",
             "frequency": "1d",
             "matching_type": "current_bar",
-            "future_starting_cash": 1000000,
             "benchmark": None,
+            "accounts": {
+                "future": 1000000
+            }
         },
         "extra": {
             "log_level": "verbose",
@@ -132,13 +133,14 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 
     __config__ = {
         "base": {
-            "securities": "future",
             "start_date": "2015-01-09",
             "end_date": "2015-01-10",
             "frequency": "1d",
             "matching_type": "current_bar",
-            "future_starting_cash": 1000000,
             "benchmark": None,
+            "accounts": {
+                "future": 1000000
+            }
         },
         "extra": {
             "log_level": "verbose",
@@ -222,13 +224,14 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 
     __config__ = {
         "base": {
-            "securities": "future",
             "start_date": "2015-01-09",
             "end_date": "2015-01-10",
             "frequency": "1d",
             "matching_type": "current_bar",
-            "future_starting_cash": 1000000,
             "benchmark": None,
+            "accounts": {
+                "future": 1000000
+            }
         },
         "extra": {
             "log_level": "verbose",

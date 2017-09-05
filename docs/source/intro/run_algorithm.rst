@@ -34,11 +34,9 @@
 -f            `- -` strategy-file             启动的策略文件路径
 -s            `- -` start-date                回测起始日期
 -e            `- -` end-date                  回测结束日期(如果是实盘，则忽略该配置)
--sc           `- -` stock-starting-cash       股票起始资金，默认为0
--fc           `- -` future-starting-cash      期货起始资金，默认为0
 -bm           `- -` benchmark                 Benchmark，如果不设置，默认没有基准参照
 -mm           `- -` margin-multiplier         设置保证金乘数，默认为1
--st           `- -` security                  设置策略类型，目前支持 :code:`stock` (股票策略)、:code:`future` (期货策略)及 :code:`stock_future` (混合策略)
+-a            `- -` account                   设置账户类型及起始资金，比如股票期货混合策略，起始资金分别为10000, 20000 :code:`--account stock 10000 --account future 20000`
 -fq           `- -` frequency                 目前支持 :code:`1d` (日线回测) 和 :code:`1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的
 -rt           `- -` run-type                  运行类型，:code:`b` 为回测，:code:`p` 为模拟交易, :code:`r` 为实盘交易
 N/A           `- -` resume                    在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
@@ -60,7 +58,7 @@ N/A           `- -` config                    设置配置文件路径
 
 .. code-block:: python3
 
-   rqalpha run -rt p -fq 1m -f strategy.py -sc 100000 -mc sys_stock_realtime.enabled True -mc sys_stock_realtime.fps 60
+   rqalpha run -rt p -fq 1m -f strategy.py --account stock 100000 -mc sys_stock_realtime.enabled True -mc sys_stock_realtime.fps 60
 
 系统内置 Mod Option扩展
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,14 +155,13 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
       start_date: 2015-06-01
       # 回测结束日期(如果是实盘，则忽略该配置)
       end_date: 2050-01-01
-      # 股票起始资金，默认为0
-      stock_starting_cash: 100000
-      # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)
-      securities: [stock]
       # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
       frequency: 1d
       # Benchmark，如果不设置，默认没有基准参照。
       benchmark: ~
+      accounts:
+        # 设置 股票为交易品种  初始资金为 100000 元
+        stock:  100000
     extra:
       # 开启日志输出
       log_level: verbose
@@ -189,7 +186,7 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
 
     # see more config
     # http://rqalpha.readthedocs.io/zh_CN/stable/intro/run_algorithm.html
-    version: 0.1.5
+    version: 0.1.6
 
     # 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
     whitelist: [base, extra, validator, mod]
@@ -199,16 +196,12 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
       data_bundle_path: ~
       # 启动的策略文件路径
       strategy_file: strategy.py
+      # 策略源代码
+      source_code: ~
       # 回测起始日期
       start_date: 2015-06-01
       # 回测结束日期(如果是实盘，则忽略该配置)
       end_date: 2050-01-01
-      # 股票起始资金，默认为0
-      stock_starting_cash: 0
-      # 期货起始资金，默认为0
-      future_starting_cash: 0
-      # 设置策略可交易品种，目前支持 `stock` (股票策略)、`future` (期货策略)
-      securities: [stock]
       # 设置保证金乘数，默认为1
       margin_multiplier: 1
       # 运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易。
@@ -223,6 +216,11 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
       # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
       persist: false
       persist_mode: real_time
+      # 设置策略可交易品种，目前支持 `stock` (股票账户)、`future` (期货账户)，您也可以自行扩展
+      accounts:
+        # 如果想设置使用某个账户，只需要增加对应的初始资金即可
+        stock: ~
+        future: ~
 
     extra:
       # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
@@ -243,6 +241,7 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
       cash_return_by_stock_delisted: false
       # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
       close_amount: true
+
 
 .. warning::
 
@@ -268,13 +267,14 @@ RQAlpha 提供了策略内配置参数信息的功能，您可以方便的在策
 
     __config__ = {
         "base": {
-            "securities": "future",
             "start_date": "2015-01-09",
             "end_date": "2015-03-09",
             "frequency": "1d",
             "matching_type": "current_bar",
-            "future_starting_cash": 1000000,
             "benchmark": None,
+            "accounts": {
+                "future": 1000000
+            }
         },
         "extra": {
             "log_level": "error",
@@ -316,9 +316,10 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
       "base": {
         "start_date": "2016-06-01",
         "end_date": "2016-12-01",
-        "securities": ['stock'],
-        "stock_starting_cash": 100000,
-        "benchmark": "000300.XSHG"
+        "benchmark": "000300.XSHG",
+        "accounts": {
+            "stock": 100000
+        }
       },
       "extra": {
         "log_level": "verbose",
@@ -371,9 +372,10 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
       "base": {
         "start_date": "2016-06-01",
         "end_date": "2016-12-01",
-        "securities": ['stock'],
-        "stock_starting_cash": 100000,
-        "benchmark": "000300.XSHG"
+        "benchmark": "000300.XSHG"，
+        "accounts": {
+            "stock": 100000
+        }
       },
       "extra": {
         "log_level": "verbose",
@@ -422,9 +424,10 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
       "base": {
         "start_date": "2016-06-01",
         "end_date": "2016-12-01",
-        "securities": ['stock'],
-        "stock_starting_cash": 100000,
-        "benchmark": "000300.XSHG"
+        "benchmark": "000300.XSHG",
+        "accounts": {
+            "stock": 100000
+        }
       },
       "extra": {
         "log_level": "verbose",
