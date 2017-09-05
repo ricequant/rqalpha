@@ -58,7 +58,13 @@ def init_portfolio(env):
                 if not instrument.listing:
                     raise RuntimeError(_(u'instrument {} in initial positions is not listing').format(order_book_id))
 
-                price = env.data_proxy.get_prev_close(order_book_id, start_date)
+                bars = env.data_proxy.history_bars(order_book_id, 1, '1d', 'close',
+                                                   env.data_proxy.get_previous_trading_date(start_date),
+                                                   adjust_type='none')
+                if bars is None:
+                    raise RuntimeError(_(u'the close price of {} in initial positions is not available').format(order_book_id))
+
+                price = bars[0]
                 trade = _fake_trade(order_book_id, quantity, price)
                 if order_book_id not in positions:
                     positions[order_book_id] = position_model(order_book_id)
