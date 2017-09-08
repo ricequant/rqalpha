@@ -18,7 +18,7 @@ import six
 import datetime
 import numpy as np
 
-from rqalpha.utils.datetime_func import convert_int_to_datetime
+from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_ms_int_to_datetime
 from rqalpha.model.tick import Tick
 
 
@@ -122,7 +122,11 @@ class SnapshotObject(object):
         if self._dt is not None:
             return self._dt
         if not self.isnan:
-            return convert_int_to_datetime(self._data['datetime'])
+            dt = self._data['datetime']
+            if dt > 10000000000000000:  # ms
+                return convert_ms_int_to_datetime(dt)
+            else:
+                return convert_int_to_datetime(dt)
         return datetime.datetime.min
 
     @property
