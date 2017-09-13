@@ -53,6 +53,8 @@ class FuturePosition(BasePosition):
             'sell_realized_pnl': self._sell_realized_pnl,
             'buy_avg_open_price': self._buy_avg_open_price,
             'sell_avg_open_price': self._sell_avg_open_price,
+            # margin rate may change
+            'margin_rate': self.margin_rate,
         }
 
     def set_state(self, state):
