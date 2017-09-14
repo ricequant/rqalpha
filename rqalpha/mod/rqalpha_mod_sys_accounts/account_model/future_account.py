@@ -107,7 +107,7 @@ class FutureAccount(BaseAccount):
             # 平昨仓
             quantity *= -1
             if position.buy_old_quantity > 0:
-                order.append(order(
+                orders.append(order(
                     order_book_id,
                     min(quantity, position.buy_old_quantity),
                     SIDE.SELL,
