@@ -45,7 +45,7 @@ class Portfolio(object):
 
     def order(self, order_book_id, quantity, style, target=False):
         account_type = get_account_type(order_book_id)
-        return self.accounts[account_type].order(quantity, style, target)
+        return self.accounts[account_type].order(order_book_id, quantity, style, target)
 
     def get_state(self):
         return jsonpickle.encode({
