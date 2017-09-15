@@ -156,7 +156,6 @@ def test_api():
         test_all_instruments_code_new,
         test_instruments_code_new,
         test_sector_code_new,
-        test_concept_code_new,
         test_industry_code_new,
         test_get_trading_dates_code_new,
         test_get_previous_trading_date_code_new,
@@ -258,7 +257,6 @@ def test_api():
     tasks.append((base_api_config, test_instruments_code_new, "test_instruments_code_new"))
     tasks.append((base_api_config, test_sector_code_new, "test_sector_code_new"))
     tasks.append((base_api_config, test_industry_code_new, "test_industry_code_new"))
-    tasks.append((base_api_config, test_concept_code_new, "test_concept_code_new"))
     tasks.append((base_api_config, test_get_trading_dates_code_new, "test_get_trading_dates_code_new"))
     tasks.append((base_api_config, test_get_previous_trading_date_code_new, "test_get_previous_trading_date_code_new"))
     tasks.append((base_api_config, test_get_next_trading_date_code_new, "test_get_next_trading_date_code_new"))
