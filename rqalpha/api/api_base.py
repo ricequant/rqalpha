@@ -634,17 +634,6 @@ def industry(code):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-def concept(*concept_names):
-    return Environment.get_instance().data_proxy.concept(*concept_names)
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('start_date').is_valid_date(ignore_none=False),
              verify_that('end_date').is_valid_date(ignore_none=False))
 def get_trading_dates(start_date, end_date):
