@@ -234,21 +234,6 @@ def test_industry():
 test_industry_code_new = get_code_block(test_industry)
 
 
-def test_concept():
-    from rqalpha.api import concept, instruments
-
-    def init(context):
-        context.s1 = '000002.XSHE'
-
-    def handle_bar(context, bar_dict):
-        ins = instruments(context.s1)
-        concepts_list = ins.concept_names.split('|')  # context.s1 的概念列表
-        stock_list = concept(concepts_list[0])  # 第一个概念对应的股票列表
-        assert context.s1 in stock_list, 'context.s1 not in stock_list {}'.format(stock_list)
-        assert len(concept('深圳本地')) >= 55, 'len(concept_list) < 55, length: {}, stock_list: {}'.format(len(concept('深圳本地')))
-test_concept_code_new = get_code_block(test_concept)
-
-
 def test_get_trading_dates():
     from rqalpha.api import get_trading_dates
     import datetime
@@ -495,18 +480,6 @@ def handle_bar(context, bar_dict):
     industry_list_2 = industry(ins_2.industry_name)
     assert context.s1 in industry_list_1
     assert context.s2 in industry_list_2
-'''
-
-test_concept_code = '''
-from rqalpha.api import concept, instruments
-def init(context):
-    context.s1 = '000002.XSHE'
-
-def handle_bar(context, bar_dict):
-    ins = instruments(context.s1)
-    concept_list = concept(ins.concept_names[:4])  # 取 concept_names 的前4个字，即 context.s1 的第一个概念
-    assert context.s1 in concept_list
-    assert len(concept_list) >= 90
 '''
 
 test_get_trading_dates_code = '''

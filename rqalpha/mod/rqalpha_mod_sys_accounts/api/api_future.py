@@ -46,7 +46,7 @@ def export_as_api(func):
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_future(),
-             verify_that('amount').is_greater_or_equal_than(0),
+             verify_that('amount').is_number().is_greater_or_equal_than(0),
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
              verify_that('style').is_instance_of((LimitOrder, MarketOrder, type(None))))
@@ -289,7 +289,7 @@ def assure_future_order_book_id(id_or_symbols):
         else:
             return id_or_symbols.order_book_id
     elif isinstance(id_or_symbols, six.string_types):
-        return assure_future_order_book_id(instruments(id_or_symbols))
+        return assure_future_order_book_id(Environment.get_instance().data_proxy.instruments(id_or_symbols))
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 

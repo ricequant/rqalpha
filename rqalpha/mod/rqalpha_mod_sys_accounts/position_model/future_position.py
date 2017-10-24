@@ -25,12 +25,10 @@ class FuturePosition(BasePosition):
 
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
-
         self._buy_old_holding_list = []
         self._sell_old_holding_list = []
         self._buy_today_holding_list = []
         self._sell_today_holding_list = []
-
         self._buy_transaction_cost = 0.
         self._sell_transaction_cost = 0.
         self._buy_realized_pnl = 0.
@@ -55,6 +53,8 @@ class FuturePosition(BasePosition):
             'sell_realized_pnl': self._sell_realized_pnl,
             'buy_avg_open_price': self._buy_avg_open_price,
             'sell_avg_open_price': self._sell_avg_open_price,
+            # margin rate may change
+            'margin_rate': self.margin_rate,
         }
 
     def set_state(self, state):

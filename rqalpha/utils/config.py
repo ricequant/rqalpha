@@ -17,10 +17,8 @@
 import os
 import locale
 import codecs
-from pprint import pformat
 
 import pandas as pd
-import logbook
 import yaml
 import simplejson as json
 import six
@@ -30,7 +28,7 @@ from rqalpha.utils import RqAttrDict, logger
 from rqalpha.utils.i18n import gettext as _, localization
 from rqalpha.utils.dict_func import deep_update
 from rqalpha.utils.py2 import to_utf8
-from rqalpha.utils.logger import user_log, user_system_log, system_log, std_log
+from rqalpha.utils.logger import system_log
 from rqalpha.mod.utils import mod_config_value_parse
 
 
@@ -189,21 +187,15 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
 
     config.base.run_type = parse_run_type(config.base.run_type)
     config.base.accounts = parse_accounts(config.base.accounts)
+    config.base.init_positions = parse_init_positions(config.base.init_positions)
     config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
 
     if config.extra.context_vars:
         if isinstance(config.extra.context_vars, six.string_types):
             config.extra.context_vars = json.loads(to_utf8(config.extra.context_vars))
 
-    system_log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
-    std_log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
-    user_log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
-    user_system_log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
-
     if config.base.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
-
-    system_log.debug("\n" + pformat(config.convert_to_dict()))
 
     return config
 
@@ -221,6 +213,31 @@ def parse_accounts(accounts):
     if len(a) == 0:
         raise RuntimeError(_(u"None account type has been selected."))
     return a
+
+
+def parse_init_positions(init_positions):
+    # --position stock 000001.XSHE:1000,000003.XSHE:200
+    # --position future IF1701:-1,IF1701:2
+    def to_position_list(positions):
+        result = []
+        for s in positions.split(','):
+            try:
+                order_book_id, quantity = s.split(':')
+            except ValueError:
+                raise RuntimeError(_(u"invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
+
+            try:
+                result.append((order_book_id, float(quantity)))
+            except ValueError:
+                raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
+                    order_book_id=order_book_id, quantity=quantity))
+
+        return result
+
+    return {
+        account_type.upper(): to_position_list(positions)
+        for account_type, positions in init_positions
+    }
 
 
 def parse_run_type(rt_str):

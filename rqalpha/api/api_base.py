@@ -126,7 +126,7 @@ def assure_order_book_id(id_or_ins):
     if isinstance(id_or_ins, Instrument):
         order_book_id = id_or_ins.order_book_id
     elif isinstance(id_or_ins, six.string_types):
-        order_book_id = instruments(id_or_ins).order_book_id
+        order_book_id = Environment.get_instance().data_proxy.instruments(id_or_ins).order_book_id
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
@@ -625,17 +625,6 @@ def industry(code):
         code = to_industry_code(code)
 
     return Environment.get_instance().data_proxy.industry(code)
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-def concept(*concept_names):
-    return Environment.get_instance().data_proxy.concept(*concept_names)
 
 
 @export_as_api

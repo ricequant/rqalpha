@@ -19,7 +19,6 @@ import os
 import shutil
 import six
 import click
-import yaml
 from importlib import import_module
 
 from rqalpha.utils.click_helper import Date
@@ -91,6 +90,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
 @click.option('-a', '--account', 'base__accounts', nargs=2, multiple=True, help="set account type with starting cash")
+@click.option('--position', 'base__init_positions', nargs=2, multiple=True, help="set init position")
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p', 'r']), default="b")
 @click.option('--resume', 'base__resume_mode', is_flag=True)
@@ -99,6 +99,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True, help='disable user system log stdout')
 @click.option('--disable-user-log', 'extra__user_log_disabled', is_flag=True, help='disable user log stdout')
+@click.option('--logger', 'extra__logger', nargs=2, multiple=True, help='config logger, e.g. --logger system_log debug')
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
@@ -165,7 +166,7 @@ def generate_config(directory):
     """
     Generate default config file
     """
-    default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "default_config.yml")
+    default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.yml")
     target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
     shutil.copy(default_config, target_config_path)
     six.print_("Config file has been generated in", target_config_path)

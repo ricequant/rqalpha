@@ -52,7 +52,7 @@ __all__ = [
 ]
 
 
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.00"
+DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 def user_std_handler_log_formatter(record, handler):
@@ -102,6 +102,7 @@ user_detail_log = Logger("user_detail_log")
 
 # 系统日志
 system_log = Logger("system_log")
+basic_system_log = Logger("basic_system_log")
 
 # 标准输出日志
 std_log = Logger("std_log")
@@ -109,6 +110,7 @@ std_log = Logger("std_log")
 
 def init_logger():
     system_log.handlers = [ColorizedStderrHandler(bubble=True)]
+    basic_system_log.handlers = [ColorizedStderrHandler(bubble=True)]
     std_log.handlers = [ColorizedStderrHandler(bubble=True)]
     user_log.handlers = []
     user_system_log.handlers = []

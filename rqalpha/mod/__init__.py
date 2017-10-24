@@ -18,7 +18,7 @@ import copy
 from collections import OrderedDict
 
 from rqalpha.utils.package_helper import import_mod
-from rqalpha.utils.logger import system_log
+from rqalpha.utils.logger import system_log, basic_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import RqAttrDict
 
@@ -65,13 +65,17 @@ class ModHandler(object):
 
     def start_up(self):
         for mod_name, mod_config in self._mod_list:
+            basic_system_log.debug(_(u"mod start_up [START] {}").format(mod_name))
             self._mod_dict[mod_name].start_up(self._env, mod_config)
+            basic_system_log.debug(_(u"mod start_up [END]   {}").format(mod_name))
 
     def tear_down(self, *args):
         result = {}
         for mod_name, __ in reversed(self._mod_list):
             try:
+                basic_system_log.debug(_(u"mod tear_down [START] {}").format(mod_name))
                 ret = self._mod_dict[mod_name].tear_down(*args)
+                basic_system_log.debug(_(u"mod tear_down [END]   {}").format(mod_name))
             except Exception as e:
                 system_log.exception("tear down fail for {}", mod_name)
                 continue

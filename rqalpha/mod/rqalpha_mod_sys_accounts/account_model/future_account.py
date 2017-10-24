@@ -107,7 +107,7 @@ class FutureAccount(BaseAccount):
             # 平昨仓
             quantity *= -1
             if position.buy_old_quantity > 0:
-                order.append(order(
+                orders.append(order(
                     order_book_id,
                     min(quantity, position.buy_old_quantity),
                     SIDE.SELL,
@@ -144,7 +144,7 @@ class FutureAccount(BaseAccount):
             'positions': {
                 order_book_id: position.get_state()
                 for order_book_id, position in six.iteritems(self._positions)
-                },
+            },
             'frozen_cash': self._frozen_cash,
             'total_cash': self._total_cash,
             'backward_trade_set': list(self._backward_trade_set),
@@ -153,13 +153,19 @@ class FutureAccount(BaseAccount):
 
     def set_state(self, state):
         self._frozen_cash = state['frozen_cash']
-        self._total_cash = state['total_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
         self._transaction_cost = state['transaction_cost']
+
+        margin_changed = 0
         self._positions.clear()
         for order_book_id, v in six.iteritems(state['positions']):
             position = self._positions.get_or_create(order_book_id)
             position.set_state(v)
+            if 'margin_rate' in v and abs(v['margin_rate'] - position.margin_rate) > 1e-6:
+                 margin_changed += position.margin * (v['margin_rate'] - position.margin_rate) / position.margin_rate
+
+        self._total_cash = state['total_cash'] + margin_changed
+
 
     @property
     def type(self):
