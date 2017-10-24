@@ -215,29 +215,23 @@ def parse_accounts(accounts):
     return a
 
 
-def parse_init_positions(init_positions):
-    # --position stock 000001.XSHE:1000,000003.XSHE:200
-    # --position future IF1701:-1,IF1701:2
-    def to_position_list(positions):
-        result = []
-        for s in positions.split(','):
-            try:
-                order_book_id, quantity = s.split(':')
-            except ValueError:
-                raise RuntimeError(_(u"invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
-
-            try:
-                result.append((order_book_id, float(quantity)))
-            except ValueError:
-                raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
-                    order_book_id=order_book_id, quantity=quantity))
-
+def parse_init_positions(positions):
+    # --position 000001.XSHE:1000,IF1701:-1
+    result = []
+    if not isinstance(positions, str):
         return result
+    for s in positions.split(','):
+        try:
+            order_book_id, quantity = s.split(':')
+        except ValueError:
+            raise RuntimeError(_(u"invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
 
-    return {
-        account_type.upper(): to_position_list(positions)
-        for account_type, positions in init_positions
-    }
+        try:
+            result.append((order_book_id, float(quantity)))
+        except ValueError:
+            raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
+                order_book_id=order_book_id, quantity=quantity))
+    return result
 
 
 def parse_run_type(rt_str):
