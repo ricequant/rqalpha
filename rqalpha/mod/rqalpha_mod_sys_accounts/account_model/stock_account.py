@@ -197,7 +197,6 @@ class StockAccount(BaseAccount):
         return datetime.date(year=y, month=m, day=d)
 
     def _handle_dividend_book_closure(self, trading_date):
-        logger.info(trading_date)
         for order_book_id, position in six.iteritems(self._positions):
             if position.quantity == 0:
                 continue
