@@ -143,7 +143,9 @@ class StockAccount(BaseAccount):
 
     def _before_trading(self, event):
         trading_date = Environment.get_instance().trading_dt.date()
-        self._handle_dividend_payable(trading_date)
+        last_date = Environment.get_instance().data_proxy.get_previous_trading_date(trading_date)
+        self._handle_dividend_book_closure(trading_date)
+        self._handle_dividend_payable(last_date)
         self._handle_split(trading_date)
 
     def _on_settlement(self, event):
@@ -164,7 +166,6 @@ class StockAccount(BaseAccount):
 
         self._transaction_cost = 0
         self._backward_trade_set.clear()
-        self._handle_dividend_book_closure(event.trading_dt.date())
 
     def _update_last_price(self, event):
         for position in self._positions.values():
