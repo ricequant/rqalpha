@@ -23,7 +23,7 @@
 
     $ pip install -U pip setuptools cython -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-*   安装 boclz
+*   安装 bcolz
 
 bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比较容易失败，建议先单独安装 bcolz 库，安装过程比较慢，请耐心等待。
 
