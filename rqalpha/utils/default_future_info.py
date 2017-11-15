@@ -18,10 +18,6 @@ from datetime import time
 
 from rqalpha.utils.datetime_func import TimeRange
 
-
-NIGHT_UNDERLYING_SYMBOL = ["CU", "AL", "ZN", "PB", "SN", "NI", "RB", "HC", "BU", "RU", "AU", "AG", "Y", "M", "A", "B",
-                           "P", "J", "JM", "I", "CF", "SR", "OI", "MA", "ZC", "FG", "RM"]
-
 TRADING_PERIOD_DICT = dict()
 
 STOCK_TRADING_PERIOD = [
@@ -35,9 +31,11 @@ time_period1 = [
     TimeRange(start=time(10, 31), end=time(11, 30)),
     TimeRange(start=time(13, 31), end=time(15, 0)),
 ]
-TRADING_PERIOD_DICT.update({underlying_symbol: time_period1 for underlying_symbol in
-                       ["WR", "FU", "CS", "C", "L", "V", "PP", "BB", "FB", "JD", "WH", "PM", "RI", "SF", "SM", "RS",
-                        "JR", "LR"]})
+TRADING_PERIOD_DICT.update({
+    underlying_symbol: time_period1
+    for underlying_symbol in
+    ["WR", "FU", "CS", "C", "L", "V", "PP", "BB", "FB", "JD", "WH", "PM", "RI", "SF", "SM", "RS", "JR", "LR"]
+})
 
 # | 商品期货 Y, M, A, B, P, J, JM, I, CF, SR, OI, TA, MA, ZC, FG, RM | 21:01~23:30, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
 time_period2 = [
@@ -46,8 +44,10 @@ time_period2 = [
     TimeRange(start=time(10, 31), end=time(11, 30)),
     TimeRange(start=time(13, 31), end=time(15, 0)),
 ]
-TRADING_PERIOD_DICT.update({underlying_symbol: time_period2 for underlying_symbol in
-                       ["Y", "M", "A", "B", "P", "J", "JM", "I", "CF", "SR", "OI", "TA", "MA", "ZC", "FG", "RM"]})
+TRADING_PERIOD_DICT.update({
+    underlying_symbol: time_period2
+    for underlying_symbol in ["Y", "M", "A", "B", "P", "J", "JM", "I", "CF", "SR", "OI", "TA", "MA", "ZC", "FG", "RM"]
+})
 
 # | 商品期货 CU, AL, ZN, PB, SN, NI | 21:01~1:00, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
 time_period3 = [
@@ -57,7 +57,9 @@ time_period3 = [
     TimeRange(start=time(10, 31), end=time(11, 30)),
     TimeRange(start=time(13, 31), end=time(15, 0)),
 ]
-TRADING_PERIOD_DICT.update({underlying_symbol: time_period3 for underlying_symbol in ["CU", "AL", "ZN", "PB", "SN", "NI"]})
+TRADING_PERIOD_DICT.update(
+    {underlying_symbol: time_period3
+     for underlying_symbol in ["CU", "AL", "ZN", "PB", "SN", "NI"]})
 
 # | 商品期货 RB, HC, BU, RU | 21:01~23:00, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
 time_period4 = [
@@ -91,4 +93,3 @@ time_period7 = [
     TimeRange(start=time(13, 1), end=time(15, 15)),
 ]
 TRADING_PERIOD_DICT.update({underlying_symbol: time_period7 for underlying_symbol in ["T", "TF"]})
-
