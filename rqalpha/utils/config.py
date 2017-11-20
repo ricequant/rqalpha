@@ -252,6 +252,7 @@ def parse_persist_mode(persist_mode):
     mapping = {
         "real_time": PERSIST_MODE.REAL_TIME,
         "on_crash": PERSIST_MODE.ON_CRASH,
+        "on_normal_exit": PERSIST_MODE.ON_NORMAL_EXIT,
     }
     try:
         return mapping[persist_mode]

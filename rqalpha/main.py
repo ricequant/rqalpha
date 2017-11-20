@@ -313,6 +313,8 @@ def run(config, source_code=None, user_funcs=None):
         code = _exception_handler(user_exc)
         mod_handler.tear_down(code, user_exc)
     else:
+        if (env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT):
+            persist_helper.persist()
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug(_(u"strategy run successfully, normal exit"))
         return result

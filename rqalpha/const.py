@@ -134,6 +134,7 @@ class INSTRUMENT_TYPE(CustomEnum):
 class PERSIST_MODE(CustomEnum):
     ON_CRASH = "ON_CRASH"
     REAL_TIME = "REAL_TIME"
+    ON_NORMAL_EXIT = "ON_NORMAL_EXIT"
 
 
 # noinspection PyPep8Naming
