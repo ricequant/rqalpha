@@ -45,23 +45,30 @@ def load_json(path):
         return json.loads(f.read())
 
 
-def load_config(path):
-    return load_json(path) if path.endswith('.json') else load_yaml(path)
-
-
 default_config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yml')
 default_mod_config_path = os.path.join(os.path.dirname(__file__), '..', 'mod_config.yml')
 
 
 def user_mod_conf_path():
-    return os.path.expanduser(os.path.join(rqalpha_path, 'mod_config.yml'))
+    return os.path.join(os.path.expanduser(rqalpha_path), 'mod_config.yml')
 
 
 def get_mod_conf():
     base = load_yaml(default_mod_config_path)
-    user_mod_conf = os.path.expanduser(os.path.join(rqalpha_path, 'mod_config.yml'))
+    user_mod_conf = os.path.join(os.path.expanduser(rqalpha_path), 'mod_config.yml')
     user = load_yaml(user_mod_conf) if os.path.exists(user_mod_conf) else {}
     deep_update(user, base)
+    return base
+
+
+def load_config_from_folder(folder):
+    folder = os.path.expanduser(folder)
+    path = os.path.join(folder, 'config.yml')
+    base = load_yaml(path) if os.path.exists(path) else {}
+    mod_path = os.path.join(folder, 'mod_config.yml')
+    mod = load_yaml(mod_path) if os.path.exists(mod_path) else {}
+
+    deep_update(mod, base)
     return base
 
 
@@ -74,23 +81,11 @@ def default_config():
 
 
 def user_config():
-    path = os.path.expanduser(os.path.join(rqalpha_path, 'config.yml'))
-    base = load_yaml(path) if os.path.exists(path) else {}
-    mod_path = os.path.expanduser(os.path.join(rqalpha_path, 'mod_config.yml'))
-    mod = load_yaml(mod_path) if os.path.exists(mod_path) else {}
-
-    deep_update(mod, base)
-    return base
+    return load_config_from_folder(rqalpha_path)
 
 
 def project_config():
-    path = os.path.join(os.getcwd(), 'config.yml')
-    base = load_yaml(path) if os.path.exists(path) else {}
-    mod_path = os.path.join(os.getcwd(), 'mod_config.yml')
-    mod = load_yaml(mod_path) if os.path.exists(mod_path) else {}
-
-    deep_update(mod, base)
-    return base
+    return load_config_from_folder(os.getcwd())
 
 
 def code_config(config, source_code=None):
@@ -137,6 +132,8 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     conf = default_config()
     deep_update(user_config(), conf)
     deep_update(project_config(), conf)
+    if config_path is not None:
+        deep_update(load_yaml(config_path), conf)
 
     if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
         # FIXME: ugly, we need this to get code
