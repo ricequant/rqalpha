@@ -34,6 +34,7 @@ CONTEXT_SETTINGS = {
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('-v', '--verbose', count=True)
+@click.help_option('-h', '--help')
 @click.pass_context
 def cli(ctx, verbose):
     ctx.obj["VERBOSE"] = verbose
