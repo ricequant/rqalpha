@@ -162,7 +162,7 @@ class FutureAccount(BaseAccount):
             position = self._positions.get_or_create(order_book_id)
             position.set_state(v)
             if 'margin_rate' in v and abs(v['margin_rate'] - position.margin_rate) > 1e-6:
-                 margin_changed += position.margin * (v['margin_rate'] - position.margin_rate) / position.margin_rate
+                margin_changed += position.margin * (v['margin_rate'] - position.margin_rate) / position.margin_rate
 
         self._total_cash = state['total_cash'] + margin_changed
 
