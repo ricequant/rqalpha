@@ -41,6 +41,7 @@ def from_utf8(string):
     except AttributeError:
         return string
 
+
 try:
     from functools import lru_cache as origin_lru_cache
 except ImportError:
@@ -62,6 +63,7 @@ def lru_cache(*args, **kwargs):
 def clear_all_cached_functions():
     for func in cached_functions:
         func.cache_clear()
+
 
 try:
     from inspect import signature

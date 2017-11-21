@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from copy import copy
 
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils import is_valid_price
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
@@ -61,7 +61,7 @@ class SignalBroker(AbstractBroker):
 
         last_price = price_board.get_last_price(order_book_id)
 
-        if np.isnan(last_price):
+        if not is_valid_price(last_price):
             instrument = self._env.get_instrument(order_book_id)
             listed_date = instrument.listed_date.date()
             if listed_date == self._env.trading_dt.date():

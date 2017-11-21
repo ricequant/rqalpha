@@ -24,6 +24,7 @@ from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
@@ -70,7 +71,7 @@ def order(id_or_ins, amount, side, position_effect, style):
             raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
 
     price = env.get_last_price(order_book_id)
-    if np.isnan(price):
+    if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         )
@@ -159,7 +160,7 @@ def order(id_or_ins, amount, side, position_effect, style):
             position_effect
         ))
 
-    if np.isnan(price) or price == 0:
+    if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         for o in orders:

@@ -101,9 +101,8 @@ class Risk(object):
             self._beta = np.nan
             return np.nan
 
-        self._alpha = np.mean(self._portfolio - self._daily_risk_free_rate - self.beta * (
-                    self._benchmark - self._daily_risk_free_rate
-                )) * self._annual_factor
+        self._alpha = np.mean(self._portfolio - self._daily_risk_free_rate - self.beta *
+                              (self._benchmark - self._daily_risk_free_rate)) * self._annual_factor
         return self._alpha
 
     @property
