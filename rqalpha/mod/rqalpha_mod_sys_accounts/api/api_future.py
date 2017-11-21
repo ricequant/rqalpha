@@ -122,7 +122,7 @@ def order(id_or_ins, amount, side, position_effect, style):
             if amount > position.buy_quantity:
                 user_system_log.warn(
                     _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=position.sell_quantity)
+                      u"quantity {quantity}").format(amount=amount, quantity=position.buy_quantity)
                 )
                 return []
             buy_old_quantity = position.buy_old_quantity
