@@ -2,6 +2,23 @@
 CHANGELOG
 ==================
 
+3.0.8
+==================
+
+- 修复 :code:`rqalpha run --config` 参数
+- 增加 ON_NORMAL_EXIT 的持久化模式，在 RQAlpha 成功运行完毕后进行 persist 。可以在盘后快速地根据昨日持久化数据继续运行回测来增量回测。
+- 增加 :code:`rqalpha run --logger` 参数可以单独设置特定的 logger 的 level
+- 增加 persist_provider 的检查
+- 修复 :code:`get_prev_close`
+- 打印 mod 的启动状态信息，方便 debug
+- 增加 :code:`is_valid_price` 工具函数来判断价格是否有效
+- 修复期货账户因为保证金变化导致total_value计算错误
+- 重构股票账户:code:`last_price`更新
+- 修复期货下单拒单是错误信息typo
+- 当启动LIVE_TRADING模式的时候，跳过simulation_mod的初始化
+- 增加 :code:`rqalpha run --position` 来设置初始仓位的功能
+- 
+
 3.0.6
 ==================
 
