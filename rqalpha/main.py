@@ -263,6 +263,8 @@ def run(config, source_code=None, user_funcs=None):
 
         if config.base.persist:
             persist_provider = env.persist_provider
+            if persist_provider is None:
+                raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
             persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
             persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
             persist_helper.register('user_context', ucontext)
