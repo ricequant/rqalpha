@@ -30,6 +30,9 @@ class Recorder(with_metaclass(abc.ABCMeta)):
     def append_portfolio(self, dt, portfolio, benchmark_portfolio):
         raise NotImplementedError
 
+    def flush(self):
+        pass
+
     def close(self):
         pass
 
@@ -63,6 +66,7 @@ class CsvRecorder(Recorder):
 
     def __init__(self, csv_folder):
         self._file_list = []
+        self._pending_tasks = []
         self._trade_writer = self._create_writer(os.path.join(csv_folder, "trade.csv"), self.TRADE_CSV_HEADER)
         self._portfolio_writer = self._create_writer(os.path.join(csv_folder, "portfolio.csv"), self.PORTFOLIO_CSV_HEADER)
         self._bm_portfolio_writer = self._create_writer(os.path.join(csv_folder, "bm_portfolio.csv"), self.PORTFOLIO_CSV_HEADER)
@@ -78,7 +82,7 @@ class CsvRecorder(Recorder):
         return writer
 
     def append_trade(self, trade):
-        self._trade_writer.writerow({key: getattr(trade, key) for key in self.TRADE_CSV_HEADER})
+        self._pending_tasks.append((self._trade_writer, {key: getattr(trade, key) for key in self.TRADE_CSV_HEADER}))
 
     def _portfolio2dict(self, dt, portfolio):
         dic = {key: getattr(portfolio, key) for key in self.PORTFOLIO_CSV_HEADER if key != "datetime"}
@@ -86,9 +90,14 @@ class CsvRecorder(Recorder):
         return dic
 
     def append_portfolio(self, dt, portfolio, benchmark_portfolio):
-        self._portfolio_writer.writerow(self._portfolio2dict(dt, portfolio))
+        self._pending_tasks.append((self._portfolio_writer, self._portfolio2dict(dt, portfolio)))
         if benchmark_portfolio is not None:
-            self._bm_portfolio_writer.writerow(self._portfolio2dict(dt, benchmark_portfolio))
+            self._pending_tasks.append((self._bm_portfolio_writer, self._portfolio2dict(dt, benchmark_portfolio)))
+
+    def flush(self):
+        # TODO: use writerows
+        for writer, data in self._pending_tasks:
+            writer.writerow(data)
 
     def close(self):
         for csv_file in self._file_list:

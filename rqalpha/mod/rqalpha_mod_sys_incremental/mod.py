@@ -60,5 +60,8 @@ class IncrementalMod(AbstractMod):
 
     def tear_down(self, success, exception=None):
         if self._recorder:
+            if exception is None:
+                # 仅当成功运行才写入数据
+                self._recorder.flush()
             self._recorder.close()
 
