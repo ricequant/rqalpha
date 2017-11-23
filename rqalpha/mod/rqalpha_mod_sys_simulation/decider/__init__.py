@@ -47,7 +47,6 @@ class SlippageDecider(object):
         except (ImportError, AttributeError):
             raise RuntimeError(_("Missing SlippageModel {}").format(module_name))
 
-        print(slippage_cls)
         self.decider = slippage_cls(rate)
         # self.decider = PriceRatioSlippage(rate)
 
