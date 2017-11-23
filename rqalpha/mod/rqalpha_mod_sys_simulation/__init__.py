@@ -23,8 +23,6 @@ __config__ = {
     "signal": False,
     # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
     "matching_type": "current_bar",
-    # 设置滑点
-    "slippage": 0,
     # 设置手续费乘数，默认为1
     "commission_multiplier": 1,
     # price_limit: 在处于涨跌停时，无法买进/卖出，默认开启【在 Signal 模式下，不再禁止买进/卖出，如果开启，则给出警告提示。】
@@ -35,6 +33,10 @@ __config__ = {
     "volume_limit": True,
     # 按照当前成交量的百分比进行撮合
     "volume_percent": 0.25,
+    # 滑点模型，如果使用自己的定制的滑点，需要加上完整的包名
+    "slippage_model": "PriceRatioSlippage",
+    # 设置滑点
+    "slippage": 0,
 }
 
 
@@ -64,6 +66,14 @@ cli.commands['run'].params.append(
         ('-sp', '--slippage', cli_prefix + "slippage"),
         type=click.FLOAT,
         help="[sys_simulation] set slippage"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('--slippage-model', cli_prefix + "slippage_model"),
+        type=click.STRING,
+        help="[sys_simulation] set slippage model"
     )
 )
 
