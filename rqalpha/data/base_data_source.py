@@ -223,3 +223,12 @@ class BaseDataSource(AbstractDataSource):
 
     def non_redeemable(self, order_book_id, dates):
         return self._non_redeemable_days.contains(order_book_id, dates)
+
+    def get_tick_size(self, instrument):
+        if instrument.type in ['CS', 'INDX']:
+            return 0.01
+        elif instrument.type in ['ETF', 'LOF', 'FenjiB', 'FenjiA', 'FenjiMu']:
+            return 0.001
+        else:
+            # NOTE: you can override get_tick_size in your custom data source
+            raise RuntimeError(_("Unsupported instrument type for tick size"))

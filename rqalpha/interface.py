@@ -446,6 +446,14 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
+    def get_tick_size(self, instrument):
+        """
+        获取合约的 tick size
+        :param instrument:
+        :return:
+        """
+        raise NotImplementedError
+
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         """
         获取合并的 ticks

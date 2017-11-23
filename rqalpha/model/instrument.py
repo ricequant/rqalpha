@@ -42,9 +42,8 @@ class Instrument(object):
             self.maturity_date = self._fix_date(self.maturity_date, self.DEFAULT_DE_LISTED_DATE)
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__,
-                               ", ".join(["{}={}".format(k, repr(v))
-                                          for k, v in six.iteritems(self.__dict__)]))
+        return "{}({})".format(
+            type(self).__name__, ", ".join(["{}={}".format(k, repr(v)) for k, v in six.iteritems(self.__dict__)]))
 
     @property
     def listing(self):
@@ -73,6 +72,9 @@ class Instrument(object):
         date = Environment.get_instance().trading_dt.date()
         days = (self.maturity_date.date() - date).days
         return -1 if days < 0 else days
+
+    def tick_size(self):
+        return Environment.get_instance().data_proxy.get_tick_size(self.order_book_id)
 
 
 class SectorCodeItem(object):

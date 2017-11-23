@@ -217,3 +217,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def public_fund_commission(self, order_book_id, buy):
         instrument = self.instruments(order_book_id)
         return self._data_source.public_fund_commission(instrument, buy)
+
+    def get_tick_size(self, order_book_id):
+        instrument = self.instruments(order_book_id)
+        return self._data_source.get_tick_size(instrument)
