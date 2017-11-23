@@ -14,6 +14,8 @@ mod:
     enabled: true
   sys_analyser:
     enabled: true
+  sys_incremental:
+    enabled: false
   # 技术分析API
   sys_funcat:
     enabled: false

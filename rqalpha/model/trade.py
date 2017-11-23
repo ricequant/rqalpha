@@ -25,7 +25,7 @@ class Trade(object):
 
     __repr__ = property_repr
 
-    trade_id_gen = id_gen(int(time.time()))
+    trade_id_gen = id_gen(int(time.time()) * 10000)
 
     def __init__(self):
         self._calendar_dt = None

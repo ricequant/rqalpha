@@ -25,7 +25,7 @@ from rqalpha.environment import Environment
 
 class Order(object):
 
-    order_id_gen = id_gen(int(time.time()))
+    order_id_gen = id_gen(int(time.time()) * 10000)
 
     __repr__ = property_repr
 
