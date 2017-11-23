@@ -37,8 +37,14 @@ class PriceRatioSlippage(BaseSlippage):
         else:
             raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is [0, 1)")))
 
-    def get_trade_price(self, side, price):
+    def get_trade_price(self, order, price):
+        side = order.side
         return price + price * self.rate * (1 if side == SIDE.BUY else -1)
+
+
+class TickSizeSlippage(BaseSlippage):
+    def get_trade_price(self, order, price):
+        pass
 
 
 # class FixedSlippage(BaseSlippage):

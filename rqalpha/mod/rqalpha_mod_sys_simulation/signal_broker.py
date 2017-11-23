@@ -102,7 +102,7 @@ class SignalBroker(AbstractBroker):
                 return
 
         ct_amount = account.positions.get_or_create(order_book_id).cal_close_today_amount(order.quantity, order.side)
-        trade_price = self._slippage_decider.get_trade_price(order.side, deal_price)
+        trade_price = self._slippage_decider.get_trade_price(order, deal_price)
         trade = Trade.__from_create__(
             order_id=order.order_id,
             price=trade_price,

@@ -16,9 +16,9 @@
 
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 
-from .commission import StockCommission, FutureCommission
-from .slippage import PriceRatioSlippage
-from .tax import StockTax, FutureTax
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider.commission import StockCommission, FutureCommission
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider.slippage import PriceRatioSlippage
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider.tax import StockTax, FutureTax
 
 
 class CommissionDecider(object):

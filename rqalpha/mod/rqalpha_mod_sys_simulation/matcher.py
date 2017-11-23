@@ -22,7 +22,7 @@ from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.utils.i18n import gettext as _
 
-from .decider import CommissionDecider, SlippageDecider, TaxDecider
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider import CommissionDecider, SlippageDecider, TaxDecider
 
 
 class Matcher(object):
@@ -147,7 +147,7 @@ class Matcher(object):
                 fill = order.unfilled_quantity
 
             ct_amount = account.positions.get_or_create(order.order_book_id).cal_close_today_amount(fill, order.side)
-            price = self._slippage_decider.get_trade_price(order.side, deal_price)
+            price = self._slippage_decider.get_trade_price(order, deal_price)
             trade = Trade.__from_create__(
                 order_id=order.order_id,
                 price=price,
