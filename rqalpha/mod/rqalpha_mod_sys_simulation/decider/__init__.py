@@ -41,14 +41,14 @@ class SlippageDecider(object):
                 module = importlib.import_module("rqalpha.mod.rqalpha_mod_sys_simulation.decider.slippage")
                 slippage_cls = getattr(module, module_name)
             else:
-                *module_paths, cls_name = module_name.split(".")
+                paths = module_name.split(".")
+                module_paths, cls_name = paths[:-1], paths[-1]
                 module = importlib.import_module(".".join(module_paths))
                 slippage_cls = getattr(module, cls_name)
         except (ImportError, AttributeError):
             raise RuntimeError(_("Missing SlippageModel {}").format(module_name))
 
         self.decider = slippage_cls(rate)
-        # self.decider = PriceRatioSlippage(rate)
 
     def get_trade_price(self, side, price):
         return self.decider.get_trade_price(side, price)
