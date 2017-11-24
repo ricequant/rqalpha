@@ -25,6 +25,10 @@ __config__ = {
     "use_disk_persist_provider": True,
     # 是否启用 csv 保存 feeds 功能
     "recorder": "CsvRecorder",
+    # mongodb
+    "mongo_url": "mongodb://localhost",
+    "mongo_dbname": "rqalpha_records",
+    "strategy_id": "1",
 }
 
 
@@ -39,6 +43,20 @@ cli.commands['run'].params.append(
     click.Option(
         ("--persist-folder", cli_prefix + "persist_folder"),
         help="[sys_incremental] persist folder"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ("--strategy-id", cli_prefix + "strategy_id"),
+        help="[sys_incremental] strategy id "
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ("--recorder", cli_prefix + "recorder"),
+        help="[sys_incremental] recorder name"
     )
 )
 

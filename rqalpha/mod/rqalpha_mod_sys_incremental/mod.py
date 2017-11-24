@@ -39,6 +39,7 @@ class IncrementalMod(AbstractMod):
         env.config.base.persist_mode = PERSIST_MODE.ON_NORMAL_EXIT
 
         self._meta = {
+            "strategy_id": mod_config.strategy_id,
             "origin_start_date": self._env.config.base.start_date.strftime("%Y-%m-%d"),
             "start_date": self._env.config.base.start_date.strftime("%Y-%m-%d"),
             "end_date": self._env.config.base.end_date.strftime("%Y-%m-%d"),

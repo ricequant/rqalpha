@@ -18,11 +18,15 @@ import abc
 import csv
 import os
 import json
+from collections import defaultdict
 
 from six import with_metaclass
 
 
 class Recorder(with_metaclass(abc.ABCMeta)):
+    '''
+    存储 trade 和 投资组合收益，根据 trade 可以恢复出 positions ，所以不需要存储 positions
+    '''
     @abc.abstractmethod
     def load_meta(self):
         raise NotImplementedError
@@ -47,10 +51,7 @@ class Recorder(with_metaclass(abc.ABCMeta)):
 
 
 class CsvRecorder(Recorder):
-    '''
-    CSV 存储 trade 和 投资组合收益，根据 trade 可以恢复出 positions ，所以不需要存储 positions
-    TODO: 重跑时避免重复存储
-    '''
+
     TRADE_CSV_HEADER = [
         "exec_id",
         "order_id",
@@ -126,4 +127,68 @@ class CsvRecorder(Recorder):
             csv_file.close()
 
 
-# TODO: add mongodb recorder, etc...
+class MongodbRecorder(Recorder):
+    TRADE_CSV_HEADER = [
+        "exec_id",
+        "order_id",
+        "order_book_id",
+        "datetime",
+        "last_price",
+        "last_quantity",
+        "transaction_cost",
+        "side",
+        "position_effect",
+    ]
+
+    PORTFOLIO_CSV_HEADER = [
+        "datetime",
+        "portfolio_value",
+        "market_value",
+        "cash",
+        "daily_pnl",
+        "daily_returns",
+        "total_returns",
+    ]
+
+    def __init__(self, mod_config):
+        try:
+            import pymongo
+        except ImportError:
+            raise RuntimeError(u"Missing pymongo, you need to install it by `pip install pymongo`")
+
+        self._client = pymongo.MongoClient(mod_config.mongo_url)
+        self._db = self._client[mod_config.mongo_dbname]
+        self._strategy_id = mod_config.strategy_id
+
+        self._trade_list = []
+        self._portfolios_dict = defaultdict(list)
+
+    def load_meta(self):
+        return self._db["meta"].find_one({"strategy_id": self._strategy_id})
+
+    def store_meta(self, meta_dict):
+        self._db["meta"].update({"strategy_id": self._strategy_id}, meta_dict, upsert=True)
+
+    def _portfolio2dict(self, dt, portfolio):
+        dic = {key: getattr(portfolio, key) for key in self.PORTFOLIO_CSV_HEADER if key != "datetime"}
+        dic["datetime"] = dt
+        return dic
+
+    def append_trade(self, trade):
+        trade_dict = {key: getattr(trade, key) for key in self.TRADE_CSV_HEADER}
+        trade_dict["strategy_id"] = self._strategy_id
+        trade_dict["side"] = str(trade_dict["side"])
+        trade_dict["position_effect"] = str(trade_dict["position_effect"])
+        self._trade_list.append(trade_dict)
+
+    def append_portfolio(self, dt, portfolio, benchmark_portfolio):
+        self._portfolios_dict["portfolio"].append(self._portfolio2dict(dt, portfolio))
+        if benchmark_portfolio is not None:
+            self._portfolios_dict["bm_portfolio"].append(self._portfolio2dict(dt, benchmark_portfolio))
+
+    def flush(self):
+        if self._trade_list:
+            self._db["trade"].insert_many(self._trade_list)
+        for name, p_list in self._portfolios_dict.items():
+            for portfolio_dict in p_list:
+                self._db[name].update({"strategy_id": self._strategy_id}, {"$push": {"data": portfolio_dict}}, upsert=True)
