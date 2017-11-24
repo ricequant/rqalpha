@@ -67,9 +67,11 @@ def _adjust_start_date(config, data_proxy):
     config.base.end_date = min(end, config.base.end_date)
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
-        raise patch_user_exc(ValueError(_(u"There is no data between {start_date} and {end_date}. Please check your"
-                                          u" data bundle or select other backtest period.").format(
-            start_date=origin_start_date, end_date=origin_end_date)))
+        raise patch_user_exc(
+            ValueError(
+                _(u"There is no data between {start_date} and {end_date}. Please check your"
+                  u" data bundle or select other backtest period.").format(
+                      start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
     config.base.timezone = pytz.utc
@@ -300,13 +302,13 @@ def run(config, source_code=None, user_funcs=None):
         if env.profile_deco:
             output_profile_result(env)
     except CustomException as e:
-        if init_succeed and env.config.base.persist and persist_helper:
+        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         code = _exception_handler(e)
         mod_handler.tear_down(code, e)
     except Exception as e:
-        if init_succeed and env.config.base.persist and persist_helper:
+        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         exc_type, exc_val, exc_tb = sys.exc_info()
