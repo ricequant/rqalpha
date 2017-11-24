@@ -25,6 +25,7 @@ from rqalpha.utils.disk_persist_provider import DiskPersistProvider
 from rqalpha.utils.i18n import gettext as _
 
 from . import recorders
+from . import persist_providers
 
 
 class IncrementalMod(AbstractMod):
@@ -38,6 +39,24 @@ class IncrementalMod(AbstractMod):
         env.config.base.persist = True
         env.config.base.persist_mode = PERSIST_MODE.ON_NORMAL_EXIT
 
+        system_log.info("use recorder {}", mod_config.recorder)
+        if mod_config.recorder == "CsvRecorder":
+            if not mod_config.persist_folder:
+                raise RuntimeError(_(u"You need to set persist_folder to use CsvRecorder"))
+            persist_provider = DiskPersistProvider(os.path.join(mod_config.persist_folder, "persist"))
+            self._recorder = recorders.CsvRecorder(mod_config.persist_folder)
+        elif mod_config.recorder == "MongodbRecorder":
+            if mod_config.strategy_id is None:
+                raise RuntimeError(_(u"You need to set strategy_id"))
+            persist_provider = persist_providers.MongodbPersistProvider(mod_config.strategy_id, mod_config.mongo_url,
+                                                                        mod_config.mongo_dbname)
+            self._recorder = recorders.MongodbRecorder(mod_config.strategy_id, mod_config.mongo_url, mod_config.mongo_dbname)
+        else:
+            raise RuntimeError(_(u"unknown recorder {}").format(mod_config.recorder))
+
+        if env.persist_provider is None:
+            env.set_persist_provider(persist_provider)
+
         self._meta = {
             "strategy_id": mod_config.strategy_id,
             "origin_start_date": self._env.config.base.start_date.strftime("%Y-%m-%d"),
@@ -45,20 +64,12 @@ class IncrementalMod(AbstractMod):
             "end_date": self._env.config.base.end_date.strftime("%Y-%m-%d"),
             "last_run_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
-
-        if mod_config.use_disk_persist_provider:
-            persist_provider = DiskPersistProvider(os.path.join(mod_config.persist_folder, "persist"))
-            env.set_persist_provider(persist_provider)
-
-        recorder_cls = getattr(recorders, mod_config.recorder)
-        self._recorder = recorder_cls(mod_config)
-
         persist_meta = self._recorder.load_meta()
         if persist_meta:
             if persist_meta["end_date"] >= self._meta["start_date"]:
                 raise RuntimeError(
-                    _(u"current start_date {} is before last end_date {}").format(
-                        self._meta["start_date"], persist_meta["end_date"]))
+                    _(u"current start_date {} is before last end_date {}").format(self._meta["start_date"],
+                                                                                  persist_meta["end_date"]))
             else:
                 self._meta["origin_start_date"] = persist_meta["origin_start_date"]
 

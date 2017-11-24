@@ -74,8 +74,7 @@ class CsvRecorder(Recorder):
         "total_returns",
     ]
 
-    def __init__(self, mod_config):
-        folder = mod_config.persist_folder
+    def __init__(self, folder):
         self._meta_json_path = os.path.join(folder, "meta.json")
         self._file_list = []
         self._pending_tasks = []
@@ -150,15 +149,15 @@ class MongodbRecorder(Recorder):
         "total_returns",
     ]
 
-    def __init__(self, mod_config):
+    def __init__(self, strategy_id, mongo_url, mongo_dbname):
         try:
             import pymongo
         except ImportError:
             raise RuntimeError(u"Missing pymongo, you need to install it by `pip install pymongo`")
 
-        self._client = pymongo.MongoClient(mod_config.mongo_url)
-        self._db = self._client[mod_config.mongo_dbname]
-        self._strategy_id = mod_config.strategy_id
+        self._client = pymongo.MongoClient(mongo_url)
+        self._db = self._client[mongo_dbname]
+        self._strategy_id = strategy_id
 
         self._trade_list = []
         self._portfolios_dict = defaultdict(list)

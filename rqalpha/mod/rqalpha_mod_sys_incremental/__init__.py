@@ -19,16 +19,14 @@ from rqalpha import cli
 
 
 __config__ = {
-    # 持久化数据输出文件夹
-    "persist_folder": "./strategy_persist",
-    # 是否启动磁盘存储 persist 功能
-    "use_disk_persist_provider": True,
-    # 是否启用 csv 保存 feeds 功能
+    # 是否启用 csv 保存 feeds 功能，可以设置为 MongodbRecorder
     "recorder": "CsvRecorder",
-    # mongodb
-    "mongo_url": "mongodb://localhost",
+    # 当设置为 CsvRecorder 的时候使用，持久化数据输出文件夹
+    "persist_folder": None,
+    # 当设置为 MongodbRecorder 的时候使用
+    "strategy_id": None,
+    "mongo_url": None,
     "mongo_dbname": "rqalpha_records",
-    "strategy_id": "1",
 }
 
 
@@ -56,7 +54,15 @@ cli.commands['run'].params.append(
 cli.commands['run'].params.append(
     click.Option(
         ("--recorder", cli_prefix + "recorder"),
+        type=click.Choice(["CsvRecorder", "MongodbRecorder"]),
         help="[sys_incremental] recorder name"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ("--mongo-url", cli_prefix + "mongo_url"),
+        help="[sys_incremental] recorder mongo url"
     )
 )
 
