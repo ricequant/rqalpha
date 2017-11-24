@@ -69,7 +69,7 @@ RQAlpha 提供了极具拓展性的 Mod Hook 接口，这意味着开发者可�
 您可以通过如下方式使用 安装和使用Mod:
 
 ..  code-block:: bash
-    
+
     # 查看当前安装的 Mod 列表及状态
     $ rqalpha mod list
     # 安装 Mod
@@ -91,6 +91,7 @@ Mod名                      说明
 `sys_progress`_           【系统模块】在控制台输出当前策略的回测进度。
 `sys_risk`_               【系统模块】对订单进行事前风控校验
 `sys_simulation`_         【系统模块】支持回测、撮合、滑点控制等
+`sys_incremental`_        【系统模块】支持增量运行回测，方便每日跟踪海量的策略的表现
 `sys_stock_realtime`_     【系统模块】Demo 模块，用于展示如何接入自有行情进行回测/模拟/实盘
 `vnpy`_                   【第三方模块】通过 VNPY 对接期货实盘行情和实盘交易
 `sentry`_                 【第三方模块】集成 sentry 的扩展，实现错误日志全自动采集、处理
@@ -215,6 +216,7 @@ Feature Status
 .. _sys_progress: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_progress/README.rst
 .. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
 .. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
+.. _sys_incremental: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_incremental/README.rst
 .. _sys_stock_realtime: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_stock_realtime/README.rst
 .. _vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
 .. _sentry: https://github.com/ricequant/rqalpha-mod-sentry

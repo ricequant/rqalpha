@@ -35,8 +35,22 @@ RQAlpha 增量运行 Mod
         "use_csv_feeds_record": True,
     }
 
-您可以通过如下方式来修改模块的配置信息，从而选择开启/关闭风控模块对应的风控项
+运行
+===============================
 
 ..  code-block:: bash
 
-    rqalpha run -f ~/strategy.py -s 2017-10-01 -e 2017-11-23 --account stock 100000 -l verbose --persist-folder ~/strategy-persist/strategy-1/
+    rqalpha run -f ~/strategy.py -s 2017-09-01 -e 2017-10-01 --account stock 100000 -l verbose --persist-folder ~/strategy-persist/strategy-1/
+    # 接着上次运行继续增量运行回测
+    # 此时传入的 account 信息会被持久化的数据覆盖
+    rqalpha run -f ~/strategy.py -s 2017-10-02 -e 2017-11-01 --account stock 100000 -l verbose --persist-folder ~/strategy-persist/strategy-1/
+
+数据分析
+===============================
+..  code-block:: python
+
+    import pandas as pd
+
+    portfolio_df = pd.read_csv("~/strategy-persist/strategy-1/portfolio.csv")
+    bm_portfolio_df = pd.read_csv("~/strategy-persist/strategy-1/bm_portfolio.csv")
+    trade_df = pd.read_csv("~/strategy-persist/strategy-1/trade.csv")
