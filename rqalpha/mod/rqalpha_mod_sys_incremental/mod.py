@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import os
-import json
+import datetime
 
 from rqalpha.utils.logger import system_log
 from rqalpha.interface import AbstractMod
@@ -24,7 +24,7 @@ from rqalpha.const import PERSIST_MODE
 from rqalpha.utils.disk_persist_provider import DiskPersistProvider
 from rqalpha.utils.i18n import gettext as _
 
-from .recorder import CsvRecorder
+from . import recorders
 
 
 class IncrementalMod(AbstractMod):
@@ -38,33 +38,31 @@ class IncrementalMod(AbstractMod):
         env.config.base.persist = True
         env.config.base.persist_mode = PERSIST_MODE.ON_NORMAL_EXIT
 
-        self._meta_json_path = os.path.join(mod_config.persist_folder, "meta.json")
         self._meta = {
+            "origin_start_date": self._env.config.base.start_date.strftime("%Y-%m-%d"),
             "start_date": self._env.config.base.start_date.strftime("%Y-%m-%d"),
             "end_date": self._env.config.base.end_date.strftime("%Y-%m-%d"),
+            "last_run_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
-        if not os.path.exists(self._meta_json_path):
-            self._meta["origin_start_date"] = self._meta["start_date"]
-        else:
-            with open(self._meta_json_path, "r") as json_file:
-                persist_meta = json.load(json_file)
-            self._meta["origin_start_date"] = persist_meta["origin_start_date"]
 
-            if self._meta["start_date"] <= persist_meta["end_date"]:
-                raise RuntimeError(
-                    _(u"current start_date {} is before last end_date {}").format(self._meta["start_date"],
-                                                                                  persist_meta["end_date"]))
-
-        if mod_config.use_disk_persist:
+        if mod_config.use_disk_persist_provider:
             persist_provider = DiskPersistProvider(os.path.join(mod_config.persist_folder, "persist"))
             env.set_persist_provider(persist_provider)
 
-        if mod_config.use_csv_feeds_record:
-            self._recorder = CsvRecorder(mod_config.persist_folder)
+        recorder_cls = getattr(recorders, mod_config.recorder)
+        self._recorder = recorder_cls(mod_config)
 
-        if self._recorder:
-            env.event_bus.add_listener(EVENT.TRADE, self.on_trade)
-            env.event_bus.add_listener(EVENT.SETTLEMENT, self.on_settlement)
+        persist_meta = self._recorder.load_meta()
+        if persist_meta:
+            if persist_meta["end_date"] >= self._meta["start_date"]:
+                raise RuntimeError(
+                    _(u"current start_date {} is before last end_date {}").format(
+                        self._meta["start_date"], persist_meta["end_date"]))
+            else:
+                self._meta["origin_start_date"] = persist_meta["origin_start_date"]
+
+        env.event_bus.add_listener(EVENT.TRADE, self.on_trade)
+        env.event_bus.add_listener(EVENT.POST_SETTLEMENT, self.on_settlement)
 
     def on_trade(self, event):
         trade = event.trade
@@ -79,9 +77,7 @@ class IncrementalMod(AbstractMod):
     def tear_down(self, success, exception=None):
         if exception is None:
             # 仅当成功运行才写入数据
-            with open(self._meta_json_path, "w") as json_file:
-                json_file.write(json.dumps(self._meta))
-
             if self._recorder:
+                self._recorder.store_meta(self._meta)
                 self._recorder.flush()
                 self._recorder.close()

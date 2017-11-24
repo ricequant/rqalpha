@@ -22,9 +22,9 @@ __config__ = {
     # 持久化数据输出文件夹
     "persist_folder": "./strategy_persist",
     # 是否启动磁盘存储 persist 功能
-    "use_disk_persist": True,
+    "use_disk_persist_provider": True,
     # 是否启用 csv 保存 feeds 功能
-    "use_csv_feeds_record": True,
+    "recorder": "CsvRecorder",
 }
 
 

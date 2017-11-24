@@ -17,11 +17,20 @@
 import abc
 import csv
 import os
+import json
 
 from six import with_metaclass
 
 
 class Recorder(with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
+    def load_meta(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def store_meta(self, meta_dict):
+        raise NotImplementedError
+
     @abc.abstractmethod
     def append_trade(self, trade):
         raise NotImplementedError
@@ -64,12 +73,25 @@ class CsvRecorder(Recorder):
         "total_returns",
     ]
 
-    def __init__(self, csv_folder):
+    def __init__(self, mod_config):
+        folder = mod_config.persist_folder
+        self._meta_json_path = os.path.join(folder, "meta.json")
         self._file_list = []
         self._pending_tasks = []
-        self._trade_writer = self._create_writer(os.path.join(csv_folder, "trade.csv"), self.TRADE_CSV_HEADER)
-        self._portfolio_writer = self._create_writer(os.path.join(csv_folder, "portfolio.csv"), self.PORTFOLIO_CSV_HEADER)
-        self._bm_portfolio_writer = self._create_writer(os.path.join(csv_folder, "bm_portfolio.csv"), self.PORTFOLIO_CSV_HEADER)
+        self._trade_writer = self._create_writer(os.path.join(folder, "trade.csv"), self.TRADE_CSV_HEADER)
+        self._portfolio_writer = self._create_writer(os.path.join(folder, "portfolio.csv"), self.PORTFOLIO_CSV_HEADER)
+        self._bm_portfolio_writer = self._create_writer(os.path.join(folder, "bm_portfolio.csv"), self.PORTFOLIO_CSV_HEADER)
+
+    def load_meta(self):
+        if os.path.exists(self._meta_json_path):
+            with open(self._meta_json_path, "r") as json_file:
+                persist_meta = json.load(json_file)
+            return persist_meta
+        return None
+
+    def store_meta(self, meta_dict):
+        with open(self._meta_json_path, "w") as json_file:
+            json_file.write(json.dumps(meta_dict))
 
     def _create_writer(self, path, header):
         is_file_exist = os.path.exists(path)
