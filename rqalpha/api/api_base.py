@@ -425,6 +425,9 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     env = Environment.get_instance()
     dt = env.calendar_dt
 
+    if frequency[-1] not in {'m', 'd'}:
+        raise RQInvalidArgument('invalid frequency {}'.format(frequency))
+
     if frequency[-1] == 'm' and env.config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
 
