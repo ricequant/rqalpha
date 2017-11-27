@@ -35,9 +35,16 @@ class IncrementalMod(AbstractMod):
     def start_up(self, env, mod_config):
         self._env = env
         self._recorder = None
+        self._mod_config = mod_config
 
         env.config.base.persist = True
         env.config.base.persist_mode = PERSIST_MODE.ON_NORMAL_EXIT
+
+        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._init)
+
+    def _init(self, event):
+        env = self._env
+        mod_config = self._mod_config
 
         system_log.info("use recorder {}", mod_config.recorder)
         if mod_config.recorder == "CsvRecorder":
