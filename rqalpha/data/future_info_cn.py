@@ -26,7 +26,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -35,7 +35,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -44,7 +44,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "SR": {
@@ -55,7 +55,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -64,7 +64,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -73,7 +73,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "JD": {
@@ -84,7 +84,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.00015,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 0.00015
+            "open_commission_ratio": 0.00015,
         },
         "speculation": {
             "short_margin_ratio": 0.08,
@@ -93,7 +93,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.00015,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 0.00015
+            "open_commission_ratio": 0.00015,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -102,7 +102,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.00015,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 0.00015
+            "open_commission_ratio": 0.00015,
         }
     },
     "T": {
@@ -113,7 +113,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.02,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.02,
@@ -122,7 +122,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.02,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.02,
@@ -131,7 +131,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.02,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "P": {
@@ -142,7 +142,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -151,7 +151,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -160,7 +160,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "BB": {
@@ -171,7 +171,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.0001,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 0.0001
+            "open_commission_ratio": 0.0001,
         },
         "speculation": {
             "short_margin_ratio": 0.2,
@@ -180,7 +180,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.0001,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 0.0001
+            "open_commission_ratio": 0.0001,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -189,7 +189,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.0001,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 0.0001
+            "open_commission_ratio": 0.0001,
         }
     },
     "RM": {
@@ -200,7 +200,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -209,7 +209,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -218,7 +218,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         }
     },
     "RS": {
@@ -229,7 +229,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -238,7 +238,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -247,7 +247,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         }
     },
     "J": {
@@ -258,7 +258,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -267,7 +267,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -276,7 +276,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         }
     },
     "RI": {
@@ -287,7 +287,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -296,7 +296,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -305,7 +305,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "ER": {
@@ -316,7 +316,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -325,7 +325,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -334,7 +334,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "L": {
@@ -345,7 +345,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -354,7 +354,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -363,7 +363,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         }
     },
     "PP": {
@@ -374,7 +374,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 5e-05
+            "open_commission_ratio": 5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -383,7 +383,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 5e-05
+            "open_commission_ratio": 5e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -392,7 +392,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 5e-05
+            "open_commission_ratio": 5e-05,
         }
     },
     "SN": {
@@ -403,7 +403,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -412,7 +412,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -421,7 +421,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "I": {
@@ -432,7 +432,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -441,7 +441,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -450,7 +450,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         }
     },
     "TA": {
@@ -461,7 +461,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -470,7 +470,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -479,7 +479,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "AL": {
@@ -490,7 +490,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -499,7 +499,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -508,7 +508,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "ZC": {
@@ -519,7 +519,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4.0
+            "open_commission_ratio": 4.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -528,7 +528,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4.0
+            "open_commission_ratio": 4.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -537,7 +537,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4.0
+            "open_commission_ratio": 4.0,
         }
     },
     "TC": {
@@ -548,7 +548,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4.0
+            "open_commission_ratio": 4.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -557,7 +557,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4.0
+            "open_commission_ratio": 4.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -566,7 +566,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4.0
+            "open_commission_ratio": 4.0,
         }
     },
     "LR": {
@@ -577,7 +577,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -586,7 +586,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -595,7 +595,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "RU": {
@@ -606,7 +606,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 4.5e-05
+            "open_commission_ratio": 4.5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.08,
@@ -615,7 +615,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 4.5e-05
+            "open_commission_ratio": 4.5e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -624,7 +624,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.5e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4.5e-05
+            "open_commission_ratio": 4.5e-05,
         }
     },
     "M": {
@@ -635,7 +635,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -644,7 +644,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -653,7 +653,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         }
     },
     "TF": {
@@ -664,7 +664,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.012,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.012,
@@ -673,7 +673,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.012,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.012,
@@ -682,7 +682,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.012,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "MA": {
@@ -693,7 +693,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.4,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 1.4
+            "open_commission_ratio": 1.4,
         },
         "speculation": {
             "short_margin_ratio": 0.07,
@@ -702,7 +702,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.4,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 1.4
+            "open_commission_ratio": 1.4,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -711,7 +711,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.4,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 1.4
+            "open_commission_ratio": 1.4,
         }
     },
     "ME": {
@@ -722,7 +722,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.4,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 1.4
+            "open_commission_ratio": 1.4,
         },
         "speculation": {
             "short_margin_ratio": 0.07,
@@ -731,7 +731,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.4,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 1.4
+            "open_commission_ratio": 1.4,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -740,7 +740,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.4,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 1.4
+            "open_commission_ratio": 1.4,
         }
     },
     "WR": {
@@ -751,7 +751,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.2,
@@ -760,7 +760,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -769,7 +769,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         }
     },
     "RB": {
@@ -780,7 +780,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 4.5e-05
+            "open_commission_ratio": 4.5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.06,
@@ -789,7 +789,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 4.5e-05
+            "open_commission_ratio": 4.5e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -798,7 +798,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.5e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4.5e-05
+            "open_commission_ratio": 4.5e-05,
         }
     },
     "C": {
@@ -809,7 +809,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.2,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.2
+            "open_commission_ratio": 1.2,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -818,7 +818,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.2,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.2
+            "open_commission_ratio": 1.2,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -827,7 +827,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.2,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 1.2
+            "open_commission_ratio": 1.2,
         }
     },
     "JR": {
@@ -838,7 +838,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -847,7 +847,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -856,7 +856,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "SF": {
@@ -867,7 +867,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -876,7 +876,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -885,7 +885,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "OI": {
@@ -896,7 +896,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -905,7 +905,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -914,7 +914,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "RO": {
@@ -925,7 +925,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -934,7 +934,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -943,7 +943,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "CF": {
@@ -954,7 +954,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.3,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4.3
+            "open_commission_ratio": 4.3,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -963,7 +963,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.3,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4.3
+            "open_commission_ratio": 4.3,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -972,7 +972,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4.3,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4.3
+            "open_commission_ratio": 4.3,
         }
     },
     "BU": {
@@ -983,7 +983,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 3e-05
+            "open_commission_ratio": 3e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.07,
@@ -992,7 +992,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 3e-05
+            "open_commission_ratio": 3e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1001,7 +1001,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3e-05
+            "open_commission_ratio": 3e-05,
         }
     },
     "JM": {
@@ -1012,7 +1012,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1021,7 +1021,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1030,7 +1030,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 6e-05
+            "open_commission_ratio": 6e-05,
         }
     },
     "IH": {
@@ -1041,7 +1041,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.4,
@@ -1050,7 +1050,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.3e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.4,
-            "open_commission_ratio": 2.3e-05
+            "open_commission_ratio": 2.3e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.2,
@@ -1059,7 +1059,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         }
     },
     "FG": {
@@ -1070,7 +1070,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1079,7 +1079,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1088,7 +1088,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
     },
     "PM": {
@@ -1099,7 +1099,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 5.0
+            "open_commission_ratio": 5.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1108,7 +1108,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 5.0
+            "open_commission_ratio": 5.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1117,7 +1117,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 5.0
+            "open_commission_ratio": 5.0,
         }
     },
     "FB": {
@@ -1128,7 +1128,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.0001,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 0.0001
+            "open_commission_ratio": 0.0001,
         },
         "speculation": {
             "short_margin_ratio": 0.2,
@@ -1137,7 +1137,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.0001,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 0.0001
+            "open_commission_ratio": 0.0001,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1146,7 +1146,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 0.0001,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 0.0001
+            "open_commission_ratio": 0.0001,
         }
     },
     "CS": {
@@ -1157,7 +1157,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1166,7 +1166,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1175,7 +1175,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 1.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 1.5
+            "open_commission_ratio": 1.5,
         }
     },
     "B": {
@@ -1186,7 +1186,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1195,7 +1195,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1204,7 +1204,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         }
     },
     "IC": {
@@ -1215,7 +1215,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.4,
@@ -1224,7 +1224,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.3e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.4,
-            "open_commission_ratio": 2.3e-05
+            "open_commission_ratio": 2.3e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.2,
@@ -1233,7 +1233,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         }
     },
     "WH": {
@@ -1244,7 +1244,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1253,7 +1253,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1262,7 +1262,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "WS": {
@@ -1273,7 +1273,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1282,7 +1282,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1291,7 +1291,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "FU": {
@@ -1302,7 +1302,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2e-05
+            "open_commission_ratio": 2e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.2,
@@ -1311,7 +1311,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2e-05
+            "open_commission_ratio": 2e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1320,7 +1320,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2e-05
+            "open_commission_ratio": 2e-05,
         }
     },
     "AU": {
@@ -1331,7 +1331,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 10.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 10.0
+            "open_commission_ratio": 10.0,
         },
         "speculation": {
             "short_margin_ratio": 0.06,
@@ -1340,7 +1340,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 10.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 10.0
+            "open_commission_ratio": 10.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1349,7 +1349,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 10.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 10.0
+            "open_commission_ratio": 10.0,
         }
     },
     "CU": {
@@ -1360,7 +1360,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.08,
@@ -1369,7 +1369,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1378,7 +1378,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         }
     },
     "V": {
@@ -1389,7 +1389,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1398,7 +1398,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1407,7 +1407,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         }
     },
     "Y": {
@@ -1418,7 +1418,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1427,7 +1427,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1436,7 +1436,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.5
+            "open_commission_ratio": 2.5,
         }
     },
     "AG": {
@@ -1447,7 +1447,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 5e-05
+            "open_commission_ratio": 5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.08,
@@ -1456,7 +1456,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.08,
-            "open_commission_ratio": 5e-05
+            "open_commission_ratio": 5e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1465,7 +1465,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 5e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 5e-05
+            "open_commission_ratio": 5e-05,
         }
     },
     "PB": {
@@ -1476,7 +1476,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1485,7 +1485,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1494,7 +1494,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         }
     },
     "IF": {
@@ -1505,7 +1505,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.4,
@@ -1514,7 +1514,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.3e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.4,
-            "open_commission_ratio": 2.3e-05
+            "open_commission_ratio": 2.3e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.2,
@@ -1523,7 +1523,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.5e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.2,
-            "open_commission_ratio": 2.5e-05
+            "open_commission_ratio": 2.5e-05,
         }
     },
     "A": {
@@ -1534,7 +1534,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "speculation": {
             "short_margin_ratio": 0.05,
@@ -1543,7 +1543,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.05,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1552,7 +1552,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 2.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 2.0
+            "open_commission_ratio": 2.0,
         }
     },
     "NI": {
@@ -1563,7 +1563,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 6.0
+            "open_commission_ratio": 6.0,
         },
         "speculation": {
             "short_margin_ratio": 0.07,
@@ -1572,7 +1572,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.07,
-            "open_commission_ratio": 6.0
+            "open_commission_ratio": 6.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1581,7 +1581,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 6.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 6.0
+            "open_commission_ratio": 6.0,
         }
     },
     "HC": {
@@ -1592,7 +1592,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         },
         "speculation": {
             "short_margin_ratio": 0.06,
@@ -1601,7 +1601,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1610,7 +1610,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 4e-05,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 4e-05
+            "open_commission_ratio": 4e-05,
         }
     },
     "ZN": {
@@ -1621,7 +1621,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "speculation": {
             "short_margin_ratio": 0.06,
@@ -1630,7 +1630,7 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": MARGIN_TYPE.BY_MONEY,
             "long_margin_ratio": 0.06,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         },
         "arbitrage": {
             "short_margin_ratio": 0.0,
@@ -1639,8 +1639,37 @@ CN_FUTURE_INFO = {
             "close_commission_ratio": 3.0,
             "margin_type": None,
             "long_margin_ratio": 0.0,
-            "open_commission_ratio": 3.0
+            "open_commission_ratio": 3.0,
         }
-    }
+    },
+    "CY": {
+        "hedge": {
+            "short_margin_ratio": 0.05,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_VOLUME,
+            "close_commission_ratio": 4.0,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.05,
+            "open_commission_ratio": 4.0,
+        },
+        "speculation": {
+            "short_margin_ratio": 0.05,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_VOLUME,
+            "close_commission_ratio": 4.0,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.05,
+            "open_commission_ratio": 4.0,
+        },
+        "arbitrage": {
+            "short_margin_ratio": 0.05,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_VOLUME,
+            "close_commission_ratio": 4.0,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.05,
+            "open_commission_ratio": 4.0,
+        }
+    },
 }
 
