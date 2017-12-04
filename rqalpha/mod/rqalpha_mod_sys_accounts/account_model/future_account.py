@@ -166,7 +166,6 @@ class FutureAccount(BaseAccount):
 
         self._total_cash = state['total_cash'] + margin_changed
 
-
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.FUTURE.name

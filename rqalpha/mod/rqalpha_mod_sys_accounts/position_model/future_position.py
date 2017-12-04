@@ -419,7 +419,7 @@ class FuturePosition(BasePosition):
                     consumed_quantity = old_quantity
                 left_quantity -= consumed_quantity
                 delta += self._cal_realized_pnl(old_price, trade.last_price, trade.side, consumed_quantity)
-            # 再平进仓
+            # 再平今仓
             while True:
                 if left_quantity <= 0:
                     break
