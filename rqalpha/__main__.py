@@ -227,6 +227,7 @@ def mod(cmd, params):
         params = [param for param in params]
 
         options, mod_list = InstallCommand().parse_args(params)
+        mod_list = [mod_name for mod_name in mod_list if mod_name != "."]
 
         params = ["install"] + params
 
