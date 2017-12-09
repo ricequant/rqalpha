@@ -150,4 +150,4 @@ class EVENT(Enum):
 
 
 def parse_event(event_str):
-    return EVENT.__members__.get(event_str.upper(), None)
+    return EVENT[event_str.upper()]
