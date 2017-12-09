@@ -179,11 +179,11 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         leg = plt.legend(loc="best")
         leg.get_frame().set_alpha(0.5)
 
-    if show_windows:
-        plt.show()
-
     if savefile:
         fnmame = savefile
         if os.path.isdir(savefile):
             fnmame = os.path.join(savefile, "{}.png".format(summary["strategy_name"]))
         plt.savefig(fnmame, bbox_inches='tight')
+
+    if show_windows:
+        plt.show()
