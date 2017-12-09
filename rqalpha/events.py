@@ -31,16 +31,16 @@ class EventBus(object):
     def __init__(self):
         self._listeners = defaultdict(list)
 
-    def add_listener(self, event, listener):
-        self._listeners[event].append(listener)
+    def add_listener(self, event_type, listener):
+        self._listeners[event_type].append(listener)
 
-    def prepend_listener(self, event, listener):
-        self._listeners[event].insert(0, listener)
+    def prepend_listener(self, event_type, listener):
+        self._listeners[event_type].insert(0, listener)
 
     def publish_event(self, event):
-        for l in self._listeners[event.event_type]:
+        for listener in self._listeners[event.event_type]:
             # 如果返回 True ，那么消息不再传递下去
-            if l(event):
+            if listener(event):
                 break
 
 
@@ -140,7 +140,7 @@ class EVENT(Enum):
 
     ON_LINE_PROFILER_RESULT = 'on_line_profiler_result'
 
-    # persist immediantly
+    # persist immediately
     DO_PERSIST = 'do_persist'
 
     # 策略被暂停
