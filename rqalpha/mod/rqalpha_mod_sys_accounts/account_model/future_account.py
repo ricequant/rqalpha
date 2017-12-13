@@ -70,28 +70,29 @@ class FutureAccount(BaseAccount):
             quantity = quantity - position.buy_quantity + position.sell_quantity
         orders = []
         if quantity > 0:
+            sell_old_quantity, sell_today_quantity = position.sell_old_quantity, position.sell_today_quantity
             # 平昨仓
-            if position.sell_old_quantity > 0:
+            if sell_old_quantity > 0:
                 orders.append(order(
                     order_book_id,
-                    min(quantity, position.sell_old_quantity),
+                    min(quantity, sell_old_quantity),
                     SIDE.BUY,
                     POSITION_EFFECT.CLOSE,
                     style
                 ))
-                quantity -= position.sell_old_quantity
+                quantity -= sell_old_quantity
             if quantity <= 0:
                 return orders
             # 平今仓
-            if position.sell_today_quantity > 0:
+            if sell_today_quantity > 0:
                 orders.append(order(
                     order_book_id,
-                    min(quantity, position.sell_today_quantity),
+                    min(quantity, sell_today_quantity),
                     SIDE.BUY,
                     POSITION_EFFECT.CLOSE_TODAY,
                     style
                 ))
-                quantity -= position.sell_today_quantity
+                quantity -= sell_today_quantity
             if quantity <= 0:
                 return orders
             # 开多仓
@@ -106,37 +107,27 @@ class FutureAccount(BaseAccount):
         else:
             # 平昨仓
             quantity *= -1
-            if position.buy_old_quantity > 0:
-                orders.append(order(
-                    order_book_id,
-                    min(quantity, position.buy_old_quantity),
-                    SIDE.SELL,
-                    POSITION_EFFECT.CLOSE,
-                    style
-                ))
-                quantity -= position.buy_old_quantity
+            buy_old_quantity, buy_today_quantity = position.buy_old_quantity, position.buy_today_quantity
+            if buy_old_quantity > 0:
+                orders.append(
+                    order(order_book_id, min(quantity, buy_old_quantity), SIDE.SELL, POSITION_EFFECT.CLOSE, style))
+                quantity -= min(quantity, buy_old_quantity)
             if quantity <= 0:
                 return orders
             # 平今仓
-            if position.buy_today_quantity > 0:
+            if buy_today_quantity > 0:
                 orders.append(order(
                     order_book_id,
-                    min(quantity, position.buy_today_quantity),
+                    min(quantity, buy_today_quantity),
                     SIDE.SELL,
                     POSITION_EFFECT.CLOSE_TODAY,
                     style
                 ))
-                quantity -= position.buy_today_quantity
+                quantity -= buy_today_quantity
             if quantity <= 0:
                 return orders
             # 开空仓
-            orders.append(order(
-                order_book_id,
-                quantity,
-                SIDE.SELL,
-                POSITION_EFFECT.OPEN,
-                style
-            ))
+            orders.append(order(order_book_id, quantity, SIDE.SELL, POSITION_EFFECT.OPEN, style))
             return orders
 
     def get_state(self):
