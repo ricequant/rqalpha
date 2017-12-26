@@ -530,8 +530,7 @@ def all_instruments(type=None, date=None):
     else:
         types = None
 
-    result = [i for i in env.data_proxy.all_instruments(types, dt)
-              if i.type != 'CS' or not env.data_proxy.is_suspended(i.order_book_id, dt)]
+    result = env.data_proxy.all_instruments(types, dt)
     if types is not None and len(types) == 1:
         return pd.DataFrame([i.__dict__ for i in result])
 
