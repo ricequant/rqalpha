@@ -44,15 +44,15 @@ class FutureAccount(BaseAccount):
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
-        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_creation_reject)
-        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
+        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
+        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
         if self.AGGRESSIVE_UPDATE_LAST_PRICE:
-            event_bus.add_listener(EVENT.BAR, self._on_bar)
-            event_bus.add_listener(EVENT.TICK, self._on_tick)
+            event_bus.add_listener(EVENT.BAR, self._update_last_price)
+            event_bus.add_listener(EVENT.TICK, self._update_last_price)
 
     def fast_forward(self, orders, trades=list()):
         # 计算 Positions
@@ -245,11 +245,7 @@ class FutureAccount(BaseAccount):
 
         self._backward_trade_set.clear()
 
-    def _on_bar(self, event):
-        for position in self._positions.values():
-            position.update_last_price()
-
-    def _on_tick(self, event):
+    def _update_last_price(self, event):
         for position in self._positions.values():
             position.update_last_price()
 
@@ -257,11 +253,6 @@ class FutureAccount(BaseAccount):
         if self != event.account:
             return
         self._frozen_cash += self._frozen_cash_of_order(event.order)
-
-    def _on_order_creation_reject(self, event):
-        if self != event.account:
-            return
-        self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
     def _on_order_unsolicited_update(self, event):
         if self != event.account:
