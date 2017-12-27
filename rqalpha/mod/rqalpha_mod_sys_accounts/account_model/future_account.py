@@ -42,6 +42,8 @@ class FutureAccount(BaseAccount):
         "daily_realized_pnl"
     ]
 
+    forced_liquidation = True
+
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
@@ -239,7 +241,9 @@ class FutureAccount(BaseAccount):
         self._total_cash = total_value - self.margin - self.holding_pnl
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
-        if total_value <= 0:
+        if total_value <= 0 and self.forced_liquidation:
+            if self._positions:
+                user_system_log.warn(_("Trigger Forced Liquidation, current total_value is {}"), total_value)
             self._positions.clear()
             self._total_cash = 0
 

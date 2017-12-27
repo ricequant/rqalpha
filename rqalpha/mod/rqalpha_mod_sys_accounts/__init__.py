@@ -23,6 +23,8 @@ __config__ = {
     "stock_t1": True,
     # 分红再投资
     "dividend_reinvestment": False,
+    # 强平
+    "future_forced_liquidation": True,
 }
 
 
