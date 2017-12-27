@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.4.0\n"
+"Generated-By: Babel 2.5.1\n"
 
 #: rqalpha/environment.py:64
 msgid ""
@@ -430,7 +430,7 @@ msgstr "不支持回测频率: {}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:47
 msgid "{} starting cash can not be 0, using `--account {} 100000`"
-msgstr "账户 {} 的初始资金不能为0，请使用 `--acount {} 100000` 来设置"
+msgstr "账户 {} 的初始资金不能为0，请使用 `--account {} 100000` 来设置"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/utils.py:57
 msgid "invalid order book id {} in initial positions"
