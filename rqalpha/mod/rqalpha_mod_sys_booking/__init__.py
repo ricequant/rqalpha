@@ -19,6 +19,7 @@ from rqalpha import cli
 
 
 __config__ = {
+    "booking_id": None,
 }
 
 
@@ -28,3 +29,11 @@ def load_mod():
 
 
 cli_prefix = "mod__sys_booking__"
+
+
+cli.commands['run'].params.append(
+    click.Option(
+        ("--booking-id", cli_prefix + "booking_id"),
+        help="[sys_booking] booking id "
+    )
+)

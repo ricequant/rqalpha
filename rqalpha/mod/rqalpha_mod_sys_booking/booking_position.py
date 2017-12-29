@@ -16,6 +16,8 @@
 
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.i18n import gettext as _
 
 
 class BookingPosition(object):
@@ -88,3 +90,25 @@ class BookingPosition(object):
         """
         return self.sell_old_quantity + self.sell_today_quantity
 
+    def apply_trade(self, trade):
+        trade_quantity = trade.last_quantity
+        if trade.side == SIDE.BUY:
+            if trade.position_effect == POSITION_EFFECT.OPEN:
+                self._buy_today_quantity += trade_quantity
+            elif trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
+                self._sell_today_quantity -= trade_quantity
+            elif trade.position_effect == POSITION_EFFECT.CLOSE:
+                self._sell_old_quantity -= trade_quantity
+            else:
+                user_system_log.error(_("Unknown position_effect, trade:{}"), trade)
+        elif trade.side == SIDE.SELL:
+            if trade.position_effect == POSITION_EFFECT.OPEN:
+                self._sell_today_quantity += trade_quantity
+            elif trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
+                self._buy_today_quantity -= trade_quantity
+            elif trade.position_effect == POSITION_EFFECT.CLOSE:
+                self._buy_old_quantity -= trade_quantity
+            else:
+                user_system_log.error(_("Unknown position_effect, trade:{}"), trade)
+        else:
+            user_system_log.error(_("Unknown side, trade:{}"), trade)

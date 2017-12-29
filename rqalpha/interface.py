@@ -113,6 +113,15 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractproperty
+    def total_value(self):
+        """
+        [Required]
+
+        返回当前账户的总权益
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
     def transaction_cost(self):
         """
         [Required]
