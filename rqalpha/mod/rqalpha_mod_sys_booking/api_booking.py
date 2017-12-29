@@ -29,8 +29,10 @@ from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha import export_as_api
 
 
+@export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
                                 EXECUTION_PHASE.BEFORE_TRADING,
                                 EXECUTION_PHASE.ON_BAR,
@@ -39,4 +41,16 @@ from rqalpha.utils.arg_checker import apply_rules, verify_that
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('booking').is_instance_of(str))
 def get_positions(booking=None):
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
+                                EXECUTION_PHASE.AFTER_TRADING,
+                                EXECUTION_PHASE.SCHEDULED)
+@apply_rules(verify_that('booking').is_instance_of(str))
+def get_position(order_book_id, side, booking=None):
     raise NotImplementedError
