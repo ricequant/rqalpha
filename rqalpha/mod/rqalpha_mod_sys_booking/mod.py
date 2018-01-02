@@ -16,18 +16,20 @@
 
 
 from rqalpha.interface import AbstractMod
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE
-from rqalpha import export_as_api
+from rqalpha.model.base_position import Positions
 
-from .account_model import StockAccount, FutureAccount, BenchmarkAccount
-from .position_model import StockPosition, FuturePosition
-from .api import api_future, api_stock
+from .booking_account import BookingAccount
+from .booking_position import BookingPosition
+
+# import api
+from . import api_booking
 
 
 class BookingMod(AbstractMod):
 
     def start_up(self, env, mod_config):
-        pass
+        # TODO: load pos/trade from pms
+        self.booking_account = BookingAccount(register_event=True)
 
     def tear_down(self, code, exception=None):
         pass

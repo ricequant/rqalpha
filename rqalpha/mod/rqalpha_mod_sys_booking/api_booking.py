@@ -22,7 +22,7 @@ from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
+from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, POSITION_DIRECTION
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
@@ -39,9 +39,11 @@ from rqalpha import export_as_api
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('booking').is_instance_of(str))
 def get_positions(booking=None):
-    raise NotImplementedError
+    env = Environment.get_instance()
+    mod = env.mod_dict["sys_booking"]
+    booking_account = mod.booking_account
+    return booking_account.get_positions(booking)
 
 
 @export_as_api
@@ -51,6 +53,9 @@ def get_positions(booking=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('booking').is_instance_of(str))
-def get_position(order_book_id, side, booking=None):
-    raise NotImplementedError
+@apply_rules(verify_that('direction').is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT]))
+def get_position(order_book_id, direction, booking=None):
+    env = Environment.get_instance()
+    mod = env.mod_dict["sys_booking"]
+    booking_account = mod.booking_account
+    return booking_account.get_position(order_book_id, direction, booking)

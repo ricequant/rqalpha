@@ -18,21 +18,41 @@ from rqalpha.environment import Environment
 from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.repr import property_repr
+
+
+class BookingPositions(dict):
+    def __init__(self, direction):
+        super(BookingPositions, self).__init__()
+        self.direction = direction
+        self._cached_positions = {}
+
+    def __missing__(self, key):
+        if key not in self._cached_positions:
+            self._cached_positions[key] = BookingPosition(key, self.direction)
+        return self._cached_positions[key]
+
+    def get_or_create(self, key):
+        if key not in self:
+            self[key] = BookingPosition(key, self.direction)
+        return self[key]
 
 
 class BookingPosition(object):
 
-    def __init__(self, order_book_id):
+    __repr__ = property_repr
+
+    def __init__(self, order_book_id, direction):
         self._order_book_id = order_book_id
+        self._direction = direction
 
-        self._buy_old_quantity = 0
-        self._sell_old_quantity = 0
-        self._buy_today_quantity = 0
-        self._sell_today_quantity = 0
+        self._old_quantity = 0
+        self._today_quantity = 0
 
-    def __repr__(self):
-        return 'BookingPosition({})'.format(self.__dict__)
+        self._frozen_quantity = 0
+        self._frozen_today_quantity = 0
 
+    @property
     def order_book_id(self):
         """
         [Required]
@@ -42,73 +62,95 @@ class BookingPosition(object):
         return self._order_book_id
 
     @property
+    def direction(self):
+        return self._direction
+
+    @property
     def quantity(self):
-        """
-        股票API
-        """
-        return self._buy_old_quantity + self._buy_today_quantity
+        return self.old_quantity + self.today_quantity
 
     @property
-    def buy_old_quantity(self):
+    def old_quantity(self):
         """
-        [int] 买方向昨仓
+        [int] 昨仓
         """
-        return self._buy_old_quantity
+        return self._old_quantity
 
     @property
-    def sell_old_quantity(self):
+    def today_quantity(self):
         """
-        [int] 卖方向昨仓
+        [int] 今仓
         """
-        return self._sell_old_quantity
+        return self._today_quantity
 
     @property
-    def buy_today_quantity(self):
-        """
-        [int] 买方向今仓
-        """
-        return self._buy_today_quantity
+    def closable_quantity(self):
+        return self.quantity - self._frozen_quantity
 
     @property
-    def sell_today_quantity(self):
-        """
-        [int] 卖方向今仓
-        """
-        return self._sell_today_quantity
+    def closable_today_quantity(self):
+        return self.today_quantity - self._frozen_today_quantity
 
-    @property
-    def buy_quantity(self):
-        """
-        [int] 买方向持仓
-        """
-        return self.buy_old_quantity + self.buy_today_quantity
+    def apply_settlement(self):
+        self._old_quantity += self._today_quantity
+        self._today_quantity = 0
 
-    @property
-    def sell_quantity(self):
-        """
-        [int] 卖方向持仓
-        """
-        return self.sell_old_quantity + self.sell_today_quantity
+        self._frozen_quantity = 0
+        self._frozen_today_quantity = 0
 
     def apply_trade(self, trade):
-        trade_quantity = trade.last_quantity
-        if trade.side == SIDE.BUY:
-            if trade.position_effect == POSITION_EFFECT.OPEN:
-                self._buy_today_quantity += trade_quantity
-            elif trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
-                self._sell_today_quantity -= trade_quantity
-            elif trade.position_effect == POSITION_EFFECT.CLOSE:
-                self._sell_old_quantity -= trade_quantity
-            else:
-                user_system_log.error(_("Unknown position_effect, trade:{}"), trade)
-        elif trade.side == SIDE.SELL:
-            if trade.position_effect == POSITION_EFFECT.OPEN:
-                self._sell_today_quantity += trade_quantity
-            elif trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
-                self._buy_today_quantity -= trade_quantity
-            elif trade.position_effect == POSITION_EFFECT.CLOSE:
-                self._buy_old_quantity -= trade_quantity
-            else:
-                user_system_log.error(_("Unknown position_effect, trade:{}"), trade)
-        else:
-            user_system_log.error(_("Unknown side, trade:{}"), trade)
+        position_effect = self._get_position_effect(trade.side, trade.position_effect)
+
+        if position_effect == POSITION_EFFECT.OPEN:
+            self._today_quantity += trade.last_quantity
+        elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            self._today_quantity -= trade.last_quantity
+        elif position_effect == POSITION_EFFECT.CLOSE:
+            # 先平昨，后平今
+            self._old_quantity -= trade.last_quantity
+            if self._old_quantity < 0:
+                self._today_quantity += self._old_quantity
+                self._old_quantity = 0
+
+    def is_de_listed(self):
+        """
+        判断合约是否过期
+        """
+        instrument = Environment.get_instance().get_instrument(self.order_book_id)
+        current_date = Environment.get_instance().trading_dt
+        if instrument.de_listed_date is not None and current_date >= instrument.de_listed_date:
+            return True
+        return False
+
+    def _get_position_effect(side, position_effect):
+        if position_effect is None:
+            # NOTE: 股票如果没有position_effect就特殊处理
+            if side == SIDE.BUY:
+                return POSITION_EFFECT.OPEN
+            elif side == SIDE.SELL:
+                return POSITION_EFFECT.CLOSE
+        return position_effect
+
+    def on_order_pending_new_(self, order):
+        position_effect = order.position_effect
+        if position_effect == POSITION_EFFECT.CLOSE:
+            self._frozen_quantity += order.quantity
+        elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            self._frozen_quantity += order.quantity
+            self._frozen_today_quantity += order.quantity
+
+    def on_order_creation_reject_(self, order):
+        position_effect = order.position_effect
+        if position_effect == POSITION_EFFECT.CLOSE:
+            self._frozen_quantity -= order.quantity
+        elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            self._frozen_quantity -= order.quantity
+            self._frozen_today_quantity -= order.quantity
+
+    def on_order_cancel_(self, order):
+        position_effect = order.position_effect
+        if position_effect == POSITION_EFFECT.CLOSE:
+            self._frozen_quantity -= order.unfilled_quantity
+        elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            self._frozen_quantity -= order.unfilled_quantity
+            self._frozen_today_quantity -= order.unfilled_quantity

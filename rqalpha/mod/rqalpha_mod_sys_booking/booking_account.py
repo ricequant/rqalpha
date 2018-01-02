@@ -19,22 +19,28 @@ import six
 from rqalpha.model.base_account import BaseAccount
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_EFFECT, SIDE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_EFFECT, SIDE, POSITION_DIRECTION
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.interface import AbstractAccount
 from rqalpha.utils.repr import property_repr
 
+from .booking_position import BookingPosition, BookingPositions
 
-class BookingAccount(AbstractAccount):
+
+class BookingAccount(object):
 
     NaN = float('NaN')
 
     __repr__ = property_repr
 
-    def __init__(self, positions, backward_trade_set=None, register_event=True):
-        self._positions = positions
+    def __init__(self, backward_trade_set=None, register_event=True):
+        self._positions_dict = {
+            POSITION_DIRECTION.LONG: BookingPositions(POSITION_DIRECTION.LONG),
+            POSITION_DIRECTION.SHORT: BookingPositions(POSITION_DIRECTION.SHORT),
+        }
         self._backward_trade_set = backward_trade_set if backward_trade_set is not None else set()
+
         if register_event:
             self.register_event()
 
@@ -48,67 +54,95 @@ class BookingAccount(AbstractAccount):
         event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
 
     def fast_forward(self, orders, trades=list()):
+        # TODO
         for trade in trades:
             if trade.exec_id in self._backward_trade_set:
                 continue
             self._apply_trade(trade)
 
-    def order(self, order_book_id, quantity, style, target=False):
-        """
-        [Required]
+    def _get_direction(self, side, position_effect):
+        direction = None
+        if position_effect in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY):
+            if side == SIDE.BUY:
+                direction = POSITION_DIRECTION.SHORT
+            elif side == SIDE.SELL:
+                direction = POSITION_DIRECTION.LONG
+        elif position_effect == POSITION_DIRECTION.OPEN:
+            if side == SIDE.BUY:
+                direction = POSITION_DIRECTION.LONG
+            elif side == SIDE.SELL:
+                direction = POSITION_DIRECTION.SHORT
+        return direction
 
-        系统下单函数会调用该函数来完成下单操作
-        """
-        raise NotImplementedError
+    def get_position(self, order_book_id, direction, booking=None):
+        return self._positions_dict[direction].get_or_create(order_book_id)
 
-    def get_state(self):
-        return {}
-
-    def set_state(self, state):
-        pass
-
-    @property
-    def type(self):
-        return "BookingAccount"
-
-    @property
-    def positions(self):
-        return self._positions
-
-    @property
-    def frozen_cash(self):
-        return 0
-
-    @property
-    def cash(self):
-        return 0
-
-    @property
-    def market_value(self):
-        raise NotImplementedError
-
-    @property
-    def transaction_cost(self):
-        return 0
+    def get_positions(self, booking=None):
+        total_positions = []
+        for direction, positions in self._positions_dict.items():
+            for order_book_id, position in positions.items():
+                if position.quantity > 0:
+                    total_positions.append(position)
+        return total_positions
 
     def _on_order_pending_new(self, event):
-        if self != event.account:
-            return
+        order = event.order
+
+        direction = self._get_direction(order.side, order.position_effect)
+        position = self.get_position(order.order_book_id, direction)
+        position.on_order_pending_new_(order)
 
     def _on_order_unsolicited_update(self, event):
-        if self != event.account:
-            return
+        order = event.order
+
+        direction = self._get_direction(order.side, order.position_effect)
+        position = self.get_position(order.order_book_id, direction)
+        position.on_order_unsolicited_update_(order)
+
+    def _settlement(self, event):
+        for direction, positions in self._positions_dict.items():
+            for order_book_id, position in positions.items():
+                if position.is_de_listed() and position.quantity != 0:
+                    user_system_log.warn(
+                        _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
+                    del self._positions[order_book_id]
+                elif position.quantity == 0:
+                    del self._positions[order_book_id]
+                else:
+                    position.apply_settlement()
+
+        self._backward_trade_set.clear()
 
     def _on_trade(self, event):
-        if self != event.account:
-            return
-        self._apply_trade(event.trade)
+        trade = event.trade
 
-    def _apply_trade(self, trade):
         if trade.exec_id in self._backward_trade_set:
             return
+
         order_book_id = trade.order_book_id
-        position = self._positions.get_or_create(order_book_id)
+
+        if trade.side not in (SIDE.BUY, SIDE.SELL):
+            raise RuntimeError("unknown side, trade {}".format(trade))
+
+        long_positions = self._positions_dict[POSITION_DIRECTION.LONG]
+        short_positions = self._positions_dict[POSITION_DIRECTION.SHORT]
+
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            if trade.side == SIDE.BUY:
+                position = long_positions.get_or_create(order_book_id)
+            elif trade.side == SIDE.SELL:
+                position = short_positions.get_or_create(order_book_id)
+        elif trade.position_effect in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY):
+            if trade.side == SIDE.BUY:
+                position = short_positions.get_or_create(order_book_id)
+            elif trade.side == SIDE.SELL:
+                position = long_positions.get_or_create(order_book_id)
+        else:
+            # NOTE: 股票如果没有position_effect就特殊处理
+            position = long_positions.get_or_create(order_book_id)
+
         position.apply_trade(trade)
+
+        system_log.info("on_trade: {}", trade)
 
         self._backward_trade_set.add(trade.exec_id)

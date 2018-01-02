@@ -110,6 +110,13 @@ class POSITION_EFFECT(CustomEnum):
 
 
 # noinspection PyPep8Naming
+class POSITION_DIRECTION(CustomEnum):
+    UNKNOWN = "UNKNOWN"
+    LONG = "LONG"
+    SHORT = "SHORT"
+
+
+# noinspection PyPep8Naming
 class EXC_TYPE(CustomEnum):
     USER_EXC = "USER_EXC"
     SYSTEM_EXC = "SYSTEM_EXC"
