@@ -67,7 +67,7 @@ class BookingAccount(object):
                 direction = POSITION_DIRECTION.SHORT
             elif side == SIDE.SELL:
                 direction = POSITION_DIRECTION.LONG
-        elif position_effect == POSITION_DIRECTION.OPEN:
+        elif position_effect == POSITION_EFFECT.OPEN:
             if side == SIDE.BUY:
                 direction = POSITION_DIRECTION.LONG
             elif side == SIDE.SELL:
@@ -97,7 +97,7 @@ class BookingAccount(object):
 
         direction = self._get_direction(order.side, order.position_effect)
         position = self.get_position(order.order_book_id, direction)
-        position.on_order_unsolicited_update_(order)
+        position.on_order_cancel_(order)
 
     def _settlement(self, event):
         for direction, positions in self._positions_dict.items():
@@ -141,8 +141,8 @@ class BookingAccount(object):
             # NOTE: 股票如果没有position_effect就特殊处理
             position = long_positions.get_or_create(order_book_id)
 
-        position.apply_trade(trade)
-
         system_log.info("on_trade: {}", trade)
+
+        position.apply_trade(trade)
 
         self._backward_trade_set.add(trade.exec_id)

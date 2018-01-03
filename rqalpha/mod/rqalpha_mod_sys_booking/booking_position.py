@@ -91,6 +91,14 @@ class BookingPosition(object):
     def closable_today_quantity(self):
         return self.today_quantity - self._frozen_today_quantity
 
+    @property
+    def frozen_quantity(self):
+        return self._frozen_quantity
+
+    @property
+    def frozen_today_quantity(self):
+        return self._frozen_today_quantity
+
     def apply_settlement(self):
         self._old_quantity += self._today_quantity
         self._today_quantity = 0
@@ -122,6 +130,7 @@ class BookingPosition(object):
             return True
         return False
 
+    @staticmethod
     def _get_position_effect(side, position_effect):
         if position_effect is None:
             # NOTE: 股票如果没有position_effect就特殊处理
