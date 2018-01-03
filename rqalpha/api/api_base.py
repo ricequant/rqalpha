@@ -41,7 +41,8 @@ from rqalpha.utils.arg_checker import apply_rules, verify_that
 # noinspection PyUnresolvedReferences
 from rqalpha.model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
 # noinspection PyUnresolvedReferences
-from rqalpha.const import EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE
+from rqalpha.const import (EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE,
+                           RUN_TYPE, POSITION_DIRECTION)
 # noinspection PyUnresolvedReferences
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 # noinspection PyUnresolvedReferences
@@ -57,6 +58,7 @@ __all__ = [
     'ORDER_STATUS',
     'SIDE',
     'POSITION_EFFECT',
+    'POSITION_DIRECTION',
     'ORDER_TYPE',
     'RUN_TYPE',
     'MATCHING_TYPE',
