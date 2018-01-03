@@ -14,22 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import division
-import six
-import numpy as np
-
-from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, POSITION_DIRECTION
-from rqalpha.model.instrument import Instrument
-from rqalpha.utils import is_valid_price
-from rqalpha.utils.exception import RQInvalidArgument
-from rqalpha.utils.logger import user_system_log
-from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import EXECUTION_PHASE, POSITION_DIRECTION
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha import export_as_api
+
+from . import mod_name
 
 
 @export_as_api
@@ -41,7 +32,7 @@ from rqalpha import export_as_api
                                 EXECUTION_PHASE.SCHEDULED)
 def get_positions(booking=None):
     env = Environment.get_instance()
-    mod = env.mod_dict["sys_booking"]
+    mod = env.mod_dict[mod_name]
     booking_account = mod.booking_account
     return booking_account.get_positions(booking)
 
@@ -56,6 +47,6 @@ def get_positions(booking=None):
 @apply_rules(verify_that('direction').is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT]))
 def get_position(order_book_id, direction, booking=None):
     env = Environment.get_instance()
-    mod = env.mod_dict["sys_booking"]
+    mod = env.mod_dict[mod_name]
     booking_account = mod.booking_account
     return booking_account.get_position(order_book_id, direction, booking)
