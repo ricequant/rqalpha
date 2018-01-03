@@ -28,6 +28,9 @@ from . import api_booking
 class BookingMod(AbstractMod):
 
     def start_up(self, env, mod_config):
+        if env.config.base.init_positions:
+            raise RuntimeError("RQAlpha recieve init positions. rqalpha_mod_sys_booking do not support init_positions")
+
         # TODO: load pos/trade from pms
         self.booking_account = BookingAccount(register_event=True)
 
