@@ -63,40 +63,58 @@ class BookingPosition(object):
 
     @property
     def direction(self):
+        """
+        持仓方向
+        """
         return self._direction
 
     @property
     def quantity(self):
+        """
+        [float] 总仓位
+        """
         return self.old_quantity + self.today_quantity
 
     @property
     def old_quantity(self):
         """
-        [int] 昨仓
+        [float] 昨仓
         """
         return self._old_quantity
 
     @property
     def today_quantity(self):
         """
-        [int] 今仓
+        [float] 今仓
         """
         return self._today_quantity
 
     @property
     def closable_quantity(self):
+        """
+        [float] 可平仓位
+        """
         return self.quantity - self._frozen_quantity
 
     @property
     def closable_today_quantity(self):
+        """
+        [float] 可平今仓
+        """
         return self.today_quantity - self._frozen_today_quantity
 
     @property
     def frozen_quantity(self):
+        """
+        [float] 总冻结仓位
+        """
         return self._frozen_quantity
 
     @property
     def frozen_today_quantity(self):
+        """
+        [float] 冻结仓位
+        """
         return self._frozen_today_quantity
 
     def apply_settlement(self):
