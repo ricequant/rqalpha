@@ -49,6 +49,9 @@ class EVENT(Enum):
     # post_system_init()
     POST_SYSTEM_INIT = 'post_system_init'
 
+    # persist helper 创建后触发
+    POST_PERSIST_HELPER_INIT = 'post_persist_helper_init'
+
     # 在实盘时，你可能需要在此事件后根据其他信息源对系统状态进行调整
     POST_SYSTEM_RESTORED = 'post_system_restored'
 

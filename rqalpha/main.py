@@ -283,6 +283,7 @@ def run(config, source_code=None, user_funcs=None):
             # broker will restore open orders from account
             if isinstance(broker, Persistable):
                 persist_helper.register('broker', broker)
+            env.event_bus.publish_event(Event(EVENT.POST_PERSIST_HELPER_INIT))
 
             persist_helper.restore()
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
