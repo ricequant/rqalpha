@@ -134,6 +134,10 @@ def run(**kwargs):
         ipy.user_global_ns["results"] = results
         ipy.user_global_ns["report"] = RqAttrDict(report)
 
+    if results is None:
+        import sys
+        sys.exit(1)
+
 
 @cli.command()
 @click.option('-d', '--directory', default="./", type=click.Path(), required=True)
