@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import errno
+import sys
 import os
 import shutil
 import six
@@ -135,7 +136,6 @@ def run(**kwargs):
         ipy.user_global_ns["report"] = RqAttrDict(report)
 
     if results is None:
-        import sys
         sys.exit(1)
 
 
