@@ -37,6 +37,8 @@ base:
     future: ~
   # 设置初始仓位
   init_positions: {}
+  # 根据价格最小变动单位调整发单价格
+  round_price: false
 
 
 extra:

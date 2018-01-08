@@ -229,6 +229,8 @@ class BaseDataSource(AbstractDataSource):
             return 0.01
         elif instrument.type in ['ETF', 'LOF', 'FenjiB', 'FenjiA', 'FenjiMu']:
             return 0.001
+        elif instrument.type == 'Future':
+            return CN_FUTURE_INFO[instrument.underlying_symbol]['speculation']['tick_size']
         else:
             # NOTE: you can override get_tick_size in your custom data source
             raise RuntimeError(_("Unsupported instrument type for tick size"))

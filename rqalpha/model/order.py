@@ -303,7 +303,11 @@ class LimitOrder(OrderStyle):
     __repr__ = ORDER_TYPE.LIMIT.__repr__
 
     def __init__(self, limit_price):
-        self.limit_price = float(limit_price)
+        if Environment.get_instance().config.base.round_price:
+            tick_size = Environment.get_instance().data_proxy.instruments(order.order_book_id).tick_size()
+            self.limit_price = round(float(limit_price) / tick_size) * tick_size
+        else:
+            self.limit_price = float(limit_price)
 
     def get_limit_price(self):
         return self.limit_price
