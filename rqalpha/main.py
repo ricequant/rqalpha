@@ -326,7 +326,11 @@ def run(config, source_code=None, user_funcs=None):
 
 
 def _exception_handler(e):
-    better_exceptions.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
+    try:
+        better_exceptions.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
+    except Exception as e:
+        system_log.exception("better_exceptions fail")
+
     user_system_log.error(e.error)
     if not is_user_exc(e.error.exc_val):
         code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
