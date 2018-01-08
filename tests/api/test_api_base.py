@@ -213,7 +213,7 @@ def test_sector():
         pass
 
     def handle_bar(context, bar_dict):
-        assert len(sector('金融')) >= 180
+        assert len(sector('金融')) >= 80, "sector('金融') 返回结果少于 80 个"
 test_sector_code_new = get_code_block(test_sector)
 
 
