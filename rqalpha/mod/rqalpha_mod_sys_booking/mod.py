@@ -17,6 +17,9 @@
 
 from rqalpha.interface import AbstractMod
 from rqalpha.model.base_position import Positions
+from rqalpha.model.trade import Trade
+from rqalpha.const import SIDE, POSITION_EFFECT, CustomEnum
+from rqalpha.utils.logger import system_log
 
 from .booking_account import BookingAccount
 from .booking_position import BookingPosition
@@ -25,14 +28,82 @@ from .booking_position import BookingPosition
 from . import api_booking
 
 
+SIDE_DICT = {
+    1: SIDE.BUY,
+    2: SIDE.SELL,
+}
+
+POSITION_EFFECT_DICT = {
+    1: POSITION_EFFECT.OPEN,
+    2: POSITION_EFFECT.CLOSE,
+    3: POSITION_EFFECT.CLOSE_TODAY,
+}
+
+
 class BookingMod(AbstractMod):
 
     def start_up(self, env, mod_config):
+        import requests
+
         if env.config.base.init_positions:
             raise RuntimeError("RQAlpha recieve init positions. rqalpha_mod_sys_booking do not support init_positions")
 
         # TODO: load pos/trade from pms
+        server_url = mod_config.server_url
+        booking_id = mod_config.booking_id
+
         self.booking_account = BookingAccount(register_event=True)
+
+        resp = requests.get("{}/get_positions/{}".format(server_url, booking_id)).json()
+        if resp["code"] != 200:
+            raise RuntimeError(resp)
+
+        # 昨仓
+        trades = []
+        position_list = resp["resp"]["positions"]
+        for position_dict in position_list:
+            if position_dict["buy_quantity"] > 0:
+                trade = self._create_trade(
+                    position_dict["order_book_id"],
+                    position_dict["buy_quantity"],
+                    SIDE.BUY,
+                    POSITION_EFFECT.OPEN,
+                )
+                trades.append(trade)
+            if position_dict["sell_quantity"] > 0:
+                trade = self._create_trade(
+                    position_dict["order_book_id"],
+                    position_dict["sell_quantity"],
+                    SIDE.SELL,
+                    POSITION_EFFECT.OPEN,
+                )
+                trades.append(trade)
+        system_log.info("yesterday position trades: {}", trades)
+        self.booking_account.fast_forward([], trades=trades)
+
+        self.booking_account._settlement(None, check_delist=False)
+
+        # 今仓
+        resp = requests.get("{}/get_trades/{}".format(server_url, booking_id)).json()
+        if resp["code"] != 200:
+            raise RuntimeError(resp)
+
+        trades = []
+        trade_list = resp["resp"]["trades"]
+        for trade_dict in trade_list:
+            trade = self._create_trade(
+                trade_dict["order_book_id"],
+                trade_dict["last_quantity"],
+                SIDE_DICT[trade_dict["side"]],
+                POSITION_EFFECT_DICT[trade_dict["position_effect"]],
+            )
+            trades.append(trade)
+        system_log.info("today trades: {}", trades)
+        self.booking_account.fast_forward([], trades=trades)
 
     def tear_down(self, code, exception=None):
         pass
+
+    def _create_trade(self, obid, quantity, side, position_effect):
+        trade = Trade.__from_create__(0, 0, quantity, side, position_effect, obid)
+        return trade

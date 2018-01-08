@@ -54,7 +54,6 @@ class BookingAccount(object):
         event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
 
     def fast_forward(self, orders, trades=list()):
-        # TODO
         for trade in trades:
             if trade.exec_id in self._backward_trade_set:
                 continue
@@ -99,23 +98,35 @@ class BookingAccount(object):
         position = self.get_position(order.order_book_id, direction)
         position.on_order_cancel_(order)
 
-    def _settlement(self, event):
+    def _settlement(self, event, check_delist=True):
+        delete_list = []
+        for direction, positions in list(self._positions_dict.items()):
+            for order_book_id, position in list(positions.items()):
+                pass
+
         for direction, positions in self._positions_dict.items():
             for order_book_id, position in positions.items():
-                if position.is_de_listed() and position.quantity != 0:
+                if check_delist and position.is_de_listed() and position.quantity != 0:
                     user_system_log.warn(
                         _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id))
-                    del self._positions[order_book_id]
+                    delete_list.append((order_book_id, direction))
+                    # del self._positions[order_book_id]
                 elif position.quantity == 0:
-                    del self._positions[order_book_id]
+                    delete_list.append((order_book_id, direction))
+                    # del self._positions[order_book_id]
                 else:
                     position.apply_settlement()
+
+        for order_book_id, direction in delete_list:
+            self._positions_dict[direction].pop(order_book_id)
 
         self._backward_trade_set.clear()
 
     def _on_trade(self, event):
         trade = event.trade
+        self._apply_trade(trade)
 
+    def _apply_trade(self, trade):
         if trade.exec_id in self._backward_trade_set:
             return
 
@@ -141,7 +152,7 @@ class BookingAccount(object):
             # NOTE: 股票如果没有position_effect就特殊处理
             position = long_positions.get_or_create(order_book_id)
 
-        system_log.info("on_trade: {}", trade)
+        system_log.debug("booking account on_trade: {}", trade)
 
         position.apply_trade(trade)
 

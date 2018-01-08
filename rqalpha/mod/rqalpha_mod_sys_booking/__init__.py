@@ -21,6 +21,7 @@ mod_name = "sys_booking"
 
 __config__ = {
     "booking_id": None,
+    "server_url": "localhost:22401",
 }
 
 
@@ -38,3 +39,11 @@ cli.commands['run'].params.append(
         help="[sys_booking] booking id "
     )
 )
+
+cli.commands['run'].params.append(
+    click.Option(
+        ("--booking-server", cli_prefix + "server_url"),
+        help="[sys_booking] booking server "
+    )
+)
+
