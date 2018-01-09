@@ -52,6 +52,9 @@ class BookingMod(AbstractMod):
         server_url = mod_config.server_url
         booking_id = mod_config.booking_id
 
+        if not mod_config.booking_id:
+            booking_id = env.config.base.run_id
+
         self.booking_account = BookingAccount(register_event=True)
 
         resp = requests.get("{}/get_positions/{}".format(server_url, booking_id)).json()
