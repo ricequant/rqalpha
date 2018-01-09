@@ -312,4 +312,4 @@ class LimitOrder(OrderStyle):
         return self.limit_price
 
     def round_price(self, tick_size):
-        self.limit_price = round(self.limit_price / tick_size) * tick_size
+        self.limit_price = int(self.limit_price / tick_size) * tick_size
