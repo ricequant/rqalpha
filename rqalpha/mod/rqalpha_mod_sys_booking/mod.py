@@ -18,7 +18,7 @@
 from rqalpha.interface import AbstractMod
 from rqalpha.model.base_position import Positions
 from rqalpha.model.trade import Trade
-from rqalpha.const import SIDE, POSITION_EFFECT, CustomEnum
+from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION, CustomEnum
 from rqalpha.utils.logger import system_log
 
 from .booking_account import BookingAccount
@@ -54,6 +54,7 @@ class BookingMod(AbstractMod):
 
         if not mod_config.booking_id:
             booking_id = env.config.base.run_id
+            mod_config.booking_id = booking_id
 
         self.booking_account = BookingAccount(register_event=True)
 
@@ -86,7 +87,7 @@ class BookingMod(AbstractMod):
 
         self.booking_account._settlement(None, check_delist=False)
 
-        # 今仓
+        # 计算今仓
         resp = requests.get("{}/get_trades/{}".format(server_url, booking_id)).json()
         if resp["code"] != 200:
             raise RuntimeError(resp)
@@ -103,6 +104,12 @@ class BookingMod(AbstractMod):
             trades.append(trade)
         system_log.info("today trades: {}", trades)
         self.booking_account.fast_forward([], trades=trades)
+
+        # 设置兼容其他组件
+        env.config.base.init_positions = []
+        for position in self.booking_account.get_positions():
+            sign = -1 if position.direction == POSITION_DIRECTION.SHORT else 1
+            env.config.base.init_positions.append((position.order_book_id, position.quantity * sign))
 
     def tear_down(self, code, exception=None):
         pass
