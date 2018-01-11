@@ -20,6 +20,7 @@ from rqalpha.model.base_position import Positions
 from rqalpha.model.trade import Trade
 from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION, CustomEnum
 from rqalpha.utils.logger import system_log
+from rqalpha.events import EVENT, Event
 
 from .booking_account import BookingAccount
 from .booking_position import BookingPosition
@@ -43,6 +44,7 @@ POSITION_EFFECT_DICT = {
 class BookingMod(AbstractMod):
 
     def start_up(self, env, mod_config):
+        self.env = env
         import requests
 
         if env.config.base.init_positions:
@@ -113,6 +115,17 @@ class BookingMod(AbstractMod):
         for position in self.booking_account.get_positions():
             sign = -1 if position.direction == POSITION_DIRECTION.SHORT else 1
             env.config.base.init_positions.append((position.order_book_id, position.quantity * sign))
+
+        env.event_bus.add_listener(EVENT.BEFORE_SYSTEM_RESTORED, self.on_before_system_restore)
+
+    def on_before_system_restore(self, event):
+        helper = self.env.persist_helper
+        disable_persist_keys = [
+            "portfolio",
+            "benchmark_portfolio",
+        ]
+        for key in disable_persist_keys:
+            helper.unregister(key)
 
     def tear_down(self, code, exception=None):
         pass

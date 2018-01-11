@@ -268,6 +268,7 @@ def run(config, source_code=None, user_funcs=None):
             if persist_provider is None:
                 raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
             persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
+            env.set_persist_helper(persist_helper)
             persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
             persist_helper.register('user_context', ucontext)
             persist_helper.register('global_vars', env.global_vars)
@@ -283,8 +284,8 @@ def run(config, source_code=None, user_funcs=None):
             # broker will restore open orders from account
             if isinstance(broker, Persistable):
                 persist_helper.register('broker', broker)
-            env.event_bus.publish_event(Event(EVENT.POST_PERSIST_HELPER_INIT))
 
+            env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
             persist_helper.restore()
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 

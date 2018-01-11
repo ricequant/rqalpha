@@ -36,6 +36,7 @@ class Environment(object):
         self.strategy_loader = None
         self.global_vars = None
         self.persist_provider = None
+        self.persist_helper = None
         self.broker = None
         self.profile_deco = None
         self.system_log = system_log
@@ -84,6 +85,9 @@ class Environment(object):
 
     def cancel_hold_strategy(self):
         self.config.extra.is_hold = False
+
+    def set_persist_helper(self, helper):
+        self.persist_helper = helper
 
     def set_persist_provider(self, provider):
         self.persist_provider = provider

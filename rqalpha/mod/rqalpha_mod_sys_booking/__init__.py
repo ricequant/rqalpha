@@ -20,6 +20,7 @@ from rqalpha import cli
 mod_name = "sys_booking"
 
 __config__ = {
+    "priority": 1,
     "booking_id": None,
     "server_url": "localhost:22401",
 }
