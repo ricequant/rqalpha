@@ -80,6 +80,10 @@ def init_portfolio(env):
             # FIXME
             positions[order_book_id]._last_price = price
 
+        # 变成昨仓
+        for order_book_id, position in positions.items():
+            position.apply_settlement()
+
         account = account_model(starting_cash, positions)
         units += account.total_value
         accounts[account_type] = account

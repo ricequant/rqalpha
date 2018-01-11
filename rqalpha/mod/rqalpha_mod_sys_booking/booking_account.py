@@ -152,8 +152,6 @@ class BookingAccount(object):
             # NOTE: 股票如果没有position_effect就特殊处理
             position = long_positions.get_or_create(order_book_id)
 
-        system_log.debug("booking account on_trade: {}", trade)
-
         position.apply_trade(trade)
 
         self._backward_trade_set.add(trade.exec_id)

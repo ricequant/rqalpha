@@ -82,9 +82,12 @@ class BookingMod(AbstractMod):
                     POSITION_EFFECT.OPEN,
                 )
                 trades.append(trade)
-        system_log.info("yesterday position trades: {}", trades)
-        self.booking_account.fast_forward([], trades=trades)
 
+        system_log.info("yesterday positions trades")
+        for trade in trades:
+            system_log.info("trade: {:9}, qtx {}, side {}", trade.order_book_id, trade.last_quantity, trade.side)
+
+        self.booking_account.fast_forward([], trades=trades)
         self.booking_account._settlement(None, check_delist=False)
 
         # 计算今仓
