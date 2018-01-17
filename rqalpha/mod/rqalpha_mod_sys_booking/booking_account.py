@@ -85,6 +85,7 @@ class BookingAccount(object):
         return total_positions
 
     def _on_order_pending_new(self, event):
+        system_log.debug("BookingAccount._on_order_pending_new ev:{}", event)
         order = event.order
 
         direction = self._get_direction(order.side, order.position_effect)
@@ -92,6 +93,7 @@ class BookingAccount(object):
         position.on_order_pending_new_(order)
 
     def _on_order_unsolicited_update(self, event):
+        system_log.debug("BookingAccount._on_order_unsolicited_update ev:{}", event)
         order = event.order
 
         direction = self._get_direction(order.side, order.position_effect)

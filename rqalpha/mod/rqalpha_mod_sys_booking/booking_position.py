@@ -16,7 +16,7 @@
 
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr
 
@@ -131,8 +131,11 @@ class BookingPosition(object):
             self._today_quantity += trade.last_quantity
         elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
             self._today_quantity -= trade.last_quantity
+            self._frozen_today_quantity -= trade.last_quantity
+            self._frozen_quantity -= trade.last_quantity
         elif position_effect == POSITION_EFFECT.CLOSE:
             # 先平昨，后平今
+            self._frozen_quantity -= trade.last_quantity
             self._old_quantity -= trade.last_quantity
             if self._old_quantity < 0:
                 self._today_quantity += self._old_quantity
@@ -159,6 +162,7 @@ class BookingPosition(object):
         return position_effect
 
     def on_order_pending_new_(self, order):
+        system_log.debug("on_order_pending_new, order {}", order)
         position_effect = order.position_effect
         if position_effect == POSITION_EFFECT.CLOSE:
             self._frozen_quantity += order.quantity
@@ -167,6 +171,8 @@ class BookingPosition(object):
             self._frozen_today_quantity += order.quantity
 
     def on_order_creation_reject_(self, order):
+        system_log.debug("on_order_creation_reject, order {}", order)
+
         position_effect = order.position_effect
         if position_effect == POSITION_EFFECT.CLOSE:
             self._frozen_quantity -= order.quantity
@@ -175,6 +181,8 @@ class BookingPosition(object):
             self._frozen_today_quantity -= order.quantity
 
     def on_order_cancel_(self, order):
+        system_log.debug("on_order_cancel, order {}", order)
+
         position_effect = order.position_effect
         if position_effect == POSITION_EFFECT.CLOSE:
             self._frozen_quantity -= order.unfilled_quantity
