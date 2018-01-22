@@ -49,9 +49,6 @@ class BookingPosition(object):
         self._old_quantity = 0
         self._today_quantity = 0
 
-        self._frozen_quantity = 0
-        self._frozen_today_quantity = 0
-
     @property
     def order_book_id(self):
         """
@@ -89,40 +86,9 @@ class BookingPosition(object):
         """
         return self._today_quantity
 
-    @property
-    def closable_quantity(self):
-        """
-        [float] 可平仓位
-        """
-        return self.quantity - self._frozen_quantity
-
-    @property
-    def closable_today_quantity(self):
-        """
-        [float] 可平今仓
-        """
-        return self.today_quantity - self._frozen_today_quantity
-
-    @property
-    def frozen_quantity(self):
-        """
-        [float] 总冻结仓位
-        """
-        return self._frozen_quantity
-
-    @property
-    def frozen_today_quantity(self):
-        """
-        [float] 冻结仓位
-        """
-        return self._frozen_today_quantity
-
     def apply_settlement(self):
         self._old_quantity += self._today_quantity
         self._today_quantity = 0
-
-        self._frozen_quantity = 0
-        self._frozen_today_quantity = 0
 
     def apply_trade(self, trade):
         position_effect = self._get_position_effect(trade.side, trade.position_effect)
@@ -131,11 +97,8 @@ class BookingPosition(object):
             self._today_quantity += trade.last_quantity
         elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
             self._today_quantity -= trade.last_quantity
-            self._frozen_today_quantity -= trade.last_quantity
-            self._frozen_quantity -= trade.last_quantity
         elif position_effect == POSITION_EFFECT.CLOSE:
             # 先平昨，后平今
-            self._frozen_quantity -= trade.last_quantity
             self._old_quantity -= trade.last_quantity
             if self._old_quantity < 0:
                 self._today_quantity += self._old_quantity
@@ -160,32 +123,3 @@ class BookingPosition(object):
             elif side == SIDE.SELL:
                 return POSITION_EFFECT.CLOSE
         return position_effect
-
-    def on_order_pending_new_(self, order):
-        system_log.debug("on_order_pending_new, order {}", order)
-        position_effect = order.position_effect
-        if position_effect == POSITION_EFFECT.CLOSE:
-            self._frozen_quantity += order.quantity
-        elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
-            self._frozen_quantity += order.quantity
-            self._frozen_today_quantity += order.quantity
-
-    def on_order_creation_reject_(self, order):
-        system_log.debug("on_order_creation_reject, order {}", order)
-
-        position_effect = order.position_effect
-        if position_effect == POSITION_EFFECT.CLOSE:
-            self._frozen_quantity -= order.quantity
-        elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
-            self._frozen_quantity -= order.quantity
-            self._frozen_today_quantity -= order.quantity
-
-    def on_order_cancel_(self, order):
-        system_log.debug("on_order_cancel, order {}", order)
-
-        position_effect = order.position_effect
-        if position_effect == POSITION_EFFECT.CLOSE:
-            self._frozen_quantity -= order.unfilled_quantity
-        elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
-            self._frozen_quantity -= order.unfilled_quantity
-            self._frozen_today_quantity -= order.unfilled_quantity

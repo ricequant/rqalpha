@@ -47,10 +47,6 @@ class BookingAccount(object):
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
-        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
 
     def fast_forward(self, orders, trades=list()):
@@ -83,22 +79,6 @@ class BookingAccount(object):
                 if position.quantity > 0:
                     total_positions.append(position)
         return total_positions
-
-    def _on_order_pending_new(self, event):
-        system_log.debug("BookingAccount._on_order_pending_new ev:{}", event)
-        order = event.order
-
-        direction = self._get_direction(order.side, order.position_effect)
-        position = self.get_position(order.order_book_id, direction)
-        position.on_order_pending_new_(order)
-
-    def _on_order_unsolicited_update(self, event):
-        system_log.debug("BookingAccount._on_order_unsolicited_update ev:{}", event)
-        order = event.order
-
-        direction = self._get_direction(order.side, order.position_effect)
-        position = self.get_position(order.order_book_id, direction)
-        position.on_order_cancel_(order)
 
     def _settlement(self, event, check_delist=True):
         delete_list = []
