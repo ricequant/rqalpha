@@ -433,6 +433,9 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     if frequency[-1] == 'm' and env.config.base.frequency == '1d':
         raise RQInvalidArgument('can not get minute history in day back test')
 
+    if frequency[-1] == 'd' and frequency != '1d':
+        raise RQInvalidArgument('invalid frequency')
+
     if adjust_type not in {'pre', 'post', 'none'}:
         raise RuntimeError('invalid adjust_type')
 
