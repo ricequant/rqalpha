@@ -14,11 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+from decimal import Decimal, getcontext
+
+from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
-from rqalpha.const import EXECUTION_PHASE, POSITION_DIRECTION
+from rqalpha.const import EXECUTION_PHASE, POSITION_DIRECTION, POSITION_EFFECT, SIDE
+from rqalpha.model.instrument import Instrument
 from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
+from rqalpha.utils.exception import patch_user_exc, RQInvalidArgument
 from rqalpha import export_as_api
+from rqalpha.utils.i18n import gettext as _
 
 from . import mod_name
 
@@ -50,3 +58,83 @@ def get_position(order_book_id, direction, booking=None):
     mod = env.mod_dict[mod_name]
     booking_account = mod.booking_account
     return booking_account.get_position(order_book_id, direction, booking)
+
+
+@apply_rules(
+    verify_that('id_or_ins').is_valid_future(),
+    verify_that('amount').is_number().is_greater_or_equal_than(0),
+    verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
+    verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
+    verify_that('style').is_instance_of((LimitOrder, MarketOrder, type(None))))
+def send_order(order_book_id, amount, side, position_effect, style):
+    env = Environment.get_instance()
+
+    order = None
+
+    order = Order.__from_create__(order_book_id, amount, side, style, POSITION_EFFECT.CLOSE)
+    env.broker.submit_order(order)
+
+
+@export_as_api
+def buy_open(id_or_ins, amount, price=None, style=None):
+    return send_order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style))
+
+
+@export_as_api
+def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
+    position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
+    return send_order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
+
+
+@export_as_api
+def sell_open(id_or_ins, amount, price=None, style=None):
+    return send_order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
+
+
+@export_as_api
+def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
+    position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
+    return send_order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style))
+
+
+@export_as_api
+@apply_rules(verify_that('id_or_ins').is_valid_stock(),
+             verify_that('amount').is_number(),
+             verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
+def order_shares(id_or_ins, amount, price=None, style=None):
+    order_book_id = assure_order_book_id(id_or_ins)
+    env = Environment.get_instance()
+
+    if amount > 0:
+        side = SIDE.BUY
+        position_effect = POSITION_EFFECT.OPEN
+    else:
+        amount = abs(amount)
+        side = SIDE.SELL
+        position_effect = POSITION_EFFECT.CLOSE
+
+    round_lot = int(env.get_instrument(order_book_id).round_lot)
+    try:
+        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+    except ValueError:
+        amount = 0
+
+    order = Order.__from_create__(order_book_id, amount, side, style, position_effect)
+
+    if amount == 0:
+        # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
+        # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
+        order.mark_rejected(_(u"Order Creation Failed: 0 order quantity"))
+        return order
+
+    env.broker.submit_order(order)
+    return order
+
+
+def assure_order_book_id(id_or_symbols):
+    if isinstance(id_or_symbols, Instrument):
+        return id_or_symbols.order_book_id
+    elif isinstance(id_or_symbols, six.string_types):
+        return assure_order_book_id(instruments(id_or_symbols))
+    else:
+        raise RQInvalidArgument(_(u"unsupported order_book_id type"))

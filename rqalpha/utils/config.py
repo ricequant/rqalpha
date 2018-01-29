@@ -207,8 +207,10 @@ def parse_accounts(accounts):
             continue
         starting_cash = float(starting_cash)
         a[account_type.upper()] = starting_cash
-    if len(a) == 0:
-        raise RuntimeError(_(u"None account type has been selected."))
+
+    # if len(a) == 0:
+    #     raise RuntimeError(_(u"None account type has been selected."))
+
     return a
 
 

@@ -76,7 +76,7 @@ class BookingAccount(object):
         total_positions = []
         for direction, positions in self._positions_dict.items():
             for order_book_id, position in positions.items():
-                if position.quantity > 0:
+                if position.quantity != 0:
                     total_positions.append(position)
         return total_positions
 

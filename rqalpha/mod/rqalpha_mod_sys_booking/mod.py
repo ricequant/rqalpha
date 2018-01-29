@@ -68,7 +68,7 @@ class BookingMod(AbstractMod):
         trades = []
         position_list = resp["resp"]["positions"]
         for position_dict in position_list:
-            if position_dict["buy_quantity"] > 0:
+            if position_dict["buy_quantity"] != 0:
                 trade = self._create_trade(
                     position_dict["order_book_id"],
                     position_dict["buy_quantity"],
@@ -76,7 +76,7 @@ class BookingMod(AbstractMod):
                     POSITION_EFFECT.OPEN,
                 )
                 trades.append(trade)
-            if position_dict["sell_quantity"] > 0:
+            if position_dict["sell_quantity"] != 0:
                 trade = self._create_trade(
                     position_dict["order_book_id"],
                     position_dict["sell_quantity"],
@@ -109,12 +109,6 @@ class BookingMod(AbstractMod):
             trades.append(trade)
         system_log.info("today trades: {}", trades)
         self.booking_account.fast_forward([], trades=trades)
-
-        # 设置兼容其他组件
-        env.config.base.init_positions = []
-        for position in self.booking_account.get_positions():
-            sign = -1 if position.direction == POSITION_DIRECTION.SHORT else 1
-            env.config.base.init_positions.append((position.order_book_id, position.quantity * sign))
 
         env.event_bus.add_listener(EVENT.BEFORE_SYSTEM_RESTORED, self.on_before_system_restore)
 
