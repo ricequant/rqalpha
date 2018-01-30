@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
+from rqalpha.utils import is_valid_price
 
 from .stock_account import StockAccount
 
@@ -37,7 +37,7 @@ class BenchmarkAccount(StockAccount):
         # run once
         if len(self._positions) == 0:
             price = event.bar_dict[self.benchmark].close
-            if np.isnan(price):
+            if not is_valid_price(price):
                 return
             position = self._positions.get_or_create(self.benchmark)
             quantity = int(self._total_cash / price)

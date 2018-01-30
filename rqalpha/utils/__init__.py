@@ -21,13 +21,14 @@ import six
 import collections
 
 from contextlib import contextmanager
+import numpy as np
 
-from .exception import CustomError, CustomException
-from ..const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
-from ..utils.datetime_func import TimeRange
-from ..utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
-from ..utils.i18n import gettext as _
-from ..utils.py2 import lru_cache
+from rqalpha.utils.exception import CustomError, CustomException
+from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
+from rqalpha.utils.datetime_func import TimeRange
+from rqalpha.utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.py2 import lru_cache
 
 
 def safe_round(value, ndigits=3):
@@ -118,7 +119,7 @@ class Nop(object):
 
 
 def to_sector_name(s):
-    from ..model.instrument import SectorCode, SectorCodeItem
+    from rqalpha.model.instrument import SectorCode, SectorCodeItem
 
     for __, v in six.iteritems(SectorCode.__dict__):
         if isinstance(v, SectorCodeItem):
@@ -129,7 +130,7 @@ def to_sector_name(s):
 
 
 def to_industry_code(s):
-    from ..model.instrument import IndustryCode, IndustryCodeItem
+    from rqalpha.model.instrument import IndustryCode, IndustryCodeItem
 
     for __, v in six.iteritems(IndustryCode.__dict__):
         if isinstance(v, IndustryCodeItem):
@@ -172,8 +173,8 @@ def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):
 
 
 def run_when_strategy_not_hold(func):
-    from ..environment import Environment
-    from ..utils.logger import system_log
+    from rqalpha.environment import Environment
+    from rqalpha.utils.logger import system_log
 
     def wrapper(*args, **kwargs):
         if not Environment.get_instance().config.extra.is_hold:
@@ -210,6 +211,8 @@ def instrument_type_str2enum(type_str):
         return INSTRUMENT_TYPE.FENJI_A
     elif type_str == "FenjiB":
         return INSTRUMENT_TYPE.FENJI_B
+    elif type_str == 'PublicFund':
+        return INSTRUMENT_TYPE.PUBLIC_FUND
     else:
         raise NotImplementedError
 
@@ -221,13 +224,14 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
     INSTRUMENT_TYPE.INDX,
     INSTRUMENT_TYPE.FENJI_MU,
     INSTRUMENT_TYPE.FENJI_A,
-    INSTRUMENT_TYPE.FENJI_B
+    INSTRUMENT_TYPE.FENJI_B,
+    INSTRUMENT_TYPE.PUBLIC_FUND
 ]
 
 
 @lru_cache(None)
 def get_account_type(order_book_id):
-    from ..environment import Environment
+    from rqalpha.environment import Environment
     instrument = Environment.get_instance().get_instrument(order_book_id)
     enum_type = instrument.enum_type
     if enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
@@ -286,7 +290,7 @@ def is_trading(dt, trading_period):
 
 @contextmanager
 def run_with_user_log_disabled(disabled=True):
-    from .logger import user_log
+    from rqalpha.utils.logger import user_log
 
     if disabled:
         user_log.disable()
@@ -320,3 +324,7 @@ def generate_account_type_dict():
     for key, a_type in six.iteritems(DEFAULT_ACCOUNT_TYPE.__members__):
         account_type_dict[key] = a_type.value
     return account_type_dict
+
+
+def is_valid_price(price):
+    return not np.isnan(price) and price > 0

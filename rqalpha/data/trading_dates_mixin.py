@@ -17,7 +17,11 @@
 import datetime
 import pandas as pd
 
-from ..utils.py2 import lru_cache
+from rqalpha.utils.py2 import lru_cache
+
+
+def _to_timestamp(d):
+    return pd.Timestamp(d).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 class TradingDatesMixin(object):
@@ -26,31 +30,30 @@ class TradingDatesMixin(object):
 
     def get_trading_dates(self, start_date, end_date):
         # 只需要date部分
-        start_date = pd.Timestamp(start_date).replace(hour=0, minute=0, second=0)
-        end_date = pd.Timestamp(end_date).replace(hour=0, minute=0, second=0)
+        start_date = _to_timestamp(start_date)
+        end_date = _to_timestamp(end_date)
         left = self._dates.searchsorted(start_date)
         right = self._dates.searchsorted(end_date, side='right')
         return self._dates[left:right]
 
-    def get_previous_trading_date(self, date):
-        date = pd.Timestamp(date).replace(hour=0, minute=0, second=0)
-        return self._get_previous_trading_date(date)
-
-    @lru_cache(None)
-    def _get_previous_trading_date(self, date):
+    def get_previous_trading_date(self, date, n=1):
+        date = _to_timestamp(date)
         pos = self._dates.searchsorted(date)
-        if pos > 0:
-            return self._dates[pos - 1]
+        if pos >= n:
+            return self._dates[pos - n]
         else:
             return self._dates[0]
 
-    def get_next_trading_date(self, date):
-        date = pd.Timestamp(date).replace(hour=0, minute=0, second=0)
+    def get_next_trading_date(self, date, n=1):
+        date = _to_timestamp(date)
         pos = self._dates.searchsorted(date, side='right')
-        return self._dates[pos]
+        if pos + n > len(self._dates):
+            return self._dates[-1]
+        else:
+            return self._dates[pos + n - 1]
 
     def is_trading_date(self, date):
-        date = pd.Timestamp(date).replace(hour=0, minute=0, second=0)
+        date = _to_timestamp(date)
         pos = self._dates.searchsorted(date)
         return pos < len(self._dates) and self._dates[pos] == date
 
@@ -71,19 +74,13 @@ class TradingDatesMixin(object):
         return datetime.datetime.combine(trading_date, calendar_dt.time())
 
     def get_future_trading_date(self, dt):
-        return self._get_future_trading_date(dt.replace(minute=0, second=0))
+        return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))
 
-    def get_nth_previous_trading_date(self, date, n):
-        date = pd.Timestamp(date).replace(hour=0, minute=0, second=0)
-        pos = self._dates.searchsorted(date)
-        if pos >= n:
-            return self._dates[pos - n]
-        else:
-            return self._dates[0]
+    get_nth_previous_trading_date = get_previous_trading_date
 
     def get_n_trading_dates_until(self, dt, n):
-        date = pd.Timestamp(dt).replace(hour=0, minute=0, second=0)
-        pos = self._dates.searchsorted(date)
+        date = _to_timestamp(dt)
+        pos = self._dates.searchsorted(date, side='right')
         if pos >= n:
             return self._dates[pos - n:pos]
 

@@ -25,12 +25,10 @@ class FuturePosition(BasePosition):
 
     def __init__(self, order_book_id):
         super(FuturePosition, self).__init__(order_book_id)
-
         self._buy_old_holding_list = []
         self._sell_old_holding_list = []
         self._buy_today_holding_list = []
         self._sell_today_holding_list = []
-
         self._buy_transaction_cost = 0.
         self._sell_transaction_cost = 0.
         self._buy_realized_pnl = 0.
@@ -38,6 +36,9 @@ class FuturePosition(BasePosition):
 
         self._buy_avg_open_price = 0.
         self._sell_avg_open_price = 0.
+
+    def __repr__(self):
+        return 'FuturePosition({})'.format(self.__dict__)
 
     def get_state(self):
         return {
@@ -52,6 +53,8 @@ class FuturePosition(BasePosition):
             'sell_realized_pnl': self._sell_realized_pnl,
             'buy_avg_open_price': self._buy_avg_open_price,
             'sell_avg_open_price': self._sell_avg_open_price,
+            # margin rate may change
+            'margin_rate': self.margin_rate,
         }
 
     def set_state(self, state):
@@ -290,7 +293,7 @@ class FuturePosition(BasePosition):
         """
         [float] 保证金
         """
-        # TODO 需要添加单向大边相关的处理逻辑
+        # TODO: 需要添加单向大边相关的处理逻辑
         return self.buy_margin + self.sell_margin
 
     @property

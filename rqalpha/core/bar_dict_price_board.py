@@ -16,8 +16,8 @@
 
 import numpy as np
 
-from ..interface import AbstractPriceBoard
-from ..environment import Environment
+from rqalpha.interface import AbstractPriceBoard
+from rqalpha.environment import Environment
 
 
 class BarDictPriceBoard(AbstractPriceBoard):
@@ -29,13 +29,13 @@ class BarDictPriceBoard(AbstractPriceBoard):
         return self._env.bar_dict
 
     def get_last_price(self, order_book_id):
-        return self._bar_dict[order_book_id].last
+        return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].last
 
     def get_limit_up(self, order_book_id):
-        return self._bar_dict[order_book_id].limit_up
+        return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].limit_up
 
     def get_limit_down(self, order_book_id):
-        return self._bar_dict[order_book_id].limit_down
+        return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].limit_down
 
     def get_a1(self, order_book_id):
         return np.nan

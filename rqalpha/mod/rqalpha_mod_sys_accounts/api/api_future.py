@@ -24,6 +24,7 @@ from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
@@ -43,9 +44,10 @@ def export_as_api(func):
 
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
                                 EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins').is_valid_future(),
-             verify_that('amount').is_greater_or_equal_than(0),
+             verify_that('amount').is_number().is_greater_or_equal_than(0),
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
              verify_that('style').is_instance_of((LimitOrder, MarketOrder, type(None))))
@@ -69,7 +71,7 @@ def order(id_or_ins, amount, side, position_effect, style):
             raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
 
     price = env.get_last_price(order_book_id)
-    if np.isnan(price):
+    if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         )
@@ -121,7 +123,7 @@ def order(id_or_ins, amount, side, position_effect, style):
             if amount > position.buy_quantity:
                 user_system_log.warn(
                     _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=position.sell_quantity)
+                      u"quantity {quantity}").format(amount=amount, quantity=position.buy_quantity)
                 )
                 return []
             buy_old_quantity = position.buy_old_quantity
@@ -158,7 +160,7 @@ def order(id_or_ins, amount, side, position_effect, style):
             position_effect
         ))
 
-    if np.isnan(price) or price == 0:
+    if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         for o in orders:
@@ -288,7 +290,7 @@ def assure_future_order_book_id(id_or_symbols):
         else:
             return id_or_symbols.order_book_id
     elif isinstance(id_or_symbols, six.string_types):
-        return assure_future_order_book_id(instruments(id_or_symbols))
+        return assure_future_order_book_id(Environment.get_instance().data_proxy.instruments(id_or_symbols))
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 

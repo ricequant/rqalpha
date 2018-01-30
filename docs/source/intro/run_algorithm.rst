@@ -34,11 +34,9 @@
 -f            `- -` strategy-file             启动的策略文件路径
 -s            `- -` start-date                回测起始日期
 -e            `- -` end-date                  回测结束日期(如果是实盘，则忽略该配置)
--sc           `- -` stock-starting-cash       股票起始资金，默认为0
--fc           `- -` future-starting-cash      期货起始资金，默认为0
 -bm           `- -` benchmark                 Benchmark，如果不设置，默认没有基准参照
 -mm           `- -` margin-multiplier         设置保证金乘数，默认为1
--st           `- -` security                  设置策略类型，目前支持 :code:`stock` (股票策略)、:code:`future` (期货策略)及 :code:`stock_future` (混合策略)
+-a            `- -` account                   设置账户类型及起始资金，比如股票期货混合策略，起始资金分别为10000, 20000 :code:`--account stock 10000 --account future 20000`
 -fq           `- -` frequency                 目前支持 :code:`1d` (日线回测) 和 :code:`1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的
 -rt           `- -` run-type                  运行类型，:code:`b` 为回测，:code:`p` 为模拟交易, :code:`r` 为实盘交易
 N/A           `- -` resume                    在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
@@ -60,7 +58,7 @@ N/A           `- -` config                    设置配置文件路径
 
 .. code-block:: python3
 
-   rqalpha run -rt p -fq 1m -f strategy.py -sc 100000 -mc sys_stock_realtime.enabled True -mc sys_stock_realtime.fps 60
+   rqalpha run -rt p -fq 1m -f strategy.py --account stock 100000 -mc sys_stock_realtime.enabled True -mc sys_stock_realtime.fps 60
 
 系统内置 Mod Option扩展
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

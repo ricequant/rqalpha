@@ -54,7 +54,7 @@ cli_prefix = "mod__sys_simulation__"
 cli.commands['run'].params.append(
     click.Option(
         ('--signal', cli_prefix + "signal"),
-        is_flag=True,
+        is_flag=True, default=None,
         help="[sys_simulation] exclude match engine",
     )
 )

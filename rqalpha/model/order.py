@@ -16,11 +16,11 @@
 
 import time
 
-from ..const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
-from ..utils import id_gen
-from ..utils.repr import property_repr, properties
-from ..utils.logger import user_system_log
-from ..environment import Environment
+from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
+from rqalpha.utils import id_gen
+from rqalpha.utils.repr import property_repr, properties
+from rqalpha.utils.logger import user_system_log
+from rqalpha.environment import Environment
 
 
 class Order(object):
@@ -31,6 +31,7 @@ class Order(object):
 
     def __init__(self):
         self._order_id = None
+        self._secondary_order_id = None
         self._calendar_dt = None
         self._trading_dt = None
         self._quantity = None
@@ -56,6 +57,7 @@ class Order(object):
     def get_state(self):
         return {
             'order_id': self._order_id,
+            'secondary_order_id': self._secondary_order_id,
             'calendar_dt': self._calendar_dt,
             'trading_dt': self._trading_dt,
             'order_book_id': self._order_book_id,
@@ -67,10 +69,14 @@ class Order(object):
             'status': self._enum_to_str(self._status),
             'frozen_price': self._frozen_price,
             'type': self._enum_to_str(self._type),
+            'transaction_cost': self._transaction_cost,
+            'avg_price': self._avg_price,
         }
 
     def set_state(self, d):
         self._order_id = d['order_id']
+        if 'secondary_order_id' in d:
+            self._secondary_order_id = d['secondary_order_id']
         self._calendar_dt = d['calendar_dt']
         self._trading_dt = d['trading_dt']
         self._order_book_id = d['order_book_id']
@@ -85,6 +91,8 @@ class Order(object):
         self._status = self._str_to_enum(ORDER_STATUS, d['status'])
         self._frozen_price = d['frozen_price']
         self._type = self._str_to_enum(ORDER_TYPE, d['type'])
+        self._transaction_cost = d['transaction_cost']
+        self._avg_price = d['avg_price']
 
     @classmethod
     def __from_create__(cls, order_book_id, quantity, side, style, position_effect):
@@ -116,6 +124,13 @@ class Order(object):
         [int] 唯一标识订单的id
         """
         return self._order_id
+
+    @property
+    def secondary_order_id(self):
+        """
+        [str] 实盘交易中交易所产生的订单ID
+        """
+        return self._secondary_order_id
 
     @property
     def trading_datetime(self):
@@ -264,6 +279,9 @@ class Order(object):
 
     def set_frozen_price(self, value):
         self._frozen_price = value
+
+    def set_secondary_order_id(self, secondary_order_id):
+        self._secondary_order_id = str(secondary_order_id)
 
     def __simple_object__(self):
         return properties(self)

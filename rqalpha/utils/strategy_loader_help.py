@@ -18,7 +18,7 @@ import sys
 import traceback
 import six
 
-from .exception import patch_user_exc, CustomError, CustomException
+from rqalpha.utils.exception import patch_user_exc, CustomError, CustomException
 
 
 def compile_strategy(source_code, strategy, scope):

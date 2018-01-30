@@ -16,7 +16,7 @@
 
 from collections import defaultdict
 
-import numpy as np
+from rqalpha.utils import is_valid_price
 from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
@@ -68,7 +68,7 @@ class Matcher(object):
             order_book_id = order.order_book_id
             instrument = self._env.get_instrument(order_book_id)
 
-            if np.isnan(price_board.get_last_price(order_book_id)):
+            if not is_valid_price(price_board.get_last_price(order_book_id)):
                 listed_date = instrument.listed_date.date()
                 if listed_date == self._trading_dt.date():
                     reason = _(u"Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
@@ -168,10 +168,11 @@ class Matcher(object):
             if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
                 reason = _(
                     u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
-                    u" larger than 25 percent of current bar volume, fill {filled_volume} actually"
+                    u" larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
                 ).format(
                     order_book_id=order.order_book_id,
                     order_volume=order.quantity,
-                    filled_volume=order.filled_quantity
+                    filled_volume=order.filled_quantity,
+                    volume_percent_limit=self._volume_percent * 100.0
                 )
                 order.mark_cancelled(reason)

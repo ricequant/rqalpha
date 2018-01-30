@@ -16,10 +16,10 @@
 
 import six
 
-from .events import EventBus
-from .utils import get_account_type, generate_account_type_dict
-from .utils.logger import system_log, user_log, user_detail_log
-from .utils.i18n import gettext as _
+from rqalpha.events import EventBus
+from rqalpha.utils import get_account_type, generate_account_type_dict
+from rqalpha.utils.logger import system_log, user_log, user_detail_log
+from rqalpha.utils.i18n import gettext as _
 
 
 class Environment(object):
@@ -121,6 +121,8 @@ class Environment(object):
         return self._position_model_dict[account_type]
 
     def can_submit_order(self, order):
+        if Environment.get_instance().config.extra.is_hold:
+            return False
         account = self.get_account(order.order_book_id)
         for v in self._frontend_validators:
             if not v.can_submit_order(account, order):
@@ -128,6 +130,8 @@ class Environment(object):
         return True
 
     def can_cancel_order(self, order):
+        if order.is_final():
+            return False
         account = self.get_account(order.order_book_id)
         for v in self._frontend_validators:
             if not v.can_cancel_order(account, order):
@@ -145,7 +149,7 @@ class Environment(object):
 
     def get_plot_store(self):
         if self.plot_store is None:
-            from .utils.plot_store import PlotStore
+            from rqalpha.utils.plot_store import PlotStore
             self.plot_store = PlotStore()
         return self.plot_store
 

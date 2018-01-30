@@ -79,7 +79,7 @@ def test_buy_close():
 
     def handle_bar(context, bar_dict):
         orders = buy_close(context.f1, 1)
-        # TODO Add More Sell Close Test
+        # TODO: Add More Sell Close Test
         assert len(orders) == 0
 
         # assert order.order_book_id == context.f1, 'Order_book_id is wrong'
@@ -105,7 +105,7 @@ def test_sell_close():
 
     def handle_bar(context, bar_dict):
         orders = sell_close(context.f1, 1)
-        # TODO Add More Sell Close Test
+        # TODO: Add More Sell Close Test
         assert len(orders) == 0
 
         # assert order.order_book_id == context.f1

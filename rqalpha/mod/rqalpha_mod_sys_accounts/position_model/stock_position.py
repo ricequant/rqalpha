@@ -30,6 +30,7 @@ class StockPosition(BasePosition):
         "sold_value",
         "average_cost"
     ]
+    stock_t1 = True
 
     def __init__(self, order_book_id):
         super(StockPosition, self).__init__(order_book_id)
@@ -38,6 +39,9 @@ class StockPosition(BasePosition):
         self._non_closable = 0     # 当天买入的不能卖出
         self._frozen = 0            # 冻结量
         self._transaction_cost = 0  # 交易费用
+
+    def __repr__(self):
+        return 'StockPosition({})'.format(self.__dict__)
 
     def get_state(self):
         return {
@@ -63,8 +67,7 @@ class StockPosition(BasePosition):
             self._avg_price = (self._avg_price * self._quantity + trade.last_quantity * trade.last_price) / (
                 self._quantity + trade.last_quantity)
             self._quantity += trade.last_quantity
-
-            if self._order_book_id not in {'510900.XSHG', '513030.XSHG', '513100.XSHG', '513500.XSHG'}:
+            if self.stock_t1 and self._order_book_id not in {'510900.XSHG', '513030.XSHG', '513100.XSHG', '513500.XSHG'}:
                 # 除了上述 T+0 基金，其他都是 T+1
                 self._non_closable += trade.last_quantity
         else:

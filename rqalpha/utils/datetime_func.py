@@ -17,7 +17,7 @@
 import datetime
 from collections import namedtuple
 
-from .py2 import lru_cache
+from rqalpha.utils.py2 import lru_cache
 
 
 TimeRange = namedtuple('TimeRange', ['start', 'end'])
@@ -83,6 +83,12 @@ def convert_int_to_datetime(dt_int):
     hour, r = divmod(r, 10000)
     minute, second = divmod(r, 100)
     return datetime.datetime(year, month, day, hour, minute, second)
+
+
+def convert_ms_int_to_datetime(ms_dt_int):
+    dt_int, ms_int = divmod(ms_dt_int, 1000)
+    dt = convert_int_to_datetime(dt_int).replace(microsecond=ms_int * 1000)
+    return dt
 
 
 def convert_date_time_ms_int_to_datetime(date_int, time_int):

@@ -17,8 +17,8 @@
 import six
 import datetime
 
-from ..environment import Environment
-from ..utils import instrument_type_str2enum
+from rqalpha.environment import Environment
+from rqalpha.utils import instrument_type_str2enum
 
 
 class Instrument(object):

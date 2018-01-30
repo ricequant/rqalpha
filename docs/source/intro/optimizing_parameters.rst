@@ -116,7 +116,7 @@
 	    vars_params = json.dumps(extra_vars).encode("utf-8").decode("utf-8")
 
 	    cmd = ("rqalpha run -fq 1d -f rqalpha/examples/golden_cross.py --start-date 2015-01-01 --end-date 2016-01-01 "
-		   "-o results/out-{short_period}-{long_period}.pkl -sc 100000 --progress -bm 000001.XSHE --extra-vars '{params}' ").format(
+		   "-o results/out-{short_period}-{long_period}.pkl --account stock 100000 --progress -bm 000001.XSHE --extra-vars '{params}' ").format(
 		       short_period=short_period,
 		       long_period=long_period,
 		       params=vars_params)

@@ -17,9 +17,9 @@
 from functools import wraps
 from contextlib import contextmanager
 
-from .utils.i18n import gettext as _
-from .utils.exception import CustomException, patch_user_exc
-from .environment import Environment
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.exception import CustomException, patch_user_exc
+from rqalpha.environment import Environment
 
 
 class ContextStack(object):
@@ -89,7 +89,7 @@ class ExecutionContext(object):
         if isinstance(last_exc_val, CustomException):
             raise last_exc_val
 
-        from .utils import create_custom_exception
+        from rqalpha.utils import create_custom_exception
         strategy_file = Environment.get_instance().config.base.strategy_file
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, strategy_file)
         raise user_exc

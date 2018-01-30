@@ -16,9 +16,9 @@
 
 import time
 
-from ..utils import id_gen
-from ..utils.repr import property_repr, properties
-from ..environment import Environment
+from rqalpha.utils import id_gen
+from rqalpha.utils.repr import property_repr, properties
+from rqalpha.environment import Environment
 
 
 class Trade(object):

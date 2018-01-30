@@ -57,7 +57,15 @@ def quotation_server(redis_url):
     redis_client = redis.from_url(redis_url)
 
     from rqalpha.data.data_proxy import DataProxy
-    config = parse_config({}, verify_config=False)
+    # 通过 parse_config 函数 获取 默认 data_bundle 的配置
+    # 由于 parse_config 会进行配置检查，如果没有设置 account 会提示报错，因此随意设置一个股票初始资金，来保证正确获取默认参数配置
+    config = parse_config({
+        'base': {
+            'accounts': {
+                'stock': 10000
+            }
+        }
+    })
 
     data_source = BaseDataSource(config.base.data_bundle_path)
     data_proxy = DataProxy(data_source)
@@ -68,15 +76,19 @@ def quotation_server(redis_url):
         for order_book_id, item in total_df.iterrows():
             redis_client[order_book_id] = json.dumps(item.to_dict())
 
+    retry_cnt = 0
     while True:
         try:
             total_df = get_realtime_quotes(order_book_id_list, include_limit=True)
-        except Exception as e:
-            system_log.exception("get_realtime_quotes fail. {}", e)
+        except (OSError, IOError) as e:
+            system_log.exception("get_realtime_quotes socket error. retry {} {}", retry_cnt, e)
+            time.sleep(retry_cnt * 2)
+            retry_cnt += 1
             continue
         system_log.info("Fetching snapshots, size {}", len(total_df))
         record_market_data(total_df)
         time.sleep(1)
+        retry_cnt = 0
 
 
 def load_mod():

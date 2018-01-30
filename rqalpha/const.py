@@ -37,7 +37,7 @@ class EXECUTION_PHASE(CustomEnum):
 
 # noinspection PyPep8Naming
 class RUN_TYPE(CustomEnum):
-    # TODO 取消 RUN_TYPE, 取而代之的是使用开启哪些Mod来控制策略所运行的类型
+    # TODO: 取消 RUN_TYPE, 取而代之的是使用开启哪些Mod来控制策略所运行的类型
     # Back Test
     BACKTEST = "BACKTEST"
     # Paper Trading
@@ -51,7 +51,7 @@ class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     """
     *   关于 ACCOUNT_TYPE，目前主要表示为交易账户。STOCK / FUTURE / OPTION 目前均表示为中国 对应的交易账户。
     *   ACCOUNT_TYPE 不区分交易所，比如 A 股区分上海交易所和深圳交易所，但对应的都是一个账户，因此统一为 STOCK
-    *   目前暂时不添加其他 ACCOUNT_TYPE 类型，尤其是 CURRENCY, 外汇比较特别，其本质是cash, 应该和 position 对立, 未来可能提供一个更强大的 cash 对象，可以方便进行currency的计算、统计和换汇等内容。
+    *   目前暂时不添加其他 DEFAULT_ACCOUNT_TYPE 类型，如果需要增加自定义账户及类型，请参考 https://github.com/ricequant/rqalpha/issues/160
     """
     TOTAL = 0
     BENCHMARK = 1
@@ -127,12 +127,14 @@ class INSTRUMENT_TYPE(CustomEnum):
     FENJI_MU = "FENJI_MU"
     FENJI_A = "FENJI_A"
     FENJI_B = "FENJI_B"
+    PUBLIC_FUND = 'PublicFund'
 
 
 # noinspection PyPep8Naming
 class PERSIST_MODE(CustomEnum):
     ON_CRASH = "ON_CRASH"
     REAL_TIME = "REAL_TIME"
+    ON_NORMAL_EXIT = "ON_NORMAL_EXIT"
 
 
 # noinspection PyPep8Naming
@@ -190,4 +192,4 @@ class CURRENCY(CustomEnum):
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"
 
 NIGHT_TRADING_NS = ["CU", "AL", "ZN", "PB", "SN", "NI", "RB", "HC", "BU", "RU", "AU", "AG", "Y", "M", "A", "B", "P",
-                    "J", "JM", "I", "CF", "SR", "OI", "MA", "ZC", "FG", "RM"]
+                    "J", "JM", "I", "CF", "SR", "OI", "MA", "ZC", "FG", "RM", "CY", "TA"]

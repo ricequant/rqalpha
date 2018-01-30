@@ -14,114 +14,106 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import six
 import os
-import yaml
-import simplejson as json
-import datetime
-import logbook
 import locale
 import codecs
-import shutil
-from pprint import pformat
 
-from . import RqAttrDict, logger
-from .exception import patch_user_exc
-from .logger import user_log, user_system_log, system_log, std_log, user_std_handler
-from ..const import RUN_TYPE, PERSIST_MODE
-from ..utils.i18n import gettext as _, localization
-from ..utils.dict_func import deep_update
-from ..utils.py2 import to_utf8
-from ..mod.utils import mod_config_value_parse
+import pandas as pd
+import yaml
+import simplejson as json
+import six
+
+from rqalpha.const import RUN_TYPE, PERSIST_MODE
+from rqalpha.utils import RqAttrDict, logger
+from rqalpha.utils.i18n import gettext as _, localization
+from rqalpha.utils.dict_func import deep_update
+from rqalpha.utils.py2 import to_utf8
+from rqalpha.utils.logger import system_log
+from rqalpha.mod.utils import mod_config_value_parse
 
 
 rqalpha_path = "~/.rqalpha"
 
 
-def load_config(config_path, loader=yaml.Loader):
-    if config_path is None:
+def load_yaml(path):
+    with codecs.open(path, encoding='utf-8') as f:
+        return yaml.load(f)
+
+
+def load_json(path):
+    with codecs.open(path, encoding='utf-8') as f:
+        return json.loads(f.read())
+
+
+default_config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yml')
+default_mod_config_path = os.path.join(os.path.dirname(__file__), '..', 'mod_config.yml')
+
+
+def user_mod_conf_path():
+    return os.path.join(os.path.expanduser(rqalpha_path), 'mod_config.yml')
+
+
+def get_mod_conf():
+    base = load_yaml(default_mod_config_path)
+    user_mod_conf = os.path.join(os.path.expanduser(rqalpha_path), 'mod_config.yml')
+    user = load_yaml(user_mod_conf) if os.path.exists(user_mod_conf) else {}
+    deep_update(user, base)
+    return base
+
+
+def load_config_from_folder(folder):
+    folder = os.path.expanduser(folder)
+    path = os.path.join(folder, 'config.yml')
+    base = load_yaml(path) if os.path.exists(path) else {}
+    mod_path = os.path.join(folder, 'mod_config.yml')
+    mod = load_yaml(mod_path) if os.path.exists(mod_path) else {}
+
+    deep_update(mod, base)
+    return base
+
+
+def default_config():
+    base = load_yaml(default_config_path)
+    base['base']['source_code'] = None
+    mod = load_yaml(default_mod_config_path)
+    deep_update(mod, base)
+    return base
+
+
+def user_config():
+    return load_config_from_folder(rqalpha_path)
+
+
+def project_config():
+    return load_config_from_folder(os.getcwd())
+
+
+def code_config(config, source_code=None):
+    try:
+        if source_code is None:
+            with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
+                source_code = f.read()
+
+        # FIXME: hardcode for parametric mod
+        def noop(*args, **kwargs):
+            pass
+        scope = {'define_parameter': noop}
+
+        code = compile(source_code, config["base"]["strategy_file"], 'exec')
+        six.exec_(code, scope)
+
+        return scope.get('__config__', {})
+    except Exception as e:
+        system_log.error(_(u"in parse_user_config, exception: {e}").format(e=e))
         return {}
-    if not os.path.exists(config_path):
-        raise RuntimeError(_(u"config.yml not found in {config_path}").format(config_path))
-    if ".json" in config_path:
-        with codecs.open(config_path, encoding="utf-8") as f:
-            json_config = f.read()
-        config = json.loads(json_config)
-    else:
-        with codecs.open(config_path, encoding="utf-8") as stream:
-            config = yaml.load(stream, loader)
-    return config
 
 
 def dump_config(config_path, config, dumper=yaml.Dumper):
+    dirname = os.path.dirname(config_path)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
     with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
         stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
-
-
-def load_mod_config(config_path, loader=yaml.Loader):
-    mod_config = load_config(config_path, loader)
-    if mod_config is None or "mod" not in mod_config:
-        import os
-        os.remove(config_path)
-        config_path = get_mod_config_path()
-        return load_mod_config(config_path, loader)
-    else:
-        # FIXME 因为增加了 sys_accounts 所以临时增加了对应 mod_config.yml 的更新
-        # TODO 这里应该更改为 mod_config.yml 和 mod_config_template.yml 的同步检查。
-        if 'sys_accounts' not in mod_config['mod']:
-            mod_config['mod']['sys_accounts'] = {
-                'enabled': True
-            }
-            dump_config(config_path, mod_config)
-        return mod_config
-
-
-def get_mod_config_path(generate=False):
-    mod_config_path = os.path.abspath(os.path.expanduser(os.path.join(rqalpha_path, "mod_config.yml")))
-    mod_template_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../mod_config_template.yml"))
-    if not os.path.exists(mod_config_path):
-        if generate:
-            dir_path = os.path.dirname(mod_config_path)
-            if not os.path.exists(dir_path):
-                os.makedirs(dir_path)
-            shutil.copy(mod_template_path, mod_config_path)
-            return mod_config_path
-        else:
-            return mod_template_path
-    return mod_config_path
-
-
-def get_user_config_path(config_path=None):
-    if config_path is None:
-        if os.path.exists(os.path.abspath(os.path.join(os.getcwd(), "config.yml"))):
-            return os.path.abspath(os.path.join(os.getcwd(), "config.yml"))
-        if os.path.exists(os.path.abspath(os.path.join(os.getcwd(), "config.json"))):
-            return os.path.abspath(os.path.join(os.getcwd(), "config.json"))
-        return None
-    else:
-        if not os.path.exists(config_path):
-            system_log.error(_("config path: {config_path} does not exist.").format(config_path=config_path))
-            return None
-        return config_path
-
-
-# def config_version_verify(config, config_path):
-#     default_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml")
-#     default_config = load_config(default_config_path, verify_version=False)
-#     config_version = config.get("version", None)
-#     if config_version != default_config["version"]:
-#         back_config_file_path = config_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
-#         shutil.move(config_path, back_config_file_path)
-#         shutil.copy(default_config_path, config_path)
-#
-#         system_log.warning(_(u"""
-# Your current config file {config_file_path} is too old and may cause RQAlpha running error.
-# RQAlpha has replaced the config file with the newest one.
-# the backup config file has been saved in {back_config_file_path}.
-#         """).format(config_file_path=config_path, back_config_file_path=back_config_file_path))
-#         config = default_config
-#     return config
 
 
 def set_locale(lc):
@@ -136,119 +128,80 @@ def set_locale(lc):
     localization.set_locale([lc])
 
 
-def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None, verify_config=True):
-    mod_configs = config_args.pop("mod_configs", [])
-    for cfg, value in mod_configs:
-        key = "mod__{}".format(cfg.replace(".", "__"))
-        config_args[key] = mod_config_value_parse(value)
+def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
+    conf = default_config()
+    deep_update(user_config(), conf)
+    deep_update(project_config(), conf)
+    if config_path is not None:
+        deep_update(load_yaml(config_path), conf)
 
-    set_locale(config_args.get("extra__locale", None))
+    if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
+        # FIXME: ugly, we need this to get code
+        conf['base']['strategy_file'] = config_args['base__strategy_file']
+    elif ('base' in config_args and 'strategy_file' in config_args['base'] and
+          config_args['base']['strategy_file']):
+        conf['base']['strategy_file'] = config_args['base']['strategy_file']
 
-    user_config_path = get_user_config_path(config_path)
-    mod_config_path = get_mod_config_path()
-
-    # load default config from rqalpha
-    config = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../default_config.yml"))
-    # load mod config
-    mod_config = load_mod_config(mod_config_path)
-    deep_update(mod_config, config)
-    # load user config
-    user_config = load_config(user_config_path)
-    deep_update(user_config, config)
-
-    # use config_args to extend config
-    if click_type:
-        for key, value in six.iteritems(config_args):
-            if config_args[key] is not None:
-                keys = key.split("__")
-                keys.reverse()
-                sub_config = config[keys.pop()]
-                while True:
-                    if len(keys) == 0:
-                        break
-                    k = keys.pop()
-                    if len(keys) == 0:
-                        sub_config[k] = value
-                    else:
-                        sub_config = sub_config[k]
-    else:
-        deep_update(config_args, config)
-
-    # config from user code
     if user_funcs is None:
-        config = parse_user_config_from_code(config, source_code)
-    config = RqAttrDict(config)
+        for k, v in six.iteritems(code_config(conf, source_code)):
+            if k in conf['whitelist']:
+                deep_update(v, conf[k])
 
-    base_config = config.base
-    extra_config = config.extra
+    mod_configs = config_args.pop('mod_configs', [])
+    for k, v in mod_configs:
+        key = 'mod__{}'.format(k.replace('.', '__'))
+        config_args[key] = mod_config_value_parse(v)
 
-    set_locale(extra_config.locale)
+    if click_type:
+        for k, v in six.iteritems(config_args):
+            if v is None:
+                continue
+            if k == 'base__accounts' and not v:
+                continue
 
-    if isinstance(base_config.start_date, six.string_types):
-        base_config.start_date = datetime.datetime.strptime(base_config.start_date, "%Y-%m-%d")
-    if isinstance(base_config.start_date, datetime.datetime):
-        base_config.start_date = base_config.start_date.date()
-    if isinstance(base_config.end_date, six.string_types):
-        base_config.end_date = datetime.datetime.strptime(base_config.end_date, "%Y-%m-%d")
-    if isinstance(base_config.end_date, datetime.datetime):
-        base_config.end_date = base_config.end_date.date()
+            key_path = k.split('__')
+            sub_dict = conf
+            for p in key_path[:-1]:
+                if p not in sub_dict:
+                    sub_dict[p] = {}
+                sub_dict = sub_dict[p]
+            sub_dict[key_path[-1]] = v
+    else:
+        deep_update(config_args, conf)
 
-    if base_config.data_bundle_path is None:
-        base_config.data_bundle_path = os.path.join(os.path.expanduser(rqalpha_path), "bundle")
+    config = RqAttrDict(conf)
 
-    base_config.data_bundle_path = os.path.abspath(base_config.data_bundle_path)
+    set_locale(config.extra.locale)
 
-    if not os.path.exists(base_config.data_bundle_path):
-        raise RuntimeError(
-            _(u"data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
-                bundle_path=base_config.data_bundle_path))
+    def _to_date(v):
+        return pd.Timestamp(v).date()
 
-    base_config.run_type = parse_run_type(base_config.run_type)
-    base_config.accounts = parse_accounts(base_config.accounts)
-    base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
+    config.base.start_date = _to_date(config.base.start_date)
+    config.base.end_date = _to_date(config.base.end_date)
 
-    if extra_config.context_vars:
-        if isinstance(extra_config.context_vars, six.string_types):
-            extra_config.context_vars = json.loads(to_utf8(extra_config.context_vars))
+    if config.base.data_bundle_path is None:
+        config.base.data_bundle_path = os.path.join(os.path.expanduser(rqalpha_path), "bundle")
 
-    system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
-    std_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
-    user_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
-    user_system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
+    config.base.run_type = parse_run_type(config.base.run_type)
+    config.base.accounts = parse_accounts(config.base.accounts)
+    config.base.init_positions = parse_init_positions(config.base.init_positions)
+    config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
 
-    if base_config.frequency == "1d":
+    if config.extra.context_vars:
+        if isinstance(config.extra.context_vars, six.string_types):
+            config.extra.context_vars = json.loads(to_utf8(config.extra.context_vars))
+
+    if config.base.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
-
-    system_log.debug("\n" + pformat(config.convert_to_dict()))
 
     return config
 
 
-def parse_user_config_from_code(config, source_code=None):
-    try:
-        if source_code is None:
-            with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
-                source_code = f.read()
-
-        scope = {}
-
-        code = compile(source_code, config["base"]["strategy_file"], 'exec')
-        six.exec_(code, scope)
-
-        __config__ = scope.get("__config__", {})
-
-        for sub_key, sub_dict in six.iteritems(__config__):
-            if sub_key not in config["whitelist"]:
-                continue
-            deep_update(sub_dict, config[sub_key])
-    except Exception as e:
-        system_log.error(_(u"in parse_user_config, exception: {e}").format(e=e))
-    finally:
-        return config
-
-
 def parse_accounts(accounts):
     a = {}
+    if isinstance(accounts, tuple):
+        accounts = {account_type: starting_cash for account_type, starting_cash in accounts}
+
     for account_type, starting_cash in six.iteritems(accounts):
         if starting_cash is None:
             continue
@@ -259,23 +212,46 @@ def parse_accounts(accounts):
     return a
 
 
+def parse_init_positions(positions):
+    # --position 000001.XSHE:1000,IF1701:-1
+    result = []
+    if not isinstance(positions, str):
+        return result
+    for s in positions.split(','):
+        try:
+            order_book_id, quantity = s.split(':')
+        except ValueError:
+            raise RuntimeError(_(u"invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
+
+        try:
+            result.append((order_book_id, float(quantity)))
+        except ValueError:
+            raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
+                order_book_id=order_book_id, quantity=quantity))
+    return result
+
+
 def parse_run_type(rt_str):
     assert isinstance(rt_str, six.string_types)
-    if rt_str == "b":
-        return RUN_TYPE.BACKTEST
-    elif rt_str == "p":
-        return RUN_TYPE.PAPER_TRADING
-    elif rt_str == 'r':
-        return RUN_TYPE.LIVE_TRADING
-    else:
-        raise NotImplementedError
+    mapping = {
+        "b": RUN_TYPE.BACKTEST,
+        "p": RUN_TYPE.PAPER_TRADING,
+        "r": RUN_TYPE.LIVE_TRADING,
+    }
+    try:
+        return mapping[rt_str]
+    except KeyError:
+        raise RuntimeError(_(u"unknown run type: {}").format(rt_str))
 
 
 def parse_persist_mode(persist_mode):
     assert isinstance(persist_mode, six.string_types)
-    if persist_mode == 'real_time':
-        return PERSIST_MODE.REAL_TIME
-    elif persist_mode == 'on_crash':
-        return PERSIST_MODE.ON_CRASH
-    else:
-        raise RuntimeError(_(u"unknown persist mode: {persist_mode}").format(persist_mode=persist_mode))
+    mapping = {
+        "real_time": PERSIST_MODE.REAL_TIME,
+        "on_crash": PERSIST_MODE.ON_CRASH,
+        "on_normal_exit": PERSIST_MODE.ON_NORMAL_EXIT,
+    }
+    try:
+        return mapping[persist_mode]
+    except KeyError:
+        raise RuntimeError(_(u"unknown persist mode: {}").format(persist_mode))

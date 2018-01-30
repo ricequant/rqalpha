@@ -100,21 +100,25 @@ Mod名                      说明
 
 如果您基于 RQAlpha 进行了 Mod 扩展，欢迎告知我们，在审核通过后，会在 Mod 列表中添加您的 Mod 信息和链接。
 
-机构版
+`专业级本地终端RQPro`_
 ============================
 
-..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/rqalpha_plus.png
+..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/RQPro.jpeg
 
-目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以联系我们的机构端产品销售获得机构端产品功能支持。「销售电话」：0755-33967716 「QQ」：4848371
+目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以联系我们的机构端产品销售获得机构端产品功能支持，也可通过 `RQPro`_ 登记试用。「销售电话」：0755-33967716 「QQ」：4848371
 
-机构端产品功能：
+RQPro产品功能：
 
-*   可以本地部署，使用pycharm、anaconda等工具做本地策略研发、模拟以及实盘交易，效率大大加强，本地管理自己的策略提高保密性
-*   极速调取经过清洗处理的历史数据接口服务，包括了：400多项指标的财务数据，股票、期货、ETF、LOF、分级基金等等10年+的日和分钟、tick级别的历史数据以及每日更新，股票、期货的实时数据支持，指数以及构成，板块分类，股本、换手率、融资融券等，天猫等电商销量数据，公募基金数据，舆情、公告类
-*   股票、期货的实盘交易订单管理系统以及实盘下单支持，从回测到实盘交易的一条龙系统以及服务支持
+RQPro由米筐旗下三大核心模块与五大拓展功能组成，其中核心模块有金融数据RQData、策略引擎RQAlpha、绩效分析RQBeta。
+
+..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/rqpro_1.jpeg
+
+*   完全本地部署，使用pycharm、anaconda等工具做本地策略研发、模拟以及实盘交易，效率大大加强，本地管理自己的策略提高保密性
+*   多资产（股票、期货，公募基金等）的精准、快速回测（日，分钟，Tick）
 *   策略的管理以及实盘的收益、风险计算等
+*   可拓展接口及SDK方便二次开发
+*   绩效分析模块全面比较不同策略的收益、风险及稳定性
 *   交易数据的保存以及提取分析
-*   业绩分析和风险管理系统
 *   技术支持及定制化开发
 
 Feature Status
@@ -186,6 +190,8 @@ Feature Status
 .. _Ricequant 社区: https://www.ricequant.com/community/category/all/
 .. _FAQ: http://rqalpha.readthedocs.io/zh_CN/latest/faq.html
 .. _索引: http://rqalpha.readthedocs.io/zh_CN/latest/genindex.html
+.. _RQPro: https://www.ricequant.com/rqpro_propaganda/?utm_source=github
+.. _专业级本地终端RQPro: https://www.ricequant.com/rqpro_propaganda/?utm_source=github
 
 .. _RQAlpha 介绍: http://rqalpha.readthedocs.io/zh_CN/latest/intro/overview.html
 .. _安装指南: http://rqalpha.readthedocs.io/zh_CN/latest/intro/install.html
@@ -214,3 +220,4 @@ Feature Status
 .. _sentry: https://github.com/ricequant/rqalpha-mod-sentry
 .. _tushare: https://github.com/ricequant/rqalpha-mod-tushare
 .. _shipane: https://github.com/wh1100717/rqalpha-mod-ShiPanE
+

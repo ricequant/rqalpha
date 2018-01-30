@@ -15,9 +15,37 @@
 # limitations under the License.
 
 
-from rqalpha.api.api_base import *
-from rqalpha.api.api_extension import *
-# noinspection PyUnresolvedReferences
-from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import *
-# noinspection PyUnresolvedReferences
-from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_future import *
+PUBLIC_FUND_COMMISSION = {
+    'Hybrid': {
+        'Buy': 0.015,
+        'Sell': 0.005
+    },
+    'Stock': {
+        'Buy': 0.015,
+        'Sell': 0.005
+    },
+    'Bond': {
+        'Buy': 0.006,
+        'Sell': 0.005
+    },
+    'StockIndex': {
+        'Buy': 0.01,
+        'Sell': 0.005
+    },
+    'BondIndex': {
+        'Buy': 0.01,
+        'Sell': 0.005
+    },
+    'QDII': {
+        'Buy': 0.015,
+        'Sell': 0.005
+    },
+    'Other': {
+        'Buy': 0,
+        'Sell': 0
+    },
+    'Related': {
+        'Buy': 0,
+        'Sell': 0
+    },
+}

@@ -6,10 +6,10 @@ import talib
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init(context):
     context.s1 = "000001.XSHE"
-
     # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
-    context.SHORTPERIOD = 20
-    context.LONGPERIOD = 120
+    context.SHORTPERIOD = 5
+    context.LONGPERIOD = 10
+    logger.info("context: {}".format(context))
 
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
@@ -46,3 +46,5 @@ def handle_bar(context, bar_dict):
     if short_avg[-1] - long_avg[-1] > 0 and short_avg[-2] - long_avg[-2] < 0:
         # 满仓入股
         order_shares(context.s1, shares)
+
+    logger.info("context:{}, bar_dict:{}".format(context, bar_dict))

@@ -22,7 +22,8 @@ def handle_bar(context, bar_dict):
     # context.portfolio 可以拿到现在的投资组合状态信息
 
     # 使用order_shares(id_or_ins, amount)方法进行落单
-
+    logger.info("[handle_bar]:" + context.s1 +  ", frequency:" + bar_dict._frequency + ", date: " + str(bar_dict.dt))
+    # logger.warn(("buy"))
     # TODO: 开始编写你的算法吧！
     if not context.fired:
         # order_percent并且传入1代表买入该股票并且使其占有投资组合的100%

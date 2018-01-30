@@ -16,7 +16,7 @@
 
 import pickle
 
-from ..model.instrument import Instrument
+from rqalpha.model.instrument import Instrument
 
 
 class InstrumentStore(object):

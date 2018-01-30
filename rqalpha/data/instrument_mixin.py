@@ -41,10 +41,6 @@ class InstrumentMixin(object):
         return [v.order_book_id for v in self._instruments.values()
                 if v.type == 'CS' and v.industry_code == code]
 
-    def concept(self, *concepts):
-        return [v.order_book_id for v in self._instruments.values()
-                if v.type == 'CS' and any(c in v.concept_names.split('|') for c in concepts)]
-
     def all_instruments(self, types, dt=None):
         return [i for i in self._instruments.values()
                 if ((dt is None or i.listed_date.date() <= dt.date() <= i.de_listed_date.date()) and

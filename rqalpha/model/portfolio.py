@@ -17,11 +17,11 @@
 import six
 import jsonpickle
 
-from ..environment import Environment
-from ..const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE
-from ..utils import get_account_type, merge_dicts
-from ..utils.repr import property_repr
-from ..events import EVENT
+from rqalpha.environment import Environment
+from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.utils import get_account_type, merge_dicts
+from rqalpha.utils.repr import property_repr
+from rqalpha.events import EVENT
 
 
 class Portfolio(object):
@@ -45,7 +45,7 @@ class Portfolio(object):
 
     def order(self, order_book_id, quantity, style, target=False):
         account_type = get_account_type(order_book_id)
-        return self.accounts[account_type].order(quantity, style, target)
+        return self.accounts[account_type].order(order_book_id, quantity, style, target)
 
     def get_state(self):
         return jsonpickle.encode({

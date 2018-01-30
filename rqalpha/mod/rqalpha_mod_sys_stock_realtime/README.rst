@@ -39,10 +39,10 @@ RQAlpha 接受实时行情并触发事件 Mod
 
 .. code-block:: bash
 
-    rqalpha run -fq 1m -rt p -f ~/strategy.py -sc 100000 -l verbose
+    rqalpha run -fq 1m -rt p -f ~/strategy.py --account stock 100000 -l verbose
 
 在启用了 redis 服务后，可以让 rqalpha 连接 redis ，从 redis 读取实时行情数据。只需要增加参数 --redis-uri ，填入启动 quotation_server 的 uri，既可以将两者连通。
 
 .. code-block:: bash
 
-    rqalpha run -fq 1m -rt p -f ~/strategy.py -sc 100000 -l verbose --redis-uri redis://localhost/1
+    rqalpha run -fq 1m -rt p -f ~/strategy.py --account stock 100000 -l verbose --redis-uri redis://localhost/1

@@ -19,8 +19,10 @@ import sys
 import tarfile
 import tempfile
 import datetime
-
 import shutil
+from pprint import pformat
+
+import logbook
 import click
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import pytz
@@ -28,30 +30,31 @@ import requests
 import six
 import better_exceptions
 
-from . import const
-from .api import helper as api_helper
-from .core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
-from .core.strategy import Strategy
-from .core.strategy_universe import StrategyUniverse
-from .core.global_var import GlobalVars
-from .core.strategy_context import StrategyContext
-from .data.base_data_source import BaseDataSource
-from .data.data_proxy import DataProxy
-from .environment import Environment
-from .events import EVENT, Event
-from .execution_context import ExecutionContext
-from .interface import Persistable
-from .mod import ModHandler
-from .model.bar import BarMap
-from .model.portfolio import Portfolio
-from .model.base_position import Positions
-from .utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
-from .utils.exception import CustomException, is_user_exc, patch_user_exc
-from .utils.i18n import gettext as _
-from .utils.logger import user_log, user_system_log, system_log, user_print, user_detail_log, init_logger, user_std_handler
-from .utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
-from .utils.scheduler import Scheduler
-from .utils.config import set_locale
+from rqalpha import const
+from rqalpha.api import helper as api_helper
+from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
+from rqalpha.core.strategy import Strategy
+from rqalpha.core.strategy_universe import StrategyUniverse
+from rqalpha.core.global_var import GlobalVars
+from rqalpha.core.strategy_context import StrategyContext
+from rqalpha.data.base_data_source import BaseDataSource
+from rqalpha.data.data_proxy import DataProxy
+from rqalpha.environment import Environment
+from rqalpha.events import EVENT, Event
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.interface import Persistable
+from rqalpha.mod import ModHandler
+from rqalpha.model.bar import BarMap
+from rqalpha.model.portfolio import Portfolio
+from rqalpha.model.base_position import Positions
+from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
+from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
+from rqalpha.utils.scheduler import Scheduler
+from rqalpha.utils.config import set_locale
+from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
+
 
 jsonpickle_numpy.register_handlers()
 
@@ -60,12 +63,12 @@ def _adjust_start_date(config, data_proxy):
     origin_start_date, origin_end_date = config.base.start_date, config.base.end_date
     start, end = data_proxy.available_data_range(config.base.frequency)
 
-    # print(repr(start), repr(end))
     config.base.start_date = max(start, config.base.start_date)
     config.base.end_date = min(end, config.base.end_date)
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
-        raise patch_user_exc(ValueError(_(u"There is no trading day between {start_date} and {end_date}.").format(
+        raise patch_user_exc(ValueError(_(u"There is no data between {start_date} and {end_date}. Please check your"
+                                          u" data bundle or select other backtest period.").format(
             start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
@@ -113,6 +116,7 @@ def create_benchmark_portfolio(env):
 
 def create_base_scope():
     import copy
+    from rqalpha.utils.logger import user_print, user_log
 
     from . import user_module
     scope = copy.copy(user_module.__dict__)
@@ -180,8 +184,8 @@ def run(config, source_code=None, user_funcs=None):
     try:
         # avoid register handlers everytime
         # when running in ipython
-        init_logger()
-        add_log_handlers(config)
+        set_loggers(config)
+        basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         if source_code is not None:
             env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
@@ -195,8 +199,8 @@ def run(config, source_code=None, user_funcs=None):
 
         if not env.data_source:
             env.set_data_source(BaseDataSource(config.base.data_bundle_path))
-
         env.set_data_proxy(DataProxy(env.data_source))
+
         Scheduler.set_trading_dates_(env.data_source.get_trading_calendar())
         scheduler = Scheduler(config.base.frequency)
         mod_scheduler._scheduler = scheduler
@@ -206,6 +210,11 @@ def run(config, source_code=None, user_funcs=None):
         _adjust_start_date(env.config, env.data_proxy)
 
         _validate_benchmark(env.config, env.data_proxy)
+
+        # FIXME
+        start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
+        env.calendar_dt = start_dt
+        env.trading_dt = start_dt
 
         broker = env.broker
         assert broker is not None
@@ -224,11 +233,6 @@ def run(config, source_code=None, user_funcs=None):
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
-
-        # FIXME
-        start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
-        env.calendar_dt = start_dt
-        env.trading_dt = start_dt
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
@@ -259,6 +263,8 @@ def run(config, source_code=None, user_funcs=None):
 
         if config.base.persist:
             persist_provider = env.persist_provider
+            if persist_provider is None:
+                raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
             persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
             persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
             persist_helper.register('user_context', ucontext)
@@ -293,16 +299,11 @@ def run(config, source_code=None, user_funcs=None):
 
         if env.profile_deco:
             output_profile_result(env)
-
-        result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
-        system_log.debug(_(u"strategy run successfully, normal exit"))
-        return result
     except CustomException as e:
         if init_succeed and env.config.base.persist and persist_helper:
             persist_helper.persist()
 
         code = _exception_handler(e)
-
         mod_handler.tear_down(code, e)
     except Exception as e:
         if init_succeed and env.config.base.persist and persist_helper:
@@ -312,8 +313,13 @@ def run(config, source_code=None, user_funcs=None):
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, config.base.strategy_file)
 
         code = _exception_handler(user_exc)
-
         mod_handler.tear_down(code, user_exc)
+    else:
+        if (env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT):
+            persist_helper.persist()
+        result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
+        system_log.debug(_(u"strategy run successfully, normal exit"))
+        return result
 
 
 def _exception_handler(e):
@@ -355,10 +361,22 @@ def output_profile_result(env):
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))
 
 
-def add_log_handlers(config):
+def set_loggers(config):
+    from rqalpha.utils.logger import user_log, user_system_log, user_detail_log, system_log, basic_system_log, std_log
+    from rqalpha.utils.logger import user_std_handler, init_logger
+    from rqalpha.utils import logger
     extra_config = config.extra
+
+    init_logger()
+
+    for log in [basic_system_log, system_log, std_log, user_log, user_system_log, user_detail_log]:
+        log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
+
     if extra_config.log_level.upper() != "NONE":
         if not extra_config.user_log_disabled:
             user_log.handlers.append(user_std_handler)
         if not extra_config.user_system_log_disabled:
             user_system_log.handlers.append(user_std_handler)
+
+    for logger_name, level in extra_config.logger:
+        getattr(logger, logger_name).level = getattr(logbook, level.upper())

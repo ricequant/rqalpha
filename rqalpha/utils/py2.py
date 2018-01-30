@@ -41,10 +41,29 @@ def from_utf8(string):
     except AttributeError:
         return string
 
+
 try:
-    from functools import lru_cache
+    from functools import lru_cache as origin_lru_cache
 except ImportError:
-    from fastcache import lru_cache
+    from fastcache import lru_cache as origin_lru_cache
+
+
+cached_functions = []
+
+
+def lru_cache(*args, **kwargs):
+    def decorator(func):
+        func = origin_lru_cache(*args, **kwargs)(func)
+        cached_functions.append(func)
+        return func
+
+    return decorator
+
+
+def clear_all_cached_functions():
+    for func in cached_functions:
+        func.cache_clear()
+
 
 try:
     from inspect import signature

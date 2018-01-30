@@ -14,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..interface import AbstractPosition
-from ..environment import Environment
-from ..utils.repr import property_repr
-from ..utils.i18n import gettext as _
-from ..utils.logger import user_system_log
+from rqalpha.interface import AbstractPosition
+from rqalpha.environment import Environment
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 
 class Positions(dict):
@@ -41,8 +40,6 @@ class Positions(dict):
 class BasePosition(AbstractPosition):
     __abandon_properties__ = ["total_orders", "total_trades"]
     NaN = float('NaN')
-
-    __repr__ = property_repr
 
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
