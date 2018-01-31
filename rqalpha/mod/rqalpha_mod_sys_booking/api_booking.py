@@ -32,12 +32,6 @@ from . import mod_name
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 def get_positions(booking=None):
     env = Environment.get_instance()
     mod = env.mod_dict[mod_name]
@@ -46,12 +40,6 @@ def get_positions(booking=None):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('direction').is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT]))
 def get_position(order_book_id, direction, booking=None):
     env = Environment.get_instance()
@@ -60,18 +48,17 @@ def get_position(order_book_id, direction, booking=None):
     return booking_account.get_position(order_book_id, direction, booking)
 
 
+@export_as_api
 @apply_rules(
     verify_that('id_or_ins').is_valid_future(),
     verify_that('amount').is_number().is_greater_or_equal_than(0),
     verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
-    verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
+    verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY]),
     verify_that('style').is_instance_of((LimitOrder, MarketOrder, type(None))))
 def send_order(order_book_id, amount, side, position_effect, style):
     env = Environment.get_instance()
 
-    order = None
-
-    order = Order.__from_create__(order_book_id, amount, side, style, POSITION_EFFECT.CLOSE)
+    order = Order.__from_create__(order_book_id, amount, side, style, position_effect)
     env.broker.submit_order(order)
 
 
