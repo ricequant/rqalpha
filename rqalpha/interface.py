@@ -397,6 +397,39 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
+    def history_ticks(self, instrument, count, fields, dt):
+        """
+        获取历史tick数据
+
+        :param instrument: 合约对象
+        :type instrument: :class:`~Instrument`
+
+        :param int count: 获取的历史数据数量
+        :param str fields: 返回数据字段
+
+        =========================   ===================================================
+        fields                      字段名
+        =========================   ===================================================
+        datetime                    时间戳
+        open                        开盘价
+        high                        最高价
+        low                         最低价
+        last                        最新价
+        prev_close                  昨收
+        volume                      成交量
+        total_turnover              成交额
+        datetime                    int类型时间戳
+        open_interest               持仓量（期货专用）
+        prev_settlement             结算价（期货日线专用）
+        =========================   ===================================================
+
+        :param datetime.datetime dt: 时间
+
+        :return: `numpy.ndarray`
+
+        """
+        raise NotImplementedError
+
     def current_snapshot(self, instrument, frequency, dt):
         """
         获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。
