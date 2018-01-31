@@ -137,3 +137,31 @@ class BookingAccount(object):
         position.apply_trade(trade)
 
         self._backward_trade_set.add(trade.exec_id)
+
+    @property
+    def cash(self):
+        return 0
+
+    @property
+    def positions(self):
+        return {}
+
+    @property
+    def total_value(self):
+        return 0
+
+    @property
+    def type(self):
+        return "BookingAccount"
+
+    @property
+    def frozen_cash(self):
+        return 0
+
+    @property
+    def market_value(self):
+        return 0
+
+    @property
+    def transaction_cost(self):
+        return 0
