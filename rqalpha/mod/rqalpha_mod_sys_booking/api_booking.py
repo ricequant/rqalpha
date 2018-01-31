@@ -60,6 +60,7 @@ def send_order(order_book_id, amount, side, position_effect, style):
 
     order = Order.__from_create__(order_book_id, amount, side, style, position_effect)
     env.broker.submit_order(order)
+    return order
 
 
 @export_as_api
