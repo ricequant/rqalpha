@@ -155,6 +155,10 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
                                               skip_suspended=skip_suspended, include_now=include_now,
                                               adjust_type=adjust_type, adjust_orig=adjust_orig)
 
+    def history_ticks(self, order_book_id, count, fields, dt):
+        instrument = self.instruments(order_book_id)
+        return self._data_source.history_ticks(instrument, count, fields, dt)
+
     def current_snapshot(self, order_book_id, frequency, dt):
         instrument = self.instruments(order_book_id)
         if frequency == '1d':
