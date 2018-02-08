@@ -67,86 +67,34 @@ class Tick(object):
     def prev_settlement(self):
         return self._tick['prev_settlement']
 
-    # FIXME: use dynamic creation
     @property
-    def b1(self):
-        return self._tick['b1']
+    def asks(self):
+        try:
+            return self._tick['asks']
+        except (KeyError, ValueError):
+            # backport
+            return []
 
     @property
-    def b2(self):
-        return self._tick['b2']
+    def ask_vols(self):
+        try:
+            return self._tick['ask_vols']
+        except (KeyError, ValueError):
+            return []
 
     @property
-    def b3(self):
-        return self._tick['b3']
+    def bids(self):
+        try:
+            return self._tick["bids"]
+        except (KeyError, ValueError):
+            return []
 
     @property
-    def b4(self):
-        return self._tick['b4']
-
-    @property
-    def b5(self):
-        return self._tick['b5']
-
-    @property
-    def b1_v(self):
-        return self._tick['b1_v']
-
-    @property
-    def b2_v(self):
-        return self._tick['b2_v']
-
-    @property
-    def b3_v(self):
-        return self._tick['b3_v']
-
-    @property
-    def b4_v(self):
-        return self._tick['b4_v']
-
-    @property
-    def b5_v(self):
-        return self._tick['b5_v']
-
-    @property
-    def a1(self):
-        return self._tick['a1']
-
-    @property
-    def a2(self):
-        return self._tick['a2']
-
-    @property
-    def a3(self):
-        return self._tick['a3']
-
-    @property
-    def a4(self):
-        return self._tick['a4']
-
-    @property
-    def a5(self):
-        return self._tick['a5']
-
-    @property
-    def a1_v(self):
-        return self._tick['a1_v']
-
-    @property
-    def a2_v(self):
-        return self._tick['a2_v']
-
-    @property
-    def a3_v(self):
-        return self._tick['a3_v']
-
-    @property
-    def a4_v(self):
-        return self._tick['a4_v']
-
-    @property
-    def a5_v(self):
-        return self._tick['a5_v']
+    def bid_vols(self):
+        try:
+            return self._tick["bid_vols"]
+        except (KeyError, ValueError):
+            return []
 
     @property
     def limit_up(self):
