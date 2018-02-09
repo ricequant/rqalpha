@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rqalpha.utils.datetime_func import convert_date_time_ms_int_to_datetime
-
 
 class Tick(object):
     def __init__(self, order_book_id, tick):
@@ -28,8 +26,7 @@ class Tick(object):
 
     @property
     def datetime(self):
-        dt = convert_date_time_ms_int_to_datetime(self._tick["date"], self._tick["time"])
-        return dt
+        return self._tick['datetime']
 
     @property
     def open(self):
@@ -72,7 +69,7 @@ class Tick(object):
         try:
             return self._tick['asks']
         except (KeyError, ValueError):
-            # backport
+            # FIXME: forward compatbility
             return []
 
     @property
