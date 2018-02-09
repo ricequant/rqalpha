@@ -397,7 +397,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_ticks(self, instrument, count, fields, dt):
+    def history_ticks(self, instrument, count, dt):
         """
         获取历史tick数据
 
@@ -407,25 +407,9 @@ class AbstractDataSource(object):
         :param int count: 获取的历史数据数量
         :param str fields: 返回数据字段
 
-        =========================   ===================================================
-        fields                      字段名
-        =========================   ===================================================
-        datetime                    时间戳
-        open                        开盘价
-        high                        最高价
-        low                         最低价
-        last                        最新价
-        prev_close                  昨收
-        volume                      成交量
-        total_turnover              成交额
-        datetime                    int类型时间戳
-        open_interest               持仓量（期货专用）
-        prev_settlement             结算价（期货日线专用）
-        =========================   ===================================================
-
         :param datetime.datetime dt: 时间
 
-        :return: `numpy.ndarray`
+        :return: list of `Tick`
 
         """
         raise NotImplementedError
