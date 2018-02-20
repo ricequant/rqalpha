@@ -48,7 +48,7 @@ class BookingMod(AbstractMod):
         import requests
 
         if env.config.base.init_positions:
-            raise RuntimeError("RQAlpha recieve init positions. rqalpha_mod_sys_booking do not support init_positions")
+            raise RuntimeError("RQAlpha receive init positions. rqalpha_mod_sys_booking does not support init_positions")
 
         # TODO: load pos/trade from pms
         server_url = mod_config.server_url
