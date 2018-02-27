@@ -41,7 +41,7 @@ from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
 class BaseDataSource(AbstractDataSource):
     def __init__(self, path):
         if not os.path.exists(path):
-            raise RuntimeError('bundle path {} not exist'.format(os.path.abspath))
+            raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 
         def _p(name):
             return os.path.join(path, name)
