@@ -377,8 +377,10 @@ def set_loggers(config):
 
     init_logger()
 
-    for log in [basic_system_log, system_log, std_log, user_log, user_system_log, user_detail_log]:
+    for log in [basic_system_log, system_log, std_log, user_system_log, user_detail_log]:
         log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
+
+    user_log.level = logbook.DEBUG
 
     if extra_config.log_level.upper() != "NONE":
         if not extra_config.user_log_disabled:
