@@ -94,12 +94,23 @@ def handle_bar(context, bar_dict):
     history_close = history_bars(context.s1, 50, '1d', 'close')
     y = bar_dict[context.s1].close
 
-    history_close = history_close[newaxis,:]
-    history_close = history_close[:,:,newaxis]
+    normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
     
-    predicted = context.model.predict(history_close)[0,0]
+    print history_close
+    print normalised_history_close
     
-    logger.info("predicted: %s real: %s" %  (predicted, y))
+    normalised_history_close = np.array(normalised_history_close)
+    normalised_history_close = normalised_history_close[newaxis,:]
+    normalised_history_close = normalised_history_close[:,:,newaxis]
+    
+    predicted = context.model.predict(normalised_history_close)[0,0]
+    
+    normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
+    normalised_history_close.append(predicted)
+    restore_normalise_window = [float(history_close[0]) * (float(p) + 1) for p in normalised_history_close]
+    
+    restore_predicted = restore_normalise_window[-1]
+    logger.info("predicted: %s restore_predicted:%s real: %s" %  (predicted,restore_predicted, y))
     
     
     """
