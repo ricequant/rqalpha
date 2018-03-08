@@ -91,7 +91,8 @@ def handle_bar(context, bar_dict):
     logger.info("每一个Bar执行")
     logger.info("打印Bar数据：")
     
-    history_close = history_bars(context.s1, 50, '1d', 'close')
+    history_close = history_bars(context.s1, 51, '1d', 'close')
+    history_close = history_close[:-1]
     y = bar_dict[context.s1].close
 
     normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
