@@ -67,7 +67,7 @@ class Tick(object):
     @property
     def asks(self):
         try:
-            return self._tick['asks']
+            return self._tick['ask']
         except (KeyError, ValueError):
             # FIXME: forward compatbility
             return []
@@ -75,21 +75,21 @@ class Tick(object):
     @property
     def ask_vols(self):
         try:
-            return self._tick['ask_vols']
+            return self._tick['ask_vol']
         except (KeyError, ValueError):
             return []
 
     @property
     def bids(self):
         try:
-            return self._tick["bids"]
+            return self._tick["bid"]
         except (KeyError, ValueError):
             return []
 
     @property
     def bid_vols(self):
         try:
-            return self._tick["bid_vols"]
+            return self._tick["bid_vol"]
         except (KeyError, ValueError):
             return []
 
