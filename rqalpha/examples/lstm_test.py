@@ -1,7 +1,43 @@
 from rqalpha.api import *
 import talib
-from rqalpha import run_func
+from sklearn.model_selection import train_test_split
+
+import time
+import warnings
 import numpy as np
+from numpy import newaxis
+from keras.layers.core import Dense, Activation, Dropout
+from keras.layers.recurrent import LSTM
+from keras.models import Sequential
+import keras
+from keras.models import load_model
+    
+def build_model(layers):
+    model = Sequential()
+
+    model.add(LSTM(
+        input_shape=(layers[1], layers[0]),
+        output_dim=layers[1],
+        return_sequences=True))
+    model.add(Dropout(0.2))
+
+    model.add(LSTM(
+        layers[2],
+        return_sequences=False))
+    model.add(Dropout(0.2))
+
+    model.add(Dense(
+        output_dim=layers[3]))
+    model.add(Activation("linear"))
+
+    start = time.time()
+    model.compile(loss="mse", optimizer="rmsprop")
+    #model.compile(loss='binary_crossentropy',optimizer='rmsprop', metrics=['accuracy'])
+    #model.compile(loss="mse", optimizer=keras.optimizers.RMSprop(lr=0.001, rho=0.9, epsilon=1e-06))
+    print("> Compilation Time : ", time.time() - start)
+    return model
+
+
 """
 Bar(symbol: u'\u73e0\u6c5f\u94a2\u7434', order_book_id: u'002678.XSHE', datetime: datetime.datetime(2014, 1, 2, 0, 0), 
 open: 7.08, close: 7.07, high: 7.14, low: 7.03, volume: 3352317.0, total_turnover: 23756852, limit_up: 7.78, limit_down: 6.36)
@@ -25,8 +61,13 @@ def init(context):
     context.s1 = "000001.XSHE"
     # 实时打印日志
     
-    context.X = []
-    context.y = []
+    context.s1_X = []
+    context.s1_y = []
+    
+        
+
+    context.model = load_model('my_model.h5')
+    context.model.compile(loss="mse", optimizer="rmsprop")
 
     logger.info("RunInfo: {}".format(context.run_info))
     df = (all_instruments('CS'))
@@ -37,6 +78,14 @@ def init(context):
 def before_trading(context):
     logger.info("开盘前执行before_trading函数")
 
+
+def normalise_windows(window_data):
+    normalised_data = []
+    for window in window_data:
+        normalised_window = [((float(p) / float(window[0])) - 1) for p in window]
+        normalised_data.append(normalised_window)
+    return normalised_data
+
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
     logger.info("每一个Bar执行")
@@ -44,15 +93,13 @@ def handle_bar(context, bar_dict):
     
     history_close = history_bars(context.s1, 50, '1d', 'close')
     y = bar_dict[context.s1].close
-    logger.info(bar_dict[context.s1].symbol)
-    context.X.append(history_close)
-    context.y.append(y)
-    
-    np.save("%s_X" % context.s1, np.array(context.X))
-    
-    np.save("%s_y" % context.s1, np.array(context.y))
-    
 
+    history_close = history_close[newaxis,:]
+    history_close = history_close[:,:,newaxis]
+    
+    predicted = context.model.predict(history_close)[0,0]
+    
+    logger.info("predicted: %s real: %s" %  (predicted, y))
     
     
     """
@@ -69,28 +116,3 @@ def handle_bar(context, bar_dict):
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
 def after_trading(context):
     logger.info("收盘后执行after_trading函数")
-    
-"""    
-config = {
-  "base": {
-    "start_date": "2004-06-01",
-    "end_date": "2016-12-01",
-    "benchmark": "000300.XSHG",
-    "accounts": {
-        "stock": 100000
-    }
-  },
-  "extra": {
-    "log_level": "verbose",
-  },
-  "mod": {
-    "sys_analyser": {
-      "enabled": True,
-      "plot": True
-    }
-  }
-}
-
-# 您可以指定您要传递的参数
-run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)
-"""
