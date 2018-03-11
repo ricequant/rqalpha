@@ -317,6 +317,7 @@ def run(config, source_code=None, user_funcs=None):
     else:
         if (env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT):
             persist_helper.persist()
+        user_strategy.end()
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug(_(u"strategy run successfully, normal exit"))
         return result
