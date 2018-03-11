@@ -1,4 +1,3 @@
-import eventlet
 import time
 import numpy as np
 import os
@@ -101,10 +100,12 @@ def get_all_order_book_id():
 
 if __name__=='__main__':
     all_stock_id = get_all_order_book_id()
+    print all_stock_id
     model = build_model([1, 50, 100, 1])
     
     for stock_id in all_stock_id:
         model_file_path = 'model/%s.h5' %  stock_id[:-4]
+        print model_file_path
         if not os.path.isfile(model_file_path):
             train_single_stock(stock_id, model)
             model.reset_states()
