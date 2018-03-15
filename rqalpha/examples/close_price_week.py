@@ -28,41 +28,9 @@ rqalpha run -f get_day_close_price.py -s 2000-01-01 -e 2017-01-01 -o result.pkl 
 
 
 
-    
-# 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
-def init(context):
-    # 在context中保存全局变量
-    context.all_close_price = {}
-    context.today = None
-    
-    logger.info("RunInfo: {}".format(context.run_info))
-    df = (all_instruments('CS'))
-    context.all = df["order_book_id"]
-    
-# before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
-def before_trading(context):
-    logger.info("开盘前执行before_trading函数")
-
-# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
-def handle_bar(context, bar_dict):
-    logger.info("每一个Bar执行")
-    logger.info("打印Bar数据：")
-    
-    """
-    
-    history_close = history_bars(context.s1, 50, '1d', 'close')
-    y = bar_dict[context.s1].close
-    logger.info(bar_dict[context.s1].symbol)
-    context.X.append(history_close)
-    context.y.append(y)
-    
-    np.save("%s_X" % context.s1, np.array(context.X))
-    
-    np.save("%s_y" % context.s1, np.array(context.y))
-    
-    """
-    
-    
+#scheduler调用的函数需要包括context, bar_dict两个参数
+def week_close_prise(context, bar_dict):
+    logger.info("Remaning cash: %r" % context.portfolio.cash)
     
     for s1 in context.all:
         #logger.info(bar_dict[s1])
@@ -80,31 +48,46 @@ def handle_bar(context, bar_dict):
             context.all_close_price[id] = [close_price]
         
         context.today = bar_dict[s1].datetime
-        
-   
-   
-    """
-    b = context.today.strftime("%Y-%m-%d")
-    logger.info("%s  %s" % (config["base"]["end_date"],b))
-    if config["base"]["end_date"] == b:
-        for book_id, data in context.all_close_price.items():
-            np.save("close_price/%s" % book_id, np.array(data))
-    """
+
+    
+# 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
+def init(context):
+    # 在context中保存全局变量
+    context.all_close_price = {}
+    context.today = None
+    
+    
+# before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
+def before_trading(context):
+    logger.info("开盘前执行before_trading函数")
+
+# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
+def handle_bar(context, bar_dict):
+    logger.info("每一个Bar执行")
+    logger.info("打印Bar数据：")
+    
+    #np.save("%s_X" % context.s1, np.array(context.X))
+    #np.save("%s_y" % context.s1, np.array(context.y))
+    
+    
+
+    
         
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
 def after_trading(context):
     logger.info("收盘后执行after_trading函数")
 
 
+
 def end(context):
-    logger.info("用户程序执行完成")
-    for book_id, data in context.all_close_price.items():
-        np.save("close_price/%s" % book_id, np.array(data))   
+    logger.info("--------------end-------------")
+    logger.info("------------end---------------")
+
 
 config = {
   "base": {
-    "start_date": "2004-06-01",
-    "end_date": "2017-02-01",
+    "start_date": "2016-04-01",
+    "end_date": "2016-12-01",
     "accounts": {
         "stock": 100000
     }
@@ -121,6 +104,6 @@ config = {
 }
 
 # 您可以指定您要传递的参数
-run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, end=end, config=config)
+run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, end=end,config=config)
 
 

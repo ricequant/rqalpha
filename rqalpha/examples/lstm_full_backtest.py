@@ -1,7 +1,7 @@
 from rqalpha.api import *
 import talib
 from sklearn.model_selection import train_test_split
-
+import os
 import time
 import warnings
 import numpy as np
@@ -10,8 +10,8 @@ from keras.layers.core import Dense, Activation, Dropout
 from keras.layers.recurrent import LSTM
 from keras.models import Sequential
 import keras
-from keras.models import load_model
-
+from keras.models import load_model,model_from_json
+from keras import backend as K
 
 """
 Bar(symbol: u'\u73e0\u6c5f\u94a2\u7434', order_book_id: u'002678.XSHE', datetime: datetime.datetime(2014, 1, 2, 0, 0), 
@@ -32,8 +32,6 @@ def init(context):
     context.error = 0
     context.ok = 0    
 
-    context.model = load_model('my_model.h5')
-    context.model.compile(loss="mse", optimizer="rmsprop")
 
     logger.info("RunInfo: {}".format(context.run_info))
     df = (all_instruments('CS'))
@@ -60,11 +58,15 @@ def handle_bar(context, bar_dict):
     logger.info("stock count %s" %  len(context.all))
     for s1 in context.all:
         #logger.info(bar_dict[s1])
-        order_book_id = bar_dict[s1].order_book_id
-    
+        order_book_id = s1
+        global_start_time = time.time()
         history_close = history_bars(order_book_id, 51, '1d', 'close')
         history_close = history_close[:-1]
         if len(history_close) != 50:
+            continue
+        if not os.path.isfile('weight/%s.h5' % order_book_id):
+            continue
+        if not os.path.isfile('weight_json/%s.h5' % order_book_id):
             continue
         
         y = bar_dict[order_book_id].close
@@ -81,8 +83,20 @@ def handle_bar(context, bar_dict):
         normalised_history_close = normalised_history_close[newaxis,:]
         normalised_history_close = normalised_history_close[:,:,newaxis]
         
-        predicted = context.model.predict(normalised_history_close)[0,0]
+
+
+        json_file = open("weight_json/%s.h5"% order_book_id, 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        model = model_from_json(loaded_model_json)
+        model.load_weights("weight/%s.h5" % order_book_id) 
         
+        
+        #model = load_model('model/%s.h5' % order_book_id)
+        #model.compile(loss="mse", optimizer="rmsprop")
+        predicted = model.predict(normalised_history_close)[0,0]
+        del model
+        K.clear_session()
         normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
         normalised_history_close.append(predicted)
         restore_normalise_window = [float(history_close[0]) * (float(p) + 1) for p in normalised_history_close]
@@ -106,7 +120,7 @@ def handle_bar(context, bar_dict):
         logger.info("error:%s  ok:%s ratio:%s" % (context.error, context.ok, round(float(context.ok)/(context.error + context.ok), 2)))
         logger.info("--eve   -------------------------------------------")
     
-
+        print "Training duration (s) : %s  %s" % (time.time() - global_start_time, order_book_id)
 
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
 def after_trading(context):

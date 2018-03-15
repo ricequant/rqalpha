@@ -38,7 +38,7 @@ if __name__=='__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
     """
     
-    X_train, y_train, X_test, y_test = lstm.load_data('000001.XSHE_y.npy', seq_len, True)
+    X_train, y_train, X_test, y_test = lstm.load_data('close_price/000001.XSHE.npy', seq_len, True)
     
     print('> Data Loaded. Compiling...')
     
@@ -51,10 +51,18 @@ if __name__=='__main__':
         nb_epoch=epochs,
         validation_split=0.05)
     
-    predictions = lstm.predict_sequences_multiple(model, X_test, seq_len, 50)
+    #predictions = lstm.predict_sequences_multiple(model, X_test, seq_len, 50)
     #predicted = lstm.predict_sequence_full(model, X_test, seq_len)
     
-    model.save('my_model.h5')
+    #model.save('my_model1.h5')
+    
+    model.save_weights('weight/000001.XSHE.h5')
+    model_json = model.to_json()
+    with open('weight_json/000001.XSHE.json', "w") as json_file:
+        json_file.write(model_json)
+    json_file.close()
+    
+    model.reset_states()
     
     #predicted = lstm.predict_point_by_point(model, X_test)        
     
@@ -62,5 +70,5 @@ if __name__=='__main__':
     #coef = np.corrcoef(predicted, y_test)
     #print coef
     #plot_results(predicted, y_test)
-    plot_results_multiple(predictions, y_test, 50)
+    #plot_results_multiple(predictions, y_test, 50)
     

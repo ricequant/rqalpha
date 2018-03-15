@@ -13,6 +13,7 @@ from keras.models import Sequential
 import keras
 from keras.models import load_model, model_from_json
 from pandas.core.frame import DataFrame
+from keras import backend as K
 
 
 """
@@ -35,10 +36,8 @@ def init(context):
     context.error = 0
     context.ok = 0
     
-    #context.model = load_model('my_model.h5')
-    context.model = load_model('model/000557.XSHE.h5')
-    context.model.compile(loss="mse", optimizer="rmsprop")  
-    
+    context.stocks = []
+    context.ORDER_PERCENT = 0.2
     
     context.all_up_stock = None
     #{"stock_id":{"price":12.0, "up":0.08}}
@@ -79,28 +78,23 @@ def before_trading(context):
         history_close = history_close[:-1]
         if len(history_close) != 50:
             continue
-        
-        #y = bar_dict[order_book_id].close
+        if not os.path.isfile('weight/%s.h5' % order_book_id):
+            continue
+        if not os.path.isfile('weight_json/%s.h5' % order_book_id):
+            continue
+                
+        y = history_close[-1]
         
         yesterday_close = history_close[-2]
         
         
         normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
-        
-        #print history_close
-        #print normalised_history_close
-        
+
         normalised_history_close = np.array(normalised_history_close)
         normalised_history_close = normalised_history_close[newaxis,:]
         normalised_history_close = normalised_history_close[:,:,newaxis]
         
-        if os.path.isfile('weight_json/%s.h5' % order_book_id):
-            continue
-        if os.path.isfile('weight/%s.h5' % order_book_id):
-            continue
-        #model = load_model('model/%s.h5' % order_book_id)
-        #model.compile(loss="mse", optimizer="rmsprop")
-        print normalised_history_close        
+        #print normalised_history_close        
         
         
         json_file = open("weight_json/%s.h5"% order_book_id, 'r')
@@ -110,51 +104,58 @@ def before_trading(context):
         model.load_weights("weight/%s.h5" % order_book_id) 
         
         
-        predicted = context.model.predict(normalised_history_close)[0,0]
+        predicted = model.predict(normalised_history_close)[0,0]
         
+        del model
+        K.clear_session()
+            
         normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
         normalised_history_close.append(predicted)
         restore_normalise_window = [float(history_close[0]) * (float(p) + 1) for p in normalised_history_close]
         
         restore_predicted = restore_normalise_window[-1]
-        logger.info("predicted: %s yesterday_close:%s restore_predicted:%s " %  (predicted,yesterday_close, restore_predicted))
+        #logger.info("predicted: %s yesterday_close:%s restore_predicted:%s " %  (predicted,yesterday_close, restore_predicted))
         
         
         if yesterday_close < restore_predicted:
-            logger.info("%s yesterday %s today %s" % (order_book_id, yesterday_close, yesterday_close))
             up = round((restore_predicted - yesterday_close) / yesterday_close, 2)
-            data.append([order_book_id,restore_predicted,up])
-        
-        
-        """
-        flag = 0
-        if yesterday_close > y and yesterday_close > restore_predicted:
-            context.ok = context.ok + 1
-            flag = flag + 1
-        if yesterday_close < y and yesterday_close < restore_predicted:
-            context.ok = context.ok + 1
-            flag = flag + 1
-        
-        if not flag:
-            context.error  = context.error + 1
+            real_up = round((y - yesterday_close) / yesterday_close, 2)
+            logger.info("%s yesterday %s today %s real_up %s  up %s" % (order_book_id, yesterday_close, restore_predicted, real_up, up))
+
+            
+            data.append([order_book_id,restore_predicted,up, real_up, yesterday_close, y])
         
         
         
         
-        logger.info("--eve----------------------------------------------")
-        logger.info("stock count %s" %  len(context.all))
-        logger.info("error:%s  ok:%s ratio:%s" % (context.error, context.ok, round(float(context.ok)/(context.error + context.ok), 2)))
-        logger.info("--eve   -------------------------------------------")
-        """
         
-    context.all_up_stock = DataFrame(data)
+        
+    col = ['id', 'predict', 'up','real_up', 'yesterday_close','today_close']
+    context.all_up_stock = DataFrame(data, columns=col)
     
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
     logger.info("每一个Bar执行")
     logger.info("打印Bar数据：")
-    logger.info(context.all_up_stock.head(5))
+    context.all_up_stock = context.all_up_stock.sort_values(by=['up'], ascending=[False])
+    context.all_up_stock = context.all_up_stock[context.all_up_stock['up']> 0.04]
+    context.all_up_stock = context.all_up_stock[context.all_up_stock['up']< 0.09]
+    
+    
+    
+    for stock in context.stocks:
+        order_target_value(stock, 0)
+        context.stocks.remove(stock)
+    
+    for index, row in context.all_up_stock.head(5).iterrows():
+        stock = row['id']
+        yesterday_close = row['yesterday_close']
+        order_percent(stock, context.ORDER_PERCENT)
+        #order_value(stock, yesterday_close)
+        context.stocks.append(stock)
+        
+    logger.info(context.all_up_stock)
         
 
 

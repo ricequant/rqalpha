@@ -17,11 +17,16 @@ def load_data(filename, seq_len, normalise_window):
     data = f.decode().split('\n')
     """
     data = np.load(filename)
-    sequence_length = seq_len + 1
+    sequence_length = seq_len + 5
     result = []
     
     for index in range(len(data) - sequence_length):
-        result.append(data[index: index + sequence_length])
+        a = data[index: index+seq_len]
+        b = [data[index+sequence_length]]
+        row = np.concatenate((a,b))
+        print row
+        result.append(row)
+    
     
     
     if normalise_window:
@@ -86,9 +91,9 @@ def train_single_stock(filename):
         validation_split=0.05)
 
 
-    model.save_weights('weight/%s.h5' %  filename[:-4])
+    model.save_weights('weight_week/%s.h5' %  filename[:-4])
     model_json = model.to_json()
-    with open('weight_json/%s.h5' %  filename[:-4], "w") as json_file:
+    with open('weight_json_week/%s.h5' %  filename[:-4], "w") as json_file:
         json_file.write(model_json)
     json_file.close()
     del model
@@ -113,7 +118,7 @@ if __name__=='__main__':
     print all_stock_id
     
     for stock_id in all_stock_id:
-        model_file_path = 'weight/%s.h5' %  stock_id[:-4]
+        model_file_path = 'weight_week/%s.h5' %  stock_id[:-4]
         print model_file_path
         if not os.path.isfile(model_file_path):
             #call(["python", "train_single_stock.py", stock_id])
