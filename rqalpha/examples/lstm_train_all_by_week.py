@@ -17,6 +17,7 @@ def load_data(filename, seq_len, normalise_window):
     data = f.decode().split('\n')
     """
     data = np.load(filename)
+    data = [x for x in data if str(x) != 'nan']
     sequence_length = seq_len + 5
     result = []
     
@@ -24,7 +25,7 @@ def load_data(filename, seq_len, normalise_window):
         a = data[index: index+seq_len]
         b = [data[index+sequence_length]]
         row = np.concatenate((a,b))
-        print row
+        #print row
         result.append(row)
     
     
@@ -79,7 +80,15 @@ def train_single_stock(filename):
     epochs  = 1
     seq_len = 50
     
-    X_train, y_train = load_data('close_price/%s' % filename, seq_len, True)
+    print filename
+    data = np.load('close_price/%s.npy' % filename)
+    print len(data)
+    if len(data) < 100:
+        return False    
+    
+    
+    X_train, y_train = load_data('close_price/%s.npy' % filename, seq_len, True)
+    
     print('> Data Loaded. Compiling...')
     model = build_model([1, 50, 100, 1])
     
@@ -115,11 +124,11 @@ def get_all_order_book_id():
 
 if __name__=='__main__':
     all_stock_id = get_all_order_book_id()
-    print all_stock_id
+    #print all_stock_id
     
     for stock_id in all_stock_id:
         model_file_path = 'weight_week/%s.h5' %  stock_id[:-4]
-        print model_file_path
+        #print model_file_path
         if not os.path.isfile(model_file_path):
             #call(["python", "train_single_stock.py", stock_id])
             train_single_stock(stock_id)

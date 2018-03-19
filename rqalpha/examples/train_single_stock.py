@@ -11,9 +11,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import newaxis
 
+"""
 print "This is the name of the script: ", sys.argv[1]
-
 filename = sys.argv[1]
+"""
+filename = "002702.XSHE.npy"
 
 def plot_results(predicted_data, true_data):
     fig = plt.figure(facecolor='white')
@@ -47,6 +49,8 @@ def load_data(filename, seq_len, normalise_window):
     data = f.decode().split('\n')
     """
     data = np.load(filename)
+    data = [x for x in data if str(x) != 'nan']
+    print data
     sequence_length = seq_len + 1
     result = []
     

@@ -36,8 +36,8 @@ def init(context):
     context.today = None
     
     logger.info("RunInfo: {}".format(context.run_info))
-    df = (all_instruments('CS'))
-    context.all = df["order_book_id"]
+    #df = (all_instruments('CS'))
+    #context.all = df["order_book_id"]
     
 # before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
 def before_trading(context):
@@ -62,9 +62,10 @@ def handle_bar(context, bar_dict):
     
     """
     
+    df = (all_instruments('CS'))
+    all = df["order_book_id"]    
     
-    
-    for s1 in context.all:
+    for s1 in all:
         #logger.info(bar_dict[s1])
         order_book_id = bar_dict[s1].order_book_id
         #history_close = history_bars(order_book_id, 50, '1d', 'close')

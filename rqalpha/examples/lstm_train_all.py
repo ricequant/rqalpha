@@ -74,7 +74,7 @@ def train_single_stock(filename):
     epochs  = 1
     seq_len = 50
     
-    X_train, y_train = load_data('close_price/%s' % filename, seq_len, True)
+    X_train, y_train = load_data('close_price/%s.npy' % filename, seq_len, True)
     print('> Data Loaded. Compiling...')
     model = build_model([1, 50, 100, 1])
     
@@ -117,7 +117,7 @@ if __name__=='__main__':
         print model_file_path
         if not os.path.isfile(model_file_path):
             #call(["python", "train_single_stock.py", stock_id])
-            train_single_stock(stock_id)
+            train_single_stock(stock_id[:-4])
             #tpool.execute(train_single_stock, stock_id)
     
     
