@@ -2,7 +2,7 @@ from rqalpha.examples.fetch_one import *
 from rqalpha.examples.lstm_train_all_by_week import *
 from rqalpha.examples.lstm_one_backtest import * 
 
-STOCKID = "000825.XSHE"
+STOCKID = "600386.XSHE"
 
 
 config_dl = {
