@@ -24,7 +24,7 @@ from functools import wraps
 from types import FunctionType
 
 import pandas as pd
-import naumpy as np
+import numpy as np
 import six
 from dateutil.parser import parse
 
