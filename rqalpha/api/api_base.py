@@ -24,6 +24,7 @@ from functools import wraps
 from types import FunctionType
 
 import pandas as pd
+import naumpy as np
 import six
 from dateutil.parser import parse
 
@@ -146,7 +147,13 @@ def cal_style(price, style):
 
     if isinstance(price, OrderStyle):
         # 为了 order_xxx('RB1710', 10, MarketOrder()) 这种写法
+        if isinstance(price, LimitOrder):
+            if np.isnan(price.get_limit_price()):
+                raise RQInvalidArgument(_(u"Limit order price should not be nan."))
         return price
+
+    if np.isnan(price):
+        raise RQInvalidArgument(_(u"Limit order price should not be nan."))
 
     return LimitOrder(price)
 
