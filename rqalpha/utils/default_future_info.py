@@ -78,7 +78,7 @@ time_period5 = [
     TimeRange(start=time(10, 31), end=time(11, 30)),
     TimeRange(start=time(13, 31), end=time(15, 0)),
 ]
-TRADING_PERIOD_DICT.update({underlying_symbol: time_period5 for underlying_symbol in ["AU", "AG"]})
+TRADING_PERIOD_DICT.update({underlying_symbol: time_period5 for underlying_symbol in ["AU", "AG", "SC"]})
 
 # | 股指期货 product='Index' | 09:31~11:30, 13:01~15:00 |
 time_period6 = [
