@@ -17,21 +17,24 @@
 
 import sys
 from os.path import dirname, join
-from pip.req import parse_requirements
-
 from setuptools import (
     find_packages,
     setup,
 )
 
 
+def parse_requirements(filename):
+    lineiter = (line.strip() for line in open(filename))
+    return [line for line in lineiter if line and not line.startswith("#")]
+
+
 with open(join(dirname(__file__), 'rqalpha/VERSION.txt'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
-requirements = [str(ir.req) for ir in parse_requirements("requirements.txt", session=False)]
+requirements = parse_requirements("requirements.txt")
 
 if sys.version_info.major == 2:
-    requirements += [str(ir.req) for ir in parse_requirements("requirements-py2.txt", session=False)]
+    requirements += parse_requirements("requirements-py2.txt")
 
 setup(
     name='rqalpha',
