@@ -70,7 +70,9 @@ def quotation_server(redis_url):
     data_source = BaseDataSource(config.base.data_bundle_path)
     data_proxy = DataProxy(data_source)
 
-    order_book_id_list = sorted(ins.order_book_id for ins in data_proxy.all_instruments("CS"))
+    order_book_id_list_cs = sorted(ins.order_book_id for ins in data_proxy.all_instruments("CS"))
+    order_book_id_list_indx = sorted(ins.order_book_id for ins in data_proxy.all_instruments("INDX"))
+    order_book_id_list = order_book_id_list_cs + order_book_id_list_indx
 
     def record_market_data(total_df):
         for order_book_id, item in total_df.iterrows():
