@@ -104,9 +104,11 @@ Mod名                      说明
 `专业级本地终端RQPro`_
 ============================
 
-..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/RQPro.jpeg
+..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/RQPro2.jpeg
 
-目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以联系我们的机构端产品销售获得机构端产品功能支持，也可通过 `RQPro`_ 登记试用。「销售电话」：0755-33967716 「QQ」：4848371
+目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以免费申请我们的是机构版本进行试用.也可通过 `RQPro`_ 登记试用。欢迎扫码或添加微信：RicequantCS
+
+..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/wechat.jpg
 
 RQPro产品功能：
 
@@ -114,13 +116,26 @@ RQPro由米筐旗下三大核心模块与五大拓展功能组成，其中核心
 
 ..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/rqpro_1.jpeg
 
-*   完全本地部署，使用pycharm、anaconda等工具做本地策略研发、模拟以及实盘交易，效率大大加强，本地管理自己的策略提高保密性
-*   多资产（股票、期货，公募基金等）的精准、快速回测（日，分钟，Tick）
-*   策略的管理以及实盘的收益、风险计算等
-*   可拓展接口及SDK方便二次开发
-*   绩效分析模块全面比较不同策略的收益、风险及稳定性
-*   交易数据的保存以及提取分析
-*   技术支持及定制化开发
+*   金融数据RQData
+
+    * 十年全品种（商品、国债、股指）、多频率（日、分钟、Tick）期货历史数据；
+    * 2005年以来股票历史数据（日、分钟）、财务数据、行业板块构成数据等；
+    * 实时数据直连CTP、支持期货夜盘；
+    * 低延迟、自动化录入及清洗，双源多点备份；
+
+*   策略引擎RQAlpha
+
+    * 完全本地部署，使用pycharm、anaconda等工具做本地策略研发、模拟交易
+    * 多资产（股票、期货，公募基金等）的精准、快速回测（日，分钟，Tick）
+    * 稳定的实盘交易、具备订单管理系统（OMS）与仓位管理系统（PMS）
+    * 可拓展接口及SDK方便二次开发
+    * 绩效分析模块全面比较不同策略的收益、风险及稳定性
+    
+*   绩效分析RQBeta
+
+    * 回测以及实时评估策略的风险、配置和风格因子
+    * 全面衡量和比较不同策略、私募、公募基金产品的收益，风险和稳定性
+    * 收益全方位拆解、评估收益来源，优化投资流程
 
 Feature Status
 ============================
