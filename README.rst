@@ -108,7 +108,9 @@ Mod名                      说明
 目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以免费申请我们的是机构版本进行试用.也可通过 `RQPro`_ 登记试用。欢迎扫码或添加微信：RicequantCS
 
 ..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/wechat.jpg
-
+    width:200px
+    height:200px
+    
 RQPro产品功能：
 
 RQPro由米筐旗下三大核心模块与五大拓展功能组成，其中核心模块有金融数据RQData、策略引擎RQAlpha、绩效分析RQBeta。
