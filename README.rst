@@ -109,6 +109,8 @@ Mod名                      说明
 目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以免费申请我们的是机构版本进行试用.也可通过 `RQPro`_ 登记试用。欢迎扫码或添加微信：RicequantCS
 
 ..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/wechat.jpg
+    :width: 200px
+    :height: 200px
 
 RQPro产品功能：
 
@@ -130,7 +132,7 @@ RQPro由米筐旗下三大核心模块与五大拓展功能组成，其中核心
     * 稳定的实盘交易、具备订单管理系统（OMS）与仓位管理系统（PMS）
     * 可拓展接口及SDK方便二次开发
     * 绩效分析模块全面比较不同策略的收益、风险及稳定性
-    
+
 *   绩效分析RQBeta
 
     * 回测以及实时评估策略的风险、配置和风格因子

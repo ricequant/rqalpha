@@ -124,13 +124,6 @@ def order_shares(id_or_ins, amount, price=None, style=None):
 
     r_order = Order.__from_create__(order_book_id, amount, side, style, position_effect)
 
-    if price == 0:
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        r_order.mark_rejected(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        return r_order
-
     if amount == 0:
         # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
         # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
@@ -248,9 +241,6 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
         return
-
-    if price == 0:
-        return order_shares(order_book_id, 0, style)
 
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
     round_lot = int(env.get_instrument(order_book_id).round_lot)

@@ -498,8 +498,6 @@ def all_instruments(type=None, date=None):
     FenjiB                      Fenji B Funds, 即分级B类基金
     INDX                        Index, 即指数
     Future                      Futures，即期货，包含股指、国债和商品期货
-    hour                        int - option [1,4]
-    minute                      int - option [1,240]
     =========================   ===================================================
 
     :example:

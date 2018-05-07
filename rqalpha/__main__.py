@@ -226,8 +226,12 @@ def mod(cmd, params):
         """
         Install third-party Mod
         """
-        from pip import main as pip_main
-        from pip.commands.install import InstallCommand
+        try:
+            from pip._internal import main as pip_main
+            from pip._internal.commands.install import InstallCommand
+        except ImportError:
+            from pip import main as pip_main
+            from pip.commands.install import InstallCommand
 
         params = [param for param in params]
 

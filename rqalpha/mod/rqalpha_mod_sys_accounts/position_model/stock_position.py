@@ -145,7 +145,7 @@ class StockPosition(BasePosition):
     @property
     def value_percent(self):
         """
-        [float] 获得该持仓的实时市场价值在总投资组合价值中所占比例，取值范围[0, 1]
+        [float] 获得该持仓的实时市场价值在股票投资组合价值中所占比例，取值范围[0, 1]
         """
         accounts = Environment.get_instance().portfolio.accounts
         if DEFAULT_ACCOUNT_TYPE.STOCK.name not in accounts:

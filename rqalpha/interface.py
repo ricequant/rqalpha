@@ -488,7 +488,7 @@ class AbstractDataSource(object):
         :param datetime.date trading_date: 交易日
         :param datetime.datetime last_dt: 仅返回 last_dt 之后的时间
 
-        :return: Tick
+        :return: Iterable object of Tick
         """
         raise NotImplementedError
 
