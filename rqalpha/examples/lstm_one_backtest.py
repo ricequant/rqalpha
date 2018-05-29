@@ -5,6 +5,7 @@ import talib
 from sklearn.model_selection import train_test_split
 
 import time
+from datetime import datetime, timedelta
 import warnings
 import numpy as np
 from numpy import newaxis
@@ -32,7 +33,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
 #scheduler调用的函数需要包括context, bar_dict两个参数
 def log_cash(context, bar_dict):
-    logger.info("Remaning cash: %r" % context.portfolio.cash)
+    pass
+    #logger.info("Remaning cash: %r" % context.portfolio.cash)
     """
     if context.is_buy_point:
         order = order_percent(context.s1, 1)
@@ -95,9 +97,9 @@ def init(context):
     
 # before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
 def before_trading(context):
-    logger.info("开盘前执行before_trading函数")
+    #logger.info("开盘前执行before_trading函数")
     
-    history_close = history_bars(context.s1, 50, '1d', 'close')
+    history_close = history_bars(context.s1, 30, '1d', 'close')
     #logger.info(history_close)
     
     normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
@@ -115,33 +117,32 @@ def before_trading(context):
     restore_predicted = restore_normalise_window[-1]
     context.restore_predicted = restore_predicted
     
-    logger.info("yesterday %s   predict %s" % (history_close[-1], restore_predicted))
+    #logger.info("yesterday %s   predict %s" % (history_close[-1], restore_predicted))
     context.yesterday_close = history_close[-1]
     
     if history_close[-1] < restore_predicted:
-        logger.info("下星期涨---------下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨--------")
-        logger.info("yesterday %s   predict %s" % (history_close[-1], restore_predicted))
+        #logger.info("下星期涨---------下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨--------")
+        #logger.info("yesterday %s   predict %s" % (history_close[-1], restore_predicted))
         context.is_buy_point = True
     else:
         context.is_buy_point = False
     
     
     if context.buy_price:
-        if context.buy_price > history_close[-1] and  (context.buy_price - history_close[-1]) / context.buy_price > 0.10:
-            
-            logger.info(history_close[-1])
-            logger.info(context.buy_price)
-            logger.info((history_close[-1]  - context.buy_price) / context.buy_price)
-            logger.info("------------fffffffffffff")
-            context.is_stop_loss = True
+        #if context.buy_price > history_close[-1] and  (context.buy_price - history_close[-1]) / context.buy_price > 0.10:
+        if  history_close[-1] > restore_predicted:
+            #logger.info(history_close[-1])
+            #logger.info(context.buy_price)
+            #logger.info((history_close[-1]  - context.buy_price) / context.buy_price)
+            context.is_sell_point = True
 
     if context.buy_price:
-        if context.buy_price < history_close[-1] and  ( history_close[-1] - context.buy_price) / context.buy_price > 0.08:
+        if context.buy_price > history_close[-1] and  ( context.buy_price - history_close[-1]) / context.buy_price > 0.08:
             
-            logger.info(history_close[-1])
-            logger.info(context.buy_price)
-            logger.info((history_close[-1]  - context.buy_price) / context.buy_price)
-            logger.info("------------fffffffffffff")
+            #logger.info(history_close[-1])
+            #logger.info(context.buy_price)
+            #logger.info((history_close[-1]  - context.buy_price) / context.buy_price)
+            logger.info("止损止损止损  我的股票价格:%s 现在的股票价格:%s " % (context.buy_price,history_close[-1] ))
             context.is_stop_loss = True
     
 
@@ -156,22 +157,26 @@ def normalise_windows(window_data):
 
 
 
-
-
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
-    logger.info("每一个Bar执行")
+    #logger.info("每一个Bar执行")
     history_close = history_bars(context.s1, 1, '1d', 'close')
-    logger.info("昨天天收盘价  %s" % context.yesterday_close)
-    logger.info("今天收盘价  %s" % bar_dict[context.s1].close)
-    logger.info("预测价一星期后 %s" % context.restore_predicted)
-    logger.info("我股票的价 %s" % context.buy_price)
+    today = bar_dict[context.s1].datetime
+    d2 = today + timedelta(days=7)
+    week_ratio = (context.restore_predicted - bar_dict[context.s1].close) / bar_dict[context.s1].close
     
-    logger.info("买点 %s" % context.is_buy_point)
-    logger.info("卖点 %s" % context.is_sell_point)
-    logger.info("止损 %s" % context.is_stop_loss)
+    logger.info("今天收盘价  %s 预测价一星期后 %s  涨%s  %s" % ( bar_dict[context.s1].close,context.restore_predicted,week_ratio, d2))
     
+    if week_ratio > 0.10:
+        
+        logger.info("我股票的价 %s" % context.buy_price)
+        logger.info("昨天天收盘价  %s" % context.yesterday_close)
+        logger.info("今天收盘价  %s" % bar_dict[context.s1].close)
+        logger.info("买点 %s" % context.is_buy_point)
+        logger.info("卖点 %s" % context.is_sell_point)
+        logger.info("止损 %s" % context.is_stop_loss)
     
+    """
     if context.buy_price:
         if context.buy_price < bar_dict[context.s1].close:
             logger.info("---------------赚-------哈哈哈------")
@@ -179,15 +184,18 @@ def handle_bar(context, bar_dict):
             logger.info("---------亏 ------------")
     else:
         logger.info("-----------没有股票-----------")
+    """
     
     if not context.buy:
         if context.is_buy_point:
             order = order_percent(context.s1, 1)
             if order:
                 logger.info("----------下单成功 下单成功---------下单成功下单成功下单成功下单成功下单成功下单成功下单成功下单成功下单成功下单成功----------买入价 %s" % order.avg_price)
+                logger.info("预测价一星期后 %s  涨%s  %s" % (context.restore_predicted,week_ratio, d2))
                 context.buy_price = order.avg_price
                 context.buy = True        
-    
+            else:
+                logger.info("----------下单失败 下单失败---------下单失败下单失败下单失败下单失败下单失败下单失败")
     
     if context.buy and context.is_sell_point:
         order = order_target_value(context.s1, 0)
@@ -196,6 +204,8 @@ def handle_bar(context, bar_dict):
             context.buy = False
             context.is_sell_point = False
             context.buy_price = 0
+        else:
+            logger.info("---------------清仓失败 --------清仓失败清仓失败清仓失败清仓失败清仓失败清仓失败")
 
     
     
@@ -223,7 +233,8 @@ def handle_bar(context, bar_dict):
 
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
 def after_trading(context):
-    logger.info("收盘后执行after_trading函数")
+    pass
+    #logger.info("收盘后执行after_trading函数")
     
 config = {
   "base": {

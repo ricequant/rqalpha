@@ -2,14 +2,14 @@ from rqalpha.examples.fetch_one import *
 from rqalpha.examples.lstm_train_all_by_week import *
 from rqalpha.examples.lstm_one_backtest import * 
 
-STOCKID = "600386.XSHE"
-
+STOCKID = "600560.XSHG"
+seq_len = 30
 
 config_dl = {
   "stock_id":STOCKID,
   "base": {
-    "start_date": "2004-06-01",
-    "end_date": "2017-02-01",
+    "start_date": "2008-04-01",
+    "end_date": "2017-10-01",
     "accounts": {
         "stock": 100000
     }
@@ -25,15 +25,15 @@ config_dl = {
   }
 }
 
-#run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, end=end_dl, config=config_dl)
+run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, end=end_dl, config=config_dl)
 
-train_single_stock(STOCKID)
+train_single_stock(STOCKID, seq_len)
 
 config = {
   "stock_id":STOCKID,        
   "base": {
-    "start_date": "2016-01-09",
-    "end_date": "2017-01-09",
+    "start_date": "2017-04-09",
+    "end_date": "2017-06-09",
     "accounts": {
         "stock": 100000
     }

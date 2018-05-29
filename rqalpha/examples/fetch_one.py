@@ -46,7 +46,7 @@ def handle_bar_dl(context, bar_dict):
     order_book_id = bar_dict[context.s1].order_book_id
     #history_close = history_bars(order_book_id, 50, '1d', 'close')
     info = "%s id: %s close: %s" % (bar_dict[context.s1].symbol,bar_dict[context.s1].order_book_id, bar_dict[context.s1].close)
-    #logger.info(info)
+    logger.info(info)
     name = bar_dict[context.s1].symbol
     id = bar_dict[context.s1].order_book_id
     close_price = bar_dict[context.s1].close
@@ -68,7 +68,7 @@ def after_trading_dl(context):
 
 
 def end_dl(context):
-    #logger.info("用户程序执行完成")
+    logger.info("用户程序执行完成")
     for book_id, data in context.all_close_price.items():
         np.save("close_price/%s" % book_id, np.array(data))   
 

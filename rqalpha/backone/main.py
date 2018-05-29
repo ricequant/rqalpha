@@ -2,14 +2,16 @@ from rqalpha.backone.fetch_one import *
 from rqalpha.backone.lstm_train_all_by_week import *
 from rqalpha.backone.lstm_one_backtest import * 
 
-STOCKID = "600560.XSHG"
+#STOCKID = "002438.XSHG"
+#STOCKID = "002438.XSHE"
+STOCKID = "002606.XSHE"
 seq_len = 30
 
 config_dl = {
   "stock_id":STOCKID,
   "base": {
     "start_date": "2008-04-01",
-    "end_date": "2017-10-01",
+    "end_date": "2018-05-01",
     "accounts": {
         "stock": 100000
     }
@@ -32,8 +34,8 @@ train_single_stock(STOCKID, seq_len)
 config = {
   "stock_id":STOCKID,        
   "base": {
-    "start_date": "2017-04-09",
-    "end_date": "2017-06-09",
+    "start_date": "2018-04-09",
+    "end_date": "2018-05-03",
     "accounts": {
         "stock": 100000
     }

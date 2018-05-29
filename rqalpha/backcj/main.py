@@ -2,7 +2,8 @@ from rqalpha.backcj.fetch_one import *
 from rqalpha.backcj.lstm_train_all_by_week import *
 from rqalpha.backcj.lstm_one_backtest import * 
 
-STOCKID = "600560.XSHG"
+#STOCKID = "600560.XSHG"
+STOCKID = "300382.XSHE"
 seq_len = 30
 
 config_dl = {
@@ -25,7 +26,7 @@ config_dl = {
   }
 }
 
-#run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, end=end_dl, config=config_dl)
+run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, end=end_dl, config=config_dl)
 
 train_single_stock(STOCKID, seq_len)
 
@@ -49,4 +50,4 @@ config = {
   }
 }
 
-#run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)
+run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)

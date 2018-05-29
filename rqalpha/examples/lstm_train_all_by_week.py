@@ -5,6 +5,7 @@ import warnings
 from numpy import newaxis
 from keras.layers.core import Dense, Activation, Dropout
 from keras.layers.recurrent import LSTM
+from keras.optimizers import RMSprop
 from keras.models import Sequential
 from eventlet import tpool
 from keras import backend as K
@@ -71,14 +72,16 @@ def build_model(layers):
 
     start = time.time()
     model.compile(loss="mse", optimizer="rmsprop")
+    #model.compile(loss='mean_squared_error', optimizer='adam')
+    #model.compile(loss="mse", optimizer=RMSprop(lr=0.003, rho=0.9, epsilon=1e-06))
     print("> Compilation Time : ", time.time() - start)
     return model
 
 
-def train_single_stock(filename):
+def train_single_stock(filename, seq_len):
     global_start_time = time.time()
     epochs  = 1
-    seq_len = 50
+    #seq_len = 50
     
     print filename
     data = np.load('close_price/%s.npy' % filename)
@@ -90,7 +93,7 @@ def train_single_stock(filename):
     X_train, y_train = load_data('close_price/%s.npy' % filename, seq_len, True)
     
     print('> Data Loaded. Compiling...')
-    model = build_model([1, 50, 100, 1])
+    model = build_model([1, seq_len, 100, 1])
     
     model.fit(
         X_train,
@@ -100,9 +103,9 @@ def train_single_stock(filename):
         validation_split=0.05)
 
 
-    model.save_weights('weight_week/%s.h5' %  filename[:-4])
+    model.save_weights('weight_week/%s.h5' %  filename)
     model_json = model.to_json()
-    with open('weight_json_week/%s.h5' %  filename[:-4], "w") as json_file:
+    with open('weight_json_week/%s.h5' %  filename, "w") as json_file:
         json_file.write(model_json)
     json_file.close()
     del model

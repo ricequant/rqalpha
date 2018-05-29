@@ -10,6 +10,7 @@ from keras.models import Sequential
 from eventlet import tpool
 from keras import backend as K
 from subprocess import call
+from pandas import read_csv
 
 
 def load_data(filename, seq_len, normalise_window):
@@ -17,7 +18,8 @@ def load_data(filename, seq_len, normalise_window):
     f = open(filename, 'rb').read()
     data = f.decode().split('\n')
     """
-    data = np.load(filename)
+    data = read_csv(filename)
+    
     data = [x for x in data if str(x) != 'nan']
     sequence_length = seq_len + 5
     result = []
@@ -84,13 +86,13 @@ def train_single_stock(filename, seq_len):
     #seq_len = 50
     
     print filename
-    data = np.load('close_price/%s.npy' % filename)
-    print len(data)
+    data = read_csv('data_df/%s' % filename)
+    print data
     if len(data) < 100:
         return False    
     
     
-    X_train, y_train = load_data('close_price/%s.npy' % filename, seq_len, True)
+    X_train, y_train = load_data('data_df/%s' % filename, seq_len, True)
     
     print('> Data Loaded. Compiling...')
     model = build_model([1, seq_len, 100, 1])
