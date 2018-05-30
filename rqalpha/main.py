@@ -296,6 +296,7 @@ def run(config, source_code=None, user_funcs=None):
         if config.extra.force_run_init_when_pt_resume:
             assert config.base.resume_mode == True
             with run_with_user_log_disabled(disabled=False):
+                env.get_universe()._set = set()
                 user_strategy.init()
 
         from .core.executor import Executor
