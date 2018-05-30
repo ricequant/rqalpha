@@ -16,14 +16,12 @@
 
 
 from rqalpha.interface import AbstractMod
-from rqalpha.model.base_position import Positions
 from rqalpha.model.trade import Trade
-from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION, CustomEnum
+from rqalpha.const import SIDE, POSITION_EFFECT, RUN_TYPE
 from rqalpha.utils.logger import system_log
-from rqalpha.events import EVENT, Event
+from rqalpha.events import EVENT
 
 from .booking_account import BookingAccount
-from .booking_position import BookingPosition
 
 # import api
 from . import api_booking
@@ -43,16 +41,35 @@ POSITION_EFFECT_DICT = {
 
 class BookingMod(AbstractMod):
 
+    def __init__(self):
+        self.env = None
+        self.mod_config = None
+        self.booking_account = None
+
+    def _get_old_position_list(self):
+        """
+        get old positions from booking service
+        :return: list of position dict
+        """
+        raise NotImplementedError
+
+    def _get_trade_list(self):
+        """
+        get trades from booking service
+        :return: list of trade dict
+        """
+        raise NotImplementedError
+
     def start_up(self, env, mod_config):
         self.env = env
-        import requests
+        self.mod_config = mod_config
+
+        if env.config.base.run_type != RUN_TYPE.LIVE_TRADING:
+            system_log.info("Mod booking will only run in live trading")
+            return
 
         if env.config.base.init_positions:
             raise RuntimeError("RQAlpha receive init positions. rqalpha_mod_sys_booking does not support init_positions")
-
-        # TODO: load pos/trade from pms
-        server_url = mod_config.server_url
-        booking_id = mod_config.booking_id
 
         if not mod_config.booking_id:
             booking_id = env.config.base.run_id
@@ -60,13 +77,9 @@ class BookingMod(AbstractMod):
 
         self.booking_account = BookingAccount(register_event=True)
 
-        resp = requests.get("{}/get_positions/{}".format(server_url, booking_id)).json()
-        if resp["code"] != 200:
-            raise RuntimeError(resp)
-
         # 昨仓
         trades = []
-        position_list = resp["resp"]["positions"]
+        position_list = self._get_old_position_list()
         for position_dict in position_list:
             if position_dict["buy_quantity"] != 0:
                 trade = self._create_trade(
@@ -93,12 +106,9 @@ class BookingMod(AbstractMod):
         self.booking_account._settlement(None, check_delist=False)
 
         # 计算今仓
-        resp = requests.get("{}/get_trades/{}".format(server_url, booking_id)).json()
-        if resp["code"] != 200:
-            raise RuntimeError(resp)
 
         trades = []
-        trade_list = resp["resp"]["trades"]
+        trade_list = self._get_trade_list()
         for trade_dict in trade_list:
             trade = self._create_trade(
                 trade_dict["order_book_id"],
