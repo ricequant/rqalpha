@@ -28,7 +28,10 @@ class CashValidator(AbstractFrontendValidator):
         if order.side == SIDE.SELL:
             return True
         # 检查可用资金是否充足
-        cost_money = order.frozen_price * order.quantity
+        # 保证占用资金包含了佣金部分, 在这里假定最小手续费就是5块, 佣金费率为万8。
+        # 没有区分不同柜台标准, 也没有根据回测中 mod_config 设置的佣金倍率进行改动, dirty hack
+        frozen_value = order.frozen_price * order.quantity
+        cost_money = frozen_value * 1.0008 if frozen_value * 0.0008 > 5 else frozen_value + 5
         if cost_money <= account.cash:
             return True
 
