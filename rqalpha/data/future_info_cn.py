@@ -1699,6 +1699,35 @@ CN_FUTURE_INFO = {
             "long_margin_ratio": 0.2,
             "open_commission_ratio": 4.0
         }
+    },
+    "AP": {
+        "hedge": {
+            "short_margin_ratio": 0.07,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_VOLUME,
+            "close_commission_ratio": 1.5,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.07,
+            "open_commission_ratio": 1.5,
+        },
+        "speculation": {
+            "short_margin_ratio": 0.07,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_VOLUME,
+            "close_commission_ratio": 1.5,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.07,
+            "open_commission_ratio": 1.5,
+        },
+        "arbitrage": {
+            "short_margin_ratio": 0.07,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_VOLUME,
+            "close_commission_ratio": 1.5,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.07,
+            "open_commission_ratio": 1.5,
+        }
     }
 }
 
