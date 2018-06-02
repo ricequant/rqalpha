@@ -2,10 +2,22 @@
 CHANGELOG
 ==================
 
+3.0.10
+==================
+
+- 支持期货合约：苹果（AP）、棉纱（CY）、原油（SC）
+- 限制 :code:`better-exceptions`、:code:`bcolz` 库的版本
+- 支持 pip 10.x
+- 修复 tick 回测中夜盘前 before_trading 无法获取白天数据的问题
+- 当 :code:`force_run_init_when_pt_resume` 开启时会清空 persist 的 universe
+- 增加资金风控中对佣金的考虑
+- 修复文档中若干 typo
+
 3.0.9
 ==================
 
 - 限制 pandas 的版本为 0.18 ~ 0.20 ，因为 0.21 和 matplotlib 有些不兼容。
+
 3.0.8
 ==================
 
@@ -17,7 +29,7 @@ CHANGELOG
 - 打印 mod 的启动状态信息，方便 debug
 - 增加 :code:`is_valid_price` 工具函数来判断价格是否有效
 - 修复期货账户因为保证金变化导致total_value计算错误
-- 重构股票账户:code:`last_price`更新
+- 重构股票账户 :code:`last_price` 更新
 - 修复期货下单拒单是错误信息typo
 - 当启动LIVE_TRADING模式的时候，跳过simulation_mod的初始化
 - 增加 :code:`rqalpha run --position` 来设置初始仓位的功能
