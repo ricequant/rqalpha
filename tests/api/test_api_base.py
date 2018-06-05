@@ -68,6 +68,23 @@ def test_get_open_order():
 test_get_open_order_code_new = get_code_block(test_get_open_order)
 
 
+def test_submit_order():
+    from rqalpha.api import submit_order
+
+    def init(context):
+        context.s1 = '000001.XSHE'
+        context.amount = 100
+        context.fired = False
+
+    def handle_bar(context, bar_dict):
+        if not context.fired:
+            submit_order(context.s1, context.amount, SIDE.BUY, bar_dict[context.s1].limit_up * 0.99)
+            context.fired = True
+        if context.fired:
+            assert context.portfolio.positions[context.s1].quantity == context.amount
+test_submit_order_code_new = get_code_block(test_submit_order)
+
+
 def test_cancel_order():
     from rqalpha.api import order_shares, cancel_order, get_order
 

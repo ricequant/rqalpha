@@ -31,11 +31,12 @@ from dateutil.parser import parse
 from rqalpha.api import names
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
-from rqalpha.utils import to_industry_code, to_sector_name, unwrapper
+from rqalpha.utils import to_industry_code, to_sector_name, unwrapper, is_valid_price
 from rqalpha.utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 # noinspection PyUnresolvedReferences
 from rqalpha.utils.logger import user_log as logger
+from rqalpha.utils.logger import user_system_log
 
 from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
 from rqalpha.utils.arg_checker import apply_rules, verify_that
@@ -181,6 +182,44 @@ def get_open_orders():
     :return: List[:class:`~Order` object]
     """
     return Environment.get_instance().broker.get_open_orders()
+
+
+@export_as_api
+@apply_rules(
+    verify_that("id_or_ins").is_valid_instrument(),
+    verify_that("amount").is_number().is_greater_than(0),
+    verify_that("side").is_in([SIDE.BUY, SIDE.SELL])
+)
+def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
+
+    order_book_id = assure_order_book_id(id_or_ins)
+    env = Environment.get_instance()
+    if env.config.base.run_type != RUN_TYPE.BACKTEST:
+        if "88" in order_book_id:
+            raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
+        if "99" in order_book_id:
+            raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
+    style = cal_style(price, None)
+    market_price = env.get_last_price(order_book_id)
+    if not is_valid_price(market_price):
+        user_system_log.warn(
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+        )
+        return
+
+    order = Order.__from_create__(
+        order_book_id=order_book_id,
+        quantity=amount,
+        side=side,
+        style=style,
+        position_effect=position_effect
+    )
+
+    if order.type == ORDER_TYPE.MARKET:
+        order.set_frozen_price(market_price)
+    if env.can_submit_order(order):
+        env.broker.submit_order(order)
+    return order
 
 
 @export_as_api

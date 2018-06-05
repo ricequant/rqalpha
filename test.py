@@ -147,6 +147,7 @@ def test_api():
     from tests.api.test_api_base import (
         test_get_order_code_new,
         test_get_open_order_code_new,
+        test_submit_order_code_new,
         test_cancel_order_code_new,
         test_update_universe_code_new,
         test_subscribe_code_new,
@@ -247,6 +248,7 @@ def test_api():
 
     tasks.append((base_api_config, test_get_order_code_new, "test_get_order_code_new"))
     tasks.append((base_api_config, test_get_open_order_code_new, "test_get_open_order_code_new"))
+    tasks.append((base_api_config, test_submit_order_code_new, "test_submit_order_code_new"))
     tasks.append((base_api_config, test_cancel_order_code_new, "test_cancel_order_code_new"))
     tasks.append((base_api_config, test_update_universe_code_new, "test_update_universe_code_new"))
     tasks.append((base_api_config, test_subscribe_code_new, "test_subscribe_code_new"))
