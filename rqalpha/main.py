@@ -296,6 +296,7 @@ def run(config, source_code=None, user_funcs=None):
         if config.extra.force_run_init_when_pt_resume:
             assert config.base.resume_mode == True
             with run_with_user_log_disabled(disabled=False):
+                env._universe._set = set()
                 user_strategy.init()
 
         from .core.executor import Executor
@@ -335,10 +336,10 @@ def _exception_handler(e):
     user_system_log.error(e.error)
     if not is_user_exc(e.error.exc_val):
         code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
-        system_log.exception(_(u"strategy execute exception"))
+        system_log.error(_(u"strategy execute exception"), exc=e)
     else:
         code = const.EXIT_CODE.EXIT_USER_ERROR
-        user_detail_log.exception(_(u"strategy execute exception"))
+        user_detail_log.error(_(u"strategy execute exception"), exc=e)
 
     return code
 

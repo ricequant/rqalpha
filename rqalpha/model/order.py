@@ -15,9 +15,10 @@
 # limitations under the License.
 
 import time
+from decimal import Decimal
 
 from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
-from rqalpha.utils import id_gen
+from rqalpha.utils import id_gen, decimal_rounding_floor
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
 from rqalpha.environment import Environment
@@ -313,6 +314,7 @@ class LimitOrder(OrderStyle):
 
     def round_price(self, tick_size):
         if tick_size:
-            self.limit_price = int(self.limit_price / tick_size) * tick_size
+            with decimal_rounding_floor():
+                self.limit_price = float((Decimal(self.limit_price) / Decimal(tick_size)).to_integral() * Decimal(tick_size))
         else:
             user_system_log.warn('Invalid tick size: {}'.format(tick_size))

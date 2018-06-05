@@ -69,7 +69,7 @@ RQAlpha 提供了极具拓展性的 Mod Hook 接口，这意味着开发者可�
 您可以通过如下方式使用 安装和使用Mod:
 
 ..  code-block:: bash
-
+    
     # 查看当前安装的 Mod 列表及状态
     $ rqalpha mod list
     # 安装 Mod
@@ -91,7 +91,6 @@ Mod名                      说明
 `sys_progress`_           【系统模块】在控制台输出当前策略的回测进度。
 `sys_risk`_               【系统模块】对订单进行事前风控校验
 `sys_simulation`_         【系统模块】支持回测、撮合、滑点控制等
-`sys_incremental`_        【系统模块】支持增量运行回测，方便每日跟踪海量的策略的表现
 `sys_stock_realtime`_     【系统模块】Demo 模块，用于展示如何接入自有行情进行回测/模拟/实盘
 `vnpy`_                   【第三方模块】通过 VNPY 对接期货实盘行情和实盘交易
 `sentry`_                 【第三方模块】集成 sentry 的扩展，实现错误日志全自动采集、处理
@@ -101,43 +100,19 @@ Mod名                      说明
 
 如果您基于 RQAlpha 进行了 Mod 扩展，欢迎告知我们，在审核通过后，会在 Mod 列表中添加您的 Mod 信息和链接。
 
-`专业级本地终端RQPro`_
-============================
+`金融数据RQData`_
+================
 
-..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/RQPro2.jpeg
+米筐自研时间序列数据模块RQData，采用双源多点备份，自动化清洗等手段保证数据的准确性。确保用户投研的脚步足够稳健。用户只需在策略中 :code:`import rqdatac`,即可通过API本地调用以下数据：
 
-目前 RQAlpha 开源版仅开放了日级别的历史数据和日回测功能，如果您是机构用户，需要做算法交易亦或是量化研究，都可以免费申请我们的是机构版本进行试用.也可通过 `RQPro`_ 登记试用。欢迎扫码或添加微信：RicequantCS
+*   十年全品种（商品、国债、股指）、多频率（日、分钟、Tick）期货历史数据；
+*   2005年以来股票历史数据（日、分钟）；
+*   上市公式财务数据、指数行业板块构成数据等；
+*   公募基金净值、持仓、行业配置等数据；
+*   停牌、分红等衍生数据；
+*   无缝对接RQAlpha;
 
-..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/wechat.jpg
-    :width: 200px
-    :height: 200px
-
-RQPro产品功能：
-
-RQPro由米筐旗下三大核心模块与五大拓展功能组成，其中核心模块有金融数据RQData、策略引擎RQAlpha、绩效分析RQBeta。
-
-..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/rqpro_1.jpeg
-
-*   金融数据RQData
-
-    * 十年全品种（商品、国债、股指）、多频率（日、分钟、Tick）期货历史数据；
-    * 2005年以来股票历史数据（日、分钟）、财务数据、行业板块构成数据等；
-    * 实时数据直连CTP、支持期货夜盘；
-    * 低延迟、自动化录入及清洗，双源多点备份；
-
-*   策略引擎RQAlpha
-
-    * 完全本地部署，使用pycharm、anaconda等工具做本地策略研发、模拟交易
-    * 多资产（股票、期货，公募基金等）的精准、快速回测（日，分钟，Tick）
-    * 稳定的实盘交易、具备订单管理系统（OMS）与仓位管理系统（PMS）
-    * 可拓展接口及SDK方便二次开发
-    * 绩效分析模块全面比较不同策略的收益、风险及稳定性
-
-*   绩效分析RQBeta
-
-    * 回测以及实时评估策略的风险、配置和风格因子
-    * 全面衡量和比较不同策略、私募、公募基金产品的收益，风险和稳定性
-    * 收益全方位拆解、评估收益来源，优化投资流程
+*目前RQData正在限额内测中，内测期用户可免费限流使用*， `点击链接免费开通`_ 。
 
 Feature Status
 ============================
@@ -233,10 +208,11 @@ Feature Status
 .. _sys_progress: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_progress/README.rst
 .. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
 .. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
-.. _sys_incremental: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_incremental/README.rst
 .. _sys_stock_realtime: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_stock_realtime/README.rst
 .. _vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
 .. _sentry: https://github.com/ricequant/rqalpha-mod-sentry
 .. _tushare: https://github.com/ricequant/rqalpha-mod-tushare
 .. _shipane: https://github.com/wh1100717/rqalpha-mod-ShiPanE
+.. _金融数据RQData: https://www.ricequant.com/doc/rqdata-institutional
+.. _点击链接免费开通: https://ricequant.mikecrm.com/h7ZFJnT
 

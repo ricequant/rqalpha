@@ -19,6 +19,7 @@ import pprint
 import re
 import six
 import collections
+from decimal import getcontext, ROUND_FLOOR
 
 from contextlib import contextmanager
 import numpy as np
@@ -328,3 +329,11 @@ def generate_account_type_dict():
 
 def is_valid_price(price):
     return not np.isnan(price) and price > 0
+
+
+@contextmanager
+def decimal_rounding_floor():
+    original_rounding_option = getcontext().rounding
+    getcontext().rounding = ROUND_FLOOR
+    yield
+    getcontext().rounding = original_rounding_option

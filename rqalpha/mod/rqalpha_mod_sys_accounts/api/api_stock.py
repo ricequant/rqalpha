@@ -93,6 +93,7 @@ def order_shares(id_or_ins, amount, price=None, style=None):
     """
     if amount == 0:
         # 如果下单量为0，则认为其并没有发单，则直接返回None
+        user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
         return None
     style = cal_style(price, style)
     if isinstance(style, LimitOrder):
