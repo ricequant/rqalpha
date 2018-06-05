@@ -46,7 +46,7 @@ class Trade(object):
     def __from_create__(
             cls, order_id, price, amount, side, position_effect, order_book_id, commission=0., tax=0.,
             trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None
-        ):
+    ):
         env = Environment.get_instance()
         trade = cls()
         trade._calendar_dt = calendar_dt or env.calendar_dt
