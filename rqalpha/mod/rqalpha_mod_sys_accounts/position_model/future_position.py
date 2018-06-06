@@ -409,7 +409,7 @@ class FuturePosition(BasePosition):
         delta = 0
         if trade.side == SIDE.BUY:
             # 先平昨仓
-            if len(self._sell_old_holding_list) != 0:
+            if trade.position_effect == POSITION_EFFECT.CLOSE and len(self._sell_old_holding_list) != 0:
                 old_price, old_quantity = self._sell_old_holding_list.pop()
 
                 if old_quantity > left_quantity:
@@ -433,7 +433,7 @@ class FuturePosition(BasePosition):
                 delta += self._cal_realized_pnl(oldest_price, trade.last_price, trade.side, consumed_quantity)
         else:
             # 先平昨仓
-            if len(self._buy_old_holding_list) != 0:
+            if trade.position_effect == POSITION_EFFECT.CLOSE and len(self._buy_old_holding_list) != 0:
                 old_price, old_quantity = self._buy_old_holding_list.pop()
                 if old_quantity > left_quantity:
                     consumed_quantity = left_quantity
