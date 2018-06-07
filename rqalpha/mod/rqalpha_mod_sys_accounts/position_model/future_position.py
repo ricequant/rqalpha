@@ -216,6 +216,25 @@ class FuturePosition(BasePosition):
         """
         return sum(order.unfilled_quantity for order in self.open_orders if order.side == SIDE.SELL and
                    order.position_effect in [POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY])
+    
+    @property
+    def _buy_close_today_order_quantity(self):
+        return sum(order.unfilled_quantity for order in self.open_orders if order.side == SIDE.BUY and
+                   order.position_effect == POSITION_EFFECT.CLOSE_TODAY)
+
+    @property
+    def _sell_close_today_order_quantity(self):
+        return sum(order.unfilled_quantity for order in self.open_orders if order.side == SIDE.SELL and
+                   order.position_effect == POSITION_EFFECT.CLOSE_TODAY)
+
+    @property
+    def _closable_today_sell_quantity(self):
+        return self.sell_today_quantity - self._buy_close_today_order_quantity
+
+    @property
+    def _closable_today_buy_quantity(self):
+        return self.buy_today_quantity - self._sell_close_today_order_quantity
+
 
     @property
     def buy_old_quantity(self):

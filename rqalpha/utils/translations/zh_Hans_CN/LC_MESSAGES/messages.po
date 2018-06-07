@@ -326,13 +326,25 @@ msgid ""
 "sell {quantity}, sellable {sellable}"
 msgstr "订单被拒单: 仓位不足。平仓量: {quantity}，可平数量: {sellable}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_risk/position_validator.py:50
+#: rqalpha/mod/rqalpha_mod_sys_risk/position_validator.py:49
+msgid ""
+"Order Rejected: not enough today position {order_book_id} to buy close, "
+"target quantity is {quantity}, closable today quantity {closable}"
+msgstr "订单被拒单: 卖方向可平今仓不足。平仓手数: {quantity}，可平手数: {closable}。"
+
+#: rqalpha/mod/rqalpha_mod_sys_risk/position_validator.py:59
+msgid ""
+"Order Rejected: not enough today position {order_book_id} to sell close, "
+"target quantity is {quantity}, closable today quantity {closable}"
+msgstr "订单被拒单: 买方向可平今仓不足。平仓手数: {quantity}，可平手数: {closable}。"
+
+#: rqalpha/mod/rqalpha_mod_sys_risk/position_validator.py:69
 msgid ""
 "Order Rejected: not enough securities {order_book_id} to buy close, "
 "target sell quantity is {quantity}, sell_closable_quantity {closable}"
 msgstr "订单被拒单: 卖方向可平仓位不足。平仓手数: {quantity}，可平手数: {closable}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_risk/position_validator.py:59
+#: rqalpha/mod/rqalpha_mod_sys_risk/position_validator.py:78
 msgid ""
 "Order Rejected: not enough securities {order_book_id} to sell close, "
 "target sell quantity is {quantity}, buy_closable_quantity {closable}"
