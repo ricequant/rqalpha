@@ -16,6 +16,5 @@ XlsxWriter>=0.9.6
 line-profiler>=2.0
 PyYAML>=3.12
 
-better_exceptions==0.1.8
 tabulate
 colorama>=0.3.9
