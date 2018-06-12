@@ -20,25 +20,7 @@ from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
 
 
-class PositionValidator(AbstractFrontendValidator):
-    @staticmethod
-    def _stock_validator(account, order):
-        if order.side != SIDE.SELL:
-            return True
-
-        position = account.positions[order.order_book_id]
-        if order.quantity <= position.sellable:
-            return True
-
-        order.mark_rejected(_(
-            "Order Rejected: not enough stock {order_book_id} to sell, you want to sell {quantity},"
-            " sellable {sellable}").format(
-            order_book_id=order.order_book_id,
-            quantity=order.quantity,
-            sellable=position.sellable,
-        ))
-        return False
-
+class FuturePositionValidator(AbstractFrontendValidator):
     @staticmethod
     def _future_validator(account, order):
         if order.position_effect == POSITION_EFFECT.OPEN:
@@ -87,12 +69,9 @@ class PositionValidator(AbstractFrontendValidator):
         return True
 
     def can_submit_order(self, account, order):
-        if account.type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
-            return self._stock_validator(account, order)
-        elif account.type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
+        if account.type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
             return self._future_validator(account, order)
-        else:
-            raise NotImplementedError
+        return True
 
     def can_cancel_order(self, account, order):
         return True
