@@ -1906,34 +1906,5 @@ CN_FUTURE_INFO = {
             "tick_size": 0.1,
         }
     },
-    "CY": {
-        "hedge": {
-            "short_margin_ratio": 0.2,
-            "close_commission_today_ratio": 0.0,
-            "commission_type": COMMISSION_TYPE.BY_VOLUME,
-            "close_commission_ratio": 4.0,
-            "margin_type": MARGIN_TYPE.BY_MONEY,
-            "long_margin_ratio": 0.2,
-            "open_commission_ratio": 4.0
-        },
-        "speculation": {
-            "short_margin_ratio": 0.2,
-            "close_commission_today_ratio": 0.0,
-            "commission_type": COMMISSION_TYPE.BY_VOLUME,
-            "close_commission_ratio": 4.0,
-            "margin_type": MARGIN_TYPE.BY_MONEY,
-            "long_margin_ratio": 0.2,
-            "open_commission_ratio": 4.0
-        },
-        "arbitrage": {
-            "short_margin_ratio": 0.2,
-            "close_commission_today_ratio": 0.0,
-            "commission_type": COMMISSION_TYPE.BY_VOLUME,
-            "close_commission_ratio": 4.0,
-            "margin_type": MARGIN_TYPE.BY_MONEY,
-            "long_margin_ratio": 0.2,
-            "open_commission_ratio": 4.0
-        }
-    }
 }
 
