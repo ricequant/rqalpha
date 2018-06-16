@@ -11,8 +11,8 @@ RQAlpha
 ..  image:: https://coveralls.io/repos/github/ricequant/rqalpha/badge.svg?branch=master
     :target: https://coveralls.io/github/ricequant/rqalpha?branch=master
 
-..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=stable
-    :target: http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable
+..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=latest
+    :target: http://rqalpha.readthedocs.io/zh_CN/latest/?badge=latest
     :alt: Documentation Status
 
 ..  image:: https://img.shields.io/pypi/v/rqalpha.svg
