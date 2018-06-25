@@ -21,7 +21,7 @@
 
 .. code-block:: bash
 
-    $ pip install -U pip setuptools cython -i https://pypi.tuna.tsinghua.edu.cn/simple
+    $ pip install -U pip setuptools cython -i https://pypi.douban.com/simple
 
 *   安装 bcolz
 
@@ -29,7 +29,7 @@ bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比�
 
 .. code-block:: bash
 
-    $ pip install bcolz -i https://pypi.tuna.tsinghua.edu.cn/simple
+    $ pip install bcolz==1.2.0 -i https://pypi.douban.com/simple
 
 如果在安装的过程中出现问题，请参考 :ref:`intro-faq` 章节。
 
@@ -55,7 +55,7 @@ bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比�
 
 .. code-block:: bash
 
-    $ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple rqalpha
+    $ pip install -i https://pypi.douban.com/simple rqalpha
 
 查看 RQAlpha 是否安装成功可以通过如下方式:
 
