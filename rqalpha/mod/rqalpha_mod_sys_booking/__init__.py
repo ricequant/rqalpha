@@ -14,28 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import click
-from rqalpha import cli
 
 mod_name = "sys_booking"
 
-__config__ = {
-    "priority": 1,
-    "booking_id": None,
-}
+__config__ = {}
 
 
 def load_mod():
     from .mod import BookingMod
     return BookingMod()
-
-
-cli_prefix = "mod__{}__".format(mod_name)
-
-
-cli.commands['run'].params.append(
-    click.Option(
-        ("--booking-id", cli_prefix + "booking_id"),
-        help="[sys_booking] booking id "
-    )
-)

@@ -71,10 +71,6 @@ class BookingMod(AbstractMod):
         if env.config.base.init_positions:
             raise RuntimeError("RQAlpha receive init positions. rqalpha_mod_sys_booking does not support init_positions")
 
-        if not mod_config.booking_id:
-            booking_id = env.config.base.run_id
-            mod_config.booking_id = booking_id
-
         self.booking_account = BookingAccount(register_event=True)
 
         # 昨仓
