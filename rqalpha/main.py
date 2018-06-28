@@ -262,6 +262,9 @@ def run(config, source_code=None, user_funcs=None):
             for k, v in six.iteritems(config.extra.context_vars):
                 setattr(ucontext, k, v)
 
+        from .core.executor import Executor
+        executor = Executor(env)
+
         if config.base.persist:
             persist_provider = env.persist_provider
             if persist_provider is None:
@@ -283,6 +286,7 @@ def run(config, source_code=None, user_funcs=None):
             # broker will restore open orders from account
             if isinstance(broker, Persistable):
                 persist_helper.register('broker', broker)
+            persist_helper.register('executor', executor)
 
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
             persist_helper.restore()
@@ -298,8 +302,7 @@ def run(config, source_code=None, user_funcs=None):
                 env._universe._set = set()
                 user_strategy.init()
 
-        from .core.executor import Executor
-        Executor(env).run(bar_dict)
+        executor.run(bar_dict)
 
         if env.profile_deco:
             output_profile_result(env)
