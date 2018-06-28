@@ -29,7 +29,7 @@ class BaseCommission(with_metaclass(abc.ABCMeta)):
 
 
 class StockCommission(BaseCommission):
-    def __init__(self, multiplier, min_commission=5):
+    def __init__(self, multiplier, min_commission):
         self.rate = 0.0008
         self.multiplier = multiplier
         self.commission_map = defaultdict(lambda: min_commission)

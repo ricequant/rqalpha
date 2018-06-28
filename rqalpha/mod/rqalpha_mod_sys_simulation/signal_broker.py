@@ -31,7 +31,7 @@ from .utils import init_portfolio
 class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
-        self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
+        self._commission_decider = CommissionDecider(mod_config.commission_multiplier, mod_config.stock_min_commission)
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._tax_decider = TaxDecider()
         self._price_limit = mod_config.price_limit
