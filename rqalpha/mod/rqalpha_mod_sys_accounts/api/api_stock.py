@@ -118,10 +118,11 @@ def order_shares(id_or_ins, amount, price=None, style=None):
 
     round_lot = int(env.get_instrument(order_book_id).round_lot)
 
-    try:
-        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
-    except ValueError:
-        amount = 0
+    if side == SIDE.BUY:
+        try:
+            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+        except ValueError:
+            amount = 0
 
     r_order = Order.__from_create__(order_book_id, amount, side, style, position_effect)
 
@@ -244,15 +245,14 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
         return
 
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
-    round_lot = int(env.get_instrument(order_book_id).round_lot)
 
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)
 
     if isinstance(style, MarketOrder):
-        amount = int(Decimal(cash_amount) / Decimal(price) / Decimal(round_lot)) * round_lot
+        amount = int(Decimal(cash_amount) / Decimal(price))
     else:
-        amount = int(Decimal(cash_amount) / Decimal(style.get_limit_price()) / Decimal(round_lot)) * round_lot
+        amount = int(Decimal(cash_amount) / Decimal(style.get_limit_price()))
 
     # if the cash_amount is larger than you current security’s position,
     # then it will sell all shares of this security.

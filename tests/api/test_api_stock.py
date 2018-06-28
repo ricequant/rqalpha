@@ -25,7 +25,7 @@ def test_order_shares():
         context.order_count = 0
         context.s1 = "000001.XSHE"
         context.limitprice = 8.59
-        context.amount = 10000
+        context.amount = 10010
 
         pass
 
@@ -35,7 +35,7 @@ def test_order_shares():
         order_side = SIDE.BUY if context.amount > 0 else SIDE.SELL
         assert order.side == order_side, 'order.side is wrong'
         assert order.order_book_id == context.s1, 'Order_book_id is wrong'
-        assert order.quantity == context.amount, 'order.quantity is wrong'
+        assert order.quantity == 10000, 'order.quantity is wrong'
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
         assert order.price == context.limitprice, 'order.price is wrong'
 test_order_shares_code_new = get_code_block(test_order_shares)
