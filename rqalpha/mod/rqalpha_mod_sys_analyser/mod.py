@@ -52,7 +52,7 @@ class AnalyserMod(AbstractMod):
                          self._mod_config.plot_save_file or self._mod_config.report_save_path)
 
         if self._enabled:
-            env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self._collect_daily)
+            env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
             env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
             env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
 

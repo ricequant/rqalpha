@@ -95,7 +95,6 @@ class SimulationEventSource(AbstractEventSource):
                 yield Event(EVENT.BAR, calendar_dt=dt_bar, trading_dt=dt_bar)
 
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
-                yield Event(EVENT.SETTLEMENT, calendar_dt=dt_settlement, trading_dt=dt_settlement)
         elif frequency == '1m':
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
@@ -137,9 +136,6 @@ class SimulationEventSource(AbstractEventSource):
 
                 dt = date.replace(hour=15, minute=30)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
-
-                dt = date.replace(hour=17, minute=0)
-                yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
         elif frequency == "tick":
             data_proxy = self._env.data_proxy
             for day in data_proxy.get_trading_dates(start_date, end_date):
@@ -175,8 +171,5 @@ class SimulationEventSource(AbstractEventSource):
 
                 dt = date.replace(hour=15, minute=30)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
-
-                dt = date.replace(hour=17, minute=0)
-                yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
         else:
             raise NotImplementedError(_("Frequency {} is not support.").format(frequency))

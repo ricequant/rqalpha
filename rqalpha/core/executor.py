@@ -41,7 +41,6 @@ class Executor(object):
         EVENT.BAR,
         EVENT.BEFORE_TRADING,
         EVENT.AFTER_TRADING,
-        EVENT.POST_SETTLEMENT,
     }
 
     def get_state(self):
@@ -53,10 +52,16 @@ class Executor(object):
     def run(self, bar_dict):
 
         def on_before_trading(e):
+            if self._last_before_trading:
+                event_bus.publish_event(PRE_SETTLEMENT)
+                event_bus.publish_event(Event(EVENT.SETTLEMENT, calendar_dt=e.calendar_dt, trading_dt=e.trading_dt))
+                event_bus.publish_event(POST_SETTLEMENT)
+
             self._last_before_trading = e.trading_dt.date()
-            event_bus.publish_event(PRE_AFTER_TRADING)
+
+            event_bus.publish_event(PRE_BEFORE_TRADING)
             event_bus.publish_event(Event(EVENT.BEFORE_TRADING, calendar_dt=e.calendar_dt, trading_dt=e.trading_dt))
-            event_bus.publish_event(POST_AFTER_TRADING)
+            event_bus.publish_event(POST_BEFORE_TRADING)
 
         PRE_BAR.bar_dict = bar_dict
         POST_BAR.bar_dict = bar_dict
@@ -86,14 +91,11 @@ class Executor(object):
                 event_bus.publish_event(event)
                 event_bus.publish_event(POST_BAR)
             elif event.event_type == EVENT.BEFORE_TRADING:
-                event_bus.publish_event(PRE_BEFORE_TRADING)
-                event_bus.publish_event(event)
-                event_bus.publish_event(POST_BEFORE_TRADING)
-            elif event.event_type == EVENT.AFTER_TRADING:
                 on_before_trading(event)
-            elif event.event_type == EVENT.SETTLEMENT:
-                event_bus.publish_event(PRE_SETTLEMENT)
+            elif event.event_type == EVENT.AFTER_TRADING:
+                event_bus.publish_event(PRE_AFTER_TRADING)
                 event_bus.publish_event(event)
-                event_bus.publish_event(POST_SETTLEMENT)
+                event_bus.publish_event(POST_AFTER_TRADING)
+
             else:
                 event_bus.publish_event(event)
