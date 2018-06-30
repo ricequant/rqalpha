@@ -376,9 +376,7 @@ class FuturePosition(BasePosition):
 
     def apply_settlement(self):
         env = Environment.get_instance()
-        data_proxy = env.data_proxy
-        trading_date = data_proxy.get_previous_trading_date(env.trading_dt.date())
-        settle_price = data_proxy.get_settle_price(self.order_book_id, trading_date)
+        settle_price = env.data_proxy.get_settle_price(self.order_book_id, env.trading_dt)
         self._buy_old_holding_list = [(settle_price, self.buy_quantity)]
         self._sell_old_holding_list = [(settle_price, self.sell_quantity)]
         self._buy_today_holding_list = []
