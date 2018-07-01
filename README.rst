@@ -92,7 +92,6 @@ Mod名                      说明
 `sys_risk`_               【系统模块】对订单进行事前风控校验
 `sys_simulation`_         【系统模块】支持回测、撮合、滑点控制等
 `sys_stock_realtime`_     【系统模块】Demo 模块，用于展示如何接入自有行情进行回测/模拟/实盘
-`vnpy`_                   【第三方模块】通过 VNPY 对接期货实盘行情和实盘交易
 `sentry`_                 【第三方模块】集成 sentry 的扩展，实现错误日志全自动采集、处理
 `tushare`_                【第三方模块】Demo Mod，用于展示如何通过tushare 获取实时Bar数据并组装以供RQAlpha使用
 `shipane`_                【第三方模块】集成实盘易SDK，用于对接股票实盘跟单交易
