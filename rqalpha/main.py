@@ -220,8 +220,11 @@ def run(config, source_code=None, user_funcs=None):
         else:
             now = datetime.datetime.now()
             env.calendar_dt = now
-            env.trading_dt = env.data_proxy.get_trading_dt(now)
-
+            try:
+                env.trading_dt = env.data_proxy.get_trading_dt(now)
+            except RuntimeError:
+                env.trading_dt = now
+            
         broker = env.broker
         assert broker is not None
         env.portfolio = broker.get_portfolio()
