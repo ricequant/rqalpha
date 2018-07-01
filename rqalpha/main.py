@@ -213,9 +213,14 @@ def run(config, source_code=None, user_funcs=None):
         _validate_benchmark(env.config, env.data_proxy)
 
         # FIXME
-        start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
-        env.calendar_dt = start_dt
-        env.trading_dt = start_dt
+        if config.base.run_type == const.RUN_TYPE.BACKTEST:
+            start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
+            env.calendar_dt = start_dt
+            env.trading_dt = start_dt
+        else:
+            now = datetime.datetime.now()
+            env.calendar_dt = now
+            env.trading_dt = env.data_proxy.get_trading_dt(now)
 
         broker = env.broker
         assert broker is not None
