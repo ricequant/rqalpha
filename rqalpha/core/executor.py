@@ -56,11 +56,12 @@ class Executor(object):
             if self._last_before_trading:
                 on_settlement()
 
-            self._last_before_trading = e.trading_dt.date()
-            update_time(e)
-            event_bus.publish_event(PRE_BEFORE_TRADING)
-            event_bus.publish_event(Event(EVENT.BEFORE_TRADING, calendar_dt=e.calendar_dt, trading_dt=e.trading_dt))
-            event_bus.publish_event(POST_BEFORE_TRADING)
+            if not self._env.config.extra.is_hold:
+                self._last_before_trading = e.trading_dt.date()
+                update_time(e)
+                event_bus.publish_event(PRE_BEFORE_TRADING)
+                event_bus.publish_event(Event(EVENT.BEFORE_TRADING, calendar_dt=e.calendar_dt, trading_dt=e.trading_dt))
+                event_bus.publish_event(POST_BEFORE_TRADING)
 
         PRE_BAR.bar_dict = bar_dict
         POST_BAR.bar_dict = bar_dict
