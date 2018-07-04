@@ -47,21 +47,29 @@ class Executor(object):
             self._env.calendar_dt = e.calendar_dt
             self._env.trading_dt = e.trading_dt
 
-        def on_settlement():
+        def publish_settlement():
             event_bus.publish_event(PRE_SETTLEMENT)
             event_bus.publish_event(Event(EVENT.SETTLEMENT))
             event_bus.publish_event(POST_SETTLEMENT)
 
-        def on_before_trading(e):
-            if self._last_before_trading:
-                on_settlement()
+        def check_before_trading(e):
+            if self._last_before_trading == event.trading_dt.date():
+                return False
 
-            if not self._env.config.extra.is_hold:
-                self._last_before_trading = e.trading_dt.date()
-                update_time(e)
-                event_bus.publish_event(PRE_BEFORE_TRADING)
-                event_bus.publish_event(Event(EVENT.BEFORE_TRADING, calendar_dt=e.calendar_dt, trading_dt=e.trading_dt))
-                event_bus.publish_event(POST_BEFORE_TRADING)
+            if self._env.config.extra.is_hold:
+                return False
+
+            if self._last_before_trading:
+                # don't publish settlement on first day
+                publish_settlement()
+
+            self._last_before_trading = e.trading_dt.date()
+            update_time(e)
+            event_bus.publish_event(PRE_BEFORE_TRADING)
+            event_bus.publish_event(Event(EVENT.BEFORE_TRADING, calendar_dt=e.calendar_dt, trading_dt=e.trading_dt))
+            event_bus.publish_event(POST_BEFORE_TRADING)
+
+            return True
 
         PRE_BAR.bar_dict = bar_dict
         POST_BAR.bar_dict = bar_dict
@@ -73,25 +81,27 @@ class Executor(object):
 
         for event in self._env.event_source.events(start_date, end_date, frequency):
             if event.event_type == EVENT.TICK:
-                if self._last_before_trading != event.trading_dt.date():
-                    on_before_trading(event)
-                else:
-                    update_time(event)
-                    event_bus.publish_event(PRE_TICK)
-                    event_bus.publish_event(event)
-                    event_bus.publish_event(POST_TICK)
+                if check_before_trading(event):
+                    continue
+                update_time(event)
+                event_bus.publish_event(PRE_TICK)
+                event_bus.publish_event(event)
+                event_bus.publish_event(POST_TICK)
+
             elif event.event_type == EVENT.BAR:
-                if self._last_before_trading != event.trading_dt.date():
-                    on_before_trading(event)
-                else:
-                    update_time(event)
-                    bar_dict.update_dt(event.calendar_dt)
-                    event_bus.publish_event(PRE_BAR)
-                    event.bar_dict = bar_dict
-                    event_bus.publish_event(event)
-                    event_bus.publish_event(POST_BAR)
+                if check_before_trading(event):
+                    continue
+                update_time(event)
+
+                bar_dict.update_dt(event.calendar_dt)
+                event_bus.publish_event(PRE_BAR)
+                event.bar_dict = bar_dict
+                event_bus.publish_event(event)
+                event_bus.publish_event(POST_BAR)
+
             elif event.event_type == EVENT.BEFORE_TRADING:
-                on_before_trading(event)
+                check_before_trading(event)
+
             elif event.event_type == EVENT.AFTER_TRADING:
                 update_time(event)
                 event_bus.publish_event(PRE_AFTER_TRADING)
@@ -101,4 +111,5 @@ class Executor(object):
             else:
                 event_bus.publish_event(event)
 
-        on_settlement()
+        # publish settlement after last day
+        publish_settlement()
