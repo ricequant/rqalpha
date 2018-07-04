@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
 from rqalpha.events import EVENT, Event
+from rqalpha.utils.rq_json import convert_dict_to_json, convert_json_to_dict
 
 PRE_BEFORE_TRADING = Event(EVENT.PRE_BEFORE_TRADING)
 POST_BEFORE_TRADING = Event(EVENT.POST_BEFORE_TRADING)
@@ -36,10 +35,10 @@ class Executor(object):
         self._last_before_trading = None
 
     def get_state(self):
-        return json.dumps({"last_before_trading": self._last_before_trading}).encode('utf-8')
+        return convert_dict_to_json({"last_before_trading": self._last_before_trading}).encode('utf-8')
 
     def set_state(self, state):
-        self._last_before_trading = json.loads(state.decode('utf-8')).get("last_before_trading")
+        self._last_before_trading = convert_json_to_dict(state.decode('utf-8')).get("last_before_trading")
 
     def run(self, bar_dict):
 
