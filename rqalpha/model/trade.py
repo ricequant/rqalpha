@@ -16,6 +16,8 @@
 
 import time
 
+import numpy as np
+
 from rqalpha.utils import id_gen
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.environment import Environment
@@ -82,23 +84,31 @@ class Trade(object):
 
     @property
     def last_price(self):
+        if np.isnan(self._price):
+            raise RuntimeError("Last price of trade {} is not supposed to be nan.".format(self.exec_id))
         return self._price
 
     @property
     def last_quantity(self):
+        if np.isnan(self._amount):
+            raise RuntimeError("Last quantity of trade {} is not supposed to be nan.".format(self.exec_id))
         return self._amount
 
     @property
     def commission(self):
+        if np.isnan(self._commission):
+            raise RuntimeError("Commission of trade {} is not supposed to be nan.".format(self.exec_id))
         return self._commission
 
     @property
     def tax(self):
+        if np.isnan(self._tax):
+            raise RuntimeError("Tax of trade {} is not supposed to be nan.".format(self.exec_id))
         return self._tax
 
     @property
     def transaction_cost(self):
-        return self._tax + self._commission
+        return self.tax + self.commission
 
     @property
     def side(self):
@@ -114,6 +124,8 @@ class Trade(object):
 
     @property
     def frozen_price(self):
+        if np.isnan(self._frozen_price):
+            raise RuntimeError("Frozen price of trade {} is not supposed to be nan.".format(self.exec_id))
         return self._frozen_price
 
     @property

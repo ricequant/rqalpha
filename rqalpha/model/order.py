@@ -17,6 +17,8 @@
 import time
 from decimal import Decimal
 
+import numpy as np
+
 from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
 from rqalpha.utils import id_gen, decimal_rounding_floor
 from rqalpha.utils.repr import property_repr, properties
@@ -155,6 +157,8 @@ class Order(object):
         """
         [int] 订单数量
         """
+        if np.isnan(self._quantity):
+            raise RuntimeError("Quantity of order {} is not supposed to be nan.".format(self.order_id))
         return self._quantity
 
     @property
@@ -162,7 +166,7 @@ class Order(object):
         """
         [int] 订单未成交数量
         """
-        return self._quantity - self._filled_quantity
+        return self.quantity - self.filled_quantity
 
     @property
     def order_book_id(self):
@@ -197,6 +201,8 @@ class Order(object):
         """
         [int] 订单已成交数量
         """
+        if np.isnan(self._filled_quantity):
+            raise RuntimeError("Filled quantity of order {} is not supposed to be nan.".format(self.order_id))
         return self._filled_quantity
 
     @property
@@ -211,7 +217,7 @@ class Order(object):
         """
         [float] 订单价格，只有在订单类型为'限价单'的时候才有意义
         """
-        return 0 if self.type == ORDER_TYPE.MARKET else self._frozen_price
+        return 0 if self.type == ORDER_TYPE.MARKET else self.frozen_price
 
     @property
     def type(self):
@@ -239,6 +245,8 @@ class Order(object):
         """
         [float] 冻结价格
         """
+        if np.isnan(self._frozen_price):
+            raise RuntimeError("Frozen price of order {} is not supposed to be nan.".format(self.order_id))
         return self._frozen_price
 
     def is_final(self):
