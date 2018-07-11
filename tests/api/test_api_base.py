@@ -314,6 +314,22 @@ def test_get_dividend():
         assert df_to_assert[0]['payable_date'] == 20130620
 test_get_dividend_code_new = get_code_block(test_get_dividend)
 
+
+def test_current_snapshot():
+    from rqalpha.api import current_snapshot
+
+    def handle_bar(context, bar_dict):
+        snapshot = current_snapshot('000001.XSHE')
+        bar = bar_dict['000001.XSHE']
+
+        assert snapshot.last == bar.close
+        for field in (
+            "open", "high", "low", "prev_close", "volume", "total_turnover", "order_book_id", "instrument", "datetime"
+        ):
+            assert getattr(bar, field) == getattr(snapshot, field)
+test_current_snapshot_code_new = get_code_block(test_current_snapshot)
+
+
 # =================== 以下把代码写为纯字符串 ===================
 
 test_get_order_code = '''
