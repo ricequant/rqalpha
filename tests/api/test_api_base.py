@@ -56,12 +56,6 @@ def test_get_open_order():
 
         order = order_shares(context.s1, context.amount, style=LimitOrder(context.limitprice))
         context.order_id = order.order_id
-        print('cash: ', context.portfolio.cash)
-        print('check_get_open_orders done')
-        print(order.order_id)
-        # print(get_open_orders())
-        print(get_open_orders())
-        print(get_order(order.order_id))
         if context.counter == 2:
             assert order.order_id in get_open_orders()
         context.counter = 0
