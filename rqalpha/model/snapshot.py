@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import datetime
+
 import numpy as np
 
 from rqalpha.utils.logger import system_log
@@ -48,7 +49,9 @@ class SnapshotObject(TickObject):
         if data is None:
             data = self._NANDict
 
-        if isinstance(dt, int):
+        dt = data.get("datetime", dt)
+
+        if not isinstance(dt, datetime.datetime):
             if dt > 10000000000000000:  # ms
                 dt = convert_ms_int_to_datetime(dt)
             else:

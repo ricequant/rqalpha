@@ -326,7 +326,9 @@ def test_current_snapshot():
         for field in (
             "open", "high", "low", "prev_close", "volume", "total_turnover", "order_book_id", "instrument", "datetime"
         ):
-            assert getattr(bar, field) == getattr(snapshot, field)
+            assert getattr(bar, field) == getattr(snapshot, field), "snapshot.{} = {}, bar.{} = {}".format(
+                field, getattr(snapshot, field), field, getattr(bar, field)
+            )
 test_current_snapshot_code_new = get_code_block(test_current_snapshot)
 
 
