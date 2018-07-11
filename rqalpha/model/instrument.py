@@ -17,6 +17,8 @@
 import six
 import datetime
 
+import numpy as np
+
 from rqalpha.environment import Environment
 from rqalpha.utils import instrument_type_str2enum
 
@@ -40,6 +42,9 @@ class Instrument(object):
             self.de_listed_date = self._fix_date(self.de_listed_date, self.DEFAULT_DE_LISTED_DATE)
         if 'maturity_date' in self.__dict__:
             self.maturity_date = self._fix_date(self.maturity_date, self.DEFAULT_DE_LISTED_DATE)
+        if 'contract_multiplier' in self.__dict__:
+            if np.isnan(self.contract_multiplier):
+                raise RuntimeError("Contract multiplier of {} is not supposed to be nan".format(self.order_book_id))
 
     def __repr__(self):
         return "{}({})".format(

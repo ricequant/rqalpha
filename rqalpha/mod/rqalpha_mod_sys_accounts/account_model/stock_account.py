@@ -18,6 +18,8 @@ import six
 import datetime
 from collections import defaultdict
 
+import numpy as np
+
 from rqalpha.model.base_account import BaseAccount
 from rqalpha.events import EVENT
 from rqalpha.environment import Environment
@@ -201,6 +203,9 @@ class StockAccount(BaseAccount):
                 continue
 
             dividend_per_share = dividend['dividend_cash_before_tax'] / dividend['round_lot']
+            if np.isnan(dividend_per_share):
+                raise RuntimeError("Dividend per share of {} is not supposed to be nan.".format(order_book_id))
+
             position.dividend_(dividend_per_share)
 
             config = Environment.get_instance().config

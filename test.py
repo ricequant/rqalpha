@@ -162,6 +162,7 @@ def test_api():
         test_get_previous_trading_date_code_new,
         test_get_next_trading_date_code_new,
         test_get_dividend_code_new,
+        test_current_snapshot_code_new
     )
 
     from tests.api.test_api_stock import (
@@ -263,6 +264,7 @@ def test_api():
     tasks.append((base_api_config, test_get_previous_trading_date_code_new, "test_get_previous_trading_date_code_new"))
     tasks.append((base_api_config, test_get_next_trading_date_code_new, "test_get_next_trading_date_code_new"))
     tasks.append((base_api_config, test_get_dividend_code_new, "test_get_dividend_code_new"))
+    tasks.append((base_api_config, test_current_snapshot_code_new, "test_current_snapshot_code_new"))
 
     # =================== Test Stock API ===================
     tasks.append((stock_api_config, test_order_shares_code_new, "test_order_shares_code_new"))
