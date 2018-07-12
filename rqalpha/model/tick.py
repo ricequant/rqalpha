@@ -93,21 +93,21 @@ class TickObject(object):
         """
        [float] 昨日收盘价
        """
-        return self._tick_dict['prev_close']
+        return self._tick_dict.get('prev_close', 0)
 
     @property
     def volume(self):
         """
         [float] 截止到当前的成交量
         """
-        return self._tick_dict['volume']
+        return self._tick_dict.get('volume', 0)
 
     @property
     def total_turnover(self):
         """
         [float] 截止到当前的成交额
         """
-        return self._tick_dict['total_turnover']
+        return self._tick_dict.get('total_turnover', 0)
 
     @property
     def open_interest(self):

@@ -21,7 +21,7 @@ import pandas as pd
 
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
-from rqalpha.model.snapshot import SnapshotObject
+from rqalpha.model.tick import TickObject
 
 
 class RedisDataSource(BaseDataSource):
@@ -41,8 +41,8 @@ class RedisDataSource(BaseDataSource):
 
     def current_snapshot(self, instrument, frequency, dt):
         snapshot_dict = self._get_snapshot_dict(instrument.order_book_id)
-        dt = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
-        return SnapshotObject(instrument, snapshot_dict, dt=dt)
+        snapshot_dict["datetime"] = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
+        return TickObject(instrument, snapshot_dict)
 
     def available_data_range(self, frequency):
         return datetime.date(2017, 1, 1), datetime.date.max
