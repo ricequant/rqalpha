@@ -14,12 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-
 import numpy as np
 
 from rqalpha.utils.logger import system_log
-from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_ms_int_to_datetime
 from rqalpha.model.tick import TickObject
 
 
@@ -49,18 +46,8 @@ class SnapshotObject(TickObject):
         if data is None:
             data = self._NANDict
 
-        dt = data.get("datetime", dt)
-
-        if not isinstance(dt, datetime.datetime):
-            if dt > 10000000000000000:  # ms
-                dt = convert_ms_int_to_datetime(dt)
-            else:
-                dt = convert_int_to_datetime(dt)
-
         if dt:
             data["datetime"] = dt
-        else:
-            data["datetime"] = datetime.datetime.min
 
         super(SnapshotObject, self).__init__(instrument, data)
 

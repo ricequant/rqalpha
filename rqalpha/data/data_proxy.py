@@ -180,7 +180,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
             d = {k: bar[k] for k in tick_fields_for(instrument) if k in bar.dtype.names}
             d['last'] = bar['close']
             d['prev_close'] = self._get_prev_close(order_book_id, dt)
-            d["datetime"] = convert_int_to_datetime(d["datetime"])
             return TickObject(instrument, d)
 
         return self._data_source.current_snapshot(instrument, frequency, dt)

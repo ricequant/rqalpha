@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+
 import numpy as np
 
 from rqalpha.environment import Environment
 from rqalpha.utils.logger import system_log
+from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_ms_int_to_datetime
 
 
 class TickObject(object):
@@ -27,6 +30,19 @@ class TickObject(object):
         :param instrument: Instrument
         :param tick_dict: dict
         """
+
+        dt = tick_dict.get("datetime")
+        if not dt:
+            tick_dict["datetime"] = datetime.datetime.min
+        else:
+            if not isinstance(dt, datetime.datetime):
+                if dt > 10000000000000000:  # ms
+                    dt = convert_ms_int_to_datetime(dt)
+                else:
+                    dt = convert_int_to_datetime(dt)
+
+            tick_dict["datetime"] = dt
+
         self._instrument = instrument
         self._tick_dict = tick_dict
 
