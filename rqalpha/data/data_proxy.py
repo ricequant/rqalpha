@@ -160,12 +160,24 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return self._data_source.history_ticks(instrument, count, dt)
 
     def current_snapshot(self, order_book_id, frequency, dt):
+
+        def tick_fields_for(ins):
+            _STOCK_FIELD_NAMES = [
+                'datetime', 'open', 'high', 'low', 'last', 'volume', 'total_turnover', 'prev_close'
+            ]
+            _FUTURE_FIELD_NAMES = _STOCK_FIELD_NAMES + ['open_interest', 'prev_settlement']
+
+            if ins.type == 'Future':
+                return _STOCK_FIELD_NAMES
+            else:
+                return _FUTURE_FIELD_NAMES
+
         instrument = self.instruments(order_book_id)
         if frequency == '1d':
             bar = self._data_source.get_bar(instrument, dt, '1d')
             if not bar:
                 return None
-            d = {k: bar[k] for k in TickObject.fields_for_(instrument) if k in bar.dtype.names}
+            d = {k: bar[k] for k in tick_fields_for(instrument) if k in bar.dtype.names}
             d['last'] = bar['close']
             d['prev_close'] = self._get_prev_close(order_book_id, dt)
             d["datetime"] = convert_int_to_datetime(d["datetime"])

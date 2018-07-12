@@ -70,3 +70,10 @@ class SnapshotObject(TickObject):
             return SnapshotObject._FUTURE_FIELD_DTYPE
         else:
             return SnapshotObject._STOCK_FIELD_DTYPE
+
+    @staticmethod
+    def fields_for_(instrument):
+        if instrument.type == 'Future':
+            return SnapshotObject._FUTURE_FIELD_NAMES
+        else:
+            return SnapshotObject._STOCK_FIELD_NAMES

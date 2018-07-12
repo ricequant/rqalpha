@@ -30,18 +30,6 @@ class TickObject(object):
         self._instrument = instrument
         self._tick_dict = tick_dict
 
-    _STOCK_FIELD_NAMES = [
-        'datetime', 'open', 'high', 'low', 'last', 'volume', 'total_turnover', 'prev_close'
-    ]
-    _FUTURE_FIELD_NAMES = _STOCK_FIELD_NAMES + ['open_interest', 'prev_settlement']
-
-    @staticmethod
-    def fields_for_(instrument):
-        if instrument.type == 'Future':
-            return TickObject._FUTURE_FIELD_NAMES
-        else:
-            return TickObject._STOCK_FIELD_NAMES
-
     @property
     def order_book_id(self):
         """
