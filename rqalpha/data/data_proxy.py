@@ -22,6 +22,7 @@ from rqalpha.data import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject
+from rqalpha.model.tick import TickObject
 from rqalpha.model.snapshot import SnapshotObject
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
@@ -164,7 +165,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         if frequency == '1d':
             bar = self._data_source.get_bar(instrument, dt, '1d')
             if not bar:
-                return SnapshotObject(instrument, None, dt)
+                return None
             d = {k: bar[k] for k in SnapshotObject.fields_for_(instrument) if k in bar.dtype.names}
             d['last'] = bar['close']
             d['prev_close'] = self._get_prev_close(order_book_id, dt)

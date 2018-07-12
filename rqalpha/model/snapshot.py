@@ -65,13 +65,6 @@ class SnapshotObject(TickObject):
         super(SnapshotObject, self).__init__(instrument, data)
 
     @staticmethod
-    def fields_for_(instrument):
-        if instrument.type == 'Future':
-            return SnapshotObject._FUTURE_FIELD_NAMES
-        else:
-            return SnapshotObject._STOCK_FIELD_NAMES
-
-    @staticmethod
     def dtype_for_(instrument):
         if instrument.type == 'Future':
             return SnapshotObject._FUTURE_FIELD_DTYPE
