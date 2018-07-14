@@ -53,23 +53,19 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     index = portfolio.index
 
-    # maxdrawdown
+    # maxdrawdown & duration, 包含截止到新的净值追平开始最大回撤开始时候时间点
     portfolio_value = portfolio.unit_net_value * portfolio.units
     xs = portfolio_value.values
     rt = portfolio.unit_net_value.values
-    max_dd_end = np.argmax(np.maximum.accumulate(xs) / xs)
+    xs_max_accum = np.maximum.accumulate(xs)
+    max_dd_end = np.argmax(xs_max_accum / xs)
     if max_dd_end == 0:
         max_dd_end = len(xs) - 1
+    tmp = (xs - xs_max_accum)[max_dd_end:]
     max_dd_start = np.argmax(xs[:max_dd_end]) if max_dd_end > 0 else 0
+    max_ddd_start_day = max_dd_start
+    max_ddd_end_day = len(xs) - 1 if tmp.max() < 0 else np.argmax(tmp) + max_dd_end
 
-    # maxdrawdown duration
-    al_cum = np.maximum.accumulate(xs)
-    a = np.unique(al_cum, return_counts=True)
-    start_idx = np.argmax(a[1])
-    m = a[0][start_idx]
-    al_cum_array = np.where(al_cum == m)
-    max_ddd_start_day = al_cum_array[0][0]
-    max_ddd_end_day = al_cum_array[0][-1]
 
     max_dd_info = "MaxDD  {}~{}, {} days".format(index[max_dd_start], index[max_dd_end],
                                                  (index[max_dd_end] - index[max_dd_start]).days)
