@@ -64,8 +64,15 @@ class StockPosition(BasePosition):
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost
         if trade.side == SIDE.BUY:
-            self._avg_price = (self._avg_price * self._quantity + trade.last_quantity * trade.last_price) / (
-                self._quantity + trade.last_quantity)
+            # 对应卖空情况
+            if self._quantity < 0:
+                if trade.last_quantity <= -1 * self._quantity:
+                    self._avg_price = 0
+                else:
+                    self._avg_price = trade.last_price
+            else:
+                self._avg_price = (self._avg_price * self._quantity + trade.last_quantity * trade.last_price) / (
+                    self._quantity + trade.last_quantity)
             self._quantity += trade.last_quantity
             if self.stock_t1 and self._order_book_id not in {'510900.XSHG', '513030.XSHG', '513100.XSHG', '513500.XSHG'}:
                 # 除了上述 T+0 基金，其他都是 T+1
