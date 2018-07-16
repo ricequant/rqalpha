@@ -30,23 +30,6 @@ class TickObject(object):
         :param instrument: Instrument
         :param tick_dict: dict
         """
-
-        try:
-            dt = tick_dict["datetime"]
-        except KeyError:
-            pass
-        else:
-            if not dt:
-                tick_dict["datetime"] = datetime.datetime.min
-            else:
-                if not isinstance(dt, datetime.datetime):
-                    if dt > 10000000000000000:  # ms
-                        dt = convert_ms_int_to_datetime(dt)
-                    else:
-                        dt = convert_int_to_datetime(dt)
-
-                tick_dict["datetime"] = dt
-
         self._instrument = instrument
         self._tick_dict = tick_dict
 
@@ -67,9 +50,16 @@ class TickObject(object):
         [datetime.datetime] 当前快照数据的时间戳
         """
         try:
-            return self._tick_dict['datetime']
+            dt = self._tick_dict['datetime']
         except (KeyError, ValueError):
             return datetime.datetime.min
+        else:
+            if not isinstance(dt, datetime.datetime):
+                if dt > 10000000000000000:  # ms
+                    return convert_ms_int_to_datetime(dt)
+                else:
+                    return convert_int_to_datetime(dt)
+            return dt
 
     @property
     def open(self):
