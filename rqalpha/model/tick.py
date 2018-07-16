@@ -31,17 +31,21 @@ class TickObject(object):
         :param tick_dict: dict
         """
 
-        dt = tick_dict.get("datetime")
-        if not dt:
-            tick_dict["datetime"] = datetime.datetime.min
+        try:
+            dt = tick_dict["datetime"]
+        except KeyError:
+            pass
         else:
-            if not isinstance(dt, datetime.datetime):
-                if dt > 10000000000000000:  # ms
-                    dt = convert_ms_int_to_datetime(dt)
-                else:
-                    dt = convert_int_to_datetime(dt)
+            if not dt:
+                tick_dict["datetime"] = datetime.datetime.min
+            else:
+                if not isinstance(dt, datetime.datetime):
+                    if dt > 10000000000000000:  # ms
+                        dt = convert_ms_int_to_datetime(dt)
+                    else:
+                        dt = convert_int_to_datetime(dt)
 
-            tick_dict["datetime"] = dt
+                tick_dict["datetime"] = dt
 
         self._instrument = instrument
         self._tick_dict = tick_dict
@@ -62,7 +66,10 @@ class TickObject(object):
         """
         [datetime.datetime] 当前快照数据的时间戳
         """
-        return self._tick_dict['datetime']
+        try:
+            return self._tick_dict['datetime']
+        except (KeyError, ValueError):
+            return datetime.datetime.min
 
     @property
     def open(self):
@@ -97,59 +104,92 @@ class TickObject(object):
         """
        [float] 昨日收盘价
        """
-        return self._tick_dict.get('prev_close', 0)
+        try:
+            return self._tick_dict['prev_close']
+        except (KeyError, ValueError):
+            return 0
 
     @property
     def volume(self):
         """
         [float] 截止到当前的成交量
         """
-        return self._tick_dict.get('volume', 0)
+        try:
+            return self._tick_dict['volume']
+        except (KeyError, ValueError):
+            return 0
 
     @property
     def total_turnover(self):
         """
         [float] 截止到当前的成交额
         """
-        return self._tick_dict.get('total_turnover', 0)
+        try:
+            return self._tick_dict['total_turnover']
+        except (KeyError, ValueError):
+            return 0
 
     @property
     def open_interest(self):
         """
         [float] 截止到当前的持仓量（期货专用）
         """
-        return self._tick_dict.get('open_interest')
+        try:
+            return self._tick_dict['open_interest']
+        except (KeyError, ValueError):
+            return 0
 
     @property
     def prev_settlement(self):
         """
         [float] 昨日结算价（期货专用）
         """
-        return self._tick_dict.get('prev_settlement')
+        try:
+            return self._tick_dict['prev_settlement']
+        except (KeyError, ValueError):
+            return 0
 
     @property
     def asks(self):
-        return self._tick_dict.get("asks", [0] * 5)
+        try:
+            return self._tick_dict['asks']
+        except (KeyError, ValueError):
+            return [0] * 5
 
     @property
     def ask_vols(self):
-        return self._tick_dict.get("ask_vols", [0] * 5)
+        try:
+            return self._tick_dict['ask_vols']
+        except (KeyError, ValueError):
+            return [0] * 5
 
     @property
     def bids(self):
-        return self._tick_dict.get("bids", [0] * 5)
+        try:
+            return self._tick_dict['bids']
+        except (KeyError, ValueError):
+            return [0] * 5
 
     @property
     def bid_vols(self):
-        return self._tick_dict.get("bid_vols", [0] * 5)
+        try:
+            return self._tick_dict['bid_vols']
+        except (KeyError, ValueError):
+            return [0] * 5
 
     @property
     def limit_up(self):
-        return self._tick_dict.get('limit_up', 0)
+        try:
+            return self._tick_dict['limit_up']
+        except (KeyError, ValueError):
+            return [0] * 5
 
     @property
     def limit_down(self):
-        return self._tick_dict.get('limit_down', 0)
+        try:
+            return self._tick_dict['limit_down']
+        except (KeyError, ValueError):
+            return [0] * 5
 
     @property
     def isnan(self):
