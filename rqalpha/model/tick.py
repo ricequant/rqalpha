@@ -41,10 +41,6 @@ class TickObject(object):
         return self._instrument.order_book_id
 
     @property
-    def instrument(self):
-        return self._instrument
-
-    @property
     def datetime(self):
         """
         [datetime.datetime] 当前快照数据的时间戳
