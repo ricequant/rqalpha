@@ -26,7 +26,6 @@ as_test_strategy = make_test_strategy_decorator({
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "frequency": "1d",
-            "matching_type": "next_bar",
             "strategy_file": 'rqalpha/__init__.py',
             "accounts": {
                 "future": 10000000000

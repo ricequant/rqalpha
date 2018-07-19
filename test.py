@@ -137,7 +137,7 @@ def is_enable_coverage():
     return os.environ.get('COVERAGE') == "enabled"
 
 
-def test_api():
+def test_api(specific_test=None):
     # FIXME: Error msg is hard to understand @zjuguxi
     print(u"Testing API......")
 
@@ -146,6 +146,8 @@ def test_api():
     from tests.api.test_api_future import test_strategies as test_api_future_strategies
 
     for strategy in test_api_base_strategies + test_api_stock_strategies + test_api_future_strategies:
+        if specific_test and strategy["name"] != specific_test:
+            continue
         print("running", strategy["name"])
         run_func(**strategy)
 
@@ -205,7 +207,10 @@ if __name__ == '__main__':
 
     if len(sys.argv) >= 2:
         if sys.argv[1] == 'api':
-            test_api()
+            try:
+                test_api(sys.argv[2])
+            except IndexError:
+                test_api()
             end_time = datetime.now()
 
         elif sys.argv[1] == 'strategy':
