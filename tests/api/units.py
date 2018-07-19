@@ -1,6 +1,8 @@
 import collections
 from copy import deepcopy
 
+from six import iteritems
+
 
 def deep_update(from_dict, to_dict):
     for (key, value) in from_dict.items():
@@ -27,3 +29,9 @@ def make_test_strategy_decorator(default_config, strategies_list):
             strategies_list.append(strategy)
         return strategy_decorator
     return as_test_strategy
+
+
+def assert_order(order, **kwargs):
+    for field, value in iteritems(kwargs):
+        assert getattr(order, field) == value, "order.{} is wrong, {} != {}".format(field, getattr(order, field), value)
+

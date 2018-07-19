@@ -17,7 +17,7 @@
 
 from rqalpha.api import *
 
-from .units import make_test_strategy_decorator
+from .units import make_test_strategy_decorator, assert_order
 
 test_strategies = []
 
@@ -50,14 +50,10 @@ def test_buy_open():
         subscribe(context.f1)
 
     def handle_bar(context, _):
-        order = buy_open(context.f1, 1)
-        assert order.order_book_id == context.f1, 'Order_book_id is wrong'
-        assert order.quantity == 1, 'order.quantity is wrong'
-        assert order.status == ORDER_STATUS.FILLED, 'order.status is wrong'
-        assert order.unfilled_quantity == 0, 'order.unfilled_quantity is wrong'
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.side == SIDE.BUY, 'order.side is wrong'
-        assert order.position_effect == POSITION_EFFECT.OPEN, 'order.position_effect is wrong'
+        o = buy_open(context.f1, 1)
+        assert_order(
+            o, order_book_id=context.s1, quantiy=1, status=ORDER_STATUS.FILLED, side=SIDE.BUY, position_effect=POSITION_EFFECT.OPEN
+        )
     return init, handle_bar
 
 
@@ -68,15 +64,10 @@ def test_sell_open():
         subscribe(context.f1)
 
     def handle_bar(context, _):
-        order = sell_open(context.f1, 1)
-
-        assert order.order_book_id == context.f1, 'Order_book_id is wrong'
-        assert order.quantity == 1, 'order.quantity is wrong'
-        assert order.status == ORDER_STATUS.FILLED, 'order.status is wrong'
-        assert order.unfilled_quantity == 0, 'order.unfilled_quantity is wrong'
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.side == SIDE.SELL, 'order.side is wrong'
-        assert order.position_effect == POSITION_EFFECT.OPEN, 'order.position_effect is wrong'
+        o = sell_open(context.f1, 1)
+        assert_order(
+            o, order_book_id=context.s1, quantity=1, status=ORDER_STATUS.FILLED, side=SIDE.SELL, position_effect=POSITION_EFFECT.OPEN
+        )
     return init, handle_bar
 
 
