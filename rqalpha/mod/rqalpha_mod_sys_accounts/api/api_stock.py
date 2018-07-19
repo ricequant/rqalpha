@@ -118,7 +118,10 @@ def order_shares(id_or_ins, amount, price=None, style=None):
 
     round_lot = int(env.get_instrument(order_book_id).round_lot)
 
-    if side == SIDE.BUY:
+    if side == SIDE.BUY or amount != env.portfolio.accounts[
+        DEFAULT_ACCOUNT_TYPE.STOCK.name
+    ].positions[order_book_id].sellable:
+        # 一次性申报卖出时可以卖散股
         try:
             amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
         except ValueError:
