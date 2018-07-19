@@ -15,23 +15,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .test_api_base import get_code_block
+from rqalpha.api import *
+
+from .units import make_test_strategy_decorator
+
+test_strategies = []
+
+as_test_strategy = make_test_strategy_decorator({
+        "base": {
+            "start_date": "2016-03-07",
+            "end_date": "2016-03-08",
+            "frequency": "1d",
+            "matching_type": "next_bar",
+            "strategy_file": 'rqalpha/__init__.py',
+            "accounts": {
+                "future": 10000000000
+            }
+        },
+        "extra": {
+            "log_level": "error",
+        },
+        "mod": {
+            "sys_progress": {
+                "enabled": True,
+                "show": True,
+            },
+        },
+    }, test_strategies)
 
 
+@as_test_strategy()
 def test_buy_open():
-    from rqalpha.api import buy_open, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
-
     def init(context):
         context.f1 = 'P88'
-        context.amount = 1
-        # context.marin_rate = 10
         subscribe(context.f1)
-        context.order_count = 0
-        context.order = None
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         order = buy_open(context.f1, 1)
-
         assert order.order_book_id == context.f1, 'Order_book_id is wrong'
         assert order.quantity == 1, 'order.quantity is wrong'
         assert order.status == ORDER_STATUS.FILLED, 'order.status is wrong'
@@ -39,21 +59,16 @@ def test_buy_open():
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
         assert order.side == SIDE.BUY, 'order.side is wrong'
         assert order.position_effect == POSITION_EFFECT.OPEN, 'order.position_effect is wrong'
-test_buy_open_code_new = get_code_block(test_buy_open)
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_sell_open():
-    from rqalpha.api import sell_open, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
-
     def init(context):
         context.f1 = 'P88'
-        context.amount = 1
-        # context.marin_rate = 10
         subscribe(context.f1)
-        context.order_count = 0
-        context.order = None
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         order = sell_open(context.f1, 1)
 
         assert order.order_book_id == context.f1, 'Order_book_id is wrong'
@@ -63,56 +78,30 @@ def test_sell_open():
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
         assert order.side == SIDE.SELL, 'order.side is wrong'
         assert order.position_effect == POSITION_EFFECT.OPEN, 'order.position_effect is wrong'
-test_sell_open_code_new = get_code_block(test_sell_open)
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_buy_close():
-    from rqalpha.api import buy_close, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
-
     def init(context):
         context.f1 = 'P88'
-        context.amount = 1
-        # context.marin_rate = 10
         subscribe(context.f1)
-        context.order_count = 0
-        context.order = None
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         orders = buy_close(context.f1, 1)
         # TODO: Add More Sell Close Test
         assert len(orders) == 0
-
-        # assert order.order_book_id == context.f1, 'Order_book_id is wrong'
-        # assert order.quantity == 1, 'order.quantity is wrong'
-        # assert order.status == ORDER_STATUS.REJECTED, 'order.status is wrong'
-        # assert order.unfilled_quantity == 1, 'order.unfilled_quantity is wrong'
-        # assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        # assert order.side == SIDE.BUY, 'order.side is wrong'
-        # assert order.position_effect == POSITION_EFFECT.CLOSE, 'order.position_effect is wrong'
-test_buy_close_code_new = get_code_block(test_buy_close)
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_sell_close():
-    from rqalpha.api import sell_close, subscribe, ORDER_STATUS, POSITION_EFFECT, SIDE
-
     def init(context):
         context.f1 = 'P88'
-        context.amount = 1
-        # context.marin_rate = 10
         subscribe(context.f1)
-        context.order_count = 0
-        context.order = None
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         orders = sell_close(context.f1, 1)
         # TODO: Add More Sell Close Test
         assert len(orders) == 0
-
-        # assert order.order_book_id == context.f1
-        # assert order.quantity == 1
-        # assert order.status == ORDER_STATUS.REJECTED
-        # assert order.unfilled_quantity == 1
-        # assert order.unfilled_quantity + order.filled_quantity == order.quantity
-        # assert order.side == SIDE.SELL
-        # assert order.position_effect == POSITION_EFFECT.CLOSE
-test_sell_close_code_new = get_code_block(test_sell_close)
+    return init, handle_bar

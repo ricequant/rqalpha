@@ -15,13 +15,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .test_api_base import get_code_block
+from rqalpha.api import *
+
+from .units import make_test_strategy_decorator
+
+test_strategies = []
+
+as_test_strategy = make_test_strategy_decorator({
+        "base": {
+            "start_date": "2016-03-07",
+            "end_date": "2016-03-08",
+            "frequency": "1d",
+            "matching_type": "next_bar",
+            "strategy_file": 'rqalpha/__init__.py',
+            "accounts": {
+                "stock": 100000000
+            }
+        },
+        "extra": {
+            "log_level": "error",
+        },
+        "mod": {
+            "sys_progress": {
+                "enabled": True,
+                "show": True,
+            },
+        },
+    }, test_strategies)
 
 
+@as_test_strategy()
 def test_order_shares():
     # FIXME: supposed to check portfolio
-    from rqalpha.api import order_shares, get_order, SIDE, LimitOrder
-
     def init(context):
         context.counter = 0
         context.s1 = "000001.XSHE"
@@ -47,13 +72,11 @@ def test_order_shares():
             assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
             assert order.price == bar_dict[context.s1].limit_down, 'order.price is wrong'
             assert order.status == ORDER_STATUS.FILLED
+    return init, handle_bar
 
-test_order_shares_code_new = get_code_block(test_order_shares)
 
-
+@as_test_strategy()
 def test_order_lots():
-    from rqalpha.api import order_lots, get_order, SIDE, LimitOrder
-
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -68,12 +91,11 @@ def test_order_lots():
         assert order.quantity == 100, 'order.quantity is wrong'
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
         assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
-test_order_lots_code_new = get_code_block(test_order_lots)
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_order_value():
-    from rqalpha.api import order_value, get_order, SIDE, LimitOrder
-
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -92,12 +114,11 @@ def test_order_value():
         assert order.quantity == context.amount, 'order.quantity is wrong'
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
         assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
-test_order_value_code_new = get_code_block(test_order_value)
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_order_percent():
-    from rqalpha.api import order_percent, get_order, SIDE, LimitOrder
-
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -111,12 +132,11 @@ def test_order_percent():
         assert order.order_book_id == context.s1, 'Order_book_id is wrong'
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
         assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
-test_order_percent_code_new = get_code_block(test_order_percent)
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_order_target_value():
-    from rqalpha.api import order_target_percent, get_order, SIDE, LimitOrder
-
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -124,10 +144,9 @@ def test_order_target_value():
 
     def handle_bar(context, bar_dict):
         order_id = order_target_percent(context.s1, 0.02, style=LimitOrder(bar_dict[context.s1].limit_up))
-        print("after: ", context.portfolio.cash)
         order = get_order(order_id)
         order_side = SIDE.BUY if order.quantity > 0 else SIDE.SELL
         assert order.side == order_side, 'order.side is wrong'
         assert order.order_book_id == context.s1, 'Order_book_id is wrong'
         assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
-test_order_target_value_code_new = get_code_block(test_order_target_value)
+    return init, handle_bar
