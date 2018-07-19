@@ -52,7 +52,7 @@ def test_buy_open():
     def handle_bar(context, _):
         o = buy_open(context.f1, 1)
         assert_order(
-            o, order_book_id=context.s1, quantiy=1, status=ORDER_STATUS.FILLED, side=SIDE.BUY, position_effect=POSITION_EFFECT.OPEN
+            o, order_book_id=context.f1, quantity=1, status=ORDER_STATUS.FILLED, side=SIDE.BUY, position_effect=POSITION_EFFECT.OPEN
         )
     return init, handle_bar
 
@@ -66,7 +66,7 @@ def test_sell_open():
     def handle_bar(context, _):
         o = sell_open(context.f1, 1)
         assert_order(
-            o, order_book_id=context.s1, quantity=1, status=ORDER_STATUS.FILLED, side=SIDE.SELL, position_effect=POSITION_EFFECT.OPEN
+            o, order_book_id=context.f1, quantity=1, status=ORDER_STATUS.FILLED, side=SIDE.SELL, position_effect=POSITION_EFFECT.OPEN
         )
     return init, handle_bar
 
