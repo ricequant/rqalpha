@@ -16,6 +16,7 @@
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import ORDER_TYPE
+from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -36,7 +37,7 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_price=order.price,
                 limit_up=limit_up
             )
-            order.mark_rejected(reason)
+            user_system_log.warn(reason)
             return False
 
         limit_down = self._env.price_board.get_limit_down(order.order_book_id)
@@ -47,7 +48,7 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_price=order.price,
                 limit_down=limit_down
             )
-            order.mark_rejected(reason)
+            user_system_log.warn(reason)
             return False
 
         return True

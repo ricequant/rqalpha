@@ -19,29 +19,35 @@ from .test_api_base import get_code_block
 
 
 def test_order_shares():
+    # FIXME: supposed to check portfolio
     from rqalpha.api import order_shares, get_order, SIDE, LimitOrder
 
     def init(context):
-        context.order_count = 0
+        context.counter = 0
         context.s1 = "000001.XSHE"
-        context.limitprice = 8.59
 
     def handle_bar(context, bar_dict):
-        order_id = order_shares(context.s1, 10010, style=LimitOrder(context.limitprice))
-        order = get_order(order_id)
-        assert order.side == SIDE.BUY, 'order.side is wrong'
-        assert order.order_book_id == context.s1, 'Order_book_id is wrong'
-        assert order.quantity == 10000, 'order.quantity is wrong'
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.price == context.limitprice, 'order.price is wrong'
+        context.counter += 1
 
-        order_id = order_shares(context.s1, -10010, style=LimitOrder(context.limitprice))
-        order = get_order(order_id)
-        assert order.side == SIDE.SELL, 'order.side is wrong'
-        assert order.order_book_id == context.s1, 'Order_book_id is wrong'
-        assert order.quantity == 10010, 'order.quantity is wrong'
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.price == context.limitprice, 'order.price is wrong'
+        if context.counter == 1:
+            order_id = order_shares(context.s1, 10010, style=LimitOrder(bar_dict[context.s1].limit_up))
+            order = get_order(order_id)
+            assert order.side == SIDE.BUY, 'order.side is wrong'
+            assert order.order_book_id == context.s1, 'Order_book_id is wrong'
+            assert order.quantity == 10000, 'order.quantity is wrong'
+            assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
+            assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
+            assert order.status == ORDER_STATUS.FILLED
+        elif context.counter == 2:
+            order_id = order_shares(context.s1, -10000, style=LimitOrder(bar_dict[context.s1].limit_down))
+            order = get_order(order_id)
+            assert order.side == SIDE.SELL, 'order.side is wrong'
+            assert order.order_book_id == context.s1, 'Order_book_id is wrong'
+            assert order.quantity == 10000, 'order.quantity is wrong'
+            assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
+            assert order.price == bar_dict[context.s1].limit_down, 'order.price is wrong'
+            assert order.status == ORDER_STATUS.FILLED
+
 test_order_shares_code_new = get_code_block(test_order_shares)
 
 
@@ -51,18 +57,17 @@ def test_order_lots():
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
-        context.limitprice = 8.59
         context.amount = 10000
 
     def handle_bar(context, bar_dict):
-        order_id = order_lots(context.s1, 1, style=LimitOrder(context.limitprice))
+        order_id = order_lots(context.s1, 1, style=LimitOrder(bar_dict[context.s1].limit_up))
         order = get_order(order_id)
         order_side = SIDE.BUY if context.amount > 0 else SIDE.SELL
         assert order.side == order_side, 'order.side is wrong'
         assert order.order_book_id == context.s1, 'Order_book_id is wrong'
         assert order.quantity == 100, 'order.quantity is wrong'
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.price == context.limitprice, 'order.price is wrong'
+        assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
 test_order_lots_code_new = get_code_block(test_order_lots)
 
 
@@ -72,18 +77,21 @@ def test_order_value():
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
-        context.limitprice = 8.59
-        context.amount = 10000
+        context.amount = 100
 
     def handle_bar(context, bar_dict):
-        order_id = order_value(context.s1, 1000, style=LimitOrder(context.limitprice))
+        order_id = order_value(
+            context.s1,
+            context.amount * bar_dict[context.s1].limit_up,
+            style=LimitOrder(bar_dict[context.s1].limit_up)
+        )
         order = get_order(order_id)
         order_side = SIDE.BUY if order.quantity > 0 else SIDE.SELL
         assert order.side == order_side, 'order.side is wrong'
         assert order.order_book_id == context.s1, 'Order_book_id is wrong'
-        assert order.quantity == 100, 'order.quantity is wrong'
+        assert order.quantity == context.amount, 'order.quantity is wrong'
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.price == context.limitprice, 'order.price is wrong'
+        assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
 test_order_value_code_new = get_code_block(test_order_value)
 
 
@@ -93,17 +101,16 @@ def test_order_percent():
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
-        context.limitprice = 8.59
         context.amount = 10000
 
     def handle_bar(context, bar_dict):
-        order_id = order_percent(context.s1, 0.0001, style=LimitOrder(context.limitprice))
+        order_id = order_percent(context.s1, 0.0001, style=LimitOrder(bar_dict[context.s1].limit_up))
         order = get_order(order_id)
         order_side = SIDE.BUY if order.quantity > 0 else SIDE.SELL
         assert order.side == order_side, 'order.side is wrong'
         assert order.order_book_id == context.s1, 'Order_book_id is wrong'
         assert order.unfilled_quantity + order.filled_quantity == order.quantity, 'order.unfilled_quantity is wrong'
-        assert order.price == context.limitprice, 'order.price is wrong'
+        assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
 test_order_percent_code_new = get_code_block(test_order_percent)
 
 
@@ -113,15 +120,14 @@ def test_order_target_value():
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
-        context.limitprice = 8.59
         context.amount = 10000
 
     def handle_bar(context, bar_dict):
-        order_id = order_target_percent(context.s1, 0.02, style=LimitOrder(context.limitprice))
+        order_id = order_target_percent(context.s1, 0.02, style=LimitOrder(bar_dict[context.s1].limit_up))
         print("after: ", context.portfolio.cash)
         order = get_order(order_id)
         order_side = SIDE.BUY if order.quantity > 0 else SIDE.SELL
         assert order.side == order_side, 'order.side is wrong'
         assert order.order_book_id == context.s1, 'Order_book_id is wrong'
-        assert order.price == context.limitprice, 'order.price is wrong'
+        assert order.price == bar_dict[context.s1].limit_up, 'order.price is wrong'
 test_order_target_value_code_new = get_code_block(test_order_target_value)

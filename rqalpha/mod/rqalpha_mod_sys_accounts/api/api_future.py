@@ -16,9 +16,8 @@
 
 from __future__ import division
 import six
-import numpy as np
 
-from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
+from rqalpha.api.api_base import decorate_api_exc, cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
@@ -163,16 +162,15 @@ def order(id_or_ins, amount, side, position_effect, style):
     if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        for o in orders:
-            o.mark_rejected(
-                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        return orders
+        return []
 
     for o in orders:
         if o.type == ORDER_TYPE.MARKET:
             o.set_frozen_price(price)
         if env.can_submit_order(o):
             env.broker.submit_order(o)
+        else:
+            orders.remove(o)
 
     # 向前兼容，如果创建的order_list 只包含一个订单的话，直接返回对应的订单，否则返回列表
     if len(orders) == 1:

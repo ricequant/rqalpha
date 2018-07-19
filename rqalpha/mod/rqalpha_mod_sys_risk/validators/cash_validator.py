@@ -16,6 +16,7 @@
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -35,7 +36,7 @@ class CashValidator(AbstractFrontendValidator):
         if cost_money <= account.cash:
             return True
 
-        order.mark_rejected(
+        user_system_log.warn(
             _("Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, "
               "cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
@@ -57,7 +58,7 @@ class CashValidator(AbstractFrontendValidator):
         if cost_money <= account.cash:
             return True
 
-        order.mark_rejected(
+        user_system_log.warn(
             _("Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
               " cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
