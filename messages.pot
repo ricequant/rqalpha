@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-07-19 15:25+0800\n"
+"POT-Creation-Date: 2018-07-19 16:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -322,70 +322,76 @@ msgstr ""
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:40
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:62
 msgid ""
-"Order Rejected: not enough money to buy {order_book_id}, needs "
+"Order Creation Failed: not enough money to buy {order_book_id}, needs "
 "{cost_money:.2f}, cash {cash:.2f}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/future_position_validator.py:34
 msgid ""
-"Order Rejected: not enough today position {order_book_id} to buy close, "
-"target quantity is {quantity}, closable today quantity {closable}"
+"Order Creation Failed: not enough today position {order_book_id} to buy "
+"close, target quantity is {quantity}, closable today quantity {closable}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/future_position_validator.py:45
 msgid ""
-"Order Rejected: not enough today position {order_book_id} to sell close, "
-"target quantity is {quantity}, closable today quantity {closable}"
+"Order Creation Failed: not enough today position {order_book_id} to sell "
+"close, target quantity is {quantity}, closable today quantity {closable}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/future_position_validator.py:55
 msgid ""
-"Order Rejected: not enough securities {order_book_id} to buy close, "
-"target sell quantity is {quantity}, sell_closable_quantity {closable}"
+"Order Creation Failed: not enough securities {order_book_id} to buy "
+"close, target sell quantity is {quantity}, sell_closable_quantity "
+"{closable}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/future_position_validator.py:65
 msgid ""
-"Order Rejected: not enough securities {order_book_id} to sell close, "
-"target sell quantity is {quantity}, buy_closable_quantity {closable}"
+"Order Creation Failed: not enough securities {order_book_id} to sell "
+"close, target sell quantity is {quantity}, buy_closable_quantity "
+"{closable}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:31
-msgid "Order Rejected: {order_book_id} is not listed!"
+msgid "Order Creation Failed: {order_book_id} is not listed!"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:37
-msgid "Order Rejected: {order_book_id} has been delisted!"
+msgid "Order Creation Failed: {order_book_id} has been delisted!"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:43
-msgid "security {order_book_id} is suspended on {date}"
+msgid "Order Creation Failed: security {order_book_id} is suspended on {date}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:52
-msgid "security {order_book_id} cannot be subscribed on {date}"
+msgid ""
+"Order Creation Failed: security {order_book_id} cannot be subscribed on "
+"{date}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:59
-msgid "security {order_book_id} cannot be redeemed on {date}"
+msgid ""
+"Order Creation Failed: security {order_book_id} cannot be redeemed on "
+"{date}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:34
 msgid ""
-"Order Rejected: limit order price {limit_price} is higher than limit up "
-"{limit_up}."
+"Order Creation Failed: limit order price {limit_price} is higher than "
+"limit up {limit_up}."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:45
 msgid ""
-"Order Rejected: limit order price {limit_price} is lower than limit down "
-"{limit_down}."
+"Order Creation Failed: limit order price {limit_price} is lower than "
+"limit down {limit_down}."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/stock_position_validator.py:34
 msgid ""
-"Order Rejected: not enough stock {order_book_id} to sell, you want to "
-"sell {quantity}, sellable {sellable}"
+"Order Creation Failed: not enough stock {order_book_id} to sell, you want"
+" to sell {quantity}, sellable {sellable}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:74

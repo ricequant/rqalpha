@@ -37,7 +37,7 @@ class CashValidator(AbstractFrontendValidator):
             return True
 
         user_system_log.warn(
-            _("Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f}, "
+            _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f}, "
               "cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
                 cost_money=cost_money,
@@ -59,7 +59,7 @@ class CashValidator(AbstractFrontendValidator):
             return True
 
         user_system_log.warn(
-            _("Order Rejected: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
+            _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
               " cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
                 cost_money=cost_money,

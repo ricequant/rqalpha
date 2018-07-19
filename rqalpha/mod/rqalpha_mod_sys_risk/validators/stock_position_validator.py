@@ -32,7 +32,7 @@ class StockPositionValidator(AbstractFrontendValidator):
             return True
 
         user_system_log.warn(_(
-            "Order Rejected: not enough stock {order_book_id} to sell, you want to sell {quantity},"
+            "Order Creation Failed: not enough stock {order_book_id} to sell, you want to sell {quantity},"
             " sellable {sellable}").format(
             order_book_id=order.order_book_id,
             quantity=order.quantity,
