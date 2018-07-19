@@ -16,6 +16,7 @@
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -30,36 +31,39 @@ class FuturePositionValidator(AbstractFrontendValidator):
 
         if order.side == SIDE.BUY and order.position_effect == POSITION_EFFECT.CLOSE_TODAY \
                 and order.quantity > position._closable_today_sell_quantity:
-            order.mark_rejected(_(
-                "Order Rejected: not enough today position {order_book_id} to buy close, target"
+            user_system_log.warn(_(
+                "Order Creation Failed: not enough today position {order_book_id} to buy close, target"
                 " quantity is {quantity}, closable today quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
                 closable=position._closable_today_sell_quantity,
             ))
+            return False
 
         if order.side == SIDE.SELL and order.position_effect == POSITION_EFFECT.CLOSE_TODAY \
                 and order.quantity > position._closable_today_buy_quantity:
-            order.mark_rejected(_(
-                "Order Rejected: not enough today position {order_book_id} to sell close, target"
+            user_system_log.warn(_(
+                "Order Creation Failed: not enough today position {order_book_id} to sell close, target"
                 " quantity is {quantity}, closable today quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
                 closable=position._closable_today_buy_quantity,
             ))
+            return False
 
         if order.side == SIDE.BUY and order.quantity > position.closable_sell_quantity:
-            order.mark_rejected(_(
-                "Order Rejected: not enough securities {order_book_id} to buy close, target"
+            user_system_log.warn(_(
+                "Order Creation Failed: not enough securities {order_book_id} to buy close, target"
                 " sell quantity is {quantity}, sell_closable_quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
                 closable=position.closable_sell_quantity,
             ))
             return False
+
         elif order.side == SIDE.SELL and order.quantity > position.closable_buy_quantity:
-            order.mark_rejected(_(
-                "Order Rejected: not enough securities {order_book_id} to sell close, target"
+            user_system_log.warn(_(
+                "Order Creation Failed: not enough securities {order_book_id} to sell close, target"
                 " sell quantity is {quantity}, buy_closable_quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,

@@ -80,21 +80,20 @@ test_submit_order_code_new = get_code_block(test_submit_order)
 
 
 def test_cancel_order():
-    from rqalpha.api import order_shares, cancel_order, get_order
+    from rqalpha.api import order_shares, cancel_order
 
     def init(context):
         context.s1 = '000001.XSHE'
-        context.limitprice = 8.59
         context.amount = 100
 
     def handle_bar(context, bar_dict):
-        order_id = order_shares(context.s1, context.amount, style=LimitOrder(context.limitprice))
-        cancel_order(order_id)
-        order = get_order(order_id)
+        order = order_shares(context.s1, context.amount, style=LimitOrder(bar_dict[context.s1].limit_down))
+        cancel_order(order)
         assert order.order_book_id == context.s1
         assert order.filled_quantity == 0
-        return order_id
-        assert order.price == context.limitprice
+        assert order.price == bar_dict[context.s1].limit_down
+        assert order.status == ORDER_STATUS.CANCELLED
+
 test_cancel_order_code_new = get_code_block(test_cancel_order)
 
 

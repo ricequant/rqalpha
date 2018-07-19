@@ -16,6 +16,7 @@
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE
+from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -30,8 +31,8 @@ class StockPositionValidator(AbstractFrontendValidator):
         if order.quantity <= position.sellable:
             return True
 
-        order.mark_rejected(_(
-            "Order Rejected: not enough stock {order_book_id} to sell, you want to sell {quantity},"
+        user_system_log.warn(_(
+            "Order Creation Failed: not enough stock {order_book_id} to sell, you want to sell {quantity},"
             " sellable {sellable}").format(
             order_book_id=order.order_book_id,
             quantity=order.quantity,

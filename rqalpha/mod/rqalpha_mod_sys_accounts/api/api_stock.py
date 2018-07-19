@@ -23,7 +23,7 @@ from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYP
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
-from rqalpha.model.order import Order, OrderStyle, MarketOrder, LimitOrder
+from rqalpha.model.order import Order, MarketOrder, LimitOrder
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 # noinspection PyUnresolvedReferences
@@ -129,26 +129,25 @@ def order_shares(id_or_ins, amount, price=None, style=None):
     if amount == 0:
         # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
         # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
-        r_order.mark_rejected(_(u"Order Creation Failed: 0 order quantity"))
-        return r_order
+        user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+        return
     if r_order.type == ORDER_TYPE.MARKET:
         r_order.set_frozen_price(price)
     if env.can_submit_order(r_order):
         env.broker.submit_order(r_order)
-
-    return r_order
+        return r_order
 
 
 def _sell_all_stock(order_book_id, amount, style):
     env = Environment.get_instance()
     order = Order.__from_create__(order_book_id, amount, SIDE.SELL, style, POSITION_EFFECT.CLOSE)
     if amount == 0:
-        order.mark_rejected(_(u"Order Creation Failed: 0 order quantity"))
-        return order
+        user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+        return
 
     if env.can_submit_order(order):
         env.broker.submit_order(order)
-    return order
+        return order
 
 
 @export_as_api

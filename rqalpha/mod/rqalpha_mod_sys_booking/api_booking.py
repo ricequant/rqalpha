@@ -15,16 +15,16 @@
 # limitations under the License.
 
 import six
-from decimal import Decimal, getcontext
+from decimal import Decimal
 
-from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.api.api_base import instruments, cal_style
 from rqalpha.environment import Environment
-from rqalpha.const import EXECUTION_PHASE, POSITION_DIRECTION, POSITION_EFFECT, SIDE
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, SIDE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.arg_checker import apply_rules, verify_that
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.utils.exception import patch_user_exc, RQInvalidArgument
+from rqalpha.model.order import Order, MarketOrder, LimitOrder
+from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.logger import user_system_log
 from rqalpha import export_as_api
 from rqalpha.utils.i18n import gettext as _
 
@@ -112,8 +112,8 @@ def order_shares(id_or_ins, amount, price=None, style=None):
     if amount == 0:
         # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
         # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
-        order.mark_rejected(_(u"Order Creation Failed: 0 order quantity"))
-        return order
+        user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+        return
 
     env.broker.submit_order(order)
     return order

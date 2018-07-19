@@ -219,7 +219,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
         order.set_frozen_price(market_price)
     if env.can_submit_order(order):
         env.broker.submit_order(order)
-    return order
+        return order
 
 
 @export_as_api
@@ -229,6 +229,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
+@apply_rules(verify_that('order').is_instance_of(Order))
 def cancel_order(order):
     """
     撤单
@@ -236,8 +237,6 @@ def cancel_order(order):
     :param order: 需要撤销的order对象
     :type order: :class:`~Order` object
     """
-    if order is None:
-        patch_user_exc(KeyError(_(u"Cancel order fail: invalid order id")))
     env = Environment.get_instance()
     if env.can_cancel_order(order):
         env.broker.cancel_order(order)
