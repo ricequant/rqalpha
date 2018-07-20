@@ -328,7 +328,7 @@ def generate_account_type_dict():
 
 
 def is_valid_price(price):
-    return not np.isnan(price) and price > 0
+    return not np.isnan(price) and price > 0 and price is not None
 
 
 @contextmanager

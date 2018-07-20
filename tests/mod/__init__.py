@@ -15,11 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .test_api_base import test_strategies as test_api_base_strategies
-from .test_api_stock import test_strategies as test_api_stock_strategies
-from .test_api_future import test_strategies as test_api_future_strategies
+from .sys_accounts import test_strategies as test_sys_accounts_strategies
 
-test_strategies = test_api_base_strategies + test_api_stock_strategies + test_api_future_strategies
+test_strategies = test_sys_accounts_strategies
 
 
 __all__ = [

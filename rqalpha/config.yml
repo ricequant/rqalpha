@@ -58,7 +58,5 @@ extra:
   logger: []
 
 validator:
-  # cash_return_by_stock_delisted: 开启该项，当持仓股票退市时，按照退市价格返还现金
-  cash_return_by_stock_delisted: false
   # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
   close_amount: true
