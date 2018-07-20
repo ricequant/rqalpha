@@ -168,14 +168,14 @@ class TickObject(object):
         try:
             return self._tick_dict['limit_up']
         except (KeyError, ValueError):
-            return [0] * 5
+            return 0
 
     @property
     def limit_down(self):
         try:
             return self._tick_dict['limit_down']
         except (KeyError, ValueError):
-            return [0] * 5
+            return 0
 
     @property
     def isnan(self):
