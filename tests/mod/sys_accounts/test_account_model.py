@@ -65,5 +65,4 @@ def test_stock_account_settlement():
             context.total_value_before_delisted = context.portfolio.total_value
         if context.now.date() > datetime.date(2015, 12, 29):
             assert context.portfolio.total_value == context.total_value_before_delisted
-
     return init, handle_bar
