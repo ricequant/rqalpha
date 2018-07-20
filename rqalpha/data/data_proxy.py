@@ -163,7 +163,8 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
         def tick_fields_for(ins):
             _STOCK_FIELD_NAMES = [
-                'datetime', 'open', 'high', 'low', 'last', 'volume', 'total_turnover', 'prev_close'
+                'datetime', 'open', 'high', 'low', 'last', 'volume', 'total_turnover', 'prev_close',
+                'limit_up', 'limit_down'
             ]
             _FUTURE_FIELD_NAMES = _STOCK_FIELD_NAMES + ['open_interest', 'prev_settlement']
 

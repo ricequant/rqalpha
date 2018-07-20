@@ -287,7 +287,8 @@ def test_current_snapshot():
 
         assert snapshot.last == bar.close
         for field in (
-            "open", "high", "low", "prev_close", "volume", "total_turnover", "order_book_id", "datetime"
+            "open", "high", "low", "prev_close", "volume", "total_turnover", "order_book_id", "datetime",
+            "limit_up", "limit_down"
         ):
             assert getattr(bar, field) == getattr(snapshot, field), "snapshot.{} = {}, bar.{} = {}".format(
                 field, getattr(snapshot, field), field, getattr(bar, field)
