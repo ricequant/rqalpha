@@ -154,7 +154,7 @@ class StockAccount(BaseAccount):
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.quantity != 0:
-                if env.config.validator.cash_return_by_stock_delisted:
+                if env.config.mod.sys_accounts.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
                 user_system_log.warn(
                     _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)

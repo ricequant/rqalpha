@@ -141,11 +141,10 @@ def test_api(specific_test=None):
     # FIXME: Error msg is hard to understand @zjuguxi
     print(u"Testing API......")
 
-    from tests.api.test_api_base import test_strategies as test_api_base_strategies
-    from tests.api.test_api_stock import test_strategies as test_api_stock_strategies
-    from tests.api.test_api_future import test_strategies as test_api_future_strategies
+    from tests.api import test_strategies as test_api_strategies
+    from tests.mod import test_strategies as test_mod_strategies
 
-    for strategy in test_api_base_strategies + test_api_stock_strategies + test_api_future_strategies:
+    for strategy in test_api_strategies + test_mod_strategies:
         if specific_test and strategy["name"] != specific_test:
             continue
         print("running", strategy["name"])

@@ -17,7 +17,7 @@
 
 from rqalpha.api import *
 
-from .units import make_test_strategy_decorator
+from ..utils import make_test_strategy_decorator
 
 test_strategies = []
 
@@ -26,7 +26,6 @@ as_test_strategy = make_test_strategy_decorator({
             "start_date": "2016-12-01",
             "end_date": "2016-12-31",
             "frequency": "1d",
-            "strategy_file": 'rqalpha/__init__.py',
             "accounts": {
                 "stock": 1000000
             }
