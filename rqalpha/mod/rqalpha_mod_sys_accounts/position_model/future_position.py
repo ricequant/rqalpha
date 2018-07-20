@@ -17,6 +17,9 @@
 from rqalpha.model.base_position import BasePosition
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.utils import is_valid_price
+
+from rqalpha.utils.i18n import gettext as _
 
 
 class FuturePosition(BasePosition):
@@ -377,6 +380,10 @@ class FuturePosition(BasePosition):
     def apply_settlement(self):
         env = Environment.get_instance()
         settle_price = env.data_proxy.get_settle_price(self.order_book_id, env.trading_dt)
+        if not is_valid_price(settle_price):
+            raise RuntimeError(_("Settlement price {settle_price} of {order_book_id} is invalid".format(
+                settle_price=settle_price, order_book_id=self.order_book_id
+            )))
         self._buy_old_holding_list = [(settle_price, self.buy_quantity)]
         self._sell_old_holding_list = [(settle_price, self.sell_quantity)]
         self._buy_today_holding_list = []
