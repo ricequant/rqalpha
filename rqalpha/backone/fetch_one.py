@@ -27,6 +27,10 @@ def init_dl(context):
     context.today = None
     
     logger.info("RunInfo: {}".format(context.run_info))
+    
+    
+
+    
     #df = (all_instruments('CS'))
     #context.all = df["order_book_id"]
     
@@ -37,16 +41,18 @@ def before_trading_dl(context):
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar_dl(context, bar_dict):
-    pass
     #logger.info("每一个Bar执行")
     #logger.info("打印Bar数据：")
     
-
+    all_days = instruments(context.config.stock_id).days_from_listed()
+    logger.info("all day %s" % all_days)
+    history_close = history_bars(context.config.stock_id, all_days, '1d', 'close')
+    logger.info("len %s" % len(history_close))
 
     order_book_id = bar_dict[context.s1].order_book_id
     #history_close = history_bars(order_book_id, 50, '1d', 'close')
     info = "%s id: %s close: %s" % (bar_dict[context.s1].symbol,bar_dict[context.s1].order_book_id, bar_dict[context.s1].close)
-    logger.info(info)
+    #logger.info(info)
     name = bar_dict[context.s1].symbol
     id = bar_dict[context.s1].order_book_id
     close_price = bar_dict[context.s1].close
@@ -73,10 +79,10 @@ def end_dl(context):
         np.save("close_price/%s" % book_id, np.array(data))   
 
 config_dl = {
-  "stock_id":"000001.XSHE",
+  "stock_id":"000670.XSHE",
   "base": {
-    "start_date": "2004-06-01",
-    "end_date": "2017-02-01",
+    "start_date": "2018-06-04",
+    "end_date": "2018-06-04",
     "accounts": {
         "stock": 100000
     }
@@ -93,7 +99,7 @@ config_dl = {
 }
 
 # 您可以指定您要传递的参数
-#run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, end=end_dl, config=config_dl)
+run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, end=end_dl, config=config_dl)
 
 
 

@@ -120,7 +120,16 @@ def before_trading(context):
     #logger.info("yesterday %s   predict %s" % (history_close[-1], restore_predicted))
     context.yesterday_close = history_close[-1]
     
+    
+    
+    day3 = history_bars(context.s1, 5, '1d', 'close')
+    day3_avg = sum(day3) /5
+    logger.info("3day avg %s" % day3_avg)
+    
+    logger.info("买点 昨天收盘 %s  均线5日 %s  lstm:%s" % (history_close[-1], day3_avg, restore_predicted))
+    #if history_close[-1] < day3_avg and history_close[-1] < restore_predicted:
     if history_close[-1] < restore_predicted:
+    #if history_close[-1] < day3_avg:
         #logger.info("下星期涨---------下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨下星期涨--------")
         #logger.info("yesterday %s   predict %s" % (history_close[-1], restore_predicted))
         context.is_buy_point = True
@@ -130,11 +139,13 @@ def before_trading(context):
     
     if context.buy_price:
         #if context.buy_price > history_close[-1] and  (context.buy_price - history_close[-1]) / context.buy_price > 0.10:
-        if  history_close[-1] > restore_predicted:
+        if  history_close[-1] > day3_avg:
+        #if  history_close[-1] > day3_avg:
             #logger.info(history_close[-1])
             #logger.info(context.buy_price)
             #logger.info((history_close[-1]  - context.buy_price) / context.buy_price)
             context.is_sell_point = True
+
 
     if context.buy_price:
         if context.buy_price > history_close[-1] and  ( context.buy_price - history_close[-1]) / context.buy_price > 0.08:
@@ -194,13 +205,18 @@ def handle_bar(context, bar_dict):
                 logger.info("预测价一星期后 %s  涨%s  %s" % (context.restore_predicted,week_ratio, d2))
                 context.buy_price = order.avg_price
                 context.buy = True        
+                day3 = history_bars(context.s1, 3, '1d', 'close')
+                day3_avg = sum(day3) /3
+                logger.info("3day avg %s" % day3_avg)
+            
+            
             else:
                 logger.info("----------下单失败 下单失败---------下单失败下单失败下单失败下单失败下单失败下单失败")
     
     if context.buy and context.is_sell_point:
         order = order_target_value(context.s1, 0)
         if order:
-            logger.info("---------------清仓 --------清仓清仓清仓清仓清仓清仓-------清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓-------")
+            logger.info("---------------清仓 --------清仓清仓清仓清仓清仓清仓-------清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓清仓----%s---" % order.avg_price)
             context.buy = False
             context.is_sell_point = False
             context.buy_price = 0

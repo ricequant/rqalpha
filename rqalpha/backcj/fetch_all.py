@@ -76,11 +76,17 @@ def end_dl(context):
         df = pd.DataFrame(data)
         df.to_csv("data_df/%s" % book_id,  encoding = "utf-8")
 
+
+yesterday = datetime.date.today() -  datetime.timedelta(days=1)
+yesterdaytime = yesterday.strftime("%Y-%m-%d")
+
+today = datetime.date.today().strftime("%Y-%m-%d")
+
 config_dl = {
   "stock_id":"000001.XSHE",
   "base": {
-    "start_date": "2004-06-01",
-    "end_date": "2017-02-01",
+    "start_date": today,
+    "end_date": today,
     "accounts": {
         "stock": 100000
     }

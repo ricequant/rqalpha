@@ -10,6 +10,8 @@ from keras.models import Sequential
 from eventlet import tpool
 from keras import backend as K
 from subprocess import call
+import traceback
+import multiprocessing
 
 
 def load_data(filename, seq_len, normalise_window):
@@ -54,13 +56,17 @@ def normalise_windows(window_data):
 
 def build_model(layers):
     model = Sequential()
-
-    model.add(LSTM(
-        input_shape=(layers[1], layers[0]),
-        output_dim=layers[1],
-        return_sequences=True))
+    print "-ffffff"
+    try:
+        model.add(LSTM(
+            input_shape=(layers[1], layers[0]),
+            output_dim=layers[1],
+            return_sequences=True))
+    except Exception as e:
+        print traceback.format_exc()
+    print "dddddddd"
     model.add(Dropout(0.2))
-
+    print "ddddd"
     model.add(LSTM(
         layers[2],
         return_sequences=False))
@@ -78,10 +84,10 @@ def build_model(layers):
     return model
 
 
-def train_single_stock(filename, seq_len):
+def train_single_stock(filename):
     global_start_time = time.time()
     epochs  = 1
-    #seq_len = 50
+    seq_len = 50
     
     print filename
     data = np.load('close_price/%s.npy' % filename)
@@ -93,7 +99,11 @@ def train_single_stock(filename, seq_len):
     X_train, y_train = load_data('close_price/%s.npy' % filename, seq_len, True)
     
     print('> Data Loaded. Compiling...')
-    model = build_model([1, seq_len, 100, 1])
+    
+    try:
+        model = build_model([1, seq_len, 100, 1])
+    except Exception as e:
+        print traceback.format_exc()
     
     model.fit(
         X_train,
@@ -128,13 +138,16 @@ def get_all_order_book_id():
 if __name__=='__main__':
     all_stock_id = get_all_order_book_id()
     #print all_stock_id
+    pool = multiprocessing.Pool(processes=10)
     
     for stock_id in all_stock_id:
         model_file_path = 'weight_week/%s.h5' %  stock_id[:-4]
         #print model_file_path
         if not os.path.isfile(model_file_path):
             #call(["python", "train_single_stock.py", stock_id])
-            train_single_stock(stock_id)
+            #train_single_stock(stock_id)
+            pool.apply_async(train_single_stock, (stock_id,))
             #tpool.execute(train_single_stock, stock_id)
     
-    
+    pool.close()
+    pool.join()

@@ -3,7 +3,7 @@ from rqalpha.backcj.lstm_train_all_by_week import *
 from rqalpha.backcj.lstm_one_backtest import * 
 
 #STOCKID = "600560.XSHG"
-STOCKID = "300382.XSHE"
+STOCKID = "000858.XSHE"
 seq_len = 30
 
 config_dl = {
