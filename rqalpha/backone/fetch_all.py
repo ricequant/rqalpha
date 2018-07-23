@@ -57,7 +57,7 @@ def handle_bar_dl(context, bar_dict):
         today = bar_dict[s1].datetime
         """
 
-        context.all_close_price[order_book_id] = history_close.tolist()
+        context.all_close_price[order_book_id] = history_close
     
     if os.path.exists("close_price"):
         shutil.rmtree("close_price")
@@ -68,8 +68,9 @@ def handle_bar_dl(context, bar_dict):
     for book_id, data in context.all_close_price.items():
         print book_id
         print data
-        df = pd.DataFrame(data)
-        df.to_csv("close_price/%s" % book_id,  encoding = "utf-8")   
+        np.save("close_price/%s" % book_id, data)
+        #df = pd.DataFrame(data)
+        #df.save("close_price/%s" % book_id,  encoding = "utf-8")   
    
         
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次

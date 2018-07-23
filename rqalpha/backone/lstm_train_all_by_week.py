@@ -90,13 +90,13 @@ def train_single_stock(filename):
     seq_len = 50
     
     print filename
-    data = np.load('close_price/%s.npy' % filename)
+    data = np.load('close_price/%s' % filename)
     print len(data)
     if len(data) < 100:
         return False    
     
     
-    X_train, y_train = load_data('close_price/%s.npy' % filename, seq_len, True)
+    X_train, y_train = load_data('close_price/%s' % filename, seq_len, True)
     
     print('> Data Loaded. Compiling...')
     
@@ -138,16 +138,16 @@ def get_all_order_book_id():
 if __name__=='__main__':
     all_stock_id = get_all_order_book_id()
     #print all_stock_id
-    pool = multiprocessing.Pool(processes=10)
+    #pool = multiprocessing.Pool(processes=2)
     
     for stock_id in all_stock_id:
         model_file_path = 'weight_week/%s.h5' %  stock_id[:-4]
         #print model_file_path
         if not os.path.isfile(model_file_path):
-            #call(["python", "train_single_stock.py", stock_id])
-            #train_single_stock(stock_id)
-            pool.apply_async(train_single_stock, (stock_id,))
+            train_single_stock(stock_id)
+            #pool.apply_async(train_single_stock, (stock_id,))
             #tpool.execute(train_single_stock, stock_id)
-    
-    pool.close()
-    pool.join()
+    """
+    #pool.close()
+    #pool.join()
+    """

@@ -49,7 +49,6 @@ def handle_bar(context, bar_dict):
     context.y.append(y)
     
     np.save("%s_X" % context.s1, np.array(context.X))
-    
     np.save("%s_y" % context.s1, np.array(context.y))
     
 
@@ -70,7 +69,7 @@ def handle_bar(context, bar_dict):
 def after_trading(context):
     logger.info("收盘后执行after_trading函数")
     
-"""    
+   
 config = {
   "base": {
     "start_date": "2004-06-01",
@@ -93,4 +92,4 @@ config = {
 
 # 您可以指定您要传递的参数
 run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)
-"""
+
