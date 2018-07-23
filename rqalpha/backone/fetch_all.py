@@ -6,6 +6,8 @@ from rqalpha import run_func
 import numpy as np
 import pandas as pd
 import datetime
+import os
+import shutil
 """
 Bar(symbol: u'\u73e0\u6c5f\u94a2\u7434', order_book_id: u'002678.XSHE', datetime: datetime.datetime(2014, 1, 2, 0, 0), 
 open: 7.08, close: 7.07, high: 7.14, low: 7.03, volume: 3352317.0, total_turnover: 23756852, limit_up: 7.78, limit_down: 6.36)
@@ -56,6 +58,12 @@ def handle_bar_dl(context, bar_dict):
         """
 
         context.all_close_price[order_book_id] = history_close.tolist()
+    
+    
+    shutil.rmtree("close_price")
+    os.mkdir("close_price")
+    
+    #if not os.path.exists("close_price"):
 
     for book_id, data in context.all_close_price.items():
         print book_id
