@@ -59,8 +59,8 @@ def handle_bar_dl(context, bar_dict):
 
         context.all_close_price[order_book_id] = history_close.tolist()
     
-    
-    shutil.rmtree("close_price")
+    if os.path.exists("close_price"):
+        shutil.rmtree("close_price")
     os.mkdir("close_price")
     
     #if not os.path.exists("close_price"):
