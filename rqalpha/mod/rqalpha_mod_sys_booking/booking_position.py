@@ -108,6 +108,7 @@ class BookingPosition(object):
         """
         判断合约是否过期
         """
+        # FIXME: 股票期货分开判断
         instrument = Environment.get_instance().get_instrument(self.order_book_id)
         current_date = Environment.get_instance().trading_dt
         if instrument.de_listed_date is not None and current_date >= instrument.de_listed_date:
