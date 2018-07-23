@@ -33,14 +33,12 @@ def init_dl(context):
     
 # before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
 def before_trading_dl(context):
-    pass
-    #logger.info("开盘前执行before_trading函数")
+    logger.info("开盘前执行before_trading函数")
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar_dl(context, bar_dict):
-    pass
-    #logger.info("每一个Bar执行")
-    #logger.info("打印Bar数据：")
+    logger.info("每一个Bar执行")
+    logger.info("打印Bar数据：")
     
     for s1 in context.all:
 
@@ -60,14 +58,13 @@ def handle_bar_dl(context, bar_dict):
             context.all_close_price[id] = [[today, close_price,volume]]
         
         context.today = bar_dict[s1].datetime
-        
+       
    
    
         
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
 def after_trading_dl(context):
-    pass
-    #logger.info("收盘后执行after_trading函数")
+    logger.info("收盘后执行after_trading函数")
 
 
 def end_dl(context):
@@ -76,15 +73,15 @@ def end_dl(context):
         df = pd.DataFrame(data)
         df.to_csv("close_price/%s" % book_id,  encoding = "utf-8")
 
-yesterday = datetime.date.today() -  datetime.timedelta(days=1)
-yesterdaytime = yesterday.strftime("%Y-%m-%d")
-
-today = datetime.date.today().strftime("%Y-%m-%d")
+before_yesterday = (datetime.date.today() -  datetime.timedelta(days=3)).strftime("%Y-%m-%d")
+yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+print before_yesterday
+print yesterday
 config_dl = {
   "stock_id":"000001.XSHE",
   "base": {
-    "start_date": yesterdaytime,
-    "end_date": today,
+    "start_date": before_yesterday,
+    "end_date": yesterday,
     "accounts": {
         "stock": 100000
     }
