@@ -43,7 +43,9 @@ def handle_bar_dl(context, bar_dict):
     for s1 in context.all:
 
         order_book_id = bar_dict[s1].order_book_id
-        #history_close = history_bars(order_book_id, 50, '1d', 'close')
+        history_close = history_bars(order_book_id, 10000, '1d', 'close')
+        #print history_close
+        """
         info = "%s id: %s close: %s" % (bar_dict[s1].symbol,bar_dict[s1].order_book_id, bar_dict[s1].close)
         logger.info(info)
         name = bar_dict[s1].symbol
@@ -51,15 +53,15 @@ def handle_bar_dl(context, bar_dict):
         close_price = bar_dict[s1].close
         volume = bar_dict[s1].volume
         today = bar_dict[s1].datetime
-        
-        if context.all_close_price.get(id, []):
-            context.all_close_price[id].append([today, close_price, volume])
-        else:
-            context.all_close_price[id] = [[today, close_price,volume]]
-        
-        context.today = bar_dict[s1].datetime
-       
-   
+        """
+
+        context.all_close_price[order_book_id] = history_close.tolist()
+
+    for book_id, data in context.all_close_price.items():
+        print book_id
+        print data
+        df = pd.DataFrame(data)
+        df.to_csv("close_price/%s" % book_id,  encoding = "utf-8")   
    
         
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
