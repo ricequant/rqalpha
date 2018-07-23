@@ -153,6 +153,22 @@ class StockPosition(BasePosition):
         total_value = accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name].total_value
         return 0 if total_value == 0 else self.market_value / total_value
 
+    # -- Function
+    def is_de_listed(self):
+        """
+        判断合约是否过期
+        """
+        env = Environment.get_instance()
+        instrument = env.get_instrument(self._order_book_id)
+        current_date = env.trading_dt
+
+        if instrument.de_listed_date is not None:
+            if instrument.de_listed_date.date() > env.config.base.end_date:
+                return False
+            if current_date >= env.data_proxy.get_previous_trading_date(instrument.de_listed_date):
+                return True
+        return False
+
     # ------------------------------------ Abandon Property ------------------------------------
 
     @property
