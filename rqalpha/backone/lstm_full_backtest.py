@@ -96,7 +96,7 @@ def handle_bar(context, bar_dict):
         loaded_model_json = json_file.read()
         json_file.close()
         model = model_from_json(loaded_model_json)
-        model.load_weights("weight_week/%s.h5" % order_book_id) 
+        model.load_weights("weight_week/%s.npy.h5" % order_book_id) 
         
         
         #model = load_model('model/%s.h5' % order_book_id)
