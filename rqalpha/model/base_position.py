@@ -88,14 +88,7 @@ class BasePosition(AbstractPosition):
 
     # -- Function
     def is_de_listed(self):
-        """
-        判断合约是否过期
-        """
-        instrument = Environment.get_instance().get_instrument(self._order_book_id)
-        current_date = Environment.get_instance().trading_dt
-        if instrument.de_listed_date is not None and current_date >= instrument.de_listed_date:
-            return True
-        return False
+        raise NotImplementedError
 
     def apply_settlement(self):
         raise NotImplementedError
