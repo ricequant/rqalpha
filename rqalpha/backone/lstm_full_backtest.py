@@ -71,9 +71,9 @@ def handle_bar(context, bar_dict):
         history_close = history_close[:-1]
         if len(history_close) != 50:
             continue
-        if not os.path.isfile('weight_week/%s.h5' % order_book_id):
+        if not os.path.isfile('weight_week/%s.npy.h5' % order_book_id):
             continue
-        if not os.path.isfile('weight_json_week/%s.h5' % order_book_id):
+        if not os.path.isfile('weight_json_week/%s.npy.h5' % order_book_id):
             continue
         
         y = bar_dict[order_book_id].close
@@ -92,7 +92,7 @@ def handle_bar(context, bar_dict):
         
 
 
-        json_file = open("weight_json/%s.h5"% order_book_id, 'r')
+        json_file = open("weight_json/%s.npy.h5"% order_book_id, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         model = model_from_json(loaded_model_json)
