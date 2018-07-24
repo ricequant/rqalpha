@@ -414,13 +414,13 @@ class FuturePosition(BasePosition):
 
         开仓：
         delta_cash
-            = -1 * margin
-            = -1 * quantity * contract_multiplier * price * margin_rate
+        = -1 * margin
+        = -1 * quantity * contract_multiplier * price * margin_rate
 
         平仓：
         delta_cash
-            = old_margin - margin + delta_realized_pnl
-            = (sum of (cost_price * quantity) of closed trade) * contract_multiplier * margin_rate + delta_realized_pnl
+        = old_margin - margin + delta_realized_pnl
+        = (sum of (cost_price * quantity) of closed trade) * contract_multiplier * margin_rate + delta_realized_pnl
 
         :param trade: rqalpha.model.trade.Trade
         :return: float

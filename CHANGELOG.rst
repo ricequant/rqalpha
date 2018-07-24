@@ -2,6 +2,42 @@
 CHANGELOG
 ==================
 
+3.1.0
+==================
+
+- Api
+
+  - 增加 :code:`symbol(order_book_id, split=", ")` 扩展Api，用于获取合约简称。
+  - :code:`current_snapshot(id_or_symbol)` 现在可以在 before_trading/after_trading 中调用。
+  - :code:`history_bars` 增加对 :code:`frequency` 参数的检查。
+  - 修正了 :code:`order(order_book_id, quantity, price=None, style=None)` 函数期货下单的逻辑。
+
+- 接口
+
+  - :code:`AbstractDataSource` 接口增加了 :code:`get_tick_size(instrument)` 方法，:code:`BaseDataSource` 实现了该方法。
+
+- 类
+
+  - :code:`Instrument` 类新增了 :code:`tick_size()` 方法。
+  - :code:`PersistHelper` 类新增了 :code:`unregister(key)` 方法，可以调用该方法注销已经注册了持久化服务的模块。
+
+- 配置
+
+  - 增加 :code:`base.round_price` 参数，开启后现价单价格会被调整为最小价格变动单位的整倍数，对应的命令行参数为 :code:`--round-price`。
+  - :code:`sys_simulation Mod` 增加滑点模型 :code:`slippage_model` 参数，滑点不再限制为价格的比率，亦可使用基于最小价格变动单位的滑点模型，甚至加载自定义的滑点模型。
+  - :code:`sys_account Mod` 增加 :code:`future_forced_liquidation` 参数，开启后期货账户在爆仓时会被强平。
+
+- Mod
+
+  - sys_incremental Mod
+
+    - 加入新 Mod :code:`rqalpha_mod_sys_incremental`，启用该 Mod 可以增量运行回测，方便长期跟踪策略而不必反复运行跑过的日期，详情参考文档 `sys_incremental Mod README <https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_incremental/README.rst>`_
+
+- 其他
+
+  - Fix `Issue 224 <https://github.com/ricequant/rqalpha/issues/224>`_ ， 解决了展示图像时图像不能被保存的问题。
+  - 策略运行失败时 return code 为 1。
+
 3.0.10
 ==================
 
