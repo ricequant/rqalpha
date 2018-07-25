@@ -23,7 +23,7 @@ from rqalpha.events import EVENT
 
 from .booking_account import BookingAccount
 
-# import api
+# noinspection PyUnresolvedReferences
 from . import api_booking
 
 

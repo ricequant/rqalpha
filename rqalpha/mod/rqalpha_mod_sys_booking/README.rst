@@ -2,7 +2,9 @@
 sys_booking Mod
 ===============================
 
-RQAlpha 通用仓位 Mod
+RQAlpha 仓位加载 Mod
+
+该 Mod 用于从外部加载仓位，使得策略可以在某一份已经存在的仓位（Booking）的基础上进行交易。
 
 该模块是系统模块，不可删除
 
@@ -16,23 +18,3 @@ RQAlpha 通用仓位 Mod
 
     # 启用
     $ rqalpha mod enable sys_booking
-
-模块配置项
-===============================
-
-您可以通过直接修改 `sys_booking` Mod 的配置信息来更改默认配置项
-
-默认配置项如下:
-
-..  code-block:: python
-
-    {
-        "booking_id": None,
-    }
-
-扩展命令
-===============================
-
-.. code-block:: bash
-
-   rqalpha run -mc sys_risk.validate_cash False -mc sys_accounts.future_forced_liquidation False
