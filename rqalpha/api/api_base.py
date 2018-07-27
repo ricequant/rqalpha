@@ -208,6 +208,16 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     :type position_effect: :class:`~POSITION_EFFECT` enum
 
     :return: :class:`~Order` object | None
+
+    :example:
+
+    .. code-block:: python
+
+        # 购买 2000 股的平安银行股票，并以市价单发送：
+        submit_order('000001.XSHE', 2000, SIDE.BUY)
+        # 平 10 份 RB1812 多方向的今仓，并以 4000 的价格发送限价单
+        submit_order('RB1812', 10, SIDE.SELL, price=4000, position_effect=POSITION_EFFECT.CLOSE_TODAY)
+
     """
     order_book_id = assure_order_book_id(id_or_ins)
     env = Environment.get_instance()
