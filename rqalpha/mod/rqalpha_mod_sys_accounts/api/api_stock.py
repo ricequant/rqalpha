@@ -78,7 +78,7 @@ def order_shares(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
 
     :example:
 
@@ -175,7 +175,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
 
     :example:
 
@@ -218,7 +218,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
 
     :example:
 
@@ -287,7 +287,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
 
     :example:
 
@@ -326,7 +326,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
 
     :example:
 
@@ -379,7 +379,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
 
     :example:
 

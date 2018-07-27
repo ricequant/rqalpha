@@ -191,7 +191,24 @@ def get_open_orders():
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL])
 )
 def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
+    """
+    通用下单函数，策略可以通过该函数自由选择参数下单。
 
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param float amount: 下单量，需为正数
+
+    :param side: 多空方向，多（SIDE.BUY）或空（SIDE.SELL）
+    :type side: :class:`~SIDE` enum
+
+    :param float price: 下单价格，默认为None，表示市价单
+
+    :param position_effect: 开平方向，开仓（POSITION_EFFECT.OPEN），平仓（POSITION.CLOSE）或平今（POSITION_EFFECT.CLOSE_TODAY），交易股票不需要该参数
+    :type position_effect: :class:`~POSITION_EFFECT` enum
+
+    :return: :class:`~Order` object | None
+    """
     order_book_id = assure_order_book_id(id_or_ins)
     env = Environment.get_instance()
     if env.config.base.run_type != RUN_TYPE.BACKTEST:

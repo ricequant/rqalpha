@@ -194,7 +194,7 @@ def buy_open(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
 
     :example:
 
@@ -223,7 +223,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
 
     :param bool close_today: 是否指定发平进仓单，默认为False，发送平仓单
 
-    :return: :class:`~Order` object | list[:class:`~Order`]
+    :return: :class:`~Order` object | list[:class:`~Order`] | None
 
     :example:
 
@@ -251,7 +251,7 @@ def sell_open(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object
+    :return: :class:`~Order` object | None
     """
     return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
 
@@ -273,7 +273,7 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
 
     :param bool close_today: 是否指定发平进仓单，默认为False，发送平仓单
 
-    :return: :class:`~Order` object | list[:class:`~Order`]
+    :return: :class:`~Order` object | list[:class:`~Order`] | None
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
