@@ -290,8 +290,13 @@ def mod(cmd, params):
         Uninstall third-party Mod
         """
 
-        from pip import main as pip_main
-        from pip.commands.uninstall import UninstallCommand
+        try:
+            # be compatible with pip < 10.0
+            from pip import main as pip_main
+            from pip.commands.uninstall import UninstallCommand
+        except ImportError:
+            from pip._internal import main as pip_main
+            from pip._internal.commands.uninstall import UninstallCommand
 
         params = [param for param in params]
 
