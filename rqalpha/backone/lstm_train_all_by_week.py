@@ -1,7 +1,9 @@
 import time
 import numpy as np
+import pandas as pd
 import os
 import math
+import datetime
 import warnings
 from numpy import newaxis
 from keras.layers.core import Dense, Activation, Dropout
@@ -58,7 +60,7 @@ def normalise_windows(window_data):
         normalised_window = [((float(p) / float(window[0])) - 1) for p in window]
         normalised_data.append(normalised_window)
     return normalised_data
-
+"""
 def build_model(layers):
     model = Sequential()
     try:
@@ -84,9 +86,33 @@ def build_model(layers):
     #model.compile(loss="mse", optimizer=RMSprop(lr=0.003, rho=0.9, epsilon=1e-06))
     print("> Compilation Time : ", time.time() - start)
     return model
+"""
+
+def build_model(layers):
+    model = Sequential()
+
+    model.add(LSTM(
+        input_shape=(layers[1], layers[0]),
+        output_dim=layers[1],
+        return_sequences=True))
+    model.add(Dropout(0.2))
+
+    model.add(LSTM(
+        layers[2],
+        return_sequences=False))
+    model.add(Dropout(0.2))
+
+    model.add(Dense(
+        output_dim=layers[3]))
+    model.add(Activation("softmax"))
+
+    start = time.time()
+    model.compile(loss="mse", optimizer="rmsprop")
+    print("> Compilation Time : ", time.time() - start)
+    return model
 
 
-def train_single_stock(filename):
+def train_single_stock(filename, result):
     global_start_time = time.time()
     epochs  = 1
     seq_len = 50
@@ -118,9 +144,10 @@ def train_single_stock(filename):
 
 
     print("loss: %s" % history.history['loss'])
-    print("val_loss: %s"  %history.history['val_loss'])
+    print("val_loss: %s"  % history.history['val_loss'])
 
-    result[filename] = history.history['loss']
+    result[filename] = history.history
+    
     """
     scaler = MinMaxScaler(feature_range=(0, 1))
     trainPredict = scaler.inverse_transform(X_train)
@@ -157,17 +184,21 @@ if __name__=='__main__':
     all_stock_id = get_all_order_book_id()
     #print all_stock_id
     #pool = multiprocessing.Pool(processes=2)
-    
+    result = {}
     for stock_id in all_stock_id:
         model_file_path = 'weight_week/%s.h5' %  stock_id[:-4]
         #print model_file_path
         if not os.path.isfile(model_file_path):
-            train_single_stock(stock_id)
+            train_single_stock(stock_id, result)
             #pool.apply_async(train_single_stock, (stock_id,))
             #tpool.execute(train_single_stock, stock_id)
-            
-            
+
     print result
+    df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
+    print df
+    yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+    df.to_csv ("train_reslut%s.csv" % yesterday,encoding = "utf-8")
+    
     """
     #pool.close()
     #pool.join()
