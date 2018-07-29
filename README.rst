@@ -211,7 +211,7 @@ Feature Status
 .. _vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
 .. _sentry: https://github.com/ricequant/rqalpha-mod-sentry
 .. _tushare: https://github.com/ricequant/rqalpha-mod-tushare
-.. _shipane: https://github.com/wh1100717/rqalpha-mod-ShiPanE
+.. _shipane: https://github.com/sinall/rqalpha-mod-ShiPanE
 .. _金融数据RQData: https://www.ricequant.com/doc/rqdata-institutional
 .. _点击链接免费开通: https://ricequant.mikecrm.com/h7ZFJnT
 
