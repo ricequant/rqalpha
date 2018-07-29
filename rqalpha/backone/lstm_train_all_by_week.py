@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import os
+import math
 import warnings
 from numpy import newaxis
 from keras.layers.core import Dense, Activation, Dropout
@@ -11,7 +12,11 @@ from eventlet import tpool
 from keras import backend as K
 from subprocess import call
 import traceback
-import multiprocessing
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+
+
+result = {}
 
 
 def load_data(filename, seq_len, normalise_window):
@@ -56,7 +61,6 @@ def normalise_windows(window_data):
 
 def build_model(layers):
     model = Sequential()
-    print "-ffffff"
     try:
         model.add(LSTM(
             input_shape=(layers[1], layers[0]),
@@ -64,9 +68,7 @@ def build_model(layers):
             return_sequences=True))
     except Exception as e:
         print traceback.format_exc()
-    print "dddddddd"
     model.add(Dropout(0.2))
-    print "ddddd"
     model.add(LSTM(
         layers[2],
         return_sequences=False))
@@ -98,14 +100,16 @@ def train_single_stock(filename):
     
     X_train, y_train = load_data('close_price/%s' % filename, seq_len, True)
     
-    print('> Data Loaded. Compiling...')
+    print('> Data Loaded. Compiling... X_train len:%s' % len(X_train))
+    if len(X_train) < 1000:
+        return None
     
     try:
         model = build_model([1, seq_len, 100, 1])
     except Exception as e:
         print traceback.format_exc()
     
-    model.fit(
+    history = model.fit(
         X_train,
         y_train,
         batch_size=512,
@@ -113,6 +117,20 @@ def train_single_stock(filename):
         validation_split=0.05)
 
 
+    print("loss: %s" % history.history['loss'])
+    print("val_loss: %s"  %history.history['val_loss'])
+
+    result[filename] = history.history['loss']
+    """
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    trainPredict = scaler.inverse_transform(X_train)
+    trainY = scaler.inverse_transform(y_train)
+
+    # TRAINING RMSE
+    trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
+    print('iiiiiiiiiiiiiin Train RMSE: %.2f' % (trainScore))
+    """
+    
     model.save_weights('weight_week/%s.h5' %  filename)
     model_json = model.to_json()
     with open('weight_json_week/%s.h5' %  filename, "w") as json_file:
@@ -147,6 +165,9 @@ if __name__=='__main__':
             train_single_stock(stock_id)
             #pool.apply_async(train_single_stock, (stock_id,))
             #tpool.execute(train_single_stock, stock_id)
+            
+            
+    print result
     """
     #pool.close()
     #pool.join()
