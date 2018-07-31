@@ -146,7 +146,10 @@ def train_single_stock(filename, result):
     print("loss: %s" % history.history['loss'])
     print("val_loss: %s"  % history.history['val_loss'])
 
-    result[filename] = history.history
+    result[filename]["loss"] = history.history['loss']
+    result[filename]["val_loss"] = history.history['val_loss']
+    result[filename]["stock_id"] = "%s.%s" % (filename.split(".")[0], filename.split(".")[1])
+    
     
     """
     scaler = MinMaxScaler(feature_range=(0, 1))

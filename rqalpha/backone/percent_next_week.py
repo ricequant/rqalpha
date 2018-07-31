@@ -97,7 +97,7 @@ def handle_bar_dl(context, bar_dict):
         
         filename =  "%s.npy.h5" % order_book_id
 
-        result[filename] = {"yesterday_close": yesterday_close, "restore_predicted": restore_predicted, "inc": inc}
+        result[filename] = {"stock_id":order_book_id, "yesterday_close": yesterday_close, "restore_predicted": restore_predicted, "inc": inc}
     
     print result
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
