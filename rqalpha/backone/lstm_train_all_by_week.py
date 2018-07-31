@@ -145,7 +145,8 @@ def train_single_stock(filename, result):
 
     print("loss: %s" % history.history['loss'])
     print("val_loss: %s"  % history.history['val_loss'])
-
+    
+    result[filename] = {}
     result[filename]["loss"] = history.history['loss']
     result[filename]["val_loss"] = history.history['val_loss']
     result[filename]["stock_id"] = "%s.%s" % (filename.split(".")[0], filename.split(".")[1])
@@ -199,7 +200,7 @@ if __name__=='__main__':
     print result
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
     print df
-    yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+    yesterday = datetime.date.today().strftime("%Y-%m-%d")
     df.to_csv ("train_reslut%s.csv" % yesterday,encoding = "utf-8")
     
     """
