@@ -2,6 +2,7 @@
 # fetch data
 rqalpha update_bundle
 rm -rf close_price
+mkdir close_price
 python fetch_all.py
 
 # train LSTM
