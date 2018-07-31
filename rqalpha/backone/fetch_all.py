@@ -84,8 +84,8 @@ def end_dl(context):
         df = pd.DataFrame(data)
         df.to_csv("close_price/%s" % book_id,  encoding = "utf-8")
 
-before_yesterday = (datetime.date.today() -  datetime.timedelta(days=3)).strftime("%Y-%m-%d")
-yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 print before_yesterday
 print yesterday
 config_dl = {
