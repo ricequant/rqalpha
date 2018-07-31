@@ -30,6 +30,7 @@ class Strategy(object):
         self._current_universe = set()
 
         self._init = scope.get('init', None)
+        self._end = scope.get('end', None)
         self._handle_bar = scope.get('handle_bar', None)
         self._handle_tick = scope.get('handle_tick', None)
         func_before_trading = scope.get('before_trading', None)
@@ -72,6 +73,17 @@ class Strategy(object):
 
         Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_INIT))
 
+
+    def end(self):
+        if not self._end:
+            return
+        
+        with ExecutionContext(EXECUTION_PHASE.FINALIZED):
+            with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
+                self._end(self._user_context)
+                        
+        Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_END))
+        
     @run_when_strategy_not_hold
     def before_trading(self, event):
         self._force_run_before_trading = False

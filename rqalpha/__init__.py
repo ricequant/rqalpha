@@ -128,7 +128,8 @@ def run_func(**kwargs):
         'handle_bar': kwargs.get('handle_bar', dummy_func),
         'handle_tick': kwargs.get('handle_tick', dummy_func),
         'before_trading': kwargs.get('before_trading', dummy_func),
-        'after_trading': kwargs.get('after_trading', dummy_func)
+        'after_trading': kwargs.get('after_trading', dummy_func),
+        'end': kwargs.get('end', dummy_func)
     }
     if config is None:
         config = {}
