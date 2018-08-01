@@ -20,6 +20,7 @@ import numpy as np
 
 from rqalpha.interface import AbstractDataSource
 from rqalpha.const import MARGIN_TYPE
+from rqalpha.environment import Environment
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
@@ -225,7 +226,22 @@ class BaseDataSource(AbstractDataSource):
         return self._non_redeemable_days.contains(order_book_id, dates)
 
     def get_tick_size(self, instrument):
-        if instrument.type in ['CS', 'INDX']:
+        if instrument.type == 'CS':
+            if instrument.exchange == "XHKG":
+                last_price = Environment.get_instance().get_last_price(instrument.order_book_id)
+                if last_price <= 0.5:
+                    return 0.005
+                elif last_price <= 10.0:
+                    return 0.01
+                elif last_price <= 20.0:
+                    return 0.02
+                elif last_price <= 100.0:
+                    return 0.05
+                elif last_price <= 200.0:
+                    return 0.1
+            else:
+                return 0.01
+        elif instrument.type == "INDX":
             return 0.01
         elif instrument.type in ['ETF', 'LOF', 'FenjiB', 'FenjiA', 'FenjiMu']:
             return 0.001
