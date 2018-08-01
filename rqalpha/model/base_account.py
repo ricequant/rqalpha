@@ -41,7 +41,6 @@ class BaseAccount(AbstractAccount):
         self._frozen_cash = 0
         self._total_cash = total_cash
         self._backward_trade_set = backward_trade_set if backward_trade_set is not None else set()
-        self._transaction_cost = 0
         if register_event:
             self.register_event()
 
@@ -112,7 +111,7 @@ class BaseAccount(AbstractAccount):
         """
         [float] 总费用
         """
-        return self._transaction_cost
+        return sum(position.transaction_cost for position in six.itervalues(self._positions))
 
     # ------------------------------------ Abandon Property ------------------------------------
 

@@ -69,7 +69,6 @@ class StockAccount(BaseAccount):
             'total_cash': self._total_cash,
             'backward_trade_set': list(self._backward_trade_set),
             'dividend_receivable': self._dividend_receivable,
-            'transaction_cost': self._transaction_cost,
         }
 
     def set_state(self, state):
@@ -77,7 +76,6 @@ class StockAccount(BaseAccount):
         self._total_cash = state['total_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
         self._dividend_receivable = state['dividend_receivable']
-        self._transaction_cost = state['transaction_cost']
         self._positions.clear()
         for order_book_id, v in six.iteritems(state['positions']):
             position = self._positions.get_or_create(order_book_id)
@@ -113,7 +111,6 @@ class StockAccount(BaseAccount):
 
         position = self._positions.get_or_create(trade.order_book_id)
         position.apply_trade(trade)
-        self._transaction_cost += trade.transaction_cost
         self._total_cash -= trade.transaction_cost
         if trade.side == SIDE.BUY:
             self._total_cash -= trade.last_quantity * trade.last_price
@@ -167,7 +164,6 @@ class StockAccount(BaseAccount):
             else:
                 position.apply_settlement()
 
-        self._transaction_cost = 0
         self._backward_trade_set.clear()
 
     def _update_last_price(self, event):

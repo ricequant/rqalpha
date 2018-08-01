@@ -83,6 +83,7 @@ class StockPosition(BasePosition):
 
     def apply_settlement(self):
         self._non_closable = 0
+        self._transaction_cost = 0
 
     def reset_frozen(self, frozen):
         self._frozen = frozen

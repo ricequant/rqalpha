@@ -141,13 +141,11 @@ class FutureAccount(BaseAccount):
             'frozen_cash': self._frozen_cash,
             'total_cash': self._total_cash,
             'backward_trade_set': list(self._backward_trade_set),
-            'transaction_cost': self._transaction_cost,
         }
 
     def set_state(self, state):
         self._frozen_cash = state['frozen_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
-        self._transaction_cost = state['transaction_cost']
 
         margin_changed = 0
         self._positions.clear()
@@ -275,7 +273,6 @@ class FutureAccount(BaseAccount):
         position = self._positions.get_or_create(order_book_id)
         delta_cash = position.apply_trade(trade)
 
-        self._transaction_cost += trade.transaction_cost
         self._total_cash -= trade.transaction_cost
         self._total_cash += delta_cash
         self._frozen_cash -= self._frozen_cash_of_trade(trade)
