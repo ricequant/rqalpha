@@ -225,20 +225,14 @@ class BaseDataSource(AbstractDataSource):
     def non_redeemable(self, order_book_id, dates):
         return self._non_redeemable_days.contains(order_book_id, dates)
 
+    HK_STOCK_PRICE_SECTIONS = [0.25, 0.5, 10, 20, 100, 200, 500, 1000, 2000, 5000]
+    HK_STOCK_TICK_SIZES = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5]
+
     def get_tick_size(self, instrument):
         if instrument.type == 'CS':
             if instrument.exchange == "XHKG":
                 last_price = Environment.get_instance().get_last_price(instrument.order_book_id)
-                if last_price <= 0.5:
-                    return 0.005
-                elif last_price <= 10.0:
-                    return 0.01
-                elif last_price <= 20.0:
-                    return 0.02
-                elif last_price <= 100.0:
-                    return 0.05
-                elif last_price <= 200.0:
-                    return 0.1
+                return self.HK_STOCK_TICK_SIZES[np.searchsorted(self.HK_STOCK_PRICE_SECTIONS, last_price)]
             else:
                 return 0.01
         elif instrument.type == "INDX":
