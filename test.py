@@ -234,6 +234,7 @@ if __name__ == '__main__':
 
         elif sys.argv[1] == 'unittest':
             run_unit_tests()
+            end_time = datetime.now()
 
         else:
             target_file = sys.argv[1]

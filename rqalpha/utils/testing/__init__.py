@@ -1,9 +1,10 @@
 from unittest import TestCase
 
-from .mock import mock_instrument
+from .mock import mock_instrument, mock_bar, mock_tick
 from .fixtures import (
     EnvironmentFixture,
-    BaseDataSourceFixture
+    BaseDataSourceFixture,
+    BenchmarkAccountFixture,
 )
 
 
@@ -19,5 +20,8 @@ __all__ = [
     "RQAlphaTestCase",
     "EnvironmentFixture",
     "BaseDataSourceFixture",
-    "mock_instrument"
+    "BenchmarkAccountFixture",
+    "mock_instrument",
+    "mock_bar",
+    "mock_tick"
 ]
