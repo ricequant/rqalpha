@@ -11,8 +11,9 @@ class BaseDataSourceTestCase(EnvironmentFixture, BaseDataSourceFixture, RQAlphaT
             self.assertEqual(self.base_data_source.get_tick_size(mock_instrument(exchange="XHKG")), 5)
         self.assertEqual(self.base_data_source.get_tick_size(mock_instrument(exchange="XSHE")), 0.01)
         self.assertEqual(self.base_data_source.get_tick_size(mock_instrument(_type="FenjiA")), 0.001)
+        self.assertEqual(self.base_data_source.get_tick_size(mock_instrument(_type="INDX")), 0.01)
         self.assertEqual(self.base_data_source.get_tick_size(
-            mock_instrument(_type="Future", underlying_symbol="SM")), 2
-        )
+            mock_instrument(_type="Future", underlying_symbol="SM")
+        ), 2)
         with self.assertRaises(RuntimeError):
             self.base_data_source.get_tick_size(mock_instrument(_type=None))
