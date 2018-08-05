@@ -185,23 +185,31 @@ def get_all_order_book_id():
 
 
 if __name__=='__main__':
-    all_stock_id = get_all_order_book_id()
-    #print all_stock_id
-    #pool = multiprocessing.Pool(processes=2)
-    result = {}
-    for stock_id in all_stock_id:
-        model_file_path = 'weight_week/%s.h5' %  stock_id[:-4]
-        #print model_file_path
-        if not os.path.isfile(model_file_path):
-            train_single_stock(stock_id, result)
-            #pool.apply_async(train_single_stock, (stock_id,))
-            #tpool.execute(train_single_stock, stock_id)
-
-    print result
-    df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
-    print df
-    yesterday = datetime.date.today().strftime("%Y-%m-%d")
-    df.to_csv ("train_reslut%s.csv" % yesterday,encoding = "utf-8")
+    
+    train_all  = 1
+    
+    if train_all:
+        all_stock_id = get_all_order_book_id()
+        #print all_stock_id
+        #pool = multiprocessing.Pool(processes=2)
+        result = {}
+        for stock_id in all_stock_id:
+            model_file_path = 'weight_week/%s.h5' %  stock_id[:-4]
+            #print model_file_path
+            if not os.path.isfile(model_file_path):
+                train_single_stock(stock_id, result)
+                #pool.apply_async(train_single_stock, (stock_id,))
+                #tpool.execute(train_single_stock, stock_id)
+    
+        print result
+        df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
+        print df
+        yesterday = datetime.date.today().strftime("%Y-%m-%d")
+        df.to_csv ("train_reslut%s.csv" % yesterday,encoding = "utf-8")
+    else:
+        stock_id = "000001.XSHE.npy"
+        train_single_stock(stock_id, result)
+    
     
     """
     #pool.close()

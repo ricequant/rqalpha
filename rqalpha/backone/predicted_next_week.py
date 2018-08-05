@@ -27,6 +27,7 @@ volume 成交量
 def init_dl(context):
     # 在context中保存全局变量
     context.s1 = context.config.stock_id
+    context.predicted_one = context.config.predicted_one
     context.config
     context.all_close_price = {}
     context.today = None
@@ -43,6 +44,10 @@ def before_trading_dl(context):
 def handle_bar_dl(context, bar_dict):
     logger.info("每一个Bar执行")
     logger.info("打印Bar数据：")
+    
+    
+    if  context.predicted_one:
+        context.all = [context.s1]
     
     result = {}
     for s1 in context.all:
@@ -61,12 +66,10 @@ def handle_bar_dl(context, bar_dict):
         y = bar_dict[order_book_id].close
         
         yesterday_close = history_close[-1]
-        
-        
         normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
-        
-        print history_close
-        print normalised_history_close
+        print "history_close: %s" % history_close
+        print "normalised_history_close: %s" % normalised_history_close
+        normalised_yesterday_close = normalised_history_close[-1]
         
         normalised_history_close = np.array(normalised_history_close)
         normalised_history_close = normalised_history_close[newaxis,:]
@@ -92,12 +95,17 @@ def handle_bar_dl(context, bar_dict):
         
         restore_predicted = restore_normalise_window[-1]
         
-        inc = round(round(restore_predicted, 2) / yesterday_close, 2)
-        logger.info("predicted: %s yesterday_close:%s restore_predicted:%s real: %s" %  (predicted,yesterday_close, restore_predicted, y))
-        
-        filename =  "%s.npy.h5" % order_book_id
-
-        result[filename] = {"stock_id":order_book_id, "yesterday_close": yesterday_close, "restore_predicted": restore_predicted, "inc": inc}
+        if restore_predicted > yesterday_close:
+            inc = round(round(restore_predicted, 2) / yesterday_close, 2)
+            logger.info("predicted: %s yesterday_close:%s restore_predicted:%s real: %s" %  (predicted,yesterday_close, restore_predicted, y))
+            filename =  "%s.npy.h5" % order_book_id
+    
+            result[filename] = {"stock_id":order_book_id,
+                                "normalised_yesterday_close":normalised_yesterday_close, 
+                                "yesterday_close": yesterday_close, 
+                                "predicted":predicted, 
+                                "restore_predicted": restore_predicted, 
+                                "inc": inc}
     
     print result
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
@@ -117,7 +125,8 @@ yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%
 print before_yesterday
 print yesterday
 config_dl = {
-  "stock_id":"000001.XSHE",
+  "stock_id":"002701.XSHE",
+  "predicted_one":False,
   "base": {
     "start_date": before_yesterday,
     "end_date": yesterday,
