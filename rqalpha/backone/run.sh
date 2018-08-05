@@ -14,6 +14,8 @@ mkdir weight_week
 python lstm_train_all_by_week.py
 python predicted_next_week.py
 
+python recommender.py
+
 #back test
 
 

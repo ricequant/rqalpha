@@ -126,7 +126,7 @@ print before_yesterday
 print yesterday
 config_dl = {
   "stock_id":"002698.XSHE",
-  "predicted_one":True,
+  "predicted_one":False,
   "base": {
     "start_date": before_yesterday,
     "end_date": yesterday,

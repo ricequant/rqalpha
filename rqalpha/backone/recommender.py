@@ -3,7 +3,7 @@
 from pyeasyga import pyeasyga
 import numpy as np
 import pandas as pd
-import random
+import random, datetime
 from theano.tensor.nnet.conv3d2d import inc_diagonal_subtensor
 
 
@@ -60,6 +60,10 @@ if __name__=='__main__':
     #result = left.join(right, on='stock_id')
     result = pd.merge(left, right, on='stock_id')
     #print result
+    
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    result.to_csv ("merge_predicted_reslut%s.csv" % today, encoding="utf-8")
+    
     
     
     data = result.to_dict(orient='records')
