@@ -96,7 +96,7 @@ def handle_bar_dl(context, bar_dict):
         restore_predicted = restore_normalise_window[-1]
         
         if restore_predicted > yesterday_close:
-            inc = round(round(restore_predicted, 2) / yesterday_close, 2)
+            inc = round(round(restore_predicted-yesterday_close, 2)  /  yesterday_close, 2)
             logger.info("predicted: %s yesterday_close:%s restore_predicted:%s real: %s" %  (predicted,yesterday_close, restore_predicted, y))
             filename =  "%s.npy.h5" % order_book_id
     
@@ -125,8 +125,8 @@ yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%
 print before_yesterday
 print yesterday
 config_dl = {
-  "stock_id":"002701.XSHE",
-  "predicted_one":False,
+  "stock_id":"002698.XSHE",
+  "predicted_one":True,
   "base": {
     "start_date": before_yesterday,
     "end_date": yesterday,
