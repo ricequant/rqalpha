@@ -185,9 +185,14 @@ class AnalyserMod(AbstractMod):
         for account_type, starting_cash in six.iteritems(self._env.config.base.accounts):
             summary[account_type] = starting_cash
 
-        risk = Risk(np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns),
-                    data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date),
-                    (self._env.config.base.end_date - self._env.config.base.start_date).days + 1)
+        risk = Risk(
+            np.array(self._portfolio_daily_returns),
+            np.array(self._benchmark_daily_returns),
+            data_proxy.get_risk_free_rate(
+                self._env.config.base.start_date, self._env.config.base.end_date
+            ),
+            (self._env.config.base.natural_end_date - self._env.config.base.natural_start_date).days + 1
+        )
         summary.update({
             'alpha': self._safe_convert(risk.alpha, 3),
             'beta': self._safe_convert(risk.beta, 3),
