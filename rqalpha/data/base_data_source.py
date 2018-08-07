@@ -19,10 +19,11 @@ import six
 import numpy as np
 
 from rqalpha.interface import AbstractDataSource
-from rqalpha.const import MARGIN_TYPE
+from rqalpha.const import MARGIN_TYPE, MARKET
 from rqalpha.environment import Environment
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
+from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.data.future_info_cn import CN_FUTURE_INFO
@@ -54,9 +55,15 @@ class BaseDataSource(AbstractDataSource):
             DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
         ]
 
-        self._instruments = InstrumentStore(_p('instruments.pk'))
+        self._multiple_market_instruments = {
+            MARKET.CN: InstrumentStore(_p('instruments.pk'), MARKET.CN)
+        }
+
+        self._multiple_market_trading_dates = {
+            MARKET.CN: TradingDatesStore(_p('trading_dates.bcolz'))
+        }
+
         self._dividends = DividendStore(_p('original_dividends.bcolz'))
-        self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
         self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
         self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
@@ -66,11 +73,16 @@ class BaseDataSource(AbstractDataSource):
 
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+
         if os.path.exists(_p('public_funds.bcolz')):
             self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
             self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
             self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
             self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
+
+        if os.path.exists(_p('hk_instruments.pk')):
+            self._multiple_market_instruments[MARKET.HK] = InstrumentStore(_p("hk_instruments.pk"), MARKET.HK)
+            self._multiple_market_trading_dates[MARKET.HK] = TradingDatesStore(_p("hk_trading_dates.bcolz"))
 
     def get_dividend(self, order_book_id, public_fund=False):
         if public_fund:
@@ -80,11 +92,17 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
 
-    def get_trading_calendar(self):
-        return self._trading_dates.get_trading_calendar()
+    def get_trading_calendar(self, market=MARKET.CN):
+        try:
+            return self._multiple_market_trading_dates[market].get_trading_calendar()
+        except KeyError:
+            raise RQInvalidArgument(_("Unsupported such market type: {}".format(market)))
 
     def get_all_instruments(self):
-        return self._instruments.get_all_instruments()
+        all_instruments = []
+        for instruments in six.itervalues(self._multiple_market_instruments):
+            all_instruments.extend(instruments.get_all_instruments())
+        return all_instruments
 
     def is_suspended(self, order_book_id, dates):
         return self._suspend_days.contains(order_book_id, dates)
