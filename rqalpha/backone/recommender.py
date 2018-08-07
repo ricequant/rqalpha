@@ -4,7 +4,6 @@ from pyeasyga import pyeasyga
 import numpy as np
 import pandas as pd
 import random, datetime
-from theano.tensor.nnet.conv3d2d import inc_diagonal_subtensor
 
 
 def create_individual(data):
@@ -54,14 +53,16 @@ def fitness(individual, data):
 
 
 if __name__=='__main__':
-    left = pd.DataFrame.from_csv('train_reslut2018-08-04.csv')
-    right = pd.DataFrame.from_csv('predicted_reslut2018-08-04.csv')
+    today = "2018-08-07"
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    
+    left = pd.DataFrame.from_csv('train_reslut%s.csv' % today)
+    right = pd.DataFrame.from_csv('predicted_reslut%s.csv' % today)
     #print right
     #result = left.join(right, on='stock_id')
     result = pd.merge(left, right, on='stock_id')
     #print result
     
-    today = datetime.date.today().strftime("%Y-%m-%d")
     result.to_csv ("merge_predicted_reslut%s.csv" % today, encoding="utf-8")
     
     
