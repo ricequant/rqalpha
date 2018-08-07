@@ -207,7 +207,7 @@ if __name__=='__main__':
         yesterday = datetime.date.today().strftime("%Y-%m-%d")
         df.to_csv ("train_reslut%s.csv" % yesterday,encoding = "utf-8")
     else:
-        stock_id = "000001.XSHE.npy"
+        stock_id = "300028.XSHE.npy"
         train_single_stock(stock_id, result)
     
     

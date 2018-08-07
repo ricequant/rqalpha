@@ -77,11 +77,11 @@ def handle_bar_dl(context, bar_dict):
         
 
 
-        json_file = open("weight_json_week/%s.npy.h5"% order_book_id, 'r')
+        json_file = open("weight_json_day/%s.npy.h5"% order_book_id, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         model = model_from_json(loaded_model_json)
-        model.load_weights("weight_week/%s.npy.h5" % order_book_id) 
+        model.load_weights("weight_day/%s.npy.h5" % order_book_id) 
         
         
         #model = load_model('model/%s.h5' % order_book_id)
@@ -119,14 +119,18 @@ def after_trading_dl(context):
     logger.info("收盘后执行after_trading函数")
 
 
-
+predicted_one = False
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
+if predicted_one:
+    before_yesterday = "2018-08-07"
+    yesterday = "2018-08-08"
 print before_yesterday
 print yesterday
 config_dl = {
-  "stock_id":"002698.XSHE",
-  "predicted_one":False,
+  "stock_id":"300028.XSHE",
+  "predicted_one":predicted_one,
   "base": {
     "start_date": before_yesterday,
     "end_date": yesterday,
