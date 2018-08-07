@@ -95,17 +95,17 @@ def handle_bar_dl(context, bar_dict):
         
         restore_predicted = restore_normalise_window[-1]
         
-        if restore_predicted > yesterday_close:
-            inc = round(round(restore_predicted-yesterday_close, 2)  /  yesterday_close, 2)
-            logger.info("predicted: %s yesterday_close:%s restore_predicted:%s real: %s" %  (predicted,yesterday_close, restore_predicted, y))
-            filename =  "%s.npy.h5" % order_book_id
-    
-            result[filename] = {"stock_id":order_book_id,
-                                "normalised_yesterday_close":normalised_yesterday_close, 
-                                "yesterday_close": yesterday_close, 
-                                "predicted":predicted, 
-                                "restore_predicted": restore_predicted, 
-                                "inc": inc}
+        #if restore_predicted > yesterday_close:
+        inc = round(round(restore_predicted-yesterday_close, 2)  /  yesterday_close, 2)
+        logger.info("predicted: %s yesterday_close:%s restore_predicted:%s real: %s" %  (predicted,yesterday_close, restore_predicted, y))
+        filename =  "%s.npy.h5" % order_book_id
+
+        result[filename] = {"stock_id":order_book_id,
+                            "normalised_yesterday_close":normalised_yesterday_close, 
+                            "yesterday_close": yesterday_close, 
+                            "predicted":predicted, 
+                            "restore_predicted": restore_predicted, 
+                            "inc": inc}
     
     print result
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
