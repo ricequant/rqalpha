@@ -90,9 +90,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         max_dd_end = len(xs) - 1
     max_dd_start = np.argmax(xs[:max_dd_end]) if max_dd_end > 0 else 0
 
-    max_ddd_start_day = max_dd_start
-    max_ddd_end_day = len(xs) - 1 if tmp.max() < 0 else np.argmax(tmp) + max_dd_end
-
+    max_ddd_start_day, max_ddd_end_day = max_ddd(xs)
     max_dd_info = "MaxDD  {}~{}, {} days".format(index[max_dd_start], index[max_dd_end],
                                                  (index[max_dd_end] - index[max_dd_start]).days)
     max_dd_info += "\nMaxDDD {}~{}, {} days".format(index[max_ddd_start_day], index[max_ddd_end_day],
