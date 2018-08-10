@@ -168,6 +168,10 @@ class BaseDataSource(AbstractDataSource):
 
         dt = np.uint64(convert_date_to_int(dt))
         i = bars['datetime'].searchsorted(dt, side='right')
+        
+        if not include_now:
+            i = i - 1 if i > 0 else 0
+        
         left = i - bar_count if i >= bar_count else 0
         bars = bars[left:i]
         if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
