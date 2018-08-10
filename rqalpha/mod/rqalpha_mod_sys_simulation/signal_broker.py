@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from copy import copy
 
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils import is_valid_price
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
@@ -31,8 +31,8 @@ from .utils import init_portfolio
 class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
-        self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
-        self._slippage_decider = SlippageDecider(mod_config.slippage)
+        self._commission_decider = CommissionDecider(mod_config.commission_multiplier, mod_config.stock_min_commission)
+        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._tax_decider = TaxDecider()
         self._price_limit = mod_config.price_limit
 
@@ -61,7 +61,7 @@ class SignalBroker(AbstractBroker):
 
         last_price = price_board.get_last_price(order_book_id)
 
-        if np.isnan(last_price):
+        if not is_valid_price(last_price):
             instrument = self._env.get_instrument(order_book_id)
             listed_date = instrument.listed_date.date()
             if listed_date == self._env.trading_dt.date():
@@ -102,7 +102,7 @@ class SignalBroker(AbstractBroker):
                 return
 
         ct_amount = account.positions.get_or_create(order_book_id).cal_close_today_amount(order.quantity, order.side)
-        trade_price = self._slippage_decider.get_trade_price(order.side, deal_price)
+        trade_price = self._slippage_decider.get_trade_price(order, deal_price)
         trade = Trade.__from_create__(
             order_id=order.order_id,
             price=trade_price,

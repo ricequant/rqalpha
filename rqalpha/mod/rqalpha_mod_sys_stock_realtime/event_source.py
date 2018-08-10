@@ -100,9 +100,6 @@ class RealtimeEventSource(AbstractEventSource):
             elif dt.strftime("%H:%M:%S") >= "15:10:00" and dt.date() > self.after_trading_fire_date:
                 self.event_queue.put((dt, EVENT.AFTER_TRADING))
                 self.after_trading_fire_date = dt.date()
-            elif dt.strftime("%H:%M:%S") >= "15:10:00" and dt.date() > self.settlement_fire_date:
-                self.event_queue.put((dt, EVENT.SETTLEMENT))
-                self.settlement_fire_date = dt.date()
 
             if is_tradetime_now():
                 self.event_queue.put((dt, EVENT.BAR))

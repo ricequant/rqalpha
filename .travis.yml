@@ -23,13 +23,13 @@ install:
 
   # Install bcolz
   - pip install Cython
-  - pip install bcolz
+  - pip install bcolz==1.2.0
 
   # Install Test Deps
   - pip install TA-Lib
   - pip install coveralls
   - pip install -U setuptools
-  - pip install funcat
+  - pip install git+https://github.com/Cuizi7/funcat.git
   - pip install ipython==5.3.0
   - pip install .
 script:

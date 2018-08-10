@@ -20,7 +20,7 @@ import pandas as pd
 
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.environment import Environment
-from rqalpha.model.snapshot import SnapshotObject
+from rqalpha.model.tick import TickObject
 
 from . import data_board
 
@@ -38,10 +38,10 @@ class DirectDataSource(BaseDataSource):
         try:
             snapshot_dict = data_board.realtime_quotes_df.loc[instrument.order_book_id].to_dict()
         except KeyError:
-            return SnapshotObject(instrument, None)
+            return None
         snapshot_dict["last"] = snapshot_dict["price"]
-        dt = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
-        return SnapshotObject(instrument, snapshot_dict, dt=dt)
+        snapshot_dict["datetime"] = pd.Timestamp(snapshot_dict["datetime"]).to_pydatetime()
+        return TickObject(instrument, snapshot_dict)
 
     def available_data_range(self, frequency):
         return datetime.date(2017, 1, 1), datetime.date.max

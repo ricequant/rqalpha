@@ -36,6 +36,7 @@ class Environment(object):
         self.strategy_loader = None
         self.global_vars = None
         self.persist_provider = None
+        self.persist_helper = None
         self.broker = None
         self.profile_deco = None
         self.system_log = system_log
@@ -85,6 +86,9 @@ class Environment(object):
     def cancel_hold_strategy(self):
         self.config.extra.is_hold = False
 
+    def set_persist_helper(self, helper):
+        self.persist_helper = helper
+
     def set_persist_provider(self, provider):
         self.persist_provider = provider
 
@@ -121,6 +125,8 @@ class Environment(object):
         return self._position_model_dict[account_type]
 
     def can_submit_order(self, order):
+        if Environment.get_instance().config.extra.is_hold:
+            return False
         account = self.get_account(order.order_book_id)
         for v in self._frontend_validators:
             if not v.can_submit_order(account, order):

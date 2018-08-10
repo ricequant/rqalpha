@@ -41,9 +41,7 @@ class SimulationEventSource(AbstractEventSource):
     def _get_universe(self):
         universe = self._env.get_universe()
         if len(universe) == 0 and DEFAULT_ACCOUNT_TYPE.STOCK.name not in self._config.base.accounts:
-            error = CustomError()
-            error.set_msg("Current universe is empty. Please use subscribe function before trade")
-            raise patch_user_exc(CustomException(error), force=True)
+            raise patch_user_exc(RuntimeError(_("Current universe is empty. Please use subscribe function before trade")), force=True)
         return universe
 
     # [BEGIN] minute event helper
@@ -97,7 +95,6 @@ class SimulationEventSource(AbstractEventSource):
                 yield Event(EVENT.BAR, calendar_dt=dt_bar, trading_dt=dt_bar)
 
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
-                yield Event(EVENT.SETTLEMENT, calendar_dt=dt_settlement, trading_dt=dt_settlement)
         elif frequency == '1m':
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 before_trading_flag = True
@@ -139,9 +136,6 @@ class SimulationEventSource(AbstractEventSource):
 
                 dt = date.replace(hour=15, minute=30)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
-
-                dt = date.replace(hour=17, minute=0)
-                yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
         elif frequency == "tick":
             data_proxy = self._env.data_proxy
             for day in data_proxy.get_trading_dates(start_date, end_date):
@@ -152,33 +146,30 @@ class SimulationEventSource(AbstractEventSource):
                 while True:
                     for tick in data_proxy.get_merge_ticks(self._get_universe(), date, last_dt):
                         # find before trading time
+
+                        calendar_dt = tick.datetime
+
+                        if calendar_dt < dt_before_day_trading:
+                            trading_dt = calendar_dt.replace(year=date.year, month=date.month, day=date.day)
+                        else:
+                            trading_dt = calendar_dt
+
                         if last_tick is None:
                             last_tick = tick
-                            dt = tick.datetime
-                            before_trading_dt = dt - datetime.timedelta(minutes=30)
-                            yield Event(EVENT.BEFORE_TRADING, calendar_dt=before_trading_dt,
-                                        trading_dt=before_trading_dt)
+                            yield Event(EVENT.BEFORE_TRADING,
+                                        calendar_dt=calendar_dt - datetime.timedelta(minutes=30),
+                                        trading_dt=trading_dt - datetime.timedelta(minutes=30))
 
-                        dt = tick.datetime
-
-                        if dt < dt_before_day_trading:
-                            trading_dt = dt.replace(year=date.year, month=date.month, day=date.day)
-                        else:
-                            trading_dt = dt
-
-                        yield Event(EVENT.TICK, calendar_dt=dt, trading_dt=trading_dt, tick=tick)
+                        yield Event(EVENT.TICK, calendar_dt=calendar_dt, trading_dt=trading_dt, tick=tick)
 
                         if self._universe_changed:
                             self._universe_changed = False
-                            last_dt = dt
+                            last_dt = calendar_dt
                             break
                     else:
                         break
 
                 dt = date.replace(hour=15, minute=30)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
-
-                dt = date.replace(hour=17, minute=0)
-                yield Event(EVENT.SETTLEMENT, calendar_dt=dt, trading_dt=dt)
         else:
             raise NotImplementedError(_("Frequency {} is not support.").format(frequency))

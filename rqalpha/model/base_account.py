@@ -36,12 +36,11 @@ class BaseAccount(AbstractAccount):
 
     __repr__ = property_repr
 
-    def __init__(self, total_cash, positions, backward_trade_set=set(), register_event=True):
+    def __init__(self, total_cash, positions, backward_trade_set=None, register_event=True):
         self._positions = positions
         self._frozen_cash = 0
         self._total_cash = total_cash
-        self._backward_trade_set = backward_trade_set
-        self._transaction_cost = 0
+        self._backward_trade_set = backward_trade_set if backward_trade_set is not None else set()
         if register_event:
             self.register_event()
 
@@ -112,7 +111,7 @@ class BaseAccount(AbstractAccount):
         """
         [float] 总费用
         """
-        return self._transaction_cost
+        return sum(position.transaction_cost for position in six.itervalues(self._positions))
 
     # ------------------------------------ Abandon Property ------------------------------------
 

@@ -19,9 +19,11 @@ import six
 import numpy as np
 
 from rqalpha.interface import AbstractDataSource
-from rqalpha.const import MARGIN_TYPE
+from rqalpha.const import MARGIN_TYPE, MARKET
+from rqalpha.environment import Environment
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
+from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.data.future_info_cn import CN_FUTURE_INFO
@@ -41,7 +43,7 @@ from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
 class BaseDataSource(AbstractDataSource):
     def __init__(self, path):
         if not os.path.exists(path):
-            raise RuntimeError('bundle path {} not exist'.format(os.path.abspath))
+            raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 
         def _p(name):
             return os.path.join(path, name)
@@ -53,9 +55,15 @@ class BaseDataSource(AbstractDataSource):
             DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
         ]
 
-        self._instruments = InstrumentStore(_p('instruments.pk'))
+        self._multiple_market_instruments = {
+            MARKET.CN: InstrumentStore(_p('instruments.pk'), MARKET.CN)
+        }
+
+        self._multiple_market_trading_dates = {
+            MARKET.CN: TradingDatesStore(_p('trading_dates.bcolz'))
+        }
+
         self._dividends = DividendStore(_p('original_dividends.bcolz'))
-        self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
         self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
         self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
@@ -65,11 +73,16 @@ class BaseDataSource(AbstractDataSource):
 
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+
         if os.path.exists(_p('public_funds.bcolz')):
             self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
             self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
             self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
             self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
+
+        if os.path.exists(_p('hk_instruments.pk')):
+            self._multiple_market_instruments[MARKET.HK] = InstrumentStore(_p("hk_instruments.pk"), MARKET.HK)
+            self._multiple_market_trading_dates[MARKET.HK] = TradingDatesStore(_p("hk_trading_dates.bcolz"))
 
     def get_dividend(self, order_book_id, public_fund=False):
         if public_fund:
@@ -79,11 +92,17 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
 
-    def get_trading_calendar(self):
-        return self._trading_dates.get_trading_calendar()
+    def get_trading_calendar(self, market=MARKET.CN):
+        try:
+            return self._multiple_market_trading_dates[market].get_trading_calendar()
+        except KeyError:
+            raise RQInvalidArgument(_("Unsupported such market type: {}".format(market)))
 
     def get_all_instruments(self):
-        return self._instruments.get_all_instruments()
+        all_instruments = []
+        for instruments in six.itervalues(self._multiple_market_instruments):
+            all_instruments.extend(instruments.get_all_instruments())
+        return all_instruments
 
     def is_suspended(self, order_book_id, dates):
         return self._suspend_days.contains(order_book_id, dates)
@@ -227,3 +246,23 @@ class BaseDataSource(AbstractDataSource):
 
     def non_redeemable(self, order_book_id, dates):
         return self._non_redeemable_days.contains(order_book_id, dates)
+
+    HK_STOCK_PRICE_SECTIONS = [0.25, 0.5, 10, 20, 100, 200, 500, 1000, 2000, 5000]
+    HK_STOCK_TICK_SIZES = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5]
+
+    def get_tick_size(self, instrument):
+        if instrument.type == 'CS':
+            if instrument.exchange == "XHKG":
+                last_price = Environment.get_instance().get_last_price(instrument.order_book_id)
+                return self.HK_STOCK_TICK_SIZES[np.searchsorted(self.HK_STOCK_PRICE_SECTIONS, last_price)]
+            else:
+                return 0.01
+        elif instrument.type == "INDX":
+            return 0.01
+        elif instrument.type in ['ETF', 'LOF', 'FenjiB', 'FenjiA', 'FenjiMu']:
+            return 0.001
+        elif instrument.type == 'Future':
+            return CN_FUTURE_INFO[instrument.underlying_symbol]['speculation']['tick_size']
+        else:
+            # NOTE: you can override get_tick_size in your custom data source
+            raise RuntimeError(_("Unsupported instrument type for tick size"))

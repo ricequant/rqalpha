@@ -21,25 +21,25 @@
 
 .. code-block:: bash
 
-    $ pip install -U pip setuptools cython -i https://pypi.tuna.tsinghua.edu.cn/simple
+    $ pip install -U pip setuptools cython -i https://pypi.douban.com/simple
 
-*   安装 boclz
+*   安装 bcolz
 
 bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比较容易失败，建议先单独安装 bcolz 库，安装过程比较慢，请耐心等待。
 
 .. code-block:: bash
 
-    $ pip install bcolz -i https://pypi.tuna.tsinghua.edu.cn/simple
+    $ pip install bcolz==1.2.0 -i https://pypi.douban.com/simple
 
 如果在安装的过程中出现问题，请参考 :ref:`intro-faq` 章节。
 
 .. note::
 
-    *   Windows 环境下因为默认没有安装 `Visual C++ Compiler`, 需要自行下载并安装 `visual-cpp-build-tools`，如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 :code:`bcolz wheel` 包，直接安装编译后的 bcolz 版本。
+       Windows 环境下因为默认没有安装 `Visual C++ Compiler`, 需要自行下载并安装 `visual-cpp-build-tools`，如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 :code:`bcolz wheel` 包，直接安装编译后的 bcolz 版本。
 
-    *   除了 bcolz 库以外，line-profiler 安装时也同样需要 C++ 编译器，如果出现安装失败，也可以同样下载 :code:`line-profiler wheel` 包来进行安装。
+       除了 bcolz 库以外，line-profiler 安装时也同样需要 C++ 编译器，如果出现安装失败，也可以前往 http://www.lfd.uci.edu/~gohlke/pythonlibs/#line_profiler 下载相应的版本 :code:`line-profiler wheel` 包来进行安装。
 
-    *   Mac OS 环境下默认没有安装`X-code`，需要自行运行安装以添加一个轻量级的C/C++ clang编译器，可在Terminal下输入：
+       Mac OS 环境下默认没有安装`X-code`，需要自行运行安装以添加一个轻量级的C/C++ clang编译器，可在Terminal下输入：
 
         .. code-block:: bash
 
@@ -55,7 +55,7 @@ bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比�
 
 .. code-block:: bash
 
-    $ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple rqalpha
+    $ pip install -i https://pypi.douban.com/simple rqalpha
 
 查看 RQAlpha 是否安装成功可以通过如下方式:
 

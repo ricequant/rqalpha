@@ -14,17 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib
+
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 
-from .commission import StockCommission, FutureCommission
-from .slippage import PriceRatioSlippage
-from .tax import StockTax, FutureTax
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider.commission import StockCommission, FutureCommission
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider.slippage import PriceRatioSlippage
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider.tax import StockTax, FutureTax
 
 
 class CommissionDecider(object):
-    def __init__(self, multiplier):
+    def __init__(self, multiplier, stock_min_commission):
         self.deciders = dict()
-        self.deciders[DEFAULT_ACCOUNT_TYPE.STOCK.name] = StockCommission(multiplier)
+        self.deciders[DEFAULT_ACCOUNT_TYPE.STOCK.name] = StockCommission(multiplier, stock_min_commission)
         self.deciders[DEFAULT_ACCOUNT_TYPE.FUTURE.name] = FutureCommission(multiplier)
 
     def get_commission(self, account_type, trade):
@@ -32,8 +35,20 @@ class CommissionDecider(object):
 
 
 class SlippageDecider(object):
-    def __init__(self, rate):
-        self.decider = PriceRatioSlippage(rate)
+    def __init__(self, module_name, rate):
+        try:
+            if "." not in module_name:
+                module = importlib.import_module("rqalpha.mod.rqalpha_mod_sys_simulation.decider.slippage")
+                slippage_cls = getattr(module, module_name)
+            else:
+                paths = module_name.split(".")
+                module_paths, cls_name = paths[:-1], paths[-1]
+                module = importlib.import_module(".".join(module_paths))
+                slippage_cls = getattr(module, cls_name)
+        except (ImportError, AttributeError):
+            raise RuntimeError(_("Missing SlippageModel {}").format(module_name))
+
+        self.decider = slippage_cls(rate)
 
     def get_trade_price(self, side, price):
         return self.decider.get_trade_price(side, price)

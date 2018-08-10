@@ -15,23 +15,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+import platform
 from os.path import dirname, join
-from pip.req import parse_requirements
+try:
+    from pip._internal.req import parse_requirements
+except ImportError:
+    from pip.req import parse_requirements
 
-from setuptools import (
-    find_packages,
-    setup,
-)
+from setuptools import find_packages, setup
+
+
+def update_requirements(from_reqs, to_reqs):
+    from_req_dict = {req.name: req for req in from_reqs}
+    from_req_dict.update({req.name: req for req in to_reqs})
+    return from_req_dict.values()
 
 
 with open(join(dirname(__file__), 'rqalpha/VERSION.txt'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
-requirements = [str(ir.req) for ir in parse_requirements("requirements.txt", session=False)]
+requirements = parse_requirements("requirements.txt", session=False)
 
-if sys.version_info.major == 2:
-    requirements += [str(ir.req) for ir in parse_requirements("requirements-py2.txt", session=False)]
+python_version = platform.python_version()
+if python_version.startswith("2"):
+    requirements = update_requirements(requirements, parse_requirements("requirements-py2.txt", session=False))
+elif python_version.startswith("3.4"):
+    requirements = update_requirements(requirements, parse_requirements("requirements-py34.txt", session=False))
+
+req_strs = [str(ir.req) for ir in requirements]
+
 
 setup(
     name='rqalpha',
@@ -43,7 +55,7 @@ setup(
     license='Apache License v2',
     package_data={'': ['*.*']},
     url='https://github.com/ricequant/rqalpha',
-    install_requires=requirements,
+    install_requires=req_strs,
     zip_safe=False,
     entry_points={
         "console_scripts": [

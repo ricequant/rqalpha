@@ -141,7 +141,7 @@ class ArgumentChecker(object):
     def _is_number(self, func_name, value):
         try:
             v = float(value)
-        except ValueError:
+        except (ValueError, TypeError):
             raise RQInvalidArgument(
                 _(u"function {}: invalid {} argument, expect a number, got {} (type: {})").format(
                     func_name, self._arg_name, value, type(value))
@@ -287,7 +287,7 @@ class ArgumentChecker(object):
         if valid:
             try:
                 valid = int(value[:-1]) > 0
-            except ValueError:
+            except (ValueError, TypeError):
                 valid = False
 
         if not valid:
@@ -308,8 +308,8 @@ class ArgumentChecker(object):
             valid = isinstance(value, six.string_types) and value[-2] == 'q'
             if valid:
                 try:
-                    valid =  1990 <= int(value[:-2]) <= 2050 and 1 <= int(value[-1]) <= 4
-                except ValueError:
+                    valid =  1990 <= int(value[:-2]) <= 2099 and 1 <= int(value[-1]) <= 4
+                except (ValueError, TypeError):
                     valid = False
 
         if not valid:
@@ -342,7 +342,7 @@ class ArgumentChecker(object):
         if valid:
             try:
                 valid = int(value[:-1]) > 0
-            except ValueError:
+            except (ValueError, TypeError):
                 valid = False
 
         if not valid:

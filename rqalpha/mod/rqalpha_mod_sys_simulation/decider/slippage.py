@@ -21,6 +21,7 @@ from six import with_metaclass
 from rqalpha.const import SIDE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.environment import Environment
 
 
 class BaseSlippage(with_metaclass(abc.ABCMeta)):
@@ -37,8 +38,28 @@ class PriceRatioSlippage(BaseSlippage):
         else:
             raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is [0, 1)")))
 
-    def get_trade_price(self, side, price):
+    def get_trade_price(self, order, price):
+        side = order.side
         return price + price * self.rate * (1 if side == SIDE.BUY else -1)
+
+
+class TickSizeSlippage(BaseSlippage):
+    def __init__(self, rate=0.):
+        if 0 <= rate:
+            self.rate = rate
+        else:
+            raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is greater than 0")))
+
+    def get_trade_price(self, order, price):
+        side = order.side
+        tick_size = Environment.get_instance().data_proxy.instruments(order.order_book_id).tick_size()
+
+        price = price + tick_size * self.rate * (1 if side == SIDE.BUY else -1)
+
+        if price <= 0:
+            raise patch_user_exc(ValueError(_(u"invalid slippage rate value {} which cause price <= 0").format(self.rate)))
+
+        return price
 
 
 # class FixedSlippage(BaseSlippage):

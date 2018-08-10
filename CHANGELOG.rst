@@ -2,6 +2,91 @@
 CHANGELOG
 ==================
 
+3.1.1
+==================
+
+- 修复 :code:`rqalpha mod uninstall` 命令不兼容 pip 10.0 以上版本的bug。
+- 不再限制 logbook 库的版本上限。
+- python 2.7/3.5/3.6 环境下不再限制 bcolz 的版本上限。
+
+3.1.0
+==================
+
+- Api
+
+  - 增加 :code:`symbol(order_book_id, split=", ")` 扩展Api，用于获取合约简称。
+  - 修改 :code:`current_snapshot(id_or_symbol)`，该 Api 支持在 before_trading/after_trading 中调用。
+  - 修改 :code:`history_bars`，增加对 :code:`frequency` 参数的检查。
+  - 修正 :code:`order(order_book_id, quantity, price=None, style=None)` 函数期货下单的逻辑。
+  - 修改股票下单接口，允许一次性申报卖出非100股整倍数的股票。
+  - 修改下单接口，当因参数检查或前端风控等原因创建订单失败时，接口返回 None 或空 list，并打印 warn。
+
+
+- 接口
+
+  - :code:`AbstractDataSource` 接口增加 :code:`get_tick_size(instrument)` 方法，:code:`BaseDataSource` 实现了该方法。
+  - :code:`AbstractDataSource` 接口增加 :code:`history_ticks(instrument, count, fields, dt)` 方法，支持 tick 级别策略运行的 DataSource 应实现该方法。
+  - 增加通用下单接口 :code:`submit_order(id_or_ins, amount, side, price=None, position_effect=None)`，策略可以通过该接口自由选择参数下单。
+
+
+- 类
+
+  - :code:`Instrument` 类新增 :code:`tick_size()` 方法。
+  - :code:`PersistHelper` 类新增 :code:`unregister(key)` 方法，可以调用该方法注销已经注册了持久化服务的模块。
+  - 新增 :code:`TickObject` 类，替代原 :code:`Tick` 类和 :code:`SnapshotObject` 类。可通过 :code:`TickObject` 对象的 asks, bids, ask_vols, bid_bols 四个属性获取买卖报盘。
+
+- 配置
+
+  - 增加 :code:`base.round_price` 参数，开启后现价单价格会被调整为最小价格变动单位的整倍数，对应的命令行参数为 :code:`--round-price`。
+  - :code:`sys_simulation Mod` 增加滑点模型 :code:`slippage_model` 参数，滑点不再限制为价格的比率，亦可使用基于最小价格变动单位的滑点模型，甚至加载自定义的滑点模型。
+  - :code:`sys_simulation Mod` 增加股票最小手续费 :code:`stock_min_commission` 参数，用于控制回测和模拟交易中单笔股票交易收取的最小手续费，对应的命令行参数为 :code:`--stock-min-commission 5`
+  - :code:`sys_account Mod` 增加 :code:`future_forced_liquidation` 参数，开启后期货账户在爆仓时会被强平。
+
+- 其他
+
+  - Fix `Issue 224 <https://github.com/ricequant/rqalpha/issues/224>`_ ， 解决了展示图像时图像不能被保存的问题。
+  - 策略运行失败时 return code 为 1。
+  - 开启 :code:`force_run_init_when_pt_resume` 参数时，策略启动前将会清空 universe。
+  - 移除对 `better-exceptions <https://github.com/Qix-/better-exceptions>`_ 库的依赖，可以通过安装并设置环境变量的方式获得更详细的错误栈。
+  - 修复 :code:`StockPosition` 类中股票卖空买回时计算平均开仓价格错误的 bug。
+  - 修复画图时最大回撤计算错误的 bug。
+  - 重构 :code:`Executor`，现在 EventSource 不再需要发出 SETTLEMENT 事件，框架会在第二个交易日 BEFORE_TRAINDG 事件前先发出 SETTLEMENT 事件，如果 EventSource 未发出 BEFORE_TRAINDG 事件，该事件会在第一个行情事件到来时被框架发出。
+  - 加入新 Mod :code:`rqalpha_mod_sys_incremental`，启用该 Mod 可以增量运行回测，方便长期跟踪策略而不必反复运行跑过的日期，详情参考文档 `sys_incremental Mod README <https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_incremental/README.rst>`_。
+  - 加入新 Mod :code:`rqalpha_mod_sys_booking`，该 Mod 用于从外部加载仓位作为实盘交易的初始仓位，详情参考文档 `sys_booking Mod README <https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_booking/README.rst>`_。
+
+3.0.10
+==================
+
+- 支持期货合约：苹果（AP）、棉纱（CY）、原油（SC）
+- 限制 :code:`better-exceptions`、:code:`bcolz` 库的版本
+- 支持 pip 10.x
+- 修复 tick 回测中夜盘前 before_trading 无法获取白天数据的问题
+- 当 :code:`force_run_init_when_pt_resume` 开启时会清空 persist 的 universe
+- 增加资金风控中对佣金的考虑
+- 修复文档中若干 typo
+
+3.0.9
+==================
+
+- 限制 pandas 的版本为 0.18 ~ 0.20 ，因为 0.21 和 matplotlib 有些不兼容。
+
+3.0.8
+==================
+
+- 修复 :code:`rqalpha run --config` 参数
+- 增加 ON_NORMAL_EXIT 的持久化模式，在 RQAlpha 成功运行完毕后进行 persist 。可以在盘后快速地根据昨日持久化数据继续运行回测来增量回测。
+- 增加 :code:`rqalpha run --logger` 参数可以单独设置特定的 logger 的 level
+- 增加 persist_provider 的检查
+- 修复 :code:`get_prev_close`
+- 打印 mod 的启动状态信息，方便 debug
+- 增加 :code:`is_valid_price` 工具函数来判断价格是否有效
+- 修复期货账户因为保证金变化导致total_value计算错误
+- 重构股票账户 :code:`last_price` 更新
+- 修复期货下单拒单是错误信息typo
+- 当启动LIVE_TRADING模式的时候，跳过simulation_mod的初始化
+- 增加 :code:`rqalpha run --position` 来设置初始仓位的功能
+-
+
 3.0.6
 ==================
 

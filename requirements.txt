@@ -1,11 +1,11 @@
 requests
 numpy>=1.11.1
-pandas>=0.18.1
+pandas>=0.18.1,<=0.20.0
 python-dateutil>=2.5.3
 pytz>=2016.4
 six>=1.10.0
 pytest>=2.9.2
-logbook==1.0.0
+logbook>=1.0.0
 click>=6.6
 bcolz>=1.1.0
 matplotlib>=1.5.1
@@ -16,6 +16,5 @@ XlsxWriter>=0.9.6
 line-profiler>=2.0
 PyYAML>=3.12
 
-better_exceptions
 tabulate
 colorama>=0.3.9

@@ -14,9 +14,13 @@ mod:
     enabled: true
   sys_analyser:
     enabled: true
+  sys_incremental:
+    enabled: false
   # 技术分析API
   sys_funcat:
     enabled: false
   # 接收实时行情运行
   sys_stock_realtime:
+    enabled: false
+  sys_booking:
     enabled: false

@@ -46,8 +46,7 @@ class DateSet(object):
 
         def _to_dt_int(d):
             if isinstance(d, (int, np.int64, np.uint64)):
-                if d > 100000000:
-                    return int(d // 1000000)
+                return int(d // 1000000) if d > 100000000 else int(d)
             else:
                 return d.year*10000 + d.month*100 + d.day
 

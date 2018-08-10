@@ -27,7 +27,7 @@ import pandas as pd
 import numpy as np
 import coverage
 
-from rqalpha import run
+from rqalpha import run, run_func
 from rqalpha.utils.logger import system_log
 
 TEST_DIR = os.path.abspath("./tests/")
@@ -137,149 +137,18 @@ def is_enable_coverage():
     return os.environ.get('COVERAGE') == "enabled"
 
 
-def test_api():
+def test_api(specific_test=None):
     # FIXME: Error msg is hard to understand @zjuguxi
-    # return
-
     print(u"Testing API......")
-    from rqalpha import run
 
-    from tests.api.test_api_base import (
-        test_get_order_code_new,
-        test_get_open_order_code_new,
-        test_cancel_order_code_new,
-        test_update_universe_code_new,
-        test_subscribe_code_new,
-        test_unsubscribe_code_new,
-        test_get_yield_curve_code_new,
-        test_history_bars_code_new,
-        test_all_instruments_code_new,
-        test_instruments_code_new,
-        test_sector_code_new,
-        test_concept_code_new,
-        test_industry_code_new,
-        test_get_trading_dates_code_new,
-        test_get_previous_trading_date_code_new,
-        test_get_next_trading_date_code_new,
-        test_get_dividend_code_new,
-    )
+    from tests.api import test_strategies as test_api_strategies
+    from tests.mod import test_strategies as test_mod_strategies
 
-    from tests.api.test_api_stock import (
-        test_order_shares_code_new, test_order_lots_code_new,
-        test_order_value_code_new,
-        test_order_percent_code_new, test_order_target_value_code_new,
-    )
-
-    from tests.api.test_api_future import (
-        test_buy_open_code_new,
-        test_sell_open_code_new,
-        test_buy_close_code_new,
-        test_sell_close_code_new,
-    )
-
-    base_api_config = {
-        "base": {
-            "start_date": "2016-12-01",
-            "end_date": "2016-12-31",
-            "frequency": "1d",
-            "matching_type": "next_bar",
-            "strategy_file": 'rqalpha/__init__.py',
-            "accounts": {
-                "stock": 1000000
-            }
-        },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }
-
-    stock_api_config = {
-        "base": {
-            "start_date": "2016-03-07",
-            "end_date": "2016-03-08",
-            "frequency": "1d",
-            "matching_type": "next_bar",
-            "strategy_file": 'rqalpha/__init__.py',
-            "accounts": {
-                "stock": 100000000
-            }
-        },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }
-
-    future_api_config = {
-        "base": {
-            "start_date": "2016-03-07",
-            "end_date": "2016-03-08",
-            "frequency": "1d",
-            "matching_type": "next_bar",
-            "strategy_file": 'rqalpha/__init__.py',
-            "accounts": {
-                "future": 10000000000
-            }
-        },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }
-
-    # =================== Test Base API ===================
-    tasks = []
-
-    tasks.append((base_api_config, test_get_order_code_new, "test_get_order_code_new"))
-    tasks.append((base_api_config, test_get_open_order_code_new, "test_get_open_order_code_new"))
-    tasks.append((base_api_config, test_cancel_order_code_new, "test_cancel_order_code_new"))
-    tasks.append((base_api_config, test_update_universe_code_new, "test_update_universe_code_new"))
-    tasks.append((base_api_config, test_subscribe_code_new, "test_subscribe_code_new"))
-    tasks.append((base_api_config, test_unsubscribe_code_new, "test_unsubscribe_code_new"))
-    tasks.append((base_api_config, test_get_yield_curve_code_new, "test_get_yield_curve_code_new"))
-    tasks.append((base_api_config, test_history_bars_code_new, "test_history_bars_code_new"))
-    tasks.append((base_api_config, test_all_instruments_code_new, "test_all_instruments_code_new"))
-    tasks.append((base_api_config, test_instruments_code_new, "test_instruments_code_new"))
-    tasks.append((base_api_config, test_sector_code_new, "test_sector_code_new"))
-    tasks.append((base_api_config, test_industry_code_new, "test_industry_code_new"))
-    tasks.append((base_api_config, test_concept_code_new, "test_concept_code_new"))
-    tasks.append((base_api_config, test_get_trading_dates_code_new, "test_get_trading_dates_code_new"))
-    tasks.append((base_api_config, test_get_previous_trading_date_code_new, "test_get_previous_trading_date_code_new"))
-    tasks.append((base_api_config, test_get_next_trading_date_code_new, "test_get_next_trading_date_code_new"))
-    tasks.append((base_api_config, test_get_dividend_code_new, "test_get_dividend_code_new"))
-
-    # =================== Test Stock API ===================
-    tasks.append((stock_api_config, test_order_shares_code_new, "test_order_shares_code_new"))
-    tasks.append((stock_api_config, test_order_lots_code_new, "test_order_lots_code_new"))
-    tasks.append((stock_api_config, test_order_value_code_new, "test_order_value_code_new"))
-    tasks.append((stock_api_config, test_order_percent_code_new, "test_order_percent_code_new"))
-    tasks.append((stock_api_config, test_order_target_value_code_new, "test_order_target_value_code_new"))
-
-    # =================== Test Future API ===================
-    tasks.append((future_api_config, test_buy_open_code_new, "test_buy_open_code_new"))
-    tasks.append((future_api_config, test_sell_open_code_new, "test_sell_open_code_new"))
-    tasks.append((future_api_config, test_buy_close_code_new, "test_buy_close_code_new"))
-    tasks.append((future_api_config, test_sell_close_code_new, "test_sell_close_code_new"))
-
-    for cfg, source_code, name in tasks:
-        print("running", name)
-        run(cfg, source_code)
+    for strategy in test_api_strategies + test_mod_strategies:
+        if specific_test and strategy["name"] != specific_test:
+            continue
+        print("running", strategy["name"])
+        run_func(**strategy)
 
     print(u"API test ends.")
 
@@ -337,7 +206,10 @@ if __name__ == '__main__':
 
     if len(sys.argv) >= 2:
         if sys.argv[1] == 'api':
-            test_api()
+            try:
+                test_api(sys.argv[2])
+            except IndexError:
+                test_api()
             end_time = datetime.now()
 
         elif sys.argv[1] == 'strategy':

@@ -29,6 +29,9 @@ class AccountMod(AbstractMod):
     def start_up(self, env, mod_config):
 
         StockPosition.stock_t1 = mod_config.stock_t1
+        StockAccount.dividend_reinvestment = mod_config.dividend_reinvestment
+
+        FutureAccount.forced_liquidation = mod_config.future_forced_liquidation
 
         # 注入 Account
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount)
