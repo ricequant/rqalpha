@@ -24,7 +24,7 @@ volume 成交量
 
     
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
-def init_dl(context):
+def init_next_day(context):
     # 在context中保存全局变量
     context.s1 = context.config.stock_id
     context.predicted_one = context.config.predicted_one
@@ -37,11 +37,11 @@ def init_dl(context):
     context.all = df["order_book_id"]
     
 # before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
-def before_trading_dl(context):
+def before_trading_next_day(context):
     logger.info("开盘前执行before_trading函数")
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
-def handle_bar_dl(context, bar_dict):
+def handle_bar_next_day(context, bar_dict):
     logger.info("每一个Bar执行")
     logger.info("打印Bar数据：")
     
@@ -86,7 +86,10 @@ def handle_bar_dl(context, bar_dict):
         
         #model = load_model('model/%s.h5' % order_book_id)
         #model.compile(loss="mse", optimizer="rmsprop")
-        predicted = model.predict(normalised_history_close)[0,0]
+        print normalised_history_close
+        predicted_result = model.predict(normalised_history_close)
+        print predicted_result
+        predicted = predicted_result[0,0]
         del model
         K.clear_session()
         normalised_history_close = [((float(p) / float(history_close[0])) - 1) for p in history_close]
@@ -115,7 +118,7 @@ def handle_bar_dl(context, bar_dict):
 
         
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
-def after_trading_dl(context):
+def after_trading_next_day(context):
     logger.info("收盘后执行after_trading函数")
 
 
@@ -128,7 +131,7 @@ if predicted_one:
     yesterday = "2018-08-08"
 print before_yesterday
 print yesterday
-config_dl = {
+config_next_day = {
   "stock_id":"300028.XSHE",
   "predicted_one":predicted_one,
   "base": {
@@ -150,4 +153,5 @@ config_dl = {
 }
 
 # 您可以指定您要传递的参数
-run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, config=config_dl)
+if __name__ == "__main__":
+    run_func(init=init_next_day, before_trading=before_trading_next_day, handle_bar=handle_bar_next_day, config=config_next_day)
