@@ -61,7 +61,7 @@ class StockCommission(BaseCommission):
         commission = self.commission_map[order_id]
         cost_money = trade.last_price * trade.last_quantity * self.rate * self.multiplier
         if cost_money > commission:
-            print('commission:', cost_money)
+            print(self.rate, self.multiplier, self.min_commission,'佣金commission:', cost_money)
             if commission == self.min_commission:
                 self.commission_map[order_id] = 0
                 return cost_money
@@ -69,7 +69,7 @@ class StockCommission(BaseCommission):
                 self.commission_map[order_id] = 0
                 return cost_money - commission
         else:
-            print('commission:', commission)
+            print(self.rate, self.multiplier, self.min_commission,'佣金commission:', commission)
             if commission == self.min_commission:
                 self.commission_map[order_id] -= cost_money
                 return commission
