@@ -40,7 +40,9 @@ class PriceRatioSlippage(BaseSlippage):
 
     def get_trade_price(self, order, price):
         side = order.side
-        return price + price * self.rate * (1 if side == SIDE.BUY else -1)
+        test = price + price * self.rate * (1 if side == SIDE.BUY else -1)
+        print("滑点{}".format(self.rate), '滑点前价格', price, "滑点后价格", test)
+        return test
 
 
 class TickSizeSlippage(BaseSlippage):
