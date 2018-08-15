@@ -37,8 +37,11 @@ class StockTax(BaseTax):
     def get_tax(self, trade):
         cost_money = trade.last_price * trade.last_quantity
         if Environment.get_instance().get_instrument(trade.order_book_id).type == 'CS':
-            return cost_money * self.rate if trade.side == SIDE.SELL else 0
+            test = cost_money * self.rate if trade.side == SIDE.SELL else 0
+            print('股票印花税{}:'.format(self.rate), "交易金额:", cost_money, "印花税:", test)
+            return test
         else:
+            print('其他类别印花税{}:'.format(self.rate), "交易金额:", cost_money, "印花税:", 0)
             return 0
 
 
