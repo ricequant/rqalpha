@@ -16,9 +16,8 @@
 
 import abc
 from six import with_metaclass
-from collections import defaultdict
 
-from rqalpha.const import HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT, SIDE
+from rqalpha.const import HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT, SIDE, MARKET
 from rqalpha.environment import Environment
 
 
@@ -29,11 +28,33 @@ class BaseCommission(with_metaclass(abc.ABCMeta)):
 
 
 class StockCommission(BaseCommission):
-    def __init__(self, multiplier, min_commission):
-        self.rate = 0.0008
+    def __init__(self, multiplier, cn_min_commission, hk_min_commission):
+
+        self.rates = {
+            MARKET.CN: 0.0008,
+            MARKET.HK: 0.0005,
+        }
+
+        self.min_commissions = {
+            MARKET.CN: cn_min_commission,
+            MARKET.HK: hk_min_commission
+        }
+
         self.multiplier = multiplier
-        self.commission_map = defaultdict(lambda: min_commission)
-        self.min_commission = min_commission
+
+        self.commission_map = {}
+
+    def get_min_commission(self, market):
+        try:
+            return self.min_commissions[market]
+        except KeyError:
+            raise NotImplementedError
+
+    def get_rate(self, market):
+        try:
+            return self.rates[market]
+        except KeyError:
+            raise NotImplementedError
 
     def get_commission(self, trade):
         """
@@ -58,17 +79,18 @@ class StockCommission(BaseCommission):
                 rate = env.data_proxy.public_fund_commission(order_book_id, False)
             cost_money = trade.last_price * trade.last_quantity * rate * self.multiplier
             return cost_money
-        commission = self.commission_map[order_id]
-        cost_money = trade.last_price * trade.last_quantity * self.rate * self.multiplier
+        market = env.get_instrument(order_book_id).market
+        commission = self.commission_map.setdefault(order_id, self.get_min_commission(market))
+        cost_money = trade.last_price * trade.last_quantity * self.get_rate(market) * self.multiplier
         if cost_money > commission:
-            if commission == self.min_commission:
+            if commission == self.get_min_commission(market):
                 self.commission_map[order_id] = 0
                 return cost_money
             else:
                 self.commission_map[order_id] = 0
                 return cost_money - commission
         else:
-            if commission == self.min_commission:
+            if commission == self.get_min_commission(market):
                 self.commission_map[order_id] -= cost_money
                 return commission
             else:

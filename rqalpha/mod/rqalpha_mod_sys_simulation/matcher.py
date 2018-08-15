@@ -27,7 +27,9 @@ from rqalpha.mod.rqalpha_mod_sys_simulation.decider import CommissionDecider, Sl
 
 class Matcher(object):
     def __init__(self, env, mod_config):
-        self._commission_decider = CommissionDecider(mod_config.commission_multiplier, mod_config.stock_min_commission)
+        self._commission_decider = CommissionDecider(
+            mod_config.commission_multiplier, mod_config.cn_stock_min_commission, mod_config.hk_stock_min_commission
+        )
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._tax_decider = TaxDecider()
         self._turnover = defaultdict(int)
