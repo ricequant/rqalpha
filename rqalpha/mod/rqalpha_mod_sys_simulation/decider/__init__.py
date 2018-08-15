@@ -55,11 +55,11 @@ class SlippageDecider(object):
 
 
 class TaxDecider(object):
-    def __init__(self, rate=None):
+    def __init__(self, ):
         self.deciders = dict()
-        self.deciders[DEFAULT_ACCOUNT_TYPE.STOCK.name] = StockTax(rate)
-        self.deciders[DEFAULT_ACCOUNT_TYPE.BENCHMARK.name] = StockTax(rate)
-        self.deciders[DEFAULT_ACCOUNT_TYPE.FUTURE.name] = FutureTax(rate)
+        self.deciders[DEFAULT_ACCOUNT_TYPE.STOCK.name] = StockTax()
+        self.deciders[DEFAULT_ACCOUNT_TYPE.BENCHMARK.name] = StockTax()
+        self.deciders[DEFAULT_ACCOUNT_TYPE.FUTURE.name] = FutureTax()
 
     def get_tax(self, account_type, trade):
         return self.deciders[account_type].get_tax(trade)
