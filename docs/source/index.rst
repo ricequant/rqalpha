@@ -88,50 +88,6 @@ Mod名                      说明
 
     如果您基于 RQAlpha 进行了 Mod 扩展，欢迎告知我们。在审核通过后，会在 Mod 列表中添加相关信息。
 
-Feature Status
-============================
-
-*   VNPY 对接 --> `vnpy`_
-
-    * ✅ 扩展VNPY_Gateway
-    * ✅ 实盘交易对接
-    * ✅ 数据源对接
-    * ✅ 事件源对接
-
-*   Tushare 对接
-
-    * ✅ 数据源对接 --> `rqalpha_mod_sys_stock_realtime`_
-    * ✅ 合成分钟线 --> `rqalpha_mod_tushare`_
-
-*   Tick 相关支持
-
-    * ✅ TICK 相关事件支持 --> `EVENT.PRE_TICK` | `EVENT.TICK` | `EVENT.POST_TICK`
-    * ✅ handle_tick 函数支持
-
-*   Mod Manager --> `通过 Mod 扩展 RQAlpha`_
-
-    * ✅ 定义 Mod 编写规范, workflow && Doc
-    * ✅ 提供 Mod Demo && Tutorial
-    * ✅ 提供 `rqalpha install xx_mod` 等命令 加载第三方 Mod
-
-*   Third-party Tools Integration
-
-    * ✅ 集成 Sentry --> `sentry`_
-
-*   i18n
-
-    * 🚫 English Doc
-
-*   Support Options
-
-    * 🚫 OptionAccount
-    * 🚫 OptionPosition
-
-*   Support BitCoin
-
-    * 🚫 BitcoinAccount
-    * 🚫 BitcoinPosition
-
 获取帮助
 ============================
 
