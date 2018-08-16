@@ -28,9 +28,10 @@ class BaseTax(with_metaclass(abc.ABCMeta)):
 
 
 class StockTax(BaseTax):
-    def __init__(self, rate):
+    def __init__(self, rate=None):
         if rate is None:
             self.rate = 0.001
+            print('rate is None, set default tax rate to 0.001')
         else:
             self.rate = rate
 
