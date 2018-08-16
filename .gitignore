@@ -11,6 +11,7 @@ rqalpha.system.log
 .vscode
 *.c
 *.so
+*.csv
 *.pyc
 build/
 bundle/
