@@ -9,16 +9,17 @@ STOCKID = "600519.XSHG"
 seq_len = 30
 result = {}
 
-before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+before_yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+today = datetime.date.today().strftime("%Y-%m-%d")
 print before_yesterday
 print yesterday
 
 config_dl = {
   "stock_id":STOCKID,
   "base": {
-    "start_date": before_yesterday,
-    "end_date": yesterday,
+    "start_date": yesterday,
+    "end_date": today,
     "accounts": {
         "stock": 100000
     }
@@ -45,8 +46,8 @@ config = {
   "stock_id":STOCKID,
   "predicted_one":predicted_one,
   "base": {
-    "start_date": before_yesterday,
-    "end_date": yesterday,
+    "start_date":yesterday,
+    "end_date": today,
     "accounts": {
         "stock": 100000
     }

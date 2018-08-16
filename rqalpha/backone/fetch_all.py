@@ -86,13 +86,15 @@ def end_dl(context):
 
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+today = datetime.date.today().strftime("%Y-%m-%d")
 print before_yesterday
 print yesterday
+
 config_dl = {
   "stock_id":"000001.XSHE",
   "base": {
-    "start_date": before_yesterday,
-    "end_date": yesterday,
+    "start_date": yesterday,
+    "end_date": today,
     "accounts": {
         "stock": 100000
     }

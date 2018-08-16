@@ -54,8 +54,8 @@ def handle_bar_next_day(context, bar_dict):
         logger.info("----------22222-------%s-------" % bar_dict[s1])
         order_book_id = s1
         global_start_time = time.time()
-        history_close = history_bars(order_book_id, 51, '1d', 'close')
-        history_close = history_close[:-1]
+        history_close = history_bars(order_book_id, 50, '1d', 'close')
+        history_close = history_close[:]
         if len(history_close) != 50:
             continue
         if not os.path.isfile('weight_day/%s.npy.h5' % order_book_id):
@@ -112,7 +112,7 @@ def handle_bar_next_day(context, bar_dict):
     
     print result
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
-    print df
+    #print df
     today = datetime.date.today().strftime("%Y-%m-%d")
     df.to_csv ("predicted_reslut%s.csv" % today, encoding="utf-8")
 
@@ -125,18 +125,18 @@ def after_trading_next_day(context):
 predicted_one = False
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-
+today = datetime.date.today().strftime("%Y-%m-%d")
 if predicted_one:
     before_yesterday = "2018-08-07"
     yesterday = "2018-08-08"
 print before_yesterday
 print yesterday
 config_next_day = {
-  "stock_id":"300028.XSHE",
+  "stock_id":"600519.XSHG",
   "predicted_one":predicted_one,
   "base": {
-    "start_date": before_yesterday,
-    "end_date": yesterday,
+    "start_date": yesterday,
+    "end_date": today,
     "accounts": {
         "stock": 100000
     }
