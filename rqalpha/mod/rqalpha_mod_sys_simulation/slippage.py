@@ -15,13 +15,35 @@
 # limitations under the License.
 
 import abc
+import importlib
 
 from six import with_metaclass
 
 from rqalpha.const import SIDE
 from rqalpha.utils.exception import patch_user_exc
-from rqalpha.utils.i18n import gettext as _
 from rqalpha.environment import Environment
+
+from rqalpha.utils.i18n import gettext as _
+
+
+class SlippageDecider(object):
+    def __init__(self, module_name, rate):
+        try:
+            if "." not in module_name:
+                module = importlib.import_module("rqalpha.mod.rqalpha_mod_sys_simulation.slippage")
+                slippage_cls = getattr(module, module_name)
+            else:
+                paths = module_name.split(".")
+                module_paths, cls_name = paths[:-1], paths[-1]
+                module = importlib.import_module(".".join(module_paths))
+                slippage_cls = getattr(module, cls_name)
+        except (ImportError, AttributeError):
+            raise RuntimeError(_("Missing SlippageModel {}").format(module_name))
+
+        self.decider = slippage_cls(rate)
+
+    def get_trade_price(self, side, price):
+        return self.decider.get_trade_price(side, price)
 
 
 class BaseSlippage(with_metaclass(abc.ABCMeta)):

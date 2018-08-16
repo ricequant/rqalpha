@@ -23,7 +23,7 @@ from rqalpha.model.trade import Trade
 from rqalpha.utils import account_type_str2enum
 from rqalpha.utils.i18n import gettext as _
 
-from rqalpha.mod.rqalpha_mod_sys_simulation.decider import SlippageDecider
+from .slippage import SlippageDecider
 
 
 class Matcher(object):

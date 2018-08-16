@@ -24,7 +24,7 @@ from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
 
-from .decider import SlippageDecider
+from .slippage import SlippageDecider
 from .utils import init_portfolio
 
 
