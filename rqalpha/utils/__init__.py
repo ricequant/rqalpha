@@ -320,13 +320,6 @@ def is_run_from_ipython():
         return False
 
 
-def generate_account_type_dict():
-    account_type_dict = {}
-    for key, a_type in six.iteritems(DEFAULT_ACCOUNT_TYPE.__members__):
-        account_type_dict[key] = a_type.value
-    return account_type_dict
-
-
 def is_valid_price(price):
     return not np.isnan(price) and price > 0 and price is not None
 
