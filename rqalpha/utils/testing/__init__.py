@@ -5,6 +5,8 @@ from .fixtures import (
     EnvironmentFixture,
     BaseDataSourceFixture,
     BenchmarkAccountFixture,
+    BarDictPriceBoardFixture,
+    MatcherFixture,
 )
 
 
@@ -21,6 +23,8 @@ __all__ = [
     "EnvironmentFixture",
     "BaseDataSourceFixture",
     "BenchmarkAccountFixture",
+    "BarDictPriceBoardFixture",
+    "MatcherFixture",
     "mock_instrument",
     "mock_bar",
     "mock_tick"

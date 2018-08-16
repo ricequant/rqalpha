@@ -26,6 +26,13 @@ class EnvironmentFixture(RQAlphaFixture):
         self.env = Environment(RqAttrDict(self.env_config))
 
     @contextmanager
+    def mock_env_method(self, name, return_value):
+        origin_method = getattr(self.env, name)
+        setattr(self.env, name, MagicMock(return_value=return_value))
+        yield
+        setattr(self.env, name, origin_method)
+
+    @contextmanager
     def mock_env_get_last_price(self, *args, **kwargs):
         origin_get_last_price = self.env.get_last_price
         self.env.get_last_price = MagicMock(*args, **kwargs)
@@ -104,3 +111,47 @@ class BenchmarkAccountFixture(EnvironmentFixture):
         super(BenchmarkAccountFixture, self).init_fixture()
 
         self.benchmark_account = BenchmarkAccount(self.benchmark_account_total_cash,  Positions(StockPosition))
+
+
+class BarDictPriceBoardFixture(EnvironmentFixture):
+    def __init__(self, *args, **kwargs):
+        super(BarDictPriceBoardFixture, self).__init__(*args, **kwargs)
+        self.price_board = None
+
+    def init_fixture(self):
+        from rqalpha.core.bar_dict_price_board import BarDictPriceBoard
+
+        super(BarDictPriceBoardFixture, self).init_fixture()
+
+        self.price_board = BarDictPriceBoard()
+        self.env.set_price_board(self.price_board)
+
+
+class MatcherFixture(EnvironmentFixture):
+    def __init__(self, *args, **kwargs):
+        super(MatcherFixture, self).__init__(*args, **kwargs)
+
+        from rqalpha.mod.rqalpha_mod_sys_simulation import __config__ as mod_sys_simulation_config
+        from rqalpha.const import MATCHING_TYPE
+
+        self.env_config = {
+            "mod": {
+                "sys_simulation": mod_sys_simulation_config
+            }
+        }
+
+        self.env_config["mod"]["sys_simulation"]["matching_type"] = MATCHING_TYPE.CURRENT_BAR_CLOSE
+
+        self.matcher = None
+
+    def init_fixture(self):
+        from datetime import datetime
+        from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import Matcher
+        
+        super(MatcherFixture, self).init_fixture()
+
+        print(Matcher, type(self.env_config["mod"]))
+
+        self.matcher = Matcher(self.env, self.env_config["mod"].sys_simulation)
+        self.matcher.update(datetime(2018, 8, 16, 11, 5), datetime(2018, 8, 16, 11, 5))
+
