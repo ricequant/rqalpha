@@ -31,13 +31,15 @@ class StockTax(BaseTax):
     def __init__(self, rate=None):
         if rate is None:
             self.rate = 0.001
+            print('rate is None, set default tax rate to 0.001')
         else:
             self.rate = rate
 
     def get_tax(self, trade):
         cost_money = trade.last_price * trade.last_quantity
         if Environment.get_instance().get_instrument(trade.order_book_id).type == 'CS':
-            return cost_money * self.rate if trade.side == SIDE.SELL else 0
+            test = cost_money * self.rate if trade.side == SIDE.SELL else 0
+            return test
         else:
             return 0
 
