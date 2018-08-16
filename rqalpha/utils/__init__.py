@@ -218,6 +218,13 @@ def instrument_type_str2enum(type_str):
         raise NotImplementedError
 
 
+def account_type_str2enum(type_str):
+    return {
+        DEFAULT_ACCOUNT_TYPE.STOCK.name: DEFAULT_ACCOUNT_TYPE.STOCK,
+        DEFAULT_ACCOUNT_TYPE.FUTURE.name: DEFAULT_ACCOUNT_TYPE.FUTURE
+    }[type_str]
+
+
 INST_TYPE_IN_STOCK_ACCOUNT = [
     INSTRUMENT_TYPE.CS,
     INSTRUMENT_TYPE.ETF,

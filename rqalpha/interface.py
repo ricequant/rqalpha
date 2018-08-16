@@ -636,3 +636,18 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     def can_cancel_order(self, account, order):
         # FIXME: need a better name
         raise NotImplementedError
+
+
+class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
+    @abc.abstractmethod
+    def get_trade_tax(self, trade):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_trade_commission(self, trade):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_order_transaction_cost(self, order):
+        raise NotImplementedError
+

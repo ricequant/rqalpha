@@ -20,18 +20,15 @@ from rqalpha.utils import is_valid_price
 from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
+from rqalpha.utils import account_type_str2enum
 from rqalpha.utils.i18n import gettext as _
 
-from rqalpha.mod.rqalpha_mod_sys_simulation.decider import CommissionDecider, SlippageDecider, TaxDecider
+from rqalpha.mod.rqalpha_mod_sys_simulation.decider import SlippageDecider
 
 
 class Matcher(object):
     def __init__(self, env, mod_config):
-        self._commission_decider = CommissionDecider(
-            mod_config.commission_multiplier, mod_config.cn_stock_min_commission, mod_config.hk_stock_min_commission
-        )
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
-        self._tax_decider = TaxDecider()
         self._turnover = defaultdict(int)
         self._calendar_dt = None
         self._trading_dt = None
@@ -173,8 +170,8 @@ class Matcher(object):
                 frozen_price=order.frozen_price,
                 close_today_amount=ct_amount
             )
-            trade._commission = self._commission_decider.get_commission(account.type, trade)
-            trade._tax = self._tax_decider.get_tax(account.type, trade)
+            trade._commission = self._env.get_trade_commission(account_type_str2enum(account.type), trade)
+            trade._tax = self._env.get_trade_tax(account_type_str2enum(account.type), trade)
             order.fill(trade)
             self._turnover[order.order_book_id] += fill
 

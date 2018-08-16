@@ -19,23 +19,19 @@ from copy import copy
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import is_valid_price
+from rqalpha.utils import is_valid_price, account_type_str2enum
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
 
-from .decider import CommissionDecider, SlippageDecider, TaxDecider
+from .decider import SlippageDecider
 from .utils import init_portfolio
 
 
 class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
-        self._commission_decider = CommissionDecider(
-            mod_config.commission_multiplier, mod_config.cn_stock_min_commission, mod_config.hk_stock_min_commission
-        )
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
-        self._tax_decider = TaxDecider()
         self._price_limit = mod_config.price_limit
 
     def get_portfolio(self):
@@ -115,8 +111,8 @@ class SignalBroker(AbstractBroker):
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
-        trade._commission = self._commission_decider.get_commission(account.type, trade)
-        trade._tax = self._tax_decider.get_tax(account.type, trade)
+        trade._commission = self._env.get_trade_commission(account_type_str2enum(account.type), trade)
+        trade._tax = self._env.get_trade_tax(account_type_str2enum(account.type), trade)
         order.fill(trade)
 
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))

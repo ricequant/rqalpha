@@ -16,24 +16,9 @@
 
 import importlib
 
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.mod.rqalpha_mod_sys_simulation.decider.commission import StockCommission, FutureCommission
 from rqalpha.mod.rqalpha_mod_sys_simulation.decider.slippage import PriceRatioSlippage
-from rqalpha.mod.rqalpha_mod_sys_simulation.decider.tax import StockTax, FutureTax
-
-
-class CommissionDecider(object):
-    def __init__(self, multiplier, cn_stock_min_commission, hk_stock_min_commission):
-        self.deciders = dict()
-        self.deciders[DEFAULT_ACCOUNT_TYPE.STOCK.name] = StockCommission(
-            multiplier, cn_stock_min_commission, hk_stock_min_commission
-        )
-        self.deciders[DEFAULT_ACCOUNT_TYPE.FUTURE.name] = FutureCommission(multiplier)
-
-    def get_commission(self, account_type, trade):
-        return self.deciders[account_type].get_commission(trade)
 
 
 class SlippageDecider(object):
@@ -54,14 +39,3 @@ class SlippageDecider(object):
 
     def get_trade_price(self, side, price):
         return self.decider.get_trade_price(side, price)
-
-
-class TaxDecider(object):
-    def __init__(self):
-        self.deciders = dict()
-        self.deciders[DEFAULT_ACCOUNT_TYPE.STOCK.name] = StockTax()
-        self.deciders[DEFAULT_ACCOUNT_TYPE.BENCHMARK.name] = StockTax()
-        self.deciders[DEFAULT_ACCOUNT_TYPE.FUTURE.name] = FutureTax()
-
-    def get_tax(self, account_type, trade):
-        return self.deciders[account_type].get_tax(trade)
