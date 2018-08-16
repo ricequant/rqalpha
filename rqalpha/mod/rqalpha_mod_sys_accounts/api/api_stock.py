@@ -298,6 +298,9 @@ def order_percent(id_or_ins, percent, price=None, style=None):
     """
     if percent < -1 or percent > 1:
         raise RQInvalidArgument(_(u"percent should between -1 and 1"))
+    # 全仓买入时，percent修改为0.999，防止手续费不足的问题
+    if percent > 0.999:
+        percent = 0.999
 
     style = cal_style(price, style)
     account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
