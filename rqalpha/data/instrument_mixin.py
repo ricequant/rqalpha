@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import six
+from rqalpha.const import MARKET
 
 
 class InstrumentMixin(object):
@@ -41,10 +42,20 @@ class InstrumentMixin(object):
         return [v.order_book_id for v in self._instruments.values()
                 if v.type == 'CS' and v.industry_code == code]
 
-    def all_instruments(self, types, dt=None):
-        return [i for i in self._instruments.values()
-                if ((dt is None or i.listed_date.date() <= dt.date() <= i.de_listed_date.date()) and
-                    (types is None or i.type in types))]
+    def all_instruments(self, types, dt=None, market=MARKET.CN):
+
+        if market is None:
+            return [
+                i for i in self._instruments.values() if ((
+                    dt is None or i.listed_date.date() <= dt.date() <= i.de_listed_date.date()
+                ) and (types is None or i.type in types))
+            ]
+        else:
+            return [
+                i for i in self._instruments.values() if ((
+                    dt is None or i.listed_date.date() <= dt.date() <= i.de_listed_date.date()
+                ) and (types is None or i.type in types)) and i.market == market
+            ]
 
     def _instrument(self, sym_or_id):
         try:

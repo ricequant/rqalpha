@@ -67,6 +67,7 @@ __all__ = [
     'RUN_TYPE',
     'MATCHING_TYPE',
     'EVENT',
+    'MARKET'
 ]
 
 
@@ -540,15 +541,17 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('type').are_valid_fields(names.VALID_INSTRUMENT_TYPES, ignore_none=True),
              verify_that('date').is_valid_date(ignore_none=True))
-def all_instruments(type=None, date=None):
+def all_instruments(type=None, date=None, market=MARKET.CN):
     """
-    获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
+    获取支持的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解。
 
     :param str type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
 
     :param date: 查询时间点
     :type date: `str` | `datetime` | `date`
 
+    :param market: 市场类型，如 MARKET.CN, MARKET.HK
+    :type market: :class:`~MARKET` enum
 
     :return: `pandas DataFrame` 所有合约的基本信息。
 
@@ -607,7 +610,7 @@ def all_instruments(type=None, date=None):
     else:
         types = None
 
-    result = env.data_proxy.all_instruments(types, dt)
+    result = env.data_proxy.all_instruments(types, dt, market)
     if types is not None and len(types) == 1:
         return pd.DataFrame([i.__dict__ for i in result])
 
