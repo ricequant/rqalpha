@@ -28,11 +28,8 @@ class CashValidator(AbstractFrontendValidator):
     def _stock_validator(self, account, order):
         if order.side == SIDE.SELL:
             return True
-        # 检查可用资金是否充足
-        # 保证占用资金包含了佣金部分, 在这里假定最小手续费就是5块, 佣金费率为万8。
-        # 没有区分不同柜台标准, 也没有根据回测中 mod_config 设置的佣金倍率进行改动, dirty hack
         frozen_value = order.frozen_price * order.quantity
-        cost_money = frozen_value * 1.0008 if frozen_value * 0.0008 > 5 else frozen_value + 5
+        cost_money = frozen_value + self._env.get_order_transaction_cost(DEFAULT_ACCOUNT_TYPE.STOCK, order)
         if cost_money <= account.cash:
             return True
 
@@ -55,6 +52,7 @@ class CashValidator(AbstractFrontendValidator):
         margin_rate = margin_info['long_margin_ratio' if order.side == 'BUY' else 'short_margin_ratio']
         margin = order.frozen_price * order.quantity * instrument.contract_multiplier * margin_rate
         cost_money = margin * self._env.config.base.margin_multiplier
+        cost_money += self._env.get_order_transaction_cost(DEFAULT_ACCOUNT_TYPE.FUTURE, order)
         if cost_money <= account.cash:
             return True
 
