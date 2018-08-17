@@ -163,17 +163,12 @@ class FutureAccount(BaseAccount):
 
     @staticmethod
     def _frozen_cash_of_order(order):
-        if order.position_effect == POSITION_EFFECT.OPEN:
-            return margin_of(order.order_book_id, order.unfilled_quantity, order.frozen_price)
-        else:
-            return 0
-
-    @staticmethod
-    def _frozen_cash_of_trade(trade):
-        if trade.position_effect == POSITION_EFFECT.OPEN:
-            return margin_of(trade.order_book_id, trade.last_quantity, trade.frozen_price)
-        else:
-            return 0
+        order_cost = margin_of(
+            order.order_book_id, order.quantity, order.frozen_price
+        ) if order.position_effect == POSITION_EFFECT.OPEN else 0
+        return order_cost + Environment.get_instance().get_order_transaction_cost(
+            DEFAULT_ACCOUNT_TYPE.FUTURE, order
+        )
 
     @property
     def total_value(self):
@@ -254,19 +249,23 @@ class FutureAccount(BaseAccount):
     def _on_order_pending_new(self, event):
         if self != event.account:
             return
+
         self._frozen_cash += self._frozen_cash_of_order(event.order)
 
     def _on_order_unsolicited_update(self, event):
         if self != event.account:
             return
-        self._frozen_cash -= self._frozen_cash_of_order(event.order)
+        if order.filled_quantity != 0:
+            self._frozen_cash -= order.unfilled_quantity / order.quantty * self._frozen_cash_of_order(order)
+        else:
+            self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
     def _on_trade(self, event):
         if self != event.account:
             return
-        self._apply_trade(event.trade)
+        self._apply_trade(event.trade, event.order)
 
-    def _apply_trade(self, trade):
+    def _apply_trade(self, trade, order=None):
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
@@ -275,9 +274,12 @@ class FutureAccount(BaseAccount):
 
         self._total_cash -= trade.transaction_cost
         self._total_cash += delta_cash
-        self._frozen_cash -= self._frozen_cash_of_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
-
+        if order:
+            if trade.last_quantity != order.quantity:
+                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
+            else:
+                self._frozen_cash -= self._frozen_cash_of_order(order)
     # ------------------------------------ Abandon Property ------------------------------------
 
     @property

@@ -190,6 +190,6 @@ class Environment(object):
         return self._get_transaction_cost_decider(account_type, trade.order_book_id).get_trade_commission(trade)
 
     def get_order_transaction_cost(self, account_type, order):
-        return self._get_transaction_cost_decider(account_type, order.order_book_id).get_order_transaction_cost(trade)
+        return self._get_transaction_cost_decider(account_type, order.order_book_id).get_order_transaction_cost(order)
 
 
