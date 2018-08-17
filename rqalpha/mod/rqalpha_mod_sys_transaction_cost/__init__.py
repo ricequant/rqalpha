@@ -56,6 +56,16 @@ cli.commands['run'].params.append(
 )
 
 
+# [deprecated]
+cli.commands['run'].params.append(
+    click.Option(
+        ('-smc', '--stock-min-commission', cli_prefix + 'cn_stock_min_commission'),
+        type=click.FLOAT,
+        help="[sys_simulation][deprecated] set minimum commission in chinese stock trades."
+    )
+)
+
+
 def load_mod():
     from .mod import TransactionCostMod
     return TransactionCostMod()

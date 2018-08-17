@@ -16,12 +16,16 @@
 
 from rqalpha.interface import AbstractMod
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET
+from rqalpha.utils.exception import patch_user_exc
 
 from .deciders import CNStockTransactionCostDecider, CNFutureTransactionCostDecider, HKStockTransactionCostDecider
 
 
 class TransactionCostMod(AbstractMod):
     def start_up(self, env, mod_config):
+        if mod_config.commission_multiplier < 0:
+            raise patch_user_exc(ValueError(_(u"invalid commission multiplier value: value range is [0, +∞)")))
+
         env.set_transaction_cost_decider(DEFAULT_ACCOUNT_TYPE.STOCK, MARKET.CN, CNStockTransactionCostDecider(
             mod_config.commission_multiplier, mod_config.cn_stock_min_commission
         ))
