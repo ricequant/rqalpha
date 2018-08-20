@@ -18,8 +18,6 @@ import abc
 
 from six import with_metaclass
 
-from rqalpha.const import MARKET
-
 
 class AbstractAccount(with_metaclass(abc.ABCMeta)):
     """
@@ -291,7 +289,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_trading_calendar(self, market=MARKET.CN):
+    def get_trading_calendar(self):
         """
         获取交易日历
 

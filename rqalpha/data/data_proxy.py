@@ -35,7 +35,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         except AttributeError:
             pass
         InstrumentMixin.__init__(self, data_source.get_all_instruments())
-        TradingDatesMixin.__init__(self, data_source)
+        TradingDatesMixin.__init__(self, data_source.get_trading_calendar())
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)
@@ -212,28 +212,28 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         if count == 1:
             return self._data_source.is_suspended(order_book_id, [dt])[0]
 
-        trading_dates = self.get_n_trading_dates_until(dt, count, self.instruments(order_book_id))
+        trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_suspended(order_book_id, trading_dates)
 
     def is_st_stock(self, order_book_id, dt, count=1):
         if count == 1:
             return self._data_source.is_st_stock(order_book_id, [dt])[0]
 
-        trading_dates = self.get_n_trading_dates_until(dt, count, self.instruments(order_book_id))
+        trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_st_stock(order_book_id, trading_dates)
 
     def non_subscribable(self, order_book_id, dt, count=1):
         if count == 1:
             return self._data_source.non_subscribable(order_book_id, [dt])[0]
 
-        trading_dates = self.get_n_trading_dates_until(dt, count, self.instruments(order_book_id))
+        trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.non_subscribable(order_book_id, trading_dates)
 
     def non_redeemable(self, order_book_id, dt, count=1):
         if count == 1:
             return self._data_source.non_redeemable(order_book_id, [dt])[0]
 
-        trading_dates = self.get_n_trading_dates_until(dt, count, self.instruments(order_book_id))
+        trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.non_redeemable(order_book_id, trading_dates)
 
     def public_fund_commission(self, order_book_id, buy):
