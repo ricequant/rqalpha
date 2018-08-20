@@ -23,7 +23,7 @@ import yaml
 import simplejson as json
 import six
 
-from rqalpha.const import RUN_TYPE, PERSIST_MODE
+from rqalpha.const import RUN_TYPE, PERSIST_MODE, MARKET
 from rqalpha.utils import RqAttrDict, logger
 from rqalpha.utils.i18n import gettext as _, localization
 from rqalpha.utils.dict_func import deep_update
@@ -186,6 +186,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     config.base.accounts = parse_accounts(config.base.accounts)
     config.base.init_positions = parse_init_positions(config.base.init_positions)
     config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
+    config.base.market = parse_market(config.base.market)
 
     if config.extra.context_vars:
         if isinstance(config.extra.context_vars, six.string_types):
@@ -257,3 +258,16 @@ def parse_persist_mode(persist_mode):
         return mapping[persist_mode]
     except KeyError:
         raise RuntimeError(_(u"unknown persist mode: {}").format(persist_mode))
+
+
+def parse_market(market):
+    assert isinstance(market, six.string_types)
+    mapping = {
+        "cn": MARKET.CN,
+        "hk": MARKET.HK
+    }
+
+    try:
+        return mapping[market.lower()]
+    except KeyError:
+        raise RuntimeError(_(u"unknown market type: {}".format(market)))
