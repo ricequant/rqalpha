@@ -171,25 +171,24 @@ class Environment(object):
     def get_open_orders(self, order_book_id=None):
         return self.broker.get_open_orders(order_book_id)
 
-    def set_transaction_cost_decider(self, account_type, market, decider):
-        self._transaction_cost_decider_dict.setdefault(account_type, {})[market] = decider
+    def set_transaction_cost_decider(self, account_type, decider):
+        self._transaction_cost_decider_dict[account_type] = decider
 
-    def _get_transaction_cost_decider(self, account_type, order_book_id):
-        market = self.get_instrument(order_book_id).market
+    def _get_transaction_cost_decider(self, account_type):
         try:
-            return self._transaction_cost_decider_dict[account_type][market]
+            return self._transaction_cost_decider_dict[account_type]
         except KeyError:
-            raise NotImplementedError(_(u"No such transaction cost decider for {} with account type {}.".format(
-                order_book_id, account_type
+            raise NotImplementedError(_(u"No such transaction cost decider for such account_type {}.".format(
+                account_type
             )))
 
     def get_trade_tax(self, account_type, trade):
-        return self._get_transaction_cost_decider(account_type, trade.order_book_id).get_trade_tax(trade)
+        return self._get_transaction_cost_decider(account_type).get_trade_tax(trade)
 
     def get_trade_commission(self, account_type, trade):
-        return self._get_transaction_cost_decider(account_type, trade.order_book_id).get_trade_commission(trade)
+        return self._get_transaction_cost_decider(account_type).get_trade_commission(trade)
 
     def get_order_transaction_cost(self, account_type, order):
-        return self._get_transaction_cost_decider(account_type, order.order_book_id).get_order_transaction_cost(order)
+        return self._get_transaction_cost_decider(account_type).get_order_transaction_cost(order)
 
 

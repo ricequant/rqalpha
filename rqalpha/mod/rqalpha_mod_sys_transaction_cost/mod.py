@@ -26,17 +26,19 @@ class TransactionCostMod(AbstractMod):
         if mod_config.commission_multiplier < 0:
             raise patch_user_exc(ValueError(_(u"invalid commission multiplier value: value range is [0, +∞)")))
 
-        env.set_transaction_cost_decider(DEFAULT_ACCOUNT_TYPE.STOCK, MARKET.CN, CNStockTransactionCostDecider(
-            mod_config.commission_multiplier, mod_config.cn_stock_min_commission
-        ))
+        if env.config.base.market == MARKET.CN:
+            env.set_transaction_cost_decider(DEFAULT_ACCOUNT_TYPE.STOCK, CNStockTransactionCostDecider(
+                mod_config.commission_multiplier, mod_config.cn_stock_min_commission
+            ))
 
-        env.set_transaction_cost_decider(DEFAULT_ACCOUNT_TYPE.FUTURE, MARKET.CN, CNFutureTransactionCostDecider(
-            mod_config.commission_multiplier
-        ))
+            env.set_transaction_cost_decider(DEFAULT_ACCOUNT_TYPE.FUTURE, CNFutureTransactionCostDecider(
+                mod_config.commission_multiplier
+            ))
 
-        env.set_transaction_cost_decider(DEFAULT_ACCOUNT_TYPE.STOCK, MARKET.HK, HKStockTransactionCostDecider(
-            mod_config.commission_multiplier, mod_config.hk_stock_min_commission
-        ))
+        elif env.config.base.market == MARKET.HK:
+            env.set_transaction_cost_decider(DEFAULT_ACCOUNT_TYPE.STOCK, HKStockTransactionCostDecider(
+                mod_config.commission_multiplier, mod_config.hk_stock_min_commission
+            ))
 
     def tear_down(self, code, exception=None):
         pass

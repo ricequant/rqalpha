@@ -176,6 +176,12 @@ class DAYS_CNT(object):
     TRADING_DAYS_A_YEAR = 252
 
 
+# noinspection PyPep89Naming
+class MARKET(CustomEnum):
+    CN = "CN"
+    HK = "HK"
+
+
 class CURRENCY(CustomEnum):
     CNY = "CNY"     # 人民币
     USD = "USD"     # 美元
