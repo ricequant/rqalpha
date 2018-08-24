@@ -17,9 +17,10 @@
 import os
 import six
 import numpy as np
+import datetime
 
 from rqalpha.interface import AbstractDataSource
-from rqalpha.const import MARGIN_TYPE
+from rqalpha.const import MARGIN_TYPE, MARKET
 from rqalpha.environment import Environment
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
@@ -37,6 +38,7 @@ from rqalpha.data.yield_curve_store import YieldCurveStore
 from rqalpha.data.simple_factor_store import SimpleFactorStore
 from rqalpha.data.adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
+from rqalpha.data.hk_data_helper import HkYieldCurveMocker, HkDividendStore
 
 
 class BaseDataSource(AbstractDataSource):
@@ -47,30 +49,46 @@ class BaseDataSource(AbstractDataSource):
         def _p(name):
             return os.path.join(path, name)
 
-        self._day_bars = [
-            DayBarStore(_p('stocks.bcolz'), StockBarConverter),
-            DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
-            DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
-            DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
-        ]
+        self._market = Environment.get_instance().config.base.market
 
-        self._instruments = InstrumentStore(_p('instruments.pk'))
-        self._dividends = DividendStore(_p('original_dividends.bcolz'))
-        self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
-        self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
-        self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
-        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
+        if self._market == MARKET.CN:
+            self._day_bars = [
+                DayBarStore(_p('stocks.bcolz'), StockBarConverter),
+                DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
+                DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
+                DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
+            ]
 
-        self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
-        self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+            self._instruments = InstrumentStore(_p('instruments.pk'))
+            self._dividends = DividendStore(_p('original_dividends.bcolz'))
+            self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
+            self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
+            self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
+            self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
 
-        self.get_yield_curve = self._yield_curve.get_yield_curve
-        self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
-        if os.path.exists(_p('public_funds.bcolz')):
-            self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
-            self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
-            self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
-            self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
+            self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
+            self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+
+            self.get_yield_curve = self._yield_curve.get_yield_curve
+            self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+            if os.path.exists(_p('public_funds.bcolz')):
+                self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
+                self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
+                self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
+                self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
+
+        elif self._market == MARKET.HK:
+            self._day_bars = [
+                DayBarStore(_p("hk_stocks.bcolz"), StockBarConverter)
+            ]
+            self._instruments = InstrumentStore(_p("hk_instruments.pk"))
+            self._dividends = HkDividendStore(_p('hk_dividend.bcolz'))
+            self._trading_dates = TradingDatesStore(_p("hk_trading_dates.bcolz"))
+            self._yield_curve = HkYieldCurveMocker()
+            self._split_factor = SimpleFactorStore(_p('hk_split_factor.bcolz'))
+            self._ex_cum_factor = SimpleFactorStore(_p("hk_ex_cum_factor.bcolz"))
+        else:
+            raise NotImplementedError
 
     def get_dividend(self, order_book_id, public_fund=False):
         if public_fund:
@@ -87,7 +105,13 @@ class BaseDataSource(AbstractDataSource):
         return self._instruments.get_all_instruments()
 
     def is_suspended(self, order_book_id, dates):
-        return self._suspend_days.contains(order_book_id, dates)
+        if self._market == MARKET.CN:
+            return self._suspend_days.contains(order_book_id, dates)
+        elif self._market == MARKET.HK:
+            # FIXME
+            return [False] * len(dates)
+        else:
+            raise NotImplementedError
 
     def is_st_stock(self, order_book_id, dates):
         return self._st_stock_days.contains(order_book_id, dates)
@@ -194,10 +218,13 @@ class BaseDataSource(AbstractDataSource):
         return self._split_factor.get_factors(order_book_id)
 
     def available_data_range(self, frequency):
-        if frequency in ['tick', '1d']:
-            s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
-            return convert_int_to_date(s).date(), convert_int_to_date(e).date()
-
+        if self._market == MARKET.CN:
+            if frequency in ['tick', '1d']:
+                s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
+                return convert_int_to_date(s).date(), convert_int_to_date(e).date()
+        elif self._market == MARKET.HK:
+            # FIXME
+            return datetime.date(2015, 1, 1), datetime.datetime.now().date()
         raise NotImplementedError
 
     def get_margin_info(self, instrument):

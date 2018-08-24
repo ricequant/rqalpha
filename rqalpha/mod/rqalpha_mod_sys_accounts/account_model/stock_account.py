@@ -220,8 +220,16 @@ class StockAccount(BaseAccount):
                 self._dividend_receivable[order_book_id] = {
                     'quantity': position.quantity,
                     'dividend_per_share': dividend_per_share,
-                    'payable_date': self._int_to_date(dividend['payable_date']),
                 }
+
+                try:
+                    self._dividend_receivable[order_book_id]['payable_date'] = self._int_to_date(
+                        dividend['payable_date']
+                    )
+                except ValueError:
+                    self._dividend_receivable[order_book_id]['payable_date'] = self._int_to_date(
+                        dividend['ex_dividend_date']
+                    )
 
     def _handle_split(self, trading_date):
         data_proxy = Environment.get_instance().data_proxy

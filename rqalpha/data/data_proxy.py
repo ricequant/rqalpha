@@ -18,11 +18,13 @@ import six
 import numpy as np
 import pandas as pd
 
+from rqalpha.environment import Environment
 from rqalpha.data import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject
 from rqalpha.model.tick import TickObject
+from rqalpha.const import MARKET
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 
@@ -74,8 +76,13 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         if table is None or len(table) == 0:
             return
 
+        try:
+            dates = table['book_closure_date']
+        except ValueError:
+            dates = table['ex_dividend_date']
+            date = self.get_next_trading_date(date)
+
         dt = date.year * 10000 + date.month * 100 + date.day
-        dates = table['book_closure_date']
         pos = dates.searchsorted(dt)
         if pos == len(dates) or dt != dates[pos]:
             return None
