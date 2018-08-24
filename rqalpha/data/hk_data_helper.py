@@ -58,8 +58,6 @@ class HkDividendStore(object):
             ('ex_dividend_date', '<u4'), ('dividend_cash_before_tax', np.float), ('round_lot', '<u4')
         ]))
 
-        print(self._table)
-
         self._table['ex_dividend_date'][:] = ct['ex_date']
         self._table['dividend_cash_before_tax'] = ct['cash_before_tax'][:] / 10000.0
         self._table['round_lot'][:] = ct['round_lot']
