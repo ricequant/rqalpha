@@ -96,7 +96,7 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p', 'r']), default="b")
 @click.option('-rp', '--round-price', 'base__round_price', is_flag=True)
-@click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default='cn')
+@click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default=None)
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
