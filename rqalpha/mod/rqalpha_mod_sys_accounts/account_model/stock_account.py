@@ -140,7 +140,7 @@ class StockAccount(BaseAccount):
         position = self._positions.get_or_create(order.order_book_id)
         position.on_order_cancel_(order)
         if order.filled_quantity != 0:
-            self._frozen_cash -= order.unfilled_quantity / order.quantty * self._frozen_cash_of_order(order)
+            self._frozen_cash -= order.unfilled_quantity / order.quantity * self._frozen_cash_of_order(order)
         else:
             self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
