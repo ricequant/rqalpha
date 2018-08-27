@@ -38,7 +38,7 @@ from rqalpha.data.yield_curve_store import YieldCurveStore
 from rqalpha.data.simple_factor_store import SimpleFactorStore
 from rqalpha.data.adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
-from rqalpha.data.hk_data_helper import HkYieldCurveMocker, HkDividendStore
+from rqalpha.data.hk_data_helper import HkYieldCurveMocker, HkDividendStore, HkDayBarStore
 
 
 class BaseDataSource(AbstractDataSource):
@@ -79,7 +79,7 @@ class BaseDataSource(AbstractDataSource):
 
         elif self._market == MARKET.HK:
             self._day_bars = [
-                DayBarStore(_p("hk_stocks.bcolz"), StockBarConverter)
+                HkDayBarStore(_p("hk_stocks.bcolz"), StockBarConverter)
             ]
             self._instruments = InstrumentStore(_p("hk_instruments.pk"))
             self._dividends = HkDividendStore(_p('hk_dividend.bcolz'))
@@ -223,8 +223,7 @@ class BaseDataSource(AbstractDataSource):
                 s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
                 return convert_int_to_date(s).date(), convert_int_to_date(e).date()
         elif self._market == MARKET.HK:
-            # FIXME
-            return datetime.date(2015, 1, 1), datetime.datetime.now().date()
+            return self._day_bars[self.INSTRUMENT_TYPE_MAP['CS']].get_available_data_range()
         raise NotImplementedError
 
     def get_margin_info(self, instrument):
