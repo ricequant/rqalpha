@@ -17,7 +17,6 @@
 import os
 import six
 import numpy as np
-import datetime
 
 from rqalpha.interface import AbstractDataSource
 from rqalpha.const import MARGIN_TYPE, MARKET
@@ -87,6 +86,7 @@ class BaseDataSource(AbstractDataSource):
             self._yield_curve = HkYieldCurveMocker()
             self._split_factor = SimpleFactorStore(_p('hk_split_factor.bcolz'))
             self._ex_cum_factor = SimpleFactorStore(_p("hk_ex_cum_factor.bcolz"))
+            self._suspend_days = DateSet(_p('hk_suspended_days.bcolz'))
         else:
             raise NotImplementedError
 
@@ -105,13 +105,7 @@ class BaseDataSource(AbstractDataSource):
         return self._instruments.get_all_instruments()
 
     def is_suspended(self, order_book_id, dates):
-        if self._market == MARKET.CN:
-            return self._suspend_days.contains(order_book_id, dates)
-        elif self._market == MARKET.HK:
-            # FIXME
-            return [False] * len(dates)
-        else:
-            raise NotImplementedError
+        return self._suspend_days.contains(order_book_id, dates)
 
     def is_st_stock(self, order_book_id, dates):
         return self._st_stock_days.contains(order_book_id, dates)
