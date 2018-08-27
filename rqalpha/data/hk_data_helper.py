@@ -20,7 +20,9 @@ import numpy as np
 from pandas import DataFrame
 
 from rqalpha.environment import Environment
+from rqalpha.data.daybar_store import DayBarStore
 from rqalpha.data.risk_free_helper import YIELD_CURVE_TENORS
+from rqalpha.utils.datetime_func import convert_int_to_date
 
 
 class HkYieldCurveMocker(object):
@@ -69,3 +71,9 @@ class HkDividendStore(object):
             return None
 
         return self._table[s:e]
+
+
+class HkDayBarStore(DayBarStore):
+    def get_available_data_range(self):
+        min_date, max_date = self._table.attrs["min_date"], self._table.attrs["max_date"]
+        return convert_int_to_date(min_date).date(), convert_int_to_date(max_date).date()
