@@ -255,6 +255,7 @@ class FutureAccount(BaseAccount):
     def _on_order_unsolicited_update(self, event):
         if self != event.account:
             return
+        order = event.order
         if order.filled_quantity != 0:
             self._frozen_cash -= order.unfilled_quantity / order.quantty * self._frozen_cash_of_order(order)
         else:

@@ -388,19 +388,19 @@ msgstr "订单创建失败: 基金{order_book_id}在{date}不能赎回。"
 msgid ""
 "Order Creation Failed: limit order price {limit_price} is higher than "
 "limit up {limit_up}."
-msgstr "订单单创建失败: 订单价格 {limit_price} 超过当天涨停板价格 {limit_up}。"
+msgstr "订单创建失败: 订单价格 {limit_price} 超过当天涨停板价格 {limit_up}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:45
 msgid ""
 "Order Creation Failed: limit order price {limit_price} is lower than "
 "limit down {limit_down}."
-msgstr "订单单创建失败: 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
+msgstr "订单创建失败: 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/stock_position_validator.py:34
 msgid ""
 "Order Creation Failed: not enough stock {order_book_id} to sell, you want"
 " to sell {quantity}, sellable {sellable}"
-msgstr "订单单创建失败: 仓位不足。平仓量: {quantity}，可平数量: {sellable}。"
+msgstr "订单创建失败: 仓位不足。平仓量: {quantity}，可平数量: {sellable}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:74
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:68
