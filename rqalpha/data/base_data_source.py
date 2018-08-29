@@ -27,7 +27,9 @@ from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.data.future_info_cn import CN_FUTURE_INFO
 from rqalpha.data.converter import StockBarConverter, IndexBarConverter
-from rqalpha.data.converter import FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
+from rqalpha.data.converter import (
+    FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter, HkStockBarConverter)
+
 from rqalpha.data.daybar_store import DayBarStore
 from rqalpha.data.date_set import DateSet
 from rqalpha.data.dividend_store import DividendStore
@@ -78,7 +80,7 @@ class BaseDataSource(AbstractDataSource):
 
         elif self._market == MARKET.HK:
             self._day_bars = [
-                HkDayBarStore(_p("hk_stocks.bcolz"), StockBarConverter)
+                HkDayBarStore(_p("hk_stocks.bcolz"), HkStockBarConverter)
             ]
             self._instruments = InstrumentStore(_p("hk_instruments.pk"))
             self._dividends = HkDividendStore(_p('hk_dividend.bcolz'))
