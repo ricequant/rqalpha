@@ -109,4 +109,3 @@ class BasePosition(AbstractPosition):
         """abandon"""
         user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('position.total_trades'))
         return 0
-

@@ -42,6 +42,7 @@ class Environment(object):
         self.user_detail_log = user_detail_log
         self.event_bus = EventBus()
         self.portfolio = None
+        self.booking = None
         self.benchmark_portfolio = None
         self.calendar_dt = None
         self.trading_dt = None
