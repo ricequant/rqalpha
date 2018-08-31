@@ -24,3 +24,5 @@ mod:
     enabled: false
   sys_booking:
     enabled: false
+  sys_transaction_cost:
+    enabled: true

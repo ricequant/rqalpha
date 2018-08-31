@@ -14,10 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-
 from rqalpha.events import EventBus
-from rqalpha.utils import get_account_type, generate_account_type_dict
+from rqalpha.utils import get_account_type
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
 from rqalpha.utils.i18n import gettext as _
 
@@ -44,16 +42,17 @@ class Environment(object):
         self.user_detail_log = user_detail_log
         self.event_bus = EventBus()
         self.portfolio = None
+        self.booking = None
         self.benchmark_portfolio = None
         self.calendar_dt = None
         self.trading_dt = None
         self.mod_dict = None
         self.plot_store = None
         self.bar_dict = None
-        self.account_type_dict = generate_account_type_dict()
         self._frontend_validators = []
         self._account_model_dict = {}
         self._position_model_dict = {}
+        self._transaction_cost_decider_dict = {}
 
     @classmethod
     def get_instance(cls):
@@ -100,13 +99,6 @@ class Environment(object):
 
     def add_frontend_validator(self, validator):
         self._frontend_validators.append(validator)
-
-    def register_account_type(self, account_type, value):
-        for k, v in six.iteritems(self.account_type_dict):
-            if v == value:
-                raise RuntimeError(
-                    _(u"value {value} has been used for {original_key}").format(value=value, original_key=k))
-        self.account_type_dict[account_type] = value
 
     def set_account_model(self, account_type, account_model):
         self._account_model_dict[account_type] = account_model
@@ -179,3 +171,25 @@ class Environment(object):
 
     def get_open_orders(self, order_book_id=None):
         return self.broker.get_open_orders(order_book_id)
+
+    def set_transaction_cost_decider(self, account_type, decider):
+        self._transaction_cost_decider_dict[account_type] = decider
+
+    def _get_transaction_cost_decider(self, account_type):
+        try:
+            return self._transaction_cost_decider_dict[account_type]
+        except KeyError:
+            raise NotImplementedError(_(u"No such transaction cost decider for such account_type {}.".format(
+                account_type
+            )))
+
+    def get_trade_tax(self, account_type, trade):
+        return self._get_transaction_cost_decider(account_type).get_trade_tax(trade)
+
+    def get_trade_commission(self, account_type, trade):
+        return self._get_transaction_cost_decider(account_type).get_trade_commission(trade)
+
+    def get_order_transaction_cost(self, account_type, order):
+        return self._get_transaction_cost_decider(account_type).get_order_transaction_cost(order)
+
+

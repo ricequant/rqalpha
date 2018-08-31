@@ -23,12 +23,6 @@ __config__ = {
     "signal": False,
     # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
     "matching_type": "current_bar",
-    # A股最小手续费
-    "cn_stock_min_commission": 5,
-    # 港股最小手续费
-    "hk_stock_min_commission": 50,
-    # 设置手续费乘数，默认为1
-    "commission_multiplier": 1,
     # price_limit: 在处于涨跌停时，无法买进/卖出，默认开启【在 Signal 模式下，不再禁止买进/卖出，如果开启，则给出警告提示。】
     "price_limit": True,
     # liquidity_limit: 当对手盘没有流动性的时候，无法买进/卖出，默认关闭
@@ -82,14 +76,6 @@ cli.commands['run'].params.append(
 )
 
 cli.commands['run'].params.append(
-    click.Option(
-        ('-cm', '--commission-multiplier', cli_prefix + "commission_multiplier"),
-        type=click.FLOAT,
-        help="[sys_simulation] set commission multiplier"
-    )
-)
-
-cli.commands['run'].params.append(
     # [Deprecated] using matching type
     click.Option(
         ('-me', '--match-engine', cli_prefix + "matching_type"),
@@ -105,34 +91,3 @@ cli.commands['run'].params.append(
         help="[sys_simulation] set matching type"
     )
 )
-
-
-cli.commands['run'].params.append(
-    click.Option(
-        ('-cnsmc', '--cn-stock-min-commission', cli_prefix + 'cn_stock_min_commission'),
-        type=click.FLOAT,
-        help="[sys_simulation] set minimum commission in chinese stock trades."
-    )
-)
-
-
-cli.commands['run'].params.append(
-    click.Option(
-        ('-hksmc', '--hk-stock-min-commission', cli_prefix + 'hk_stock_min_commission'),
-        type=click.FLOAT,
-        help="[sys_simulation] set minimum commission in Hong Kong stock trades."
-    )
-)
-
-
-# [deprecated]
-cli.commands['run'].params.append(
-    click.Option(
-        ('-smc', '--stock-min-commission', cli_prefix + 'cn_stock_min_commission'),
-        type=click.FLOAT,
-        help="[sys_simulation][deprecated] set minimum commission in chinese stock trades."
-    )
-)
-
-
-

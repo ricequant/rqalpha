@@ -92,4 +92,4 @@ time_period7 = [
     TimeRange(start=time(9, 16), end=time(11, 30)),
     TimeRange(start=time(13, 1), end=time(15, 15)),
 ]
-TRADING_PERIOD_DICT.update({underlying_symbol: time_period7 for underlying_symbol in ["T", "TF"]})
+TRADING_PERIOD_DICT.update({underlying_symbol: time_period7 for underlying_symbol in ["T", "TF", "TS"]})

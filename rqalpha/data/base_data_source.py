@@ -23,7 +23,6 @@ from rqalpha.const import MARGIN_TYPE, MARKET
 from rqalpha.environment import Environment
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
-from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.data.future_info_cn import CN_FUTURE_INFO
@@ -38,6 +37,7 @@ from rqalpha.data.yield_curve_store import YieldCurveStore
 from rqalpha.data.simple_factor_store import SimpleFactorStore
 from rqalpha.data.adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
+from rqalpha.data.hk_data_helper import HkYieldCurveMocker, HkDividendStore, HkDayBarStore
 
 
 class BaseDataSource(AbstractDataSource):
@@ -48,41 +48,47 @@ class BaseDataSource(AbstractDataSource):
         def _p(name):
             return os.path.join(path, name)
 
-        self._day_bars = [
-            DayBarStore(_p('stocks.bcolz'), StockBarConverter),
-            DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
-            DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
-            DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
-        ]
+        self._market = Environment.get_instance().config.base.market
 
-        self._multiple_market_instruments = {
-            MARKET.CN: InstrumentStore(_p('instruments.pk'), MARKET.CN)
-        }
+        if self._market == MARKET.CN:
+            self._day_bars = [
+                DayBarStore(_p('stocks.bcolz'), StockBarConverter),
+                DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
+                DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
+                DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
+            ]
 
-        self._multiple_market_trading_dates = {
-            MARKET.CN: TradingDatesStore(_p('trading_dates.bcolz'))
-        }
+            self._instruments = InstrumentStore(_p('instruments.pk'))
+            self._dividends = DividendStore(_p('original_dividends.bcolz'))
+            self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
+            self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
+            self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
+            self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
 
-        self._dividends = DividendStore(_p('original_dividends.bcolz'))
-        self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
-        self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
-        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
+            self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
+            self._suspend_days = DateSet(_p('suspended_days.bcolz'))
 
-        self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
-        self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+            self.get_yield_curve = self._yield_curve.get_yield_curve
+            self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
+            if os.path.exists(_p('public_funds.bcolz')):
+                self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
+                self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
+                self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
+                self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
 
-        self.get_yield_curve = self._yield_curve.get_yield_curve
-        self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
-
-        if os.path.exists(_p('public_funds.bcolz')):
-            self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
-            self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
-            self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
-            self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
-
-        if os.path.exists(_p('hk_instruments.pk')):
-            self._multiple_market_instruments[MARKET.HK] = InstrumentStore(_p("hk_instruments.pk"), MARKET.HK)
-            self._multiple_market_trading_dates[MARKET.HK] = TradingDatesStore(_p("hk_trading_dates.bcolz"))
+        elif self._market == MARKET.HK:
+            self._day_bars = [
+                HkDayBarStore(_p("hk_stocks.bcolz"), StockBarConverter)
+            ]
+            self._instruments = InstrumentStore(_p("hk_instruments.pk"))
+            self._dividends = HkDividendStore(_p('hk_dividend.bcolz'))
+            self._trading_dates = TradingDatesStore(_p("hk_trading_dates.bcolz"))
+            self._yield_curve = HkYieldCurveMocker()
+            self._split_factor = SimpleFactorStore(_p('hk_split_factor.bcolz'))
+            self._ex_cum_factor = SimpleFactorStore(_p("hk_ex_cum_factor.bcolz"))
+            self._suspend_days = DateSet(_p('hk_suspended_days.bcolz'))
+        else:
+            raise NotImplementedError
 
     def get_dividend(self, order_book_id, public_fund=False):
         if public_fund:
@@ -92,17 +98,11 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
 
-    def get_trading_calendar(self, market=MARKET.CN):
-        try:
-            return self._multiple_market_trading_dates[market].get_trading_calendar()
-        except KeyError:
-            raise RQInvalidArgument(_("Unsupported such market type: {}".format(market)))
+    def get_trading_calendar(self):
+        return self._trading_dates.get_trading_calendar()
 
     def get_all_instruments(self):
-        all_instruments = []
-        for instruments in six.itervalues(self._multiple_market_instruments):
-            all_instruments.extend(instruments.get_all_instruments())
-        return all_instruments
+        return self._instruments.get_all_instruments()
 
     def is_suspended(self, order_book_id, dates):
         return self._suspend_days.contains(order_book_id, dates)
@@ -212,10 +212,12 @@ class BaseDataSource(AbstractDataSource):
         return self._split_factor.get_factors(order_book_id)
 
     def available_data_range(self, frequency):
-        if frequency in ['tick', '1d']:
-            s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
-            return convert_int_to_date(s).date(), convert_int_to_date(e).date()
-
+        if self._market == MARKET.CN:
+            if frequency in ['tick', '1d']:
+                s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
+                return convert_int_to_date(s).date(), convert_int_to_date(e).date()
+        elif self._market == MARKET.HK:
+            return self._day_bars[self.INSTRUMENT_TYPE_MAP['CS']].get_available_data_range()
         raise NotImplementedError
 
     def get_margin_info(self, instrument):

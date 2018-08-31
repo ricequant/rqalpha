@@ -43,10 +43,8 @@ from rqalpha.utils.arg_checker import apply_rules, verify_that
 # noinspection PyUnresolvedReferences
 from rqalpha.model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
 # noinspection PyUnresolvedReferences
-from rqalpha.const import (
-    EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE,
-    POSITION_DIRECTION, MARKET
-)
+from rqalpha.const import (EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE,
+                           RUN_TYPE, POSITION_DIRECTION)
 # noinspection PyUnresolvedReferences
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 # noinspection PyUnresolvedReferences
@@ -715,7 +713,7 @@ def industry(code):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('start_date').is_valid_date(ignore_none=False),
              verify_that('end_date').is_valid_date(ignore_none=False))
-def get_trading_dates(start_date, end_date, market=MARKET.CN):
+def get_trading_dates(start_date, end_date):
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
 
@@ -724,9 +722,6 @@ def get_trading_dates(start_date, end_date, market=MARKET.CN):
 
     :param end_date: 结束如期
     :type end_date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
-    :param market: 市场类型
-    :type market: :class:`~MARKET` enum
 
     :return: list[`datetime.date`]
 
@@ -739,7 +734,7 @@ def get_trading_dates(start_date, end_date, market=MARKET.CN):
         [Out]
         [datetime.date(2016, 5, 5)]
     """
-    return Environment.get_instance().data_proxy.get_trading_dates(start_date, end_date, market)
+    return Environment.get_instance().data_proxy.get_trading_dates(start_date, end_date)
 
 
 @export_as_api
@@ -751,18 +746,13 @@ def get_trading_dates(start_date, end_date, market=MARKET.CN):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=False),
              verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
-def get_previous_trading_date(date, n=1, market=MARKET.CN):
+def get_previous_trading_date(date, n=1):
     """
     获取指定日期的之前的第 n 个交易日。
 
     :param date: 指定日期
     :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
     :param n:
-    :type n: `int`
-
-    :param market: 市场类型
-    :type market: :class:`~MARKET` enum
 
     :return: `datetime.date`
 
@@ -775,7 +765,7 @@ def get_previous_trading_date(date, n=1, market=MARKET.CN):
         [Out]
         [datetime.date(2016, 4, 29)]
     """
-    return Environment.get_instance().data_proxy.get_previous_trading_date(date, n, market)
+    return Environment.get_instance().data_proxy.get_previous_trading_date(date, n)
 
 
 @export_as_api
@@ -787,18 +777,13 @@ def get_previous_trading_date(date, n=1, market=MARKET.CN):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=False),
              verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
-def get_next_trading_date(date, n=1, market=MARKET.CN):
+def get_next_trading_date(date, n=1):
     """
     获取指定日期之后的第 n 个交易日
 
     :param date: 指定日期
     :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
     :param n:
-    :type n: `int`
-
-    :param market: 市场类型
-    :type market: :class:`~MARKET` enum
 
     :return: `datetime.date`
 
@@ -811,7 +796,7 @@ def get_next_trading_date(date, n=1, market=MARKET.CN):
         [Out]
         [datetime.date(2016, 5, 3)]
     """
-    return Environment.get_instance().data_proxy.get_next_trading_date(date, n, market)
+    return Environment.get_instance().data_proxy.get_next_trading_date(date, n)
 
 
 def to_date(date):
@@ -919,3 +904,21 @@ def current_snapshot(id_or_symbol):
 
     # PT、实盘直接取最新快照，忽略 frequency, dt 参数
     return env.data_proxy.current_snapshot(order_book_id, frequency, dt)
+
+
+@export_as_api
+def get_positions():
+    booking = Environment.get_instance().booking
+    if not booking:
+        raise RuntimeError(_("Booking has not been set, please check your broker configuration."))
+    return booking.get_positions()
+
+
+@export_as_api
+@apply_rules(verify_that('direction').is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT]))
+def get_position(order_book_id, direction):
+    booking = Environment.get_instance().booking
+    if not booking:
+        raise RuntimeError(_("Booking has not been set, please check your broker configuration."))
+
+    return booking.get_position(order_book_id, direction)

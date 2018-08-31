@@ -19,16 +19,11 @@ import pickle
 from rqalpha.model.instrument import Instrument
 
 
-def update_instrument_dict(instrument_dict, **kwargs):
-    instrument_dict.update(kwargs)
-    return instrument_dict
-
-
 class InstrumentStore(object):
-    def __init__(self, f, market):
+    def __init__(self, f):
         with open(f, 'rb') as store:
             d = pickle.load(store)
-        self._instruments = [Instrument(update_instrument_dict(i, market=market)) for i in d]
+        self._instruments = [Instrument(i) for i in d]
 
     def get_all_instruments(self):
         return self._instruments

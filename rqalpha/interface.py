@@ -18,8 +18,6 @@ import abc
 
 from six import with_metaclass
 
-from rqalpha.const import MARKET
-
 
 class AbstractAccount(with_metaclass(abc.ABCMeta)):
     """
@@ -130,6 +128,19 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
 
         返回当前账户的当日交易费用
         """
+        raise NotImplementedError
+
+
+class AbstractBookingPosition(with_metaclass(abc.ABCMeta)):
+
+    @property
+    @abc.abstractmethod
+    def order_book_id(self):
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def direction(self):
         raise NotImplementedError
 
 
@@ -291,7 +302,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_trading_calendar(self, market=MARKET.CN):
+    def get_trading_calendar(self):
         """
         获取交易日历
 
@@ -514,6 +525,11 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
         :return: Portfolio
         """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_booking(self):
+        raise NotImplementedError
 
     @abc.abstractmethod
     def submit_order(self, order):
@@ -636,3 +652,18 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     def can_cancel_order(self, account, order):
         # FIXME: need a better name
         raise NotImplementedError
+
+
+class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
+    @abc.abstractmethod
+    def get_trade_tax(self, trade):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_trade_commission(self, trade):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_order_transaction_cost(self, order):
+        raise NotImplementedError
+

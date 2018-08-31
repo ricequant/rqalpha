@@ -50,6 +50,9 @@ class SimulationBroker(AbstractBroker, Persistable):
     def get_portfolio(self):
         return init_portfolio(self._env)
 
+    def get_booking(self):
+        raise NotImplementedError
+
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:
             return [order for account, order in self._open_orders]

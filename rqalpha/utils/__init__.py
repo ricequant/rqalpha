@@ -218,6 +218,13 @@ def instrument_type_str2enum(type_str):
         raise NotImplementedError
 
 
+def account_type_str2enum(type_str):
+    return {
+        DEFAULT_ACCOUNT_TYPE.STOCK.name: DEFAULT_ACCOUNT_TYPE.STOCK,
+        DEFAULT_ACCOUNT_TYPE.FUTURE.name: DEFAULT_ACCOUNT_TYPE.FUTURE
+    }[type_str]
+
+
 INST_TYPE_IN_STOCK_ACCOUNT = [
     INSTRUMENT_TYPE.CS,
     INSTRUMENT_TYPE.ETF,
@@ -318,13 +325,6 @@ def is_run_from_ipython():
         return True
     except NameError:
         return False
-
-
-def generate_account_type_dict():
-    account_type_dict = {}
-    for key, a_type in six.iteritems(DEFAULT_ACCOUNT_TYPE.__members__):
-        account_type_dict[key] = a_type.value
-    return account_type_dict
 
 
 def is_valid_price(price):
