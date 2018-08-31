@@ -3,9 +3,9 @@ import pickle
 from contextlib import contextmanager
 
 from unittest.mock import MagicMock
-
 import six
 
+from rqalpha.const import MARKET
 
 class RQAlphaFixture(object):
     def init_fixture(self):
@@ -52,10 +52,15 @@ class TempDirFixture(RQAlphaFixture):
         self.temp_dir = TemporaryDirectory()
 
 
-class BaseDataSourceFixture(TempDirFixture):
+class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
     def __init__(self, *args, **kwargs):
         super(BaseDataSourceFixture, self).__init__(*args, **kwargs)
 
+        self.env_config = {
+            "base": {
+                "market": MARKET.CN
+            }
+        }
         self.bcolz_data = {key: None for key in [
             "stocks", "indexes", "futures", "funds", "original_dividends", "trading_dates",
             "yield_curve", "split_factor", "ex_cum_factor", "st_stock_days", "suspended_days"

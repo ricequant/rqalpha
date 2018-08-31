@@ -1,7 +1,7 @@
-from rqalpha.utils.testing import EnvironmentFixture, BaseDataSourceFixture, RQAlphaTestCase, mock_instrument
+from rqalpha.utils.testing import BaseDataSourceFixture, RQAlphaTestCase, mock_instrument
 
 
-class BaseDataSourceTestCase(EnvironmentFixture, BaseDataSourceFixture, RQAlphaTestCase):
+class BaseDataSourceTestCase(BaseDataSourceFixture, RQAlphaTestCase):
     def test_get_tick_size(self):
         with self.mock_env_get_last_price(return_value=0.03):
             self.assertEqual(self.base_data_source.get_tick_size(mock_instrument(exchange="XHKG")), 0.001)
