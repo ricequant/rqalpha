@@ -5,7 +5,6 @@ from contextlib import contextmanager
 from unittest.mock import MagicMock
 import six
 
-from rqalpha.const import MARKET
 
 class RQAlphaFixture(object):
     def init_fixture(self):
@@ -26,9 +25,9 @@ class EnvironmentFixture(RQAlphaFixture):
         self.env = Environment(RqAttrDict(self.env_config))
 
     @contextmanager
-    def mock_env_method(self, name, return_value):
+    def mock_env_method(self, name, mock_method):
         origin_method = getattr(self.env, name)
-        setattr(self.env, name, MagicMock(return_value=return_value))
+        setattr(self.env, name, mock_method)
         yield
         setattr(self.env, name, origin_method)
 
@@ -55,6 +54,8 @@ class TempDirFixture(RQAlphaFixture):
 class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
     def __init__(self, *args, **kwargs):
         super(BaseDataSourceFixture, self).__init__(*args, **kwargs)
+
+        from rqalpha.const import MARKET
 
         self.env_config = {
             "base": {
@@ -160,3 +161,21 @@ class MatcherFixture(EnvironmentFixture):
         self.matcher = Matcher(self.env, self.env_config["mod"].sys_simulation)
         self.matcher.update(datetime(2018, 8, 16, 11, 5), datetime(2018, 8, 16, 11, 5))
 
+
+class BookingFixture(EnvironmentFixture):
+    def __init__(self, *args, **kwargs):
+        super(BookingFixture, self).__init__(*args, **kwargs)
+
+        from rqalpha.model.booking import BookingPositions
+        from rqalpha.const import POSITION_DIRECTION
+
+        self.long_positions = BookingPositions(POSITION_DIRECTION.LONG)
+        self.short_positions = BookingPositions(POSITION_DIRECTION.SHORT)
+        self.booking = None
+
+    def init_fixture(self):
+        from rqalpha.model.booking import Booking
+        
+        super(BookingFixture, self).init_fixture()
+        
+        self.booking = Booking(self.long_positions, self.short_positions)

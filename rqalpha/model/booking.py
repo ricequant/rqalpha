@@ -30,6 +30,7 @@ class Booking(object):
             POSITION_DIRECTION.SHORT: short_positions,
         }
         self._backward_trade_set = backward_trade_set or set()
+        self.register_event()
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
