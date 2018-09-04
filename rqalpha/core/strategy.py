@@ -81,7 +81,7 @@ class Strategy(object):
 
     @run_when_strategy_not_hold
     def handle_bar(self, event):
-        if self._force_run_before_trading:
+        if self._force_run_before_trading and (self._before_trading is not None):
             self.before_trading(event)
         else:
             bar_dict = event.bar_dict
@@ -91,7 +91,7 @@ class Strategy(object):
 
     @run_when_strategy_not_hold
     def handle_tick(self, event):
-        if self._force_run_before_trading:
+        if self._force_run_before_trading and (self._before_trading is not None):
             self.before_trading(event)
         else:
             tick = event.tick
