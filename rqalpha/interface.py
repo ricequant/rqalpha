@@ -131,6 +131,19 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
+class AbstractBookingPosition(with_metaclass(abc.ABCMeta)):
+
+    @property
+    @abc.abstractmethod
+    def order_book_id(self):
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def direction(self):
+        raise NotImplementedError
+
+
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
     仓位接口，主要用于构建仓位信息
@@ -512,6 +525,11 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
         :return: Portfolio
         """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_booking(self):
+        raise NotImplementedError
 
     @abc.abstractmethod
     def submit_order(self, order):

@@ -37,6 +37,9 @@ class SignalBroker(AbstractBroker):
     def get_portfolio(self):
         return init_portfolio(self._env)
 
+    def get_booking(self):
+        raise NotImplementedError
+
     def get_open_orders(self, order_book_id=None):
         return []
 
