@@ -132,6 +132,8 @@ class BookingPosition(AbstractBookingPosition):
         self._old_quantity = 0
         self._today_quantity = 0
 
+        self._avg_price = 0
+
     @property
     def order_book_id(self):
         """
@@ -169,6 +171,13 @@ class BookingPosition(AbstractBookingPosition):
         """
         return self._today_quantity
 
+    @property
+    def avg_price(self):
+        """
+        [float] 平均开仓价格
+        """
+        return self._avg_price
+
     def apply_settlement(self):
         self._old_quantity += self._today_quantity
         self._today_quantity = 0
@@ -177,6 +186,15 @@ class BookingPosition(AbstractBookingPosition):
         position_effect = self._get_position_effect(trade.side, trade.position_effect)
 
         if position_effect == POSITION_EFFECT.OPEN:
+            if self.quantity < 0:
+                if trade.last_quantity <= -1 * self.quantity:
+                    self._avg_price = 0
+                else:
+                    self._avg_price = trade.last_price
+            else:
+                self._avg_price = (
+                        self.quantity * self.avg_price + trade.last_quantity * trade.last_price
+                ) / (self.quantity + trade.last_quantity)
             self._today_quantity += trade.last_quantity
         elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
             self._today_quantity -= trade.last_quantity
