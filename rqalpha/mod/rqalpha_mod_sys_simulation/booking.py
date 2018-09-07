@@ -97,14 +97,6 @@ class FutureSimulationBookingPosition(SimulationBookingPosition):
 class SimulationBooking(object):
     def __init__(self):
         self._env = Environment.get_instance()
-        self._cached_booking_positions = {}
-
-        self._env.event_bus.add_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
-
-    def _post_settlement(self, _):
-        for order_book_id in list(six.iterkeys(self._cached_booking_positions)):
-            if order_book_id not in self._positions:
-                del self._cached_booking_positions[order_book_id]
 
     @property
     def _positions(self):
@@ -113,30 +105,21 @@ class SimulationBooking(object):
             raise RuntimeError(_('Cannot get portfolio instance.'))
         return portfolio.positions
 
-    def _get_booking_positions_dict(self, order_book_id):
-        def make_booking_position(obid, dir):
-            account_type = get_account_type(obid)
-            if account_type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
-                return StockSimulationBookingPosition(self._positions[obid], dir)
-            elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
-                return FutureSimulationBookingPosition(self._positions[obid], dir)
-            else:
-                raise NotImplementedError
-
-        return self._cached_booking_positions.setdefault(order_book_id, {
-            POSITION_DIRECTION.LONG: make_booking_position(order_book_id, POSITION_DIRECTION.LONG),
-            POSITION_DIRECTION.SHORT: make_booking_position(order_book_id, POSITION_DIRECTION.SHORT)
-        })
-
     def get_positions(self):
         total_positions = []
-
-        for order_book_id in six.iterkeys(self._positions):
-            for booking_position in six.itervalues(self._get_booking_positions_dict(order_book_id)):
+        for order_book_id, position in six.iteritems(self._positions):
+            for direction in [POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT]:
+                booking_position = self.get_position(order_book_id, direction)
                 if booking_position.quantity != 0:
                     total_positions.append(booking_position)
 
         return total_positions
 
     def get_position(self, order_book_id, direction):
-        return self._get_booking_positions_dict(order_book_id)[direction]
+        account_type = get_account_type(order_book_id)
+        if account_type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
+            return StockSimulationBookingPosition(self._positions[order_book_id], direction)
+        elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
+            return FutureSimulationBookingPosition(self._positions[order_book_id], direction)
+        else:
+            raise NotImplementedError
