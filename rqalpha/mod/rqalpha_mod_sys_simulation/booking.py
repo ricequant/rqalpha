@@ -19,13 +19,15 @@ import six
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractBookingPosition
 from rqalpha.const import POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
-from rqalpha.events import EVENT
+from rqalpha.utils.repr import property_repr
 from rqalpha.utils import get_account_type
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 
 
 class SimulationBookingPosition(AbstractBookingPosition):
+    __repr__ = property_repr
+
     def __init__(self, position, direction):
         self._position = position
         self._direction = direction
