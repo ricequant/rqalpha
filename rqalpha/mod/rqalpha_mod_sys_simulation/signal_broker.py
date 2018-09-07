@@ -26,6 +26,7 @@ from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
 
 from .slippage import SlippageDecider
 from .utils import init_portfolio
+from .booking import SimulationBooking
 
 
 class SignalBroker(AbstractBroker):
@@ -38,7 +39,7 @@ class SignalBroker(AbstractBroker):
         return init_portfolio(self._env)
 
     def get_booking(self):
-        raise NotImplementedError
+        return SimulationBooking()
 
     def get_open_orders(self, order_book_id=None):
         return []

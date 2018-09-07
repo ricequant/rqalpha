@@ -146,6 +146,8 @@ class BookingPosition(AbstractBookingPosition):
     @property
     def direction(self):
         """
+        [Required]
+
         持仓方向
         """
         return self._direction

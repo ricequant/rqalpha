@@ -24,6 +24,7 @@ from rqalpha.model.order import Order
 
 from .matcher import Matcher
 from .utils import init_portfolio
+from .booking import SimulationBooking
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -51,7 +52,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         return init_portfolio(self._env)
 
     def get_booking(self):
-        raise NotImplementedError
+        return SimulationBooking()
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:
