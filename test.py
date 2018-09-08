@@ -193,6 +193,14 @@ def write_csv(path, fields):
                 writer.writerow({'date_time': end_time, 'time_spend': time_spend})
 
 
+def run_unit_tests():
+    from unittest import TextTestRunner
+
+    from tests.unittest import load_tests
+
+    TextTestRunner(verbosity=2).run(load_tests())
+
+
 if __name__ == '__main__':
     if is_enable_coverage():
         print("enable coverage")
@@ -217,12 +225,16 @@ if __name__ == '__main__':
             end_time = datetime.now()
 
         elif sys.argv[1] == 'performance':
-            test_api()
+            # test_api()
             test_strategy()
             end_time = datetime.now()
             performance_path = sys.argv[2]
             time_spend = (end_time - start_time).total_seconds()
             write_csv(performance_path, field_names)
+
+        elif sys.argv[1] == 'unittest':
+            run_unit_tests()
+            end_time = datetime.now()
 
         else:
             target_file = sys.argv[1]
@@ -230,6 +242,7 @@ if __name__ == '__main__':
             end_time = datetime.now()
 
     else:
+        run_unit_tests()
         test_api()
         error_count = run_tests()
         end_time = datetime.now()
