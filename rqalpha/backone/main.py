@@ -4,16 +4,17 @@ from rqalpha.backone.predicted_next_day import *
 import datetime
 
 #STOCKID = "002438.XSHG"
-STOCKID = "600519.XSHG"
-#STOCKID = "000670.XSHE"
+#STOCKID = "603019.XSHG"
+STOCKID = "002044.XSHE"
 seq_len = 30
 result = {}
 
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 today = datetime.date.today().strftime("%Y-%m-%d")
-print before_yesterday
+#yesterday="2018-08-31"
 print yesterday
+print today
 
 config_dl = {
   "stock_id":STOCKID,

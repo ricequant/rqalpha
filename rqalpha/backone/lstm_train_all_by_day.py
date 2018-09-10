@@ -105,6 +105,7 @@ def build_model(layers):
     model.add(Dense(
         output_dim=layers[3]))
     model.add(Activation("linear"))
+    #model.add(Activation("softmax"))
 
     start = time.time()
     model.compile(loss="mse", optimizer="rmsprop")
@@ -127,7 +128,7 @@ def train_single_stock(filename, result):
     X_train, y_train = load_data('close_price/%s' % filename, seq_len, True)
     
     print('> Data Loaded. Compiling... X_train len:%s' % len(X_train))
-    if len(X_train) < 1000:
+    if len(X_train) < 500:
         return None
     
     try:
