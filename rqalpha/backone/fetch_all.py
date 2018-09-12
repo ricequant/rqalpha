@@ -68,7 +68,11 @@ def handle_bar_dl(context, bar_dict):
     for book_id, data in context.all_close_price.items():
         print book_id
         print data
+        
         np.save("close_price/%s" % book_id, data)
+        today = datetime.date.today().strftime("%Y%m%d")
+        np.save("data%s/close_price/%s" % (today, book_id), data)
+        
         #df = pd.DataFrame(data)
         #df.save("close_price/%s" % book_id,  encoding = "utf-8")   
    

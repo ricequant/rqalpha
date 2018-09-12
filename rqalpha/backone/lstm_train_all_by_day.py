@@ -242,7 +242,7 @@ def train_single_stock_test(filename, result):
 
 def get_all_order_book_id(today):
     all_order_book_id = []
-    filepath = "close_price" % today
+    filepath = "data%s/close_price" % today
     files = os.listdir(filepath)
     for file in files:
         all_order_book_id.append(file)
