@@ -55,7 +55,7 @@ def fitness(individual, data):
 if __name__=='__main__':
     today_str = "2018-08-07"
     today_str = datetime.date.today().strftime("%Y-%m-%d")
-    today = datetime.date.today().strftime("%Y-%m-%d")
+    today = datetime.date.today().strftime("%Y%m%d")
     
     left = pd.DataFrame.from_csv('data%s/train_reslut%s.csv' % (today, today_str))
     right = pd.DataFrame.from_csv('data%s/predicted_reslut%s.csv' % (today, today_str))
