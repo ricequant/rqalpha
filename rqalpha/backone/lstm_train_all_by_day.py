@@ -265,7 +265,7 @@ if __name__=='__main__':
         #pool = multiprocessing.Pool(processes=2)
         result = {}
         for stock_id in all_stock_id:
-            model_file_path = 'data%sweight_day/%s.h5' %  (today,stock_id[:-4])
+            model_file_path = 'data%s/weight_day/%s.h5' %  (today,stock_id[:-4])
             #print model_file_path
             if not os.path.isfile(model_file_path):
                 train_single_stock(stock_id, result, today)
@@ -276,7 +276,7 @@ if __name__=='__main__':
         df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
         print df
         yesterday = datetime.date.today().strftime("%Y-%m-%d")
-        df.to_csv ("data%strain_reslut%s.csv" % (today, yesterday), encoding = "utf-8")
+        df.to_csv ("data%s/train_reslut%s.csv" % (today, yesterday), encoding = "utf-8")
     else:
         stock_id = "300028.XSHE.npy"
         train_single_stock(stock_id, result, today)

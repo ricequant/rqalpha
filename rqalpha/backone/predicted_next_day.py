@@ -60,10 +60,10 @@ def handle_bar_next_day(context, bar_dict):
             print "history_close != 50"
             continue
         if not os.path.isfile('data%s/weight_day/%s.npy.h5' % (today,order_book_id)):
-            print "weight_day/%s.npy.h5  not file" % order_book_id
+            print "data%s/weight_day/%s.npy.h5  not file" % (today, order_book_id)
             continue
         if not os.path.isfile('data%s/weight_json_day/%s.npy.h5' % (today, order_book_id)):
-            print 'weight_json_day/%s.npy.h5 not file' % order_book_id
+            print 'data%s/weight_json_day/%s.npy.h5 not file' % (today, order_book_id)
             continue
         
         y = bar_dict[order_book_id].close
