@@ -1,6 +1,6 @@
 #!/bin/sh
 # fetch data
-#rqalpha update_bundle
+rqalpha update_bundle
 today=`date "+%Y%m%d"`
 data_dir=data${today}
 mkdir -p ${data_dir}/close_price
