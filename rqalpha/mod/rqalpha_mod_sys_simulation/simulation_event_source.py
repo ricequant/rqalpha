@@ -183,18 +183,20 @@ class SimulationEventSource(AbstractEventSource):
 
                         if last_tick is None:
                             last_tick = tick
+
                             yield Event(
                                 EVENT.BEFORE_TRADING,
                                 calendar_dt=calendar_dt - datetime.timedelta(minutes=30),
                                 trading_dt=trading_dt - datetime.timedelta(minutes=30)
                             )
 
-                        yield Event(EVENT.TICK, calendar_dt=calendar_dt, trading_dt=trading_dt, tick=tick)
-
                         if self._universe_changed:
                             self._universe_changed = False
-                            last_dt = calendar_dt
                             break
+
+                        last_dt = calendar_dt
+                        yield Event(EVENT.TICK, calendar_dt=calendar_dt, trading_dt=trading_dt, tick=tick)
+
                     else:
                         break
 
