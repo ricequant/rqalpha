@@ -177,9 +177,72 @@ def train_single_stock(filename, result, today):
     """
     print "Training duration (s) : %s  %s" % (time.time() - global_start_time, filename)
 
+def train_single_stock_test(filename, result):
+    global_start_time = time.time()
+    epochs  = 1
+    seq_len = 50
+    
+    print filename
+    data = np.load('close_price/%s' %  filename)
+    print len(data)
+    if len(data) < 100:
+        return False    
+    
+    
+    X_train, y_train = load_data('close_price/%s' %  filename, seq_len, True)
+    
+    print('> Data Loaded. Compiling... X_train len:%s' % len(X_train))
+    if len(X_train) < 500:
+        return None
+    
+    try:
+        model = build_model([1, seq_len, 100, 1])
+    except Exception as e:
+        print traceback.format_exc()
+    
+    history = model.fit(
+        X_train,
+        y_train,
+        batch_size=512,
+        nb_epoch=epochs,
+        validation_split=0.05)
+
+
+    print("loss: %s" % history.history['loss'])
+    print("val_loss: %s"  % history.history['val_loss'])
+    
+    result[filename] = {}
+    result[filename]["loss"] = history.history['loss']
+    result[filename]["val_loss"] = history.history['val_loss']
+    result[filename]["stock_id"] = "%s.%s" % (filename.split(".")[0], filename.split(".")[1])
+    
+    
+    """
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    trainPredict = scaler.inverse_transform(X_train)
+    trainY = scaler.inverse_transform(y_train)
+
+    # TRAINING RMSE
+    trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
+    print('iiiiiiiiiiiiiin Train RMSE: %.2f' % (trainScore))
+    """
+    
+    model.save_weights('weight_day/%s.h5' %  filename)
+    model_json = model.to_json()
+    with open('weight_json_day/%s.h5' %  filename, "w") as json_file:
+        json_file.write(model_json)
+    json_file.close()
+    del model
+    K.clear_session()
+    """
+    model.save('model/%s.h5' %  filename[:-4]) 
+    model.reset_states()
+    """
+    print "Training duration (s) : %s  %s" % (time.time() - global_start_time, filename)
+
 def get_all_order_book_id(today):
     all_order_book_id = []
-    filepath = "data%s/close_price" % today
+    filepath = "close_price" % today
     files = os.listdir(filepath)
     for file in files:
         all_order_book_id.append(file)

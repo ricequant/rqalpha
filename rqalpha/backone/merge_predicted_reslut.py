@@ -1,8 +1,8 @@
 import pandas as pd
 
 if __name__ == '__main__':
-    today_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-07.csv')
-    tomorrow_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-08.csv')
+    today_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-11.csv')
+    tomorrow_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-12.csv')
     
     left =  today_df[["stock_id","restore_predicted", "yesterday_close", "inc"]]
     right =  tomorrow_df[["stock_id","yesterday_close"]]
@@ -14,7 +14,7 @@ if __name__ == '__main__':
     ddd["inc_check2"] =  ddd["inc"] > 0
     ddd["result_1"] = ddd["inc_check2"] & ddd["inc_check"]
     
-    print ddd[ddd["result_1"] == True].count() / ddd[ddd["inc_check2"]== True].count()
+    print ddd[ddd["result_1"] == True].count() / ddd[ddd["inc_check"]== True].count()
     
     print ddd[ddd["result_1"] == True].count()
     print ddd[ddd["inc_check2"]== True].count()

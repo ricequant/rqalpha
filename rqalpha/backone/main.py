@@ -4,15 +4,14 @@ from rqalpha.backone.predicted_next_day import *
 import datetime
 
 #STOCKID = "002438.XSHG"
-#STOCKID = "603019.XSHG"
-STOCKID = "002044.XSHE"
+STOCKID = "002848.XSHE"
+#STOCKID = "000595.XSHE"
 seq_len = 30
 result = {}
 
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 today = datetime.date.today().strftime("%Y-%m-%d")
-yesterday="2018-09-07"
 print yesterday
 print today
 
@@ -38,7 +37,7 @@ config_dl = {
 
 run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, config=config_dl)
 
-train_single_stock("%s.npy" % STOCKID, result, today)
+train_single_stock_test("%s.npy" % STOCKID, result)
 
 
 
@@ -65,7 +64,7 @@ config = {
 }
     
 
-run_func(init=init_next_day, before_trading=before_trading_next_day, handle_bar=handle_bar_next_day, config=config)
+run_func(init=init_next_day, before_trading=before_trading_next_day, handle_bar=handle_bar_next_day_test, config=config)
 """
 json_file = open("weight_json_day/%s.npy.h5"% STOCKID, 'r')
 loaded_model_json = json_file.read()
