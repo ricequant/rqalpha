@@ -12,7 +12,7 @@ result = {}
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 today = datetime.date.today().strftime("%Y-%m-%d")
-#yesterday="2018-08-31"
+yesterday="2018-09-07"
 print yesterday
 print today
 
@@ -38,7 +38,7 @@ config_dl = {
 
 run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, config=config_dl)
 
-train_single_stock("%s.npy" % STOCKID, result)
+train_single_stock("%s.npy" % STOCKID, result, today)
 
 
 

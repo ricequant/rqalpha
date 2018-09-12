@@ -1,8 +1,8 @@
 import pandas as pd
 
 if __name__ == '__main__':
-    today_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-04.csv')
-    tomorrow_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-05.csv')
+    today_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-07.csv')
+    tomorrow_df = pd.DataFrame.from_csv('merge_predicted_reslut/merge_predicted_reslut2018-09-08.csv')
     
     left =  today_df[["stock_id","restore_predicted", "yesterday_close", "inc"]]
     right =  tomorrow_df[["stock_id","yesterday_close"]]

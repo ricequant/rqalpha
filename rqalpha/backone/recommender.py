@@ -53,17 +53,19 @@ def fitness(individual, data):
 
 
 if __name__=='__main__':
-    today = "2018-08-07"
+    today_str = "2018-08-07"
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
     today = datetime.date.today().strftime("%Y-%m-%d")
     
-    left = pd.DataFrame.from_csv('train_reslut%s.csv' % today)
-    right = pd.DataFrame.from_csv('predicted_reslut%s.csv' % today)
+    left = pd.DataFrame.from_csv('data%s/train_reslut%s.csv' % (today, today_str))
+    right = pd.DataFrame.from_csv('data%s/predicted_reslut%s.csv' % (today, today_str))
     #print right
     #result = left.join(right, on='stock_id')
     result = pd.merge(left, right, on='stock_id')
     #print result
     
-    result.to_csv ("merge_predicted_reslut%s.csv" % today, encoding="utf-8")
+    result.to_csv ("merge_predicted_reslut%s.csv" % today_str, encoding="utf-8")
+    result.to_csv ("data%s/merge_predicted_reslut%s.csv" % (today, today_str), encoding="utf-8")
     
     
     

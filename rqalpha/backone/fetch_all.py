@@ -82,7 +82,8 @@ def end_dl(context):
     logger.info("用户程序执行完成")
     for book_id, data in context.all_close_price.items():
         df = pd.DataFrame(data)
-        df.to_csv("close_price/%s" % book_id,  encoding = "utf-8")
+        today = datetime.date.today().strftime("%Y%m%d")
+        df.to_csv("data%s/close_price/%s" % (today, book_id),  encoding = "utf-8")
 
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")

@@ -16,6 +16,7 @@ from subprocess import call
 import traceback
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
+import sys
 
 
 result = {}
@@ -113,19 +114,19 @@ def build_model(layers):
     return model
 
 
-def train_single_stock(filename, result):
+def train_single_stock(filename, result, today):
     global_start_time = time.time()
     epochs  = 1
     seq_len = 50
     
     print filename
-    data = np.load('close_price/%s' % filename)
+    data = np.load('data%s/close_price/%s' % (today, filename))
     print len(data)
     if len(data) < 100:
         return False    
     
     
-    X_train, y_train = load_data('close_price/%s' % filename, seq_len, True)
+    X_train, y_train = load_data('data%s/close_price/%s' % (today, filename), seq_len, True)
     
     print('> Data Loaded. Compiling... X_train len:%s' % len(X_train))
     if len(X_train) < 500:
@@ -163,9 +164,9 @@ def train_single_stock(filename, result):
     print('iiiiiiiiiiiiiin Train RMSE: %.2f' % (trainScore))
     """
     
-    model.save_weights('weight_day/%s.h5' %  filename)
+    model.save_weights('data%s/weight_day/%s.h5' %  (today, filename))
     model_json = model.to_json()
-    with open('weight_json_day/%s.h5' %  filename, "w") as json_file:
+    with open('data%s/weight_json_day/%s.h5' %  (today, filename), "w") as json_file:
         json_file.write(model_json)
     json_file.close()
     del model
@@ -176,9 +177,9 @@ def train_single_stock(filename, result):
     """
     print "Training duration (s) : %s  %s" % (time.time() - global_start_time, filename)
 
-def get_all_order_book_id():
+def get_all_order_book_id(today):
     all_order_book_id = []
-    filepath = "close_price"
+    filepath = "data%s/close_price" % today
     files = os.listdir(filepath)
     for file in files:
         all_order_book_id.append(file)
@@ -187,18 +188,24 @@ def get_all_order_book_id():
 
 if __name__=='__main__':
     
+    if len(sys.argv) == 2:
+        today = sys.argv[1]
+    else:
+        today = datetime.date.today().strftime("%Y%m%d")
+    
+    
     train_all  = 1
     
     if train_all:
-        all_stock_id = get_all_order_book_id()
+        all_stock_id = get_all_order_book_id(today)
         #print all_stock_id
         #pool = multiprocessing.Pool(processes=2)
         result = {}
         for stock_id in all_stock_id:
-            model_file_path = 'weight_day/%s.h5' %  stock_id[:-4]
+            model_file_path = 'data%sweight_day/%s.h5' %  (today,stock_id[:-4])
             #print model_file_path
             if not os.path.isfile(model_file_path):
-                train_single_stock(stock_id, result)
+                train_single_stock(stock_id, result, today)
                 #pool.apply_async(train_single_stock, (stock_id,))
                 #tpool.execute(train_single_stock, stock_id)
     
@@ -206,10 +213,10 @@ if __name__=='__main__':
         df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
         print df
         yesterday = datetime.date.today().strftime("%Y-%m-%d")
-        df.to_csv ("train_reslut%s.csv" % yesterday,encoding = "utf-8")
+        df.to_csv ("data%strain_reslut%s.csv" % (today, yesterday), encoding = "utf-8")
     else:
         stock_id = "300028.XSHE.npy"
-        train_single_stock(stock_id, result)
+        train_single_stock(stock_id, result, today)
     
     
     """

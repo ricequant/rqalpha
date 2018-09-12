@@ -45,7 +45,7 @@ def handle_bar_next_day(context, bar_dict):
     logger.info("每一个Bar执行")
     logger.info("打印Bar数据：")
     
-    
+    today = datetime.date.today().strftime("%Y%m%d")
     if  context.predicted_one:
         context.all = [context.s1]
     
@@ -59,10 +59,10 @@ def handle_bar_next_day(context, bar_dict):
         if len(history_close) != 50:
             print "history_close != 50"
             continue
-        if not os.path.isfile('weight_day/%s.npy.h5' % order_book_id):
+        if not os.path.isfile('data%s/weight_day/%s.npy.h5' % (today,order_book_id)):
             print "weight_day/%s.npy.h5  not file" % order_book_id
             continue
-        if not os.path.isfile('weight_json_day/%s.npy.h5' % order_book_id):
+        if not os.path.isfile('data%s/weight_json_day/%s.npy.h5' % (today, order_book_id)):
             print 'weight_json_day/%s.npy.h5 not file' % order_book_id
             continue
         
@@ -80,11 +80,11 @@ def handle_bar_next_day(context, bar_dict):
         
 
 
-        json_file = open("weight_json_day/%s.npy.h5"% order_book_id, 'r')
+        json_file = open("data%s/weight_json_day/%s.npy.h5"% (today, order_book_id), 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         model = model_from_json(loaded_model_json)
-        model.load_weights("weight_day/%s.npy.h5" % order_book_id) 
+        model.load_weights("data%s/weight_day/%s.npy.h5" % (today, order_book_id))
         
         
         #model = load_model('model/%s.h5' % order_book_id)
@@ -116,8 +116,8 @@ def handle_bar_next_day(context, bar_dict):
     print result
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
     #print df
-    today = datetime.date.today().strftime("%Y-%m-%d")
-    df.to_csv ("predicted_reslut%s.csv" % today, encoding="utf-8")
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    df.to_csv ("data%s/predicted_reslut.csv" % (today, today_str), encoding="utf-8")
 
         
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
