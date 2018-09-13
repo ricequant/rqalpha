@@ -102,6 +102,27 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
         self.base_data_source = BaseDataSource(self.temp_dir.name)
 
 
+class DataProxyFixture(BaseDataSourceFixture):
+    def __init__(self, *args, **kwargs):
+        super(DataProxyFixture, self).__init__(*args, **kwargs)
+        self.data_source = None
+
+    def init_fixture(self):
+        from rqalpha.data.data_proxy import DataProxy
+
+        super(DataProxyFixture, self).init_fixture()
+        if not self.data_source:
+            self.data_source = self.base_data_source
+        self.env.set_data_proxy(DataProxy(self.data_source))
+
+    @contextmanager
+    def mock_data_proxy_method(self, name, mock_method):
+        origin_method = getattr(self.env, name)
+        setattr(self.env.data_proxy, name, mock_method)
+        yield
+        setattr(self.env.data_proxy, name, origin_method)
+
+
 class BarDictPriceBoardFixture(EnvironmentFixture):
     def __init__(self, *args, **kwargs):
         super(BarDictPriceBoardFixture, self).__init__(*args, **kwargs)

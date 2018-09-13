@@ -4,6 +4,7 @@ from .mock import mock_instrument, mock_bar, mock_tick
 from .fixtures import (
     RQAlphaFixture,
     EnvironmentFixture,
+    DataProxyFixture,
     BaseDataSourceFixture,
     BarDictPriceBoardFixture,
     MatcherFixture,
@@ -23,6 +24,7 @@ __all__ = [
     "RQAlphaFixture",
     "RQAlphaTestCase",
     "EnvironmentFixture",
+    "DataProxyFixture",
     "BaseDataSourceFixture",
     "BarDictPriceBoardFixture",
     "MatcherFixture",
