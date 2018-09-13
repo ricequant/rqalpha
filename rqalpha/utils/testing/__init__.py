@@ -2,9 +2,9 @@ from unittest import TestCase
 
 from .mock import mock_instrument, mock_bar, mock_tick
 from .fixtures import (
+    RQAlphaFixture,
     EnvironmentFixture,
     BaseDataSourceFixture,
-    BenchmarkAccountFixture,
     BarDictPriceBoardFixture,
     MatcherFixture,
     BookingFixture,
@@ -20,10 +20,10 @@ class RQAlphaTestCase(TestCase):
 
 
 __all__ = [
+    "RQAlphaFixture",
     "RQAlphaTestCase",
     "EnvironmentFixture",
     "BaseDataSourceFixture",
-    "BenchmarkAccountFixture",
     "BarDictPriceBoardFixture",
     "MatcherFixture",
     "BookingFixture",

@@ -1,4 +1,5 @@
-from rqalpha.utils.testing import BenchmarkAccountFixture, RQAlphaTestCase, mock_instrument, mock_bar, mock_tick
+from rqalpha.utils.testing import RQAlphaTestCase, mock_instrument, mock_bar, mock_tick
+from rqalpha.mod.rqalpha_mod_sys_accounts.testing import BenchmarkAccountFixture
 
 
 class ModSysAccountsBenchmarkAccountTestCase(BenchmarkAccountFixture, RQAlphaTestCase):
