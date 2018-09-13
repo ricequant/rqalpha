@@ -168,16 +168,7 @@ def write_csv(path, fields):
         for row in reader:
             old_test_times.append(row)
 
-    if performance_path is None:
-        if len(old_test_times) != 0 and time_spend > float(old_test_times[-1]["time_spend"]) * 1.1:
-            system_log.error("代码咋写的，太慢了！")
-            system_log.error("上次测试用例执行的总时长为：" + old_test_times[-1]["time_spend"])
-            system_log.error("本次测试用例执行的总时长增长为: " + str(time_spend))
-        else:
-            with open(path, 'a') as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=fields)
-                writer.writerow({'date_time': end_time, 'time_spend': time_spend})
-    else:
+    if performance_path is not None:
         if 0 < len(old_test_times) < 5 and time_spend > float(sum(float(i['time_spend']) for i in old_test_times)) / len(old_test_times) * 1.1:
             print('Average time of last 5 runs:', float(sum(float(i['time_spend']) for i in old_test_times))/len(old_test_times))
             print('Now time spend:', time_spend)
