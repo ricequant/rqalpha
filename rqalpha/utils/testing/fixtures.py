@@ -39,6 +39,14 @@ class EnvironmentFixture(RQAlphaFixture):
         self.env.get_last_price = origin_get_last_price
 
 
+class UniverseFixture(EnvironmentFixture):
+    def init_fixture(self):
+        from rqalpha.core.strategy_universe import StrategyUniverse
+
+        super(UniverseFixture, self).init_fixture()
+        self.env._universe = StrategyUniverse()
+
+
 class TempDirFixture(RQAlphaFixture):
     def __init__(self, *args, **kwargs):
         super(TempDirFixture, self).__init__(*args, **kwargs)
@@ -117,7 +125,7 @@ class DataProxyFixture(BaseDataSourceFixture):
 
     @contextmanager
     def mock_data_proxy_method(self, name, mock_method):
-        origin_method = getattr(self.env, name)
+        origin_method = getattr(self.env.data_proxy, name)
         setattr(self.env.data_proxy, name, mock_method)
         yield
         setattr(self.env.data_proxy, name, origin_method)
