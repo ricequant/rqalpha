@@ -2,8 +2,13 @@ import os
 import pickle
 from contextlib import contextmanager
 
-from unittest.mock import MagicMock
 import six
+
+if six.PY3:
+    from unittest.mock import MagicMock
+else:
+    from mock import MagicMock
+
 
 
 class RQAlphaFixture(object):
@@ -53,7 +58,11 @@ class TempDirFixture(RQAlphaFixture):
         self.temp_dir = None
 
     def init_fixture(self):
-        from tempfile import TemporaryDirectory
+        if six.PY3:
+            from tempfile import TemporaryDirectory
+        else:
+            from backports.tempfile import TemporaryDirectory
+
 
         super(TempDirFixture, self).init_fixture()
         self.temp_dir = TemporaryDirectory()

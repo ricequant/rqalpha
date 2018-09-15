@@ -2,8 +2,9 @@ from unittest import TestCase
 
 import six
 
-from .mock import mock_instrument, mock_bar, mock_tick
+from .mocking import mock_instrument, mock_bar, mock_tick
 from .fixtures import (
+    MagicMock,
     RQAlphaFixture,
     EnvironmentFixture,
     UniverseFixture,
@@ -31,6 +32,7 @@ class RQAlphaTestCase(TestCase):
 
 
 __all__ = [
+    "MagicMock",
     "RQAlphaFixture",
     "RQAlphaTestCase",
     "EnvironmentFixture",

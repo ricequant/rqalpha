@@ -1,7 +1,6 @@
 import datetime
-from unittest.mock import MagicMock
 
-from rqalpha.utils.testing import BookingFixture, RQAlphaTestCase
+from rqalpha.utils.testing import MagicMock, BookingFixture, RQAlphaTestCase
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT
 from rqalpha.events import Event, EVENT
 from rqalpha.model.trade import Trade
@@ -17,16 +16,16 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
         pos2 = self.short_positions.get_or_create("TF1812")
         pos2._today_quantity = 4
 
-    def _assertPositions(self, positions_data):
+    def assertPositions(self, positions_data):
         self.assertEqual(
             {(p.direction, p.order_book_id, p.today_quantity, p.old_quantity) for p in self.booking.get_positions()},
             positions_data
         )
         for direction, order_book_id, today_quanttiy, old_quantity in positions_data:
-            p = self.booking.get_position(order_book_id, direction)
-            self.assertEqual(p.today_quantity, today_quanttiy)
-            self.assertEqual(p.old_quantity, old_quantity)
-            self.assertEqual(p.quantity, today_quanttiy + old_quantity)
+            self.assertObj(
+                self.booking.get_position(order_book_id, direction),
+                today_quantity=today_quanttiy, old_quantity=old_quantity, quantity=(today_quanttiy + old_quantity)
+            )
 
     def test_booking(self):
 
@@ -40,7 +39,7 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
                 return delisted_ins
             return not_delisted_ins
 
-        self._assertPositions({
+        self.assertPositions({
             (POSITION_DIRECTION.LONG, "RB1812", 3, 1),
             (POSITION_DIRECTION.SHORT, "TF1812", 4, 0)
         })
@@ -48,7 +47,7 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
         self.env.event_bus.publish_event(Event(EVENT.TRADE, trade=Trade.__from_create__(
             0, 0, 2, SIDE.SELL, POSITION_EFFECT.OPEN, "RB1812"
         )))
-        self._assertPositions({
+        self.assertPositions({
             (POSITION_DIRECTION.LONG, "RB1812", 3, 1),
             (POSITION_DIRECTION.SHORT, "RB1812", 2, 0),
             (POSITION_DIRECTION.SHORT, "TF1812", 4, 0)
@@ -56,7 +55,7 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
         self.env.event_bus.publish_event(Event(EVENT.TRADE, trade=Trade.__from_create__(
             0, 0, 3, SIDE.SELL, POSITION_EFFECT.CLOSE, "RB1812"
         )))
-        self._assertPositions({
+        self.assertPositions({
             (POSITION_DIRECTION.LONG, "RB1812", 1, 0),
             (POSITION_DIRECTION.SHORT, "RB1812", 2, 0),
             (POSITION_DIRECTION.SHORT, "TF1812", 4, 0)
@@ -65,7 +64,7 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
         with self.mock_env_method("get_instrument", mock_get_instrument):
             self.env.trading_dt = datetime.datetime(2018, 8, 31)
             self.env.event_bus.publish_event(Event(EVENT.POST_SETTLEMENT))
-            self._assertPositions({
+            self.assertPositions({
                 (POSITION_DIRECTION.LONG, "RB1812", 0, 1),
                 (POSITION_DIRECTION.SHORT, "RB1812", 0, 2),
             })

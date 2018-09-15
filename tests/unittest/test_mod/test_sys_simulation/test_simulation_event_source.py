@@ -5,17 +5,20 @@ from datetime import datetime
 from rqalpha.utils.testing import RQAlphaTestCase, DataProxyFixture, UniverseFixture
 from rqalpha.mod.rqalpha_mod_sys_simulation.testing import SimulationEventSourceFixture
 
-ticks = pickle.loads(open(
-    os.path.join(os.path.dirname(__file__), "mock_data/mock_ticks.pkl"), "rb"
-).read())
-
 
 class SimulationEventSourceTestCase(UniverseFixture, SimulationEventSourceFixture, DataProxyFixture, RQAlphaTestCase):
     def __init__(self, *args, **kwargs):
         super(SimulationEventSourceTestCase, self).__init__(*args, **kwargs)
+        self._ticks = None
+
+    def init_fixture(self):
+        super(SimulationEventSourceTestCase, self).init_fixture()
+        self._ticks = pickle.loads(open(
+            os.path.join(os.path.dirname(__file__), "mock_data/mock_ticks.pkl"), "rb"
+        ).read())
 
     def _mock_get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
-        for tick in ticks:
+        for tick in self._ticks:
             if tick.order_book_id not in order_book_id_list:
                 continue
             if self.env.data_proxy.get_future_trading_date(tick.datetime).date() != trading_date.date():
