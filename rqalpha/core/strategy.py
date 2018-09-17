@@ -72,6 +72,9 @@ class Strategy(object):
 
     @run_when_strategy_not_hold
     def before_trading(self, event):
+        if not self._before_trading:
+            return
+        
         with ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._before_trading(self._user_context)
