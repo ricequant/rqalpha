@@ -19,6 +19,34 @@ from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext
 
 
+def max_ddd(arr):
+    max_seen = arr[0]
+    ddd_start, ddd_end = 0, 0
+    ddd = 0
+    start = 0
+    in_draw_down = False
+
+    for i in range(len(arr)):
+        if arr[i] > max_seen:
+            if in_draw_down:
+                in_draw_down = False
+                if i - start > ddd:
+                    ddd = i - start
+                    ddd_start = start
+                    ddd_end = i - 1
+            max_seen = arr[i]
+        elif arr[i] < max_seen:
+            if not in_draw_down:
+                in_draw_down = True
+                start = i - 1
+
+    if arr[i] < max_seen:
+        if i - start > ddd:
+            return start, i
+
+    return ddd_start, ddd_end
+
+
 def plot_result(result_dict, show_windows=True, savefile=None):
     import os
     from matplotlib import rcParams, gridspec, ticker, image as mpimg, pyplot as plt
@@ -53,7 +81,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     index = portfolio.index
 
-    # maxdrawdown
+    # max drawdown
     portfolio_value = portfolio.unit_net_value * portfolio.units
     xs = portfolio_value.values
     rt = portfolio.unit_net_value.values
@@ -62,15 +90,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         max_dd_end = len(xs) - 1
     max_dd_start = np.argmax(xs[:max_dd_end]) if max_dd_end > 0 else 0
 
-    # maxdrawdown duration
-    al_cum = np.maximum.accumulate(xs)
-    a = np.unique(al_cum, return_counts=True)
-    start_idx = np.argmax(a[1])
-    m = a[0][start_idx]
-    al_cum_array = np.where(al_cum == m)
-    max_ddd_start_day = al_cum_array[0][0]
-    max_ddd_end_day = al_cum_array[0][-1]
-
+    max_ddd_start_day, max_ddd_end_day = max_ddd(xs)
     max_dd_info = "MaxDD  {}~{}, {} days".format(index[max_dd_start], index[max_dd_end],
                                                  (index[max_dd_end] - index[max_dd_start]).days)
     max_dd_info += "\nMaxDDD {}~{}, {} days".format(index[max_ddd_start_day], index[max_ddd_end_day],
@@ -94,8 +114,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     # draw logo
     ax = plt.subplot(gs[:3, -1:])
     ax.axis("off")
-    filename = os.path.join(os.path.dirname(os.path.realpath(rqalpha.__file__)), "resource")
-    filename = os.path.join(filename, "ricequant-logo.png")
+    filename = os.path.join(
+        os.path.dirname(os.path.realpath(rqalpha.__file__)),
+        "resource", 'ricequant-logo.png')
     img = mpimg.imread(filename)
     ax.imshow(img, interpolation="nearest")
     ax.autoscale_view()
@@ -179,11 +200,11 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         leg = plt.legend(loc="best")
         leg.get_frame().set_alpha(0.5)
 
-    if show_windows:
-        plt.show()
-
     if savefile:
         fnmame = savefile
         if os.path.isdir(savefile):
             fnmame = os.path.join(savefile, "{}.png".format(summary["strategy_name"]))
         plt.savefig(fnmame, bbox_inches='tight')
+
+    if show_windows:
+        plt.show()

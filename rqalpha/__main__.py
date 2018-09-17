@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import errno
+import sys
 import os
 import shutil
 import six
@@ -94,6 +95,8 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--position', 'base__init_positions', type=click.STRING, help="set init position")
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p', 'r']), default="b")
+@click.option('-rp', '--round-price', 'base__round_price', is_flag=True)
+@click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default=None)
 @click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
@@ -104,7 +107,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
 @click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, help="add line profiler to profile your strategy")
-@click.option("--dividend-reinvestment", "extra__dividend_reinvestment", is_flag=True, help="enable dividend reinvestment")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
@@ -134,6 +136,9 @@ def run(**kwargs):
         report = results.get("sys_analyser", {})
         ipy.user_global_ns["results"] = results
         ipy.user_global_ns["report"] = RqAttrDict(report)
+
+    if results is None:
+        sys.exit(1)
 
 
 @cli.command()
@@ -222,12 +227,17 @@ def mod(cmd, params):
         """
         Install third-party Mod
         """
-        from pip import main as pip_main
-        from pip.commands.install import InstallCommand
+        try:
+            from pip._internal import main as pip_main
+            from pip._internal.commands.install import InstallCommand
+        except ImportError:
+            from pip import main as pip_main
+            from pip.commands.install import InstallCommand
 
         params = [param for param in params]
 
         options, mod_list = InstallCommand().parse_args(params)
+        mod_list = [mod_name for mod_name in mod_list if mod_name != "."]
 
         params = ["install"] + params
 
@@ -281,8 +291,13 @@ def mod(cmd, params):
         Uninstall third-party Mod
         """
 
-        from pip import main as pip_main
-        from pip.commands.uninstall import UninstallCommand
+        try:
+            from pip._internal import main as pip_main
+            from pip._internal.commands.uninstall import UninstallCommand
+        except ImportError:
+            # be compatible with pip < 10.0
+            from pip import main as pip_main
+            from pip.commands.uninstall import UninstallCommand
 
         params = [param for param in params]
 

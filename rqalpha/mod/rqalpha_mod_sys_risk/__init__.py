@@ -24,8 +24,10 @@ __config__ = {
     "validate_is_trading": True,
     # 检查可用资金是否充足
     "validate_cash": True,
-    # 检查可平仓位是否充足
-    "validate_position": True,
+    # 检查股票可平仓位是否充足
+    "validate_stock_position": True,
+    # 检查期货可平仓位是否充足
+    "validate_future_position": True,
 }
 
 
@@ -36,13 +38,13 @@ def load_mod():
 
 """
 注入 --short-stock option
-可以通过 `rqalpha run --short-stock` 来开启允许卖空
+可以通过 `rqalpha run --short-stock` 来开启允许股票卖空
 """
 cli_prefix = "mod__sys_risk__"
 
 cli.commands['run'].params.append(
     click.Option(
-        ("--no-short-stock/--short-stock", "mod__sys_risk__validate_position"),
+        ("--no-short-stock/--short-stock", "mod__sys_risk__validate_stock_position"),
         is_flag=True, default=True,
         help="[sys_risk] enable stock shorting"
     )

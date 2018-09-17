@@ -40,7 +40,7 @@ class BenchmarkAccount(StockAccount):
             if not is_valid_price(price):
                 return
             position = self._positions.get_or_create(self.benchmark)
-            quantity = int(self._total_cash / price)
+            quantity = self._total_cash / price
             position._quantity = quantity
             position._avg_price = price
             self._total_cash -= quantity * price
@@ -53,7 +53,7 @@ class BenchmarkAccount(StockAccount):
                 return
             price = tick.last
             position = self._positions.get_or_create(self.benchmark)
-            quantity = int(self._total_cash / price)
+            quantity = self._total_cash / price
             position._quantity = quantity
             position._avg_price = price
             self._total_cash -= quantity * price

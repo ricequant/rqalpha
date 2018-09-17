@@ -28,7 +28,6 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 import pytz
 import requests
 import six
-import better_exceptions
 
 from rqalpha import const
 from rqalpha.api import helper as api_helper
@@ -47,6 +46,7 @@ from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
 from rqalpha.model.portfolio import Portfolio
 from rqalpha.model.base_position import Positions
+from rqalpha.const import RUN_TYPE
 from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
@@ -65,11 +65,18 @@ def _adjust_start_date(config, data_proxy):
 
     config.base.start_date = max(start, config.base.start_date)
     config.base.end_date = min(end, config.base.end_date)
+
+    # for annualized risk indicator calculation
+    config.base.natural_start_date = config.base.start_date
+    config.base.natural_end_date = config.base.end_date
+
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
-        raise patch_user_exc(ValueError(_(u"There is no data between {start_date} and {end_date}. Please check your"
-                                          u" data bundle or select other backtest period.").format(
-            start_date=origin_start_date, end_date=origin_end_date)))
+        raise patch_user_exc(
+            ValueError(
+                _(u"There is no data between {start_date} and {end_date}. Please check your"
+                  u" data bundle or select other backtest period.").format(
+                      start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
     config.base.timezone = pytz.utc
@@ -114,12 +121,15 @@ def create_benchmark_portfolio(env):
     return Portfolio(start_date, 1, total_cash, accounts)
 
 
-def create_base_scope():
-    import copy
+def create_base_scope(copy_scope=False):
     from rqalpha.utils.logger import user_print, user_log
-
     from . import user_module
-    scope = copy.copy(user_module.__dict__)
+
+    if copy_scope:
+        from copy import copy
+        scope = copy(user_module.__dict__)
+    else:
+        scope = user_module.__dict__
     scope.update({
         "logger": user_log,
         "print": user_print,
@@ -219,6 +229,12 @@ def run(config, source_code=None, user_funcs=None):
         broker = env.broker
         assert broker is not None
         env.portfolio = broker.get_portfolio()
+
+        try:
+            env.booking = broker.get_booking()
+        except NotImplementedError:
+            pass
+
         env.benchmark_portfolio = create_benchmark_portfolio(env)
 
         event_source = env.event_source
@@ -236,7 +252,7 @@ def run(config, source_code=None, user_funcs=None):
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
-        scope = create_base_scope()
+        scope = create_base_scope(config.base.run_type == RUN_TYPE.BACKTEST)
         scope.update({
             "g": env.global_vars
         })
@@ -261,11 +277,15 @@ def run(config, source_code=None, user_funcs=None):
             for k, v in six.iteritems(config.extra.context_vars):
                 setattr(ucontext, k, v)
 
+        from .core.executor import Executor
+        executor = Executor(env)
+
         if config.base.persist:
             persist_provider = env.persist_provider
             if persist_provider is None:
                 raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
             persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
+            env.set_persist_helper(persist_helper)
             persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
             persist_helper.register('user_context', ucontext)
             persist_helper.register('global_vars', env.global_vars)
@@ -281,7 +301,9 @@ def run(config, source_code=None, user_funcs=None):
             # broker will restore open orders from account
             if isinstance(broker, Persistable):
                 persist_helper.register('broker', broker)
+            persist_helper.register('executor', executor)
 
+            env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
             persist_helper.restore()
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
@@ -292,21 +314,21 @@ def run(config, source_code=None, user_funcs=None):
         if config.extra.force_run_init_when_pt_resume:
             assert config.base.resume_mode == True
             with run_with_user_log_disabled(disabled=False):
+                env._universe._set = set()
                 user_strategy.init()
 
-        from .core.executor import Executor
-        Executor(env).run(bar_dict)
+        executor.run(bar_dict)
 
         if env.profile_deco:
             output_profile_result(env)
     except CustomException as e:
-        if init_succeed and env.config.base.persist and persist_helper:
+        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         code = _exception_handler(e)
         mod_handler.tear_down(code, e)
     except Exception as e:
-        if init_succeed and env.config.base.persist and persist_helper:
+        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         exc_type, exc_val, exc_tb = sys.exc_info()
@@ -323,14 +345,18 @@ def run(config, source_code=None, user_funcs=None):
 
 
 def _exception_handler(e):
-    better_exceptions.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
+    try:
+        sys.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
+    except Exception as e:
+        system_log.exception("hook exception failed")
+
     user_system_log.error(e.error)
     if not is_user_exc(e.error.exc_val):
         code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
-        system_log.exception(_(u"strategy execute exception"))
+        system_log.error(_(u"strategy execute exception"), exc=e)
     else:
         code = const.EXIT_CODE.EXIT_USER_ERROR
-        user_detail_log.exception(_(u"strategy execute exception"))
+        user_detail_log.error(_(u"strategy execute exception"), exc=e)
 
     return code
 
@@ -369,8 +395,10 @@ def set_loggers(config):
 
     init_logger()
 
-    for log in [basic_system_log, system_log, std_log, user_log, user_system_log, user_detail_log]:
+    for log in [basic_system_log, system_log, std_log, user_system_log, user_detail_log]:
         log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
+
+    user_log.level = logbook.DEBUG
 
     if extra_config.log_level.upper() != "NONE":
         if not extra_config.user_log_disabled:

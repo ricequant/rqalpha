@@ -36,6 +36,7 @@ def export_as_api(func):
     return func
 
 
+@export_as_api
 def symbol(order_book_id, split=", "):
     if isinstance(order_book_id, six.string_types):
         return "{}[{}]".format(order_book_id, instruments(order_book_id).symbol)

@@ -31,7 +31,7 @@
 
 .. _VirtualBox 官网: https://www.virtualbox.org/wiki/Downloads
 
-.. _RQAlpha 开箱即用虚拟机镜像: https://pan.baidu.com/s/1htvAEmK
+.. _RQAlpha 开箱即用虚拟机镜像: https://pan.baidu.com/s/1mhB3jfE
 
 
 在终端运行 RQAlpha
@@ -46,27 +46,27 @@
 
     source activate py3
 
+在终端输入如下命令以进入 RQAlpha 代码所在文件夹
+
+.. code-block:: bash
+
+    ﻿cd /home/rqalpha_user/rqalpha
+
 在终端输入如下命令以启动 RQAlpha，并运行 :ref:`intro-examples` 中的 :ref:`intro-examples-buy-and-hold` 进行回测。
 
 .. code-block:: bash
 
-    rqalpha run -f ~/examples/buy_and_hold.py -s 2017-01-01 -e 2017-12-31 --account stock 100000 --benchmark 000300.XSHG --plot
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot
 
-
-其他命令
+使用 PyCharm 进行断点调试
 ------------------------------------------------------
 
-更新 RQAlpha 版本
+该虚拟机镜像中安装了 PyCharm，您可以方便的使用 PyCharm 进行代码的阅读、编写，或是通过断点调试了解 RQAlpha 的运行流程。
 
-.. code-block:: bash
+*   打开 PyCharm
 
-    source activate py3
-    pip install -U rqalpha
+*   在右上角的下拉框中选择 debug_buy_and_hold
 
-在 RQAlpha 所在虚拟环境中安装其他依赖（以 funcat 为例）
+*   点击右边的小虫子图标，运行期间可点击代码行号的右侧增加断点，点击左下方的箭头图标控制代码运行。
 
-.. code-block:: bash
-
-    source activate py3
-    pip install funcat
-
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/pycharm_1.png

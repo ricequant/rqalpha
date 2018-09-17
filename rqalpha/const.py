@@ -110,6 +110,13 @@ class POSITION_EFFECT(CustomEnum):
 
 
 # noinspection PyPep8Naming
+class POSITION_DIRECTION(CustomEnum):
+    UNKNOWN = "UNKNOWN"
+    LONG = "LONG"
+    SHORT = "SHORT"
+
+
+# noinspection PyPep8Naming
 class EXC_TYPE(CustomEnum):
     USER_EXC = "USER_EXC"
     SYSTEM_EXC = "SYSTEM_EXC"
@@ -169,6 +176,12 @@ class DAYS_CNT(object):
     TRADING_DAYS_A_YEAR = 252
 
 
+# noinspection PyPep89Naming
+class MARKET(CustomEnum):
+    CN = "CN"
+    HK = "HK"
+
+
 class CURRENCY(CustomEnum):
     CNY = "CNY"     # 人民币
     USD = "USD"     # 美元
@@ -192,4 +205,4 @@ class CURRENCY(CustomEnum):
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"
 
 NIGHT_TRADING_NS = ["CU", "AL", "ZN", "PB", "SN", "NI", "RB", "HC", "BU", "RU", "AU", "AG", "Y", "M", "A", "B", "P",
-                    "J", "JM", "I", "CF", "SR", "OI", "MA", "ZC", "FG", "RM", "CY", "TA"]
+                    "J", "JM", "I", "CF", "SR", "OI", "MA", "ZC", "FG", "RM", "CY", "TA", "SC"]

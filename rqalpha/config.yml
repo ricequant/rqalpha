@@ -35,8 +35,12 @@ base:
     # 如果想设置使用某个账户，只需要增加对应的初始资金即可
     stock: ~
     future: ~
+  # 交易市场，如 cn 中国市场，hk 香港市场
+  market: cn
   # 设置初始仓位
   init_positions: {}
+  # 根据价格最小变动单位调整发单价格
+  round_price: false
 
 
 extra:
@@ -51,14 +55,10 @@ extra:
   force_run_init_when_pt_resume: false
   # enable_profiler: 是否启动性能分析
   enable_profiler: false
-  # 选择是否开启分红再投资
-  dividend_reinvestment: false
   is_hold: false
   locale: zh_Hans_CN
   logger: []
 
 validator:
-  # cash_return_by_stock_delisted: 开启该项，当持仓股票退市时，按照退市价格返还现金
-  cash_return_by_stock_delisted: false
   # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
   close_amount: true

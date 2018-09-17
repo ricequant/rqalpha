@@ -15,9 +15,7 @@
 # limitations under the License.
 
 from datetime import datetime
-import traceback
 import logbook
-import better_exceptions
 from logbook import Logger
 from logbook.more import ColorizedStderrHandler
 
@@ -28,22 +26,6 @@ logbook.set_datetime_format("local")
 
 # patch warn
 logbook.base._level_names[logbook.base.WARNING] = 'WARN'
-
-
-# better_exceptions hot patch
-def format_exception(exc, value, tb):
-    formatted, colored_source = better_exceptions.format_traceback(tb)
-
-    if not str(value) and exc is AssertionError:
-        value.args = (colored_source,)
-    title = traceback.format_exception_only(exc, value)
-    title = from_utf8(title[0].strip())
-    full_trace = u'Traceback (most recent call last):\n{}{}\n'.format(formatted, title)
-
-    return full_trace
-
-
-better_exceptions.format_exception = format_exception
 
 
 __all__ = [

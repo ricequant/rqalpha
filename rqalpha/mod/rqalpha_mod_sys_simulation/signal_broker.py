@@ -19,25 +19,27 @@ from copy import copy
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import is_valid_price
+from rqalpha.utils import is_valid_price, account_type_str2enum
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
 
-from .decider import CommissionDecider, SlippageDecider, TaxDecider
+from .slippage import SlippageDecider
 from .utils import init_portfolio
+from .booking import SimulationBooking
 
 
 class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
-        self._commission_decider = CommissionDecider(mod_config.commission_multiplier)
-        self._slippage_decider = SlippageDecider(mod_config.slippage)
-        self._tax_decider = TaxDecider()
+        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._price_limit = mod_config.price_limit
 
     def get_portfolio(self):
         return init_portfolio(self._env)
+
+    def get_booking(self):
+        return SimulationBooking()
 
     def get_open_orders(self, order_book_id=None):
         return []
@@ -102,7 +104,7 @@ class SignalBroker(AbstractBroker):
                 return
 
         ct_amount = account.positions.get_or_create(order_book_id).cal_close_today_amount(order.quantity, order.side)
-        trade_price = self._slippage_decider.get_trade_price(order.side, deal_price)
+        trade_price = self._slippage_decider.get_trade_price(order, deal_price)
         trade = Trade.__from_create__(
             order_id=order.order_id,
             price=trade_price,
@@ -113,8 +115,8 @@ class SignalBroker(AbstractBroker):
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
-        trade._commission = self._commission_decider.get_commission(account.type, trade)
-        trade._tax = self._tax_decider.get_tax(account.type, trade)
+        trade._commission = self._env.get_trade_commission(account_type_str2enum(account.type), trade)
+        trade._tax = self._env.get_trade_tax(account_type_str2enum(account.type), trade)
         order.fill(trade)
 
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))

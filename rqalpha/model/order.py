@@ -15,9 +15,12 @@
 # limitations under the License.
 
 import time
+from decimal import Decimal
+
+import numpy as np
 
 from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
-from rqalpha.utils import id_gen
+from rqalpha.utils import id_gen, decimal_rounding_floor
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
 from rqalpha.environment import Environment
@@ -25,7 +28,7 @@ from rqalpha.environment import Environment
 
 class Order(object):
 
-    order_id_gen = id_gen(int(time.time()))
+    order_id_gen = id_gen(int(time.time()) * 10000)
 
     __repr__ = property_repr
 
@@ -109,6 +112,9 @@ class Order(object):
         order._filled_quantity = 0
         order._status = ORDER_STATUS.PENDING_NEW
         if isinstance(style, LimitOrder):
+            if env.config.base.round_price:
+                tick_size = env.data_proxy.get_tick_size(order_book_id)
+                style.round_price(tick_size)
             order._frozen_price = style.get_limit_price()
             order._type = ORDER_TYPE.LIMIT
         else:
@@ -151,6 +157,8 @@ class Order(object):
         """
         [int] 订单数量
         """
+        if np.isnan(self._quantity):
+            raise RuntimeError("Quantity of order {} is not supposed to be nan.".format(self.order_id))
         return self._quantity
 
     @property
@@ -158,7 +166,7 @@ class Order(object):
         """
         [int] 订单未成交数量
         """
-        return self._quantity - self._filled_quantity
+        return self.quantity - self.filled_quantity
 
     @property
     def order_book_id(self):
@@ -193,6 +201,8 @@ class Order(object):
         """
         [int] 订单已成交数量
         """
+        if np.isnan(self._filled_quantity):
+            raise RuntimeError("Filled quantity of order {} is not supposed to be nan.".format(self.order_id))
         return self._filled_quantity
 
     @property
@@ -207,7 +217,7 @@ class Order(object):
         """
         [float] 订单价格，只有在订单类型为'限价单'的时候才有意义
         """
-        return 0 if self.type == ORDER_TYPE.MARKET else self._frozen_price
+        return 0 if self.type == ORDER_TYPE.MARKET else self.frozen_price
 
     @property
     def type(self):
@@ -235,6 +245,8 @@ class Order(object):
         """
         [float] 冻结价格
         """
+        if np.isnan(self._frozen_price):
+            raise RuntimeError("Frozen price of order {} is not supposed to be nan.".format(self.order_id))
         return self._frozen_price
 
     def is_final(self):
@@ -307,3 +319,10 @@ class LimitOrder(OrderStyle):
 
     def get_limit_price(self):
         return self.limit_price
+
+    def round_price(self, tick_size):
+        if tick_size:
+            with decimal_rounding_floor():
+                self.limit_price = float((Decimal(self.limit_price) / Decimal(tick_size)).to_integral() * Decimal(tick_size))
+        else:
+            user_system_log.warn('Invalid tick size: {}'.format(tick_size))
