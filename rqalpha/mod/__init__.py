@@ -91,7 +91,6 @@ SYSTEM_MOD_LIST = [
     "sys_funcat",
     "sys_risk",
     "sys_simulation",
-    "sys_stock_realtime",
     "sys_incremental",
     "sys_transaction_cost"
 ]

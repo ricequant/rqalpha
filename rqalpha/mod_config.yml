@@ -19,10 +19,5 @@ mod:
   # 技术分析API
   sys_funcat:
     enabled: false
-  # 接收实时行情运行
-  sys_stock_realtime:
-    enabled: false
-  sys_booking:
-    enabled: false
   sys_transaction_cost:
     enabled: true
