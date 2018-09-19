@@ -88,9 +88,10 @@ Mod名                      说明
 ======================    ==================================================================================
 `sys_analyser`_           【系统模块】记录每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，并以csv、plot图标等形式输出分析结果
 `sys_funcat`_             【系统模块】支持以通达信公式的方式写策略
-`sys_progress`_           【系统模块】在控制台输出当前策略的回测进度。
+`sys_progress`_           【系统模块】在控制台输出当前策略的回测进度
 `sys_risk`_               【系统模块】对订单进行事前风控校验
 `sys_simulation`_         【系统模块】支持回测、撮合、滑点控制等
+`incremental`_            【第三方模块】提供了回测中的持久化功能，用于增量运行回测
 `stock_realtime`_         【第三方模块】Demo 模块，用于展示如何接入自有行情进行回测/模拟/实盘
 `sentry`_                 【第三方模块】集成 sentry 的扩展，实现错误日志全自动采集、处理
 `tushare`_                【第三方模块】Demo Mod，用于展示如何通过tushare 获取实时Bar数据并组装以供RQAlpha使用
@@ -160,6 +161,7 @@ Mod名                      说明
 .. _sys_progress: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_progress/README.rst
 .. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
 .. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
+.. _incremental: https://github.com/ricequant/rqalpha-mod-incremental
 .. _stock_realtime: https://github.com/ricequant/rqalpha-mod-stock-realtime
 .. _vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
 .. _sentry: https://github.com/ricequant/rqalpha-mod-sentry
