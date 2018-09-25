@@ -61,6 +61,8 @@ class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     FUTURE = 3
     # 期权
     OPTION = 4
+    # 债券
+    BOND = 5
 
 
 # noinspection PyPep8Naming
@@ -135,6 +137,7 @@ class INSTRUMENT_TYPE(CustomEnum):
     FENJI_A = "FENJI_A"
     FENJI_B = "FENJI_B"
     PUBLIC_FUND = 'PublicFund'
+    BOND = "Bond"
 
 
 # noinspection PyPep8Naming

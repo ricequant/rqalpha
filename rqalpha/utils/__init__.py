@@ -214,6 +214,8 @@ def instrument_type_str2enum(type_str):
         return INSTRUMENT_TYPE.FENJI_B
     elif type_str == 'PublicFund':
         return INSTRUMENT_TYPE.PUBLIC_FUND
+    elif type_str == "Bond":
+        return INSTRUMENT_TYPE.BOND
     else:
         raise NotImplementedError
 
@@ -221,7 +223,8 @@ def instrument_type_str2enum(type_str):
 def account_type_str2enum(type_str):
     return {
         DEFAULT_ACCOUNT_TYPE.STOCK.name: DEFAULT_ACCOUNT_TYPE.STOCK,
-        DEFAULT_ACCOUNT_TYPE.FUTURE.name: DEFAULT_ACCOUNT_TYPE.FUTURE
+        DEFAULT_ACCOUNT_TYPE.FUTURE.name: DEFAULT_ACCOUNT_TYPE.FUTURE,
+        DEFAULT_ACCOUNT_TYPE.BOND.name: DEFAULT_ACCOUNT_TYPE.BOND,
     }[type_str]
 
 
@@ -246,6 +249,8 @@ def get_account_type(order_book_id):
         return DEFAULT_ACCOUNT_TYPE.STOCK.name
     elif enum_type == INSTRUMENT_TYPE.FUTURE:
         return DEFAULT_ACCOUNT_TYPE.FUTURE.name
+    elif enum_type == INSTRUMENT_TYPE.BOND:
+        return DEFAULT_ACCOUNT_TYPE.BOND.name
     else:
         raise NotImplementedError
 
