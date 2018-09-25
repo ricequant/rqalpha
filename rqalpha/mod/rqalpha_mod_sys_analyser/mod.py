@@ -108,6 +108,7 @@ class AnalyserMod(AbstractMod):
     ACCOUNT_FIELDS_MAP = {
         DEFAULT_ACCOUNT_TYPE.STOCK.name: ['dividend_receivable'],
         DEFAULT_ACCOUNT_TYPE.FUTURE.name: ['holding_pnl', 'realized_pnl', 'daily_pnl', 'margin'],
+        DEFAULT_ACCOUNT_TYPE.BOND.name: [],
     }
 
     def _to_account_record(self, date, account):
@@ -132,6 +133,9 @@ class AnalyserMod(AbstractMod):
             'margin', 'margin_rate', 'contract_multiplier', 'last_price',
             'buy_pnl', 'buy_margin', 'buy_quantity', 'buy_avg_open_price',
             'sell_pnl', 'sell_margin', 'sell_quantity', 'sell_avg_open_price'
+        ],
+        DEFAULT_ACCOUNT_TYPE.BOND.name: [
+            'quantity', 'last_price', 'avg_price', 'market_value'
         ],
     }
 
