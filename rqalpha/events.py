@@ -149,6 +149,9 @@ class EVENT(Enum):
     # 策略被恢复
     STRATEGY_HOLD_CANCELLED = 'strategy_hold_canceled'
 
+    # 心跳事件，用于触发定时任务
+    HEARTBEAT = 'heartbeat'
+
 
 def parse_event(event_str):
     return EVENT[event_str.upper()]
