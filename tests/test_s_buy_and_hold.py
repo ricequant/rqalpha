@@ -1,3 +1,6 @@
+from rqalpha.mod.rqalpha_mod_sys_booking.api_booking import order_shares
+
+
 def init(context):
     context.s1 = "000001.XSHE"
 
