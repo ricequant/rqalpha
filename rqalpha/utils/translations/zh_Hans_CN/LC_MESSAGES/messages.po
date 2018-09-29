@@ -30,7 +30,7 @@ msgstr "{value} 已经被用于 {original_key}"
 
 #: rqalpha/environment.py:116 rqalpha/environment.py:124
 msgid "Unknown Account Type {}"
-msgstr "位置账户类型 {}"
+msgstr "未知账户类型 {}"
 
 #: rqalpha/execution_context.py:105
 #, python-format
