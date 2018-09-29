@@ -514,7 +514,9 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     if frequency == '1d':
         sys_frequency = Environment.get_instance().config.base.frequency
         if ((
-                sys_frequency in ['1m', 'tick'] and not include_now
+                sys_frequency in ['1m', 'tick'] and
+                not include_now and
+                ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
         ) or (
                 ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING
         )):
