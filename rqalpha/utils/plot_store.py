@@ -21,6 +21,10 @@ class PlotStore(object):
     def __init__(self):
         self._plots = defaultdict(dict)
 
+    @property
+    def empty(self):
+        return len(self._plots) == 0
+
     def add_plot(self, dt, series_name, value):
         self._plots[series_name][dt] = value
 

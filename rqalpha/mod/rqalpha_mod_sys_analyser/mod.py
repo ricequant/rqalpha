@@ -245,7 +245,7 @@ class AnalyserMod(AbstractMod):
             benchmark_portfolios = b_df.set_index('date').sort_index()
             result_dict['benchmark_portfolio'] = benchmark_portfolios
 
-        if self._env.plot_store is not None:
+        if not self._env.get_plot_store().empty:
             plots = self._env.get_plot_store().get_plots()
             plots_items = defaultdict(dict)
             for series_name, value_dict in six.iteritems(plots):
@@ -254,6 +254,7 @@ class AnalyserMod(AbstractMod):
                     plots_items[date]["date"] = date
 
             df = pd.DataFrame([dict_data for date, dict_data in six.iteritems(plots_items)])
+
             df["date"] = pd.to_datetime(df["date"])
             df = df.set_index("date").sort_index()
             result_dict["plots"] = df
