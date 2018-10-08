@@ -31,7 +31,7 @@ class SimulationMod(AbstractMod):
         pass
 
     def start_up(self, env, mod_config):
-
+        # 仿真模式不需要模拟
         if env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
             return
 

@@ -68,7 +68,7 @@ class Strategy(object):
 
         with ExecutionContext(EXECUTION_PHASE.ON_INIT):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                self._init(self._user_context)
+                self._init(self._user_context)  # 调用策略代码 init 方法
 
         Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_INIT))
 

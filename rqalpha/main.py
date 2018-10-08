@@ -220,9 +220,15 @@ def run(config, source_code=None, user_funcs=None):
 
         env.set_global_vars(GlobalVars())
         mod_handler.set_env(env)
+        """
+        调用每个模块的 start_up 方法，主要是添加事件监听
+        """
         mod_handler.start_up()
 
         if not env.data_source:
+            """
+            设置数据来源
+            """
             env.set_data_source(BaseDataSource(config.base.data_bundle_path))
         env.set_data_proxy(DataProxy(env.data_source))
 
@@ -332,6 +338,9 @@ def run(config, source_code=None, user_funcs=None):
                 env._universe._set = set()
                 user_strategy.init()
 
+        """
+        执行策略
+        """
         executor.run(bar_dict)
 
         if env.profile_deco:
