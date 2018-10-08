@@ -42,11 +42,17 @@ def cli(ctx, verbose):
 
 
 def inject_mod_commands():
+    """
+    获取配置，注册模块
+    :return:
+    """
     from rqalpha.utils.config import get_mod_conf
     from rqalpha.mod import SYSTEM_MOD_LIST
     from rqalpha.utils.package_helper import import_mod
+    # 获取配置
     mod_config = get_mod_conf()
 
+    # 加载配置中的模块
     for mod_name, config in six.iteritems(mod_config['mod']):
         if 'lib' in config:
             lib_name = config["lib"]
@@ -66,8 +72,14 @@ def inject_mod_commands():
 
 
 def entry_point():
+    """
+    直接运行入口
+    :return:
+    """
     inject_mod_commands()
-
+    """
+    run 命令解析
+    """
     cli(obj={})
 
 
@@ -123,8 +135,14 @@ def run(**kwargs):
 
     from rqalpha import main
     source_code = kwargs.get("base__source_code")
+    """
+    解析完整配置
+    """
     cfg = parse_config(kwargs, config_path=config_path, click_type=True, source_code=source_code)
     source_code = cfg.base.source_code
+    """
+    运行策略代码
+    """
     results = main.run(cfg, source_code=source_code)
 
     # store results into ipython when running in ipython
@@ -390,4 +408,5 @@ def _detect_package_name_from_dir():
 
 
 if __name__ == '__main__':
+    # 直接执行
     entry_point()

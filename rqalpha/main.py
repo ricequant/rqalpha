@@ -186,6 +186,17 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
 
 
 def run(config, source_code=None, user_funcs=None):
+    """
+    策略代码运行
+    :param config:
+    :param source_code: 策略代码
+    :param user_funcs:
+    :return:
+    """
+
+    """
+    获取上下文环境
+    """
     env = Environment(config)
     persist_helper = None
     init_succeed = False
@@ -197,12 +208,16 @@ def run(config, source_code=None, user_funcs=None):
         set_loggers(config)
         basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
 
+        """
+        读取源码到上下文环境
+        """
         if source_code is not None:
             env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
         elif user_funcs is not None:
             env.set_strategy_loader(UserFuncStrategyLoader(user_funcs))
         else:
             env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
+
         env.set_global_vars(GlobalVars())
         mod_handler.set_env(env)
         mod_handler.start_up()
