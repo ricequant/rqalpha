@@ -74,9 +74,10 @@ class StockPosition(BasePosition):
                 self._avg_price = (self._avg_price * self._quantity + trade.last_quantity * trade.last_price) / (
                     self._quantity + trade.last_quantity)
             self._quantity += trade.last_quantity
-            if self.stock_t1 and self._order_book_id not in {'510900.XSHG', '513030.XSHG', '513100.XSHG', '513500.XSHG'}:
-                # 除了上述 T+0 基金，其他都是 T+1
-                self._non_closable += trade.last_quantity
+            if self.stock_t1:
+                env = Environment.get_instance()
+                if env.get_instrument(self._order_book_id).market_tplus == 1:
+                    self._non_closable += trade.last_quantity
         else:
             self._quantity -= trade.last_quantity
             self._frozen -= trade.last_quantity

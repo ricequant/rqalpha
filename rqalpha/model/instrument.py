@@ -104,6 +104,13 @@ class Instrument(object):
         return self._ins_dict["exchange"]
 
     @property
+    def market_tplus(self):
+        """
+        [int] 合约卖出和买入操作需要间隔的最小交易日数，如A股为 1
+        """
+        return self._ins_dict["market_tplus"]
+
+    @property
     def sector_code(self):
         """
         [str] 板块缩写代码，全球通用标准定义（股票专用）
@@ -154,7 +161,7 @@ class Instrument(object):
     @property
     def concept_names(self):
         """
-        [str] 概念股分类，例如：’铁路基建’，’基金重仓’等
+        [str] 概念股分类，例如：’铁路基建’，’基金重仓’等（股票专用）
         """
         try:
             return self._ins_dict["concept_names"]
