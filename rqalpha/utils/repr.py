@@ -44,7 +44,10 @@ def properties(inst):
                 # 如果 设置了 __abandon_properties__ 属性，则过滤其中的property，不输出相关内容
                 continue
             # FIXME: 这里getattr在iter_properties_of_class中掉用过了，性能比较差，可以优化
-            tmp = getattr(inst, varname)
+            try:
+                tmp = getattr(inst, varname)
+            except (AttributeError, RuntimeError):
+                continue
             if varname == "positions":
                 tmp = list(tmp.keys())
             if hasattr(tmp, '__simple_object__'):

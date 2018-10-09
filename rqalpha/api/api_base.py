@@ -613,7 +613,7 @@ def all_instruments(type=None, date=None):
 
     result = env.data_proxy.all_instruments(types, dt)
     if types is not None and len(types) == 1:
-        return pd.DataFrame([i.__dict__ for i in result])
+        return pd.DataFrame([i._ins_dict for i in result])
 
     return pd.DataFrame(
         [[i.order_book_id, i.symbol, i.type, i.listed_date, i.de_listed_date] for i in result],
