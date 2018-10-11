@@ -19,6 +19,7 @@ from __future__ import division
 import datetime
 import inspect
 import sys
+import types
 from collections import Iterable
 from functools import wraps
 from types import FunctionType
@@ -928,3 +929,13 @@ def get_position(order_book_id, direction):
         raise RuntimeError(_("Booking has not been set, please check your broker configuration."))
 
     return booking.get_position(order_book_id, direction)
+
+
+@export_as_api
+@apply_rules(
+    verify_that('event_type').is_instance_of(EVENT),
+    verify_that('handler').is_instance_of(types.FunctionType)
+)
+def subscribe_event(event_type, handler):
+    env = Environment.get_instance()
+    env.event_bus.add_listener(event_type, handler)

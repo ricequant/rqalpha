@@ -1,5 +1,3 @@
-from rqalpha import subscribe_event, events
-
 SLIPPAGE = 10
 price = 0
 stock = "000001.XSHE"
@@ -7,7 +5,7 @@ stock = "000001.XSHE"
 
 def init(context):
     context.count = 0
-    subscribe_event(events.EVENT.TRADE, on_trade)
+    subscribe_event(EVENT.TRADE, on_trade)
 
 
 def on_trade(event):
