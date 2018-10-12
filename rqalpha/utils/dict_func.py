@@ -18,6 +18,12 @@ import collections
 
 
 def deep_update(from_dict, to_dict):
+    """
+    深度拷贝、更新
+    :param from_dict:
+    :param to_dict:
+    :return:
+    """
     for (key, value) in from_dict.items():
         if (key in to_dict.keys() and
                 isinstance(to_dict[key], collections.Mapping) and

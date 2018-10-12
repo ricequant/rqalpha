@@ -54,9 +54,12 @@ def user_mod_conf_path():
 
 
 def get_mod_conf():
+    # 加载系统默认配置
     base = load_yaml(default_mod_config_path)
+    # 加载用户自定义配置
     user_mod_conf = os.path.join(os.path.expanduser(rqalpha_path), 'mod_config.yml')
     user = load_yaml(user_mod_conf) if os.path.exists(user_mod_conf) else {}
+    # 合并配置
     deep_update(user, base)
     return base
 
@@ -153,6 +156,9 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         config_args[key] = mod_config_value_parse(v)
 
     if click_type:
+        """
+        将命令行参数与配置合并
+        """
         for k, v in six.iteritems(config_args):
             if v is None:
                 continue
@@ -167,10 +173,16 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
                 sub_dict = sub_dict[p]
             sub_dict[key_path[-1]] = v
     else:
+        """
+        将默认参数与配置参数合并
+        """
         deep_update(config_args, conf)
 
     config = RqAttrDict(conf)
 
+    """
+    设置默认字符集与时区
+    """
     set_locale(config.extra.locale)
 
     def _to_date(v):

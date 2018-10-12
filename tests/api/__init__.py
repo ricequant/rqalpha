@@ -21,7 +21,6 @@ from .test_api_future import test_strategies as test_api_future_strategies
 
 test_strategies = test_api_base_strategies + test_api_stock_strategies + test_api_future_strategies
 
-
 __all__ = [
     "test_strategies"
 ]

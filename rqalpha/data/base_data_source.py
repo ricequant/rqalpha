@@ -213,6 +213,9 @@ class BaseDataSource(AbstractDataSource):
     def get_split(self, order_book_id):
         return self._split_factor.get_factors(order_book_id)
 
+    """
+    获取可供使用的有效起止时间
+    """
     def available_data_range(self, frequency):
         if self._market == MARKET.CN:
             if frequency in ['tick', '1d']:

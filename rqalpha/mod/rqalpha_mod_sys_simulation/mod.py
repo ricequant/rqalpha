@@ -31,7 +31,7 @@ class SimulationMod(AbstractMod):
         pass
 
     def start_up(self, env, mod_config):
-
+        # 仿真模式不需要模拟
         if env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
             return
 
@@ -55,6 +55,9 @@ class SimulationMod(AbstractMod):
             ]:
                 raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
 
+        """
+        设置 broker
+        """
         if mod_config.signal:
             env.set_broker(SignalBroker(env, mod_config))
         else:

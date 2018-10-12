@@ -86,6 +86,9 @@ class Scheduler(object):
         self._ucontext = None
         self._frequency = frequency
 
+        """
+        监听 before_trading 函数执行前及执行触发事件
+        """
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.next_day_)
         event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading_)

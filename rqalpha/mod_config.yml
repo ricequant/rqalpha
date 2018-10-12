@@ -12,8 +12,10 @@ mod:
     enabled: true
   sys_risk:
     enabled: true
-  sys_analyser:
-    enabled: true
+  sys_analyser: {
+    enabled: true,
+    plot: true
+  }
   # 技术分析API
   sys_funcat:
     enabled: false

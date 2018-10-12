@@ -109,6 +109,9 @@ class SimulationEventSource(AbstractEventSource):
         else:
             raise NotImplementedError(_("Unsupported market {}".format(self._env.config.base.market)))
 
+    """
+    构建全部事件用于遍历
+    """
     def events(self, start_date, end_date, frequency):
         if frequency == "1d":
             # 根据起始日期和结束日期，获取所有的交易日，然后再循环获取每一个交易日
