@@ -58,7 +58,9 @@ from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, 
 
 jsonpickle_numpy.register_handlers()
 
-
+"""
+将起止日期矫正为可用的有效日期
+"""
 def _adjust_start_date(config, data_proxy):
     origin_start_date, origin_end_date = config.base.start_date, config.base.end_date
     start, end = data_proxy.available_data_range(config.base.frequency)
@@ -209,7 +211,7 @@ def run(config, source_code=None, user_funcs=None):
         basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         """
-        读取源码到上下文环境
+        读取源码到上下文环境，填充 Environment 对象
         """
         if source_code is not None:
             env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
@@ -219,6 +221,9 @@ def run(config, source_code=None, user_funcs=None):
             env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
 
         env.set_global_vars(GlobalVars())
+        """
+        初始化 mod 管理器 mod_handler
+        """
         mod_handler.set_env(env)
         """
         调用每个模块的 start_up 方法，主要是添加事件监听
@@ -232,23 +237,44 @@ def run(config, source_code=None, user_funcs=None):
             env.set_data_source(BaseDataSource(config.base.data_bundle_path))
         env.set_data_proxy(DataProxy(env.data_source))
 
+        """
+        初始化调度器
+        """
         Scheduler.set_trading_dates_(env.data_source.get_trading_calendar())
         scheduler = Scheduler(config.base.frequency)
         mod_scheduler._scheduler = scheduler
 
+        """
+        策略运行中的证券池初始化
+        """
         env._universe = StrategyUniverse()
 
+        """
+        将起止时间校准为有效日期
+        """
         _adjust_start_date(env.config, env.data_proxy)
 
+        """
+        判断参照股是否有效
+        """
         _validate_benchmark(env.config, env.data_proxy)
 
         # FIXME
         start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
+        """
+        设置当前日历日期为起始日期
+        """
         env.calendar_dt = start_dt
+        """
+        设置当前交易日期为起始日期
+        """
         env.trading_dt = start_dt
 
         broker = env.broker
         assert broker is not None
+        """
+        获取交易钱包，存储当前剩余资金等信息
+        """
         env.portfolio = broker.get_portfolio()
 
         try:
@@ -256,6 +282,9 @@ def run(config, source_code=None, user_funcs=None):
         except NotImplementedError:
             pass
 
+        """
+        创建参考股钱包
+        """
         env.benchmark_portfolio = create_benchmark_portfolio(env)
 
         event_source = env.event_source
@@ -264,6 +293,9 @@ def run(config, source_code=None, user_funcs=None):
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
         env.set_bar_dict(bar_dict)
 
+        """
+        获取当前快照数据
+        """
         if env.price_board is None:
             from .core.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()
@@ -278,18 +310,30 @@ def run(config, source_code=None, user_funcs=None):
             "g": env.global_vars
         })
 
+        """
+        获取全部 api
+        """
         apis = api_helper.get_apis()
         scope.update(apis)
 
+        """
+        加载策略
+        """
         scope = env.strategy_loader.load(scope)
 
         if env.config.extra.enable_profiler:
             enable_profiler(env, scope)
 
+        """
+        获取完整策略
+        """
         ucontext = StrategyContext()
         user_strategy = Strategy(env.event_bus, scope, ucontext)
         scheduler.set_user_context(ucontext)
 
+        """
+        调用策略 init 方法，触发事件 POST_USER_INIT
+        """
         if not config.extra.force_run_init_when_pt_resume:
             with run_with_user_log_disabled(disabled=config.base.resume_mode):
                 user_strategy.init()

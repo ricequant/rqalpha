@@ -78,6 +78,9 @@ class Executor(object):
         frequency = self._env.config.base.frequency
         event_bus = self._env.event_bus
 
+        """
+        触发全部事件
+        """
         for event in self._env.event_source.events(start_date, end_date, frequency):
             if event.event_type == EVENT.TICK:
                 if check_before_trading(event):
@@ -99,9 +102,15 @@ class Executor(object):
                 event_bus.publish_event(POST_BAR)
 
             elif event.event_type == EVENT.BEFORE_TRADING:
+                """
+                更新日历时间与当前交易时间，触发 PRE_BEFORE_TRADING、BEFORE_TRADING、POST_BEFORE_TRADING 三个事件
+                """
                 check_before_trading(event)
 
             elif event.event_type == EVENT.AFTER_TRADING:
+                """
+                更新日历时间与当前交易时间，触发 PRE_AFTER_TRADING、AFTER_TRADING、POST_AFTER_TRADING 三个事件
+                """
                 update_time(event)
                 event_bus.publish_event(PRE_AFTER_TRADING)
                 event_bus.publish_event(event)

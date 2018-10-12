@@ -37,6 +37,9 @@ class EventBus(object):
     def prepend_listener(self, event_type, listener):
         self._listeners[event_type].insert(0, listener)
 
+    """
+    发出事件
+    """
     def publish_event(self, event):
         for listener in self._listeners[event.event_type]:
             # 如果返回 True ，那么消息不再传递下去

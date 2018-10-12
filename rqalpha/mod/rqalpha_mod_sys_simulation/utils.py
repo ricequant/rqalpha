@@ -55,7 +55,13 @@ def init_portfolio(env):
         if starting_cash == 0:
             raise RuntimeError(_(u"{} starting cash can not be 0, using `--account {} 100000`").format(account_type, account_type))
 
+        """
+        获取账户信息
+        """
         account_model = env.get_account_model(account_type)
+        """
+        获取仓位信息
+        """
         position_model = env.get_position_model(account_type)
         positions = Positions(position_model)
 
