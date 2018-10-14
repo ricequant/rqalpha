@@ -13,17 +13,9 @@ pd.set_option('display.width',1000)
 
 
 
-# setup data
-data = [{'name': 'chn.ln', 'cost': 3.15364, 'lower': 50, "avail": 2, 'province':"Ai", 'region':"ShangHai"},
-        {'name': 'chn.hh', 'cost': 2.80773, 'lower': 50, "avail": 2, 'province':"fff", 'region':"qq"},
-        {'name': 'chn.sx', 'cost': 3.15364, 'lower': 50, "avail": 2, 'province':"ZheJiang", 'region':"ShangHai"},
-        {'name': 'chn.sx', 'cost': 3.15364, 'lower': 50, "avail": 2, 'province':"ZheJiang", 'region':"ShangHai"},
-        {'name': 'chn.sx', 'cost': 3.15364, 'lower': 50, "avail": 2, 'province':"ZheJiang", 'region':"ShangHai"},
-        {'name': 'chn.sx', 'cost': 3.15364, 'lower': 60, "avail": 2, 'province':"ZheJiang", 'region':"ShangHai"},
-        {'name': 'chn.du', 'cost': 3.15364, 'lower': 50, "avail": 3, 'province':"ZheJiang", 'region':"ShangHai"}]
 
 today = datetime.date.today().strftime("%Y-%m-%d")
-today = "2018-09-29"
+#today = "2018-09-29"
 filename = "top500/top500_%s" %  today
 df = pd.DataFrame.from_csv(filename)
 df = df.sort_values(by=['inc', 'rise_fall_ratio'], ascending=False)
@@ -48,9 +40,20 @@ def fitness(individual, data):
         if selected:
             counts += 1
             rise_fall_region_ratio += box.get('rise_fall_region_ratio')
-            
+            inc = box.get('inc')
+            if inc > 0.15:
+                return 0
+            if inc < 0.04:
+                return 0
+            yesterday_close = box.get('yesterday_close')
+            restore_predicted = box.get('restore_predicted')
+            if restore_predicted < yesterday_close:
+                return 0
                 
             q += rise_fall_region_ratio
+            
+            
+
 
     if counts > ga.count:
         q = 0
@@ -72,6 +75,7 @@ def mutate(individual):
 
 
 if __name__ == "__main__":
+    data50 = []
     ga = pyeasyga.GeneticAlgorithm(data)        # initialise the GA with data
     ga.inc_ratio_limit = 0.5
     ga.rise_all_ratio_limit = 0.7
@@ -86,4 +90,10 @@ if __name__ == "__main__":
     selected_list = ga.best_individual()[1]
     for selected, s in zip(selected_list, data):
         if selected:
+            line = {"stock_id": s["stock_id"], "inc": s["inc"], "restore_predicted":s["restore_predicted"],"rise_fall":s["rise_fall"], "rise_fall_region": s["rise_fall_region"]}
             print "%s %s %s %s %s" % (s["stock_id"], s["inc"], s["restore_predicted"], s["rise_fall"],   s["rise_fall_region"])
+            data50.append(line)
+    df = pd.DataFrame(data50)
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    today = datetime.date.today().strftime("%Y%m%d")
+    df.to_csv ("recommder_reslut%s.csv" % (today_str), encoding="utf-8")

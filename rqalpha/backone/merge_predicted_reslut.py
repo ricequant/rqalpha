@@ -80,8 +80,8 @@ def analyze_predicted_result(files):
     result.to_csv("rise_fall/rf_%s" %  today,  encoding = "utf-8")
     return result
 
-def recommeder_socket(predicted_result_index):
-    today = datetime.date.today().strftime("%Y-%m-%d")
+def recommeder_socket(predicted_result_index, today):
+
     to_day_predicted_reslut = "merge_predicted_reslut/merge_predicted_reslut%s.csv" % today
     to_day_rise_fall = "rise_fall/rf_%s" %  today
     today_df = pd.DataFrame.from_csv(to_day_predicted_reslut)
@@ -124,7 +124,7 @@ def calculate_index(file1, file2):
     a = df[df['rise_fall'] == 1]['rise_fall'].count()
     b = df['rise_fall'].count()
     oneday_predicted_rise_fall_is_ok =  a / float(b)
-    print oneday_predicted_rise_fall_is_ok
+    #print oneday_predicted_rise_fall_is_ok
     
     
     return df[["stock_id", "rise_fall", "rise_fall_region"]]
@@ -172,13 +172,18 @@ def calculate_index_test(file1, file2):
 if __name__ == '__main__':
     base_dir = "merge_predicted_reslut"
     files = sort_files_by_date(base_dir)
-    print files
+    #print files
     
     predicted_result_index = analyze_predicted_result(files)
-    print predicted_result_index.head(500)
+    #print predicted_result_index.head(500)
+
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    #today = "2018-10-09"
+        
+    top500 = recommeder_socket(predicted_result_index, today)
     
-    top500 = recommeder_socket(predicted_result_index)
     top500 =  top500.head(500)
+    print top500[["yesterday_close", "restore_predicted", "rise_fall", "rise_fall_ratio", "rise_fall_region", "rise_fall_region_ratio"]]
     today = datetime.date.today().strftime("%Y-%m-%d")
     top500.to_csv("top500/top500_%s" %  today,  encoding = "utf-8")
     

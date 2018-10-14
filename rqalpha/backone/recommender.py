@@ -67,29 +67,7 @@ if __name__=='__main__':
     result.to_csv ("merge_predicted_reslut%s.csv" % today_str, encoding="utf-8")
     result.to_csv ("data%s/merge_predicted_reslut%s.csv" % (today, today_str), encoding="utf-8")
     
-    
-    
-    data = result.to_dict(orient='records')
-    #ga = pyeasyga.GeneticAlgorithm(data)        # initialise the GA with data
-    ga = pyeasyga.GeneticAlgorithm(data, population_size=100, mutation_probability=1, maximise_fitness=True)
-    #ga = pyeasyga.GeneticAlgorithm(data, population_size=50, generations=100, crossover_probability=0.83, mutation_probability=0.02, elitism=False, maximise_fitness=True)
-    #ga.population_size = 2000
-    
-    ga.fitness_function = fitness               # set the GA's fitness function
-    ga.create_individual = create_individual
-    ga.run()
-    
-    
-    #print dir(ga)                                    # run the GA
-    print ga.best_individual()                  # print the GA's best solution
-    #print ga.seed_data
-    print "--------"
-    for individual in ga.last_generation():
-        print individual
-    
-    
-    print "------------------"
-    print ga.best_individual()  
+
     
     
     
