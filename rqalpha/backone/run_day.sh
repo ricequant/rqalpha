@@ -23,11 +23,3 @@ python predicted_next_day.py  ${today}
 python recommender.py  ${today}
 python merge_predicted_reslut.py  ${today}
 python ga_select.py  ${today}
-
-
-#back test
-
-
-#sort
-
-#send mail
