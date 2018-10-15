@@ -205,7 +205,7 @@ if __name__=='__main__':
         df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
         print df
         yesterday = datetime.date.today().strftime("%Y-%m-%d")
-        df.to_csv ("train_reslut%s.csv" % yesterday,encoding = "utf-8")
+        df.to_csv ("train_result%s.csv" % yesterday,encoding = "utf-8")
     else:
         stock_id = "000001.XSHE.npy"
         train_single_stock(stock_id, result)

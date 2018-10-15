@@ -82,9 +82,9 @@ def analyze_predicted_result(files):
 
 def recommeder_socket(predicted_result_index, today):
 
-    to_day_predicted_reslut = "merge_predicted_result/merge_predicted_result%s.csv" % today
+    to_day_predicted_result = "merge_predicted_result/merge_predicted_result%s.csv" % today
     to_day_rise_fall = "rise_fall/rf_%s" %  today
-    today_df = pd.DataFrame.from_csv(to_day_predicted_reslut)
+    today_df = pd.DataFrame.from_csv(to_day_predicted_result)
     rise_fall_df = pd.DataFrame.from_csv(to_day_rise_fall)
     
     df = pd.merge(today_df, rise_fall_df, on='stock_id')

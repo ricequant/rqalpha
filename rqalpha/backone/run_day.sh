@@ -22,5 +22,5 @@ python lstm_train_all_by_day.py  ${today}
 python predicted_next_day.py  ${today}
 
 python recommender.py  ${today}
-python merge_predicted_reslut.py  ${today}
+python merge_predicted_result.py  ${today}
 python ga_select.py  ${today}

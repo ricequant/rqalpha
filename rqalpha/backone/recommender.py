@@ -69,15 +69,15 @@ if __name__=='__main__':
 
 
     
-    left = pd.DataFrame.from_csv('data%s/train_reslut%s.csv' % (today, today_str))
-    right = pd.DataFrame.from_csv('data%s/predicted_reslut%s.csv' % (today, today_str))
+    left = pd.DataFrame.from_csv('data%s/train_result%s.csv' % (today, today_str))
+    right = pd.DataFrame.from_csv('data%s/predicted_result%s.csv' % (today, today_str))
     #print right
     #result = left.join(right, on='stock_id')
     result = pd.merge(left, right, on='stock_id')
     #print result
     
-    result.to_csv ("merge_predicted_reslut%s.csv" % today_str, encoding="utf-8")
-    result.to_csv ("data%s/merge_predicted_reslut%s.csv" % (today, today_str), encoding="utf-8")
+    result.to_csv ("merge_predicted_result%s.csv" % today_str, encoding="utf-8")
+    result.to_csv ("data%s/merge_predicted_result%s.csv" % (today, today_str), encoding="utf-8")
     
 
     

@@ -109,4 +109,4 @@ if __name__ == "__main__":
     df = pd.DataFrame(data50)
     today_str = datetime.date.today().strftime("%Y-%m-%d")
     today = datetime.date.today().strftime("%Y%m%d")
-    df.to_csv ("recommder_reslut%s.csv" % (today_str), encoding="utf-8")
+    df.to_csv ("recommder_result%s.csv" % (today_str), encoding="utf-8")

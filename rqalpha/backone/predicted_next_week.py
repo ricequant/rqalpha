@@ -111,7 +111,7 @@ def handle_bar_dl(context, bar_dict):
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
     print df
     today = datetime.date.today().strftime("%Y-%m-%d")
-    df.to_csv ("predicted_reslut%s.csv" % today, encoding="utf-8")
+    df.to_csv ("predicted_result%s.csv" % today, encoding="utf-8")
 
         
 # after_trading函数会在每天交易结束后被调用，当天只会被调用一次
