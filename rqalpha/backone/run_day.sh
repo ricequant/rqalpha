@@ -5,6 +5,7 @@ if [ ! -n "$1" ] ;then
 	today=`date "+%Y%m%d"`
 else:
 	today=$1
+fi
 
 data_dir=data${today}
 mkdir -p ${data_dir}/close_price
