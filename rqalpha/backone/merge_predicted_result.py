@@ -37,7 +37,7 @@ def sort_files_by_date(base_dir):
     q = sorted(date_key_list, date_compare)
     
     for date_key in q:
-        files_name = "merge_predicted_reslut/merge_predicted_reslut%s.csv" % date_key
+        files_name = "merge_predicted_result/merge_predicted_result%s.csv" % date_key
         files_list.append(files_name)
     return files_list
     
@@ -82,7 +82,7 @@ def analyze_predicted_result(files):
 
 def recommeder_socket(predicted_result_index, today):
 
-    to_day_predicted_reslut = "merge_predicted_reslut/merge_predicted_reslut%s.csv" % today
+    to_day_predicted_reslut = "merge_predicted_result/merge_predicted_result%s.csv" % today
     to_day_rise_fall = "rise_fall/rf_%s" %  today
     today_df = pd.DataFrame.from_csv(to_day_predicted_reslut)
     rise_fall_df = pd.DataFrame.from_csv(to_day_rise_fall)
@@ -170,7 +170,7 @@ def calculate_index_test(file1, file2):
 
 
 if __name__ == '__main__':
-    base_dir = "merge_predicted_reslut"
+    base_dir = "merge_predicted_result"
     files = sort_files_by_date(base_dir)
     #print files
     
