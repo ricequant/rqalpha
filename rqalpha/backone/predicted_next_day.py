@@ -226,8 +226,7 @@ print yesterday
 if predicted_one:
     before_yesterday = "2018-08-07"
     yesterday = "2018-08-08"
-print before_yesterday
-print yesterday
+
 config_next_day = {
   "stock_id":"600519.XSHG",
   "predicted_one":predicted_one,

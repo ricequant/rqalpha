@@ -5,6 +5,7 @@ import datetime
 import pandas as pd
 import random
 from operator import attrgetter
+import sys
 
 pd.set_option('display.height',1000)
 pd.set_option('display.max_rows',500)
@@ -14,13 +15,7 @@ pd.set_option('display.width',1000)
 
 
 
-today = datetime.date.today().strftime("%Y-%m-%d")
-#today = "2018-09-29"
-filename = "top500/top500_%s" %  today
-df = pd.DataFrame.from_csv(filename)
-df = df.sort_values(by=['inc', 'rise_fall_ratio'], ascending=False)
-print df.head(500)
-data = df.head(500).to_dict(orient='records')
+
 
 
 def create_individual(data):
@@ -75,6 +70,24 @@ def mutate(individual):
 
 
 if __name__ == "__main__":
+
+    print len(sys.argv)
+    if len(sys.argv) == 2:
+        now_time = datetime.datetime.strptime(sys.argv[1], "%Y%m%d")
+        yesterday =  now_time.strftime("%Y-%m-%d")    
+        
+    
+    else:
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")    
+    
+    #today = "2018-09-29"
+    filename = "top500/top500_%s" %  today
+    df = pd.DataFrame.from_csv(filename)
+    df = df.sort_values(by=['inc', 'rise_fall_ratio'], ascending=False)
+    print df.head(500)
+    data = df.head(500).to_dict(orient='records')
+    
     data50 = []
     ga = pyeasyga.GeneticAlgorithm(data)        # initialise the GA with data
     ga.inc_ratio_limit = 0.5
