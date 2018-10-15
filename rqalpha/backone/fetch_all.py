@@ -6,7 +6,7 @@ from rqalpha import run_func
 import numpy as np
 import pandas as pd
 import datetime
-import os
+import os, sys
 import shutil
 """
 Bar(symbol: u'\u73e0\u6c5f\u94a2\u7434', order_book_id: u'002678.XSHE', datetime: datetime.datetime(2014, 1, 2, 0, 0), 
@@ -16,11 +16,20 @@ total_turnover  资产周转率
 volume 成交量
 
 """
-
-
-
-
+print len(sys.argv)
+if len(sys.argv) == 2:
+    today = sys.argv[1]
+    now_time = datetime.datetime.strptime(today, "%Y%m%d")
+    yesterday =  (now_time + datetime.timedelta(days=-1)).strftime("%Y-%m-%d")    
     
+
+else:
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
+print yesterday
+
+
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init_dl(context):
     # 在context中保存全局变量
@@ -89,11 +98,9 @@ def end_dl(context):
         today = datetime.date.today().strftime("%Y%m%d")
         df.to_csv("data%s/close_price/%s" % (today, book_id),  encoding = "utf-8")
 
-before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
-yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-today = datetime.date.today().strftime("%Y-%m-%d")
-print before_yesterday
-print yesterday
+
+
+
 
 config_dl = {
   "stock_id":"000001.XSHE",

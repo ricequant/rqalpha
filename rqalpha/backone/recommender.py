@@ -4,7 +4,7 @@ from pyeasyga import pyeasyga
 import numpy as np
 import pandas as pd
 import random, datetime
-
+import sys
 
 def create_individual(data):
     individual = data[:]
@@ -53,9 +53,21 @@ def fitness(individual, data):
 
 
 if __name__=='__main__':
-    today_str = "2018-08-07"
-    today_str = datetime.date.today().strftime("%Y-%m-%d")
-    today = datetime.date.today().strftime("%Y%m%d")
+
+
+    print len(sys.argv)
+    if len(sys.argv) == 2:
+        today = sys.argv[1]
+        now_time = datetime.datetime.strptime(today, "%Y%m%d")
+        today_str =  now_time.strftime("%Y-%m-%d")    
+        
+    
+    else:
+        today_str = "2018-08-07"
+        today_str = datetime.date.today().strftime("%Y-%m-%d")
+        today = datetime.date.today().strftime("%Y%m%d")
+
+
     
     left = pd.DataFrame.from_csv('data%s/train_reslut%s.csv' % (today, today_str))
     right = pd.DataFrame.from_csv('data%s/predicted_reslut%s.csv' % (today, today_str))

@@ -6,7 +6,7 @@ from rqalpha import run_func
 import numpy as np
 import pandas as pd
 import datetime
-import os
+import os, sys
 from keras.models import load_model,model_from_json
 from keras import backend as K
 from numpy import newaxis
@@ -204,9 +204,25 @@ def after_trading_next_day(context):
 
 
 predicted_one = False
+"""
 before_yesterday = (datetime.date.today() -  datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 today = datetime.date.today().strftime("%Y-%m-%d")
+"""
+
+print len(sys.argv)
+if len(sys.argv) == 2:
+    today = sys.argv[1]
+    now_time = datetime.datetime.strptime(today, "%Y%m%d")
+    yesterday =  (now_time + datetime.timedelta(days=-1)).strftime("%Y-%m-%d")    
+    
+
+else:
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
+print yesterday
+
 if predicted_one:
     before_yesterday = "2018-08-07"
     yesterday = "2018-08-08"

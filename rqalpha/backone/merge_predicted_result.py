@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import pandas as pd
-import os
+import os, sys
 import time
 import datetime
 from pyeasyga import pyeasyga
@@ -176,9 +176,12 @@ if __name__ == '__main__':
     
     predicted_result_index = analyze_predicted_result(files)
     #print predicted_result_index.head(500)
-
-    today = datetime.date.today().strftime("%Y-%m-%d")
-    #today = "2018-10-09"
+    if len(sys.argv) == 2:
+        now_time = datetime.datetime.strptime(sys.argv[1], "%Y%m%d")
+        today =  now_time.strftime("%Y-%m-%d")
+    else:
+    
+        today = datetime.date.today().strftime("%Y-%m-%d")
         
     top500 = recommeder_socket(predicted_result_index, today)
     
