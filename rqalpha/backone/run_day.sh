@@ -4,8 +4,9 @@ rqalpha update_bundle
 today=`date "+%Y%m%d"`
 data_dir=data${today}
 mkdir -p ${data_dir}/close_price
-mkdir -p ${data_dir}/top500
- 
+mkdir top500
+mkdir merge_predicted_reslut
+
 python fetch_all.py
 
 # train LSTM
