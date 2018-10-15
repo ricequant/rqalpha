@@ -47,7 +47,7 @@ def sum_rise_fall(x, y):
 def rise_fall_ok(x, count):
     return float(x) / count
 
-def analyze_predicted_result(files):
+def analyze_predicted_result(files, today):
     files_1 = files[:-1]
     files_2 = files[1:]
     result =pd.DataFrame([])
@@ -76,7 +76,7 @@ def analyze_predicted_result(files):
     
     result = result.sort_values(by=['rise_fall_ratio'], ascending=False)
     
-    today = datetime.date.today().strftime("%Y-%m-%d")
+    #today = datetime.date.today().strftime("%Y-%m-%d")
     result.to_csv("rise_fall/rf_%s" %  today,  encoding = "utf-8")
     return result
 
@@ -174,14 +174,14 @@ if __name__ == '__main__':
     files = sort_files_by_date(base_dir)
     #print files
     
-    predicted_result_index = analyze_predicted_result(files)
     #print predicted_result_index.head(500)
     if len(sys.argv) == 2:
         now_time = datetime.datetime.strptime(sys.argv[1], "%Y%m%d")
         today =  now_time.strftime("%Y-%m-%d")
     else:
-    
         today = datetime.date.today().strftime("%Y-%m-%d")
+        
+    predicted_result_index = analyze_predicted_result(files, today)
         
     top500 = recommeder_socket(predicted_result_index, today)
     

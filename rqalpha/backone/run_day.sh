@@ -11,6 +11,7 @@ data_dir=data${today}
 mkdir -p ${data_dir}/close_price
 mkdir top500
 mkdir merge_predicted_reslut
+mkdir rise_fall
 
 python fetch_all.py ${today}
 
