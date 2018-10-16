@@ -55,16 +55,7 @@ def handle_bar_dl(context, bar_dict):
 
         order_book_id = bar_dict[s1].order_book_id
         history_close = history_bars(order_book_id, 10000, '1d', 'close')
-        #print history_close
-        """
-        info = "%s id: %s close: %s" % (bar_dict[s1].symbol,bar_dict[s1].order_book_id, bar_dict[s1].close)
-        logger.info(info)
-        name = bar_dict[s1].symbol
-        id = bar_dict[s1].order_book_id
-        close_price = bar_dict[s1].close
-        volume = bar_dict[s1].volume
-        today = bar_dict[s1].datetime
-        """
+
 
         context.all_close_price[order_book_id] = history_close
     
@@ -77,9 +68,9 @@ def handle_bar_dl(context, bar_dict):
     for book_id, data in context.all_close_price.items():
         print book_id
         print data
-        
+        print today
         np.save("close_price/%s" % book_id, data)
-        today = datetime.date.today().strftime("%Y%m%d")
+        #today = datetime.date.today().strftime("%Y%m%d")
         np.save("data%s/close_price/%s" % (today, book_id), data)
         
         #df = pd.DataFrame(data)
@@ -90,13 +81,6 @@ def handle_bar_dl(context, bar_dict):
 def after_trading_dl(context):
     logger.info("收盘后执行after_trading函数")
 
-
-def end_dl(context):
-    logger.info("用户程序执行完成")
-    for book_id, data in context.all_close_price.items():
-        df = pd.DataFrame(data)
-        today = datetime.date.today().strftime("%Y%m%d")
-        df.to_csv("data%s/close_price/%s" % (today, book_id),  encoding = "utf-8")
 
 
 
@@ -123,4 +107,4 @@ config_dl = {
 }
 
 # 您可以指定您要传递的参数
-run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl, end=end_dl, config=config_dl)
+run_func(init=init_dl, before_trading=before_trading_dl, handle_bar=handle_bar_dl,  config=config_dl)
