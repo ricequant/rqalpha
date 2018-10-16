@@ -20,7 +20,16 @@ total_turnover  资产周转率
 volume 成交量
 
 """
+print len(sys.argv)
+if len(sys.argv) == 2:
+    today = sys.argv[1]
+    now_time = datetime.datetime.strptime(today, "%Y%m%d")
+    yesterday =  (now_time + datetime.timedelta(days=-1)).strftime("%Y-%m-%d")    
+    
 
+else:
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
     
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
@@ -45,7 +54,9 @@ def handle_bar_next_day(context, bar_dict):
     logger.info("每一个Bar执行")
     logger.info("打印Bar数据：")
     
-    today = datetime.date.today().strftime("%Y%m%d")
+    #today = datetime.date.today().strftime("%Y%m%d")
+    
+    
     if  context.predicted_one:
         context.all = [context.s1]
     
@@ -117,13 +128,15 @@ def handle_bar_next_day(context, bar_dict):
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
     #print df
     today_str = datetime.date.today().strftime("%Y-%m-%d")
+    
+    
     df.to_csv ("data%s/predicted_result%s.csv" % (today, today_str), encoding="utf-8")
 
 def handle_bar_next_day_test(context, bar_dict):
     logger.info("每一个Bar执行")
     logger.info("打印Bar数据：")
     
-    today = datetime.date.today().strftime("%Y%m%d")
+    #today = datetime.date.today().strftime("%Y%m%d")
     if  context.predicted_one:
         context.all = [context.s1]
     
@@ -194,7 +207,10 @@ def handle_bar_next_day_test(context, bar_dict):
     print result
     df = pd.DataFrame(pd.DataFrame(result).to_dict("index"))
     #print df
-    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    
+    
+    now_time = datetime.datetime.strptime(today, "%Y%m%d")
+    today_str = now_time.strftime("%Y-%m-%d")
     df.to_csv ("predicted_result%s.csv" % today_str, encoding="utf-8")
 
         
@@ -210,16 +226,7 @@ yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%
 today = datetime.date.today().strftime("%Y-%m-%d")
 """
 
-print len(sys.argv)
-if len(sys.argv) == 2:
-    today = sys.argv[1]
-    now_time = datetime.datetime.strptime(today, "%Y%m%d")
-    yesterday =  (now_time + datetime.timedelta(days=-1)).strftime("%Y-%m-%d")    
-    
 
-else:
-    today = datetime.date.today().strftime("%Y-%m-%d")
-    yesterday = (datetime.date.today() -  datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
 print yesterday
 
