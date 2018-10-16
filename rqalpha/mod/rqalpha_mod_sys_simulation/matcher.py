@@ -160,6 +160,7 @@ class Matcher(object):
 
             ct_amount = account.positions.get_or_create(order.order_book_id).cal_close_today_amount(fill, order.side)
             price = self._slippage_decider.get_trade_price(order, deal_price)
+            price = max(min(bar.limit_up, price), bar.limit_down)  # 魏子睿改于2018-10-15
             trade = Trade.__from_create__(
                 order_id=order.order_id,
                 price=price,
