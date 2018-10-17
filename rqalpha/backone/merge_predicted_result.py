@@ -187,7 +187,6 @@ if __name__ == '__main__':
     
     top500 =  top500.head(500)
     print top500[["yesterday_close", "restore_predicted", "rise_fall", "rise_fall_ratio", "rise_fall_region", "rise_fall_region_ratio"]]
-    today = datetime.date.today().strftime("%Y-%m-%d")
     top500.to_csv("top500/top500_%s" %  today,  encoding = "utf-8")
     
     
