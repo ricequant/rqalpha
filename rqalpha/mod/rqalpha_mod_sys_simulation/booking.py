@@ -50,14 +50,13 @@ class StockSimulationBookingPosition(SimulationBookingPosition):
 
     @property
     def old_quantity(self):
-        user_system_log.warn(_("Quantity of stock has not been classfied "))
-        return 0
+        if self._direction == POSITION_DIRECTION.SHORT:
+            return 0
+        return self._position.sellable
 
     @property
     def today_quantity(self):
-        if self._direction == POSITION_DIRECTION.SHORT:
-            return 0
-        return self.quantity
+        return self.quantity - self.old_quantity
 
     @property
     def avg_price(self):
