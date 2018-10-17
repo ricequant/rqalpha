@@ -74,7 +74,8 @@ if __name__ == "__main__":
     print len(sys.argv)
     if len(sys.argv) == 2:
         now_time = datetime.datetime.strptime(sys.argv[1], "%Y%m%d")
-        yesterday =  now_time.strftime("%Y-%m-%d")    
+        today =  now_time.strftime("%Y-%m-%d")    
+        today_str = today.strftime("%Y-%m-%d")
         
     
     else:
@@ -107,6 +108,8 @@ if __name__ == "__main__":
             print "%s %s %s %s %s" % (s["stock_id"], s["inc"], s["restore_predicted"], s["rise_fall"],   s["rise_fall_region"])
             data50.append(line)
     df = pd.DataFrame(data50)
-    today_str = datetime.date.today().strftime("%Y-%m-%d")
-    today = datetime.date.today().strftime("%Y%m%d")
+    #today_str = datetime.date.today().strftime("%Y-%m-%d")
+    today_str = today.strftime("%Y-%m-%d")
+    
+    
     df.to_csv ("recommder_result%s.csv" % (today_str), encoding="utf-8")
