@@ -116,7 +116,7 @@ class BenchmarkAccountFixture(EnvironmentFixture):
 
         super(BenchmarkAccountFixture, self).init_fixture()
 
-        self.benchmark_account = BenchmarkAccount(self.benchmark_account_total_cash,  Positions(StockPosition))
+        self.benchmark_account = BenchmarkAccount(self.benchmark_account_total_cash, Positions(StockPosition))
 
 
 class BarDictPriceBoardFixture(EnvironmentFixture):
@@ -153,7 +153,7 @@ class MatcherFixture(EnvironmentFixture):
     def init_fixture(self):
         from datetime import datetime
         from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import Matcher
-        
+
         super(MatcherFixture, self).init_fixture()
 
         print(Matcher, type(self.env_config["mod"]))
@@ -175,7 +175,27 @@ class BookingFixture(EnvironmentFixture):
 
     def init_fixture(self):
         from rqalpha.model.booking import Booking
-        
+
         super(BookingFixture, self).init_fixture()
-        
+
         self.booking = Booking(self.long_positions, self.short_positions)
+
+
+class IndicatorFixture(EnvironmentFixture):
+    def __init__(self, *args, **kwargs):
+        super(IndicatorFixture, self).__init__(*args, **kwargs)
+
+        self.indicator = None
+
+    def init_fixture(self):
+        from rqalpha_mod_indicator.indicator_board import IndicatorBoard
+        from rqalpha_mod_indicator.pt_indicator_board import PTIndicatorBoard
+        from rqalpha.const import RUN_TYPE
+
+        super(IndicatorFixture, self).init_fixture()
+
+        config = self.env.config
+        if config.base.run_type in (RUN_TYPE.PAPER_TRADING, RUN_TYPE.LIVE_TRADING):
+            self.indicator = PTIndicatorBoard()
+        else:
+            self.indicator = IndicatorBoard(config.base.start_date, config.base.end_date)

@@ -8,6 +8,7 @@ from .fixtures import (
     BarDictPriceBoardFixture,
     MatcherFixture,
     BookingFixture,
+    IndicatorFixture,
 )
 
 
@@ -27,6 +28,7 @@ __all__ = [
     "BarDictPriceBoardFixture",
     "MatcherFixture",
     "BookingFixture",
+    "IndicatorFixture",
     "mock_instrument",
     "mock_bar",
     "mock_tick"
