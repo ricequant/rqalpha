@@ -327,12 +327,15 @@ def test_get_position():
         elif context.counter == 15:
             buy_close("RB1701", 2)
 
-        if 1 <= context.counter < 5:
+        if context.counter == 1:
             pos = get_positions()[0]
             assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 300, 0, context.expected_avg_price)
+        elif 1 < context.counter < 5:
+            pos = get_positions()[0]
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 300, context.expected_avg_price)
         elif 5 <= context.counter < 10:
             pos = get_position("000001.XSHE", POSITION_DIRECTION.LONG)
-            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 200, 0, context.expected_avg_price)
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 200, context.expected_avg_price)
         elif context.counter == 10:
             pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
             assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 5, 0, context.expected_avg_price)

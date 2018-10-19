@@ -37,8 +37,9 @@ index_contract_warning_flag = True
 
 
 class ArgumentChecker(object):
-    def __init__(self, arg_name):
+    def __init__(self, arg_name, pre_check):
         self._arg_name = arg_name
+        self._pre_check = pre_check
         self._rules = []
 
     def is_instance_of(self, types):
@@ -364,15 +365,34 @@ class ArgumentChecker(object):
     def arg_name(self):
         return self._arg_name
 
+    @property
+    def pre_check(self):
+        return self._pre_check
 
-def verify_that(arg_name):
-    return ArgumentChecker(arg_name)
+
+def verify_that(arg_name, pre_check=False):
+    return ArgumentChecker(arg_name, pre_check)
+
+
+def get_call_args(func, args, kwargs, traceback=None):
+    try:
+        return inspect.getcallargs(unwrapper(func), *args, **kwargs)
+    except TypeError as e:
+        six.reraise(RQTypeError, RQTypeError(*e.args), traceback)
 
 
 def apply_rules(*rules):
     def decorator(func):
         @wraps(func)
         def api_rule_check_wrapper(*args, **kwargs):
+            call_args = None
+            for r in rules:
+                if not r.pre_check:
+                    continue
+                if call_args is None:
+                    call_args = get_call_args(func, args, kwargs)
+                r.verify(func.__name__, call_args[r.arg_name])
+
             try:
                 return func(*args, **kwargs)
             except RQInvalidArgument:
@@ -381,14 +401,12 @@ def apply_rules(*rules):
                 exc_info = sys.exc_info()
                 t, v, tb = exc_info
 
-                try:
-                    call_args = inspect.getcallargs(unwrapper(func), *args, **kwargs)
-                except TypeError as e:
-                    six.reraise(RQTypeError, RQTypeError(*e.args), tb)
-                    return
-
+                if call_args is None:
+                    call_args = get_call_args(func, args, kwargs, tb)
                 try:
                     for r in rules:
+                        if r.pre_check:
+                            continue
                         r.verify(func.__name__, call_args[r.arg_name])
                 except RQInvalidArgument as e:
                     six.reraise(RQInvalidArgument, e, tb)
