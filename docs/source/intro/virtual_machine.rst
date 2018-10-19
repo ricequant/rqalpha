@@ -31,7 +31,7 @@
 
 .. _VirtualBox 官网: https://www.virtualbox.org/wiki/Downloads
 
-.. _RQAlpha 开箱即用虚拟机镜像: https://pan.baidu.com/s/1mhB3jfE
+.. _RQAlpha 开箱即用虚拟机镜像: https://pan.baidu.com/s/1JjV0EOl5KlA_czUnr9kC-A
 
 
 在终端运行 RQAlpha
