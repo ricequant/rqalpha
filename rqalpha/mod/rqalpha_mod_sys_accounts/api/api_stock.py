@@ -17,6 +17,7 @@
 from decimal import Decimal, getcontext
 
 import six
+import numpy as np
 
 from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style, register_api
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT
@@ -343,7 +344,14 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     if cash_amount == 0:
         return _sell_all_stock(order_book_id, position.sellable, style)
 
-    return order_value(order_book_id, cash_amount - position.market_value, style=style)
+    try:
+        market_value = position.market_value
+    except RuntimeError:
+        order_result = order_value(order_book_id, np.nan, style=style)
+        if order_result:
+            raise
+    else:
+        return order_value(order_book_id, cash_amount - market_value, style=style)
 
 
 @export_as_api
@@ -400,7 +408,14 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     if percent == 0:
         return _sell_all_stock(order_book_id, position.sellable, style)
 
-    return order_value(order_book_id, account.total_value * percent - position.market_value, style=style)
+    try:
+        market_value = position.market_value
+    except RuntimeError:
+        order_result = order_value(order_book_id, np.nan, style=style)
+        if order_result:
+            raise
+    else:
+        return order_value(order_book_id, account.total_value * percent - market_value, style=style)
 
 
 @export_as_api
