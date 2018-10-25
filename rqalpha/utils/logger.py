@@ -16,8 +16,7 @@
 
 from datetime import datetime
 import logbook
-from logbook import Logger
-from logbook.more import ColorizedStderrHandler
+from logbook import Logger, StderrHandler
 
 from rqalpha.utils.py2 import to_utf8, from_utf8
 
@@ -52,7 +51,7 @@ def user_std_handler_log_formatter(record, handler):
     return log
 
 
-user_std_handler = ColorizedStderrHandler(bubble=True)
+user_std_handler = StderrHandler(bubble=True)
 user_std_handler.formatter = user_std_handler_log_formatter
 
 
@@ -80,7 +79,7 @@ user_system_log = Logger("user_system_log")
 
 # 用于用户异常的详细日志打印
 user_detail_log = Logger("user_detail_log")
-# user_detail_log.handlers.append(ColorizedStderrHandler(bubble=True))
+# user_detail_log.handlers.append(StderrHandler(bubble=True))
 
 # 系统日志
 system_log = Logger("system_log")
@@ -91,9 +90,9 @@ std_log = Logger("std_log")
 
 
 def init_logger():
-    system_log.handlers = [ColorizedStderrHandler(bubble=True)]
-    basic_system_log.handlers = [ColorizedStderrHandler(bubble=True)]
-    std_log.handlers = [ColorizedStderrHandler(bubble=True)]
+    system_log.handlers = [StderrHandler(bubble=True)]
+    basic_system_log.handlers = [StderrHandler(bubble=True)]
+    std_log.handlers = [StderrHandler(bubble=True)]
     user_log.handlers = []
     user_system_log.handlers = []
 
