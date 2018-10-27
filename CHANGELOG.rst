@@ -2,6 +2,63 @@
 CHANGELOG
 ==================
 
+3.2.0
+==================
+
+- 配置和命令
+
+  - :code:`rqalpha run` 命令增加参数 :code:`-mk/--market`，用来标识策略交易标的所在的市场，如 cn、hk 等。
+  - :code:`rqalpha update_bundle` 更改为 :code:`rqalpha update-bundle`。
+
+- 接口和 Mod
+
+  - 增加新接口 :code:`AbstractTransactionCostDecider`，在 :code:`Environment` 中注册该接口的实现可以自定义不同合约品种、不同市场的税费计算逻辑。
+  - 增加新 Mod :code:`sys_transaction_cost` 实现上述接口，抽离了原 :code:`sys_simulation` Mod 中的税费计算逻辑，并加入了对港股税费计算的支持。
+  - 移除 :code:`sys_booking` Mod，booking 相关逻辑移入框架中，:code:`Booking` 与 :code:`Portfolio` 类地位相当。
+  - 移除 :code:`sys_stock_realtime` Mod，该 Mod 被移到了单独的 `仓库 <https://github.com/ricequant/rqalpha-mod-stock-realtime>`_ ，不再与框架一同维护。
+  - 移除 :code:`sys_stock_incremental` Mod，该 Mod 被移到了单独的 `仓库 <https://github.com/ricequant/rqalpha-mod-incremental>`_ ，不再与框架一同维护。
+
+
+- 类型和 Api
+
+  - 增加 :code:`SimulationBooking` 类，实现了 :code:`Booking` 类相同的方法，用于在回测和模拟交易中兼容实盘 :code:`Booking` 相关的 Api。
+  - 增加 Api :code:`get_position` 和 :code:`get_positions`，用来获取策略持仓的 :code:`BookingPosition` 对象。
+  - 增加 Api :code:`subscribe_event`，策略可以通过该 Api 注册回调函数，订阅框架内部事件。
+  - :code:`DEFAULT_ACCOUNT_TYPE` 枚举类增加债券 :code:`BOND` 类型。
+  - :code:`history_bars` 在 :code:`before_trading` 中调用时可以取到当日日线数据。
+  - 重构 :code:`Instrument` 类，该类所需的字段现在以 property 的形式写明，方便对 Instrument 对象的调用及对接第三方数据源。
+  - :code:`Instrument` 类型新增字段 :code:`market_tplus`，用来标识合约对平仓时间的限制，例如有 T+1 限制的 A 股该字段值为1，港股为 0。
+
+
+- 逻辑
+
+  - 更改 Benchmark 的买入逻辑，不再对买入数量进行取整，避免初始资金较小时 Benchmark 空仓的问题。
+  - 修正画图时最大回撤的计算逻辑。
+  - 修正年化收益的计算逻辑，年化的天数的计算使用 :code:`start_date`、:code:`end_date`，而非根据交易日历调整后的日期。
+  - 下单冻结资金时考虑税费。
+  - 前端风控验资时考虑税费。
+  - 修复了 :code:`before_trading` 中更新订阅池会可能会导致开盘收到错误 tick 的 Bug。
+  - 修复 beta 值为 0 时 plot result 出错的问题。
+  - 重构 A 股 T+1 的相关逻辑，移除 hard code。
+  - 滑点计算增加对涨跌停价的判断，现在有涨跌停价的合约滑点不会超出涨跌停价的范围。
+  - 修复在取不到行情时下单可能会抛出 RuntimeError 的 Bug。
+
+
+- 依赖
+
+  - 在 Python2.7 和 Python3.4 环境中限制 Matplotlib 的版本。
+  - 移除了测试用例对 Pandas 的版本依赖。
+  - 不再限制 Pandas 的版本上限。
+  - 移除对 colorama 库的依赖。
+  - 限制 click 库的版本下限为 7.0。
+
+
+- 其他
+
+  - 加入对期货 TS 品种的支持。
+  - 模拟交易和实盘中支持持久化自定义类型（可被 pickle 的自定义类型）。
+  - 增加了单元测试框架并添加了少量测试用例。
+
 3.1.2
 ==================
 
