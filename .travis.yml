@@ -35,10 +35,6 @@ install:
 script:
   - ls -al $HOME/.rqalpha/
   - ls -al $HOME/.rqalpha/bundle/
-#  - |
-#      if [ ! -d $HOME/.rqalpha/bundle/ex_cum_factor.bcolz ]; then
-#        rqalpha update_bundle
-#      fi
   - rqalpha update-bundle
   - coverage run --source=rqalpha test.py
 cache:
