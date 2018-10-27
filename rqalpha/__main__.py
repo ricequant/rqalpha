@@ -201,27 +201,25 @@ def mod(cmd, params):
         """
         List all mod configuration
         """
-        from colorama import init, Fore
         from tabulate import tabulate
         from rqalpha.utils.config import get_mod_conf
-        init()
 
         mod_config = get_mod_conf()
         table = []
 
         for mod_name, mod in six.iteritems(mod_config['mod']):
             table.append([
-                Fore.RESET + mod_name,
-                (Fore.GREEN + "enabled" if mod['enabled'] else Fore.RED + "disabled") + Fore.RESET
+                mod_name,
+                ("enabled" if mod['enabled'] else "disabled")
             ])
 
         headers = [
-            Fore.CYAN + "name",
-            Fore.CYAN + "status" + Fore.RESET
+            "name",
+            "status"
         ]
 
         six.print_(tabulate(table, headers=headers, tablefmt="psql"))
-        six.print_(Fore.LIGHTYELLOW_EX + "You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
+        six.print_("You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
 
     def install(params):
         """
