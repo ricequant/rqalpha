@@ -16,6 +16,7 @@
 
 import abc
 import importlib
+from rqalpha.utils import is_valid_price
 
 from six import with_metaclass
 
@@ -62,7 +63,20 @@ class PriceRatioSlippage(BaseSlippage):
 
     def get_trade_price(self, order, price):
         side = order.side
-        return price + price * self.rate * (1 if side == SIDE.BUY else -1)
+        temp_price = price + price * self.rate * (1 if side == SIDE.BUY else -1)
+        temp_bar = Environment.get_instance().bar_dict[order.order_book_id]
+        limit_up, limit_down = temp_bar.limit_up, temp_bar.limit_down
+
+        if is_valid_price(limit_up):
+            temp_price = min(temp_price, limit_up)
+        else:
+            pass
+        if is_valid_price(limit_down):
+            temp_price = max(temp_price, limit_down)
+        else:
+            pass
+
+        return temp_price
 
 
 class TickSizeSlippage(BaseSlippage):

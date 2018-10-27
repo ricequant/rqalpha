@@ -43,10 +43,13 @@ class Matcher(object):
         decider_dict = {
             MATCHING_TYPE.CURRENT_BAR_CLOSE: self._current_bar_close_decider,
             MATCHING_TYPE.NEXT_BAR_OPEN: self._next_bar_open_decider,
-            MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(order_book_id),
-            MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: self._best_own_price_decider(order_book_id, side),
+            MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(
+                order_book_id),
+            MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: self._best_own_price_decider(order_book_id,
+                                                                                                       side),
             MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
-                self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(order_book_id))
+                self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(
+                    order_book_id))
         }
         return decider_dict[matching_type]
 
@@ -63,7 +66,8 @@ class Matcher(object):
             return 0
 
     def _best_own_price_decider(self, order_book_id, side):
-        price = self._env.price_board.get_b1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_a1(order_book_id)
+        price = self._env.price_board.get_b1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_a1(
+            order_book_id)
         if price == 0:
             price = self._env.price_board.get_last_price(order_book_id)
         return price
@@ -160,6 +164,7 @@ class Matcher(object):
 
             ct_amount = account.positions.get_or_create(order.order_book_id).cal_close_today_amount(fill, order.side)
             price = self._slippage_decider.get_trade_price(order, deal_price)
+
             trade = Trade.__from_create__(
                 order_id=order.order_id,
                 price=price,
