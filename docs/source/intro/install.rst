@@ -72,18 +72,18 @@ RiceQuant 免费提供日级别的股票和期货数据供回测使用，可以�
 
 .. note::
 
-    Mac OS下执行 :code:`update_bundle` 出现问题，请参考：:ref:`FAQ-update-bundle-mac`
+    Mac OS下执行 :code:`update-bundle` 出现问题，请参考：:ref:`FAQ-update-bundle-mac`
 
 .. code-block:: bash
 
-    $ rqalpha update_bundle
+    $ rqalpha update-bundle
 
 
 bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存放位置，
 
 .. code-block:: bash
 
-    $ rqalpha update_bundle -d target_bundle_path
+    $ rqalpha update-bundle -d target_bundle_path
 
 如果您使用了指定路径来存放 bundle，那么执行程序的时候也同样需要指定对应的 bundle 路径。
 
@@ -210,4 +210,4 @@ Mac 下默认并没有安装很多命令，我们可以通过homebrew安装，�
 
 2.数据存储的路径：
 
-如您没有指定路径，则会在您执行 :code:`rqalpha update_bundle` 的当前目录创建 :code:`/.rqalpha/bundle` 的文件夹.您可以在命令行内查看路径。
+如您没有指定路径，则会在您执行 :code:`rqalpha update-bundle` 的当前目录创建 :code:`/.rqalpha/bundle` 的文件夹.您可以在命令行内查看路径。
