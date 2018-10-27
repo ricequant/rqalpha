@@ -17,4 +17,3 @@ line-profiler>=2.0
 PyYAML>=3.12
 
 tabulate
-colorama>=0.3.9
