@@ -69,13 +69,10 @@ class PriceRatioSlippage(BaseSlippage):
 
         if is_valid_price(limit_up):
             temp_price = min(temp_price, limit_up)
-        else:
-            pass
+
         if is_valid_price(limit_down):
             temp_price = max(temp_price, limit_down)
-        else:
-            pass
-
+       
         return temp_price
 
 
