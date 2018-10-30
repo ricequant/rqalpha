@@ -119,18 +119,24 @@ class Environment(object):
     def can_submit_order(self, order):
         if Environment.get_instance().config.extra.is_hold:
             return False
-        account = self.get_account(order.order_book_id)
+        try:
+            account = self.get_account(order.order_book_id)
+        except NotImplementedError:
+            account = None
         for v in self._frontend_validators:
-            if not v.can_submit_order(account, order):
+            if not v.can_submit_order(order, account):
                 return False
         return True
 
     def can_cancel_order(self, order):
         if order.is_final():
             return False
-        account = self.get_account(order.order_book_id)
+        try:
+            account = self.get_account(order.order_book_id)
+        except NotImplementedError:
+            account = None
         for v in self._frontend_validators:
-            if not v.can_cancel_order(account, order):
+            if not v.can_cancel_order(order, account):
                 return False
         return True
 
@@ -166,6 +172,8 @@ class Environment(object):
         return get_account_type(order_book_id)
 
     def get_account(self, order_book_id):
+        if not self.portfolio:
+            raise NotImplementedError
         account_type = get_account_type(order_book_id)
         return self.portfolio.accounts[account_type]
 

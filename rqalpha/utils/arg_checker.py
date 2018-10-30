@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import sys
+import abc
 import inspect
 import datetime
 import six
@@ -23,7 +24,7 @@ from functools import wraps
 
 from dateutil.parser import parse as parse_date
 
-from rqalpha.utils.exception import RQInvalidArgument, RQTypeError
+from rqalpha.utils.exception import RQInvalidArgument, RQTypeError, RQApiNotSupportedError
 from rqalpha.model.instrument import Instrument
 from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, EXC_TYPE
@@ -36,7 +37,19 @@ main_contract_warning_flag = True
 index_contract_warning_flag = True
 
 
-class ArgumentChecker(object):
+class AbstractChecker(six.with_metaclass(abc.ABCMeta)):
+
+    @abc.abstractmethod
+    def verify(self, func_name, call_args):
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def pre_check(self):
+        raise NotImplementedError
+
+
+class ArgumentChecker(AbstractChecker):
     def __init__(self, arg_name, pre_check):
         self._arg_name = arg_name
         self._pre_check = pre_check
@@ -357,7 +370,9 @@ class ArgumentChecker(object):
         self._rules.append(self._is_valid_frequency)
         return self
 
-    def verify(self, func_name, value):
+    def verify(self, func_name, call_args):
+        value = call_args[self.arg_name]
+
         for r in self._rules:
             r(func_name, value)
 
@@ -370,8 +385,38 @@ class ArgumentChecker(object):
         return self._pre_check
 
 
+class EnvChecker(AbstractChecker):
+    def __init__(self, pre_check):
+        self._pre_check = pre_check
+
+        self._rules = []
+
+    def portfolio_exists(self):
+        def check_portfolio_exist(func_name):
+            if Environment.get_instance().porfolio is None:
+                raise RQApiNotSupportedError(_(
+                    "Api {} cannot be called in current strategy, because portfolio instance dose not exist".format(
+                        func_name
+                    )
+                ))
+        self._rules.append(check_portfolio_exist)
+        return self
+
+    def verify(self, func_name, _):
+        for r in self._rules:
+            r(func_name)
+
+    @property
+    def pre_check(self):
+        return self._pre_check
+
+
 def verify_that(arg_name, pre_check=False):
     return ArgumentChecker(arg_name, pre_check)
+
+
+def verify_env(pre_check=False):
+    return EnvChecker(pre_check)
 
 
 def get_call_args(func, args, kwargs, traceback=None):
@@ -391,7 +436,7 @@ def apply_rules(*rules):
                     continue
                 if call_args is None:
                     call_args = get_call_args(func, args, kwargs)
-                r.verify(func.__name__, call_args[r.arg_name])
+                r.verify(func.__name__, call_args)
 
             try:
                 return func(*args, **kwargs)
@@ -407,7 +452,7 @@ def apply_rules(*rules):
                     for r in rules:
                         if r.pre_check:
                             continue
-                        r.verify(func.__name__, call_args[r.arg_name])
+                        r.verify(func.__name__, call_args)
                 except RQInvalidArgument as e:
                     six.reraise(RQInvalidArgument, e, tb)
                     return

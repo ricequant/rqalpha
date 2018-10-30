@@ -25,7 +25,7 @@ class PriceValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
-    def can_submit_order(self, account, order):
+    def can_submit_order(self, order, account=None):
         if order.type != ORDER_TYPE.LIMIT:
             return True
 
@@ -54,5 +54,5 @@ class PriceValidator(AbstractFrontendValidator):
 
         return True
 
-    def can_cancel_order(self, account, order):
+    def can_cancel_order(self, order, account=None):
         return True

@@ -228,7 +228,10 @@ def run(config, source_code=None, user_funcs=None):
 
         broker = env.broker
         assert broker is not None
-        env.portfolio = broker.get_portfolio()
+        try:
+            env.portfolio = broker.get_portfolio()
+        except NotImplementedError:
+            pass
 
         try:
             env.booking = broker.get_booking()

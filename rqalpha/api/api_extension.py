@@ -18,7 +18,7 @@ import six
 
 from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
 from rqalpha.environment import Environment
-from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.arg_checker import apply_rules, verify_that, verify_env
 # noinspection PyUnresolvedReferences
 from rqalpha.model.order import LimitOrder, MarketOrder, Order
 
@@ -50,7 +50,10 @@ def now_time_str(str_format="%H:%M:%S"):
 
 
 @export_as_api
-@apply_rules(verify_that('quantity').is_number())
+@apply_rules(
+    verify_env().portfolio_exists(),
+    verify_that('quantity').is_number()
+)
 def order(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数
@@ -99,7 +102,10 @@ def order(order_book_id, quantity, price=None, style=None):
 
 
 @export_as_api
-@apply_rules(verify_that('quantity').is_number())
+@apply_rules(
+    verify_env().portfolio_exists(),
+    verify_that('quantity').is_number()
+)
 def order_to(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数

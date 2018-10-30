@@ -40,10 +40,10 @@ class StockPositionValidator(AbstractFrontendValidator):
         ))
         return False
 
-    def can_submit_order(self, account, order):
-        if account.type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
+    def can_submit_order(self, order, account=None):
+        if account is not None and account.type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
             return self._stock_validator(account, order)
         return True
 
-    def can_cancel_order(self, account, order):
+    def can_cancel_order(self, order, account=None):
         return True

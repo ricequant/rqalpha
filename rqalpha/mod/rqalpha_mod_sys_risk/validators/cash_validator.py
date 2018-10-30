@@ -66,7 +66,9 @@ class CashValidator(AbstractFrontendValidator):
         )
         return False
 
-    def can_submit_order(self, account, order):
+    def can_submit_order(self, order, account=None):
+        if account is None:
+            return True
         if account.type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
             return self._stock_validator(account, order)
         elif account.type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
@@ -74,5 +76,5 @@ class CashValidator(AbstractFrontendValidator):
         else:
             raise NotImplementedError
 
-    def can_cancel_order(self, account, order):
+    def can_cancel_order(self, order, account=None):
         return True

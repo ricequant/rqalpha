@@ -130,3 +130,8 @@ class RQInvalidArgument(RQUserError):
 
 class RQTypeError(RQUserError):
     pass
+
+
+class RQApiNotSupportedError(RQUserError):
+    pass
+

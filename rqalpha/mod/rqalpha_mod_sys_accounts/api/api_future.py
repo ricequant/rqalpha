@@ -21,7 +21,7 @@ from rqalpha.api.api_base import decorate_api_exc, cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
+from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, POSITION_DIRECTION
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
@@ -79,18 +79,26 @@ def order(id_or_ins, amount, side, position_effect, style):
     amount = int(amount)
 
     position = Environment.get_instance().portfolio.positions[order_book_id]
+    env = Environment.get_instance()
 
     orders = []
     if position_effect == POSITION_EFFECT.CLOSE:
         if side == SIDE.BUY:
+            if env.portfolio:
+                position = env.portfolio.positions[order_book_id]
+                sell_quantity, sell_old_quantity = position.sell_quantity, position.sell_old_quantity
+            else:
+                position = env.booking.get_position(order_book_id, POSITION_DIRECTION.SHORT)
+                sell_quantity, sell_old_quantity = position.quantity, position.old_quantity
+
             # 如果平仓量大于持仓量，则 Warning 并 取消订单创建
-            if amount > position.sell_quantity:
+            if amount > sell_quantity:
                 user_system_log.warn(
                     _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=position.sell_quantity)
+                      u"quantity {quantity}").format(amount=amount, quantity=sell_quantity)
                 )
                 return []
-            sell_old_quantity = position.sell_old_quantity
+            sell_old_quantity = sell_old_quantity
             if amount > sell_old_quantity:
                 if sell_old_quantity != 0:
                     # 如果有昨仓，则创建一个 POSITION_EFFECT.CLOSE 的平仓单
@@ -119,13 +127,20 @@ def order(id_or_ins, amount, side, position_effect, style):
                     POSITION_EFFECT.CLOSE
                 ))
         else:
-            if amount > position.buy_quantity:
+            if env.portfolio:
+                position = env.portfolio.positions[order_book_id]
+                buy_quantity, buy_old_quantity = position.buy_quantity, position.buy_old_quantity
+            else:
+                position = env.booking.get_position(order_book_id, POSITION_DIRECTION.LONG)
+                buy_quantity, buy_old_quantity = position.quantity, position.old_quantity
+
+            if amount > buy_quantity:
                 user_system_log.warn(
                     _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=position.buy_quantity)
+                      u"quantity {quantity}").format(amount=amount, quantity=buy_quantity)
                 )
                 return []
-            buy_old_quantity = position.buy_old_quantity
+            buy_old_quantity = buy_old_quantity
             if amount > buy_old_quantity:
                 if buy_old_quantity != 0:
                     orders.append(Order.__from_create__(

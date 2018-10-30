@@ -644,12 +644,12 @@ class Persistable(with_metaclass(abc.ABCMeta)):
 
 class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
-    def can_submit_order(self, account, order):
+    def can_submit_order(self, order, account=None):
         # FIXME: need a better name
         raise NotImplementedError
 
     @abc.abstractmethod
-    def can_cancel_order(self, account, order):
+    def can_cancel_order(self, order, account=None):
         # FIXME: need a better name
         raise NotImplementedError
 

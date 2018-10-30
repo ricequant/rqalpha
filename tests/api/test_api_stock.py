@@ -65,11 +65,11 @@ def test_order_shares():
         elif context.counter == 3:
             assert context.portfolio.positions[context.s1].quantity == 2280
             o = order_shares(context.s1, -1010, bar_dict[context.s1].limit_down)
-            assert_order(o, side=SIDE.SELL, quantity=1000, status=ORDER_STATUS.FILLED)
+            assert_order(o, side=SIDE.SELL, quantity=1010, status=ORDER_STATUS.FILLED)
         elif context.counter == 4:
-            assert context.portfolio.positions[context.s1].quantity == 1280
-            o = order_shares(context.s1, -1280, bar_dict[context.s1].limit_down)
-            assert_order(o, quantity=1280, status=ORDER_STATUS.FILLED)
+            assert context.portfolio.positions[context.s1].quantity == 1270
+            o = order_shares(context.s1, -1270, bar_dict[context.s1].limit_down)
+            assert_order(o, quantity=1270, status=ORDER_STATUS.FILLED)
             assert context.portfolio.positions[context.s1].quantity == 0
 
     return init, handle_bar

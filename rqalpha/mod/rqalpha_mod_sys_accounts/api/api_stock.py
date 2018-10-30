@@ -26,7 +26,7 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
 from rqalpha.utils import is_valid_price
-from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.arg_checker import apply_rules, verify_that, verify_env
 # noinspection PyUnresolvedReferences
 from rqalpha.utils.exception import patch_user_exc, RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
@@ -117,12 +117,9 @@ def order_shares(id_or_ins, amount, price=None, style=None):
         side = SIDE.SELL
         position_effect = POSITION_EFFECT.CLOSE
 
-    round_lot = int(env.get_instrument(order_book_id).round_lot)
-
-    if side == SIDE.BUY or amount != env.portfolio.accounts[
-        DEFAULT_ACCOUNT_TYPE.STOCK.name
-    ].positions[order_book_id].sellable:
-        # 一次性申报卖出时可以卖散股
+    if side == SIDE.BUY:
+        # 卖出不再限制 round_lot, order_shares 不再依赖 portfolio
+        round_lot = int(env.get_instrument(order_book_id).round_lot)
         try:
             amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
         except ValueError:
@@ -202,7 +199,8 @@ def order_lots(id_or_ins, amount, price=None, style=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_env().portfolio_exists(),
+             verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_value(id_or_ins, cash_amount, price=None, style=None):
@@ -271,7 +269,8 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_env().portfolio_exists(),
+             verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_percent(id_or_ins, percent, price=None, style=None):
@@ -310,7 +309,8 @@ def order_percent(id_or_ins, percent, price=None, style=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_env().portfolio_exists(),
+             verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_target_value(id_or_ins, cash_amount, price=None, style=None):
@@ -359,7 +359,8 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_env().portfolio_exists(),
+             verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_target_percent(id_or_ins, percent, price=None, style=None):
