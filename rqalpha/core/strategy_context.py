@@ -51,7 +51,7 @@ class RunInfo(object):
         try:
             self._matching_type = config.mod.sys_simulation.matching_type
             self._slippage = config.mod.sys_simulation.slippage
-            self._commission_multiplier = config.mod.sys_simulation.commission_multiplier
+            self._commission_multiplier = config.mod.sys_transaction_cost.commission_multiplier
         except:
             pass
 
