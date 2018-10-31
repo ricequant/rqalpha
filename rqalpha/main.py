@@ -295,7 +295,8 @@ def run(config, source_code=None, user_funcs=None):
             persist_helper.register('universe', env._universe)
             if isinstance(event_source, Persistable):
                 persist_helper.register('event_source', event_source)
-            persist_helper.register('portfolio', env.portfolio)
+            if env.portfolio:
+                persist_helper.register('portfolio', env.portfolio)
             if env.benchmark_portfolio:
                 persist_helper.register('benchmark_portfolio', env.benchmark_portfolio)
             for name, module in six.iteritems(env.mod_dict):
