@@ -78,7 +78,6 @@ def order(id_or_ins, amount, side, position_effect, style):
 
     amount = int(amount)
 
-    position = Environment.get_instance().portfolio.positions[order_book_id]
     env = Environment.get_instance()
 
     orders = []
