@@ -338,6 +338,8 @@ class BarMap(object):
         try:
             return self._cache[order_book_id]
         except KeyError:
+            if self._dt is None:
+                raise ValueError('BarMap have not update dt')
             try:
                 bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
             except Exception as e:
