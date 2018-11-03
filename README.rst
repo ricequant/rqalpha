@@ -129,6 +129,12 @@ Mod名                      说明
 *  在 `Github Issue`_ 中提交issue
 *  RQAlpha 交流群「487188429」
 
+防骗声明
+============================
+
+近日有部分 RQAlpha 的贡献者和关注者收到邮件，内容类似 "谢谢您对Ricequant/rqalpha项目的付出，扫描下面二维码收下红包！" 并附有二维码。
+该邮件并非 Ricequant 米筐科技发出，请各位宽客不要扫描二维码，亦不要点击邮件中的链接，保护个人信息和财产安全，谨防上当受骗，
+
 
 .. _Github Issue: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
