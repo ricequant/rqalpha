@@ -160,7 +160,7 @@ class Portfolio(object):
             return -1
         current_date = Environment.get_instance().trading_dt.date()
         natural_start_date = Environment.get_instance().config.base.natural_start_date
-        return self.unit_net_value ** (DAYS_CNT.DAYS_A_YEAR / float((current_date - natural_start_date).days + 1)) - 1
+        return self.unit_net_value ** (DAYS_CNT.TRADING_DAYS_A_YEAR / float((current_date - natural_start_date).days + 1)) - 1
 
     @property
     def total_value(self):
