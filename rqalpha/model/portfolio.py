@@ -159,8 +159,8 @@ class Portfolio(object):
         if self.unit_net_value <= 0:
             return -1
         current_date = Environment.get_instance().trading_dt.date()
-        natural_start_date = Environment.get_instance().config.base.natural_start_date
-        return self.unit_net_value ** (DAYS_CNT.TRADING_DAYS_A_YEAR / float((current_date - natural_start_date).days + 1)) - 1
+        start_date = Environment.get_instance().config.base.start_date
+        return self.unit_net_value ** (DAYS_CNT.TRADING_DAYS_A_YEAR / float((current_date - start_date).days + 1)) - 1
 
     @property
     def total_value(self):
