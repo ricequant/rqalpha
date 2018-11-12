@@ -63,7 +63,6 @@ class TempDirFixture(RQAlphaFixture):
         else:
             from backports.tempfile import TemporaryDirectory
 
-
         super(TempDirFixture, self).init_fixture()
         self.temp_dir = TemporaryDirectory()
 
@@ -122,6 +121,7 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
 class DataProxyFixture(BaseDataSourceFixture):
     def __init__(self, *args, **kwargs):
         super(DataProxyFixture, self).__init__(*args, **kwargs)
+        self.data_proxy = None
         self.data_source = None
 
     def init_fixture(self):
@@ -130,7 +130,8 @@ class DataProxyFixture(BaseDataSourceFixture):
         super(DataProxyFixture, self).init_fixture()
         if not self.data_source:
             self.data_source = self.base_data_source
-        self.env.set_data_proxy(DataProxy(self.data_source))
+        self.data_proxy = DataProxy(self.data_source)
+        self.env.set_data_proxy(self.data_proxy)
 
     @contextmanager
     def mock_data_proxy_method(self, name, mock_method):
