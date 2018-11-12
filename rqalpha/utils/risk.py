@@ -60,7 +60,7 @@ class Risk(object):
         self._return = np.expm1(np.log1p(self._portfolio).sum())
         self._annual_return = (1 + self._return) ** (252 / days) - 1
         self._benchmark_return = np.expm1(np.log1p(self._benchmark).sum())
-        self._benchmark_annual_return = (1 + self._benchmark_return) ** (365 / days) - 1
+        self._benchmark_annual_return = (1 + self._benchmark_return) ** (252 / days) - 1
         self._max_drawdown = None
         self._volatility = None
         self._annual_volatility = None

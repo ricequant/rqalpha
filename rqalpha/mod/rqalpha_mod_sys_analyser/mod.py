@@ -195,7 +195,7 @@ class AnalyserMod(AbstractMod):
             data_proxy.get_risk_free_rate(
                 self._env.config.base.start_date, self._env.config.base.end_date
             ),
-            (self._env.config.base.end_date - self._env.config.base.start_date).days + 1
+            self._env.data_proxy.count_trading_dates(self._env.config.base.start_date, self._env.config.base.end_date)
         )
         summary.update({
             'alpha': self._safe_convert(risk.alpha, 3),
