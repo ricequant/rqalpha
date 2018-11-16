@@ -66,16 +66,14 @@ class PriceRatioSlippage(BaseSlippage):
         temp_price = price + price * self.rate * (1 if side == SIDE.BUY else -1)
         try:
             temp_bar = Environment.get_instance().bar_dict[order.order_book_id]
+        except KeyError:
+            pass
+        else:
             limit_up, limit_down = temp_bar.limit_up, temp_bar.limit_down
-
             if is_valid_price(limit_up):
                 temp_price = min(temp_price, limit_up)
-
             if is_valid_price(limit_down):
                 temp_price = max(temp_price, limit_down)
-        except KeyError:
-            # tick中没有涨跌停价
-            pass
         return temp_price
 
 
