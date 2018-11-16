@@ -66,10 +66,6 @@ def _adjust_start_date(config, data_proxy):
     config.base.start_date = max(start, config.base.start_date)
     config.base.end_date = min(end, config.base.end_date)
 
-    # for annualized risk indicator calculation
-    config.base.natural_start_date = config.base.start_date
-    config.base.natural_end_date = config.base.end_date
-
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
         raise patch_user_exc(

@@ -50,11 +50,15 @@ class AnalyserMod(AbstractMod):
         self._mod_config = mod_config
         self._enabled = (self._mod_config.record or self._mod_config.plot or self._mod_config.output_file or
                          self._mod_config.plot_save_file or self._mod_config.report_save_path)
+        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
 
-        if self._enabled:
-            env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
-            env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
-            env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
+    def _subscribe_events(self, _):
+        if not self._enabled:
+            return
+        self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
+        self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
+        if self._env.portfolio:
+            self._env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
 
     def _collect_trade(self, event):
         self._trades.append(self._to_trade_record(event.trade))
@@ -62,7 +66,7 @@ class AnalyserMod(AbstractMod):
     def _collect_order(self, event):
         self._orders.append(event.order)
 
-    def _collect_daily(self, event):
+    def _collect_daily(self, _):
         date = self._env.calendar_dt.date()
         portfolio = self._env.portfolio
         benchmark_portfolio = self._env.benchmark_portfolio
@@ -195,7 +199,7 @@ class AnalyserMod(AbstractMod):
             data_proxy.get_risk_free_rate(
                 self._env.config.base.start_date, self._env.config.base.end_date
             ),
-            (self._env.config.base.natural_end_date - self._env.config.base.natural_start_date).days + 1
+            self._env.data_proxy.count_trading_dates(self._env.config.base.start_date, self._env.config.base.end_date)
         )
         summary.update({
             'alpha': self._safe_convert(risk.alpha, 3),

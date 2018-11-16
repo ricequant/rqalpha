@@ -85,3 +85,10 @@ class TradingDatesMixin(object):
             return self._dates[pos - n:pos]
 
         return self._dates[:pos]
+
+    def count_trading_dates(self, start_date, end_date):
+        start_date = _to_timestamp(start_date)
+        end_date = _to_timestamp(end_date)
+
+        return self._dates.searchsorted(end_date, side='right') - self._dates.searchsorted(start_date)
+

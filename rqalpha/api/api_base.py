@@ -222,7 +222,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     """
     order_book_id = assure_order_book_id(id_or_ins)
     env = Environment.get_instance()
-    if env.config.base.run_type != RUN_TYPE.BACKTEST:
+    if env.config.base.run_type != RUN_TYPE.BACKTEST and env.get_instrument(order_book_id).type == "Future":
         if "88" in order_book_id:
             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
         if "99" in order_book_id:

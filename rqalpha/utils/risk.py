@@ -19,7 +19,7 @@ from __future__ import division
 import numpy as np
 
 APPROX_BDAYS_PER_MONTH = 21
-APPROX_BDAYS_PER_YEAR = 244
+APPROX_BDAYS_PER_YEAR = 252
 
 MONTHS_PER_YEAR = 12
 WEEKS_PER_YEAR = 52
@@ -58,9 +58,9 @@ class Risk(object):
         self._beta = None
         self._sharpe = None
         self._return = np.expm1(np.log1p(self._portfolio).sum())
-        self._annual_return = (1 + self._return) ** (365 / days) - 1
+        self._annual_return = (1 + self._return) ** (252 / days) - 1
         self._benchmark_return = np.expm1(np.log1p(self._benchmark).sum())
-        self._benchmark_annual_return = (1 + self._benchmark_return) ** (365 / days) - 1
+        self._benchmark_annual_return = (1 + self._benchmark_return) ** (252 / days) - 1
         self._max_drawdown = None
         self._volatility = None
         self._annual_volatility = None
