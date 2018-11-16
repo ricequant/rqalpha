@@ -152,6 +152,9 @@ class EVENT(Enum):
     # 心跳事件，用于触发定时任务
     HEARTBEAT = 'heartbeat'
 
+    # 接受到用户发送的信息
+    USER_MSG_RECEIVED = 'user_msg_received'
+
 
 def parse_event(event_str):
     return EVENT[event_str.upper()]
