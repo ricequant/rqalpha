@@ -323,8 +323,8 @@ class LimitOrder(OrderStyle):
     def round_price(self, tick_size):
         if tick_size:
             with decimal_rounding_floor():
-                limit_price_decimal = round(Decimal(self.limit_price), 4)
-                tick_size_decimal = round(Decimal(tick_size), 4)
+                limit_price_decimal = Decimal("{:.4f}".format(self.limit_price))
+                tick_size_decimal = Decimal("{:.4f}".format(tick_size))
                 self.limit_price = float((limit_price_decimal / tick_size_decimal).to_integral() * tick_size_decimal)
         else:
             user_system_log.warn('Invalid tick size: {}'.format(tick_size))
