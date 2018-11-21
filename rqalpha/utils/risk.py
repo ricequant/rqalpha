@@ -118,6 +118,10 @@ class Risk(object):
             self._portfolio,
             self._benchmark
         ]), ddof=1)
+
+        if cov[1][1] == 0.0:
+            return float("nan")
+
         self._beta = cov[0][1] / cov[1][1]
         return self._beta
 
