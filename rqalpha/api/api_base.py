@@ -235,6 +235,8 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
         )
         return
 
+    amount = int(amount)
+
     order = Order.__from_create__(
         order_book_id=order_book_id,
         quantity=amount,
