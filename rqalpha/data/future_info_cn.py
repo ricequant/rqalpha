@@ -1937,6 +1937,38 @@ CN_FUTURE_INFO = {
             "open_commission_ratio": 3,
             "tick_size": 0.005,
         },
+    },
+    "SP": {
+        "hedge": {
+            "short_margin_ratio": 0.04,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_MONEY,
+            "close_commission_ratio": 5e-05,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.005,
+            "open_commission_ratio": 5e-05,
+            "tick_size": 2.0,
+        },
+        "speculation": {
+            "short_margin_ratio": 0.04,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_MONEY,
+            "close_commission_ratio": 5e-05,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.005,
+            "open_commission_ratio": 5e-05,
+            "tick_size": 2.0,
+        },
+        "arbitrage": {
+            "short_margin_ratio": 0.04,
+            "close_commission_today_ratio": 0.0,
+            "commission_type": COMMISSION_TYPE.BY_MONEY,
+            "close_commission_ratio": 5e-05,
+            "margin_type": MARGIN_TYPE.BY_MONEY,
+            "long_margin_ratio": 0.005,
+            "open_commission_ratio": 5e-05,
+            "tick_size": 2.0,
+        },
     }
 }
 

@@ -34,7 +34,7 @@ time_period1 = [
 TRADING_PERIOD_DICT.update({
     underlying_symbol: time_period1
     for underlying_symbol in
-    ["WR", "FU", "CS", "C", "L", "V", "PP", "BB", "FB", "JD", "WH", "PM", "RI", "SF", "SM", "RS", "JR", "LR", "AP"]
+    ["WR", "FU", "CS", "C", "L", "V", "PP", "BB", "FB", "JD", "WH", "PM", "RI", "SF", "SM", "RS", "JR", "LR", "AP", "SP"]
 })
 
 # | 商品期货 Y, M, A, B, P, J, JM, I, CF, SR, OI, TA, MA, ZC, FG, RM, CY | 21:01~23:30, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
