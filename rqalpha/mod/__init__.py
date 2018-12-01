@@ -91,5 +91,6 @@ SYSTEM_MOD_LIST = [
     "sys_funcat",
     "sys_risk",
     "sys_simulation",
-    "sys_transaction_cost"
+    "sys_transaction_cost",
+    "sys_benchmark"
 ]

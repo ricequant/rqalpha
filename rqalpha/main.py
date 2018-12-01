@@ -44,8 +44,6 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
-from rqalpha.model.portfolio import Portfolio
-from rqalpha.model.base_position import Positions
 from rqalpha.const import RUN_TYPE
 from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
@@ -100,21 +98,6 @@ def _validate_benchmark(config, data_proxy):
         raise patch_user_exc(ValueError(
             _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
                                                                                 end_date=end_date)))
-
-
-def create_benchmark_portfolio(env):
-    if env.config.base.benchmark is None:
-        return None
-
-    BenchmarkAccount = env.get_account_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
-    BenchmarkPosition = env.get_position_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
-
-    start_date = env.config.base.start_date
-    total_cash = sum(env.config.base.accounts.values())
-    accounts = {
-        const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name: BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
-    }
-    return Portfolio(start_date, 1, total_cash, accounts)
 
 
 def create_base_scope(copy_scope=False):
@@ -234,8 +217,6 @@ def run(config, source_code=None, user_funcs=None):
         except NotImplementedError:
             pass
 
-        env.benchmark_portfolio = create_benchmark_portfolio(env)
-
         event_source = env.event_source
         assert event_source is not None
 
@@ -293,8 +274,6 @@ def run(config, source_code=None, user_funcs=None):
                 persist_helper.register('event_source', event_source)
             if env.portfolio:
                 persist_helper.register('portfolio', env.portfolio)
-            if env.benchmark_portfolio:
-                persist_helper.register('benchmark_portfolio', env.benchmark_portfolio)
             for name, module in six.iteritems(env.mod_dict):
                 if isinstance(module, Persistable):
                     persist_helper.register('mod_{}'.format(name), module)

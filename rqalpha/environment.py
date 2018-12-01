@@ -200,4 +200,5 @@ class Environment(object):
     def get_order_transaction_cost(self, account_type, order):
         return self._get_transaction_cost_decider(account_type).get_order_transaction_cost(order)
 
-
+    def set_benchmark_portfolio(self, benchmark_portfolio):
+        self.benchmark_portfolio = benchmark_portfolio

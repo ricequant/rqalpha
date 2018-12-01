@@ -643,6 +643,9 @@ class Persistable(with_metaclass(abc.ABCMeta)):
 
 
 class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
+    """
+    前端风控接口，下撤单请求在到达券商代理模块前会经过前端风控。
+    """
     @abc.abstractmethod
     def can_submit_order(self, order, account=None):
         # FIXME: need a better name
@@ -655,6 +658,9 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
 
 
 class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
+    """
+    订单税费计算接口，通过实现次接口可以定义不同市场、不同合约的个性化税费计算逻辑。
+    """
     @abc.abstractmethod
     def get_trade_tax(self, trade):
         raise NotImplementedError
@@ -665,5 +671,18 @@ class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
 
     @abc.abstractmethod
     def get_order_transaction_cost(self, order):
+        raise NotImplementedError
+
+
+class AbstractBenchmarkPortfolio(with_metaclass(abc.ABCMeta)):
+    """
+    基准组合模块，通过实现该接口可以定义基准组合的实现逻辑，基准组合的收益率将被用于画图及策略分析
+    """
+    @property
+    @abc.abstractmethod
+    def daily_returns(self):
+        """
+        [float] 当前最新一天的日收益
+        """
         raise NotImplementedError
 

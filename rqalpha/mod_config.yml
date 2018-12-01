@@ -19,3 +19,5 @@ mod:
     enabled: false
   sys_transaction_cost:
     enabled: true
+  sys_benchmark:
+    enabled: true

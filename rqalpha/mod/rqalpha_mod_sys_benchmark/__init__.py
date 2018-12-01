@@ -14,5 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .future_account import FutureAccount
-from .stock_account import StockAccount
+import click
+from rqalpha import cli
+
+__config__ = {
+    "order_book_id": None
+}
+
+
+def load_mod():
+    from .mod import BenchmarkMod
+    return BenchmarkMod()
+
+
+cli_prefix = "mod__sys_benchmark__"
+
+cli.commands["run"].params.append(
+    click.Option(
+        ("-bm", "--benchmark", cli_prefix + "order_book_id"),
+        type=click.STRING,
+        help="[sys_benchmark] order_book_id of benchmark"
+    )
+)
