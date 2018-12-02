@@ -1,15 +1,15 @@
 from rqalpha.utils.testing import DataProxyFixture
 
 
-class BackTestPriceSeriesBenchmarkPortfolioFixture(DataProxyFixture):
+class BackTestPriceSeriesBenchmarkProviderFixture(DataProxyFixture):
     def __init__(self, *args, **kwargs):
-        super(BackTestPriceSeriesBenchmarkPortfolioFixture, self).__init__(*args, **kwargs)
+        super(BackTestPriceSeriesBenchmarkProviderFixture, self).__init__(*args, **kwargs)
 
-        self.benchmark_portfolio = None
+        self.benchmark_provider = None
         self.benchmark_order_book_id = None
 
     def init_fixture(self):
-        from rqalpha.mod.rqalpha_mod_sys_benchmark.benchmark_portfolio import BackTestPriceSeriesBenchmarkPortfolio
+        from rqalpha.mod.rqalpha_mod_sys_benchmark.benchmark_provider import BackTestPriceSeriesBenchmarkProvider
 
-        super(BackTestPriceSeriesBenchmarkPortfolioFixture, self).init_fixture()
-        self.benchmark_portfolio = BackTestPriceSeriesBenchmarkPortfolio(self.benchmark_order_book_id)
+        super(BackTestPriceSeriesBenchmarkProviderFixture, self).init_fixture()
+        self.benchmark_provider = BackTestPriceSeriesBenchmarkProvider(self.benchmark_order_book_id)

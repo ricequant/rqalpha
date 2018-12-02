@@ -674,7 +674,7 @@ class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
         raise NotImplementedError
 
 
-class AbstractBenchmarkPortfolio(with_metaclass(abc.ABCMeta)):
+class AbstractBenchmarkProvider(with_metaclass(abc.ABCMeta)):
     """
     基准组合模块，通过实现该接口可以定义基准组合的实现逻辑，基准组合的收益率将被用于画图及策略分析
     """
@@ -683,6 +683,14 @@ class AbstractBenchmarkPortfolio(with_metaclass(abc.ABCMeta)):
     def daily_returns(self):
         """
         [float] 当前最新一天的日收益
+        """
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def total_returns(self):
+        """
+        [float] 累计收益率
         """
         raise NotImplementedError
 

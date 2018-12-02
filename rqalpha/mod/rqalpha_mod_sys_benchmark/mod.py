@@ -19,8 +19,6 @@ from rqalpha.interface import AbstractMod
 from rqalpha.utils.logger import system_log
 from rqalpha.const import RUN_TYPE
 
-from .benchmark_portfolio import BackTestPriceSeriesBenchmarkPortfolio, RealTimePriceSeriesBenchmarkPortfolio
-
 
 class BenchmarkMod(AbstractMod):
     def start_up(self, env, mod_config):
@@ -35,12 +33,12 @@ class BenchmarkMod(AbstractMod):
             system_log.info("No order_book_id set, BenchmarkMod disabled.")
             return
 
-        benchmark_portfolio = BackTestPriceSeriesBenchmarkPortfolio(
-            order_book_id
-        ) if env.config.base.run_type == RUN_TYPE.BACKTEST else RealTimePriceSeriesBenchmarkPortfolio(
-            order_book_id
-        )
-        env.set_benchmark_portfolio(benchmark_portfolio)
+        if env.config.base.run_type == RUN_TYPE.BACKTEST:
+            from .benchmark_provider import BackTestPriceSeriesBenchmarkProvider as BTProvider
+            env.set_benchmark_provider(BTProvider(order_book_id))
+        else:
+            from .benchmark_provider import RealTimePriceSeriesBenchmarkProvider as RTProvider
+            env.set_benchmark_portfolio(RTProvider(order_book_id))
 
     def tear_down(self, code, exception=None):
         pass

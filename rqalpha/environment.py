@@ -43,6 +43,7 @@ class Environment(object):
         self.event_bus = EventBus()
         self.portfolio = None
         self.booking = None
+        self.benchmark_provider = None
         self.benchmark_portfolio = None
         self.calendar_dt = None
         self.trading_dt = None
@@ -200,5 +201,5 @@ class Environment(object):
     def get_order_transaction_cost(self, account_type, order):
         return self._get_transaction_cost_decider(account_type).get_order_transaction_cost(order)
 
-    def set_benchmark_portfolio(self, benchmark_portfolio):
-        self.benchmark_portfolio = benchmark_portfolio
+    def set_benchmark_provider(self, benchmark_provider):
+        self.benchmark_provider = benchmark_provider
