@@ -19,6 +19,7 @@ import numpy as np
 from rqalpha.interface import AbstractBenchmarkProvider
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
+from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -63,3 +64,35 @@ class BackTestPriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
 class RealTimePriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
+
+        self._daily_returns = 0
+        self._total_returns = 0
+
+        event_bus = Environment.get_instance().event_bus
+        event_bus.prepend_listener(EVENT.AFTER_TRADING, self._on_after_trading)
+
+    def _refresh_returns(self, end_date):
+        env = Environment.get_instance()
+        bar_count = env.data_proxy.count_trading_dates(env.config.base.start_date, end_date) + 1
+
+        close_series = env.data_proxy.history_bars(
+            self._order_book_id, bar_count, "1d", "close", end_date, skip_suspended=False, adjust_type='pre'
+        )
+
+        if len(close_series) < bar_count:
+            system_log.error(_("Valid benchmark: unable to load enough close price."))
+
+        self._daily_returns = float((close_series[-1] - close_series[-2]) / close_series[-2])
+        self._total_returns = float((close_series[-1] - close_series[0]) / close_series[0])
+
+    def _on_after_trading(self, _):
+        env = Environment.get_instance()
+        self._refresh_returns(env.trading_dt.date())
+
+    @property
+    def daily_returns(self):
+        return self._daily_returns
+
+    @property
+    def total_returns(self):
+        return self._total_returns
