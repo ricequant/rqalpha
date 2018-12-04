@@ -43,7 +43,7 @@ class BenchmarkMod(AbstractMod):
             env.set_benchmark_provider(BTProvider(order_book_id))
         else:
             from .benchmark_provider import RealTimePriceSeriesBenchmarkProvider as RTProvider
-            env.set_benchmark_portfolio(RTProvider(order_book_id))
+            env.set_benchmark_provider(RTProvider(order_book_id))
 
     def tear_down(self, code, exception=None):
         pass
