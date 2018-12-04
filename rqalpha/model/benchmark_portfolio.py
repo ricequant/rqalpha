@@ -57,10 +57,12 @@ class BenchmarkPortfolio(object):
     def total_value(self):
         return self.units * self.unit_net_value
 
+    # Only for compatible
+
     @property
     def cash(self):
         return 0
 
-    @property
-    def market_value(self):
-        return self.total_value
+    market_value = total_value
+    portfolio_value = total_value
+    starting_cash = units
