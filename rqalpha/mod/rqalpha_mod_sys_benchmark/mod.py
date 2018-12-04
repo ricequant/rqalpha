@@ -17,7 +17,10 @@
 
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.logger import system_log
+from rqalpha.utils.exception import patch_user_exc
+from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import RUN_TYPE
+from rqalpha.events import EVENT
 
 
 class BenchmarkMod(AbstractMod):
@@ -33,6 +36,8 @@ class BenchmarkMod(AbstractMod):
             system_log.info("No order_book_id set, BenchmarkMod disabled.")
             return
 
+        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, lambda e: self._validate_benchmark(order_book_id, env))
+
         if env.config.base.run_type == RUN_TYPE.BACKTEST:
             from .benchmark_provider import BackTestPriceSeriesBenchmarkProvider as BTProvider
             env.set_benchmark_provider(BTProvider(order_book_id))
@@ -42,3 +47,25 @@ class BenchmarkMod(AbstractMod):
 
     def tear_down(self, code, exception=None):
         pass
+
+    @staticmethod
+    def _validate_benchmark(bechmark_order_book_id, env):
+        instrument = env.data_proxy.instruments(bechmark_order_book_id)
+        if instrument is None:
+            raise patch_user_exc(ValueError(_(u"invalid benchmark {}").format(bechmark_order_book_id)))
+
+        if instrument.order_book_id == "000300.XSHG":
+            # 000300.XSHG 数据进行了补齐，因此认为只要benchmark设置了000300.XSHG，就存在数据，不受限于上市日期。
+            return
+
+        config = env.config
+        start_date = config.base.start_date
+        end_date = config.base.end_date
+        if instrument.listed_date.date() > start_date:
+            raise patch_user_exc(ValueError(
+                _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=bechmark_order_book_id,
+                                                                                       start_date=start_date)))
+        if instrument.de_listed_date.date() < end_date:
+            raise patch_user_exc(ValueError(
+                _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=bechmark_order_book_id,
+                                                                                    end_date=end_date)))

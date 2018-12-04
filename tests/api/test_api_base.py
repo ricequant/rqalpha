@@ -347,3 +347,18 @@ def test_get_position():
             assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3, context.expected_avg_price)
 
     return init, handle_bar
+
+
+@as_test_strategy
+def test_subscribe_event():
+    def init(_):
+        subscribe_event(EVENT.BEFORE_TRADING, on_before_trading)
+
+    def before_trading(_):
+        g.before_trading_ran = True
+
+    def on_before_trading(_):
+        assert g.before_trading_ran
+        g.before_trading_ran = False
+
+    return init, before_trading

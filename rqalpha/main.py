@@ -77,30 +77,6 @@ def _adjust_start_date(config, data_proxy):
     config.base.timezone = pytz.utc
 
 
-def _validate_benchmark(config, data_proxy):
-    benchmark = config.base.benchmark
-    if benchmark is None:
-        return
-    instrument = data_proxy.instruments(benchmark)
-    if instrument is None:
-        raise patch_user_exc(ValueError(_(u"invalid benchmark {}").format(benchmark)))
-
-    if instrument.order_book_id == "000300.XSHG":
-        # 000300.XSHG 数据进行了补齐，因此认为只要benchmark设置了000300.XSHG，就存在数据，不受限于上市日期。
-        return
-    config = Environment.get_instance().config
-    start_date = config.base.start_date
-    end_date = config.base.end_date
-    if instrument.listed_date.date() > start_date:
-        raise patch_user_exc(ValueError(
-            _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=benchmark,
-                                                                                   start_date=start_date)))
-    if instrument.de_listed_date.date() < end_date:
-        raise patch_user_exc(ValueError(
-            _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
-                                                                                end_date=end_date)))
-
-
 def create_base_scope(copy_scope=False):
     from rqalpha.utils.logger import user_print, user_log
     from . import user_module
@@ -198,8 +174,6 @@ def run(config, source_code=None, user_funcs=None):
         env._universe = StrategyUniverse()
 
         _adjust_start_date(env.config, env.data_proxy)
-
-        _validate_benchmark(env.config, env.data_proxy)
 
         # FIXME
         start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
