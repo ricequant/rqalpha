@@ -23,7 +23,7 @@ import yaml
 import simplejson as json
 import six
 
-from rqalpha.const import RUN_TYPE, PERSIST_MODE, MARKET
+from rqalpha.const import RUN_TYPE, PERSIST_MODE, MARKET, COMMISSION_TYPE
 from rqalpha.utils import RqAttrDict, logger
 from rqalpha.utils.i18n import gettext as _, localization
 from rqalpha.utils.dict_func import deep_update
@@ -187,6 +187,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     config.base.init_positions = parse_init_positions(config.base.init_positions)
     config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
     config.base.market = parse_market(config.base.market)
+    config.base.future_info = parse_future_info(config.base.future_info)
 
     if config.extra.context_vars:
         if isinstance(config.extra.context_vars, six.string_types):
@@ -196,6 +197,31 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         logger.DATETIME_FORMAT = "%Y-%m-%d"
 
     return config
+
+
+def parse_future_info(future_info):
+    new_info = {}
+
+    for underlying_symbol, info in six.iteritems(future_info):
+        try:
+            underlying_symbol = underlying_symbol.upper()
+        except AttributeError:
+            raise RuntimeError(_("Invalid future info: underlying_symbol {] is illegal.".format(underlying_symbol)))
+
+        for field, value in six.iteritems(info):
+            if field in (
+                "open_commission_ratio", "close_commission_ratio", "close_commission_today_ratio"
+            ):
+                new_info.setdefault(underlying_symbol, {})[field] = float(value)
+            elif field == "commission_type":
+                if not isinstance(value, COMMISSION_TYPE):
+                    raise RuntimeError(_(
+                        "Invalid future info: commission_type must be an instance of COMMISSION_TYPE Enum"
+                    ))
+                new_info.setdefault(underlying_symbol, {})[field] = value
+            else:
+                raise RuntimeError(_("Invalid future info: field {} is not valid".format(field)))
+    return new_info
 
 
 def parse_accounts(accounts):
