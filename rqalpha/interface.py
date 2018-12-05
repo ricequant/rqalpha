@@ -468,15 +468,6 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_margin_info(self, instrument):
-        """
-        获取合约的保证金数据
-
-        :param instrument: 合约对象
-        :return: dict
-        """
-        raise NotImplementedError
-
     def get_commission_info(self, instrument):
         """
         获取合约的手续费信息

@@ -78,9 +78,9 @@ class FuturePosition(BasePosition):
     @property
     def margin_rate(self):
         env = Environment.get_instance()
-        margin_info = env.data_proxy.get_margin_info(self.order_book_id)
+        instrument = env.get_instrument(self.order_book_id)
         margin_multiplier = env.config.base.margin_multiplier
-        return margin_info['long_margin_ratio'] * margin_multiplier
+        return instrument.margin_rate * margin_multiplier
 
     @property
     def market_value(self):
