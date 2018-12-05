@@ -214,11 +214,16 @@ def parse_future_info(future_info):
             ):
                 new_info.setdefault(underlying_symbol, {})[field] = float(value)
             elif field == "commission_type":
-                if not isinstance(value, COMMISSION_TYPE):
+                if isinstance(value, six.string_types) and value.upper() == "BY_MONEY":
+                    new_info.setdefault(underlying_symbol, {})[field] = COMMISSION_TYPE.BY_MONEY
+                elif isinstance(value, six.string_types) and value.upper() == "BY_VOLUME":
+                    new_info.setdefault(underlying_symbol, {})[field] = COMMISSION_TYPE.BY_VOLUME
+                elif isinstance(value, COMMISSION_TYPE):
+                    new_info.setdefault(underlying_symbol, {})[field] = value
+                else:
                     raise RuntimeError(_(
-                        "Invalid future info: commission_type must be an instance of COMMISSION_TYPE Enum"
+                        "Invalid future info: commission_type is suppose to be BY_MONEY or BY_VOLUME"
                     ))
-                new_info.setdefault(underlying_symbol, {})[field] = value
             else:
                 raise RuntimeError(_("Invalid future info: field {} is not valid".format(field)))
     return new_info

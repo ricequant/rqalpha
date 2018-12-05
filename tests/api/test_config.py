@@ -52,7 +52,7 @@ def assert_almost_equal(first, second):
             "SC": {
                 "close_commission_ratio": 0.0001,
                 "open_commission_ratio": 0.0002,
-                "commission_type": COMMISSION_TYPE.BY_MONEY,
+                "commission_type": "BY_MONEY",
             }
         }
     }
