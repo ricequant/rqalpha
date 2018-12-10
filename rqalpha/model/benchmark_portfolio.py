@@ -16,9 +16,12 @@
 
 from rqalpha.environment import Environment
 from rqalpha.const import DAYS_CNT
+from rqalpha.utils.repr import property_repr
 
 
 class BenchmarkPortfolio(object):
+    __repr__ = property_repr
+
     def __init__(self, benchmark_provider, units):
         self._provider = benchmark_provider
         self._units = units

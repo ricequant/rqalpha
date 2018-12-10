@@ -19,7 +19,6 @@ import numpy as np
 from rqalpha.interface import AbstractBenchmarkProvider
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
-from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -65,29 +64,38 @@ class RealTimePriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
     def __init__(self, order_book_id):
         self._order_book_id = order_book_id
 
+        self._first_close = None
+        self._last_close = None
+
         self._daily_returns = 0
         self._total_returns = 0
 
         event_bus = Environment.get_instance().event_bus
+        event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._on_system_init)
         event_bus.prepend_listener(EVENT.AFTER_TRADING, self._on_after_trading)
+        event_bus.prepend_listener(EVENT.BAR, self._on_bar)
 
-    def _refresh_returns(self, end_date):
+    def _get_close(self, frequency, dt):
         env = Environment.get_instance()
-        bar_count = env.data_proxy.count_trading_dates(env.config.base.start_date, end_date) + 1
+        return env.data_proxy.history_bars(
+            self._order_book_id, 1, frequency, "close", dt, skip_suspended=False, adjust_type='pre'
+        )[0]
 
-        close_series = env.data_proxy.history_bars(
-            self._order_book_id, bar_count, "1d", "close", end_date, skip_suspended=False, adjust_type='pre'
+    def _on_system_init(self, _):
+        env = Environment.get_instance()
+        self._first_close = self._last_close = self._get_close(
+            "1d", env.data_proxy.get_previous_trading_date(env.config.base.start_date)
         )
+        print(env.data_proxy.get_previous_trading_date(env.config.base.start_date))
+        print(self._first_close)
 
-        if len(close_series) < bar_count:
-            system_log.error(_("Valid benchmark: unable to load enough close price."))
+    def _on_after_trading(self, event):
+        self._last_close = self._get_close("1d", event.calendar_dt)
 
-        self._daily_returns = float((close_series[-1] - close_series[-2]) / close_series[-2])
-        self._total_returns = float((close_series[-1] - close_series[0]) / close_series[0])
-
-    def _on_after_trading(self, _):
-        env = Environment.get_instance()
-        self._refresh_returns(env.trading_dt.date())
+    def _on_bar(self, event):
+        close = self._get_close("1m", event.calendar_dt)
+        self._daily_returns = float((close - self._last_close) / self._last_close)
+        self._total_returns = float((close - self._first_close) / self._first_close)
 
     @property
     def daily_returns(self):
