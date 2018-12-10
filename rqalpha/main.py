@@ -234,6 +234,7 @@ def run(config, source_code=None, user_funcs=None):
 
         ucontext = StrategyContext()
         user_strategy = Strategy(env.event_bus, scope, ucontext)
+        env.user_strategy = user_strategy
         scheduler.set_user_context(ucontext)
 
         if not config.extra.force_run_init_when_pt_resume:

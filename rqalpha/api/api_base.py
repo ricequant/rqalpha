@@ -940,4 +940,5 @@ def get_position(order_book_id, direction):
 )
 def subscribe_event(event_type, handler):
     env = Environment.get_instance()
-    env.event_bus.add_listener(event_type, handler, user=True)
+    user_strategy = env.user_strategy
+    env.event_bus.add_listener(event_type, user_strategy.wrap_user_event_handler(handler), user=True)

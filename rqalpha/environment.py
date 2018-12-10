@@ -50,6 +50,7 @@ class Environment(object):
         self.mod_dict = None
         self.plot_store = None
         self.bar_dict = None
+        self.user_strategy = None
         self._frontend_validators = []
         self._account_model_dict = {}
         self._position_model_dict = {}

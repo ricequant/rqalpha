@@ -351,16 +351,14 @@ def test_get_position():
 
 @as_test_strategy()
 def test_subscribe_event():
-    flags = {}
-
     def init(_):
         subscribe_event(EVENT.BEFORE_TRADING, on_before_trading)
 
-    def before_trading(_):
-        flags["before_trading_ran"] = True
+    def before_trading(context):
+        context.before_trading_ran = True
 
-    def on_before_trading(_):
-        assert flags["before_trading_ran"]
-        flags["before_trading_ran"] = False
+    def on_before_trading(context, _):
+        assert context.before_trading_ran
+        context.before_trading_ran = False
 
     return init, before_trading

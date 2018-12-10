@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from rqalpha.api import *
+from rqalpha.environment import Environment
 
 from ..utils import make_test_strategy_decorator
 
@@ -66,9 +67,9 @@ def test_future_info():
         buy_open("SC1809", 2)
         sell_close("SC1809", 2, close_today=False)
 
-    def on_trade(event):
+    def on_trade(_, event):
         trade = event.trade
-        contract_multiplier = instruments("SC1809").contract_multiplier
+        contract_multiplier = Environment.get_instance().data_proxy.instruments("SC1809").contract_multiplier
         if trade.position_effect == POSITION_EFFECT.OPEN:
             assert_almost_equal(
                 trade.transaction_cost, 0.0002 * trade.last_quantity * trade.last_price * contract_multiplier
