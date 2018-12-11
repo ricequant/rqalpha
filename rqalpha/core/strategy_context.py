@@ -50,7 +50,7 @@ class RunInfo(object):
         self._commission_multiplier = np.nan
         try:
             self._matching_type = config.mod.sys_simulation.matching_type
-            self._benchmark = config.mod.sys_benchmark.order_book_Id
+            self._benchmark = config.mod.sys_benchmark.order_book_id
             self._slippage = config.mod.sys_simulation.slippage
             self._commission_multiplier = config.mod.sys_transaction_cost.commission_multiplier
         except:
