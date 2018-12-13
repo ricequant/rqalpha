@@ -18,13 +18,11 @@ import six
 import numpy as np
 import pandas as pd
 
-from rqalpha.environment import Environment
 from rqalpha.data import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject
 from rqalpha.model.tick import TickObject
-from rqalpha.const import MARKET
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 
