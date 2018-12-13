@@ -298,7 +298,6 @@ def test_current_snapshot():
 
 @as_test_strategy()
 def test_get_position():
-
     def assert_position(pos, obid, dir, today_quantity, old_quantity, avg_price):
         assert pos.order_book_id == obid
         assert pos.direction == dir, "Direction of {} is expected to be {} instead of {}".format(
