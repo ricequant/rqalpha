@@ -30,6 +30,8 @@ class Instrument(object):
 
     @staticmethod
     def _fix_date(ds, dflt):
+        if isinstance(ds, datetime.datetime):
+            return ds
         if ds == '0000-00-00':
             return dflt
         year, month, day = ds.split('-')
