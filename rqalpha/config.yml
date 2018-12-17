@@ -22,8 +22,6 @@ base:
   run_type: b
   # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
   frequency: 1d
-  # Benchmark，如果不设置，默认没有基准参照。
-  benchmark: ~
   # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
   resume_mode: false
   # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，
@@ -41,6 +39,8 @@ base:
   init_positions: {}
   # 根据价格最小变动单位调整发单价格
   round_price: false
+  # 用户自定义的期货合约数据，用于设置期货手续菲费率
+  future_info: {}
 
 
 extra:

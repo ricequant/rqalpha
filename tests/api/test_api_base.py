@@ -298,7 +298,6 @@ def test_current_snapshot():
 
 @as_test_strategy()
 def test_get_position():
-
     def assert_position(pos, obid, dir, today_quantity, old_quantity, avg_price):
         assert pos.order_book_id == obid
         assert pos.direction == dir, "Direction of {} is expected to be {} instead of {}".format(
@@ -347,3 +346,18 @@ def test_get_position():
             assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3, context.expected_avg_price)
 
     return init, handle_bar
+
+
+@as_test_strategy()
+def test_subscribe_event():
+    def init(_):
+        subscribe_event(EVENT.BEFORE_TRADING, on_before_trading)
+
+    def before_trading(context):
+        context.before_trading_ran = True
+
+    def on_before_trading(context, _):
+        assert context.before_trading_ran
+        context.before_trading_ran = False
+
+    return init, before_trading

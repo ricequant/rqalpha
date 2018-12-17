@@ -188,7 +188,6 @@ class AnalyserMod(AbstractMod):
             'end_date': self._env.config.base.end_date.strftime('%Y-%m-%d'),
             'strategy_file': self._env.config.base.strategy_file,
             'run_type': self._env.config.base.run_type.value,
-            'benchmark': self._env.config.base.benchmark,
         }
         for account_type, starting_cash in six.iteritems(self._env.config.base.accounts):
             summary[account_type] = starting_cash

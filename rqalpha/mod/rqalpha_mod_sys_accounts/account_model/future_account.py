@@ -28,11 +28,9 @@ from ..api.api_future import order
 
 def margin_of(order_book_id, quantity, price):
     env = Environment.get_instance()
-    margin_info = env.data_proxy.get_margin_info(order_book_id)
     margin_multiplier = env.config.base.margin_multiplier
-    margin_rate = margin_info['long_margin_ratio'] * margin_multiplier
-    contract_multiplier = env.get_instrument(order_book_id).contract_multiplier
-    return quantity * contract_multiplier * price * margin_rate
+    instrument = env.get_instrument(order_book_id)
+    return quantity * instrument.contract_multiplier * price * instrument.margin_rate * margin_multiplier
 
 
 class FutureAccount(BaseAccount):

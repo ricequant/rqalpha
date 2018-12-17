@@ -18,13 +18,11 @@ import six
 import numpy as np
 import pandas as pd
 
-from rqalpha.environment import Environment
 from rqalpha.data import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject
 from rqalpha.model.tick import TickObject
-from rqalpha.const import MARKET
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 
@@ -194,15 +192,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     def available_data_range(self, frequency):
         return self._data_source.available_data_range(frequency)
-
-    def get_margin_info(self, order_book_id):
-        instrument = self.instruments(order_book_id)
-        margin_info = self._data_source.get_margin_info(instrument)
-
-        if "long_margin_ratio" in margin_info and np.isnan(margin_info["long_margin_ratio"]):
-            raise RuntimeError("Long margin ratio of {} is not supposed to be nan".format(order_book_id))
-
-        return margin_info
 
     def get_commission_info(self, order_book_id):
         instrument = self.instruments(order_book_id)

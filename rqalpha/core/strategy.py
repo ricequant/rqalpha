@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import wraps
+
 from rqalpha.events import EVENT, Event
 from rqalpha.utils import run_when_strategy_not_hold
 from rqalpha.utils.logger import user_system_log
@@ -104,3 +106,11 @@ class Strategy(object):
         with ExecutionContext(EXECUTION_PHASE.AFTER_TRADING):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._after_trading(self._user_context)
+
+    def wrap_user_event_handler(self, handler):
+        @wraps(handler)
+        def wrapped_handler(event):
+            with ExecutionContext(EXECUTION_PHASE.GLOBAL):
+                with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
+                    return handler(self._user_context, event)
+        return wrapped_handler

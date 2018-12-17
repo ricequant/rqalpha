@@ -198,15 +198,8 @@ class BaseDataSource(AbstractDataSource):
             s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
-    def get_margin_info(self, instrument):
-        return {
-            'margin_type': MARGIN_TYPE.BY_MONEY,
-            'long_margin_ratio': instrument.margin_rate,
-            'short_margin_ratio': instrument.margin_rate,
-        }
-
     def get_commission_info(self, instrument):
-        return CN_FUTURE_INFO[instrument.underlying_symbol]['speculation']
+        return CN_FUTURE_INFO[instrument.underlying_symbol]
 
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError
@@ -231,7 +224,7 @@ class BaseDataSource(AbstractDataSource):
         elif instrument.type in ['ETF', 'LOF', 'FenjiB', 'FenjiA', 'FenjiMu']:
             return 0.001
         elif instrument.type == 'Future':
-            return CN_FUTURE_INFO[instrument.underlying_symbol]['speculation']['tick_size']
+            return CN_FUTURE_INFO[instrument.underlying_symbol]['tick_size']
         else:
             # NOTE: you can override get_tick_size in your custom data source
             raise RuntimeError(_("Unsupported instrument type for tick size"))

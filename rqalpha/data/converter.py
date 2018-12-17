@@ -18,7 +18,7 @@ from collections import namedtuple
 
 import numpy as np
 
-Rule = namedtuple('Rule', ['dtype', 'multiplier', 'round'])
+Rule = namedtuple("Rule", ["dtype", "multiplier", "round"])
 
 
 class Converter(object):
@@ -43,61 +43,72 @@ class Converter(object):
         except KeyError:
             return dt
 
-float64 = np.dtype('float64')
+
+float64 = np.dtype("float64")
 
 
-StockBarConverter = Converter({
-    'open': Rule(float64, 1 / 10000.0, 2),
-    'close': Rule(float64, 1 / 10000.0, 2),
-    'high': Rule(float64, 1 / 10000.0, 2),
-    'low': Rule(float64, 1 / 10000.0, 2),
-    'limit_up': Rule(float64, 1/10000.0, 2),
-    'limit_down': Rule(float64, 1/10000.0, 2),
-    'volume': Rule(float64, 1, 0),
-})
+StockBarConverter = Converter(
+    {
+        "open": Rule(float64, 1 / 10000.0, 2),
+        "close": Rule(float64, 1 / 10000.0, 2),
+        "high": Rule(float64, 1 / 10000.0, 2),
+        "low": Rule(float64, 1 / 10000.0, 2),
+        "limit_up": Rule(float64, 1 / 10000.0, 2),
+        "limit_down": Rule(float64, 1 / 10000.0, 2),
+        "volume": Rule(float64, 1, 0),
+    }
+)
 
 
-FutureDayBarConverter = Converter({
-    'open': Rule(float64, 1 / 10000.0, 3),
-    'close': Rule(float64, 1 / 10000.0, 3),
-    'high': Rule(float64, 1 / 10000.0, 3),
-    'low': Rule(float64, 1 / 10000.0, 3),
-    'limit_up': Rule(float64, 1 / 10000.0, 3),
-    'limit_down': Rule(float64, 1 / 10000.0, 3),
-    'volume': Rule(float64, 1, 0),
-    'basis_spread': Rule(float64, 1 / 10000.0, 4),
-    'settlement': Rule(float64, 1 / 10000.0, 3),
-    'prev_settlement': Rule(float64, 1 / 10000.0, 3),
-})
+FutureDayBarConverter = Converter(
+    {
+        "open": Rule(float64, 1 / 10000.0, 3),
+        "close": Rule(float64, 1 / 10000.0, 3),
+        "high": Rule(float64, 1 / 10000.0, 3),
+        "low": Rule(float64, 1 / 10000.0, 3),
+        "limit_up": Rule(float64, 1 / 10000.0, 3),
+        "limit_down": Rule(float64, 1 / 10000.0, 3),
+        "volume": Rule(float64, 1, 0),
+        "basis_spread": Rule(float64, 1 / 10000.0, 4),
+        "settlement": Rule(float64, 1 / 10000.0, 3),
+        "prev_settlement": Rule(float64, 1 / 10000.0, 3),
+    }
+)
 
-FundDayBarConverter = Converter({
-    'open': Rule(float64, 1 / 10000.0, 3),
-    'close': Rule(float64, 1 / 10000.0, 3),
-    'high': Rule(float64, 1 / 10000.0, 3),
-    'low': Rule(float64, 1 / 10000.0, 3),
-    'acc_net_value': Rule(float64, 1 / 10000.0, 4),
-    'unit_net_value': Rule(float64, 1 / 10000.0, 4),
-    'discount_rate': Rule(float64, 1 / 10000.0, 4),
-    'limit_up': Rule(float64, 1/10000.0, 4),
-    'limit_down': Rule(float64, 1/10000.0, 4),
-    'volume': Rule(float64, 1, 0),
-})
+FundDayBarConverter = Converter(
+    {
+        "open": Rule(float64, 1 / 10000.0, 3),
+        "close": Rule(float64, 1 / 10000.0, 3),
+        "high": Rule(float64, 1 / 10000.0, 3),
+        "low": Rule(float64, 1 / 10000.0, 3),
+        "acc_net_value": Rule(float64, 1 / 10000.0, 4),
+        "unit_net_value": Rule(float64, 1 / 10000.0, 4),
+        "discount_rate": Rule(float64, 1 / 10000.0, 4),
+        "limit_up": Rule(float64, 1 / 10000.0, 4),
+        "limit_down": Rule(float64, 1 / 10000.0, 4),
+        "volume": Rule(float64, 1, 0),
+    }
+)
 
-IndexBarConverter = Converter({
-    'open': Rule(float64, 1 / 10000.0, 2),
-    'close': Rule(float64, 1 / 10000.0, 2),
-    'high': Rule(float64, 1 / 10000.0, 2),
-    'low': Rule(float64, 1 / 10000.0, 2),
-    'volume': Rule(float64, 1, 0),
-})
+IndexBarConverter = Converter(
+    {
+        "open": Rule(float64, 1 / 10000.0, 2),
+        "close": Rule(float64, 1 / 10000.0, 2),
+        "high": Rule(float64, 1 / 10000.0, 2),
+        "low": Rule(float64, 1 / 10000.0, 2),
+        "volume": Rule(float64, 1, 0),
+    }
+)
 
-PublicFundDayBarConverter = Converter({
-    'open': Rule(float64, 1 / 10000.0, 4),
-    'close': Rule(float64, 1 / 10000.0, 4),
-    'high': Rule(float64, 1 / 10000.0, 4),
-    'low': Rule(float64, 1 / 10000.0, 4),
-    'acc_net_value': Rule(float64, 1 / 10000.0, 4),
-    'unit_net_value': Rule(float64, 1 / 10000.0, 4),
-    'limit_up': Rule(float64, 1 / 10000.0, 4),
-    'limit_down': Rule(float64, 1 / 10000.0, 4),
-})
+PublicFundDayBarConverter = Converter(
+    {
+        "open": Rule(float64, 1 / 10000.0, 4),
+        "close": Rule(float64, 1 / 10000.0, 4),
+        "high": Rule(float64, 1 / 10000.0, 4),
+        "low": Rule(float64, 1 / 10000.0, 4),
+        "acc_net_value": Rule(float64, 1 / 10000.0, 4),
+        "unit_net_value": Rule(float64, 1 / 10000.0, 4),
+        "limit_up": Rule(float64, 1 / 10000.0, 4),
+        "limit_down": Rule(float64, 1 / 10000.0, 4),
+    }
+)

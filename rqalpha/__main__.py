@@ -89,7 +89,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-f', '--strategy-file', 'base__strategy_file', type=click.Path(exists=True))
 @click.option('-s', '--start-date', 'base__start_date', type=Date())
 @click.option('-e', '--end-date', 'base__end_date', type=Date())
-@click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
 @click.option('-a', '--account', 'base__accounts', nargs=2, multiple=True, help="set account type with starting cash")
 @click.option('--position', 'base__init_positions', type=click.STRING, help="set init position")

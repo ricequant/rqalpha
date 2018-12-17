@@ -25,7 +25,8 @@ STOCK_TRADING_PERIOD = [
     TimeRange(start=time(13, 1), end=time(15, 0)),
 ]
 
-# | 商品期货 WR, FU, CS, C, L, V, PP, BB, FB, JD, WH, PM, RI, SF, SM, RS, JR, LR, AP  | 09:01~10:15, 10:31~11:30, 13:31~15:00 |
+# | 商品期货 WR, FU, CS, C, L, V, PP, BB, FB, JD, WH, PM, RI, SF, SM, RS, JR, LR, AP, EG
+# | 09:01~10:15, 10:31~11:30, 13:31~15:00 |
 time_period1 = [
     TimeRange(start=time(9, 1), end=time(10, 15)),
     TimeRange(start=time(10, 31), end=time(11, 30)),
@@ -33,11 +34,14 @@ time_period1 = [
 ]
 TRADING_PERIOD_DICT.update({
     underlying_symbol: time_period1
-    for underlying_symbol in
-    ["WR", "FU", "CS", "C", "L", "V", "PP", "BB", "FB", "JD", "WH", "PM", "RI", "SF", "SM", "RS", "JR", "LR", "AP", "SP"]
+    for underlying_symbol in [
+        "WR", "FU", "CS", "C", "L", "V", "PP", "BB", "FB", "JD", "WH", "PM", "RI", "SF", "SM", "RS", "JR", "LR", "AP",
+        "SP", "EG"
+    ]
 })
 
-# | 商品期货 Y, M, A, B, P, J, JM, I, CF, SR, OI, TA, MA, ZC, FG, RM, CY | 21:01~23:30, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
+# | 商品期货 Y, M, A, B, P, J, JM, I, CF, SR, OI, TA, MA, ZC, FG, RM, CY
+# | 21:01~23:30, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
 time_period2 = [
     TimeRange(start=time(21, 1), end=time(23, 30)),
     TimeRange(start=time(9, 1), end=time(10, 15)),
@@ -46,7 +50,9 @@ time_period2 = [
 ]
 TRADING_PERIOD_DICT.update({
     underlying_symbol: time_period2
-    for underlying_symbol in ["Y", "M", "A", "B", "P", "J", "JM", "I", "CF", "SR", "OI", "TA", "MA", "ZC", "FG", "RM", "CY"]
+    for underlying_symbol in [
+        "Y", "M", "A", "B", "P", "J", "JM", "I", "CF", "SR", "OI", "TA", "MA", "ZC", "FG", "RM", "CY"
+    ]
 })
 
 # | 商品期货 CU, AL, ZN, PB, SN, NI | 21:01~1:00, 09:01~10:15, 10:31~11:30, 13:31~15:00 |

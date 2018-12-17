@@ -36,6 +36,7 @@ from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_universe import StrategyUniverse
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.core.strategy_context import StrategyContext
+from rqalpha.data import future_info_cn
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
@@ -44,8 +45,7 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
-from rqalpha.model.portfolio import Portfolio
-from rqalpha.model.base_position import Positions
+from rqalpha.model.benchmark_portfolio import BenchmarkPortfolio
 from rqalpha.const import RUN_TYPE
 from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
@@ -54,6 +54,7 @@ from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from rqalpha.utils.scheduler import Scheduler
 from rqalpha.utils.config import set_locale
 from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
+from rqalpha.utils.dict_func import deep_update
 
 
 jsonpickle_numpy.register_handlers()
@@ -76,45 +77,6 @@ def _adjust_start_date(config, data_proxy):
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
     config.base.timezone = pytz.utc
-
-
-def _validate_benchmark(config, data_proxy):
-    benchmark = config.base.benchmark
-    if benchmark is None:
-        return
-    instrument = data_proxy.instruments(benchmark)
-    if instrument is None:
-        raise patch_user_exc(ValueError(_(u"invalid benchmark {}").format(benchmark)))
-
-    if instrument.order_book_id == "000300.XSHG":
-        # 000300.XSHG 数据进行了补齐，因此认为只要benchmark设置了000300.XSHG，就存在数据，不受限于上市日期。
-        return
-    config = Environment.get_instance().config
-    start_date = config.base.start_date
-    end_date = config.base.end_date
-    if instrument.listed_date.date() > start_date:
-        raise patch_user_exc(ValueError(
-            _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=benchmark,
-                                                                                   start_date=start_date)))
-    if instrument.de_listed_date.date() < end_date:
-        raise patch_user_exc(ValueError(
-            _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
-                                                                                end_date=end_date)))
-
-
-def create_benchmark_portfolio(env):
-    if env.config.base.benchmark is None:
-        return None
-
-    BenchmarkAccount = env.get_account_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
-    BenchmarkPosition = env.get_position_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
-
-    start_date = env.config.base.start_date
-    total_cash = sum(env.config.base.accounts.values())
-    accounts = {
-        const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name: BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
-    }
-    return Portfolio(start_date, 1, total_cash, accounts)
 
 
 def create_base_scope(copy_scope=False):
@@ -203,6 +165,13 @@ def run(config, source_code=None, user_funcs=None):
         mod_handler.set_env(env)
         mod_handler.start_up()
 
+        try:
+            future_info = config.base.future_info
+        except AttributeError:
+            pass
+        else:
+            deep_update(future_info, future_info_cn.CN_FUTURE_INFO)
+
         if not env.data_source:
             env.set_data_source(BaseDataSource(config.base.data_bundle_path))
         env.set_data_proxy(DataProxy(env.data_source))
@@ -215,8 +184,6 @@ def run(config, source_code=None, user_funcs=None):
 
         _adjust_start_date(env.config, env.data_proxy)
 
-        _validate_benchmark(env.config, env.data_proxy)
-
         # FIXME
         start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
         env.calendar_dt = start_dt
@@ -228,13 +195,14 @@ def run(config, source_code=None, user_funcs=None):
             env.portfolio = broker.get_portfolio()
         except NotImplementedError:
             pass
+        else:
+            if env.benchmark_provider:
+                env.benchmark_portfolio = BenchmarkPortfolio(env.benchmark_provider, env.portfolio.units)
 
         try:
             env.booking = broker.get_booking()
         except NotImplementedError:
             pass
-
-        env.benchmark_portfolio = create_benchmark_portfolio(env)
 
         event_source = env.event_source
         assert event_source is not None
@@ -266,6 +234,7 @@ def run(config, source_code=None, user_funcs=None):
 
         ucontext = StrategyContext()
         user_strategy = Strategy(env.event_bus, scope, ucontext)
+        env.user_strategy = user_strategy
         scheduler.set_user_context(ucontext)
 
         if not config.extra.force_run_init_when_pt_resume:
@@ -293,8 +262,6 @@ def run(config, source_code=None, user_funcs=None):
                 persist_helper.register('event_source', event_source)
             if env.portfolio:
                 persist_helper.register('portfolio', env.portfolio)
-            if env.benchmark_portfolio:
-                persist_helper.register('benchmark_portfolio', env.benchmark_portfolio)
             for name, module in six.iteritems(env.mod_dict):
                 if isinstance(module, Persistable):
                     persist_helper.register('mod_{}'.format(name), module)

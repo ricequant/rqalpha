@@ -10,7 +10,6 @@ else:
     from mock import MagicMock
 
 
-
 class RQAlphaFixture(object):
     def init_fixture(self):
         pass
@@ -132,6 +131,12 @@ class DataProxyFixture(BaseDataSourceFixture):
             self.data_source = self.base_data_source
         self.data_proxy = DataProxy(self.data_source)
         self.env.set_data_proxy(self.data_proxy)
+        try:
+            self.env.config.base.trading_calendar = self.data_proxy.get_trading_dates(
+                self.env.config.base.start_date, self.env.config.base.end_date
+            )
+        except AttributeError:
+            pass
 
     @contextmanager
     def mock_data_proxy_method(self, name, mock_method):
@@ -201,3 +206,4 @@ class BookingFixture(EnvironmentFixture):
         super(BookingFixture, self).init_fixture()
         
         self.booking = Booking(self.long_positions, self.short_positions)
+

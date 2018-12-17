@@ -14,14 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractBookingPosition
 from rqalpha.const import POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
 from rqalpha.utils.repr import property_repr
 from rqalpha.utils import get_account_type
-from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -103,12 +100,12 @@ class SimulationBooking(object):
     def _positions(self):
         portfolio = self._env.portfolio
         if not portfolio:
-            raise RuntimeError(_('Cannot get portfolio instance.'))
+            raise RuntimeError(_("Cannot get portfolio instance."))
         return portfolio.positions
 
     def get_positions(self):
         total_positions = []
-        for order_book_id, position in six.iteritems(self._positions):
+        for order_book_id in self._positions:
             for direction in [POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT]:
                 booking_position = self.get_position(order_book_id, direction)
                 if booking_position.quantity != 0:
@@ -119,8 +116,12 @@ class SimulationBooking(object):
     def get_position(self, order_book_id, direction):
         account_type = get_account_type(order_book_id)
         if account_type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
-            return StockSimulationBookingPosition(self._positions[order_book_id], direction)
+            return StockSimulationBookingPosition(
+                self._positions[order_book_id], direction
+            )
         elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
-            return FutureSimulationBookingPosition(self._positions[order_book_id], direction)
+            return FutureSimulationBookingPosition(
+                self._positions[order_book_id], direction
+            )
         else:
             raise NotImplementedError

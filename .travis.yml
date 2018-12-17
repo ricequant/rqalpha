@@ -11,6 +11,10 @@ matrix:
     - python: 3.4
     - python: 3.5
     - python: 3.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
+
 install:
   # Install TA-Lib
   - wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
@@ -30,6 +34,7 @@ install:
   - pip install coveralls
   - pip install -U setuptools
   - pip install git+https://github.com/Cuizi7/funcat.git
+  - pip install git+https://github.com/rkern/line_profiler.git
   - pip install ipython==5.3.0
   - pip install .
 script:

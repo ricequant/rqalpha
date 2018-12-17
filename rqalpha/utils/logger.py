@@ -18,7 +18,7 @@ from datetime import datetime
 import logbook
 from logbook import Logger, StderrHandler
 
-from rqalpha.utils.py2 import to_utf8, from_utf8
+from rqalpha.utils.py2 import to_utf8
 
 logbook.set_datetime_format("local")
 
@@ -30,6 +30,7 @@ logbook.base._level_names[logbook.base.WARNING] = 'WARN'
 __all__ = [
     "user_log",
     "system_log",
+    "user_system_log",
 ]
 
 

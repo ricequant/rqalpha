@@ -33,39 +33,62 @@ from rqalpha.api import names
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.utils import to_industry_code, to_sector_name, unwrapper, is_valid_price
-from rqalpha.utils.exception import patch_user_exc, patch_system_exc, EXC_EXT_NAME, RQInvalidArgument
+from rqalpha.utils.exception import (
+    patch_user_exc,
+    patch_system_exc,
+    EXC_EXT_NAME,
+    RQInvalidArgument,
+)
 from rqalpha.utils.i18n import gettext as _
+
 # noinspection PyUnresolvedReferences
 from rqalpha.utils.logger import user_log as logger
 from rqalpha.utils.logger import user_system_log
 
 from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
 from rqalpha.utils.arg_checker import apply_rules, verify_that
+
 # noinspection PyUnresolvedReferences
-from rqalpha.model.instrument import Instrument, SectorCode as sector_code, IndustryCode as industry_code
+from rqalpha.model.instrument import (
+    Instrument,
+    SectorCode as sector_code,
+    IndustryCode as industry_code,
+)
+
 # noinspection PyUnresolvedReferences
-from rqalpha.const import (EXECUTION_PHASE, EXC_TYPE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE,
-                           RUN_TYPE, POSITION_DIRECTION)
+from rqalpha.const import (
+    EXECUTION_PHASE,
+    EXC_TYPE,
+    ORDER_STATUS,
+    SIDE,
+    POSITION_EFFECT,
+    ORDER_TYPE,
+    MATCHING_TYPE,
+    RUN_TYPE,
+    POSITION_DIRECTION,
+)
+
 # noinspection PyUnresolvedReferences
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
+
 # noinspection PyUnresolvedReferences
 from rqalpha.events import EVENT
 
 
 __all__ = [
-    'logger',
-    'sector_code',
-    'industry_code',
-    'LimitOrder',
-    'MarketOrder',
-    'ORDER_STATUS',
-    'SIDE',
-    'POSITION_EFFECT',
-    'POSITION_DIRECTION',
-    'ORDER_TYPE',
-    'RUN_TYPE',
-    'MATCHING_TYPE',
-    'EVENT',
+    "logger",
+    "sector_code",
+    "industry_code",
+    "LimitOrder",
+    "MarketOrder",
+    "ORDER_STATUS",
+    "SIDE",
+    "POSITION_EFFECT",
+    "POSITION_DIRECTION",
+    "ORDER_TYPE",
+    "RUN_TYPE",
+    "MATCHING_TYPE",
+    "EVENT",
 ]
 
 
@@ -73,11 +96,11 @@ def decorate_api_exc(func):
     f = func
     exception_checked = False
     while True:
-        if getattr(f, '_rq_exception_checked', False):
+        if getattr(f, "_rq_exception_checked", False):
             exception_checked = True
             break
 
-        f = getattr(f, '__wrapped__', None)
+        f = getattr(f, "__wrapped__", None)
         if f is None:
             break
     if not exception_checked:
@@ -88,6 +111,7 @@ def decorate_api_exc(func):
 
 def api_exc_patch(func):
     if isinstance(func, FunctionType):
+
         @wraps(func)
         def deco(*args, **kwargs):
             try:
@@ -131,7 +155,9 @@ def assure_order_book_id(id_or_ins):
     if isinstance(id_or_ins, Instrument):
         order_book_id = id_or_ins.order_book_id
     elif isinstance(id_or_ins, six.string_types):
-        order_book_id = Environment.get_instance().data_proxy.instruments(id_or_ins).order_book_id
+        order_book_id = (
+            Environment.get_instance().data_proxy.instruments(id_or_ins).order_book_id
+        )
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
@@ -161,21 +187,25 @@ def cal_style(price, style):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
 def get_order(order):
     return order
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
 def get_open_orders():
     """
     获取当日未成交订单数据
@@ -189,7 +219,7 @@ def get_open_orders():
 @apply_rules(
     verify_that("id_or_ins").is_valid_instrument(),
     verify_that("amount").is_number().is_greater_than(0),
-    verify_that("side").is_in([SIDE.BUY, SIDE.SELL])
+    verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
 def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     """
@@ -222,16 +252,25 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     """
     order_book_id = assure_order_book_id(id_or_ins)
     env = Environment.get_instance()
-    if env.config.base.run_type != RUN_TYPE.BACKTEST and env.get_instrument(order_book_id).type == "Future":
+    if (
+        env.config.base.run_type != RUN_TYPE.BACKTEST
+        and env.get_instrument(order_book_id).type == "Future"
+    ):
         if "88" in order_book_id:
-            raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
+            raise RQInvalidArgument(
+                _(u"Main Future contracts[88] are not supported in paper trading.")
+            )
         if "99" in order_book_id:
-            raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
+            raise RQInvalidArgument(
+                _(u"Index Future contracts[99] are not supported in paper trading.")
+            )
     style = cal_style(price, None)
     market_price = env.get_last_price(order_book_id)
     if not is_valid_price(market_price):
         user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+            _(u"Order Creation Failed: [{order_book_id}] No market data").format(
+                order_book_id=order_book_id
+            )
         )
         return
 
@@ -242,7 +281,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
         quantity=amount,
         side=side,
         style=style,
-        position_effect=position_effect
+        position_effect=position_effect,
     )
 
     if order.type == ORDER_TYPE.MARKET:
@@ -253,13 +292,15 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED,
-                                EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_that('order').is_instance_of(Order))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL,
+)
+@apply_rules(verify_that("order").is_instance_of(Order))
 def cancel_order(order):
     """
     撤单
@@ -274,43 +315,49 @@ def cancel_order(order):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('id_or_symbols').are_valid_instruments())
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def update_universe(id_or_symbols):
     """
     该方法用于更新现在关注的证券的集合（e.g.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为['000001.XSHE', '000024.XSHE']然后调用了update_universe(['000030.XSHE'])之后，股票池就会变成000030.XSHE一个股票了，随后的数据更新也只会跟踪000030.XSHE这一个股票了。
 
-    :param id_or_ins: 标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :param id_or_symbols: 标的物
+    :type id_or_symbols: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
     if isinstance(id_or_symbols, (six.string_types, Instrument)):
         id_or_symbols = [id_or_symbols]
-    order_book_ids = set(assure_order_book_id(order_book_id) for order_book_id in id_or_symbols)
+    order_book_ids = set(
+        assure_order_book_id(order_book_id) for order_book_id in id_or_symbols
+    )
     if order_book_ids != Environment.get_instance().get_universe():
         Environment.get_instance().update_universe(order_book_ids)
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('id_or_symbols').are_valid_instruments())
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def subscribe(id_or_symbols):
     """
     订阅合约行情。该操作会导致合约池内合约的增加，从而影响handle_bar中处理bar数据的数量。
 
     需要注意，用户在初次编写策略时候需要首先订阅合约行情，否则handle_bar不会被触发。
 
-    :param id_or_ins: 标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :param id_or_symbols: 标的物
+    :type id_or_symbols: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -323,24 +370,26 @@ def subscribe(id_or_symbols):
             current_universe.add(assure_order_book_id(item))
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
-    verify_that('id_or_symbols')._are_valid_instruments("subscribe", id_or_symbols)
+    verify_that("id_or_symbols")._are_valid_instruments("subscribe", id_or_symbols)
     Environment.get_instance().update_universe(current_universe)
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('id_or_symbols').are_valid_instruments())
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def unsubscribe(id_or_symbols):
     """
     取消订阅合约行情。取消订阅会导致合约池内合约的减少，如果当前合约池中没有任何合约，则策略直接退出。
 
-    :param id_or_ins: 标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :param id_or_symbols: 标的物
+    :type id_or_symbols: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -359,14 +408,18 @@ def unsubscribe(id_or_symbols):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('date').is_valid_date(ignore_none=True),
-             verify_that('tenor').is_in(names.VALID_TENORS, ignore_none=True))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("date").is_valid_date(ignore_none=True),
+    verify_that("tenor").is_in(names.VALID_TENORS, ignore_none=True),
+)
 def get_yield_curve(date=None, tenor=None):
     """
     获取某个国家市场指定日期的收益率曲线水平。
@@ -405,26 +458,41 @@ def get_yield_curve(date=None, tenor=None):
     else:
         date = pd.Timestamp(date)
         if date > yesterday:
-            raise RQInvalidArgument('get_yield_curve: {} >= now({})'.format(date, yesterday))
+            raise RQInvalidArgument(
+                "get_yield_curve: {} >= now({})".format(date, yesterday)
+            )
 
     return env.data_proxy.get_yield_curve(start_date=date, end_date=date, tenor=tenor)
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('order_book_id').is_valid_instrument(),
-             verify_that('bar_count').is_instance_of(int).is_greater_than(0),
-             verify_that('frequency').is_valid_frequency(),
-             verify_that('fields').are_valid_fields(names.VALID_HISTORY_FIELDS, ignore_none=True),
-             verify_that('skip_suspended').is_instance_of(bool),
-             verify_that('include_now').is_instance_of(bool),
-             verify_that('adjust_type').is_in({'pre', 'none', 'post'}))
-def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspended=True,
-                 include_now=False, adjust_type='pre'):
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("order_book_id").is_valid_instrument(),
+    verify_that("bar_count").is_instance_of(int).is_greater_than(0),
+    verify_that("frequency").is_valid_frequency(),
+    verify_that("fields").are_valid_fields(
+        names.VALID_HISTORY_FIELDS, ignore_none=True
+    ),
+    verify_that("skip_suspended").is_instance_of(bool),
+    verify_that("include_now").is_instance_of(bool),
+    verify_that("adjust_type").is_in({"pre", "none", "post"}),
+)
+def history_bars(
+    order_book_id,
+    bar_count,
+    frequency,
+    fields=None,
+    skip_suspended=True,
+    include_now=False,
+    adjust_type="pre",
+):
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
 
@@ -502,27 +570,25 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     env = Environment.get_instance()
     dt = env.calendar_dt
 
-    if frequency[-1] not in {'m', 'd'}:
-        raise RQInvalidArgument('invalid frequency {}'.format(frequency))
+    if frequency[-1] not in {"m", "d"}:
+        raise RQInvalidArgument("invalid frequency {}".format(frequency))
 
-    if frequency[-1] == 'm' and env.config.base.frequency == '1d':
-        raise RQInvalidArgument('can not get minute history in day back test')
+    if frequency[-1] == "m" and env.config.base.frequency == "1d":
+        raise RQInvalidArgument("can not get minute history in day back test")
 
-    if frequency[-1] == 'd' and frequency != '1d':
-        raise RQInvalidArgument('invalid frequency')
+    if frequency[-1] == "d" and frequency != "1d":
+        raise RQInvalidArgument("invalid frequency")
 
-    if adjust_type not in {'pre', 'post', 'none'}:
-        raise RuntimeError('invalid adjust_type')
+    if adjust_type not in {"pre", "post", "none"}:
+        raise RuntimeError("invalid adjust_type")
 
-    if frequency == '1d':
+    if frequency == "1d":
         sys_frequency = Environment.get_instance().config.base.frequency
-        if ((
-                sys_frequency in ['1m', 'tick'] and
-                not include_now and
-                ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
-        ) or (
-                ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING
-        )):
+        if (
+            sys_frequency in ["1m", "tick"]
+            and not include_now
+            and ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
+        ) or (ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING):
             dt = env.data_proxy.get_previous_trading_date(env.trading_dt.date())
             # 当 EXECUTION_PHASE.BEFORE_TRADING 的时候，强制 include_now 为 False
             include_now = False
@@ -533,20 +599,34 @@ def history_bars(order_book_id, bar_count, frequency, fields=None, skip_suspende
     if fields is None:
         fields = ["datetime", "open", "high", "low", "close", "volume"]
 
-    return env.data_proxy.history_bars(order_book_id, bar_count, frequency, fields, dt,
-                                       skip_suspended=skip_suspended, include_now=include_now,
-                                       adjust_type=adjust_type, adjust_orig=env.trading_dt)
+    return env.data_proxy.history_bars(
+        order_book_id,
+        bar_count,
+        frequency,
+        fields,
+        dt,
+        skip_suspended=skip_suspended,
+        include_now=include_now,
+        adjust_type=adjust_type,
+        adjust_orig=env.trading_dt,
+    )
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('type').are_valid_fields(names.VALID_INSTRUMENT_TYPES, ignore_none=True),
-             verify_that('date').is_valid_date(ignore_none=True))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("type").are_valid_fields(
+        names.VALID_INSTRUMENT_TYPES, ignore_none=True
+    ),
+    verify_that("date").is_valid_date(ignore_none=True),
+)
 def all_instruments(type=None, date=None):
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
@@ -605,10 +685,10 @@ def all_instruments(type=None, date=None):
 
         types = set()
         for t in type:
-            if t == 'Stock':
-                types.add('CS')
-            elif t == 'Fund':
-                types.update(['ETF', 'LOF', 'SF', 'FenjiA', 'FenjiB', 'FenjiMu'])
+            if t == "Stock":
+                types.add("CS")
+            elif t == "Fund":
+                types.update(["ETF", "LOF", "SF", "FenjiA", "FenjiB", "FenjiMu"])
             else:
                 types.add(t)
     else:
@@ -619,24 +699,30 @@ def all_instruments(type=None, date=None):
         return pd.DataFrame([i._ins_dict for i in result])
 
     return pd.DataFrame(
-        [[i.order_book_id, i.symbol, i.type, i.listed_date, i.de_listed_date] for i in result],
-        columns=['order_book_id', 'symbol', 'type', 'listed_date', 'de_listed_date'])
+        [
+            [i.order_book_id, i.symbol, i.type, i.listed_date, i.de_listed_date]
+            for i in result
+        ],
+        columns=["order_book_id", "symbol", "type", "listed_date", "de_listed_date"],
+    )
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('id_or_symbols').is_instance_of((str, Iterable)))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(verify_that("id_or_symbols").is_instance_of((str, Iterable)))
 def instruments(id_or_symbols):
     """
     获取某个国家市场内一个或多个合约的详细信息。目前仅支持中国市场。
 
-    :param order_book_id: 合约代码或者合约代码列表
-    :type order_book_id: `str` | List[`str`]
+    :param id_or_symbols: 合约代码或者合约代码列表
+    :type id_or_symbols: `str` | List[`str`]
 
     :return: :class:`~StockInstrument` | :class:`~FutureInstrument`
 
@@ -680,13 +766,15 @@ def instruments(id_or_symbols):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('code').is_instance_of((str, SectorCodeItem)))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(verify_that("code").is_instance_of((str, SectorCodeItem)))
 def sector(code):
     if not isinstance(code, six.string_types):
         code = code.name
@@ -697,13 +785,15 @@ def sector(code):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('code').is_instance_of((str, IndustryCodeItem)))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(verify_that("code").is_instance_of((str, IndustryCodeItem)))
 def industry(code):
     if not isinstance(code, six.string_types):
         code = code.code
@@ -714,14 +804,18 @@ def industry(code):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('start_date').is_valid_date(ignore_none=False),
-             verify_that('end_date').is_valid_date(ignore_none=False))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("start_date").is_valid_date(ignore_none=False),
+    verify_that("end_date").is_valid_date(ignore_none=False),
+)
 def get_trading_dates(start_date, end_date):
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
@@ -747,14 +841,18 @@ def get_trading_dates(start_date, end_date):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('date').is_valid_date(ignore_none=False),
-             verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("date").is_valid_date(ignore_none=False),
+    verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
+)
 def get_previous_trading_date(date, n=1):
     """
     获取指定日期的之前的第 n 个交易日。
@@ -778,14 +876,18 @@ def get_previous_trading_date(date, n=1):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('date').is_valid_date(ignore_none=False),
-             verify_that('n').is_instance_of(int).is_greater_or_equal_than(1))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("date").is_valid_date(ignore_none=False),
+    verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
+)
 def get_next_trading_date(date, n=1):
     """
     获取指定日期之后的第 n 个交易日
@@ -812,24 +914,28 @@ def to_date(date):
     if isinstance(date, six.string_types):
         return parse(date).date()
 
-    if isinstance(date, datetime.date):
+    if isinstance(date, datetime.datetime):
         try:
             return date.date()
         except AttributeError:
             return date
 
-    raise RQInvalidArgument('unknown date value: {}'.format(date))
+    raise RQInvalidArgument("unknown date value: {}".format(date))
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('order_book_id').is_valid_instrument(),
-             verify_that('start_date').is_valid_date(ignore_none=False))
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("order_book_id").is_valid_instrument(),
+    verify_that("start_date").is_valid_date(ignore_none=False),
+)
 def get_dividend(order_book_id, start_date, *args, **kwargs):
     # adjusted 参数在不复权数据回测时不再提供
     env = Environment.get_instance()
@@ -837,9 +943,10 @@ def get_dividend(order_book_id, start_date, *args, **kwargs):
     start_date = to_date(start_date)
     if start_date > dt:
         raise RQInvalidArgument(
-            _(u"in get_dividend, start_date {} is later than the previous test day {}").format(
-                start_date, dt
-            ))
+            _(
+                u"in get_dividend, start_date {} is later than the previous test day {}"
+            ).format(start_date, dt)
+        )
     order_book_id = assure_order_book_id(order_book_id)
     array = env.data_proxy.get_dividend(order_book_id)
     if array is None:
@@ -847,15 +954,19 @@ def get_dividend(order_book_id, start_date, *args, **kwargs):
 
     sd = start_date.year * 10000 + start_date.month * 100 + start_date.day
     ed = dt.year * 10000 + dt.month * 100 + dt.day
-    return array[(array['announcement_date'] >= sd) & (array['announcement_date'] <= ed)]
+    return array[
+        (array["announcement_date"] >= sd) & (array["announcement_date"] <= ed)
+    ]
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('series_name', pre_check=True).is_instance_of(str),
-             verify_that('value', pre_check=True).is_number())
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_BAR, EXECUTION_PHASE.ON_TICK, EXECUTION_PHASE.SCHEDULED
+)
+@apply_rules(
+    verify_that("series_name", pre_check=True).is_instance_of(str),
+    verify_that("value", pre_check=True).is_number(),
+)
 def plot(series_name, value):
     """
     Add a point to custom series.
@@ -867,12 +978,14 @@ def plot(series_name, value):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('id_or_symbol').is_valid_instrument())
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(verify_that("id_or_symbol").is_valid_instrument())
 def current_snapshot(id_or_symbol):
     """
     获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。
@@ -881,7 +994,7 @@ def current_snapshot(id_or_symbol):
     需要注意，在实盘模拟中，该函数返回的是调用当时的市场快照情况，所以在同一个handle_bar中不同时点调用可能返回的数据不同。
     如果当日截止到调用时候对应股票没有任何成交，那么snapshot中的close, high, low, last几个价格水平都将以0表示。
 
-    :param str order_book_id: 合约代码或简称
+    :param str id_or_symbol: 合约代码或简称
 
     :return: :class:`~Snapshot`
 
@@ -919,25 +1032,34 @@ def current_snapshot(id_or_symbol):
 def get_positions():
     booking = Environment.get_instance().booking
     if not booking:
-        raise RuntimeError(_("Booking has not been set, please check your broker configuration."))
+        raise RuntimeError(
+            _("Booking has not been set, please check your broker configuration.")
+        )
     return booking.get_positions()
 
 
 @export_as_api
-@apply_rules(verify_that('direction').is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT]))
+@apply_rules(
+    verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
+)
 def get_position(order_book_id, direction):
     booking = Environment.get_instance().booking
     if not booking:
-        raise RuntimeError(_("Booking has not been set, please check your broker configuration."))
+        raise RuntimeError(
+            _("Booking has not been set, please check your broker configuration.")
+        )
 
     return booking.get_position(order_book_id, direction)
 
 
 @export_as_api
 @apply_rules(
-    verify_that('event_type').is_instance_of(EVENT),
-    verify_that('handler').is_instance_of(types.FunctionType)
+    verify_that("event_type").is_instance_of(EVENT),
+    verify_that("handler").is_instance_of(types.FunctionType),
 )
 def subscribe_event(event_type, handler):
     env = Environment.get_instance()
-    env.event_bus.add_listener(event_type, handler)
+    user_strategy = env.user_strategy
+    env.event_bus.add_listener(
+        event_type, user_strategy.wrap_user_event_handler(handler), user=True
+    )
