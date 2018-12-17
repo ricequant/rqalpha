@@ -53,6 +53,12 @@ class Instrument(object):
             if np.isnan(self.contract_multiplier):
                 raise RuntimeError("Contract multiplier of {} is not supposed to be nan".format(self.order_book_id))
 
+    def __getattr__(self, item):
+        try:
+            return super(Instrument, self).__getattribute__("_ins_dict")[item]
+        except KeyError:
+            raise AttributeError(item)
+
     @property
     def order_book_id(self):
         """
