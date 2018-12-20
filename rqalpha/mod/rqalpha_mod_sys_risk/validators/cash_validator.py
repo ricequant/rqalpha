@@ -72,7 +72,7 @@ class CashValidator(AbstractFrontendValidator):
         elif account.type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
             return self._future_validator(account, order)
         else:
-            raise NotImplementedError
+            return True
 
     def can_cancel_order(self, order, account=None):
         return True
