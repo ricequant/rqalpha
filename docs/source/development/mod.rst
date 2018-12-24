@@ -80,8 +80,12 @@ PyPI方式安装Mod
 .. code-block:: python3
 
 
-    from pip.req import parse_requirements
-
+    #from pip.req import parse_requirements 这样的话如果pip版本较高会报错
+    try: # for pip >= 10
+        from pip._internal.req import parse_requirements
+    except ImportError: # for pip <= 9.0.3
+        from pip.req import parse_requirements
+    
     from setuptools import (
         find_packages,
         setup,
