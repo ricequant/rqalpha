@@ -226,8 +226,15 @@ class ArgumentChecker(AbstractChecker):
                 func_name, self._arg_name, repr(values), type(values)
             ))
 
-    def are_valid_instruments(self):
-        self._rules.append(self._are_valid_instruments)
+    def are_valid_instruments(self, ignore_none=False):
+
+        def check_are_valid_instruments(func_name, values):
+            if values is None and ignore_none:
+                return
+
+            return self._are_valid_instruments(func_name, values)
+
+        self._rules.append(check_are_valid_instruments)
         return self
 
     def is_valid_date(self, ignore_none=True):
