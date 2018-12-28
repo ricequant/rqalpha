@@ -32,10 +32,7 @@ class BookingModel(object):
         if short_positions is None:
             short_positions = BookingPositions(self._data_proxy, POSITION_DIRECTION.SHORT)
 
-        self._positions_dict = {
-            POSITION_DIRECTION.LONG: long_positions,
-            POSITION_DIRECTION.SHORT: short_positions,
-        }
+        self._positions_dict = {POSITION_DIRECTION.LONG: long_positions, POSITION_DIRECTION.SHORT: short_positions}
         self._backward_trade_set = backward_trade_set or set()
 
     def get_position(self, order_book_id, direction):
@@ -107,8 +104,14 @@ class BookingPosition(object):
     __repr__ = property_repr
 
     def __init__(
-            self, data_proxy, order_book_id, direction, old_quantity=0, today_quantity=0, avg_price=0,
-            prev_settlement_price=0
+        self,
+        data_proxy,
+        order_book_id,
+        direction,
+        old_quantity=0,
+        today_quantity=0,
+        avg_price=0,
+        prev_settlement_price=0,
     ):
         self._data_proxy = data_proxy
 
@@ -239,9 +242,9 @@ class BookingPosition(object):
                 else:
                     self._avg_price = trade.last_price
             else:
-                self._avg_price = (
-                                          self.quantity * self._avg_price + trade.last_quantity * trade.last_price
-                                  ) / (self.quantity + trade.last_quantity)
+                self._avg_price = (self.quantity * self._avg_price + trade.last_quantity * trade.last_price) / (
+                    self.quantity + trade.last_quantity
+                )
             self._today_quantity += trade.last_quantity
         elif position_effect == POSITION_EFFECT.CLOSE_TODAY:
             self._today_quantity -= trade.last_quantity
@@ -284,9 +287,7 @@ class Booking(BookingModel):
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
-        event_bus.prepend_listener(
-            EVENT.POST_SETTLEMENT, lambda e: self.apply_settlement(self._env.trading_dt.date())
-        )
+        event_bus.prepend_listener(EVENT.POST_SETTLEMENT, lambda e: self.apply_settlement(self._env.trading_dt.date()))
         event_bus.add_listener(EVENT.TRADE, lambda e: self.apply_trade(e.trade))
 
     def apply_trade(self, trade):
@@ -318,5 +319,3 @@ class Booking(BookingModel):
 
         position.apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
-
-    # TODO: resume from portfolio in pt
