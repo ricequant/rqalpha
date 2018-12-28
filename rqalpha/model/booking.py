@@ -206,7 +206,7 @@ class BookingPosition(object):
         return self._logical_old_quantity * contract_multiplier * price_spread
 
     def apply_settlement(self, trading_date):
-        next_trading_date = self._data_proxy.get_next_trading_date(trading_date)
+        next_trading_date = self._data_proxy.get_next_trading_date(trading_date).date()
         # 今仓变昨仓
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
@@ -318,3 +318,5 @@ class Booking(BookingModel):
 
         position.apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
+
+    # TODO: resume from portfolio in pt
