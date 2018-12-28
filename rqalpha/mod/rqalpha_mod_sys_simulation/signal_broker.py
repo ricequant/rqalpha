@@ -22,11 +22,12 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import is_valid_price, account_type_str2enum
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
+from rqalpha.model.booking import Booking
 from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
 
 from .slippage import SlippageDecider
 from .utils import init_portfolio
-from .booking import SimulationBooking
+# from .booking import SimulationBooking
 
 
 class SignalBroker(AbstractBroker):
@@ -39,7 +40,7 @@ class SignalBroker(AbstractBroker):
         return init_portfolio(self._env)
 
     def get_booking(self):
-        return SimulationBooking()
+        return Booking()
 
     def get_open_orders(self, order_book_id=None):
         return []

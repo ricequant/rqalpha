@@ -9,12 +9,6 @@ from rqalpha.model.trade import Trade
 class BookingTestCase(BookingFixture, RQAlphaTestCase):
     def __init__(self, *args, **kwargs):
         super(BookingTestCase, self).__init__(*args, **kwargs)
-        pos1 = self.long_positions.get_or_create("RB1812")
-        pos1._today_quantity = 3
-        pos1._old_quantity = 1
-
-        pos2 = self.short_positions.get_or_create("TF1812")
-        pos2._today_quantity = 4
 
     def assertPositions(self, positions_data):
         self.assertEqual(
@@ -28,16 +22,26 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
             )
 
     def test_booking(self):
+        from rqalpha.model.booking import BookingPosition
 
         def mock_get_instrument(order_book_id):
             not_delisted_ins = MagicMock()
             not_delisted_ins.de_listed_date = datetime.datetime.max
+            not_delisted_ins.type = "Future"
 
             delisted_ins = MagicMock()
             delisted_ins.de_listed_date = datetime.datetime.min
+            delisted_ins.type = "Future"
             if order_book_id == "TF1812":
                 return delisted_ins
             return not_delisted_ins
+
+        self.long_positions["RB1812"] = BookingPosition(
+            self.data_proxy, "RB1812", POSITION_DIRECTION.LONG, old_quantity=1, today_quantity=3
+        )
+        self.short_positions["TF1812"] = BookingPosition(
+            self.data_proxy, "TF1812", POSITION_DIRECTION.SHORT, today_quantity=4
+        )
 
         self.assertPositions({
             (POSITION_DIRECTION.LONG, "RB1812", 3, 1),
@@ -61,7 +65,7 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
             (POSITION_DIRECTION.SHORT, "TF1812", 4, 0)
         })
 
-        with self.mock_env_method("get_instrument", mock_get_instrument):
+        with self.mock_data_proxy_method("instruments", mock_get_instrument):
             self.env.trading_dt = datetime.datetime(2018, 8, 31)
             self.env.event_bus.publish_event(Event(EVENT.POST_SETTLEMENT))
             self.assertPositions({

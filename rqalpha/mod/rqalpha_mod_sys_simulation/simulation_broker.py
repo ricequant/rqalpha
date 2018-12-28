@@ -21,10 +21,11 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
 from rqalpha.model.order import Order
+from rqalpha.model.booking import Booking
 
 from .matcher import Matcher
 from .utils import init_portfolio
-from .booking import SimulationBooking
+# from .booking import SimulationBooking
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -52,7 +53,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         return init_portfolio(self._env)
 
     def get_booking(self):
-        return SimulationBooking()
+        return Booking()
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:
