@@ -174,7 +174,12 @@ def run(config, source_code=None, user_funcs=None):
 
         if not env.data_source:
             env.set_data_source(BaseDataSource(config.base.data_bundle_path))
-        env.set_data_proxy(DataProxy(env.data_source))
+
+        if env.price_board is None:
+            from .core.bar_dict_price_board import BarDictPriceBoard
+            env.price_board = BarDictPriceBoard()
+
+        env.set_data_proxy(DataProxy(env.data_source, env.price_board))
 
         Scheduler.set_trading_dates_(env.data_source.get_trading_calendar())
         scheduler = Scheduler(config.base.frequency)
@@ -209,10 +214,6 @@ def run(config, source_code=None, user_funcs=None):
 
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
         env.set_bar_dict(bar_dict)
-
-        if env.price_board is None:
-            from .core.bar_dict_price_board import BarDictPriceBoard
-            env.price_board = BarDictPriceBoard()
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()

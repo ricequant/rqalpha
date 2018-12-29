@@ -117,7 +117,21 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
         self.base_data_source = BaseDataSource(self.temp_dir.name)
 
 
-class DataProxyFixture(BaseDataSourceFixture):
+class BarDictPriceBoardFixture(EnvironmentFixture):
+    def __init__(self, *args, **kwargs):
+        super(BarDictPriceBoardFixture, self).__init__(*args, **kwargs)
+        self.price_board = None
+
+    def init_fixture(self):
+        from rqalpha.core.bar_dict_price_board import BarDictPriceBoard
+
+        super(BarDictPriceBoardFixture, self).init_fixture()
+
+        self.price_board = BarDictPriceBoard()
+        self.env.set_price_board(self.price_board)
+
+
+class DataProxyFixture(BaseDataSourceFixture, BarDictPriceBoardFixture):
     def __init__(self, *args, **kwargs):
         super(DataProxyFixture, self).__init__(*args, **kwargs)
         self.data_proxy = None
@@ -129,7 +143,7 @@ class DataProxyFixture(BaseDataSourceFixture):
         super(DataProxyFixture, self).init_fixture()
         if not self.data_source:
             self.data_source = self.base_data_source
-        self.data_proxy = DataProxy(self.data_source)
+        self.data_proxy = DataProxy(self.data_source, self.price_board)
         self.env.set_data_proxy(self.data_proxy)
         try:
             self.env.config.base.trading_calendar = self.data_proxy.get_trading_dates(
@@ -144,20 +158,6 @@ class DataProxyFixture(BaseDataSourceFixture):
         setattr(self.env.data_proxy, name, mock_method)
         yield
         setattr(self.env.data_proxy, name, origin_method)
-
-
-class BarDictPriceBoardFixture(EnvironmentFixture):
-    def __init__(self, *args, **kwargs):
-        super(BarDictPriceBoardFixture, self).__init__(*args, **kwargs)
-        self.price_board = None
-
-    def init_fixture(self):
-        from rqalpha.core.bar_dict_price_board import BarDictPriceBoard
-
-        super(BarDictPriceBoardFixture, self).init_fixture()
-
-        self.price_board = BarDictPriceBoard()
-        self.env.set_price_board(self.price_board)
 
 
 class MatcherFixture(EnvironmentFixture):

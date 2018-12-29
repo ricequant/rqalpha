@@ -136,7 +136,7 @@ class BookingPosition(object):
         self._logical_old_quantity = 0
         self._today_quantity = 0
         self._avg_price = 0
-        self._prev_settlement_price = 0
+        self._last_price = 0
 
         self._trade_quantity = 0
         self._trade_cost = 0
@@ -147,7 +147,7 @@ class BookingPosition(object):
             "logical_old_quantity": self._logical_old_quantity,
             "today_quantity": self._today_quantity,
             "avg_price": self._avg_price,
-            "prev_settlement_price": self._prev_settlement_price,
+            "last_price": self._last_price,
             "trade_quantity": self._trade_quantity,
             "trade_cost": self._trade_cost,
         }
@@ -157,7 +157,7 @@ class BookingPosition(object):
         self._logical_old_quantity = state.get("logical_old_quantity", self._old_quantity)
         self._today_quantity = state.get("today_quantity", 0)
         self._avg_price = state.get("avg_price", 0)
-        self._prev_settlement_price = state.get("prev_settlement_price", 0)
+        self._last_price = state.get("last_price", 0)
         self._trade_quantity = state.get("trade_quantity", 0)
         self._trade_cost = state.get("trade_cost", 0)
 
@@ -209,7 +209,10 @@ class BookingPosition(object):
 
     @property
     def last_price(self):
-        return self._data_proxy.current_snapshot(self._order_book_id).last
+        """
+        [float] 前结算价或收盘价
+        """
+        return self._last_price
 
     @property
     def contract_multiplier(self):
@@ -219,19 +222,17 @@ class BookingPosition(object):
             return 1
 
     @property
-    def prev_settlement_price(self):
-        return self._prev_settlement_price
-
-    @property
     def trading_pnl(self):
-        return self.contract_multiplier * (self._trade_quantity * self.last_price - self._trade_cost)
+        last_price = self._data_proxy.get_last_price(self._order_book_id)
+        return self.contract_multiplier * (self._trade_quantity * last_price - self._trade_cost)
 
     @property
     def position_pnl(self):
+        last_price = self._data_proxy.get_last_price(self._order_book_id)
         if self._direction == POSITION_DIRECTION.LONG:
-            price_spread = self.last_price - self._prev_settlement_price
+            price_spread = last_price - self._last_price
         else:
-            price_spread = self._prev_settlement_price - self.last_price
+            price_spread = self._last_price - last_price
 
         return self._logical_old_quantity * self.contract_multiplier * price_spread
 
@@ -250,9 +251,9 @@ class BookingPosition(object):
         self._trade_quantity = self._trade_cost = 0
         # 更新结算价
         if self._data_proxy.instruments(self._order_book_id).type == "Future":
-            self._prev_settlement_price = self._data_proxy.get_settle_price(self._order_book_id, trading_date)
+            self._last_price = self._data_proxy.get_settle_price(self._order_book_id, trading_date)
         else:
-            self._prev_settlement_price = self._data_proxy.history_bars(
+            self._last_price = self._data_proxy.history_bars(
                 order_book_id=self._order_book_id, bar_count=1, frequency="1d", field="close", dt=trading_date
             )[0]
 

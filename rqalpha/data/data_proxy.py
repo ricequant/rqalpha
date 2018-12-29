@@ -28,8 +28,9 @@ from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):
-    def __init__(self, data_source):
+    def __init__(self, data_source, price_board):
         self._data_source = data_source
+        self._price_board = price_board
         try:
             self.get_risk_free_rate = data_source.get_risk_free_rate
         except AttributeError:
@@ -239,3 +240,6 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def get_tick_size(self, order_book_id):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_tick_size(instrument)
+
+    def get_last_price(self, order_book_id):
+        return float(self._price_board.get_last_price(order_book_id))
