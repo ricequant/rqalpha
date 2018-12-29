@@ -215,26 +215,32 @@ class BookingPosition(object):
         return self._last_price
 
     @property
-    def contract_multiplier(self):
-        try:
-            return self._data_proxy.instruments(self._order_book_id).contract_multiplier
-        except AttributeError:
-            return 1
-
-    @property
     def trading_pnl(self):
+        """
+        [float] 交易盈亏，策略在当前交易日产生的盈亏中来源于当日成交的部分
+        """
         last_price = self._data_proxy.get_last_price(self._order_book_id)
-        return self.contract_multiplier * (self._trade_quantity * last_price - self._trade_cost)
+        return self._contract_multiplier * (self._trade_quantity * last_price - self._trade_cost)
 
     @property
     def position_pnl(self):
+        """
+        [float] 昨仓盈亏，策略在当前交易日产生的盈亏中来源于昨仓的部分
+        """
         last_price = self._data_proxy.get_last_price(self._order_book_id)
         if self._direction == POSITION_DIRECTION.LONG:
             price_spread = last_price - self._last_price
         else:
             price_spread = self._last_price - last_price
 
-        return self._logical_old_quantity * self.contract_multiplier * price_spread
+        return self._logical_old_quantity * self._contract_multiplier * price_spread
+
+    @property
+    def _contract_multiplier(self):
+        try:
+            return self._data_proxy.instruments(self._order_book_id).contract_multiplier
+        except AttributeError:
+            return 1
 
     def apply_settlement(self, trading_date):
         next_trading_date = self._data_proxy.get_next_trading_date(trading_date).date()
