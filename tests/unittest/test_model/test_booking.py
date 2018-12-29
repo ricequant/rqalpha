@@ -22,8 +22,6 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
             )
 
     def test_booking(self):
-        from rqalpha.model.booking import BookingPosition
-
         def mock_get_instrument(order_book_id):
             not_delisted_ins = MagicMock()
             not_delisted_ins.de_listed_date = datetime.datetime.max
@@ -36,12 +34,17 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
                 return delisted_ins
             return not_delisted_ins
 
-        self.long_positions["RB1812"] = BookingPosition(
-            self.data_proxy, "RB1812", POSITION_DIRECTION.LONG, old_quantity=1, today_quantity=3
-        )
-        self.short_positions["TF1812"] = BookingPosition(
-            self.data_proxy, "TF1812", POSITION_DIRECTION.SHORT, today_quantity=4
-        )
+        self.booking.set_state({
+            "long_positions": {
+                "RB1812": {
+                    "old_quantity": 1, "today_quantity": 3
+                }},
+            "short_positions": {
+                "TF1812": {
+                    "today_quantity": 4
+                }
+            }
+        })
 
         self.assertPositions({
             (POSITION_DIRECTION.LONG, "RB1812", 3, 1),

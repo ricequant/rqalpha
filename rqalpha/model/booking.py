@@ -24,16 +24,29 @@ from rqalpha.model.instrument import Instrument
 
 
 class BookingModel(object):
-    def __init__(self, data_proxy, long_positions=None, short_positions=None, backward_trade_set=None):
+    def __init__(self, data_proxy):
         self._data_proxy = data_proxy
 
-        if long_positions is None:
-            long_positions = BookingPositions(self._data_proxy, POSITION_DIRECTION.LONG)
-        if short_positions is None:
-            short_positions = BookingPositions(self._data_proxy, POSITION_DIRECTION.SHORT)
+        self._positions_dict = {
+            POSITION_DIRECTION.LONG: BookingPositions(self._data_proxy, POSITION_DIRECTION.LONG),
+            POSITION_DIRECTION.SHORT: BookingPositions(self._data_proxy, POSITION_DIRECTION.SHORT),
+        }
+        self._backward_trade_set = set()
 
-        self._positions_dict = {POSITION_DIRECTION.LONG: long_positions, POSITION_DIRECTION.SHORT: short_positions}
-        self._backward_trade_set = backward_trade_set or set()
+    def get_state(self):
+        return {
+            "long_positions": self._positions_dict[POSITION_DIRECTION.LONG].get_state(),
+            "short_positions": self._positions_dict[POSITION_DIRECTION.SHORT].get_state(),
+            "backward_trade_set": list(self._backward_trade_set),
+        }
+
+    def set_state(self, state):
+        if "long_positions" in state:
+            self._positions_dict[POSITION_DIRECTION.LONG].set_state(state["long_positions"])
+        if "short_positions" in state:
+            self._positions_dict[POSITION_DIRECTION.SHORT].set_state(state["short_positions"])
+        if "backward_trade_set" in state:
+            self._backward_trade_set = set(state["backward_trade_set"])
 
     def get_position(self, order_book_id, direction):
         return self._positions_dict[direction][order_book_id]
@@ -99,31 +112,54 @@ class BookingPositions(dict):
     def get_or_create(self, key):
         return self[key]
 
+    def get_state(self):
+        return {key: value.get_state() for key, value in six.iteritems(self)}
+
+    def set_state(self, state):
+        for key, value in six.iteritems(state):
+            self[key].set_state(state[key])
+        for key in list(six.iterkeys(self)):
+            if key not in state:
+                del self[key]
+
 
 class BookingPosition(object):
     __repr__ = property_repr
 
-    def __init__(
-        self,
-        data_proxy,
-        order_book_id,
-        direction,
-        old_quantity=0,
-        today_quantity=0,
-        avg_price=0,
-        prev_settlement_price=0,
-    ):
+    def __init__(self, data_proxy, order_book_id, direction):
         self._data_proxy = data_proxy
 
         self._order_book_id = order_book_id
         self._direction = direction
-        self._old_quantity = old_quantity
-        self._logical_old_quantity = old_quantity
-        self._today_quantity = today_quantity
-        self._avg_price = avg_price
-        self._prev_settlement_price = prev_settlement_price
 
-        self._trades = {}
+        self._old_quantity = 0
+        self._logical_old_quantity = 0
+        self._today_quantity = 0
+        self._avg_price = 0
+        self._prev_settlement_price = 0
+
+        self._trade_quantity = 0
+        self._trade_cost = 0
+
+    def get_state(self):
+        return {
+            "old_quantity": self._old_quantity,
+            "logical_old_quantity": self._logical_old_quantity,
+            "today_quantity": self._today_quantity,
+            "avg_price": self._avg_price,
+            "prev_settlement_price": self._prev_settlement_price,
+            "trade_quantity": self._trade_quantity,
+            "trade_cost": self._trade_cost,
+        }
+
+    def set_state(self, state):
+        self._old_quantity = state.get("old_quantity", 0)
+        self._logical_old_quantity = state.get("logical_old_quantity", self._old_quantity)
+        self._today_quantity = state.get("today_quantity", 0)
+        self._avg_price = state.get("avg_price", 0)
+        self._prev_settlement_price = state.get("prev_settlement_price", 0)
+        self._trade_quantity = state.get("trade_quantity", 0)
+        self._trade_cost = state.get("trade_cost", 0)
 
     @property
     def order_book_id(self):
@@ -176,37 +212,28 @@ class BookingPosition(object):
         return self._data_proxy.current_snapshot(self._order_book_id).last
 
     @property
+    def contract_multiplier(self):
+        try:
+            return self._data_proxy.instruments(self._order_book_id).contract_multiplier
+        except AttributeError:
+            return 1
+
+    @property
     def prev_settlement_price(self):
         return self._prev_settlement_price
 
     @property
     def trading_pnl(self):
-        pnl = 0
-
-        for trade in six.itervalues(self._trades):
-            if trade.side == SIDE.BUY:
-                price_spread = self.last_price - trade.last_price
-            else:
-                price_spread = trade.last_price - self.last_price
-
-            contract_multiplier = self._data_proxy.instruments(self._order_book_id).contract_multiplier
-            pnl += trade.last_quantity * contract_multiplier * price_spread
-
-        return pnl
+        return self.contract_multiplier * (self._trade_quantity * self.last_price - self._trade_cost)
 
     @property
     def position_pnl(self):
-        if self._logical_old_quantity == 0:
-            return 0
-
         if self._direction == POSITION_DIRECTION.LONG:
             price_spread = self.last_price - self._prev_settlement_price
         else:
             price_spread = self._prev_settlement_price - self.last_price
 
-        contract_multiplier = self._data_proxy.instruments(self._order_book_id).contract_multiplier
-
-        return self._logical_old_quantity * contract_multiplier * price_spread
+        return self._logical_old_quantity * self.contract_multiplier * price_spread
 
     def apply_settlement(self, trading_date):
         next_trading_date = self._data_proxy.get_next_trading_date(trading_date).date()
@@ -220,7 +247,7 @@ class BookingPosition(object):
             self._old_quantity *= split_ratio
             self._avg_price /= split_ratio
         # 清空缓存的交易
-        self._trades.clear()
+        self._trade_quantity = self._trade_cost = 0
         # 更新结算价
         if self._data_proxy.instruments(self._order_book_id).type == "Future":
             self._prev_settlement_price = self._data_proxy.get_settle_price(self._order_book_id, trading_date)
@@ -230,9 +257,6 @@ class BookingPosition(object):
             )[0]
 
     def apply_trade(self, trade):
-        if trade.exec_id in self._trades:
-            return
-
         position_effect = self._get_position_effect(trade.side, trade.position_effect)
 
         if position_effect == POSITION_EFFECT.OPEN:
@@ -257,7 +281,8 @@ class BookingPosition(object):
         else:
             raise RuntimeError("Unknown side when apply trade: ")
 
-        self._trades[trade.exec_id] = trade
+        self._trade_quantity += trade.last_quantity * (1 if trade.side == SIDE.BUY else -1)
+        self._trade_cost += trade.last_quantity * trade.last_price * (1 if trade.side == SIDE.BUY else -1)
 
     def is_de_listed(self, trading_date):
         instrument = self._data_proxy.instruments(self._order_book_id)
@@ -280,9 +305,9 @@ class BookingPosition(object):
 
 
 class Booking(BookingModel):
-    def __init__(self, long_positions=None, short_positions=None, backward_trade_set=None):
+    def __init__(self):
         self._env = Environment.get_instance()
-        super(Booking, self).__init__(self._env.data_proxy, long_positions, short_positions, backward_trade_set)
+        super(Booking, self).__init__(self._env.data_proxy)
         self.register_event()
 
     def register_event(self):

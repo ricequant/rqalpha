@@ -193,18 +193,12 @@ class BookingFixture(DataProxyFixture):
     def __init__(self, *args, **kwargs):
         super(BookingFixture, self).__init__(*args, **kwargs)
 
-        self.long_positions = None
-        self.short_positions = None
         self.booking = None
 
     def init_fixture(self):
         from rqalpha.model.booking import Booking
-        from rqalpha.model.booking import BookingPositions
-        from rqalpha.const import POSITION_DIRECTION
         
         super(BookingFixture, self).init_fixture()
-        self.long_positions = BookingPositions(self.data_proxy, POSITION_DIRECTION.LONG)
-        self.short_positions = BookingPositions(self.data_proxy, POSITION_DIRECTION.SHORT)
-        self.booking = Booking(self.long_positions, self.short_positions)
+        self.booking = Booking()
 
 
