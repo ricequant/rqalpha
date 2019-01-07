@@ -47,7 +47,7 @@ from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
 from rqalpha.model.benchmark_portfolio import BenchmarkPortfolio
 from rqalpha.const import RUN_TYPE
-from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
+from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler, RqAttrDict
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
@@ -243,6 +243,8 @@ def run(config, source_code=None, user_funcs=None):
 
         if config.extra.context_vars:
             for k, v in six.iteritems(config.extra.context_vars):
+                if isinstance(v, RqAttrDict):
+                    v = v.__dict__
                 setattr(ucontext, k, v)
 
         from .core.executor import Executor
