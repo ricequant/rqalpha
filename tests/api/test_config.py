@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rqalpha.api import *
 from rqalpha.environment import Environment
 
 from ..utils import make_test_strategy_decorator
