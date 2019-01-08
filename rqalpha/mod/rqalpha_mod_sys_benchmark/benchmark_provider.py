@@ -86,8 +86,6 @@ class RealTimePriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
         self._first_close = self._last_close = self._get_close(
             "1d", env.data_proxy.get_previous_trading_date(env.config.base.start_date)
         )
-        print(env.data_proxy.get_previous_trading_date(env.config.base.start_date))
-        print(self._first_close)
 
     def _on_after_trading(self, event):
         self._last_close = self._get_close("1d", event.calendar_dt)
