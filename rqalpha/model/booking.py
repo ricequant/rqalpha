@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import six
+import jsonpickle
 
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, SIDE
@@ -34,13 +35,14 @@ class BookingModel(object):
         self._backward_trade_set = set()
 
     def get_state(self):
-        return {
+        return jsonpickle.encode({
             "long_positions": self._positions_dict[POSITION_DIRECTION.LONG].get_state(),
             "short_positions": self._positions_dict[POSITION_DIRECTION.SHORT].get_state(),
             "backward_trade_set": list(self._backward_trade_set),
-        }
+        }).encode('utf-8')
 
     def set_state(self, state):
+        state = jsonpickle.decode(state.decode('utf-8'))
         if "long_positions" in state:
             self._positions_dict[POSITION_DIRECTION.LONG].set_state(state["long_positions"])
         if "short_positions" in state:
