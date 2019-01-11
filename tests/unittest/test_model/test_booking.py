@@ -1,4 +1,5 @@
 import datetime
+import jsonpickle
 
 from rqalpha.utils.testing import MagicMock, BookingFixture, RQAlphaTestCase
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT
@@ -34,7 +35,7 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
                 return delisted_ins
             return not_delisted_ins
 
-        self.booking.set_state({
+        self.booking.set_state(jsonpickle.encode({
             "long_positions": {
                 "RB1812": {
                     "old_quantity": 1, "today_quantity": 3
@@ -44,7 +45,7 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
                     "today_quantity": 4
                 }
             }
-        })
+        }).encode('utf-8'))
 
         self.assertPositions({
             (POSITION_DIRECTION.LONG, "RB1812", 3, 1),
