@@ -13,7 +13,7 @@ XlsxWriter >=0.9.6
 PyYAML >=3.12
 tabulate
 
-rqrisk >=0.0.7
+rqrisk >=0.0.9
 
 pandas >=0.18.1 ; python_version != '3.4'
 pandas >=0.18.1,<=0.22.0 ; python_version == '3.4'
