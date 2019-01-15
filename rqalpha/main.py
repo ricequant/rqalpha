@@ -14,19 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
-import tarfile
-import tempfile
 import datetime
-import shutil
 from pprint import pformat
 
 import logbook
-import click
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import pytz
-import requests
 import six
 
 from rqalpha import const
@@ -52,7 +46,6 @@ from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from rqalpha.utils.scheduler import Scheduler
-from rqalpha.utils.config import set_locale
 from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
 from rqalpha.utils.dict_func import deep_update
 
@@ -94,53 +87,6 @@ def create_base_scope(copy_scope=False):
     })
 
     return scope
-
-
-def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
-    set_locale(locale)
-    default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
-    if data_bundle_path is None:
-        data_bundle_path = default_bundle_path
-    else:
-        data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
-    if (confirm and os.path.exists(data_bundle_path) and data_bundle_path != default_bundle_path and
-            os.listdir(data_bundle_path)):
-        click.confirm(_(u"""
-[WARNING]
-Target bundle path {data_bundle_path} is not empty.
-The content of this folder will be REMOVED before updating.
-Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=True)
-
-    day = datetime.date.today()
-    tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
-
-    while True:
-        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2' % (
-            day.year, day.month, day.day)
-        six.print_(_(u"try {} ...").format(url))
-        r = requests.get(url, stream=True)
-        if r.status_code != 200:
-            day = day - datetime.timedelta(days=1)
-            continue
-
-        out = open(tmp, 'wb')
-        total_length = int(r.headers.get('content-length'))
-
-        with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
-            for data in r.iter_content(chunk_size=8192):
-                bar.update(len(data))
-                out.write(data)
-
-        out.close()
-        break
-
-    shutil.rmtree(data_bundle_path, ignore_errors=True)
-    os.makedirs(data_bundle_path)
-    tar = tarfile.open(tmp, 'r:bz2')
-    tar.extractall(data_bundle_path)
-    tar.close()
-    os.remove(tmp)
-    six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
 def run(config, source_code=None, user_funcs=None):
