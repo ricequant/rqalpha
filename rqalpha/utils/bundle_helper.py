@@ -60,9 +60,7 @@ def down_load_helper(out, total_length, url):
                     requests.exceptions.Timeout) as err:
                 six.print_(_(" {} abort .3s later retry.").format(i + 1))
                 time.sleep(3)
-            except Exception as err:
-                raise err
-    return False
+    raise requests.exceptions.ConnectionError("Can't download data : {}".format(url))
 
 
 def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
