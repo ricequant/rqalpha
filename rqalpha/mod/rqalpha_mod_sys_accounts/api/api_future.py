@@ -235,7 +235,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :param bool close_today: 是否指定发平进仓单，默认为False，发送平仓单
+    :param bool close_today: 是否指定发平今仓单，默认为False，发送平仓单
 
     :return: :class:`~Order` object | list[:class:`~Order`] | None
 
@@ -285,7 +285,7 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :param bool close_today: 是否指定发平进仓单，默认为False，发送平仓单
+    :param bool close_today: 是否指定发平今仓单，默认为False，发送平仓单
 
     :return: :class:`~Order` object | list[:class:`~Order`] | None
     """
