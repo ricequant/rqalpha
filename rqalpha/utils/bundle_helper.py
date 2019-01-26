@@ -58,7 +58,7 @@ def down_load_helper(out, total_length, url):
             except (requests.exceptions.ConnectionError,
                     requests.exceptions.ChunkedEncodingError,
                     requests.exceptions.Timeout) as err:
-                six.print_(_(" {} abort .3s later retry.").format(i + 1))
+                six.print_(_("Download failed, retry in 10 seconds."))
                 time.sleep(3)
     raise requests.exceptions.ConnectionError("Can't download data : {}".format(url))
 
