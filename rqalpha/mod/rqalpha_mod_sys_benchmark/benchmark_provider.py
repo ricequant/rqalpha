@@ -41,7 +41,7 @@ class BackTestPriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
             self._order_book_id, bar_count, "1d", "close", end_date, skip_suspended=False, adjust_type='pre'
         )
         if len(close_series) < bar_count:
-            raise RuntimeError(_("Valid benchmark: unable to load enough close price."))
+            raise RuntimeError(_("Invalid benchmark: unable to load enough close price."))
 
         self._total_return_series = (close_series - close_series[0]) / close_series[0]
 
