@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-01-26 16:22+0800\n"
+"POT-Creation-Date: 2019-01-26 16:57+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -277,7 +277,7 @@ msgid "MaxDDD"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_benchmark/benchmark_provider.py:44
-msgid "Valid benchmark: unable to load enough close price."
+msgid "Invalid benchmark: unable to load enough close price."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_benchmark/mod.py:55
@@ -593,15 +593,15 @@ msgstr ""
 msgid "try {} ..."
 msgstr ""
 
-#: rqalpha/utils/bundle_helper.py:47
+#: rqalpha/utils/bundle_helper.py:48
 msgid "downloading ..."
 msgstr ""
 
-#: rqalpha/utils/bundle_helper.py:61
-msgid "Download failed, retry in 10 seconds."
+#: rqalpha/utils/bundle_helper.py:62
+msgid "Download failed, retry in {} seconds."
 msgstr ""
 
-#: rqalpha/utils/bundle_helper.py:75
+#: rqalpha/utils/bundle_helper.py:76
 msgid ""
 "\n"
 "[WARNING]\n"
@@ -610,7 +610,7 @@ msgid ""
 "Are you sure to continue?"
 msgstr ""
 
-#: rqalpha/utils/bundle_helper.py:94
+#: rqalpha/utils/bundle_helper.py:95
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr ""
 
@@ -619,7 +619,7 @@ msgid "in parse_user_config, exception: {e}"
 msgstr ""
 
 #: rqalpha/utils/config.py:209
-msgid "Invalid future info: underlying_symbol {] is illegal."
+msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr ""
 
 #: rqalpha/utils/config.py:224

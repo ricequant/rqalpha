@@ -206,7 +206,7 @@ def parse_future_info(future_info):
         try:
             underlying_symbol = underlying_symbol.upper()
         except AttributeError:
-            raise RuntimeError(_("Invalid future info: underlying_symbol {] is illegal.".format(underlying_symbol)))
+            raise RuntimeError(_("Invalid future info: underlying_symbol {} is illegal.".format(underlying_symbol)))
 
         for field, value in six.iteritems(info):
             if field in (

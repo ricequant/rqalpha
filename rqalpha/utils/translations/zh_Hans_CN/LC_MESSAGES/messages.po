@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-01-26 16:22+0800\n"
+"POT-Creation-Date: 2019-01-26 16:57+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -30,7 +30,7 @@ msgstr "未知账户类型 {}"
 
 #: rqalpha/environment.py:192
 msgid "No such transaction cost decider for such account_type {}."
-msgstr ""
+msgstr "不存在账户类型 {} 的费率算法"
 
 #: rqalpha/execution_context.py:105
 #, python-format
@@ -92,7 +92,7 @@ msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的�
 
 #: rqalpha/api/api_base.py:1036 rqalpha/api/api_base.py:1049
 msgid "Booking has not been set, please check your broker configuration."
-msgstr ""
+msgstr "Booking 对象不存在，请检查券商代理模块的配置。"
 
 #: rqalpha/core/strategy.py:40
 msgid "deprecated parameter[bar_dict] in before_trading function."
@@ -197,7 +197,7 @@ msgstr "percent 取值应该在 0 和 1 之间。"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/future_position.py:393
 msgid "Settlement price {settle_price} of {order_book_id} is invalid"
-msgstr ""
+msgstr "{order_book_id} 的结算价 {settle_price} 不合法"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:188
 #: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:196
@@ -278,8 +278,8 @@ msgid "MaxDDD"
 msgstr "最大回撤持续期"
 
 #: rqalpha/mod/rqalpha_mod_sys_benchmark/benchmark_provider.py:44
-msgid "Valid benchmark: unable to load enough close price."
-msgstr ""
+msgid "Invalid benchmark: unable to load enough close price."
+msgstr "不合法的基准：没有足够的收盘价"
 
 #: rqalpha/mod/rqalpha_mod_sys_benchmark/mod.py:55
 msgid "invalid benchmark {}"
@@ -372,7 +372,7 @@ msgstr "订单创建失败: 仓位不足。平仓量: {quantity}，可平数量:
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/booking.py:103
 msgid "Cannot get portfolio instance."
-msgstr ""
+msgstr "无法加载 portfolio 对象"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:90
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:70
@@ -448,7 +448,7 @@ msgstr "当前合约池为空。请使用 subscribe 订阅合约。"
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:102
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:110
 msgid "Unsupported market {}"
-msgstr ""
+msgstr "不支持的市场类型 {}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:206
 msgid "Frequency {} is not support."
@@ -598,15 +598,15 @@ msgstr ""
 msgid "try {} ..."
 msgstr "尝试 {} ..."
 
-#: rqalpha/utils/bundle_helper.py:47
+#: rqalpha/utils/bundle_helper.py:48
 msgid "downloading ..."
 msgstr "下载中 ..."
 
-#: rqalpha/utils/bundle_helper.py:61
-msgid "Download failed, retry in 10 seconds."
-msgstr ""
+#: rqalpha/utils/bundle_helper.py:62
+msgid "Download failed, retry in {} seconds."
+msgstr "下载失败，{}秒后重试。"
 
-#: rqalpha/utils/bundle_helper.py:75
+#: rqalpha/utils/bundle_helper.py:76
 msgid ""
 "\n"
 "[WARNING]\n"
@@ -620,7 +620,7 @@ msgstr ""
 "更新操作首先会清空该文件件下所有内容\n"
 "您确定要继续吗？\n"
 
-#: rqalpha/utils/bundle_helper.py:94
+#: rqalpha/utils/bundle_helper.py:95
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr "数据下载成功: {bundle_path}"
 
@@ -629,18 +629,18 @@ msgid "in parse_user_config, exception: {e}"
 msgstr "在执行 parse_user_config 时，产生异常: {e}"
 
 #: rqalpha/utils/config.py:209
-msgid "Invalid future info: underlying_symbol {] is illegal."
-msgstr ""
+msgid "Invalid future info: underlying_symbol {} is illegal."
+msgstr "无效的 future info: 合约品种 {} 不合法"
 
 #: rqalpha/utils/config.py:224
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
-msgstr ""
+msgstr "无效的 future info: commission_type 字段应为 BY_MONEY 或 BY_VOLUME"
 
 #: rqalpha/utils/config.py:228
 msgid "Invalid future info: field {} is not valid"
-msgstr ""
+msgstr "无效的 future info: 字段 {} 不合法"
 
 #: rqalpha/utils/config.py:258
 msgid "invalid init position {}, should be in format 'order_book_id:quantity'"
@@ -652,15 +652,15 @@ msgstr "初始仓位中合约 {order_book_id} 的数量 {quantity} 不是有效�
 
 #: rqalpha/utils/config.py:278
 msgid "unknown run type: {}"
-msgstr ""
+msgstr "未知的策略类型：{}"
 
 #: rqalpha/utils/config.py:291
 msgid "unknown persist mode: {}"
-msgstr ""
+msgstr "未知的持久化模式：{}"
 
 #: rqalpha/utils/config.py:304
 msgid "unknown market type: {}"
-msgstr ""
+msgstr "未知的市场类型：{}"
 
 #~ msgid "style should be OrderStyle"
 #~ msgstr "style 应该为 OrderStyle 类型，比如MarketOrder()"
@@ -783,5 +783,14 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "RealtimeTradeMod using market from network"
+#~ msgstr ""
+
+#~ msgid "Valid benchmark: unable to load enough close price."
+#~ msgstr ""
+
+#~ msgid "Download failed, retry in 10 seconds."
+#~ msgstr "下载失败，"
+
+#~ msgid "Invalid future info: underlying_symbol {] is illegal."
 #~ msgstr ""
 
