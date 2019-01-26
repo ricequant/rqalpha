@@ -83,9 +83,8 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
         return self._get_tax(trade.order_book_id, trade.side, trade.last_price * trade.last_quantity)
 
     def get_order_transaction_cost(self, order):
-        order_price = order.price if order.price else self.env.get_last_price(order.order_book_id)
-        commission = self._get_order_commission(order.order_book_id, order.side, order_price, order.quantity)
-        tax = self._get_tax(order.order_book_id, order.side, order_price * order.quantity)
+        commission = self._get_order_commission(order.order_book_id, order.side, order.frozen_price, order.quantity)
+        tax = self._get_tax(order.order_book_id, order.side, order.frozen_price * order.quantity)
         return tax + commission
 
 
@@ -160,11 +159,9 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
         return 0
 
     def get_order_transaction_cost(self, order):
-        order_price = order.price if order.price else self.env.get_last_price(order.order_book_id)
-
         close_today_quantity = order.quantity if order.position_effect == POSITION_EFFECT.CLOSE_TODAY else 0
 
         return self._get_commission(
-            order.order_book_id, order.position_effect, order_price, order.quantity, close_today_quantity
+            order.order_book_id, order.position_effect, order.frozen_price, order.quantity, close_today_quantity
         )
 

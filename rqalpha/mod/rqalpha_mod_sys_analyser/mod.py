@@ -22,11 +22,11 @@ from enum import Enum
 import six
 import numpy as np
 import pandas as pd
+from rqrisk import Risk
 
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod
-from rqalpha.utils.risk import Risk
 
 
 class AnalyserMod(AbstractMod):
@@ -197,8 +197,7 @@ class AnalyserMod(AbstractMod):
             np.array(self._benchmark_daily_returns),
             data_proxy.get_risk_free_rate(
                 self._env.config.base.start_date, self._env.config.base.end_date
-            ),
-            self._env.data_proxy.count_trading_dates(self._env.config.base.start_date, self._env.config.base.end_date)
+            )
         )
         summary.update({
             'alpha': self._safe_convert(risk.alpha, 3),

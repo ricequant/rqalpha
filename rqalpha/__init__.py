@@ -47,8 +47,8 @@ def load_ipython_extension(ipython):
 
 
 def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
-    from rqalpha import main
-    main.update_bundle(data_bundle_path=data_bundle_path, locale=locale, confirm=confirm)
+    import rqalpha.utils.bundle_helper
+    rqalpha.utils.bundle_helper.update_bundle(data_bundle_path=data_bundle_path, locale=locale, confirm=confirm)
 
 
 def run(config, source_code=None):
