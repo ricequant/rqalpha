@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-01-26 16:57+0800\n"
+"POT-Creation-Date: 2019-01-28 14:18+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -60,7 +60,7 @@ msgstr "策略运行产生异常"
 #: rqalpha/api/api_base.py:162 rqalpha/api/api_base.py:372
 #: rqalpha/api/api_base.py:405
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:307
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:477
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:482
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
@@ -187,11 +187,11 @@ msgstr "当前策略类型不支持 {order_book_id} 合约。"
 msgid "Order Creation Failed: 0 order quantity"
 msgstr "订单创建失败: 下单量为0。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:300
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:305
 msgid "percent should between -1 and 1"
 msgstr "percent 取值应该在 -1 和 1 之间。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:401
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:406
 msgid "percent should between 0 and 1"
 msgstr "percent 取值应该在 0 和 1 之间。"
 
@@ -603,8 +603,10 @@ msgid "downloading ..."
 msgstr "下载中 ..."
 
 #: rqalpha/utils/bundle_helper.py:62
-msgid "Download failed, retry in {} seconds."
-msgstr "下载失败，{}秒后重试。"
+msgid ""
+"\n"
+"Download failed, retry in {} seconds."
+msgstr "\n下载失败，{} 秒后重试。"
 
 #: rqalpha/utils/bundle_helper.py:76
 msgid ""
@@ -793,4 +795,7 @@ msgstr "未知的市场类型：{}"
 
 #~ msgid "Invalid future info: underlying_symbol {] is illegal."
 #~ msgstr ""
+
+#~ msgid "Download failed, retry in {} seconds."
+#~ msgstr "下载失败，{}秒后重试。"
 
