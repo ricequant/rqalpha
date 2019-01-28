@@ -265,7 +265,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
 
         while amount > 0:
             dummy_order = Order.__from_create__(order_book_id, amount, SIDE.BUY, style, POSITION_EFFECT.OPEN)
-            expected_transaction_cost = env.get_order_transaction_cost(DEFAULT_ACCOUNT_TYPE.STOCK.STOCK, dummy_order)
+            expected_transaction_cost = env.get_order_transaction_cost(DEFAULT_ACCOUNT_TYPE.STOCK, dummy_order)
             if amount * price + expected_transaction_cost <= cash_amount:
                 break
             amount -= round_lot
