@@ -44,6 +44,7 @@ def get_exactly_url():
 
 
 def down_load_helper(out, total_length, url):
+    retry_interval = 3
     with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
         for i in range(10):  # try five times
             try:
@@ -58,8 +59,8 @@ def down_load_helper(out, total_length, url):
             except (requests.exceptions.ConnectionError,
                     requests.exceptions.ChunkedEncodingError,
                     requests.exceptions.Timeout) as err:
-                six.print_(_(" {} abort .3s later retry.").format(i + 1))
-                time.sleep(3)
+                six.print_(_("Download failed, retry in {} seconds.".format(retry_interval)))
+                time.sleep(retry_interval)
     raise requests.exceptions.ConnectionError("Can't download data : {}".format(url))
 
 

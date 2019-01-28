@@ -137,6 +137,9 @@ class TickObject(object):
 
     @property
     def asks(self):
+        """
+        [list] 卖出报盘价格，asks[0]代表盘口卖一档报盘价
+        """
         try:
             return self._tick_dict['asks']
         except (KeyError, ValueError):
@@ -144,6 +147,9 @@ class TickObject(object):
 
     @property
     def ask_vols(self):
+        """
+        [list] 卖出报盘数量，ask_vols[0]代表盘口卖一档报盘数量
+        """
         try:
             return self._tick_dict['ask_vols']
         except (KeyError, ValueError):
@@ -151,6 +157,9 @@ class TickObject(object):
 
     @property
     def bids(self):
+        """
+        买入报盘价格，bids[0]代表盘口买一档报盘价
+        """
         try:
             return self._tick_dict['bids']
         except (KeyError, ValueError):
@@ -158,6 +167,9 @@ class TickObject(object):
 
     @property
     def bid_vols(self):
+        """
+        买入报盘数量，bids_vols[0]代表盘口买一档报盘数量
+        """
         try:
             return self._tick_dict['bid_vols']
         except (KeyError, ValueError):
@@ -165,6 +177,9 @@ class TickObject(object):
 
     @property
     def limit_up(self):
+        """
+        涨停价
+        """
         try:
             return self._tick_dict['limit_up']
         except (KeyError, ValueError):
@@ -172,6 +187,9 @@ class TickObject(object):
 
     @property
     def limit_down(self):
+        """
+        跌停价
+        """
         try:
             return self._tick_dict['limit_down']
         except (KeyError, ValueError):
