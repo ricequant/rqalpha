@@ -250,10 +250,24 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)
 
-    if isinstance(style, MarketOrder):
-        amount = int(Decimal(cash_amount) / Decimal(price))
-    else:
-        amount = int(Decimal(cash_amount) / Decimal(style.get_limit_price()))
+    price = price if isinstance(style, MarketOrder) else style.get_limit_price()
+    amount = int(Decimal(cash_amount) / Decimal(price))
+
+    if cash_amount > 0:
+        round_lot = int(env.get_instrument(order_book_id).round_lot)
+
+        # FIXME: logic duplicate with order_shares
+        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+
+        while amount > 0:
+            dummy_order = Order.__from_create__(order_book_id, amount, SIDE.BUY, style, POSITION_EFFECT.OPEN)
+            expected_transaction_cost = env.get_order_transaction_cost(DEFAULT_ACCOUNT_TYPE.STOCK.STOCK, dummy_order)
+            if amount * price + expected_transaction_cost <= cash_amount:
+                break
+            amount -= round_lot
+        else:
+            user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+            return
 
     # if the cash_amount is larger than you current security’s position,
     # then it will sell all shares of this security.

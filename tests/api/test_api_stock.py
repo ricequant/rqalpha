@@ -94,7 +94,8 @@ def test_order_value():
 
     def handle_bar(context, bar_dict):
         order_price = bar_dict[context.s1].limit_up
-        o = order_value(context.s1, context.amount * order_price, order_price)
+        # 5 块最小手续费
+        o = order_value(context.s1, context.amount * order_price + 5, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=context.amount, price=order_price)
     return init, handle_bar
 
