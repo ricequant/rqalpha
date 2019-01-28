@@ -296,8 +296,8 @@ def order_percent(id_or_ins, percent, price=None, style=None):
     发送一个花费价值等于目前投资组合（市场价值和目前现金的总和）一定百分比现金的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
 
     需要注意：
-    发送买单时，percent 代表的是期望买入股票消耗的金额占投资组合总权益的百分比（包含税费）。
-    发送卖单时，percent 代表的是期望卖出的股票总价值占投资组合总权益的百分比。
+    发送买单时，percent 代表的是期望买入股票消耗的金额（包含税费）占投资组合总权益的比例。
+    发送卖单时，percent 代表的是期望卖出的股票总价值占投资组合总权益的比例。
 
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str`
@@ -315,7 +315,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
 
     .. code-block:: python
 
-        #买入等于现有投资组合50%价值的平安银行股票。如果现在平安银行的股价是￥10/股并且现在的投资组合总价值是￥2000，那么将会买入200股的平安银行股票。（不包含交易成本和滑点的损失）：
+        #花费等于现有投资组合50%价值的现金买入平安银行股票：
         order_percent('000001.XSHG', 0.5)
     """
     if percent < -1 or percent > 1:
@@ -338,7 +338,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
 def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     """
     买入/卖出并且自动调整该证券的仓位到一个目标价值。
-    加仓时，cash_amount 代表现有持仓的价值加上即将花费的现金的总价值。
+    加仓时，cash_amount 代表现有持仓的价值加上即将花费（包含税费）的现金的总价值。
     减仓时，cash_amount 代表调整仓位的目标价至。
 
     需要注意，如果资金不足，该API将不会创建发送订单。
@@ -359,7 +359,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
 
     .. code-block:: python
 
-        #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位并且设置其目标价值为￥10000，以下代码范例会发送价值￥7000的平安银行的买单到市场。（向下调整到最接近每手股数即100的倍数的股数）：
+        #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位，以下代码范例会发送花费 ￥7000 现金的平安银行买单到市场。（向下调整到最接近每手股数即100的倍数的股数）：
         order_target_value('000001.XSHE', 10000)
     """
     order_book_id = assure_stock_order_book_id(id_or_ins)
@@ -393,8 +393,8 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     """
     买入/卖出证券以自动调整该证券的仓位到占有一个目标价值。
 
-    加仓时，percent 代表证券已有持仓的价值加上即将花费的现金的总值占当前投资组合总价值的百分比。
-    减仓时，percent 代表证券将被调整到的目标价至占当前投资组合总价值的百分比。
+    加仓时，percent 代表证券已有持仓的价值加上即将花费的现金（包含税费）的总值占当前投资组合总价值的比例。
+    减仓时，percent 代表证券将被调整到的目标价至占当前投资组合总价值的比例。
 
     其实我们需要计算一个position_to_adjust (即应该调整的仓位)
 
@@ -420,7 +420,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 
     .. code-block:: python
 
-        #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会买入平安银行股票最终使其占据投资组合价值的15%：
+        #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会消耗相当于当前投资组合价值5%的现金买入平安银行股票：
         order_target_percent('000001.XSHE', 0.15)
     """
     if percent < 0 or percent > 1:
