@@ -300,6 +300,20 @@ class BarObject(object):
         return self.__dict__[key]
 
 
+class MinuteBarObject(BarObject):
+    @property
+    def _day_bar(self):
+        return Environment.get_instance().data_proxy.get_bar(self.order_book_id, self.datetime, frequency="1d")
+
+    @property
+    def limit_up(self):
+        return self._day_bar.limit_up
+
+    @property
+    def limit_down(self):
+        return self._day_bar.limit_down
+
+
 class BarMap(object):
     def __init__(self, data_proxy, frequency):
         self._dt = None
