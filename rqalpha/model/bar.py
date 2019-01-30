@@ -339,6 +339,8 @@ class BarMap(object):
             return self._cache[order_book_id]
         except KeyError:
             try:
+                if not self._dt:
+                    return BarObject(instrument, NANDict, self._dt)
                 bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
             except Exception as e:
                 system_log.exception(e)
