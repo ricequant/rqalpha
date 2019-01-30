@@ -307,6 +307,9 @@ class MinuteBarObject(BarObject):
 
     @property
     def limit_up(self):
+        limit_up = super(MinuteBarObject, self).limit_up
+        if not np.isnan(limit_up):
+            return limit_up
         try:
             return self._day_bar.limit_up
         except AttributeError:
@@ -314,6 +317,9 @@ class MinuteBarObject(BarObject):
 
     @property
     def limit_down(self):
+        limit_down = super(MinuteBarObject, self).limit_down
+        if not np.isnan(limit_down):
+            return limit_down
         try:
             return self._day_bar.limit_down
         except AttributeError:
