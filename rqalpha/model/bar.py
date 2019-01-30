@@ -307,11 +307,17 @@ class MinuteBarObject(BarObject):
 
     @property
     def limit_up(self):
-        return self._day_bar.limit_up
+        try:
+            return self._day_bar.limit_up
+        except AttributeError:
+            return np.nan
 
     @property
     def limit_down(self):
-        return self._day_bar.limit_down
+        try:
+            return self._day_bar.limit_down
+        except AttributeError:
+            return np.nan
 
 
 class BarMap(object):
