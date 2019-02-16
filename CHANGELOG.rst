@@ -2,6 +2,40 @@
 CHANGELOG
 ==================
 
+3.3.1
+==================
+
+- 新增
+
+  - 加入对期货 SP, EG 品种的支持。
+  - 加入 python3.7 环境下的自动化测试。
+  - 使用 :code:`run_func` 运行的策略不再需要显式地执行 :code:`from rqalpha.api import *`。
+  - :code:`update-bundle` 命令增加中断重试功能。
+  - 增加 :code:`MinuteBarObject` 对象，当分钟线数据不包含涨跌停价时该对象的涨跌停字段改为从日线获取。
+
+
+- 变更
+
+  - 年化（如收益率）的计算改为使用交易日而非是自然日。
+  - 基准收益率不再使用全仓买入基准合约模拟，改为直接使用前复权价格序列计算。
+  - 策略使用 :code:`subscribe_event` 注册的回调函数改为接收两个参数 :code:`context`, :code:`event`。
+  - 重构了 :code:`Booking` 的计算逻辑，增加了 :code:`trading_pnl`, :code:`position_pnl` 两个字段。
+  - 抽离 :code:`risk.py` 为 `rqrisk <https://github.com/ricequant/rqrisk>`_ 项目。
+  - :code:`order_value` 等使用价值计算股数的下单 API 计算股数时增加对税费的考虑（即计算包含税费的情况下花费一定数量的现金可以交易多少合约）。
+
+
+- 修复
+
+  - 净值为负的情况下 :code:`Portfolio` 年化收益率计算有误的问题。
+  - :code:`Portfolio` 对象不存在的情况下某些 API 的报错信息不明确的问题。
+  - :code:`RunInfo` 对象中的 :code:`commission_multiplier` 字段不正确的问题。
+  - 期货 tick 回测/模拟交易下滑点计算报错的问题。
+  - 模拟交易和实盘中调用 :code:`submit_order` 发送代码中包含 "88" 的股票订单报错的问题。
+  - 限价单 round price 的精度问题。
+  - 策略使用 :code:`subscribe_event` 注册的回调函数和框架内部逻辑触发顺序不可控的问题。
+  - 回测和模拟交易中股票市价单冻结和解冻的资金可能出现不一致的问题。
+
+
 3.2.0
 ==================
 
