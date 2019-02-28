@@ -46,7 +46,7 @@ def properties(inst):
             # FIXME: 这里getattr在iter_properties_of_class中掉用过了，性能比较差，可以优化
             try:
                 tmp = getattr(inst, varname)
-            except (AttributeError, RuntimeError):
+            except (AttributeError, RuntimeError, KeyError):
                 continue
             if varname == "positions":
                 tmp = list(tmp.keys())
