@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-01-28 14:18+0800\n"
+"POT-Creation-Date: 2019-03-11 16:06+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -43,24 +43,24 @@ msgid ""
 "data bundle or select other backtest period."
 msgstr "未在 {start_date} 和 {end_date} 区间内查询到数据，请检查并升级您的 data bundle 或者选择其他回测区间。"
 
-#: rqalpha/main.py:202
+#: rqalpha/main.py:203
 msgid ""
 "Missing persist provider. You need to set persist_provider before use "
 "persist"
 msgstr "Persist provider 未加载，加载 Persist provider 方可使用 persist 功能。"
 
-#: rqalpha/main.py:258
+#: rqalpha/main.py:259
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:271 rqalpha/main.py:274
+#: rqalpha/main.py:272 rqalpha/main.py:275
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
 #: rqalpha/api/api_base.py:162 rqalpha/api/api_base.py:372
 #: rqalpha/api/api_base.py:405
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:307
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:482
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:318
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:503
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
@@ -82,7 +82,7 @@ msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:75
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:178
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:109
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:245
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:249
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
@@ -152,7 +152,6 @@ msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:226
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:162
-#: rqalpha/model/booking.py:62
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓。"
 
@@ -167,7 +166,7 @@ msgstr "订单创建失败: 下单量为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:102
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:237
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:241
 msgid "Limit order price should be positive"
 msgstr "Limit order 价格应该为正，请检查您的下单价格。"
 
@@ -178,20 +177,27 @@ msgid ""
 "quantity {quantity}"
 msgstr "订单创建失败: 平仓量 {amount} 大于当前持仓量 {quantity}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:300
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:186
+msgid ""
+"Order was separated, original order: {original_order_repr}, new orders: "
+"[{new_orders_repr}]"
+msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_orders_repr}]"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:311
 msgid "{order_book_id} is not supported in current strategy type"
 msgstr "当前策略类型不支持 {order_book_id} 合约。"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:133
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:146
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:273
 msgid "Order Creation Failed: 0 order quantity"
 msgstr "订单创建失败: 下单量为0。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:305
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:322
 msgid "percent should between -1 and 1"
 msgstr "percent 取值应该在 -1 和 1 之间。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:406
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:427
 msgid "percent should between 0 and 1"
 msgstr "percent 取值应该在 0 和 1 之间。"
 
@@ -370,19 +376,15 @@ msgid ""
 " to sell {quantity}, sellable {sellable}"
 msgstr "订单创建失败: 仓位不足。平仓量: {quantity}，可平数量: {sellable}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/booking.py:103
-msgid "Cannot get portfolio instance."
-msgstr "无法加载 portfolio 对象"
-
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:90
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:70
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:71
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
 "listed date [{listed_date}]"
 msgstr "订单被撤销: [{order_book_id}] 上市首日无法交易。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:96
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:76
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:77
 msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
@@ -414,29 +416,29 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:41
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:43
 msgid "invalid margin multiplier value: value range is (0, +∞]"
 msgstr "无效的 保证金乘数 设置: 其值范围为 (0, +∞]"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:50
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:56
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:52
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:58
 msgid "Not supported matching type {}"
 msgstr "不支持撮合类型: {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:57
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:58
 msgid "cancel_order function is not supported in signal mode"
 msgstr "在 Signal 模式下，不支持 cancel_order 函数。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:92
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:99
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:93
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:100
 msgid "You have traded {order_book_id} with {quantity} lots in {bar_status}"
 msgstr "您在 {bar_status} 下成交 {quantity} 手 {order_book_id} (请尽量避免涨跌停时下单)"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:104
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:105
 msgid "{order_id} order has been cancelled by user."
 msgstr "订单 {order_id} 被手动取消。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:123
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:124
 msgid "Order Rejected: {order_book_id} can not match. Market close."
 msgstr "订单被拒单: {order_book_id} 当天交易结束，订单无法成交。"
 
@@ -490,9 +492,16 @@ msgstr "无法获取初始仓位中合约 {} 的收盘价。"
 msgid "invalid commission multiplier value: value range is [0, +∞)"
 msgstr "无效的 手续费乘数 设置: 其值范围为 [0, +∞)"
 
-#: rqalpha/model/bar.py:345
+#: rqalpha/model/bar.py:373
 msgid "id_or_symbols {} does not exist"
 msgstr "您选择的证券[{}]不存在。"
+
+#: rqalpha/model/trade.py:57
+msgid ""
+"price, amount, commission, tax and frozen_price of trade {trade_id} is "
+"not supposed to be nan, current_value is {price}, {amount}, {commission},"
+" {tax}, {frozen_price}"
+msgstr ""
 
 #: rqalpha/utils/__init__.py:184
 msgid "not run {}({}, {}) because strategy is hold"
@@ -606,7 +615,9 @@ msgstr "下载中 ..."
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
-msgstr "\n下载失败，{} 秒后重试。"
+msgstr ""
+"\n"
+"下载失败，{} 秒后重试。"
 
 #: rqalpha/utils/bundle_helper.py:76
 msgid ""
@@ -798,4 +809,7 @@ msgstr "未知的市场类型：{}"
 
 #~ msgid "Download failed, retry in {} seconds."
 #~ msgstr "下载失败，{}秒后重试。"
+
+#~ msgid "Cannot get portfolio instance."
+#~ msgstr "无法加载 portfolio 对象"
 
