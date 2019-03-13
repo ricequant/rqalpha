@@ -312,7 +312,7 @@ class MinuteBarObject(BarObject):
             return limit_up
         try:
             return self._day_bar.limit_up
-        except AttributeError:
+        except (AttributeError, RuntimeError):
             return np.nan
 
     @property
@@ -322,7 +322,7 @@ class MinuteBarObject(BarObject):
             return limit_down
         try:
             return self._day_bar.limit_down
-        except AttributeError:
+        except (AttributeError, RuntimeError):
             return np.nan
 
 
