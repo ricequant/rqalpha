@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-11 16:06+0800\n"
+"POT-Creation-Date: 2019-03-14 17:34+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -369,6 +369,12 @@ msgid ""
 "Order Creation Failed: limit order price {limit_price} is lower than "
 "limit down {limit_down}."
 msgstr "订单创建失败: 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
+
+#: rqalpha/mod/rqalpha_mod_sys_risk/validators/self_trade_validator.py:32
+msgid ""
+"Create order failed, there are active orders leading to the risk of self-"
+"trade: [{}...]"
+msgstr "订单创建失败，当前存在可能导致自成交的挂单：[{}...]"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/stock_position_validator.py:34
 msgid ""
