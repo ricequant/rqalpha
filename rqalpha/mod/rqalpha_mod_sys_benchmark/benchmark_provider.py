@@ -63,27 +63,25 @@ class BackTestPriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
 
 class RealTimePriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
     def __init__(self, order_book_id):
-        env = Environment.get_instance()
-
         self._order_book_id = order_book_id
-        self._data_proxy = env.data_proxy
+        self._env = Environment.get_instance()
 
         self._first_close = None
 
         self._daily_returns = 0
         self._total_returns = 0
 
-        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._on_system_init)
-        env.event_bus.prepend_listener(EVENT.BAR, self._on_bar)
+        self._env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._on_system_init)
+        self._env.event_bus.prepend_listener(EVENT.BAR, self._on_bar)
 
     def _on_system_init(self, _):
         start_dt = datetime.combine(Environment.get_instance().config.base.start_date, time.min)
-        self._first_close = self._data_proxy.history_bars(
+        self._first_close = self._env.data_proxy.history_bars(
             self._order_book_id, 1, "1d", "close", start_dt, skip_suspended=False, adjust_type='pre'
         )[0]
 
     def _on_bar(self, event):
-        bar = self._data_proxy.get_bar(self._order_book_id, event.calendar_dt, "1m")
+        bar = self._env.data_proxy.get_bar(self._order_book_id, event.calendar_dt, "1m")
         self._daily_returns = float((bar.close - bar.prev_close) / bar.prev_close)
         self._total_returns = float((bar.close - self._first_close) / self._first_close)
 
