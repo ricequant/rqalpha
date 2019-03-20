@@ -90,7 +90,7 @@ class BarObject(object):
     @property
     def prev_close(self):
         """
-        [float] 截止到当前的最低价
+        [float] 昨日收盘价
         """
         try:
             return self._data['prev_close']

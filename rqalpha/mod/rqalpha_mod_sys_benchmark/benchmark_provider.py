@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import numpy as np
+from datetime import datetime, time
 
 from rqalpha.interface import AbstractBenchmarkProvider
 from rqalpha.environment import Environment
@@ -33,7 +34,7 @@ class BackTestPriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
         event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._on_system_init)
         event_bus.prepend_listener(EVENT.AFTER_TRADING, self._on_after_trading)
 
-    def _on_system_init(self, _):
+    def _on_system_init(self, __):
         env = Environment.get_instance()
         bar_count = len(env.config.base.trading_calendar) + 1
         end_date = env.config.base.end_date
@@ -62,38 +63,29 @@ class BackTestPriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
 
 class RealTimePriceSeriesBenchmarkProvider(AbstractBenchmarkProvider):
     def __init__(self, order_book_id):
+        env = Environment.get_instance()
+
         self._order_book_id = order_book_id
+        self._data_proxy = env.data_proxy
 
         self._first_close = None
-        self._last_close = None
 
         self._daily_returns = 0
         self._total_returns = 0
 
-        event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._on_system_init)
-        event_bus.prepend_listener(EVENT.AFTER_TRADING, self._on_after_trading)
-        event_bus.prepend_listener(EVENT.BAR, self._on_bar)
-
-    def _get_close(self, frequency, dt):
-        env = Environment.get_instance()
-        return env.data_proxy.history_bars(
-            self._order_book_id, 1, frequency, "close", dt, skip_suspended=False, adjust_type='pre'
-        )[0]
+        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._on_system_init)
+        env.event_bus.prepend_listener(EVENT.BAR, self._on_bar)
 
     def _on_system_init(self, _):
-        env = Environment.get_instance()
-        self._first_close = self._last_close = self._get_close(
-            "1d", env.data_proxy.get_previous_trading_date(env.config.base.start_date)
-        )
-
-    def _on_after_trading(self, event):
-        self._last_close = self._get_close("1d", event.calendar_dt)
+        start_dt = datetime.combine(Environment.get_instance().config.base.start_date, time.min)
+        self._first_close = self._data_proxy.history_bars(
+            self._order_book_id, 1, "1d", "close", start_dt, skip_suspended=False, adjust_type='pre'
+        )[0]
 
     def _on_bar(self, event):
-        close = self._get_close("1m", event.calendar_dt)
-        self._daily_returns = float((close - self._last_close) / self._last_close)
-        self._total_returns = float((close - self._first_close) / self._first_close)
+        bar = self._data_proxy.get_bar(self._order_book_id, event.calendar_dt, "1m")
+        self._daily_returns = float((bar.close - bar.prev_close) / bar.prev_close)
+        self._total_returns = float((bar.close - self._first_close) / self._first_close)
 
     @property
     def daily_returns(self):
