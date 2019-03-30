@@ -90,7 +90,7 @@ class BarObject(object):
     @property
     def prev_close(self):
         """
-        [float] 截止到当前的最低价
+        [float] 昨日收盘价
         """
         try:
             return self._data['prev_close']
@@ -298,32 +298,6 @@ class BarObject(object):
 
     def __getitem__(self, key):
         return self.__dict__[key]
-
-
-class MinuteBarObject(BarObject):
-    @property
-    def _day_bar(self):
-        return Environment.get_instance().data_proxy.get_bar(self.order_book_id, self.datetime, frequency="1d")
-
-    @property
-    def limit_up(self):
-        limit_up = super(MinuteBarObject, self).limit_up
-        if not np.isnan(limit_up):
-            return limit_up
-        try:
-            return self._day_bar.limit_up
-        except (AttributeError, RuntimeError):
-            return np.nan
-
-    @property
-    def limit_down(self):
-        limit_down = super(MinuteBarObject, self).limit_down
-        if not np.isnan(limit_down):
-            return limit_down
-        try:
-            return self._day_bar.limit_down
-        except (AttributeError, RuntimeError):
-            return np.nan
 
 
 class BarMap(object):

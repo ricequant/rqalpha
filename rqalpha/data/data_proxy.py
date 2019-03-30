@@ -21,7 +21,7 @@ import pandas as pd
 from rqalpha.data import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
-from rqalpha.model.bar import BarObject, MinuteBarObject
+from rqalpha.model.bar import BarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
@@ -138,9 +138,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         instrument = self.instruments(order_book_id)
         bar = self._data_source.get_bar(instrument, dt, frequency)
         if bar:
-            if frequency[-1] == 'd':
-                return BarObject(instrument, bar)
-            return MinuteBarObject(instrument, bar)
+            return BarObject(instrument, bar)
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
         data = self.history_bars(order_book_id, bar_count, frequency,
