@@ -82,11 +82,14 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
             date = self.get_next_trading_date(date)
 
         dt = date.year * 10000 + date.month * 100 + date.day
-        pos = dates.searchsorted(dt)
-        if pos == len(dates) or dt != dates[pos]:
+
+        left_pos = dates.searchsorted(dt)
+        right_pos = dates.searchsorted(dt, side="right")
+
+        if left_pos >= right_pos:
             return None
 
-        return table[pos]
+        return table[left_pos: right_pos]
 
     def get_split_by_ex_date(self, order_book_id, date):
         df = self.get_split(order_book_id)
