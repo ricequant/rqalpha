@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import date
+
 from rqalpha.api import *
 
 from ...utils import make_test_strategy_decorator
@@ -65,4 +67,30 @@ def test_stock_account_settlement():
             context.total_value_before_delisted = context.portfolio.total_value
         if context.now.date() > datetime.date(2015, 12, 29):
             assert context.portfolio.total_value == context.total_value_before_delisted
+    return init, handle_bar
+
+
+@as_test_strategy({
+    "base": {
+        "start_date": "2017-06-02",
+        "end_date": "2018-07-9"
+    }
+})
+def test_stock_dividend():
+    def init(context):
+        context.s = "601088.XSHG"
+        context.last_cash = None
+
+    def handle_bar(context, _):
+        if context.now.date() == date(2017, 6, 2):
+            order_shares(context.s, 1000)
+        elif context.now.date() == date(2017, 7, 7):
+            context.last_cash = context.portfolio.cash
+        elif context.now.date() == date(2017, 7, 11):
+            assert context.portfolio.cash == context.last_cash + 2970
+        elif context.now.date() == date(2018, 7, 6):
+            context.last_cash = context.portfolio.cash
+        elif context.now.date() == date(2018, 7, 9):
+            assert context.portfolio.cash == context.last_cash + 91
+
     return init, handle_bar
