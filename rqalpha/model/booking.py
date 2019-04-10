@@ -17,9 +17,12 @@
 import six
 import jsonpickle
 
+from datetime import datetime, time
+
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, SIDE
 from rqalpha.events import EVENT
+from rqalpha.utils.logger import system_log
 from rqalpha.utils.repr import property_repr
 from rqalpha.model.instrument import Instrument
 
@@ -261,9 +264,9 @@ class BookingPosition(object):
         if self._data_proxy.instruments(self._order_book_id).type == "Future":
             self._last_price = self._data_proxy.get_settle_price(self._order_book_id, trading_date)
         else:
-            self._last_price = self._data_proxy.history_bars(
-                order_book_id=self._order_book_id, bar_count=1, frequency="1d", field="close", dt=trading_date
-            )[0]
+            self._last_price = self._data_proxy.get_prev_close(
+                self._order_book_id, datetime.combine(next_trading_date, time.min)
+            )
 
     def apply_trade(self, trade):
         position_effect = self._get_position_effect(trade.side, trade.position_effect)
@@ -321,8 +324,13 @@ class Booking(BookingModel):
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
-        event_bus.prepend_listener(EVENT.POST_SETTLEMENT, lambda e: self.apply_settlement(self._env.trading_dt.date()))
+        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self.apply_settlement)
         event_bus.add_listener(EVENT.TRADE, lambda e: self.apply_trade(e.trade))
+
+    def apply_settlement(self, event):
+        prev_trading_date = self._env.data_proxy.get_previous_trading_date(self._env.trading_dt).date()
+        system_log.info("booking settlement on {}".format(prev_trading_date))
+        super(Booking, self).apply_settlement(prev_trading_date)
 
     def apply_trade(self, trade):
         if trade.exec_id in self._backward_trade_set:
