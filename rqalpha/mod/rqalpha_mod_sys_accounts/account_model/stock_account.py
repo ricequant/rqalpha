@@ -214,7 +214,7 @@ class StockAccount(BaseAccount):
             if dividend is None:
                 continue
 
-            dividend_per_share = dividend['dividend_cash_before_tax'] / dividend['round_lot']
+            dividend_per_share = sum(dividend['dividend_cash_before_tax'] / dividend['round_lot'])
             if np.isnan(dividend_per_share):
                 raise RuntimeError("Dividend per share of {} is not supposed to be nan.".format(order_book_id))
 
@@ -232,11 +232,11 @@ class StockAccount(BaseAccount):
 
                 try:
                     self._dividend_receivable[order_book_id]['payable_date'] = self._int_to_date(
-                        dividend['payable_date']
+                        dividend['payable_date'][0]
                     )
                 except ValueError:
                     self._dividend_receivable[order_book_id]['payable_date'] = self._int_to_date(
-                        dividend['ex_dividend_date']
+                        dividend['ex_dividend_date'][0]
                     )
 
     def _handle_split(self, trading_date):
