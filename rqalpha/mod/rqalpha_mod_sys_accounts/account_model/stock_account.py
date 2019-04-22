@@ -38,6 +38,7 @@ class StockAccount(BaseAccount):
     def __init__(self, total_cash, positions, backward_trade_set=None, dividend_receivable=None, register_event=True):
         super(StockAccount, self).__init__(total_cash, positions, backward_trade_set, register_event)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
+        self._pending_transform = {}
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
@@ -150,6 +151,7 @@ class StockAccount(BaseAccount):
         self._handle_dividend_book_closure(last_date)
         self._handle_dividend_payable(trading_date)
         self._handle_split(trading_date)
+        self._handle_transform()
 
     def _on_settlement(self, event):
         env = Environment.get_instance()
@@ -160,16 +162,14 @@ class StockAccount(BaseAccount):
                 message = _(u"{order_book_id} is expired, close all positions by system").format(
                     order_book_id=order_book_id)
                 if order_book_id in share_transformation:
-                    successor = share_transformation[order_book_id]['successor']
-                    position.share_transform(successor, share_transformation[order_book_id]['share_conversion_ratio'])
-                    self._positions[successor] = position
-                    message = _(u"{predecessor} code has changed to {successor}, change position by system").format(
-                        predecessor=order_book_id, successor=successor)
+                    self._pending_transform[order_book_id] = share_transformation[order_book_id]
+                    message = None
                 elif env.config.mod.sys_accounts.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
 
-                user_system_log.warn(message)
-                self._positions.pop(order_book_id, None)
+                if message:
+                    user_system_log.warn(message)
+                    self._positions.pop(order_book_id, None)
             elif position.quantity == 0:
                 self._positions.pop(order_book_id, None)
             else:
@@ -246,6 +246,23 @@ class StockAccount(BaseAccount):
             if ratio is None:
                 continue
             position.split_(ratio)
+
+    def _handle_transform(self):
+        if not self._pending_transform:
+            return
+        for predecessor, transformation in self._pending_transform.items():
+            successor = transformation['successor']
+            predecessor_position = self._positions[predecessor]
+            successor_position = self._positions.get_or_create(successor)
+
+            successor_position.share_transform(predecessor_position, transformation['share_conversion_ratio'])
+            self._positions.pop(predecessor, None)
+            self._positions[successor] = successor_position
+
+            user_system_log.warn(_(u"{predecessor} code has changed to {successor}, change position by system").format(
+                predecessor=predecessor, successor=successor))
+
+        self._pending_transform.clear()
 
     @property
     def total_value(self):

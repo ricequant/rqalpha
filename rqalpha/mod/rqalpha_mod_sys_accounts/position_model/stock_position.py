@@ -92,10 +92,10 @@ class StockPosition(BasePosition):
     def cal_close_today_amount(self, *args):
         return 0
 
-    def share_transform(self, order_book_id, share_conversion_ratio):
-        self._order_book_id = order_book_id
-        self._quantity *= share_conversion_ratio
-        self._avg_price /= share_conversion_ratio
+    def share_transform(self, predecessor_position, share_conversion_ratio):
+        total = self._avg_price * self._quantity + predecessor_position.avg_price * predecessor_position.quantity
+        self._quantity += predecessor_position.quantity * share_conversion_ratio
+        self._avg_price = total / self._quantity
 
     @property
     def type(self):
