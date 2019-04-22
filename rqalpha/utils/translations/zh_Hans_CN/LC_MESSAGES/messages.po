@@ -151,9 +151,13 @@ msgid "mod tear_down [END]   {}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:226
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:162
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:160
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓。"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:166
+msgid "{predecessor} code has changed to {successor}, change position by system"
+msgstr "{predecessor} 代码已更换为 {successor}，系统自动调整仓位。"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:237
 msgid "Trigger Forced Liquidation, current total_value is {}"

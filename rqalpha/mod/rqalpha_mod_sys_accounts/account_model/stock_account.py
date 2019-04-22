@@ -153,14 +153,22 @@ class StockAccount(BaseAccount):
 
     def _on_settlement(self, event):
         env = Environment.get_instance()
+        share_transformation = env.data_proxy.get_share_transformation()
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.quantity != 0:
-                if env.config.mod.sys_accounts.cash_return_by_stock_delisted:
+                message = _(u"{order_book_id} is expired, close all positions by system").format(
+                    order_book_id=order_book_id)
+                if order_book_id in share_transformation:
+                    successor = share_transformation[order_book_id]['successor']
+                    position.share_transform(successor, share_transformation[order_book_id]['share_conversion_ratio'])
+                    self._positions[successor] = position
+                    message = _(u"{predecessor} code has changed to {successor}, change position by system").format(
+                        predecessor=order_book_id, successor=successor)
+                elif env.config.mod.sys_accounts.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
-                user_system_log.warn(
-                    _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
-                )
+
+                user_system_log.warn(message)
                 self._positions.pop(order_book_id, None)
             elif position.quantity == 0:
                 self._positions.pop(order_book_id, None)

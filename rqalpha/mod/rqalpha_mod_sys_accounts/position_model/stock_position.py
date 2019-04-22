@@ -92,6 +92,11 @@ class StockPosition(BasePosition):
     def cal_close_today_amount(self, *args):
         return 0
 
+    def share_transform(self, order_book_id, share_conversion_ratio):
+        self._order_book_id = order_book_id
+        self._quantity *= share_conversion_ratio
+        self._avg_price /= share_conversion_ratio
+
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.STOCK.name

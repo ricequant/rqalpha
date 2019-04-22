@@ -35,6 +35,7 @@ from rqalpha.data.instrument_store import InstrumentStore
 from rqalpha.data.trading_dates_store import TradingDatesStore
 from rqalpha.data.yield_curve_store import YieldCurveStore
 from rqalpha.data.simple_factor_store import SimpleFactorStore
+from rqalpha.data.share_transformation_store import ShareTransformationStore
 from rqalpha.data.adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
 
@@ -60,6 +61,7 @@ class BaseDataSource(AbstractDataSource):
         self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
         self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
+        self._share_transformation = ShareTransformationStore(_p('share_transformation.json'))
 
         self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
         self._suspend_days = DateSet(_p('suspended_days.bcolz'))
@@ -85,6 +87,9 @@ class BaseDataSource(AbstractDataSource):
 
     def get_all_instruments(self):
         return self._instruments.get_all_instruments()
+
+    def get_share_transformation(self):
+        return self._share_transformation.get_share_transformation()
 
     def is_suspended(self, order_book_id, dates):
         return self._suspend_days.contains(order_book_id, dates)
