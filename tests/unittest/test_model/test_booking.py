@@ -72,8 +72,8 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
         })
 
         with self.mock_data_proxy_method("instruments", mock_get_instrument):
-            self.env.trading_dt = datetime.datetime(2018, 8, 31)
-            self.env.event_bus.publish_event(Event(EVENT.POST_SETTLEMENT))
+            self.env.trading_dt = datetime.datetime(2018, 9, 3)
+            self.env.event_bus.publish_event(Event(EVENT.PRE_BEFORE_TRADING))
             self.assertPositions({
                 (POSITION_DIRECTION.LONG, "RB1812", 0, 1),
                 (POSITION_DIRECTION.SHORT, "RB1812", 0, 2),
