@@ -159,17 +159,15 @@ class StockAccount(BaseAccount):
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.quantity != 0:
-                message = _(u"{order_book_id} is expired, close all positions by system").format(
-                    order_book_id=order_book_id)
                 if order_book_id in share_transformation:
                     self._pending_transform[order_book_id] = share_transformation[order_book_id]
-                    message = None
-                elif env.config.mod.sys_accounts.cash_return_by_stock_delisted:
+                    continue
+                if env.config.mod.sys_accounts.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
-
-                if message:
-                    user_system_log.warn(message)
-                    self._positions.pop(order_book_id, None)
+                user_system_log.warn(
+                    _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
+                )
+                self._positions.pop(order_book_id, None)
             elif position.quantity == 0:
                 self._positions.pop(order_book_id, None)
             else:
