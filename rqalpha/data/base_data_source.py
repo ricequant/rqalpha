@@ -88,8 +88,8 @@ class BaseDataSource(AbstractDataSource):
     def get_all_instruments(self):
         return self._instruments.get_all_instruments()
 
-    def get_share_transformation(self):
-        return self._share_transformation.get_share_transformation()
+    def get_share_transformation(self, order_book_id):
+        return self._share_transformation.get_share_transformation(order_book_id)
 
     def is_suspended(self, order_book_id, dates):
         return self._suspend_days.contains(order_book_id, dates)

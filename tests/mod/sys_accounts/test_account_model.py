@@ -107,11 +107,9 @@ def test_stock_transform():
         context.s2 = "601766.XSHG"
 
     def handle_bar(context, _):
-        print(context.now.date())
         if context.now.date() == date(2015, 5, 6):
             order_shares(context.s1, 200)
         elif context.now.date() >= date(2015, 5, 20):
-            print(context.portfolio.positions[context.s2])
             assert int(context.portfolio.positions[context.s2].quantity) == 220
 
     return init, handle_bar

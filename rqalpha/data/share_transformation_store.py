@@ -68,5 +68,9 @@ class ShareTransformationStore(object):
             system_log.warning("{} not found, use default data which may be out-of-date".format(f))
             self._share_transformation = DEFAULT_SHARE_TRANSFORMATION
 
-    def get_share_transformation(self):
-        return self._share_transformation
+    def get_share_transformation(self, order_book_id):
+        try:
+            transformation_data = self._share_transformation[order_book_id]
+        except KeyError:
+            return
+        return transformation_data["successor"], transformation_data["share_conversion_ratio"]
