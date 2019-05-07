@@ -60,6 +60,8 @@ class EVENT(Enum):
     # 策略执行完init函数后触发
     # post_user_init()
     POST_USER_INIT = 'post_user_init'
+    
+    POST_USER_END = 'post_user_end'
     # 策略证券池发生变化后触发
     # post_universe_changed(universe)
     POST_UNIVERSE_CHANGED = 'post_universe_changed'
