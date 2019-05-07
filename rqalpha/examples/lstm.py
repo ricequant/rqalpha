@@ -16,6 +16,7 @@ def load_data(filename, seq_len, normalise_window):
     data = f.decode().split('\n')
     """
     data = np.load(filename)
+    print "data length: %d" % len(data)
     sequence_length = seq_len + 1
     result = []
     
@@ -48,7 +49,7 @@ def normalise_windows(window_data):
         normalised_data.append(normalised_window)
     return normalised_data
 
-def build_model(layers):
+def build_model(layers=[1, 50, 100, 1]):
     model = Sequential()
 
     model.add(LSTM(
@@ -67,7 +68,7 @@ def build_model(layers):
     model.add(Activation("linear"))
 
     start = time.time()
-    model.compile(loss="mse", optimizer="rmsprop")
+    model.compile(loss="mse", optimizer="rmsprop", metrics=["accuracy"])
     print("> Compilation Time : ", time.time() - start)
     return model
 

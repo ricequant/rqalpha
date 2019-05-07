@@ -70,7 +70,8 @@ def build_model(layers):
 
     model.add(Dense(
         output_dim=layers[3]))
-    model.add(Activation("linear"))
+    model.add(Activation("softmax"))
+    #model.add(Activation("linear"))
 
     start = time.time()
     model.compile(loss="mse", optimizer="rmsprop")

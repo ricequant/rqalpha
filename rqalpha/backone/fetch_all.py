@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from rqalpha.api import *
-import talib
 from rqalpha import run_func
 import numpy as np
 import pandas as pd
