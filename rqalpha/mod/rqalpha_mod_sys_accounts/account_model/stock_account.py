@@ -256,7 +256,9 @@ class StockAccount(BaseAccount):
         if not self._pending_transform:
             return
         for predecessor, (successor, conversion_ratio) in six.iteritems(self._pending_transform):
-            self._positions[successor].combine_with_transformed_position(self._positions[predecessor], conversion_ratio)
+            self._positions.get_or_create(successor).combine_with_transformed_position(
+                self._positions[predecessor], conversion_ratio
+            )
             self._positions.pop(predecessor, None)
             user_system_log.warn(_(u"{predecessor} code has changed to {successor}, change position by system").format(
                 predecessor=predecessor, successor=successor))
