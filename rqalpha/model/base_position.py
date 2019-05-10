@@ -26,11 +26,12 @@ class Positions(dict):
     def __init__(self, position_cls):
         super(Positions, self).__init__()
         self._position_cls = position_cls
+        self._cached_positions = {}
 
     def __missing__(self, key):
-        position = self._position_cls(key)
-        self[key] = position
-        return position
+        if key not in self._cached_positions:
+            self._cached_positions[key] = self._position_cls(key)
+        return self._cached_positions[key]
 
     def get_or_create(self, key):
         if key not in self:
