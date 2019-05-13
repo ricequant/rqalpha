@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-11 16:06+0800\n"
+"POT-Creation-Date: 2019-05-13 11:09+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -282,7 +282,7 @@ msgstr ""
 msgid "MaxDDD"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_benchmark/benchmark_provider.py:44
+#: rqalpha/mod/rqalpha_mod_sys_benchmark/benchmark_provider.py:46
 msgid "Invalid benchmark: unable to load enough close price."
 msgstr ""
 
@@ -296,6 +296,12 @@ msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_benchmark/mod.py:70
 msgid "benchmark {benchmark} has been de_listed on {end_date}"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_benchmark/mod.py:74
+msgid ""
+"the target {benchmark} will be delisted in the short term. please choose "
+"a sustainable target."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:37
@@ -487,7 +493,7 @@ msgstr ""
 msgid "invalid commission multiplier value: value range is [0, +∞)"
 msgstr ""
 
-#: rqalpha/model/bar.py:373
+#: rqalpha/model/bar.py:347
 msgid "id_or_symbols {} does not exist"
 msgstr ""
 

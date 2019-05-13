@@ -15,12 +15,12 @@
 # limitations under the License.
 
 
-from rqalpha.interface import AbstractMod
-from rqalpha.utils.logger import system_log
-from rqalpha.utils.exception import patch_user_exc
-from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import RUN_TYPE
 from rqalpha.events import EVENT
+from rqalpha.interface import AbstractMod
+from rqalpha.utils.exception import patch_user_exc
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import system_log
 
 
 class BenchmarkMod(AbstractMod):
@@ -66,6 +66,12 @@ class BenchmarkMod(AbstractMod):
                 _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=bechmark_order_book_id,
                                                                                        start_date=start_date)))
         if instrument.de_listed_date.date() < end_date:
-            raise patch_user_exc(ValueError(
-                _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=bechmark_order_book_id,
-                                                                                    end_date=end_date)))
+            if config.base.run_type == RUN_TYPE.BACKTEST:
+                msg = _(u"benchmark {benchmark} has been de_listed on {end_date}").format(
+                    benchmark=bechmark_order_book_id,
+                    end_date=end_date)
+            else:
+                msg = _(u"the target {benchmark} will be delisted in the short term. "
+                        u"please choose a sustainable target.").format(
+                    benchmark=bechmark_order_book_id)
+            raise patch_user_exc(ValueError(msg))
