@@ -126,7 +126,7 @@ Mod名                      说明
 关于RQAlpha的任何问题可以通过以下途径来获取帮助
 
 *  可以通过 `索引`_ 或者使用搜索功能来查找特定问题
-*  在 `Github Issue`_ 中提交issue
+*  在 `Github Issues`_ 中提交issue
 *  RQAlpha 交流群「487188429」
 
 防骗声明
@@ -136,7 +136,7 @@ Mod名                      说明
 该邮件并非 Ricequant 米筐科技发出，请各位宽客不要扫描二维码，亦不要点击邮件中的链接，保护个人信息和财产安全，谨防上当受骗，
 
 
-.. _Github Issue: https://github.com/ricequant/rqalpha/issues
+.. _Github Issues: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
 .. _RQAlpha 文档: http://rqalpha.readthedocs.io/zh_CN/latest/
 .. _Ricequant 文档: https://www.ricequant.com/api/python/chn
