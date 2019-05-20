@@ -151,9 +151,13 @@ msgid "mod tear_down [END]   {}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:226
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:162
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:168
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓。"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:260
+msgid "{predecessor} code has changed to {successor}, change position by system"
+msgstr "{predecessor} 代码已更换为 {successor}，系统自动调整仓位。"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:237
 msgid "Trigger Forced Liquidation, current total_value is {}"
@@ -177,7 +181,7 @@ msgid ""
 "quantity {quantity}"
 msgstr "订单创建失败: 平仓量 {amount} 大于当前持仓量 {quantity}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:186
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:182
 msgid ""
 "Order was separated, original order: {original_order_repr}, new orders: "
 "[{new_orders_repr}]"
@@ -375,6 +379,12 @@ msgid ""
 "Order Creation Failed: limit order price {limit_price} is lower than "
 "limit down {limit_down}."
 msgstr "订单创建失败: 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
+
+#: rqalpha/mod/rqalpha_mod_sys_risk/validators/self_trade_validator.py:32
+msgid ""
+"Create order failed, there are active orders leading to the risk of self-"
+"trade: [{}...]"
+msgstr "订单创建失败，当前存在可能导致自成交的挂单：[{}...]"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/stock_position_validator.py:34
 msgid ""

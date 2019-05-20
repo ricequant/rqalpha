@@ -46,16 +46,15 @@ as_test_strategy = make_test_strategy_decorator({
 
 @as_test_strategy({
     "base": {
-        "start_date": "2015-12-07",
-        "end_date": "2016-01-05"
+        "start_date": "2018-12-25",
+        "end_date": "2019-01-05"
     }
 })
-def test_stock_account_settlement():
+def test_stock_delist():
     import datetime
 
     def init(context):
-        # 招商地产
-        context.s = "000024.XSHE"
+        context.s = "000979.XSHE"
         context.fired = False
         context.total_value_before_delisted = None
 
@@ -63,9 +62,9 @@ def test_stock_account_settlement():
         if not context.fired:
             order_shares(context.s, 20000)
             context.fired = True
-        if context.now.date() == datetime.date(2015, 12, 29):
+        if context.now.date() == datetime.date(2018, 12, 27):
             context.total_value_before_delisted = context.portfolio.total_value
-        if context.now.date() > datetime.date(2015, 12, 29):
+        if context.now.date() > datetime.date(2018, 12, 28):
             assert context.portfolio.total_value == context.total_value_before_delisted
     return init, handle_bar
 
@@ -92,5 +91,25 @@ def test_stock_dividend():
             context.last_cash = context.portfolio.cash
         elif context.now.date() == date(2018, 7, 9):
             assert context.portfolio.cash == context.last_cash + 91
+
+    return init, handle_bar
+
+
+@as_test_strategy({
+    "base": {
+        "start_date": "2015-05-06",
+        "end_date": "2015-05-20"
+    }
+})
+def test_stock_transform():
+    def init(context):
+        context.s1 = "601299.XSHG"
+        context.s2 = "601766.XSHG"
+
+    def handle_bar(context, _):
+        if context.now.date() == date(2015, 5, 6):
+            order_shares(context.s1, 200)
+        elif context.now.date() >= date(2015, 5, 20):
+            assert int(context.portfolio.positions[context.s2].quantity) == 220
 
     return init, handle_bar

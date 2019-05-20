@@ -28,6 +28,8 @@ __config__ = {
     "validate_stock_position": True,
     # 检查期货可平仓位是否充足
     "validate_future_position": True,
+    # 检查是否存在自成交的风险
+    "validate_self_trade": False,
 }
 
 

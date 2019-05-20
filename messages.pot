@@ -176,7 +176,7 @@ msgid ""
 "quantity {quantity}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:186
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:182
 msgid ""
 "Order was separated, original order: {original_order_repr}, new orders: "
 "[{new_orders_repr}]"
@@ -371,6 +371,12 @@ msgstr ""
 msgid ""
 "Order Creation Failed: limit order price {limit_price} is lower than "
 "limit down {limit_down}."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_risk/validators/self_trade_validator.py:32
+msgid ""
+"Create order failed, there are active orders leading to the risk of self-"
+"trade: [{}...]"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/stock_position_validator.py:34

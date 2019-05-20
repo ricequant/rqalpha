@@ -38,6 +38,7 @@ class StockAccount(BaseAccount):
     def __init__(self, total_cash, positions, backward_trade_set=None, dividend_receivable=None, register_event=True):
         super(StockAccount, self).__init__(total_cash, positions, backward_trade_set, register_event)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
+        self._pending_transform = {}
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
@@ -69,6 +70,7 @@ class StockAccount(BaseAccount):
             'total_cash': self._total_cash,
             'backward_trade_set': list(self._backward_trade_set),
             'dividend_receivable': self._dividend_receivable,
+            'pending_transform': self._pending_transform,
         }
 
     def set_state(self, state):
@@ -76,6 +78,7 @@ class StockAccount(BaseAccount):
         self._total_cash = state['total_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
         self._dividend_receivable = state['dividend_receivable']
+        self._pending_transform = state.get("pending_transform", {})
         self._positions.clear()
         for order_book_id, v in six.iteritems(state['positions']):
             position = self._positions.get_or_create(order_book_id)
@@ -150,16 +153,26 @@ class StockAccount(BaseAccount):
         self._handle_dividend_book_closure(last_date)
         self._handle_dividend_payable(trading_date)
         self._handle_split(trading_date)
+        self._handle_transform()
 
     def _on_settlement(self, event):
         env = Environment.get_instance()
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.quantity != 0:
+                try:
+                    transform_data = env.data_proxy.get_share_transformation(order_book_id)
+                except NotImplementedError:
+                    pass
+                else:
+                    if transform_data is not None:
+                        self._pending_transform[order_book_id] = transform_data
+                        continue
                 if env.config.mod.sys_accounts.cash_return_by_stock_delisted:
                     self._total_cash += position.market_value
                 user_system_log.warn(
-                    _(u"{order_book_id} is expired, close all positions by system").format(order_book_id=order_book_id)
+                    _(u"{order_book_id} is expired, close all positions by system").format(
+                        order_book_id=order_book_id)
                 )
                 self._positions.pop(order_book_id, None)
             elif position.quantity == 0:
@@ -238,6 +251,19 @@ class StockAccount(BaseAccount):
             if ratio is None:
                 continue
             position.split_(ratio)
+
+    def _handle_transform(self):
+        if not self._pending_transform:
+            return
+        for predecessor, (successor, conversion_ratio) in six.iteritems(self._pending_transform):
+            self._positions.get_or_create(successor).combine_with_transformed_position(
+                self._positions[predecessor], conversion_ratio
+            )
+            self._positions.pop(predecessor, None)
+            user_system_log.warn(_(u"{predecessor} code has changed to {successor}, change position by system").format(
+                predecessor=predecessor, successor=successor))
+
+        self._pending_transform.clear()
 
     @property
     def total_value(self):

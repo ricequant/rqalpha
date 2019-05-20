@@ -19,9 +19,13 @@ from .is_trading_validator import IsTradingValidator
 from .price_validator import PriceValidator
 from .stock_position_validator import StockPositionValidator
 from .future_position_validator import FuturePositionValidator
+from .self_trade_validator import SelfTradeValidator
 
 __all__ = [
     "CashValidator",
     "StockPositionValidator",
-    "FuturePositionValidator"
+    "FuturePositionValidator",
+    "PriceValidator",
+    "IsTradingValidator",
+    "SelfTradeValidator",
 ]

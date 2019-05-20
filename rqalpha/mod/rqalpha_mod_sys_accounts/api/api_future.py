@@ -180,14 +180,14 @@ def order(id_or_ins, amount, side, position_effect, style):
 
     if len(orders) > 1:
         user_system_log.warn(_(
-            "Order was separated, original order: {original_order_repr}, new orders: [{new_orders_repr}]".format(
+            "Order was separated, original order: {original_order_repr}, new orders: [{new_orders_repr}]").format(
                 original_order_repr="Order(order_book_id={}, quantity={}, side={}, position_effect={})".format(
                     order_book_id, amount, side, position_effect
                 ), new_orders_repr=", ".join(["Order({}, {}, {}, {})".format(
                     o.order_book_id, o.quantity, o.side, o.position_effect
                 ) for o in orders])
             )
-        ))
+        )
 
     for o in orders:
         if o.type == ORDER_TYPE.MARKET:
