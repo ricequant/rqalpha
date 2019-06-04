@@ -180,7 +180,7 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
 
 .. code-block:: bash
 
-    $ rqalpha generate_config
+    $ rqalpha generate-config
 
 ::
 

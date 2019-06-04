@@ -478,7 +478,7 @@ msgstr "无法加载滑点模型 {}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/slippage.py:62
 msgid "invalid slippage rate value: value range is [0, 1)"
-msgstr "无效的 滑点 设置: 其值范围为 [0, 1]"
+msgstr "无效的 滑点 设置: 其值范围为 [0, 1)"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/slippage.py:85
 msgid "invalid slippage rate value: value range is greater than 0"

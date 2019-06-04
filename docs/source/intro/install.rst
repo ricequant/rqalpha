@@ -102,7 +102,7 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 
 .. code-block:: bash
 
-    $ rqalpha generate_config
+    $ rqalpha generate-config
 
 .. _intro-faq:
 
