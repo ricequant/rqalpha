@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import json
+import six
 
 from rqalpha.utils.logger import system_log
 
@@ -56,6 +57,12 @@ DEFAULT_SHARE_TRANSFORMATION = {
     "event": "code_change"
   }
 }
+
+
+if six.PY2:
+    # FileNotFoundError is only available since Python 3.3
+    FileNotFoundError = IOError
+    from io import open
 
 
 class ShareTransformationStore(object):
