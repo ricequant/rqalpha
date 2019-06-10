@@ -37,7 +37,7 @@ rqalpha_path = "~/.rqalpha"
 
 def load_yaml(path):
     with codecs.open(path, encoding='utf-8') as f:
-        return yaml.load(f)
+        return yaml.load(f, Loader=yaml.FullLoader)
 
 
 def load_json(path):

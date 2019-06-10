@@ -10,7 +10,7 @@ jsonpickle ==0.9.4
 simplejson >=3.10.0
 dill ==0.2.5
 XlsxWriter >=0.9.6
-PyYAML >=3.12
+PyYAML >=5.1
 tabulate
 
 rqrisk >=0.0.9
