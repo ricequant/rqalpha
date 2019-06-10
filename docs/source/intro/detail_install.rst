@@ -13,7 +13,7 @@ Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQ
 
 .. note::
 
-    安装 Anaconda 需要下载 `最新的安装包 <https://www.continuum.io/downloads>`_, 如果速度比较慢，建议从 `清华源 <https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/>`_ 下载。
+    安装 Anaconda 比较简单，只需要去 `Anaconda 官网`_ 下载对应操作系统版本的安装包进行安装即可。
 
 当安装成功后，执行如下命令来查看是否安装成功:
 
@@ -24,12 +24,12 @@ Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQ
 For GNU/Linux
 ------------------------------------
 
-如果您使用 GNU/Linux 系统，可以使用如下方式进行 Anaconda 环境的安装，下面以 CentOS 为例:
+如果您使用 GNU/Linux 系统，可以使用如下方式进行 Anaconda 环境（基于 **Python 3**）的安装，下面以 CentOS 为例:
 
 .. code-block:: bash
 
-    # 首先从清华的官方镜像下载 anaconda Linux64版本
-    $ wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-4.2.0-Linux-x86_64.sh
+    # 首先从 Anaconda 官网下载 anaconda Linux 64Bit 版本命令行安装包
+    $ wget https://repo.continuum.io/archive/Anaconda3-4.2.0-Linux-x86_64.sh
 
     # 修改权限让脚本可以运行
     $ chmod +x Anaconda3-4.2.0-Linux-x86_64.sh
@@ -78,7 +78,17 @@ For GNU/Linux
 更改 Anaconda 源，提高下载速度
 ------------------------------------
 
-conda 官方的服务器在国外，因此国内的网络环境使用 :code:`conda` 可能会比较慢，建议您根据自己的网络环境选择是否更换 `conda` 源。
+.. warning::
+
+    由于 Anaconda 及其 :code:`conda` 软件包仓库的官方服务器在国外，因此国内连接有可能会出现速度较慢的问题。
+    为了改善连接速度，**2019年5月之前**， Anaconda 在国内常用的镜像源仓库有 `清华镜像仓库`_ 以及
+    `中科大镜像仓库`_，但由于版权问题，这些非官方授权的镜像仓库均已 `关闭且停止使用`_。因此，目前只能通过
+    Anaconda 官方服务器获取软件包。下述方法已经失效，仅作为历史记录保留参考。
+
+.. _`Anaconda 官网`: https://www.anaconda.com/distribution/
+.. _`清华镜像仓库`: https://mirrors.tuna.tsinghua.edu.cn/news/close-anaconda-service/
+.. _`中科大镜像仓库`: http://mirrors.ustc.edu.cn/help/anaconda.html
+.. _`关闭且停止使用`: https://servers.ustclug.org/2019/04/close-anaconda-service/
 
 清华大学提供了Anaconda的仓库镜像，我们只需要配置Anaconda的配置文件，添加清华的镜像源，然后将其设置为第一搜索渠道即可：
 运行以下命令行:
