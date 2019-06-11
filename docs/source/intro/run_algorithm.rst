@@ -342,7 +342,7 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
 此种模式下，您需要以字符串的方式传入策略源码，并传入配置参数以启动策略
 
 .. code-block:: python
-    
+
     # run_code_demo
     from rqalpha import run_code
 
@@ -372,7 +372,7 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
       "base": {
         "start_date": "2016-06-01",
         "end_date": "2016-12-01",
-        "benchmark": "000300.XSHG"，
+        "benchmark": "000300.XSHG",
         "accounts": {
             "stock": 100000
         }

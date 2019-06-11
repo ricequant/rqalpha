@@ -82,7 +82,7 @@ def order(order_book_id, quantity, price=None, style=None):
 
         # 当前仓位为0
         # RB1710 多方向调仓2手：调整后变为 BUY 2手
-        order('RB1710'， 2)
+        order('RB1710', 2)
 
         # RB1710 空方向调仓3手：先平多方向2手 在开空方向1手，调整后变为 SELL 1手
         order('RB1710', -3)
@@ -134,7 +134,7 @@ def order_to(order_book_id, quantity, price=None, style=None):
         order_to('RB1710', 2)
 
         # RB1710 调仓至 SELL 1手
-        order_to('RB1710'， -1)
+        order_to('RB1710', -1)
 
     """
     style = cal_style(price, style)

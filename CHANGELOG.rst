@@ -49,8 +49,8 @@ CHANGELOG
   - 增加新接口 :code:`AbstractTransactionCostDecider`，在 :code:`Environment` 中注册该接口的实现可以自定义不同合约品种、不同市场的税费计算逻辑。
   - 增加新 Mod :code:`sys_transaction_cost` 实现上述接口，抽离了原 :code:`sys_simulation` Mod 中的税费计算逻辑，并加入了对港股税费计算的支持。
   - 移除 :code:`sys_booking` Mod，booking 相关逻辑移入框架中，:code:`Booking` 与 :code:`Portfolio` 类地位相当。
-  - 移除 :code:`sys_stock_realtime` Mod，该 Mod 被移到了单独的 `仓库 <https://github.com/ricequant/rqalpha-mod-stock-realtime>`_ ，不再与框架一同维护。
-  - 移除 :code:`sys_stock_incremental` Mod，该 Mod 被移到了单独的 `仓库 <https://github.com/ricequant/rqalpha-mod-incremental>`_ ，不再与框架一同维护。
+  - 移除 :code:`sys_stock_realtime` Mod，该 Mod 被移到了单独的仓库 `rqalpha-mod-stock-realtime <https://github.com/ricequant/rqalpha-mod-stock-realtime>`_ ，不再与框架一同维护。
+  - 移除 :code:`sys_stock_incremental` Mod，该 Mod 被移到了单独的仓库 `rqalpha-mod-incremental <https://github.com/ricequant/rqalpha-mod-incremental>`_ ，不再与框架一同维护。
 
 
 - 类型和 Api
