@@ -75,32 +75,8 @@ For GNU/Linux
     rm -rf ~/.fontconfig
 
 
-更改 Anaconda 源，提高下载速度
-------------------------------------
-
-.. warning::
-
-    由于 Anaconda 及其 :code:`conda` 软件包仓库的官方服务器在国外，因此国内连接有可能会出现速度较慢的问题。
-    为了改善连接速度，**2019年5月之前**， Anaconda 在国内常用的镜像源仓库有 `清华镜像仓库`_ 以及
-    `中科大镜像仓库`_，但由于版权问题，这些非官方授权的镜像仓库均已 `关闭且停止使用`_。因此，目前只能通过
-    Anaconda 官方服务器获取软件包。下述方法已经失效，仅作为历史记录保留参考。
-
 .. _`Anaconda 官网`: https://www.anaconda.com/distribution/
-.. _`清华镜像仓库`: https://mirrors.tuna.tsinghua.edu.cn/news/close-anaconda-service/
-.. _`中科大镜像仓库`: http://mirrors.ustc.edu.cn/help/anaconda.html
-.. _`关闭且停止使用`: https://servers.ustclug.org/2019/04/close-anaconda-service/
 
-清华大学提供了Anaconda的仓库镜像，我们只需要配置Anaconda的配置文件，添加清华的镜像源，然后将其设置为第一搜索渠道即可：
-运行以下命令行:
-
-..  code-block:: bash
-
-    conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/'
-    conda config --set show_channel_urls yes
-
-设置好源后，就可以使用 :code:`conda install 【包名】` 安装需要的 Python 库了。大部分情况下，建议使用 :code:`conda` 来安装 Python 数据分析相关的库，因为 conda 做了很多的优化和版本依赖关系的管理。如果没有相关的库，则使用 :code:`pip install 【包名】` 的方式来安装。
-
-.. _intro-detail-create-env:
 
 conda 虚拟环境
 ------------------------------------
