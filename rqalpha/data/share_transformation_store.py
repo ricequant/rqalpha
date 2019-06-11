@@ -19,42 +19,51 @@ import json
 from rqalpha.utils.logger import system_log
 
 DEFAULT_SHARE_TRANSFORMATION = {
-  "000024.XSHE": {
-    "successor": "001979.XSHE",
-    "effective_date": 1451433600000,
-    "share_conversion_ratio": 1.6008,
-    "predecessor_delisted": True,
-    "discretionary_execution": False,
-    "predecessor_delisted_date": 1451433600000,
-    "event": "merge"
-  },
-  "600005.XSHG": {
-    "successor": "600019.XSHG",
-    "effective_date": 1487030400000,
-    "share_conversion_ratio": 0.56,
-    "predecessor_delisted": True,
-    "discretionary_execution": False,
-    "predecessor_delisted_date": 1487030400000,
-    "event": "merge"
-  },
-  "601299.XSHG": {
-    "successor": "601766.XSHG",
-    "effective_date": 1432080000000,
-    "share_conversion_ratio": 1.1,
-    "predecessor_delisted": True,
-    "discretionary_execution": False,
-    "predecessor_delisted_date": 1432080000000,
-    "event": "merge"
-  },
-  "601313.XSHG": {
-    "successor": "601360.XSHG",
-    "effective_date": 1519603200000,
-    "share_conversion_ratio": 1.0,
-    "predecessor_delisted": True,
-    "discretionary_execution": False,
-    "predecessor_delisted_date": 1519603200000,
-    "event": "code_change"
-  }
+    '000022.XSHE': {
+        'successor': '001872.XSHE',
+        'effective_date': '2018-12-26',
+        'share_conversion_ratio': 1.0,
+        'predecessor_delisted': True,
+        'discretionary_execution': False,
+        'predecessor_delisted_date': '2018-12-26',
+        'event': 'code_change'
+    },
+    '000024.XSHE': {
+        'successor': '001979.XSHE',
+        'effective_date': '2015-12-30',
+        'share_conversion_ratio': 1.6008,
+        'predecessor_delisted': True,
+        'discretionary_execution': False,
+        'predecessor_delisted_date': '2015-12-30',
+        'event': 'merge'
+    },
+    '600005.XSHG': {
+        'successor': '600019.XSHG',
+        'effective_date': '2017-02-14',
+        'share_conversion_ratio': 0.56,
+        'predecessor_delisted': True,
+        'discretionary_execution': False,
+        'predecessor_delisted_date': '2017-02-14',
+        'event': 'merge'
+    },
+    '601299.XSHG': {
+        'successor': '601766.XSHG',
+        'effective_date': '2015-05-20',
+        'share_conversion_ratio': 1.1,
+        'predecessor_delisted': True,
+        'discretionary_execution': False,
+        'predecessor_delisted_date': '2015-05-20',
+        'event': 'merge'
+    },
+    '601313.XSHG': {
+        'successor': '601360.XSHG',
+        'effective_date': '2018-02-26',
+        'share_conversion_ratio': 1.0,
+        'predecessor_delisted': True,
+        'discretionary_execution': False,
+        'predecessor_delisted_date': '2018-02-26',
+        'event': 'code_change'
+    }
 }
 
 

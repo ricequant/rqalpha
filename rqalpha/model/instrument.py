@@ -109,8 +109,9 @@ class Instrument(object):
     def market_tplus(self):
         """
         [int] 合约卖出和买入操作需要间隔的最小交易日数，如A股为 1
+        公募基金的market_tplus默认0
         """
-        return self.__dict__["market_tplus"]
+        return self.__dict__.get("market_tplus", 0)
 
     @property
     def sector_code(self):

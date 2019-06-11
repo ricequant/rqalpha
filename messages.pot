@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-14 19:02+0800\n"
+"POT-Creation-Date: 2019-05-20 16:17+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -121,7 +121,7 @@ msgstr ""
 msgid "[abandon] {} is no longer used."
 msgstr ""
 
-#: rqalpha/data/base_data_source.py:230
+#: rqalpha/data/base_data_source.py:235
 msgid "Unsupported instrument type for tick size"
 msgstr ""
 
@@ -150,12 +150,16 @@ msgid "mod tear_down [END]   {}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:226
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:162
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:174
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:237
 msgid "Trigger Forced Liquidation, current total_value is {}"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:263
+msgid "{predecessor} code has changed to {successor}, change position by system"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:59
@@ -204,11 +208,11 @@ msgstr ""
 msgid "Settlement price {settle_price} of {order_book_id} is invalid"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:188
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:196
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:204
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:212
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:220
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:193
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:201
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:209
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:217
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model/stock_position.py:225
 #: rqalpha/model/base_position.py:104 rqalpha/model/base_position.py:110
 msgid "[abandon] {} is no longer valid."
 msgstr ""
@@ -282,7 +286,7 @@ msgstr ""
 msgid "MaxDDD"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_benchmark/benchmark_provider.py:44
+#: rqalpha/mod/rqalpha_mod_sys_benchmark/benchmark_provider.py:46
 msgid "Invalid benchmark: unable to load enough close price."
 msgstr ""
 
@@ -296,6 +300,12 @@ msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_benchmark/mod.py:70
 msgid "benchmark {benchmark} has been de_listed on {end_date}"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_benchmark/mod.py:74
+msgid ""
+"the target {benchmark} will be delisted in the short term. please choose "
+"a sustainable target."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:37
@@ -493,7 +503,7 @@ msgstr ""
 msgid "invalid commission multiplier value: value range is [0, +∞)"
 msgstr ""
 
-#: rqalpha/model/bar.py:373
+#: rqalpha/model/bar.py:347
 msgid "id_or_symbols {} does not exist"
 msgstr ""
 
