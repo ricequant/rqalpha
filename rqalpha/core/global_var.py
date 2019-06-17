@@ -25,7 +25,7 @@ class GlobalVars(object):
         for key, value in six.iteritems(self.__dict__):
             try:
                 dict_data[key] = pickle.dumps(value)
-            except Exception as e:
+            except Exception:
                 user_detail_log.exception("g.{} can not pickle", key)
                 user_system_log.warn("g.{} can not pickle", key)
         return pickle.dumps(dict_data)
@@ -36,6 +36,6 @@ class GlobalVars(object):
             try:
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore g.{} {}", key, type(self.__dict__[key]))
-            except Exception as e:
+            except Exception:
                 user_detail_log.exception("g.{} can not restore", key)
                 user_system_log.warn("g.{} can not restore", key)
