@@ -84,12 +84,13 @@ class StockAccount(BaseAccount):
             position = self._positions.get_or_create(order_book_id)
             position.set_state(v)
 
-    def fast_forward(self, orders, trades=list()):
+    def fast_forward(self, orders, trades=None):
         # 计算 Positions
-        for trade in trades:
-            if trade.exec_id in self._backward_trade_set:
-                continue
-            self._apply_trade(trade)
+        if trades:
+            for trade in trades:
+                if trade.exec_id in self._backward_trade_set:
+                    continue
+                self._apply_trade(trade)
         # 计算 Frozen Cash
         self._frozen_cash = 0
         frozen_quantity = defaultdict(int)
