@@ -134,7 +134,8 @@ def order_shares(id_or_ins, amount, price=None, style=None):
         return
     if r_order.type == ORDER_TYPE.MARKET:
         r_order.set_frozen_price(price)
-    if env.can_submit_order(r_order):
+    reject_validator_type = env.can_submit_order(r_order)
+    if not reject_validator_type:
         env.broker.submit_order(r_order)
         return r_order
 
@@ -146,7 +147,8 @@ def _sell_all_stock(order_book_id, amount, style):
         user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
         return
 
-    if env.can_submit_order(order):
+    reject_validator_type = env.can_submit_order(order)
+    if not reject_validator_type:
         env.broker.submit_order(order)
         return order
 

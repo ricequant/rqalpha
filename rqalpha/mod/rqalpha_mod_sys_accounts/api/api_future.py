@@ -192,7 +192,8 @@ def order(id_or_ins, amount, side, position_effect, style):
     for o in orders:
         if o.type == ORDER_TYPE.MARKET:
             o.set_frozen_price(price)
-        if env.can_submit_order(o):
+        reject_validator_type = env.can_submit_order(o)
+        if not reject_validator_type:
             env.broker.submit_order(o)
         else:
             orders.remove(o)

@@ -184,6 +184,14 @@ class MARKET(CustomEnum):
     HK = "HK"
 
 
+# noinspection PyPep89Naming
+class FRONT_VALIDATOR_TYPE(CustomEnum):
+    CASH = "CASH"
+    POSITION = "POSITION"
+    PRICE = "PRICE"
+    OTHER = "OTHER"
+
+
 class CURRENCY(CustomEnum):
     CNY = "CNY"     # 人民币
     USD = "USD"     # 美元

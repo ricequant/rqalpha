@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from rqalpha.interface import AbstractMod
+from rqalpha.const import FRONT_VALIDATOR_TYPE
 
 from .validators import (
     CashValidator, StockPositionValidator, FuturePositionValidator, PriceValidator, IsTradingValidator,
@@ -25,15 +26,15 @@ from .validators import (
 class RiskManagerMod(AbstractMod):
     def start_up(self, env, mod_config):
         if mod_config.validate_price:
-            env.add_frontend_validator(PriceValidator(env))
+            env.add_frontend_validator(PriceValidator(env), FRONT_VALIDATOR_TYPE.PRICE)
         if mod_config.validate_is_trading:
             env.add_frontend_validator(IsTradingValidator(env))
         if mod_config.validate_cash:
-            env.add_frontend_validator(CashValidator(env))
+            env.add_frontend_validator(CashValidator(env), FRONT_VALIDATOR_TYPE.CASH)
         if mod_config.validate_stock_position:
-            env.add_frontend_validator(StockPositionValidator())
+            env.add_frontend_validator(StockPositionValidator(), FRONT_VALIDATOR_TYPE.POSITION)
         if mod_config.validate_future_position:
-            env.add_frontend_validator(FuturePositionValidator())
+            env.add_frontend_validator(FuturePositionValidator(), FRONT_VALIDATOR_TYPE.POSITION)
         if mod_config.validate_self_trade:
             env.add_frontend_validator(SelfTradeValidator(env))
 
