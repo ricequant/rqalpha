@@ -16,7 +16,6 @@
 
 from rqalpha.events import EventBus
 from rqalpha.utils import get_account_type
-from rqalpha.utils.logger import system_log, user_log, user_detail_log
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -36,10 +35,6 @@ class Environment(object):
         self.persist_provider = None
         self.persist_helper = None
         self.broker = None
-        self.profile_deco = None
-        self.system_log = system_log
-        self.user_log = user_log
-        self.user_detail_log = user_detail_log
         self.event_bus = EventBus()
         self.portfolio = None
         self.booking = None
