@@ -116,7 +116,7 @@ class Environment(object):
             raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
         return self._position_model_dict[account_type]
 
-    def can_submit_order(self, order):
+    def validate_order_submission(self, order):
         if Environment.get_instance().config.extra.is_hold:
             return False
         try:
@@ -129,7 +129,7 @@ class Environment(object):
                 if not v.can_submit_order(order, account):
                     return validator_type
 
-    def can_cancel_order(self, order):
+    def validate_order_cancellation(self, order):
         if order.is_final():
             return False
         try:
@@ -141,6 +141,12 @@ class Environment(object):
             for v in validators:
                 if not v.can_cancel_order(order, account):
                     return validator_type
+
+    def can_submit_order(self, order):
+        return self.validate_order_submission(order) is None
+
+    def can_cancel_order(self, order):
+        return self.validate_order_cancellation(order) is None
 
     def set_bar_dict(self, bar_dict):
         self.bar_dict = bar_dict

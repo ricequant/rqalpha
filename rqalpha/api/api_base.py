@@ -286,8 +286,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
 
     if order.type == ORDER_TYPE.MARKET:
         order.set_frozen_price(market_price)
-    reject_validator_type = env.can_submit_order(order)
-    if not reject_validator_type:
+    if env.can_submit_order(order):
         env.broker.submit_order(order)
         return order
 
@@ -310,8 +309,7 @@ def cancel_order(order):
     :type order: :class:`~Order` object
     """
     env = Environment.get_instance()
-    reject_validator_type = env.can_cancel_order(order)
-    if not reject_validator_type:
+    if env.can_cancel_order(order):
         env.broker.cancel_order(order)
     return order
 
