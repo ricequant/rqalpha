@@ -176,7 +176,8 @@ def run(config, source_code=None, user_funcs=None):
 
         scope = env.strategy_loader.load(scope)
 
-        profile_deco = enable_profiler(env, scope)
+        if env.config.extra.enable_profiler:
+            enable_profiler(env, scope)
 
         ucontext = StrategyContext()
         user_strategy = Strategy(env.event_bus, scope, ucontext)
@@ -234,7 +235,8 @@ def run(config, source_code=None, user_funcs=None):
 
         executor.run(bar_dict)
 
-        output_profile_result(env, profile_deco)
+        if env.profile_deco:
+            output_profile_result(env)
     except CustomException as e:
         if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
@@ -277,12 +279,9 @@ def _exception_handler(e):
 
 def enable_profiler(env, scope):
     # decorate line profiler
-    if not env.config.extra.enable_profiler:
-        return
-
     import line_profiler
     import inspect
-    profile_deco = line_profiler.LineProfiler()
+    env.profile_deco = profile_deco = line_profiler.LineProfiler()
     for name in scope:
         obj = scope[name]
         if getattr(obj, "__module__", None) != "rqalpha.user_module":
@@ -293,14 +292,11 @@ def enable_profiler(env, scope):
             for key, val in six.iteritems(obj.__dict__):
                 if inspect.isfunction(val):
                     setattr(obj, key, profile_deco(val))
-    return profile_deco
 
 
-def output_profile_result(env, profile_deco):
-    if not profile_deco:
-        return
+def output_profile_result(env):
     stdout_trap = six.StringIO()
-    profile_deco.print_stats(stdout_trap)
+    env.profile_deco.print_stats(stdout_trap)
     profile_output = stdout_trap.getvalue()
     profile_output = profile_output.rstrip()
     six.print_(profile_output)
