@@ -21,24 +21,24 @@ from ..utils import make_test_strategy_decorator, assert_order
 test_strategies = []
 
 as_test_strategy = make_test_strategy_decorator({
-        "base": {
-            "start_date": "2016-03-07",
-            "end_date": "2016-03-08",
-            "frequency": "1d",
-            "accounts": {
-                "stock": 100000000
-            }
+    "base": {
+        "start_date": "2016-03-07",
+        "end_date": "2016-03-08",
+        "frequency": "1d",
+        "accounts": {
+            "stock": 100000000
+        }
+    },
+    "extra": {
+        "log_level": "error",
+    },
+    "mod": {
+        "sys_progress": {
+            "enabled": True,
+            "show": True,
         },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }, test_strategies)
+    },
+}, test_strategies)
 
 
 @as_test_strategy({
@@ -122,3 +122,24 @@ def test_order_target_value():
         o = order_target_percent(context.s1, 0.02, style=LimitOrder(bar_dict[context.s1].limit_up))
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
     return init, handle_bar
+
+
+@as_test_strategy({
+    "base": {
+        "start_date": "2016-03-07",
+        "end_date": "2016-03-07",
+        "accounts": {
+            "stock": 2000
+        }
+    },
+    "mod": {
+        "sys_accounts": {
+            "auto_switch_order_value": True
+        },
+    }
+})
+def test_auto_switch_order_value():
+    def handle_bar(context, _):
+        order_shares("000001.XSHE", 200)
+        assert context.portfolio.positions["000001.XSHE"].quantity == 100
+    return handle_bar

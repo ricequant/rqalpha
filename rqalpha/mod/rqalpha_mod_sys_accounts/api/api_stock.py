@@ -146,8 +146,11 @@ def _order_shares(order_book_id, amount, style, auto_switch_order_value):
         return r_order
     else:
         if auto_switch_order_value and reject_validator_type == FRONT_VALIDATOR_TYPE.CASH:
-            account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
-            return _order_value(order_book_id, account.cash, style)
+            remaining_cash = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name].cash
+            user_system_log.warn(_(
+                u"Insufficient cash, use all remaining cash({}) to create order.".format(remaining_cash)
+            ))
+            return _order_value(order_book_id, remaining_cash, style)
 
 
 def _sell_all_stock(order_book_id, amount, style):
