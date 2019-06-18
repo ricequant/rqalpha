@@ -15,11 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .sys_accounts import test_strategies as test_sys_accounts_strategies
-from .sys_simulation import test_strategies as test_sys_simulation_strategies
+from .test_signal_broker import test_strategies as test_signal_broker_strategies
 
-test_strategies = test_sys_accounts_strategies + test_sys_simulation_strategies
-
+test_strategies = test_signal_broker_strategies
 
 __all__ = [
     "test_strategies"
