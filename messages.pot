@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-05-20 16:17+0800\n"
+"POT-Creation-Date: 2019-06-18 18:03+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,17 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: rqalpha/environment.py:66
+#: rqalpha/environment.py:64
 msgid ""
 "Environment has not been created. Please Use `Environment.get_instance()`"
 " after RQAlpha init"
 msgstr ""
 
-#: rqalpha/environment.py:110 rqalpha/environment.py:118
+#: rqalpha/environment.py:108 rqalpha/environment.py:116
 msgid "Unknown Account Type {}"
 msgstr ""
 
-#: rqalpha/environment.py:192
+#: rqalpha/environment.py:198
 msgid "No such transaction cost decider for such account_type {}."
 msgstr ""
 
@@ -42,24 +42,24 @@ msgid ""
 "data bundle or select other backtest period."
 msgstr ""
 
-#: rqalpha/main.py:203
+#: rqalpha/main.py:202
 msgid ""
 "Missing persist provider. You need to set persist_provider before use "
 "persist"
 msgstr ""
 
-#: rqalpha/main.py:259
+#: rqalpha/main.py:257
 msgid "strategy run successfully, normal exit"
 msgstr ""
 
-#: rqalpha/main.py:272 rqalpha/main.py:275
+#: rqalpha/main.py:270 rqalpha/main.py:273
 msgid "strategy execute exception"
 msgstr ""
 
 #: rqalpha/api/api_base.py:162 rqalpha/api/api_base.py:372
 #: rqalpha/api/api_base.py:405
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:318
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:503
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:522
 msgid "unsupported order_book_id type"
 msgstr ""
 
@@ -80,8 +80,8 @@ msgstr ""
 #: rqalpha/api/api_base.py:271
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:75
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:178
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:109
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:249
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:114
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:267
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr ""
 
@@ -169,7 +169,7 @@ msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:102
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:241
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:255
 msgid "Limit order price should be positive"
 msgstr ""
 
@@ -190,17 +190,21 @@ msgstr ""
 msgid "{order_book_id} is not supported in current strategy type"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:133
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:146
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:273
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:138
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:160
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:292
 msgid "Order Creation Failed: 0 order quantity"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:322
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:151
+msgid "Insufficient cash, use all remaining cash({}) to create order."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:341
 msgid "percent should between -1 and 1"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:427
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:446
 msgid "percent should between 0 and 1"
 msgstr ""
 

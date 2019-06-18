@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-05-20 16:17+0800\n"
+"POT-Creation-Date: 2019-06-18 18:03+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -18,17 +18,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: rqalpha/environment.py:66
+#: rqalpha/environment.py:64
 msgid ""
 "Environment has not been created. Please Use `Environment.get_instance()`"
 " after RQAlpha init"
 msgstr "Environment 并没有被创建，请再 RQAlpha 初始化之后使用 `Environment.get_instance() 函数`"
 
-#: rqalpha/environment.py:110 rqalpha/environment.py:118
+#: rqalpha/environment.py:108 rqalpha/environment.py:116
 msgid "Unknown Account Type {}"
 msgstr "未知账户类型 {}"
 
-#: rqalpha/environment.py:192
+#: rqalpha/environment.py:198
 msgid "No such transaction cost decider for such account_type {}."
 msgstr "不存在账户类型 {} 的费率算法"
 
@@ -43,24 +43,24 @@ msgid ""
 "data bundle or select other backtest period."
 msgstr "未在 {start_date} 和 {end_date} 区间内查询到数据，请检查并升级您的 data bundle 或者选择其他回测区间。"
 
-#: rqalpha/main.py:203
+#: rqalpha/main.py:202
 msgid ""
 "Missing persist provider. You need to set persist_provider before use "
 "persist"
 msgstr "Persist provider 未加载，加载 Persist provider 方可使用 persist 功能。"
 
-#: rqalpha/main.py:259
+#: rqalpha/main.py:257
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:272 rqalpha/main.py:275
+#: rqalpha/main.py:270 rqalpha/main.py:273
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
 #: rqalpha/api/api_base.py:162 rqalpha/api/api_base.py:372
 #: rqalpha/api/api_base.py:405
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:318
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:503
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:522
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
@@ -81,8 +81,8 @@ msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 #: rqalpha/api/api_base.py:271
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:75
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:178
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:109
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:249
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:114
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:267
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
@@ -170,7 +170,7 @@ msgstr "订单创建失败: 下单量为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:102
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:241
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:255
 msgid "Limit order price should be positive"
 msgstr "Limit order 价格应该为正，请检查您的下单价格。"
 
@@ -191,17 +191,21 @@ msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_
 msgid "{order_book_id} is not supported in current strategy type"
 msgstr "当前策略类型不支持 {order_book_id} 合约。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:133
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:146
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:273
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:138
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:160
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:292
 msgid "Order Creation Failed: 0 order quantity"
 msgstr "订单创建失败: 下单量为0。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:322
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:151
+msgid "Insufficient cash, use all remaining cash({}) to create order."
+msgstr "资金不足，使用所有的剩余现金（{}）下单。"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:341
 msgid "percent should between -1 and 1"
 msgstr "percent 取值应该在 -1 和 1 之间。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:427
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:446
 msgid "percent should between 0 and 1"
 msgstr "percent 取值应该在 0 和 1 之间。"
 
