@@ -20,7 +20,7 @@ import six
 import numpy as np
 
 from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style, register_api
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
@@ -101,6 +101,11 @@ def order_shares(id_or_ins, amount, price=None, style=None):
         if style.get_limit_price() <= 0:
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
     order_book_id = assure_stock_order_book_id(id_or_ins)
+    auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
+    return _order_shares(order_book_id, amount, style, auto_switch_order_value)
+
+
+def _order_shares(order_book_id, amount, style, auto_switch_order_value):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
@@ -134,9 +139,15 @@ def order_shares(id_or_ins, amount, price=None, style=None):
         return
     if r_order.type == ORDER_TYPE.MARKET:
         r_order.set_frozen_price(price)
-    if env.can_submit_order(r_order):
+
+    reject_validator_type = env.validate_order_submission(r_order)
+    if not reject_validator_type:
         env.broker.submit_order(r_order)
         return r_order
+    else:
+        if auto_switch_order_value and reject_validator_type == FRONT_VALIDATOR_TYPE.CASH:
+            account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
+            return _order_value(order_book_id, account.cash, style)
 
 
 def _sell_all_stock(order_book_id, amount, style):
@@ -241,6 +252,10 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
+    return _order_value(order_book_id, cash_amount, style)
+
+
+def _order_value(order_book_id, cash_amount, style):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
@@ -264,7 +279,8 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
         amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
 
         while amount > 0:
-            dummy_order = Order.__from_create__(order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN)
+            dummy_order = Order.__from_create__(order_book_id, amount, SIDE.BUY, LimitOrder(price),
+                                                POSITION_EFFECT.OPEN)
             expected_transaction_cost = env.get_order_transaction_cost(DEFAULT_ACCOUNT_TYPE.STOCK, dummy_order)
             if amount * price + expected_transaction_cost <= cash_amount:
                 break
@@ -279,7 +295,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
     position = account.positions[order_book_id]
     amount = downsize_amount(amount, position)
 
-    return order_shares(order_book_id, amount, style=style)
+    return _order_shares(order_book_id, amount, style, auto_switch_order_value=False)
 
 
 @export_as_api
