@@ -54,12 +54,22 @@ class FutureAccount(BaseAccount):
             event_bus.add_listener(EVENT.BAR, self._update_last_price)
             event_bus.add_listener(EVENT.TICK, self._update_last_price)
 
-    def fast_forward(self, orders, trades=list()):
+    def fast_forward(self, orders, trades=None):
         # 计算 Positions
-        for trade in trades:
-            if trade.exec_id in self._backward_trade_set:
-                continue
-            self._apply_trade(trade)
+        if trades:
+            close_trades = []
+            # 先处理开仓
+            for trade in trades:
+                if trade.exec_id in self._backward_trade_set:
+                    continue
+                if trade.position_effect == POSITION_EFFECT.OPEN:
+                    self._apply_trade(trade)
+                else:
+                    close_trades.append(trade)
+            # 后处理平仓
+            for trade in close_trades:
+                self._apply_trade(trade)
+
         # 计算 Frozen Cash
         self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
 

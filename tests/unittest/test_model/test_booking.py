@@ -48,7 +48,6 @@ class BookingTestCase(BookingFixture, RQAlphaTestCase):
             }
         }).encode('utf-8'))
 
-
         self.assertPositions({
             (POSITION_DIRECTION.LONG, "RB1812", 3, 1),
             (POSITION_DIRECTION.SHORT, "TF1812", 4, 0)
