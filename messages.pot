@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-06-18 18:03+0800\n"
+"POT-Creation-Date: 2019-06-19 10:33+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,17 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: rqalpha/environment.py:64
+#: rqalpha/environment.py:69
 msgid ""
 "Environment has not been created. Please Use `Environment.get_instance()`"
 " after RQAlpha init"
 msgstr ""
 
-#: rqalpha/environment.py:108 rqalpha/environment.py:116
+#: rqalpha/environment.py:113 rqalpha/environment.py:121
 msgid "Unknown Account Type {}"
 msgstr ""
 
-#: rqalpha/environment.py:198
+#: rqalpha/environment.py:203
 msgid "No such transaction cost decider for such account_type {}."
 msgstr ""
 
@@ -42,17 +42,17 @@ msgid ""
 "data bundle or select other backtest period."
 msgstr ""
 
-#: rqalpha/main.py:202
+#: rqalpha/main.py:203
 msgid ""
 "Missing persist provider. You need to set persist_provider before use "
 "persist"
 msgstr ""
 
-#: rqalpha/main.py:257
+#: rqalpha/main.py:259
 msgid "strategy run successfully, normal exit"
 msgstr ""
 
-#: rqalpha/main.py:270 rqalpha/main.py:273
+#: rqalpha/main.py:272 rqalpha/main.py:275
 msgid "strategy execute exception"
 msgstr ""
 
@@ -113,8 +113,8 @@ msgstr ""
 #: rqalpha/core/strategy_context.py:264 rqalpha/core/strategy_context.py:268
 #: rqalpha/core/strategy_context.py:272 rqalpha/core/strategy_context.py:276
 #: rqalpha/core/strategy_context.py:280
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:289
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:297
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:299
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:307
 #: rqalpha/model/base_account.py:123 rqalpha/model/base_account.py:131
 #: rqalpha/model/base_account.py:139 rqalpha/model/base_account.py:147
 #: rqalpha/model/base_account.py:155
@@ -149,16 +149,16 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:226
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:174
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:236
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:175
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:237
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:247
 msgid "Trigger Forced Liquidation, current total_value is {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:263
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:264
 msgid "{predecessor} code has changed to {successor}, change position by system"
 msgstr ""
 
@@ -197,7 +197,7 @@ msgid "Order Creation Failed: 0 order quantity"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:151
-msgid "Insufficient cash, use all remaining cash({}) to create order."
+msgid "Insufficient cash, use all remaining cash({}) to create order"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:341

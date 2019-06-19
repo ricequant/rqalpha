@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-06-18 18:03+0800\n"
+"POT-Creation-Date: 2019-06-19 10:33+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -18,17 +18,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: rqalpha/environment.py:64
+#: rqalpha/environment.py:69
 msgid ""
 "Environment has not been created. Please Use `Environment.get_instance()`"
 " after RQAlpha init"
 msgstr "Environment 并没有被创建，请再 RQAlpha 初始化之后使用 `Environment.get_instance() 函数`"
 
-#: rqalpha/environment.py:108 rqalpha/environment.py:116
+#: rqalpha/environment.py:113 rqalpha/environment.py:121
 msgid "Unknown Account Type {}"
 msgstr "未知账户类型 {}"
 
-#: rqalpha/environment.py:198
+#: rqalpha/environment.py:203
 msgid "No such transaction cost decider for such account_type {}."
 msgstr "不存在账户类型 {} 的费率算法"
 
@@ -43,17 +43,17 @@ msgid ""
 "data bundle or select other backtest period."
 msgstr "未在 {start_date} 和 {end_date} 区间内查询到数据，请检查并升级您的 data bundle 或者选择其他回测区间。"
 
-#: rqalpha/main.py:202
+#: rqalpha/main.py:203
 msgid ""
 "Missing persist provider. You need to set persist_provider before use "
 "persist"
 msgstr "Persist provider 未加载，加载 Persist provider 方可使用 persist 功能。"
 
-#: rqalpha/main.py:257
+#: rqalpha/main.py:259
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:270 rqalpha/main.py:273
+#: rqalpha/main.py:272 rqalpha/main.py:275
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
@@ -114,8 +114,8 @@ msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_
 #: rqalpha/core/strategy_context.py:264 rqalpha/core/strategy_context.py:268
 #: rqalpha/core/strategy_context.py:272 rqalpha/core/strategy_context.py:276
 #: rqalpha/core/strategy_context.py:280
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:289
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:297
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:299
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:307
 #: rqalpha/model/base_account.py:123 rqalpha/model/base_account.py:131
 #: rqalpha/model/base_account.py:139 rqalpha/model/base_account.py:147
 #: rqalpha/model/base_account.py:155
@@ -150,16 +150,16 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:226
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:174
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:236
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:175
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:237
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/future_account.py:247
 msgid "Trigger Forced Liquidation, current total_value is {}"
 msgstr "触发强制平仓，当前总权益为 {}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:263
+#: rqalpha/mod/rqalpha_mod_sys_accounts/account_model/stock_account.py:264
 msgid "{predecessor} code has changed to {successor}, change position by system"
 msgstr "{predecessor} 代码已更换为 {successor}，系统自动调整仓位。"
 
@@ -198,8 +198,8 @@ msgid "Order Creation Failed: 0 order quantity"
 msgstr "订单创建失败: 下单量为0。"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:151
-msgid "Insufficient cash, use all remaining cash({}) to create order."
-msgstr "资金不足，使用所有的剩余现金（{}）下单。"
+msgid "Insufficient cash, use all remaining cash({}) to create order"
+msgstr "资金不足，使用全部的剩余现金（{}）下单"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:341
 msgid "percent should between -1 and 1"
@@ -832,4 +832,7 @@ msgstr "未知的市场类型：{}"
 
 #~ msgid "Cannot get portfolio instance."
 #~ msgstr "无法加载 portfolio 对象"
+
+#~ msgid "Insufficient cash, use all remaining cash({}) to create order."
+#~ msgstr "资金不足，使用所有的剩余现金（{}）下单。"
 
