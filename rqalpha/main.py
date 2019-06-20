@@ -229,9 +229,8 @@ def run(config, source_code=None, user_funcs=None):
         # we should run `init` after restore persist data
         if config.extra.force_run_init_when_pt_resume:
             assert config.base.resume_mode == True
-            with run_with_user_log_disabled(disabled=False):
-                env._universe._set = set()
-                user_strategy.init()
+            env._universe._set = set()
+            user_strategy.init()
 
         executor.run(bar_dict)
 
