@@ -228,7 +228,7 @@ def run(config, source_code=None, user_funcs=None):
         # When force_run_init_when_pt_resume is active,
         # we should run `init` after restore persist data
         if config.extra.force_run_init_when_pt_resume:
-            assert config.base.resume_mode == True
+            assert config.base.resume_mode is True
             env._universe._set = set()
             user_strategy.init()
 
