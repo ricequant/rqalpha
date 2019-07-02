@@ -214,9 +214,18 @@ def run(config, source_code=None, user_funcs=None):
         env.user_strategy = user_strategy
         scheduler.set_user_context(ucontext)
 
-        if not config.extra.force_run_init_when_pt_resume:
-            with run_with_user_log_disabled(disabled=config.base.resume_mode):
+        from .core.executor import Executor
+        executor = Executor(env)
+
+        persist_helper = init_persist_helper(env, scheduler, ucontext, executor, config)
+
+        resume_mode = persist_helper.resume_mode() if persist_helper else False
+
+        if resume_mode:
+            with run_with_user_log_disabled(disabled=True):
                 user_strategy.init()
+        else:
+            user_strategy.init()
 
         if config.extra.context_vars:
             for k, v in six.iteritems(config.extra.context_vars):
@@ -224,24 +233,12 @@ def run(config, source_code=None, user_funcs=None):
                     v = v.__dict__
                 setattr(ucontext, k, v)
 
-        from .core.executor import Executor
-        executor = Executor(env)
-
-        persist_helper = init_persist_helper(env, scheduler, ucontext, executor, config)
         if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
             persist_helper.restore()
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True
-
-        # When force_run_init_when_pt_resume is active,
-        # we should run `init` after restore persist data
-        if config.extra.force_run_init_when_pt_resume:
-            assert config.base.resume_mode is True
-            env._universe._set = set()
-            user_strategy.init()
-
         executor.run(bar_dict)
 
         if env.profile_deco:

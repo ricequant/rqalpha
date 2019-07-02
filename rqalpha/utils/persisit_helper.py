@@ -74,6 +74,12 @@ class PersistHelper(object):
             else:
                 self._last_state[key] = md5
 
+    def resume_mode(self):
+        for key in six.iterkeys(self._objects):
+            if self._persist_provider.load(key):
+                return True
+        return False
+
     def register(self, key, obj):
         if key in self._objects:
             raise RuntimeError('duplicated persist key found: {}'.format(key))
