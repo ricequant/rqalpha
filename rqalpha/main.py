@@ -89,6 +89,41 @@ def create_base_scope(copy_scope=False):
     return scope
 
 
+def init_persist_helper(env, scheduler, ucontext, executor, config):
+    if not config.base.persist:
+        return None
+    persist_provider = env.persist_provider
+    if persist_provider is None:
+        raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
+    persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
+    env.set_persist_helper(persist_helper)
+    persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
+    persist_helper.register('user_context', ucontext)
+    persist_helper.register('global_vars', env.global_vars)
+    persist_helper.register('universe', env._universe)
+    if isinstance(env.event_source, Persistable):
+        persist_helper.register('event_source', env.event_source)
+    if env.portfolio:
+        persist_helper.register('portfolio', env.portfolio)
+    for name, module in six.iteritems(env.mod_dict):
+        if isinstance(module, Persistable):
+            persist_helper.register('mod_{}'.format(name), module)
+    # broker will restore open orders from account
+    if isinstance(env.broker, Persistable):
+        persist_helper.register('broker', env.broker)
+    persist_helper.register('executor', executor)
+    return persist_helper
+
+
+def init_strategy_loader(env, source_code, user_funcs, config):
+    if source_code is not None:
+        return SourceCodeStrategyLoader(source_code)
+    elif user_funcs is not None:
+        return UserFuncStrategyLoader(user_funcs)
+    else:
+        return FileStrategyLoader(config.base.strategy_file)
+
+
 def run(config, source_code=None, user_funcs=None):
     env = Environment(config)
     persist_helper = None
@@ -101,12 +136,7 @@ def run(config, source_code=None, user_funcs=None):
         set_loggers(config)
         basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
 
-        if source_code is not None:
-            env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
-        elif user_funcs is not None:
-            env.set_strategy_loader(UserFuncStrategyLoader(user_funcs))
-        else:
-            env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
+        env.set_strategy_loader(init_strategy_loader(env, source_code, user_funcs, config))
         env.set_global_vars(GlobalVars())
         mod_handler.set_env(env)
         mod_handler.start_up()
@@ -197,28 +227,8 @@ def run(config, source_code=None, user_funcs=None):
         from .core.executor import Executor
         executor = Executor(env)
 
-        if config.base.persist:
-            persist_provider = env.persist_provider
-            if persist_provider is None:
-                raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
-            persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
-            env.set_persist_helper(persist_helper)
-            persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
-            persist_helper.register('user_context', ucontext)
-            persist_helper.register('global_vars', env.global_vars)
-            persist_helper.register('universe', env._universe)
-            if isinstance(event_source, Persistable):
-                persist_helper.register('event_source', event_source)
-            if env.portfolio:
-                persist_helper.register('portfolio', env.portfolio)
-            for name, module in six.iteritems(env.mod_dict):
-                if isinstance(module, Persistable):
-                    persist_helper.register('mod_{}'.format(name), module)
-            # broker will restore open orders from account
-            if isinstance(broker, Persistable):
-                persist_helper.register('broker', broker)
-            persist_helper.register('executor', executor)
-
+        persist_helper = init_persist_helper(env, scheduler, ucontext, executor, config)
+        if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
             persist_helper.restore()
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
@@ -237,13 +247,13 @@ def run(config, source_code=None, user_funcs=None):
         if env.profile_deco:
             output_profile_result(env)
     except CustomException as e:
-        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
+        if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         code = _exception_handler(e)
         mod_handler.tear_down(code, e)
     except Exception as e:
-        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
+        if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         exc_type, exc_val, exc_tb = sys.exc_info()
@@ -252,7 +262,7 @@ def run(config, source_code=None, user_funcs=None):
         code = _exception_handler(user_exc)
         mod_handler.tear_down(code, user_exc)
     else:
-        if (env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT):
+        if persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT:
             persist_helper.persist()
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug(_(u"strategy run successfully, normal exit"))
