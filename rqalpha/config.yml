@@ -22,8 +22,6 @@ base:
   run_type: b
   # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
   frequency: 1d
-  # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
-  resume_mode: false
   # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，
   # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
   persist: false
@@ -51,8 +49,6 @@ extra:
   user_log_disabled: false
   # 通过该参数可以将预定义变量传入 `context` 内。
   context_vars: ~
-  # force_run_init_when_pt_resume: 在PT的resume模式时，是否强制执行用户init。主要用于用户改代码。
-  force_run_init_when_pt_resume: false
   # enable_profiler: 是否启动性能分析
   enable_profiler: false
   is_hold: false

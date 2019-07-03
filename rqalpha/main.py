@@ -210,8 +210,6 @@ def run(config, source_code=None, user_funcs=None):
             enable_profiler(env, scope)
 
         ucontext = StrategyContext()
-        user_strategy = Strategy(env.event_bus, scope, ucontext)
-        env.user_strategy = user_strategy
         scheduler.set_user_context(ucontext)
 
         from .core.executor import Executor
@@ -219,13 +217,19 @@ def run(config, source_code=None, user_funcs=None):
 
         persist_helper = init_persist_helper(env, scheduler, ucontext, executor, config)
 
-        resume_mode = persist_helper.resume_mode() if persist_helper else False
-
-        if resume_mode:
-            with run_with_user_log_disabled(disabled=True):
-                user_strategy.init()
+        if persist_helper:
+            should_resume = persist_helper.should_resume()
+            should_run_init = persist_helper.should_run_init()
         else:
-            user_strategy.init()
+            should_resume = False
+            should_run_init = True
+
+        user_strategy = Strategy(env.event_bus, scope, ucontext, should_run_init)
+        env.user_strategy = user_strategy
+
+        if (should_resume and not should_run_init) or not should_resume:
+            with run_with_user_log_disabled(disabled=should_resume):
+                user_strategy.init()
 
         if config.extra.context_vars:
             for k, v in six.iteritems(config.extra.context_vars):
@@ -239,6 +243,10 @@ def run(config, source_code=None, user_funcs=None):
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True
+
+        if should_resume and should_run_init:
+            user_strategy.init()
+
         executor.run(bar_dict)
 
         if env.profile_deco:

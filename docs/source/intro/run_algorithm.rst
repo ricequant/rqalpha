@@ -210,8 +210,6 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
       frequency: 1d
       # Benchmark，如果不设置，默认没有基准参照。
       benchmark: ~
-      # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
-      resume_mode: false
       # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，
       # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
       persist: false
@@ -229,8 +227,6 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
       user_system_log_disabled: false
       # 通过该参数可以将预定义变量传入 `context` 内。
       context_vars: ~
-      # force_run_init_when_pt_resume: 在PT的resume模式时，是否强制执行用户init。主要用于用户改代码。
-      force_run_init_when_pt_resume: false
       # enable_profiler: 是否启动性能分析
       enable_profiler: false
       is_hold: false

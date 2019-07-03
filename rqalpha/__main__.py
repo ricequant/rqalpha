@@ -96,7 +96,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p', 'r']), default="b")
 @click.option('-rp', '--round-price', 'base__round_price', is_flag=True)
 @click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default=None)
-@click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
@@ -109,6 +108,8 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
+# for compatible
+@click.option('--resume', 'base__resume_mode', is_flag=True, help="[DEPRECATED] --resume is deprecated")
 def run(**kwargs):
     """
     Start to run a strategy

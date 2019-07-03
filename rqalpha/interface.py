@@ -602,6 +602,22 @@ class AbstractPersistProvider(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def should_resume(self):
+        """
+        是否应该以 resume 模式运行
+        :return: bool
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def should_run_init(self):
+        """
+        是否应该执行策略的 init 函数
+        :return: bool
+        """
+        raise NotImplementedError
+
 
 class Persistable(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod

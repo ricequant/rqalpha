@@ -27,7 +27,7 @@ from rqalpha.environment import Environment
 
 
 class Strategy(object):
-    def __init__(self, event_bus, scope, ucontext):
+    def __init__(self, event_bus, scope, ucontext, force_run_before_trading):
         self._user_context = ucontext
         self._current_universe = set()
 
@@ -58,7 +58,7 @@ class Strategy(object):
         if self._before_night_trading is not None:
             user_system_log.warn(_(u"[deprecated] before_night_trading is no longer used. use before_trading instead."))
 
-        self._force_run_before_trading = Environment.get_instance().config.extra.force_run_init_when_pt_resume
+        self._force_run_before_trading = force_run_before_trading
 
     @property
     def user_context(self):
