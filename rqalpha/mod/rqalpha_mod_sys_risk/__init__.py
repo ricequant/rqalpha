@@ -51,3 +51,12 @@ cli.commands['run'].params.append(
         help="[sys_risk] enable stock shorting"
     )
 )
+
+
+cli.commands["run"].params.append(
+    click.Option(
+        ("--cash-validation/--no-cash-validation", "mod__sys_risk__validate_cash"),
+        is_flag=True, default=True,
+        help="[sys_risk] enable cash validation"
+    )
+)
