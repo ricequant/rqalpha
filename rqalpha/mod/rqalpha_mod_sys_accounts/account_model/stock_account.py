@@ -49,9 +49,9 @@ class StockAccount(BaseAccount):
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
-        if self.AGGRESSIVE_UPDATE_LAST_PRICE:
-            event_bus.add_listener(EVENT.BAR, self._update_last_price)
-            event_bus.add_listener(EVENT.TICK, self._update_last_price)
+
+        event_bus.add_listener(EVENT.BAR, self._update_last_price)
+        event_bus.add_listener(EVENT.TICK, self._update_last_price)
 
     def order(self, order_book_id, quantity, style, target=False):
         position = self.positions[order_book_id]
