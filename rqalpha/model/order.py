@@ -187,6 +187,11 @@ class Order(object):
         """
         [POSITION_EFFECT] 订单开平（期货专用）
         """
+        if self._position_effect is None:
+            if self._side == SIDE.BUY:
+                return POSITION_EFFECT.OPEN
+            else:
+                return POSITION_EFFECT.CLOSE
         return self._position_effect
 
     @property

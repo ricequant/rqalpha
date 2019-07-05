@@ -20,8 +20,9 @@ from rqalpha.model.base_account import BaseAccount
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_EFFECT, SIDE
-from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils.i18n import gettext as _
 
 from ..api.api_future import order
 
@@ -180,7 +181,7 @@ class FutureAccount(BaseAccount):
 
     @property
     def total_value(self):
-        return self._total_cash + self.margin + self.holding_pnl
+        return self._total_cash + self.margin
 
     # -- Margin 相关
     @property
@@ -210,23 +211,17 @@ class FutureAccount(BaseAccount):
         """
         [float] 当日盈亏
         """
-        return self.realized_pnl + self.holding_pnl - self.transaction_cost
+        return sum(p.daily_pnl for p in six.itervalues(self._positions))
 
     @property
-    def holding_pnl(self):
-        """
-        [float] 浮动盈亏
-        """
-        return sum(position.holding_pnl for position in six.itervalues(self._positions))
+    def position_pnl(self):
+        return sum(p.position_pnl for p in six.itervalues(self._positions))
 
     @property
-    def realized_pnl(self):
-        """
-        [float] 平仓盈亏
-        """
-        return sum(position.realized_pnl for position in six.itervalues(self._positions))
+    def trading_pnl(self):
+        return sum(p.trading_pnl for p in six.itervalues(self._positions))
 
-    def _settlement(self, event):
+    def _settlement(self, __):
         total_value = self.total_value
 
         for position in list(self._positions.values()):
@@ -289,20 +284,7 @@ class FutureAccount(BaseAccount):
                 self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
             else:
                 self._frozen_cash -= self._frozen_cash_of_order(order)
-    # ------------------------------------ Abandon Property ------------------------------------
 
-    @property
-    def daily_holding_pnl(self):
-        """
-        [已弃用] 请使用 holding_pnl
-        """
-        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('future_account.daily_holding_pnl'))
-        return self.holding_pnl
-
-    @property
-    def daily_realized_pnl(self):
-        """
-        [已弃用] 请使用 realized_pnl
-        """
-        user_system_log.warn(_(u"[abandon] {} is no longer used.").format('future_account.daily_realized_pnl'))
-        return self.realized_pnl
+    # deprecated propertie
+    holding_pnl = deprecated_property("holding_pnl", "position_pnl")
+    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")

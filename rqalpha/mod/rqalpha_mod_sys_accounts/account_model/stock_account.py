@@ -131,18 +131,12 @@ class StockAccount(BaseAccount):
         if event.account != self:
             return
         order = event.order
-        position = self._positions.get(order.order_book_id, None)
-        if position is not None:
-            position.on_order_pending_new_(order)
         self._frozen_cash += self._frozen_cash_of_order(order)
 
     def _on_order_unsolicited_update(self, event):
         if event.account != self:
             return
-
         order = event.order
-        position = self._positions.get_or_create(order.order_book_id)
-        position.on_order_cancel_(order)
         if order.filled_quantity != 0:
             self._frozen_cash -= order.unfilled_quantity / order.quantity * self._frozen_cash_of_order(order)
         else:

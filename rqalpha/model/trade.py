@@ -20,6 +20,7 @@ from rqalpha.utils import id_gen
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.environment import Environment
+from rqalpha.const import POSITION_EFFECT, SIDE
 
 
 class Trade(object):
@@ -120,6 +121,11 @@ class Trade(object):
 
     @property
     def position_effect(self):
+        if self._position_effect is None:
+            if self._side == SIDE.BUY:
+                return POSITION_EFFECT.OPEN
+            else:
+                return POSITION_EFFECT.CLOSE
         return self._position_effect
 
     @property

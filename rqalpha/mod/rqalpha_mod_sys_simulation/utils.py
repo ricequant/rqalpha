@@ -17,7 +17,7 @@ import datetime
 import six
 
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE
-from rqalpha.model.base_position import Positions
+from rqalpha.model.positions import Positions
 from rqalpha.model.portfolio import Portfolio
 from rqalpha.model.trade import Trade
 from rqalpha.model.base_account import BaseAccount

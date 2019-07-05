@@ -14,5 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .future_position import FuturePositionProxy
-from .stock_position import StockPositionProxy
+
+class Positions(dict):
+    def __init__(self, position_cls):
+        super(Positions, self).__init__()
+        self._position_cls = position_cls
+        self._cached_positions = {}
+
+    def __missing__(self, key):
+        if key not in self._cached_positions:
+            self._cached_positions[key] = self._position_cls(key)
+        return self._cached_positions[key]
+
+    def get_or_create(self, key):
+        if key not in self:
+            self[key] = self._position_cls(key)
+        return self[key]

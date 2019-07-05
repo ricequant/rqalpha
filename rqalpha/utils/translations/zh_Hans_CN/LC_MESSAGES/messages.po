@@ -525,7 +525,7 @@ msgstr ""
 
 #: rqalpha/utils/__init__.py:184
 msgid "not run {}({}, {}) because strategy is hold"
-msgstr "因为策略上一次运行还没接触，取消执行 {}({}, {})"
+msgstr "策略暂停中，取消执行 {}({}, {})"
 
 #: rqalpha/utils/arg_checker.py:62
 msgid ""

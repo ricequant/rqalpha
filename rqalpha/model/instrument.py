@@ -109,9 +109,9 @@ class Instrument(object):
     def market_tplus(self):
         """
         [int] 合约卖出和买入操作需要间隔的最小交易日数，如A股为 1
-        公募基金的market_tplus默认0
+        公募基金的 market_tplus 默认0
         """
-        return self.__dict__.get("market_tplus", 0)
+        return self.__dict__.get("market_tplus") or 0
 
     @property
     def sector_code(self):
@@ -216,24 +216,14 @@ class Instrument(object):
         """
         [float] 合约乘数，例如沪深300股指期货的乘数为300.0（期货专用）
         """
-        try:
-            return self.__dict__["contract_multiplier"]
-        except (KeyError, ValueError):
-            raise AttributeError(
-                "Instrument(order_book_id={}) has no attribute 'contract_multiplier' ".format(self.order_book_id)
-            )
+        return self.__dict__.get("contract_multiplier") or 1
 
     @property
     def margin_rate(self):
         """
         [float] 合约最低保证金率（期货专用）
         """
-        try:
-            return self.__dict__["margin_rate"]
-        except (KeyError, ValueError):
-            raise AttributeError(
-                "Instrument(order_book_id={}) has no attribute 'margin_rate' ".format(self.order_book_id)
-            )
+        return self.__dict__.get("margin_rate") or 1
 
     @property
     def underlying_order_book_id(self):

@@ -20,7 +20,7 @@ from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 from rqalpha import export_as_api
 
 from .account_model import StockAccount, FutureAccount
-from .position_model import StockPosition, FuturePosition
+from .position_model import StockPositionProxy, FuturePositionProxy
 from .api import api_future, api_stock
 
 
@@ -28,7 +28,7 @@ class AccountMod(AbstractMod):
 
     def start_up(self, env, mod_config):
 
-        StockPosition.stock_t1 = mod_config.stock_t1
+        StockPositionProxy.stock_t1 = mod_config.stock_t1
         StockAccount.dividend_reinvestment = mod_config.dividend_reinvestment
 
         FutureAccount.forced_liquidation = mod_config.future_forced_liquidation
@@ -38,8 +38,8 @@ class AccountMod(AbstractMod):
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount)
 
         # 注入 Position
-        env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPosition)
-        env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePosition)
+        env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPositionProxy)
+        env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePositionProxy)
 
         # 注入 API
         if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.accounts:

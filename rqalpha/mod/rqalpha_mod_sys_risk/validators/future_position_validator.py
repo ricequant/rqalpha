@@ -30,24 +30,24 @@ class FuturePositionValidator(AbstractFrontendValidator):
         position = account.positions[order.order_book_id]
 
         if order.side == SIDE.BUY and order.position_effect == POSITION_EFFECT.CLOSE_TODAY \
-                and order.quantity > position._closable_today_sell_quantity:
+                and order.quantity > position.closable_today_sell_quantity:
             user_system_log.warn(_(
                 "Order Creation Failed: not enough today position {order_book_id} to buy close, target"
                 " quantity is {quantity}, closable today quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
-                closable=position._closable_today_sell_quantity,
+                closable=position.closable_today_sell_quantity,
             ))
             return False
 
         if order.side == SIDE.SELL and order.position_effect == POSITION_EFFECT.CLOSE_TODAY \
-                and order.quantity > position._closable_today_buy_quantity:
+                and order.quantity > position.closable_today_buy_quantity:
             user_system_log.warn(_(
                 "Order Creation Failed: not enough today position {order_book_id} to sell close, target"
                 " quantity is {quantity}, closable today quantity {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
-                closable=position._closable_today_buy_quantity,
+                closable=position.closable_today_buy_quantity,
             ))
             return False
 
