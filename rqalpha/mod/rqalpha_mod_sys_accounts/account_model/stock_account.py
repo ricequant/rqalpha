@@ -177,7 +177,7 @@ class StockAccount(BaseAccount):
 
         self._backward_trade_set.clear()
 
-    def _update_last_price(self, event):
+    def _update_last_price(self, _):
         for position in self._positions.values():
             position.update_last_price()
 

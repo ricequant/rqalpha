@@ -358,7 +358,6 @@ class AssetPositionProxy(AbstractPosition):
             self._long.update_last_price(price)
             self._short.update_last_price(price)
 
-
     def is_de_listed(self):
         raise NotImplementedError
 
