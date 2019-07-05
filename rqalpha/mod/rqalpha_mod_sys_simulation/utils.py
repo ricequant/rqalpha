@@ -47,6 +47,10 @@ def init_portfolio(env):
     start_date = datetime.datetime.combine(config.base.start_date, datetime.time.min)
     units = 0
 
+    if config.base.init_positions or (DEFAULT_ACCOUNT_TYPE.FUTURE.name in config.base.accounts and
+                                      config.base.frequency != '1d'):
+        BaseAccount.AGGRESSIVE_UPDATE_LAST_PRICE = True
+
     for account_type, starting_cash in six.iteritems(config.base.accounts):
         if starting_cash == 0:
             raise RuntimeError(_(u"{} starting cash can not be 0, using `--account {} 100000`").format(account_type, account_type))

@@ -31,6 +31,9 @@ class BaseAccount(AbstractAccount):
         "total_returns",
         "pnl"
     ]
+
+    AGGRESSIVE_UPDATE_LAST_PRICE = False
+
     __repr__ = property_repr
 
     def __init__(self, total_cash, positions, backward_trade_set=None, register_event=True):
