@@ -168,7 +168,7 @@ class FutureAccount(BaseAccount):
         if "static_total_value" in state:
             self._static_total_value = state["static_total_value"]
         else:
-            self._static_total_value = state["total_cash"] + self.margin - self.realized_pnl + self.transaction_cost
+            self._static_total_value = state["total_cash"] + self.margin - self.daily_pnl + self.transaction_cost
 
     @property
     def type(self):
@@ -185,7 +185,7 @@ class FutureAccount(BaseAccount):
 
     @property
     def total_value(self):
-        return self._static_total_value + self.realized_pnl - self.transaction_cost
+        return self._static_total_value + self.daily_pnl - self.transaction_cost
 
     @property
     def total_cash(self):
@@ -228,10 +228,6 @@ class FutureAccount(BaseAccount):
     @property
     def trading_pnl(self):
         return sum(p.trading_pnl for p in six.itervalues(self._positions))
-
-    @property
-    def realized_pnl(self):
-        return sum(p.realized_pnl for p in six.itervalues(self._positions))
 
     def _settlement(self, __):
 
@@ -295,3 +291,5 @@ class FutureAccount(BaseAccount):
 
     # deprecated propertie
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
+    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
+
