@@ -213,8 +213,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_env().portfolio_exists(),
-             verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_value(id_or_ins, cash_amount, price=None, style=None):
@@ -306,8 +305,7 @@ def _order_value(order_book_id, cash_amount, style):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_env().portfolio_exists(),
-             verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_percent(id_or_ins, percent, price=None, style=None):
@@ -350,8 +348,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_env().portfolio_exists(),
-             verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_target_value(id_or_ins, cash_amount, price=None, style=None):
@@ -404,8 +401,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_env().portfolio_exists(),
-             verify_that('id_or_ins').is_valid_stock(),
+@apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_target_percent(id_or_ins, percent, price=None, style=None):

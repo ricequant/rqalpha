@@ -57,8 +57,7 @@ class AnalyserMod(AbstractMod):
             return
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
-        if self._env.portfolio:
-            self._env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
+        self._env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
 
     def _collect_trade(self, event):
         self._trades.append(self._to_trade_record(event.trade))

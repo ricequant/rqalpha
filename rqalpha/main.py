@@ -103,8 +103,7 @@ def init_persist_helper(env, scheduler, ucontext, executor, config):
     persist_helper.register('universe', env._universe)
     if isinstance(env.event_source, Persistable):
         persist_helper.register('event_source', env.event_source)
-    if env.portfolio:
-        persist_helper.register('portfolio', env.portfolio)
+    persist_helper.register('portfolio', env.portfolio)
     for name, module in six.iteritems(env.mod_dict):
         if isinstance(module, Persistable):
             persist_helper.register('mod_{}'.format(name), module)

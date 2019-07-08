@@ -184,8 +184,6 @@ class Environment(object):
         return get_account_type(order_book_id)
 
     def get_account(self, order_book_id):
-        if not self.portfolio:
-            raise NotImplementedError
         account_type = get_account_type(order_book_id)
         return self.portfolio.accounts[account_type]
 

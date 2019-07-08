@@ -398,17 +398,6 @@ class EnvChecker(AbstractChecker):
 
         self._rules = []
 
-    def portfolio_exists(self):
-        def check_portfolio_exist(func_name):
-            if Environment.get_instance().portfolio is None:
-                raise RQApiNotSupportedError(_(
-                    "Api {} cannot be called in current strategy, because portfolio instance dose not exist".format(
-                        func_name
-                    )
-                ))
-        self._rules.append(check_portfolio_exist)
-        return self
-
     def verify(self, func_name, _):
         for r in self._rules:
             r(func_name)

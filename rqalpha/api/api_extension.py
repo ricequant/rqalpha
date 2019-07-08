@@ -48,7 +48,7 @@ def now_time_str(str_format="%H:%M:%S"):
 
 
 @export_as_api
-@apply_rules(verify_env().portfolio_exists(), verify_that("quantity").is_number())
+@apply_rules(verify_that("quantity").is_number())
 def order(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数
@@ -97,7 +97,7 @@ def order(order_book_id, quantity, price=None, style=None):
 
 
 @export_as_api
-@apply_rules(verify_env().portfolio_exists(), verify_that("quantity").is_number())
+@apply_rules(verify_that("quantity").is_number())
 def order_to(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数
