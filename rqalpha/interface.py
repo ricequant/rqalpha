@@ -514,10 +514,6 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_booking(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def submit_order(self, order):
         """
         [Required]

@@ -12,7 +12,6 @@ from .fixtures import (
     BaseDataSourceFixture,
     BarDictPriceBoardFixture,
     MatcherFixture,
-    BookingFixture,
 )
 
 
@@ -41,7 +40,6 @@ __all__ = [
     "BaseDataSourceFixture",
     "BarDictPriceBoardFixture",
     "MatcherFixture",
-    "BookingFixture",
     "mock_instrument",
     "mock_bar",
     "mock_tick"

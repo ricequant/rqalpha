@@ -172,18 +172,9 @@ def run(config, source_code=None, user_funcs=None):
 
         broker = env.broker
         assert broker is not None
-        try:
-            env.portfolio = broker.get_portfolio()
-        except NotImplementedError:
-            pass
-        else:
-            if env.benchmark_provider:
-                env.benchmark_portfolio = BenchmarkPortfolio(env.benchmark_provider, env.portfolio.units)
-
-        try:
-            env.booking = broker.get_booking()
-        except NotImplementedError:
-            pass
+        env.portfolio = broker.get_portfolio()
+        if env.benchmark_provider:
+            env.benchmark_portfolio = BenchmarkPortfolio(env.benchmark_provider, env.portfolio.units)
 
         event_source = env.event_source
         assert event_source is not None

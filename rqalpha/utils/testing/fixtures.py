@@ -187,18 +187,3 @@ class MatcherFixture(EnvironmentFixture):
 
         self.matcher = Matcher(self.env, self.env_config["mod"].sys_simulation)
         self.matcher.update(datetime(2018, 8, 16, 11, 5), datetime(2018, 8, 16, 11, 5))
-
-
-class BookingFixture(DataProxyFixture):
-    def __init__(self, *args, **kwargs):
-        super(BookingFixture, self).__init__(*args, **kwargs)
-
-        self.booking = None
-
-    def init_fixture(self):
-        from rqalpha.model.booking import Booking
-        
-        super(BookingFixture, self).init_fixture()
-        self.booking = Booking()
-
-

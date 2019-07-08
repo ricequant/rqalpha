@@ -83,12 +83,8 @@ def order(id_or_ins, amount, side, position_effect, style):
     orders = []
     if position_effect == POSITION_EFFECT.CLOSE:
         if side == SIDE.BUY:
-            if env.portfolio:
-                position = env.portfolio.positions[order_book_id]
-                sell_quantity, sell_old_quantity = position.sell_quantity, position.sell_old_quantity
-            else:
-                position = env.booking.get_position(order_book_id, POSITION_DIRECTION.SHORT)
-                sell_quantity, sell_old_quantity = position.quantity, position.old_quantity
+            position = env.portfolio.positions[order_book_id]
+            sell_quantity, sell_old_quantity = position.sell_quantity, position.sell_old_quantity
 
             # 如果平仓量大于持仓量，则 Warning 并 取消订单创建
             if amount > sell_quantity:
@@ -126,12 +122,8 @@ def order(id_or_ins, amount, side, position_effect, style):
                     POSITION_EFFECT.CLOSE
                 ))
         else:
-            if env.portfolio:
-                position = env.portfolio.positions[order_book_id]
-                buy_quantity, buy_old_quantity = position.buy_quantity, position.buy_old_quantity
-            else:
-                position = env.booking.get_position(order_book_id, POSITION_DIRECTION.LONG)
-                buy_quantity, buy_old_quantity = position.quantity, position.old_quantity
+            position = env.portfolio.positions[order_book_id]
+            buy_quantity, buy_old_quantity = position.buy_quantity, position.buy_old_quantity
 
             if amount > buy_quantity:
                 user_system_log.warn(

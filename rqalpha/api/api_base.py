@@ -1030,12 +1030,7 @@ def current_snapshot(id_or_symbol):
 
 @export_as_api
 def get_positions():
-    booking = Environment.get_instance().booking
-    if not booking:
-        raise RuntimeError(
-            _("Booking has not been set, please check your broker configuration.")
-        )
-    return booking.get_positions()
+    raise NotImplementedError
 
 
 @export_as_api
@@ -1043,13 +1038,7 @@ def get_positions():
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
 def get_position(order_book_id, direction):
-    booking = Environment.get_instance().booking
-    if not booking:
-        raise RuntimeError(
-            _("Booking has not been set, please check your broker configuration.")
-        )
-
-    return booking.get_position(order_book_id, direction)
+    raise NotImplementedError
 
 
 @export_as_api

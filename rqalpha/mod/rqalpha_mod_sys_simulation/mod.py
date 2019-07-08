@@ -64,13 +64,6 @@ class SimulationMod(AbstractMod):
 
         event_source = SimulationEventSource(env)
         env.set_event_source(event_source)
-        env.event_bus.add_listener(EVENT.BEFORE_SYSTEM_RESTORED, self._before_system_restore)
-
-    @staticmethod
-    def _before_system_restore(_):
-        env = Environment.get_instance()
-        if env.config.base.run_type == RUN_TYPE.PAPER_TRADING and env.booking:
-            env.persist_helper.register('booking', env.booking)
 
     def tear_down(self, code, exception=None):
         pass
