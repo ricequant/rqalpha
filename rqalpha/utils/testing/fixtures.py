@@ -112,6 +112,10 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
             else:
                 with open(os.path.join(self.temp_dir.name, "{}.pk".format(key)), "wb+") as out:
                     pickle.dump(obj, out, protocol=2)
+        os.symlink(
+            os.path.join(default_bundle_path, "share_transformation.json"),
+            os.path.join(self.temp_dir.name, "share_transformation.json")
+        )
 
         # TODO: use mocked bcolz file
         self.base_data_source = BaseDataSource(self.temp_dir.name)
