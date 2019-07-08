@@ -50,10 +50,6 @@ class StockPositionProxy(AssetPositionProxy):
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.STOCK.name
 
-    @property
-    def long(self):
-        return self._long
-
     def split_(self, ratio):
         self._long.apply_split(ratio)
 

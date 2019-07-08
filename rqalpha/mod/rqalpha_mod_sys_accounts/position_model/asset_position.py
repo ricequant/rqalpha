@@ -19,8 +19,6 @@ from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION
 from rqalpha.utils.class_helper import deprecated_property
 
 
-# TODO margin_multiplier
-
 class AssetPosition(object):
     def __init__(self, order_book_id, direction):
         self._order_book_id = order_book_id
@@ -44,6 +42,13 @@ class AssetPosition(object):
         self._last_price = float("NaN")
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
+        self._margin_multiplier = Environment.get_instance().config.base.margin_multiplier
+
+    def __repr__(self):
+        return "AssetPosition({}, {})".format(self._order_book_id, self._direction)
+
+    def __str__(self):
+        return "Position({}, {}, quantity={})".format(self._order_book_id, self._direction_factor, self.quantity)
 
     def get_state(self):
         return {
@@ -152,7 +157,11 @@ class AssetPosition(object):
     def margin_rate(self):
         if not self._margin_rate:
             env = Environment.get_instance()
-            self._margin_rate = env.data_proxy.instruments(self._order_book_id).margin_rate
+            margin_rate = env.data_proxy.instruments(self._order_book_id).margin_rate
+            if margin_rate == 1:
+                self._margin_rate = margin_rate
+            else:
+                self._margin_rate = margin_rate * self._margin_multiplier
         return self._margin_rate
 
     @property
@@ -335,6 +344,18 @@ class AssetPositionProxy(AbstractPosition):
     @property
     def transaction_cost(self):
         return self.buy_transaction_cost + self.sell_transaction_cost
+
+    @property
+    def positions(self):
+        return [self._long, self._short]
+
+    @property
+    def long(self):
+        return self._long
+
+    @property
+    def short(self):
+        return self._short
 
     # -- Function
     def apply_settlement(self):

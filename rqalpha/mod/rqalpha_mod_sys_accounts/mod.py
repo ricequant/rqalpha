@@ -21,7 +21,7 @@ from rqalpha import export_as_api
 
 from .account_model import StockAccount, FutureAccount
 from .position_model import StockPositionProxy, FuturePositionProxy
-from .api import api_future, api_stock
+from .api import api_future, api_stock, api_base
 
 
 class AccountMod(AbstractMod):
@@ -42,6 +42,9 @@ class AccountMod(AbstractMod):
         env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePositionProxy)
 
         # 注入 API
+        for export_name in api_base.__all__:
+            export_as_api(getattr(api_base, export_name))
+
         if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.accounts:
             # 注入期货API
             for export_name in api_future.__all__:

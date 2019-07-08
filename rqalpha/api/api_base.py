@@ -1029,19 +1029,6 @@ def current_snapshot(id_or_symbol):
 
 
 @export_as_api
-def get_positions():
-    raise NotImplementedError
-
-
-@export_as_api
-@apply_rules(
-    verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
-)
-def get_position(order_book_id, direction):
-    raise NotImplementedError
-
-
-@export_as_api
 @apply_rules(
     verify_that("event_type").is_instance_of(EVENT),
     verify_that("handler").is_instance_of(types.FunctionType),
