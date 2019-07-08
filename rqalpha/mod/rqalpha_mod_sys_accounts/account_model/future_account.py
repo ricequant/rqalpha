@@ -43,6 +43,10 @@ class FutureAccount(BaseAccount):
 
     forced_liquidation = True
 
+    def __init__(self, total_cash, positions, backward_trade_set=None, register_event=True):
+        super(FutureAccount, self).__init__(positions, backward_trade_set, register_event)
+        self._static_total_value = total_cash
+
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.TRADE, self._on_trade)
@@ -148,7 +152,7 @@ class FutureAccount(BaseAccount):
                 for order_book_id, position in six.iteritems(self._positions)
             },
             'frozen_cash': self._frozen_cash,
-            'total_cash': self._total_cash,
+            'static_total_value': self._static_total_value,
             'backward_trade_set': list(self._backward_trade_set),
         }
 
@@ -156,15 +160,15 @@ class FutureAccount(BaseAccount):
         self._frozen_cash = state['frozen_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
 
-        margin_changed = 0
         self._positions.clear()
         for order_book_id, v in six.iteritems(state['positions']):
             position = self._positions.get_or_create(order_book_id)
             position.set_state(v)
-            if 'margin_rate' in v and abs(v['margin_rate'] - position.margin_rate) > 1e-6:
-                margin_changed += position.margin * (v['margin_rate'] - position.margin_rate) / position.margin_rate
 
-        self._total_cash = state['total_cash'] + margin_changed
+        if "static_total_value" in state:
+            self._static_total_value = state["static_total_value"]
+        else:
+            self._static_total_value = state["total_cash"] + self.margin - self.realized_pnl + self.transaction_cost
 
     @property
     def type(self):
@@ -181,7 +185,11 @@ class FutureAccount(BaseAccount):
 
     @property
     def total_value(self):
-        return self._total_cash + self.margin
+        return self._static_total_value + self.realized_pnl - self.transaction_cost
+
+    @property
+    def total_cash(self):
+        return self.total_value - self.margin
 
     # -- Margin 相关
     @property
@@ -221,8 +229,13 @@ class FutureAccount(BaseAccount):
     def trading_pnl(self):
         return sum(p.trading_pnl for p in six.itervalues(self._positions))
 
+    @property
+    def realized_pnl(self):
+        return sum(p.realized_pnl for p in six.itervalues(self._positions))
+
     def _settlement(self, __):
-        total_value = self.total_value
+
+        self._static_total_value = self.total_value
 
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
@@ -234,14 +247,13 @@ class FutureAccount(BaseAccount):
                 del self._positions[order_book_id]
             else:
                 position.apply_settlement()
-        self._total_cash = total_value - self.margin - self.holding_pnl
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
-        if total_value <= 0 and self.forced_liquidation:
+        if self._static_total_value <= 0 and self.forced_liquidation:
             if self._positions:
-                user_system_log.warn(_("Trigger Forced Liquidation, current total_value is {}"), total_value)
+                user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
             self._positions.clear()
-            self._total_cash = 0
+            self._static_total_value = 0
 
         self._backward_trade_set.clear()
 
@@ -273,11 +285,7 @@ class FutureAccount(BaseAccount):
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
-        position = self._positions.get_or_create(order_book_id)
-        delta_cash = position.apply_trade(trade)
-
-        self._total_cash -= trade.transaction_cost
-        self._total_cash += delta_cash
+        self._positions.get_or_create(order_book_id).apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
         if order:
             if trade.last_quantity != order.quantity:
@@ -287,4 +295,3 @@ class FutureAccount(BaseAccount):
 
     # deprecated propertie
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
-    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")

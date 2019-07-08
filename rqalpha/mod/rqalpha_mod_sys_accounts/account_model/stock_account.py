@@ -36,7 +36,8 @@ class StockAccount(BaseAccount):
     __abandon_properties__ = []
 
     def __init__(self, total_cash, positions, backward_trade_set=None, dividend_receivable=None, register_event=True):
-        super(StockAccount, self).__init__(total_cash, positions, backward_trade_set, register_event)
+        super(StockAccount, self).__init__(positions, backward_trade_set, register_event)
+        self._total_cash = total_cash
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
         self._pending_transform = {}
 
@@ -184,6 +185,10 @@ class StockAccount(BaseAccount):
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.STOCK.name
+
+    @property
+    def total_cash(self):
+        return self._total_cash
 
     def _handle_dividend_payable(self, trading_date):
         to_be_removed = []

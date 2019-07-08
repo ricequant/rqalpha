@@ -33,10 +33,9 @@ class BaseAccount(AbstractAccount):
     ]
     __repr__ = property_repr
 
-    def __init__(self, total_cash, positions, backward_trade_set=None, register_event=True):
+    def __init__(self, positions, backward_trade_set=None, register_event=True):
         self._positions = positions
         self._frozen_cash = 0
-        self._total_cash = total_cash
         self._backward_trade_set = backward_trade_set if backward_trade_set is not None else set()
         if register_event:
             self.register_event()
@@ -83,6 +82,10 @@ class BaseAccount(AbstractAccount):
         return self._positions
 
     @property
+    def total_cash(self):
+        raise NotImplementedError
+
+    @property
     def frozen_cash(self):
         """
         [float] 冻结资金
@@ -94,7 +97,7 @@ class BaseAccount(AbstractAccount):
         """
         [float] 可用资金
         """
-        return self._total_cash - self._frozen_cash
+        return self.total_cash - self._frozen_cash
 
     @property
     def market_value(self):

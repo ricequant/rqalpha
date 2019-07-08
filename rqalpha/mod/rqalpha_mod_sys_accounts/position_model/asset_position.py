@@ -30,6 +30,7 @@ class AssetPosition(object):
 
         self._avg_price = 0
         self._trade_cost = 0
+        self._realized_pnl = 0
         self._transaction_cost = 0
 
         self._non_closable = 0
@@ -59,6 +60,7 @@ class AssetPosition(object):
             "trade_cost": self._trade_cost,
             "transaction_cost": self._transaction_cost,
             "non_closable": self._non_closable,
+            "realized_pnl": self._realized_pnl,
         }
 
     def set_state(self, state):
@@ -69,6 +71,7 @@ class AssetPosition(object):
         self._trade_cost = state.get("trade_cost", 0)
         self._transaction_cost = state.get("transaction_cost", 0)
         self._non_closable = state.get("non_closable", 0)
+        self._realized_pnl = state.get("realized_pnl", 0)
 
     @property
     def order_book_id(self):
@@ -128,6 +131,10 @@ class AssetPosition(object):
         return quantity * self.contract_multiplier * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
+    def realized_pnl(self):
+        return self._realized_pnl
+
+    @property
     def pnl(self):
         return (self.last_price - self.avg_price) * self.quantity * self.contract_multiplier * self._direction_factor
 
@@ -185,6 +192,7 @@ class AssetPosition(object):
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
         self._prev_close = self._contract_multiplier = self._margin_rate = None
+        self._realized_pnl = 0
 
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost
@@ -203,7 +211,7 @@ class AssetPosition(object):
 
             if self.market_tplus >= 1:
                 self._non_closable += 1
-            return -1 * trade.last_quantity * trade.last_price * self.margin_rate * self.contract_multiplier
+            return 0
         else:
             if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
                 self._today_quantity -= trade.last_quantity
@@ -216,11 +224,9 @@ class AssetPosition(object):
             else:
                 raise RuntimeError("Unknown position_effect of trade: {}".format(trade))
             self._trade_cost -= trade.last_price * trade.last_quantity
-            delta_margin = trade.last_quantity * self.last_price * self.margin_rate * self.contract_multiplier
-            realized_pnl = (
-                                self.avg_price - trade.last_price
-                           ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
-            return delta_margin + realized_pnl
+            self._realized_pnl += (
+                self.avg_price - trade.last_price
+            ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
 
     def apply_split(self, ratio):
         self._today_quantity *= ratio
@@ -286,6 +292,10 @@ class AssetPositionProxy(AbstractPosition):
     @property
     def trading_pnl(self):
         return self._long.trading_pnl + self._short.trading_pnl
+
+    @property
+    def realized_pnl(self):
+        return self._long.realized_pnl + self._short.realized_pnl
 
     @property
     def daily_pnl(self):
@@ -385,4 +395,3 @@ class AssetPositionProxy(AbstractPosition):
     # deprecated properties
 
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
-    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
