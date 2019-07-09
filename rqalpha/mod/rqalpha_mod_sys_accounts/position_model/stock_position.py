@@ -40,7 +40,7 @@ class StockPositionProxy(AssetPositionProxy):
                 "today_quantity": today_quantity,
                 "avg_price": state.get("avg_price", 0),
                 "trade_cost": 0,
-                "transaction_cose": state.get("transaction_cost")
+                "transaction_cost": state.get("transaction_cost")
             })
 
     @property
