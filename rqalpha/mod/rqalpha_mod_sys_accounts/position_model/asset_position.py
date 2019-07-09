@@ -34,9 +34,10 @@ class AssetPosition(object):
 
         self._non_closable = 0
 
+        self._prev_close = None
+
         self._contract_multiplier = None
         self._margin_rate = None
-        self._prev_close = None
         self._market_tplus = None
 
         self._last_price = float("NaN")
@@ -59,6 +60,7 @@ class AssetPosition(object):
             "trade_cost": self._trade_cost,
             "transaction_cost": self._transaction_cost,
             "non_closable": self._non_closable,
+            "prev_close": self._prev_close
         }
 
     def set_state(self, state):
@@ -69,6 +71,7 @@ class AssetPosition(object):
         self._trade_cost = state.get("trade_cost", 0)
         self._transaction_cost = state.get("transaction_cost", 0)
         self._non_closable = state.get("non_closable", 0)
+        self._prev_close = state.get("prev_close")
 
     @property
     def order_book_id(self):
@@ -184,7 +187,8 @@ class AssetPosition(object):
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
-        self._prev_close = self._contract_multiplier = self._margin_rate = None
+        self._contract_multiplier = self._margin_rate = None
+        self._prev_close = self.last_price
 
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost

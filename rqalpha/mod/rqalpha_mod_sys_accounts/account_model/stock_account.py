@@ -20,70 +20,24 @@ from collections import defaultdict
 
 import numpy as np
 
-from rqalpha.model.base_account import BaseAccount
-from rqalpha.events import EVENT
 from rqalpha.environment import Environment
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE
 
 from ..api.api_stock import order_shares
+from .asset_account import AssetAccount
 
 
-class StockAccount(BaseAccount):
+class StockAccount(AssetAccount):
     dividend_reinvestment = False
 
     __abandon_properties__ = []
 
     def __init__(self, total_cash, positions, backward_trade_set=None, dividend_receivable=None, register_event=True):
-        super(StockAccount, self).__init__(positions, backward_trade_set, register_event)
-        self._total_cash = total_cash
+        super(StockAccount, self).__init__(total_cash, positions, backward_trade_set, register_event)
         self._dividend_receivable = dividend_receivable if dividend_receivable else {}
         self._pending_transform = {}
-
-    def register_event(self):
-        event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.TRADE, self._on_trade)
-        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._before_trading)
-        event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
-
-        event_bus.add_listener(EVENT.BAR, self._update_last_price)
-        event_bus.add_listener(EVENT.TICK, self._update_last_price)
-
-    def order(self, order_book_id, quantity, style, target=False):
-        position = self.positions[order_book_id]
-        if target:
-            # For order_to
-            quantity = quantity - position.quantity
-        return order_shares(order_book_id, quantity, style=style)
-
-    def get_state(self):
-        return {
-            'positions': {
-                order_book_id: position.get_state()
-                for order_book_id, position in six.iteritems(self._positions)
-            },
-            'frozen_cash': self._frozen_cash,
-            'total_cash': self._total_cash,
-            'backward_trade_set': list(self._backward_trade_set),
-            'dividend_receivable': self._dividend_receivable,
-            'pending_transform': self._pending_transform,
-        }
-
-    def set_state(self, state):
-        self._frozen_cash = state['frozen_cash']
-        self._total_cash = state['total_cash']
-        self._backward_trade_set = set(state['backward_trade_set'])
-        self._dividend_receivable = state['dividend_receivable']
-        self._pending_transform = state.get("pending_transform", {})
-        self._positions.clear()
-        for order_book_id, v in six.iteritems(state['positions']):
-            position = self._positions.get_or_create(order_book_id)
-            position.set_state(v)
 
     def fast_forward(self, orders, trades=None):
         # 计算 Positions
@@ -105,28 +59,12 @@ class StockAccount(BaseAccount):
         for order_book_id, position in six.iteritems(self._positions):
             position.reset_frozen(frozen_quantity[order_book_id])
 
-    def _on_trade(self, event):
-        if event.account != self:
-            return
-        self._apply_trade(event.trade, event.order)
-
-    def _apply_trade(self, trade, order=None):
-        if trade.exec_id in self._backward_trade_set:
-            return
-
-        position = self._positions.get_or_create(trade.order_book_id)
-        position.apply_trade(trade)
-        self._total_cash -= trade.transaction_cost
-        if order:
-            if trade.last_quantity != order.quantity:
-                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
-            else:
-                self._frozen_cash -= self._frozen_cash_of_order(order)
-        if trade.side == SIDE.BUY:
-            self._total_cash -= trade.last_quantity * trade.last_price
-        else:
-            self._total_cash += trade.last_price * trade.last_quantity
-        self._backward_trade_set.add(trade.exec_id)
+    def order(self, order_book_id, quantity, style, target=False):
+        position = self.positions[order_book_id]
+        if target:
+            # For order_to
+            quantity = quantity - position.quantity
+        return order_shares(order_book_id, quantity, style=style)
 
     def _on_order_pending_new(self, event):
         if event.account != self:
@@ -143,7 +81,12 @@ class StockAccount(BaseAccount):
         else:
             self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
-    def _before_trading(self, event):
+    def _on_trade(self, event):
+        if event.account != self:
+            return
+        self._apply_trade(event.trade, event.order)
+
+    def _on_before_trading(self, event):
         trading_date = Environment.get_instance().trading_dt.date()
         last_date = Environment.get_instance().data_proxy.get_previous_trading_date(trading_date)
         self._handle_dividend_book_closure(last_date)
@@ -153,6 +96,7 @@ class StockAccount(BaseAccount):
 
     def _on_settlement(self, event):
         env = Environment.get_instance()
+        self._static_total_value = self.total_value
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.quantity != 0:
@@ -164,8 +108,8 @@ class StockAccount(BaseAccount):
                     if transform_data is not None:
                         self._pending_transform[order_book_id] = transform_data
                         continue
-                if env.config.mod.sys_accounts.cash_return_by_stock_delisted:
-                    self._total_cash += position.market_value
+                if not env.config.mod.sys_accounts.cash_return_by_stock_delisted:
+                    self._static_total_value -= position.market_value
                 user_system_log.warn(
                     _(u"{order_book_id} is expired, close all positions by system").format(
                         order_book_id=order_book_id)
@@ -178,24 +122,41 @@ class StockAccount(BaseAccount):
 
         self._backward_trade_set.clear()
 
-    def _update_last_price(self, _):
-        for position in self._positions.values():
-            position.update_last_price()
-
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.STOCK.name
 
-    @property
-    def total_cash(self):
-        return self._total_cash
+    def get_state(self):
+        state = super(StockAccount, self).get_state()
+        state.update({
+            'dividend_receivable': self._dividend_receivable,
+            'pending_transform': self._pending_transform,
+        })
+
+    def set_state(self, state):
+        super(StockAccount, self).set_state(state)
+        self._dividend_receivable = state['dividend_receivable']
+        self._pending_transform = state.get("pending_transform", {})
+
+    def _apply_trade(self, trade, order=None):
+        if trade.exec_id in self._backward_trade_set:
+            return
+
+        position = self._positions.get_or_create(trade.order_book_id)
+        position.apply_trade(trade)
+        if order:
+            if trade.last_quantity != order.quantity:
+                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
+            else:
+                self._frozen_cash -= self._frozen_cash_of_order(order)
+        self._backward_trade_set.add(trade.exec_id)
 
     def _handle_dividend_payable(self, trading_date):
         to_be_removed = []
         for order_book_id, dividend in six.iteritems(self._dividend_receivable):
             if dividend['payable_date'] == trading_date:
                 to_be_removed.append(order_book_id)
-                self._total_cash += dividend['quantity'] * dividend['dividend_per_share']
+                self._static_total_value += dividend['quantity'] * dividend['dividend_per_share']
         for order_book_id in to_be_removed:
             del self._dividend_receivable[order_book_id]
 
@@ -266,12 +227,12 @@ class StockAccount(BaseAccount):
         self._pending_transform.clear()
 
     @property
-    def total_value(self):
-        return self.market_value + self._total_cash + self.dividend_receivable
-
-    @property
     def dividend_receivable(self):
         """
         [float] 投资组合在分红现金收到账面之前的应收分红部分。具体细节在分红部分
         """
         return sum(d['quantity'] * d['dividend_per_share'] for d in six.itervalues(self._dividend_receivable))
+
+    @property
+    def total_value(self):
+        return super(StockAccount, self).total_value + self.dividend_receivable

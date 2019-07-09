@@ -16,15 +16,14 @@
 
 import six
 
-from rqalpha.model.base_account import BaseAccount
 from rqalpha.environment import Environment
-from rqalpha.events import EVENT
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 
 from ..api.api_future import order
+from .asset_account import AssetAccount
 
 
 def margin_of(order_book_id, quantity, price):
@@ -34,7 +33,7 @@ def margin_of(order_book_id, quantity, price):
     return quantity * instrument.contract_multiplier * price * instrument.margin_rate * margin_multiplier
 
 
-class FutureAccount(BaseAccount):
+class FutureAccount(AssetAccount):
 
     __abandon_properties__ = [
         "daily_holding_pnl",
@@ -42,22 +41,6 @@ class FutureAccount(BaseAccount):
     ]
 
     forced_liquidation = True
-
-    def __init__(self, total_cash, positions, backward_trade_set=None, register_event=True):
-        super(FutureAccount, self).__init__(positions, backward_trade_set, register_event)
-        self._static_total_value = total_cash
-
-    def register_event(self):
-        event_bus = Environment.get_instance().event_bus
-        event_bus.add_listener(EVENT.TRADE, self._on_trade)
-        event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
-        event_bus.add_listener(EVENT.SETTLEMENT, self._settlement)
-
-        event_bus.add_listener(EVENT.BAR, self._update_last_price)
-        event_bus.add_listener(EVENT.TICK, self._update_last_price)
 
     def fast_forward(self, orders, trades=None):
         # 计算 Positions
@@ -145,92 +128,27 @@ class FutureAccount(BaseAccount):
             orders.append(order(order_book_id, quantity, SIDE.SELL, POSITION_EFFECT.OPEN, style))
             return orders
 
-    def get_state(self):
-        return {
-            'positions': {
-                order_book_id: position.get_state()
-                for order_book_id, position in six.iteritems(self._positions)
-            },
-            'frozen_cash': self._frozen_cash,
-            'static_total_value': self._static_total_value,
-            'backward_trade_set': list(self._backward_trade_set),
-        }
+    def _on_order_pending_new(self, event):
+        if self != event.account:
+            return
 
-    def set_state(self, state):
-        self._frozen_cash = state['frozen_cash']
-        self._backward_trade_set = set(state['backward_trade_set'])
+        self._frozen_cash += self._frozen_cash_of_order(event.order)
 
-        self._positions.clear()
-        for order_book_id, v in six.iteritems(state['positions']):
-            position = self._positions.get_or_create(order_book_id)
-            position.set_state(v)
-
-        if "static_total_value" in state:
-            self._static_total_value = state["static_total_value"]
+    def _on_order_unsolicited_update(self, event):
+        if self != event.account:
+            return
+        order = event.order
+        if order.filled_quantity != 0:
+            self._frozen_cash -= order.unfilled_quantity / order.quantity * self._frozen_cash_of_order(order)
         else:
-            self._static_total_value = state["total_cash"] + self.margin - self.daily_pnl + self.transaction_cost
+            self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
-    @property
-    def type(self):
-        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
+    def _on_trade(self, event):
+        if self != event.account:
+            return
+        self._apply_trade(event.trade, event.order)
 
-    @staticmethod
-    def _frozen_cash_of_order(order):
-        order_cost = margin_of(
-            order.order_book_id, order.quantity, order.frozen_price
-        ) if order.position_effect == POSITION_EFFECT.OPEN else 0
-        return order_cost + Environment.get_instance().get_order_transaction_cost(
-            DEFAULT_ACCOUNT_TYPE.FUTURE, order
-        )
-
-    @property
-    def total_value(self):
-        return self._static_total_value + self.daily_pnl - self.transaction_cost
-
-    @property
-    def total_cash(self):
-        return self.total_value - self.margin
-
-    # -- Margin 相关
-    @property
-    def margin(self):
-        """
-        [float] 总保证金
-        """
-        return sum(position.margin for position in six.itervalues(self._positions))
-
-    @property
-    def buy_margin(self):
-        """
-        [float] 买方向保证金
-        """
-        return sum(position.buy_margin for position in six.itervalues(self._positions))
-
-    @property
-    def sell_margin(self):
-        """
-        [float] 卖方向保证金
-        """
-        return sum(position.sell_margin for position in six.itervalues(self._positions))
-
-    # -- PNL 相关
-    @property
-    def daily_pnl(self):
-        """
-        [float] 当日盈亏
-        """
-        return sum(p.daily_pnl for p in six.itervalues(self._positions))
-
-    @property
-    def position_pnl(self):
-        return sum(p.position_pnl for p in six.itervalues(self._positions))
-
-    @property
-    def trading_pnl(self):
-        return sum(p.trading_pnl for p in six.itervalues(self._positions))
-
-    def _settlement(self, __):
-
+    def _on_settlement(self, event):
         self._static_total_value = self.total_value
 
         for position in list(self._positions.values()):
@@ -253,29 +171,21 @@ class FutureAccount(BaseAccount):
 
         self._backward_trade_set.clear()
 
-    def _update_last_price(self, event):
-        for position in self._positions.values():
-            position.update_last_price()
+    def _on_before_trading(self, event):
+        pass
 
-    def _on_order_pending_new(self, event):
-        if self != event.account:
-            return
+    @property
+    def type(self):
+        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
 
-        self._frozen_cash += self._frozen_cash_of_order(event.order)
-
-    def _on_order_unsolicited_update(self, event):
-        if self != event.account:
-            return
-        order = event.order
-        if order.filled_quantity != 0:
-            self._frozen_cash -= order.unfilled_quantity / order.quantity * self._frozen_cash_of_order(order)
-        else:
-            self._frozen_cash -= self._frozen_cash_of_order(event.order)
-
-    def _on_trade(self, event):
-        if self != event.account:
-            return
-        self._apply_trade(event.trade, event.order)
+    @staticmethod
+    def _frozen_cash_of_order(order):
+        order_cost = margin_of(
+            order.order_book_id, order.quantity, order.frozen_price
+        ) if order.position_effect == POSITION_EFFECT.OPEN else 0
+        return order_cost + Environment.get_instance().get_order_transaction_cost(
+            DEFAULT_ACCOUNT_TYPE.FUTURE, order
+        )
 
     def _apply_trade(self, trade, order=None):
         if trade.exec_id in self._backward_trade_set:
@@ -288,6 +198,20 @@ class FutureAccount(BaseAccount):
                 self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
             else:
                 self._frozen_cash -= self._frozen_cash_of_order(order)
+
+    @property
+    def buy_margin(self):
+        """
+        [float] 买方向保证金
+        """
+        return sum(position.buy_margin for position in six.itervalues(self._positions))
+
+    @property
+    def sell_margin(self):
+        """
+        [float] 卖方向保证金
+        """
+        return sum(position.sell_margin for position in six.itervalues(self._positions))
 
     # deprecated propertie
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
