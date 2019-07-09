@@ -339,5 +339,3 @@ class AssetPositionProxy(AbstractPosition):
 
     def is_de_listed(self):
         raise NotImplementedError
-
-    # deprecated properties
