@@ -216,4 +216,3 @@ class FutureAccount(AssetAccount):
     # deprecated propertie
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
-
