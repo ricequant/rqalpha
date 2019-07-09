@@ -110,7 +110,7 @@ class AnalyserMod(AbstractMod):
 
     ACCOUNT_FIELDS_MAP = {
         DEFAULT_ACCOUNT_TYPE.STOCK.name: ['dividend_receivable'],
-        DEFAULT_ACCOUNT_TYPE.FUTURE.name: ['holding_pnl', 'realized_pnl', 'daily_pnl', 'margin'],
+        DEFAULT_ACCOUNT_TYPE.FUTURE.name: ['position_pnl', 'trading_pnl', 'daily_pnl', 'margin'],
         DEFAULT_ACCOUNT_TYPE.BOND.name: [],
     }
 

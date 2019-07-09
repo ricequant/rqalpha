@@ -148,6 +148,36 @@ class FuturePositionProxy(AssetPositionProxy):
         return self.sell_old_quantity + self.sell_today_quantity
 
     @property
+    def buy_margin(self):
+        """
+        [float] 买方向持仓保证金
+        """
+        return self._long.margin
+
+    @property
+    def sell_margin(self):
+        """
+        [float] 卖方向持仓保证金
+        """
+        return self._short.margin
+
+    @property
+    def buy_avg_open_price(self):
+        return self._long.avg_price
+
+    @property
+    def sell_avg_open_price(self):
+        return self._short.avg_price
+
+    @property
+    def buy_transaction_cost(self):
+        return self._long.transaction_cost
+
+    @property
+    def sell_transaction_cost(self):
+        return self._short.transaction_cost
+
+    @property
     def closable_today_sell_quantity(self):
         buy_close_today_order_quantity = sum(o.unfilled_quantity for o in self.open_orders if o.side == SIDE.BUY and
                                              o.position_effect == POSITION_EFFECT.CLOSE_TODAY)
@@ -194,6 +224,7 @@ class FuturePositionProxy(AssetPositionProxy):
             close_today_amount = trade_amount - self.sell_old_quantity
         return max(close_today_amount, 0)
 
+    holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     buy_holding_pnl = deprecated_property("buy_holding_pnl", "buy_position_pnl")
     sell_holding_pnl = deprecated_property("sell_holding_pnl", "sell_position_pnl")
     buy_realized_pnl = deprecated_property("buy_realized_pnl", "buy_trading_pnl")

@@ -16,7 +16,6 @@
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION
-from rqalpha.utils.class_helper import deprecated_property
 
 
 class AssetPosition(object):
@@ -304,45 +303,15 @@ class AssetPositionProxy(AbstractPosition):
 
     # -- Margin 相关
     @property
-    def buy_margin(self):
-        """
-        [float] 买方向持仓保证金
-        """
-        return self._long.margin
-
-    @property
-    def sell_margin(self):
-        """
-        [float] 卖方向持仓保证金
-        """
-        return self._short.margin
-
-    @property
     def margin(self):
         """
         [float] 保证金
         """
-        return self.buy_margin + self.sell_margin
-
-    @property
-    def buy_avg_open_price(self):
-        return self._long.avg_price
-
-    @property
-    def sell_avg_open_price(self):
-        return self._short.avg_price
-
-    @property
-    def buy_transaction_cost(self):
-        return self._long.transaction_cost
-
-    @property
-    def sell_transaction_cost(self):
-        return self._short.transaction_cost
+        return self._long.margin+ self._short.margin
 
     @property
     def transaction_cost(self):
-        return self.buy_transaction_cost + self.sell_transaction_cost
+        return self._long.transaction_cost + self._short.transaction_cost
 
     @property
     def positions(self):
@@ -382,5 +351,3 @@ class AssetPositionProxy(AbstractPosition):
         raise NotImplementedError
 
     # deprecated properties
-
-    holding_pnl = deprecated_property("holding_pnl", "position_pnl")

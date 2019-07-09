@@ -35,11 +35,6 @@ def margin_of(order_book_id, quantity, price):
 
 class FutureAccount(AssetAccount):
 
-    __abandon_properties__ = [
-        "daily_holding_pnl",
-        "daily_realized_pnl"
-    ]
-
     forced_liquidation = True
 
     def fast_forward(self, orders, trades=None):
