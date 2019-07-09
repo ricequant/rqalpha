@@ -227,6 +227,7 @@ class FuturePositionProxy(AssetPositionProxy):
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     buy_holding_pnl = deprecated_property("buy_holding_pnl", "buy_position_pnl")
     sell_holding_pnl = deprecated_property("sell_holding_pnl", "sell_position_pnl")
+    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
     buy_realized_pnl = deprecated_property("buy_realized_pnl", "buy_trading_pnl")
     sell_realized_pnl = deprecated_property("sell_realized_pnl", "sell_trading_pnl")
     buy_avg_holding_price = deprecated_property("buy_avg_holding_price", "buy_avg_open_price")
