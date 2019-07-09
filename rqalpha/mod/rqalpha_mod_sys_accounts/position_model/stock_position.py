@@ -43,9 +43,6 @@ class StockPositionProxy(AssetPositionProxy):
                 "transaction_cose": state.get("transaction_cost")
             })
 
-    def combine_with_transformed_position(self, predecessor_position, share_conversion_ratio):
-        self._long.combine(predecessor_position.long, share_conversion_ratio)
-
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.STOCK.name

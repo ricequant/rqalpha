@@ -231,16 +231,6 @@ class AssetPosition(object):
     def update_last_price(self, price):
         self._last_price = price
 
-    def combine(self, another, conversion_ratio):
-        total = self._avg_price * self.quantity + another.avg_price * another.quantity
-        self._old_quantity += another.old_quantity * conversion_ratio
-        self._today_quantity += another.today_quantity * conversion_ratio
-        self._logical_old_quantity += another.logical_old_quantity * conversion_ratio
-        self._avg_price = total / self.quantity
-        self._trade_cost += another.trade_cost
-        self._transaction_cost += another.transaction_cost
-        self._non_closable += another.non_closable * conversion_ratio
-
 
 class AssetPositionProxy(AbstractPosition):
     __abandon_properties__ = []

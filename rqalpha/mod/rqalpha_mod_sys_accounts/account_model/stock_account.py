@@ -221,10 +221,16 @@ class StockAccount(AssetAccount):
         if not self._pending_transform:
             return
         for predecessor, (successor, conversion_ratio) in six.iteritems(self._pending_transform):
-            self._positions.get_or_create(successor).combine_with_transformed_position(
-                self._positions[predecessor], conversion_ratio
-            )
-            self._positions.pop(predecessor, None)
+            predecessor_position = self._positions.pop(predecessor)
+
+            self._apply_trade(Trade.__from_create__(
+                order_id=None,
+                price=predecessor_position.avg_price / conversion_ratio,
+                amount=predecessor_position.quantity * conversion_ratio,
+                side=SIDE.BUY,
+                position_effect=POSITION_EFFECT.OPEN,
+                order_book_id=successor
+            ))
             user_system_log.warn(_(u"{predecessor} code has changed to {successor}, change position by system").format(
                 predecessor=predecessor, successor=successor))
 
