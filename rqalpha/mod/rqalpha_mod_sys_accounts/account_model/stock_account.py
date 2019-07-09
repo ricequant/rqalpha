@@ -23,7 +23,8 @@ import numpy as np
 from rqalpha.environment import Environment
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE, POSITION_EFFECT
+from rqalpha.model.trade import Trade
 
 from ..api.api_stock import order_shares
 from .asset_account import AssetAccount
@@ -187,9 +188,12 @@ class StockAccount(AssetAccount):
             position.dividend_(dividend_per_share)
 
             if StockAccount.dividend_reinvestment:
-                last_price = Environment.get_instance().data_proxy.get_bar(order_book_id, trading_date).close
-                shares = position.quantity * dividend_per_share / last_price
-                position._quantity += shares
+                last_price = position.last_price
+                dividend_value = position.quantity * dividend_per_share
+                self._static_total_value += dividend_value
+                self._apply_trade(Trade.__from_create__(
+                    None, last_price, dividend_value / last_price, SIDE.BUY, POSITION_EFFECT.OPEN, order_book_id
+                ))
             else:
                 self._dividend_receivable[order_book_id] = {
                     'quantity': position.quantity,
