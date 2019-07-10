@@ -37,6 +37,11 @@ class FutureAccount(AssetAccount):
 
     forced_liquidation = True
 
+    __abandon_properties__ = [
+        "holding_pnl",
+        "realized_pnl",
+    ]
+
     def fast_forward(self, orders, trades=None):
         # 计算 Positions
         if trades:
