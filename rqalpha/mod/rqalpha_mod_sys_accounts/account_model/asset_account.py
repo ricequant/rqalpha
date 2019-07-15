@@ -145,7 +145,7 @@ class AssetAccount(AbstractAccount):
 
     @property
     def total_value(self):
-        return self._static_total_value + self.daily_pnl - self.transaction_cost
+        return self._static_total_value + self.daily_pnl
 
     @property
     def total_cash(self):

@@ -17,8 +17,13 @@ from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION
 
+from rqalpha.utils.repr import property_repr
+
 
 class AssetPosition(object):
+
+    __repr__ = property_repr
+
     def __init__(self, order_book_id, direction):
         self._order_book_id = order_book_id
         self._direction = direction
@@ -43,12 +48,6 @@ class AssetPosition(object):
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
         self._margin_multiplier = Environment.get_instance().config.base.margin_multiplier
-
-    def __repr__(self):
-        return "AssetPosition({}, {})".format(self._order_book_id, self._direction)
-
-    def __str__(self):
-        return "Position({}, {}, quantity={})".format(self._order_book_id, self._direction_factor, self.quantity)
 
     def get_state(self):
         return {
@@ -239,6 +238,8 @@ class AssetPositionProxy(AbstractPosition):
         self._long = AssetPosition(order_book_id, POSITION_DIRECTION.LONG)
         self._short = AssetPosition(order_book_id, POSITION_DIRECTION.SHORT)
 
+    __repr__ = property_repr
+
     @property
     def type(self):
         raise NotImplementedError
@@ -277,7 +278,8 @@ class AssetPositionProxy(AbstractPosition):
 
     @property
     def daily_pnl(self):
-        return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl + self._short.trading_pnl
+        return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl +\
+               self._short.trading_pnl - self.transaction_cost
 
     @property
     def pnl(self):
@@ -297,7 +299,7 @@ class AssetPositionProxy(AbstractPosition):
         """
         [float] 保证金
         """
-        return self._long.margin+ self._short.margin
+        return self._long.margin + self._short.margin
 
     @property
     def transaction_cost(self):

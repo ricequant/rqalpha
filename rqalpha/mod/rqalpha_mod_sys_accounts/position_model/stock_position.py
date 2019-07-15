@@ -16,6 +16,7 @@
 
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, SIDE
 from rqalpha.environment import Environment
+from rqalpha.utils.repr import property_repr
 
 from .asset_position import AssetPositionProxy
 
@@ -24,8 +25,7 @@ class StockPositionProxy(AssetPositionProxy):
 
     stock_t1 = True
 
-    def __repr__(self):
-        return 'StockPosition({})'.format(self.__dict__)
+    __repr__ = property_repr
 
     def set_state(self, state):
         assert self.order_book_id == state['order_book_id']

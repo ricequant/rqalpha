@@ -16,11 +16,26 @@
 from rqalpha.const import POSITION_EFFECT, SIDE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.environment import Environment
+from rqalpha.utils.repr import property_repr
 
 from .asset_position import AssetPositionProxy
 
 
 class FuturePositionProxy(AssetPositionProxy):
+
+    __abandon_properties__ = [
+        "holding_pnl",
+        "buy_holding_pnl",
+        "sell_holding_pnl",
+        "realized_pnl",
+        "buy_realized_pnl",
+        "sell_realized_pnl",
+        "buy_avg_holding_price",
+        "sell_avg_holding_price"
+    ]
+
+    __repr__ = property_repr
+
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.FUTURE.name
