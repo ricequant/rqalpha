@@ -25,7 +25,9 @@ class StockPositionProxy(AssetPositionProxy):
 
     stock_t1 = True
 
-    __repr__ = property_repr
+    __abandon_properties__ = AssetPositionProxy.__abandon_properties__ + [
+        "margin"
+    ]
 
     def set_state(self, state):
         assert self.order_book_id == state['order_book_id']

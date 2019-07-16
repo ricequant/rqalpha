@@ -232,7 +232,11 @@ class AssetPosition(object):
 
 
 class AssetPositionProxy(AbstractPosition):
-    __abandon_properties__ = []
+    __abandon_properties__ = [
+        "positions",
+        "long",
+        "short"
+    ]
 
     def __init__(self, order_book_id):
         self._long = AssetPosition(order_book_id, POSITION_DIRECTION.LONG)

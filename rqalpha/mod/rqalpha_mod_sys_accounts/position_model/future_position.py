@@ -23,7 +23,7 @@ from .asset_position import AssetPositionProxy
 
 class FuturePositionProxy(AssetPositionProxy):
 
-    __abandon_properties__ = [
+    __abandon_properties__ = AssetPositionProxy.__abandon_properties__ +[
         "holding_pnl",
         "buy_holding_pnl",
         "sell_holding_pnl",
@@ -33,8 +33,6 @@ class FuturePositionProxy(AssetPositionProxy):
         "buy_avg_holding_price",
         "sell_avg_holding_price"
     ]
-
-    __repr__ = property_repr
 
     @property
     def type(self):
