@@ -113,18 +113,12 @@ class AssetPosition(object):
 
     @property
     def trading_pnl(self):
-        """
-        [float] 交易盈亏，策略在当前交易日产生的盈亏中来源于当日成交的部分
-        """
         # 今日交易产生的持仓差
         trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
         return self.contract_multiplier * (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
     def position_pnl(self):
-        """
-        [float] 昨仓盈亏，策略在当前交易日产生的盈亏中来源于昨仓的部分
-        """
         quantity = self._logical_old_quantity
         return quantity * self.contract_multiplier * (self.last_price - self.prev_close) * self._direction_factor
 
@@ -274,14 +268,34 @@ class AssetPositionProxy(AbstractPosition):
     # -- PNL 相关
     @property
     def position_pnl(self):
+        """
+        [float] 昨仓盈亏，当前交易日盈亏中来源于昨仓的部分
+
+        多方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (最新价 - 昨收价)
+        空方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (昨收价 - 最新价)
+
+        """
         return self._long.position_pnl + self._short.position_pnl
 
     @property
     def trading_pnl(self):
+        """
+        [float] 交易盈亏，当前交易日盈亏中来源于当日成交的部分
+
+        单比买方向成交的交易盈亏 = 成交量 * (最新价 - 成交价)
+        单比卖方向成交的交易盈亏 = 成交量 * (成交价 - 最新价)
+
+        """
         return self._long.trading_pnl + self._short.trading_pnl
 
     @property
     def daily_pnl(self):
+        """
+        [float] 当日盈亏
+
+        当日盈亏 = 昨仓盈亏 + 交易盈亏
+
+        """
         return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl +\
                self._short.trading_pnl - self.transaction_cost
 
@@ -289,6 +303,9 @@ class AssetPositionProxy(AbstractPosition):
     def pnl(self):
         """
         [float] 累计盈亏
+
+        (最新价 - 平均开仓价格) * 持仓量 * 合约乘数
+
         """
         return self._long.pnl + self._short.pnl
 
@@ -302,11 +319,19 @@ class AssetPositionProxy(AbstractPosition):
     def margin(self):
         """
         [float] 保证金
+
+        保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
+
+        股票保证金 = 市值 = 持仓量 * 最新价
+
         """
         return self._long.margin + self._short.margin
 
     @property
     def transaction_cost(self):
+        """
+        [float] 交易费率
+        """
         return self._long.transaction_cost + self._short.transaction_cost
 
     @property

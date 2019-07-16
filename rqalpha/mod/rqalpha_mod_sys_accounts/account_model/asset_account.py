@@ -112,6 +112,9 @@ class AssetAccount(AbstractAccount):
     def cash(self):
         """
         [float] 可用资金
+
+        可用资金 = 总资金 - 冻结资金
+
         """
         return self.total_cash - self._frozen_cash
 
@@ -145,16 +148,34 @@ class AssetAccount(AbstractAccount):
 
     @property
     def total_value(self):
+        """
+        [float] 账户总权益
+
+        期货账户总权益 = 期货昨日总权益 + 当日盈亏
+
+        """
         return self._static_total_value + self.daily_pnl
 
     @property
     def total_cash(self):
+        """
+        [float] 账户总资金
+
+        期货账户总资金会受保证金变化的影响变化，期货账户总资金 = 总权益 - 保证金
+
+        """
         return self.total_value - self.margin
 
     @property
     def position_pnl(self):
+        """
+        [float] 昨仓盈亏
+        """
         return sum(p.position_pnl for p in six.itervalues(self._positions))
 
     @property
     def trading_pnl(self):
+        """
+        [float] 交易盈亏
+        """
         return sum(p.trading_pnl for p in six.itervalues(self._positions))

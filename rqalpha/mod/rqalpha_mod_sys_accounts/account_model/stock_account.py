@@ -245,4 +245,10 @@ class StockAccount(AssetAccount):
 
     @property
     def total_value(self):
+        """
+        [float] 股票账户总权益
+
+        股票账户总权益 = 股票账户总资金 + 股票持仓总市值 + 应收分红
+
+        """
         return super(StockAccount, self).total_value + self.dividend_receivable

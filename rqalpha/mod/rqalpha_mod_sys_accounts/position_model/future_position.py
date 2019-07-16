@@ -74,34 +74,58 @@ class FuturePositionProxy(AssetPositionProxy):
 
     @property
     def buy_market_value(self):
+        """
+        [float] 多方向市值
+        """
         return self._long.market_value
 
     @property
     def sell_market_value(self):
+        """
+        [float] 空方向市值
+        """
         return self._short.market_value
 
     @property
     def buy_position_pnl(self):
+        """
+        [float] 多方向昨仓盈亏
+        """
         return self._long.position_pnl
 
     @property
     def sell_position_pnl(self):
+        """
+        [float] 空方向昨仓盈亏
+        """
         return self._short.position_pnl
 
     @property
     def buy_trading_pnl(self):
+        """
+        [float] 多方向交易盈亏
+        """
         return self._long.trading_pnl
 
     @property
     def sell_trading_pnl(self):
+        """
+        [float] 空方向交易盈亏
+        """
         return self._short.trading_pnl
 
     @property
     def buy_daily_pnl(self):
+        """
+        [float] 多方向每日盈亏
+        """
         return self.buy_position_pnl + self.buy_trading_pnl
 
     @property
     def sell_daily_pnl(self):
+        """
+        [float] 空方向每日盈亏
+        """
         return self.sell_position_pnl + self.sell_trading_pnl
 
     @property
@@ -114,80 +138,92 @@ class FuturePositionProxy(AssetPositionProxy):
     @property
     def sell_pnl(self):
         """
-        [float] 卖方向累计盈亏
+        [float] 空方向累计盈亏
         """
         return self._short.pnl
 
     @property
     def buy_old_quantity(self):
         """
-        [int] 买方向昨仓
+        [int] 多方向昨仓
         """
         return self._long.old_quantity
 
     @property
     def sell_old_quantity(self):
         """
-        [int] 卖方向昨仓
+        [int] 空方向昨仓
         """
         return self._short.old_quantity
 
     @property
     def buy_today_quantity(self):
         """
-        [int] 买方向今仓
+        [int] 多方向今仓
         """
         return self._long.today_quantity
 
     @property
     def sell_today_quantity(self):
         """
-        [int] 卖方向今仓
+        [int] 空方向今仓
         """
         return self._short.today_quantity
 
     @property
     def buy_quantity(self):
         """
-        [int] 买方向持仓
+        [int] 多方向持仓
         """
         return self.buy_old_quantity + self.buy_today_quantity
 
     @property
     def sell_quantity(self):
         """
-        [int] 卖方向持仓
+        [int] 空方向持仓
         """
         return self.sell_old_quantity + self.sell_today_quantity
 
     @property
     def buy_margin(self):
         """
-        [float] 买方向持仓保证金
+        [float] 多方向持仓保证金
         """
         return self._long.margin
 
     @property
     def sell_margin(self):
         """
-        [float] 卖方向持仓保证金
+        [float] 空方向持仓保证金
         """
         return self._short.margin
 
     @property
     def buy_avg_open_price(self):
+        """
+        [float] 多方向平均开仓价格
+        """
         return self._long.avg_price
 
     @property
     def sell_avg_open_price(self):
+        """
+        [float] 空方向平均开仓价格
+        """
         return self._short.avg_price
 
     @property
     def buy_transaction_cost(self):
+        """
+        [float] 多方向交易费率
+        """
         return self._long.transaction_cost
 
     @property
     def sell_transaction_cost(self):
+        """
+        [float] 空方向交易费率
+        """
         return self._short.transaction_cost
 
     @property
@@ -205,7 +241,7 @@ class FuturePositionProxy(AssetPositionProxy):
     @property
     def closable_buy_quantity(self):
         """
-        [float] 可平买方向持仓
+        [float] 可平多方向持仓
         """
         sell_close_order_quantity = sum(o.unfilled_quantity for o in self.open_orders if o.side == SIDE.SELL and
                                         o.position_effect in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY))
@@ -214,7 +250,7 @@ class FuturePositionProxy(AssetPositionProxy):
     @property
     def closable_sell_quantity(self):
         """
-        [float] 可平卖方向持仓
+        [float] 可平空方向持仓
         """
         buy_close_order_quantity = sum(o.unfilled_quantity for o in self.open_orders if o.side == SIDE.BUY and
                                        o.position_effect in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY))

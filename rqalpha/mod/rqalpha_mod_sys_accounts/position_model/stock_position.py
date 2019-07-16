@@ -67,7 +67,7 @@ class StockPositionProxy(AssetPositionProxy):
     @property
     def sellable(self):
         """
-        [int] 该仓位可卖出股数。T＋1的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
+        [int] 该仓位可卖出股数。T＋1 的市场中sellable = 所有持仓 - 今日买入的仓位 - 已冻结
         """
         if self.stock_t1:
             return self.closable_quantity - self._long.non_closable
@@ -76,6 +76,9 @@ class StockPositionProxy(AssetPositionProxy):
 
     @property
     def avg_price(self):
+        """
+        [float] 平均开仓价格
+        """
         return self._long.avg_price
 
     @property

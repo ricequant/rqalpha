@@ -669,7 +669,6 @@ StockAccount
 
 .. autoclass:: StockAccount
     :members:
-    :show-inheritance:
     :inherited-members:
 
 FutureAccount
@@ -679,25 +678,22 @@ FutureAccount
 
 .. autoclass:: FutureAccount
     :members:
-    :show-inheritance:
     :inherited-members:
 
 StockPosition
 ------------------------------------------------------
 .. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model.stock_position
 
-..  autoclass:: StockPosition
+..  autoclass:: StockPositionProxy
     :members:
-    :show-inheritance:
     :inherited-members:
 
 FuturePosition
 ------------------------------------------------------
 .. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model.future_position
 
-..  autoclass:: FuturePosition
+..  autoclass:: FuturePositionProxy
     :members:
-    :show-inheritance:
     :inherited-members:
 
 
