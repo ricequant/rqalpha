@@ -135,6 +135,7 @@ class StockAccount(AssetAccount):
             'dividend_receivable': self._dividend_receivable,
             'pending_transform': self._pending_transform,
         })
+        return state
 
     def set_state(self, state):
         super(StockAccount, self).set_state(state)
