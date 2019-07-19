@@ -16,6 +16,8 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
+from six import iteritems
+
 from rqalpha.events import EventBus
 from rqalpha.utils import get_account_type
 from rqalpha.const import FRONT_VALIDATOR_TYPE
