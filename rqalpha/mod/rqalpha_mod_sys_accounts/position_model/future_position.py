@@ -16,9 +16,9 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-from rqalpha.model.base_position import BasePosition
 from rqalpha.environment import Environment
-from rqalpha.utils.repr import property_repr
+from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, SIDE, POSITION_EFFECT
 
 from .asset_position import AssetPositionProxy
 

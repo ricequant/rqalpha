@@ -15,10 +15,8 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-from rqalpha.model.base_position import BasePosition
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, SIDE
 from rqalpha.environment import Environment
-from rqalpha.utils.repr import property_repr
 
 from .asset_position import AssetPositionProxy
 
