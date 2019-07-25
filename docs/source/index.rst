@@ -181,6 +181,7 @@ Mod名                      说明
     development/mod
     development/event_source
     development/data_source
+    development/collecting_logs
 
 
 .. toctree::
