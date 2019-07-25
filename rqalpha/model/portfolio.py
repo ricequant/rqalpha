@@ -135,7 +135,7 @@ class Portfolio(object):
         """
         [float] 当日盈亏
         """
-        return sum(account.daily_returns for account in six.itervalues(self._accounts))
+        return sum(account.daily_pnl for account in six.itervalues(self._accounts))
 
     @property
     def daily_returns(self):
