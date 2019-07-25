@@ -1,5 +1,6 @@
 requests
-numpy >=1.11.1
+numpy >=1.11.1; python_version >= '3.4'
+numpy >=1.11.1,<=1.16.4; python_version == '2.7'
 python-dateutil >=2.5.3
 pytz >=2016.4
 six >=1.10.0
