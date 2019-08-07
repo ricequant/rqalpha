@@ -19,6 +19,7 @@
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION
+from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.utils.repr import property_repr
 
@@ -167,6 +168,10 @@ class AssetPosition(object):
         if self._prev_close is None:
             env = Environment.get_instance()
             self._prev_close = env.data_proxy.get_prev_close(self._order_book_id, env.trading_dt)
+            if self._prev_close != self._prev_close:
+                raise RuntimeError(
+                    _("previous close price of position {} is not supposed to be nan").format(self._order_book_id)
+                )
         return self._prev_close
 
     @property
@@ -175,7 +180,7 @@ class AssetPosition(object):
             env = Environment.get_instance()
             self._last_price = env.data_proxy.get_last_price(self._order_book_id)
             if self._last_price != self._last_price:
-                raise RuntimeError("Last price of position {} is not supposed to be nan".format(self._order_book_id))
+                raise RuntimeError(_("last price of position {} is not supposed to be nan").format(self._order_book_id))
         return self._last_price
 
     def apply_settlement(self):
