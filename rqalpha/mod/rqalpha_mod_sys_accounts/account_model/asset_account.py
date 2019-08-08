@@ -73,6 +73,14 @@ class AssetAccount(AbstractAccount):
         if "static_total_value" in state:
             self._static_total_value = state["static_total_value"]
         else:
+            static_total_value = state["total_cash"]
+            for position in list(six.itervalues(self._positions)):
+                try:
+                    static_total_value += (position.margin - position.daily_pnl + position.transaction_cost)
+                except RuntimeError:
+                    # 新老结构切换之间发生退市的
+                    static_total_value += position.margin
+                    self._positions.pop(position.order_book_id)
             self._static_total_value = state["total_cash"] + self.margin - self.daily_pnl + self.transaction_cost
 
     def _update_last_price(self, _):
