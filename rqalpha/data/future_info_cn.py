@@ -333,5 +333,15 @@ CN_FUTURE_INFO = {
            'close_commission_today_ratio': 0.0,
            'commission_type': COMMISSION_TYPE.BY_VOLUME,
            'open_commission_ratio': 3.0,
-           'tick_size': 5.0}
+           'tick_size': 5.0},
+    "UR": {'close_commission_ratio': 5.0,
+           'close_commission_today_ratio': 5.0,
+           'commission_type': COMMISSION_TYPE.BY_VOLUME,
+           'open_commission_ratio': 5.0,
+           'tick_size': 1.0},
+    "NR": {'close_commission_ratio': 10.0,
+           'close_commission_today_ratio': 0.0,
+           'commission_type': COMMISSION_TYPE.BY_VOLUME,
+           'open_commission_ratio': 10.0,
+           'tick_size': 5.0},
 }
