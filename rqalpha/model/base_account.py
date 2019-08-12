@@ -47,9 +47,6 @@ class BaseAccount(AbstractAccount):
             self.register_event()
 
     def register_event(self):
-        """
-        注册事件
-        """
         raise NotImplementedError
 
     def fast_forward(self, orders, trades=list()):
@@ -119,40 +116,25 @@ class BaseAccount(AbstractAccount):
 
     @property
     def portfolio_value(self):
-        """
-        [已弃用] 请使用 total_value
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer used.").format('account.portfolio_value'))
         return self.total_value
 
     @property
     def starting_cash(self):
-        """
-        [已弃用] 请使用 total_value
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer used.").format('account.starting_cash'))
         return 0
 
     @property
     def daily_returns(self):
-        """
-        [已弃用] 请使用 total_value
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer used.").format('account.daily_returns'))
         return 0
 
     @property
     def total_returns(self):
-        """
-        [已弃用] 请使用 total_value
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer used.").format('account.total_returns'))
         return 0
 
     @property
     def pnl(self):
-        """
-        [已弃用] 请使用 total_value
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer used.").format('account.pnl'))
         return 0

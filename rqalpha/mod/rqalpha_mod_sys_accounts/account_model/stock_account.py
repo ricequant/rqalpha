@@ -56,6 +56,7 @@ class StockAccount(BaseAccount):
             event_bus.add_listener(EVENT.TICK, self._update_last_price)
 
     def order(self, order_book_id, quantity, style, target=False):
+        """"""
         position = self.positions[order_book_id]
         if target:
             # For order_to
@@ -63,6 +64,7 @@ class StockAccount(BaseAccount):
         return order_shares(order_book_id, quantity, style=style)
 
     def get_state(self):
+        """"""
         return {
             'positions': {
                 order_book_id: position.get_state()
@@ -76,6 +78,7 @@ class StockAccount(BaseAccount):
         }
 
     def set_state(self, state):
+        """"""
         self._frozen_cash = state['frozen_cash']
         self._total_cash = state['total_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
@@ -87,6 +90,7 @@ class StockAccount(BaseAccount):
             position.set_state(v)
 
     def fast_forward(self, orders, trades=None):
+        """"""
         # 计算 Positions
         if trades:
             for trade in trades:

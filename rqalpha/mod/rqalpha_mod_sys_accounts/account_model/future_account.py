@@ -57,6 +57,7 @@ class FutureAccount(BaseAccount):
             event_bus.add_listener(EVENT.TICK, self._update_last_price)
 
     def fast_forward(self, orders, trades=None):
+        """"""
         # 计算 Positions
         if trades:
             close_trades = []
@@ -76,6 +77,7 @@ class FutureAccount(BaseAccount):
         self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
 
     def order(self, order_book_id, quantity, style, target=False):
+        """"""
         position = self.positions[order_book_id]
         if target:
             # For order_to
@@ -143,6 +145,7 @@ class FutureAccount(BaseAccount):
             return orders
 
     def get_state(self):
+        """"""
         return {
             'positions': {
                 order_book_id: position.get_state()
@@ -154,6 +157,7 @@ class FutureAccount(BaseAccount):
         }
 
     def set_state(self, state):
+        """"""
         self._frozen_cash = state['frozen_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
 

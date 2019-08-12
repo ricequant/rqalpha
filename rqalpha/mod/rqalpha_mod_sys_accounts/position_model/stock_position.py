@@ -56,6 +56,7 @@ class StockPosition(BasePosition):
         }
 
     def set_state(self, state):
+        """"""
         assert self._order_book_id == state['order_book_id']
         self._quantity = state['quantity']
         self._avg_price = state['avg_price']
@@ -64,6 +65,7 @@ class StockPosition(BasePosition):
         self._transaction_cost = state['transaction_cost']
 
     def apply_trade(self, trade):
+        """"""
         self._transaction_cost += trade.transaction_cost
         if trade.side == SIDE.BUY:
             # 对应卖空情况

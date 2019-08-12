@@ -835,7 +835,7 @@ def industry(code):
     """
     获得属于某一行业的所有股票列表。
 
-    :param str industry_code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
+    :param str code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
 
     :return: list of order_book_id 获得属于某一行业的所有股票
 
@@ -1092,10 +1092,12 @@ def to_date(date):
 def get_dividend(order_book_id, start_date):
     """
     获取某只股票到策略当前日期前一天的分红情况（包含起止日期）。
+
     :param order_book_id: 股票代码
-    :type order_book_id str
+    :type order_book_id: str
     :param start_date: 开始日期，需要早于策略当前日期
     :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
+
     :return: ndarray
 
     =========================   ===================================================
@@ -1142,10 +1144,9 @@ def get_dividend(order_book_id, start_date):
 def plot(series_name, value):
     """
     在生成的图标结果中，某一个根线上增加一个点。
-    Add a point to custom series.
-    :param str series_name: the name of custom series
-    :param float value: the value of the series in this time
-    :return: None
+
+    :param str series_name: 序列名称
+    :param float value: 值
     """
     Environment.get_instance().add_plot(series_name, value)
 
@@ -1264,7 +1265,7 @@ def get_position(order_book_id, direction):
 )
 def subscribe_event(event_type, handler):
     """
-    订阅某个个事件
+    订阅框架内部事件，注册事件处理函数
 
     :param event_type: 事件类型
     :param handler: 处理函数
