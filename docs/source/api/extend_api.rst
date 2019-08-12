@@ -450,6 +450,99 @@ get_split - 拆分数据
         #ex_dividend_date
         #2013-06-20                        16.0
 
+
+get_financials - 季度财务数据
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_financials(query, quarter=None, interval='4q')
+
+
+get_pit_financials - pit季度财务数据
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_pit_financials(fields, quarter=None, interval=None, order_book_ids=None, if_adjusted='all')
+
+
+index_weights - 查询指数的权重
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.index_weights(order_book_id, date=None)
+
+concept - 某个概念的股票列表
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.concept(*concept_names)
+
+
+get_price_change_rate - 历史涨跌幅
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_price_change_rate
+
+
+get_factor - 获取因子
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_factor
+
+
+get_all_factor_names - 因子列表
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_all_factor_names
+
+shenwan_industry - 获取申万行业组成
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.shenwan_industry
+
+shenwan_instrument_industry - 股票对应的申万行业
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.shenwan_instrument_industry
+
+get_industry - 获取某行业的股票列表
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_industry
+
+get_instrument_industry - 查询股票的指定行业分类
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_instrument_industry
+
+get_stock_connect - "陆股通"的持股、持股比例
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.get_stock_connect
+
+current_performance - A股快报
+------------------------------------------------------
+
+..  autofunction:: rqalpha_mod_ricequant_data.api_extension.current_performance
+
+
+fund - 基金数据
+------------------------------------------------------
+
+..  module:: rqalpha_mod_ricequant_data.api_stock
+
+..  autoclass:: fund
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
+
+econ - 货币数据
+------------------------------------------------------
+
+..  module:: rqalpha_mod_ricequant_data.api_extension
+
+..  autoclass:: econ
+    :members:
+    :show-inheritance:
+    :inherited-members:
+
 分级基金数据
 ------------------------------------------------------
 
@@ -548,6 +641,7 @@ get_split - 拆分数据
         #0    2.5    161828
         #1    5    150213.XSHE
         #2    5.5    150335.XSHE
+
 
 雪球舆论数据
 ------------------------------------------------------

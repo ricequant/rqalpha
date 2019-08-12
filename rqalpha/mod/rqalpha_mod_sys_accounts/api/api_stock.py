@@ -69,7 +69,7 @@ def export_as_api(func):
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_shares(id_or_ins, amount, price=None, style=None):
     """
-    落指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
+    指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
     :param id_or_ins: 下单标的物
     :type id_or_ins: :class:`~Instrument` object | `str`

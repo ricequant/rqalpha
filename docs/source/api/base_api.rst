@@ -94,7 +94,7 @@ after_trading
 ..  module:: rqalpha.api
     :synopsis: API
 
-🆕 submit_order - 自由参数下单「通用」
+submit_order - 自由参数下单「通用」
 ------------------------------------------------------
 
 .. autofunction:: submit_order
@@ -549,6 +549,16 @@ current_snapshot - 当前快照数据
 
 ..  autofunction:: current_snapshot(order_book_id)
 
+get_positions - 获取全部持仓信息
+------------------------------------------------------
+
+..  autofunction:: get_positions()
+
+get_position - 获取某个标的的持仓信息
+------------------------------------------------------
+
+..  autofunction:: get_position()
+
 
 get_future_contracts - 期货可交易合约列表
 ------------------------------------------------------
@@ -572,6 +582,16 @@ get_next_trading_date - 下一交易日
 ------------------------------------------------------
 
 ..  autofunction:: get_next_trading_date(date)
+
+get_dividend - 获取股票拆分数据
+------------------------------------------------------
+
+..  autofunction:: get_dividend(order_book_id, start_date, *args, **kwargs)
+
+plot - 画图
+------------------------------------------------------
+
+..  autofunction:: plot(series_name, value)
 
 
 get_yield_curve - 收益率曲线
@@ -609,6 +629,12 @@ unsubscribe
 ------------------------------------------------------
 
 ..  autofunction:: unsubscribe(id_or_ins)
+
+
+subscribe_event
+------------------------------------------------------
+
+..  autofunction:: subscribe_event(event_type, handler)
 
 
 Context属性

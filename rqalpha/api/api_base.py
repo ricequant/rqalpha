@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2019 Ricequant, Inc
+# Copyright 2017 Ricequant, Inc
 #
-# * Commercial Usage: please contact public@ricequant.com
-# * Non-Commercial Usage:
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import division
 
@@ -75,7 +73,6 @@ from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 
 # noinspection PyUnresolvedReferences
 from rqalpha.events import EVENT
-
 
 __all__ = [
     "logger",
@@ -255,8 +252,8 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     order_book_id = assure_order_book_id(id_or_ins)
     env = Environment.get_instance()
     if (
-        env.config.base.run_type != RUN_TYPE.BACKTEST
-        and env.get_instrument(order_book_id).type == "Future"
+            env.config.base.run_type != RUN_TYPE.BACKTEST
+            and env.get_instrument(order_book_id).type == "Future"
     ):
         if "88" in order_book_id:
             raise RQInvalidArgument(
@@ -487,13 +484,13 @@ def get_yield_curve(date=None, tenor=None):
     verify_that("adjust_type").is_in({"pre", "none", "post"}),
 )
 def history_bars(
-    order_book_id,
-    bar_count,
-    frequency,
-    fields=None,
-    skip_suspended=True,
-    include_now=False,
-    adjust_type="pre",
+        order_book_id,
+        bar_count,
+        frequency,
+        fields=None,
+        skip_suspended=True,
+        include_now=False,
+        adjust_type="pre",
 ):
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。
@@ -586,9 +583,9 @@ def history_bars(
     if frequency == "1d":
         sys_frequency = Environment.get_instance().config.base.frequency
         if (
-            sys_frequency in ["1m", "tick"]
-            and not include_now
-            and ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
+                sys_frequency in ["1m", "tick"]
+                and not include_now
+                and ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
         ) or (ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING):
             dt = env.data_proxy.get_previous_trading_date(env.trading_dt.date())
             # 当 EXECUTION_PHASE.BEFORE_TRADING 的时候，强制 include_now 为 False
@@ -1131,7 +1128,7 @@ def get_dividend(order_book_id, start_date):
     ed = dt.year * 10000 + dt.month * 100 + dt.day
     return array[
         (array["announcement_date"] >= sd) & (array["announcement_date"] <= ed)
-    ]
+        ]
 
 
 @export_as_api
@@ -1144,6 +1141,7 @@ def get_dividend(order_book_id, start_date):
 )
 def plot(series_name, value):
     """
+    在生成的图标结果中，某一个根线上增加一个点。
     Add a point to custom series.
     :param str series_name: the name of custom series
     :param float value: the value of the series in this time
@@ -1205,6 +1203,21 @@ def current_snapshot(id_or_symbol):
 
 @export_as_api
 def get_positions():
+    """
+    获取所有持仓信息
+
+    :return: list BookingPosition
+
+    :example:
+
+    ..  code-block:: python3
+
+        [In] get_positions()
+        [Out]
+        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0}),
+         BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
+
+    """
     booking = Environment.get_instance().booking
     if not booking:
         raise RuntimeError(
@@ -1218,6 +1231,23 @@ def get_positions():
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
 def get_position(order_book_id, direction):
+    """
+    获取某个标的的持仓信息
+
+    :param order_book_id: 标的编号
+    :param direction: 持仓类型 “long_positions” | “short_positions” | “backward_trade_set”
+
+    :return: list BookingPosition
+
+    :example:
+
+    ..  code-block:: python3
+
+        [In] get_position('000014.XSHE','long_positions")
+        [Out]
+        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
+
+    """
     booking = Environment.get_instance().booking
     if not booking:
         raise RuntimeError(
@@ -1233,6 +1263,22 @@ def get_position(order_book_id, direction):
     verify_that("handler").is_instance_of(types.FunctionType),
 )
 def subscribe_event(event_type, handler):
+    """
+    订阅某个个事件
+
+    :param event_type: 事件类型
+    :param handler: 处理函数
+
+    :return: None
+
+    :example:
+
+    ..  code-block:: python3
+
+        from rqalpha.events import EVENT
+        subscribe_event(EVENT.POST_BAR, print)
+
+    """
     env = Environment.get_instance()
     user_strategy = env.user_strategy
     env.event_bus.add_listener(
