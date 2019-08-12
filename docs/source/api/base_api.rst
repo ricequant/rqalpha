@@ -378,186 +378,24 @@ instruments - 合约详细信息
 industry - 行业股票列表
 ------------------------------------------------------
 
-.. py:function:: industry(industry_code)
-
-    获得属于某一行业的所有股票列表。
-
-    :param str industry_code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
-
-    :return: list of order_book_id 获得属于某一行业的所有股票
-
-    我们目前使用的行业分类来自于中国国家统计局的 `国民经济行业分类 <http://www.stats.gov.cn/tjsj/tjbz/hyflbz/>`_ ，可以使用这里的任何一个行业代码来调用行业的股票列表：
-
-    =========================   ===================================================
-    行业代码                      行业名称
-    =========================   ===================================================
-    A01                         农业
-    A02                         林业
-    A03                         畜牧业
-    A04                         渔业
-    A05                         农、林、牧、渔服务业
-    B06                         煤炭开采和洗选业
-    B07                         石油和天然气开采业
-    B08                         黑色金属矿采选业
-    B09                         有色金属矿采选业
-    B10                         非金属矿采选业
-    B11                         开采辅助活动
-    B12                         其他采矿业
-    C13                         农副食品加工业
-    C14                         食品制造业
-    C15                         酒、饮料和精制茶制造业
-    C16                         烟草制品业
-    C17                         纺织业
-    C18                         纺织服装、服饰业
-    C19                         皮革、毛皮、羽毛及其制品和制鞋业
-    C20                         木材加工及木、竹、藤、棕、草制品业
-    C21                         家具制造业
-    C22                         造纸及纸制品业
-    C23                         印刷和记录媒介复制业
-    C24                         文教、工美、体育和娱乐用品制造业
-    C25                         石油加工、炼焦及核燃料加工业
-    C26                         化学原料及化学制品制造业
-    C27                         医药制造业
-    C28                         化学纤维制造业
-    C29                         橡胶和塑料制品业
-    C30                         非金属矿物制品业
-    C31                         黑色金属冶炼及压延加工业
-    C32                         有色金属冶炼和压延加工业
-    C33                         金属制品业
-    C34                         通用设备制造业
-    C35                         专用设备制造业
-    C36                         汽车制造业
-    C37                         铁路、船舶、航空航天和其它运输设备制造业
-    C38                         电气机械及器材制造业
-    C39                         计算机、通信和其他电子设备制造业
-    C40                         仪器仪表制造业
-    C41                         其他制造业
-    C42                         废弃资源综合利用业
-    C43                         金属制品、机械和设备修理业
-    D44                         电力、热力生产和供应业
-    D45                         燃气生产和供应业
-    D46                         水的生产和供应业
-    E47                         房屋建筑业
-    E48                         土木工程建筑业
-    E49                         建筑安装业
-    E50                         建筑装饰和其他建筑业
-    F51                         批发业
-    F52                         零售业
-    G53                         铁路运输业
-    G54                         道路运输业
-    G55                         水上运输业
-    G56                         航空运输业
-    G57                         管道运输业
-    G58                         装卸搬运和运输代理业
-    G59                         仓储业
-    G60                         邮政业
-    H61                         住宿业
-    H62                         餐饮业
-    I63                         电信、广播电视和卫星传输服务
-    I64                         互联网和相关服务
-    I65                         软件和信息技术服务业
-    J66                         货币金融服务
-    J67                         资本市场服务
-    J68                         保险业
-    J69                         其他金融业
-    K70                         房地产业
-    L71                         租赁业
-    L72                         商务服务业
-    M73                         研究和试验发展
-    M74                         专业技术服务业
-    M75                         科技推广和应用服务业
-    N76                         水利管理业
-    N77                         生态保护和环境治理业
-    N78                         公共设施管理业
-    O79                         居民服务业
-    O80                         机动车、电子产品和日用产品修理业
-    O81                         其他服务业
-    P82                         教育
-    Q83                         卫生
-    Q84                         社会工作
-    R85                         新闻和出版业
-    R86                         广播、电视、电影和影视录音制作业
-    R87                         文化艺术业
-    R88                         体育
-    R89                         娱乐业
-    S90                         综合
-    =========================   ===================================================
-
-    :example:
-
-    ..  code-block:: python3
-        :linenos:
-
-        def init(context):
-            stock_list = industry('A01')
-            logger.info("农业股票列表：" + str(stock_list))
-
-        #INITINFO 农业股票列表：['600354.XSHG', '601118.XSHG', '002772.XSHE', '600371.XSHG', '600313.XSHG', '600672.XSHG', '600359.XSHG', '300143.XSHE', '002041.XSHE', '600762.XSHG', '600540.XSHG', '300189.XSHE', '600108.XSHG', '300087.XSHE', '600598.XSHG', '000998.XSHE', '600506.XSHG']
+.. autofunction:: industry
 
 sector - 板块股票列表
 ------------------------------------------------------
 
-.. py:function:: sector(code)
-
-    获得属于某一板块的所有股票列表。
-
-    :param code: 板块名称或板块代码。例如，能源板块可填写'Energy'、'能源'或sector_code.Energy
-        :type code: `str` | `sector_code`
-
-    :return: list of order_book_id 属于该板块的股票列表
-
-    目前支持的板块分类如下，其取值参考自MSCI发布的全球行业标准分类:
-
-    =========================   =========================   ==============================================================================
-    板块代码                      中文板块名称                  英文板块名称
-    =========================   =========================   ==============================================================================
-    Energy                      能源                         energy
-    Materials                   原材料                        materials
-    ConsumerDiscretionary       非必需消费品                   consumer discretionary
-    ConsumerStaples             必需消费品                    consumer staples
-    HealthCare                  医疗保健                      health care
-    Financials                  金融                         financials
-    InformationTechnology       信息技术                      information technology
-    TelecommunicationServices   电信服务                      telecommunication services
-    Utilities                   公共服务                      utilities
-    Industrials                 工业                         industrials
-    =========================   =========================   ==============================================================================
-
-    :example:
-
-    ..  code-block:: python3
-        :linenos:
-
-        def init(context):
-            ids1 = sector("consumer discretionary")
-            ids2 = sector("非必需消费品")
-            ids3 = sector("ConsumerDiscretionary")
-            assert ids1 == ids2 and ids1 == ids3
-            logger.info(ids1)
-        #INIT INFO
-        #['002045.XSHE', '603099.XSHG', '002486.XSHE', '002536.XSHE', '300100.XSHE', '600633.XSHG', '002291.XSHE', ..., '600233.XSHG']
+.. autofunction:: sector
 
 
 history_bars - 某一合约历史数据
 ------------------------------------------------------
 
-..  autofunction:: history_bars(order_book_id, bar_count, frequency, fields)
+..  autofunction:: history_bars
 
 
 current_snapshot - 当前快照数据
 ------------------------------------------------------
 
 ..  autofunction:: current_snapshot(order_book_id)
-
-get_positions - 获取全部持仓信息
-------------------------------------------------------
-
-..  autofunction:: get_positions()
-
-get_position - 获取某个标的的持仓信息
-------------------------------------------------------
-
-..  autofunction:: get_position()
 
 
 get_future_contracts - 期货可交易合约列表
@@ -586,7 +424,7 @@ get_next_trading_date - 下一交易日
 get_dividend - 获取股票拆分数据
 ------------------------------------------------------
 
-..  autofunction:: get_dividend(order_book_id, start_date, *args, **kwargs)
+..  autofunction:: get_dividend
 
 plot - 画图
 ------------------------------------------------------
