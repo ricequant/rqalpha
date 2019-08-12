@@ -45,6 +45,7 @@ class StockPosition(BasePosition):
         return 'StockPosition({})'.format(self.__dict__)
 
     def get_state(self):
+        """"""
         return {
             'order_book_id': self._order_book_id,
             'quantity': self._quantity,
@@ -188,40 +189,25 @@ class StockPosition(BasePosition):
 
     @property
     def bought_quantity(self):
-        """
-        [已弃用]
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('stock_position.bought_quantity'))
         return self._quantity
 
     @property
     def sold_quantity(self):
-        """
-        [已弃用]
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('stock_position.sold_quantity'))
         return 0
 
     @property
     def bought_value(self):
-        """
-        [已弃用]
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('stock_position.bought_value'))
         return self._quantity * self._avg_price
 
     @property
     def sold_value(self):
-        """
-        [已弃用]
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('stock_position.sold_value'))
         return 0
 
     @property
     def average_cost(self):
-        """
-        [已弃用] 请使用 avg_price 获取持仓买入均价
-        """
         user_system_log.warn(_(u"[abandon] {} is no longer valid.").format('stock_position.average_cost'))
         return self._avg_price
