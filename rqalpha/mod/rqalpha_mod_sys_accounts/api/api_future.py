@@ -57,6 +57,8 @@ def order(id_or_ins, amount, side, position_effect, style):
         raise RuntimeError
     if amount < 0:
         raise RuntimeError
+
+    amount = int(amount)
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
         return None
@@ -77,8 +79,6 @@ def order(id_or_ins, amount, side, position_effect, style):
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         )
         return
-
-    amount = int(amount)
 
     env = Environment.get_instance()
 
@@ -167,11 +167,6 @@ def order(id_or_ins, amount, side, position_effect, style):
             position_effect
         ))
 
-    if not is_valid_price(price):
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        return []
-
     if len(orders) > 1:
         user_system_log.warn(_(
             "Order was separated, original order: {original_order_repr}, new orders: [{new_orders_repr}]").format(
@@ -204,7 +199,7 @@ def buy_open(id_or_ins, amount, price=None, style=None):
     买入开仓。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 
@@ -213,7 +208,7 @@ def buy_open(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object | None
+    :return: :class:`~Order` object | list[:class:`~Order`] | None
 
     :example:
 
@@ -231,7 +226,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
     平卖仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 
@@ -261,7 +256,7 @@ def sell_open(id_or_ins, amount, price=None, style=None):
     卖出开仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 
@@ -270,7 +265,7 @@ def sell_open(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object | None
+    :return: :class:`~Order` object | list[:class:`~Order`] | None
     """
     return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
 
@@ -281,7 +276,7 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     平买仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 

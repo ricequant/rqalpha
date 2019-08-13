@@ -76,7 +76,6 @@ from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 # noinspection PyUnresolvedReferences
 from rqalpha.events import EVENT
 
-
 __all__ = [
     "logger",
     "sector_code",
@@ -496,7 +495,7 @@ def history_bars(
     adjust_type="pre",
 ):
     """
-    获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。 注意，该API会自动跳过停牌数据。
+    获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。
 
     日回测获取分钟历史数据：不支持
 
@@ -533,6 +532,9 @@ def history_bars(
     :param int bar_count: 获取的历史数据数量，必填项
     :param str frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
     :param str fields: 返回数据字段。必填项。见下方列表。
+    :param bool skip_suspended: 是否跳过停牌数据
+    :param bool include_now: 是否包含当前数据
+    :param str adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
 
     =========================   ===================================================
     fields                      字段名
@@ -550,11 +552,7 @@ def history_bars(
     prev_settlement             结算价（期货日线专用）
     =========================   ===================================================
 
-    :param bool skip_suspended: 是否跳过停牌数据
-    :param bool include_now: 是否包含当前数据
-    :param str adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
-
-    :return: `ndarray`, 方便直接与talib等计算库对接，效率较history返回的DataFrame更高。
+    :return: `ndarray`
 
     :example:
 
@@ -726,7 +724,7 @@ def instruments(id_or_symbols):
     :param id_or_symbols: 合约代码或者合约代码列表
     :type id_or_symbols: `str` | List[`str`]
 
-    :return: :class:`~StockInstrument` | :class:`~FutureInstrument`
+    :return: :class:`~Instrument`
 
     目前系统并不支持跨国家市场的同时调用。传入 order_book_id list必须属于同一国家市场，不能混合着中美两个国家市场的order_book_id。
 
@@ -778,6 +776,45 @@ def instruments(id_or_symbols):
 )
 @apply_rules(verify_that("code").is_instance_of((str, SectorCodeItem)))
 def sector(code):
+    """
+    获得属于某一板块的所有股票列表。
+
+    :param code: 板块名称或板块代码。例如，能源板块可填写'Energy'、'能源'或sector_code.Energy
+        :type code: `str` | `sector_code`
+
+    :return: list of order_book_id 属于该板块的股票列表
+
+    目前支持的板块分类如下，其取值参考自MSCI发布的全球行业标准分类:
+
+    =========================   =========================   ==============================================================================
+    板块代码                      中文板块名称                  英文板块名称
+    =========================   =========================   ==============================================================================
+    Energy                      能源                         energy
+    Materials                   原材料                        materials
+    ConsumerDiscretionary       非必需消费品                   consumer discretionary
+    ConsumerStaples             必需消费品                    consumer staples
+    HealthCare                  医疗保健                      health care
+    Financials                  金融                         financials
+    InformationTechnology       信息技术                      information technology
+    TelecommunicationServices   电信服务                      telecommunication services
+    Utilities                   公共服务                      utilities
+    Industrials                 工业                         industrials
+    =========================   =========================   ==============================================================================
+
+    :example:
+
+    ..  code-block:: python3
+        :linenos:
+
+        def init(context):
+            ids1 = sector("consumer discretionary")
+            ids2 = sector("非必需消费品")
+            ids3 = sector("ConsumerDiscretionary")
+            assert ids1 == ids2 and ids1 == ids3
+            logger.info(ids1)
+        #INIT INFO
+        #['002045.XSHE', '603099.XSHG', '002486.XSHE', '002536.XSHE', '300100.XSHE', '600633.XSHG', '002291.XSHE', ..., '600233.XSHG']
+    """
     if not isinstance(code, six.string_types):
         code = code.name
     else:
@@ -797,6 +834,122 @@ def sector(code):
 )
 @apply_rules(verify_that("code").is_instance_of((str, IndustryCodeItem)))
 def industry(code):
+    """
+    获得属于某一行业的所有股票列表。
+
+    :param str code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
+
+    :return: list of order_book_id 获得属于某一行业的所有股票
+
+    我们目前使用的行业分类来自于中国国家统计局的 `国民经济行业分类 <http://www.stats.gov.cn/tjsj/tjbz/hyflbz/>`_ ，可以使用这里的任何一个行业代码来调用行业的股票列表：
+
+    =========================   ===================================================
+    行业代码                      行业名称
+    =========================   ===================================================
+    A01                         农业
+    A02                         林业
+    A03                         畜牧业
+    A04                         渔业
+    A05                         农、林、牧、渔服务业
+    B06                         煤炭开采和洗选业
+    B07                         石油和天然气开采业
+    B08                         黑色金属矿采选业
+    B09                         有色金属矿采选业
+    B10                         非金属矿采选业
+    B11                         开采辅助活动
+    B12                         其他采矿业
+    C13                         农副食品加工业
+    C14                         食品制造业
+    C15                         酒、饮料和精制茶制造业
+    C16                         烟草制品业
+    C17                         纺织业
+    C18                         纺织服装、服饰业
+    C19                         皮革、毛皮、羽毛及其制品和制鞋业
+    C20                         木材加工及木、竹、藤、棕、草制品业
+    C21                         家具制造业
+    C22                         造纸及纸制品业
+    C23                         印刷和记录媒介复制业
+    C24                         文教、工美、体育和娱乐用品制造业
+    C25                         石油加工、炼焦及核燃料加工业
+    C26                         化学原料及化学制品制造业
+    C27                         医药制造业
+    C28                         化学纤维制造业
+    C29                         橡胶和塑料制品业
+    C30                         非金属矿物制品业
+    C31                         黑色金属冶炼及压延加工业
+    C32                         有色金属冶炼和压延加工业
+    C33                         金属制品业
+    C34                         通用设备制造业
+    C35                         专用设备制造业
+    C36                         汽车制造业
+    C37                         铁路、船舶、航空航天和其它运输设备制造业
+    C38                         电气机械及器材制造业
+    C39                         计算机、通信和其他电子设备制造业
+    C40                         仪器仪表制造业
+    C41                         其他制造业
+    C42                         废弃资源综合利用业
+    C43                         金属制品、机械和设备修理业
+    D44                         电力、热力生产和供应业
+    D45                         燃气生产和供应业
+    D46                         水的生产和供应业
+    E47                         房屋建筑业
+    E48                         土木工程建筑业
+    E49                         建筑安装业
+    E50                         建筑装饰和其他建筑业
+    F51                         批发业
+    F52                         零售业
+    G53                         铁路运输业
+    G54                         道路运输业
+    G55                         水上运输业
+    G56                         航空运输业
+    G57                         管道运输业
+    G58                         装卸搬运和运输代理业
+    G59                         仓储业
+    G60                         邮政业
+    H61                         住宿业
+    H62                         餐饮业
+    I63                         电信、广播电视和卫星传输服务
+    I64                         互联网和相关服务
+    I65                         软件和信息技术服务业
+    J66                         货币金融服务
+    J67                         资本市场服务
+    J68                         保险业
+    J69                         其他金融业
+    K70                         房地产业
+    L71                         租赁业
+    L72                         商务服务业
+    M73                         研究和试验发展
+    M74                         专业技术服务业
+    M75                         科技推广和应用服务业
+    N76                         水利管理业
+    N77                         生态保护和环境治理业
+    N78                         公共设施管理业
+    O79                         居民服务业
+    O80                         机动车、电子产品和日用产品修理业
+    O81                         其他服务业
+    P82                         教育
+    Q83                         卫生
+    Q84                         社会工作
+    R85                         新闻和出版业
+    R86                         广播、电视、电影和影视录音制作业
+    R87                         文化艺术业
+    R88                         体育
+    R89                         娱乐业
+    S90                         综合
+    =========================   ===================================================
+
+    :example:
+
+    ..  code-block:: python3
+        :linenos:
+
+        def init(context):
+            stock_list = industry('A01')
+            logger.info("农业股票列表：" + str(stock_list))
+
+        #INITINFO 农业股票列表：['600354.XSHG', '601118.XSHG', '002772.XSHE', '600371.XSHG', '600313.XSHG', '600672.XSHG', '600359.XSHG', '300143.XSHE', '002041.XSHE', '600762.XSHG', '600540.XSHG', '300189.XSHE', '600108.XSHG', '300087.XSHE', '600598.XSHG', '000998.XSHE', '600506.XSHG']
+
+    """
     if not isinstance(code, six.string_types):
         code = code.code
     else:
@@ -938,7 +1091,28 @@ def to_date(date):
     verify_that("order_book_id").is_valid_instrument(),
     verify_that("start_date").is_valid_date(ignore_none=False),
 )
-def get_dividend(order_book_id, start_date, *args, **kwargs):
+def get_dividend(order_book_id, start_date):
+    """
+    获取某只股票到策略当前日期前一天的分红情况（包含起止日期）。
+
+    :param order_book_id: 股票代码
+    :type order_book_id: str
+    :param start_date: 开始日期，需要早于策略当前日期
+    :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
+
+    :return: ndarray
+
+    =========================   ===================================================
+    fields                      字段名
+    =========================   ===================================================
+    announcement_date           分红宣布日
+    book_closure_date           股权登记日
+    dividend_cash_before_tax    税前分红
+    ex_dividend_date            除权除息日
+    payable_date                分红到帐日
+    round_lot                   分红最小单位
+    =========================   ===================================================
+    """
     # adjusted 参数在不复权数据回测时不再提供
     env = Environment.get_instance()
     dt = env.trading_dt.date() - datetime.timedelta(days=1)
@@ -971,10 +1145,10 @@ def get_dividend(order_book_id, start_date, *args, **kwargs):
 )
 def plot(series_name, value):
     """
-    Add a point to custom series.
-    :param str series_name: the name of custom series
-    :param float value: the value of the series in this time
-    :return: None
+    在生成的图标结果中，某一个根线上增加一个点。
+
+    :param str series_name: 序列名称
+    :param float value: 值
     """
     Environment.get_instance().add_plot(series_name, value)
 
@@ -998,7 +1172,7 @@ def current_snapshot(id_or_symbol):
 
     :param str id_or_symbol: 合约代码或简称
 
-    :return: :class:`~Snapshot`
+    :return: :class:`~Tick`
 
     :example:
 
@@ -1031,11 +1205,83 @@ def current_snapshot(id_or_symbol):
 
 
 @export_as_api
+def get_positions():
+    """
+    获取所有持仓信息
+
+    :return: list BookingPosition
+
+    :example:
+
+    ..  code-block:: python3
+
+        [In] get_positions()
+        [Out]
+        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0}),
+         BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
+
+    """
+    booking = Environment.get_instance().booking
+    if not booking:
+        raise RuntimeError(
+            _("Booking has not been set, please check your broker configuration.")
+        )
+    return booking.get_positions()
+
+
+@export_as_api
+@apply_rules(
+    verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
+)
+def get_position(order_book_id, direction):
+    """
+    获取某个标的的持仓信息
+
+    :param order_book_id: 标的编号
+    :param direction: 持仓类型 “long_positions” | “short_positions” | “backward_trade_set”
+
+    :return: list BookingPosition
+
+    :example:
+
+    ..  code-block:: python3
+
+        [In] get_position('000014.XSHE','long_positions")
+        [Out]
+        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
+
+    """
+    booking = Environment.get_instance().booking
+    if not booking:
+        raise RuntimeError(
+            _("Booking has not been set, please check your broker configuration.")
+        )
+
+    return booking.get_position(order_book_id, direction)
+
+
+@export_as_api
 @apply_rules(
     verify_that("event_type").is_instance_of(EVENT),
     verify_that("handler").is_instance_of(types.FunctionType),
 )
 def subscribe_event(event_type, handler):
+    """
+    订阅框架内部事件，注册事件处理函数
+
+    :param event_type: 事件类型
+    :param handler: 处理函数
+
+    :return: None
+
+    :example:
+
+    ..  code-block:: python3
+
+        from rqalpha.events import EVENT
+        subscribe_event(EVENT.POST_BAR, print)
+
+    """
     env = Environment.get_instance()
     user_strategy = env.user_strategy
     env.event_bus.add_listener(
