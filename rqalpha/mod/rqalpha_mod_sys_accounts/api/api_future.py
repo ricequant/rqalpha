@@ -57,6 +57,8 @@ def order(id_or_ins, amount, side, position_effect, style):
         raise RuntimeError
     if amount < 0:
         raise RuntimeError
+
+    amount = int(amount)
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
         return None
@@ -76,13 +78,6 @@ def order(id_or_ins, amount, side, position_effect, style):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         )
-        return
-
-    amount = int(amount)
-    if amount == 0:
-        # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
-        # 因为很多策略会直接在handle_bar里面执行order_target_percent之类的函数，经常会出现下一个量为0的订单，如果这些订单都生成是没有意义的。
-        user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
         return
 
     env = Environment.get_instance()
