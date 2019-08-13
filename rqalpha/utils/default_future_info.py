@@ -66,7 +66,7 @@ TRADING_PERIOD_DICT.update(
     {underlying_symbol: time_period3
      for underlying_symbol in ["CU", "AL", "ZN", "PB", "SN", "NI"]})
 
-# | 商品期货 RB, HC, BU, RU, L, V, PP, EG, C, CS, Y, M, A, B, P, J, JM, I,
+# | 商品期货 RB, HC, BU, RU, L, V, PP, EG, C, CS, Y, M, A, B, P, J, JM, I, RR
 # | 21:01~23:00, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
 time_period4 = [
     TimeRange(start=time(21, 1), end=time(23, 0)),
@@ -75,7 +75,7 @@ time_period4 = [
     TimeRange(start=time(13, 31), end=time(15, 0)),
 ]
 TRADING_PERIOD_DICT.update({underlying_symbol: time_period4 for underlying_symbol in [
-    "RB", "HC", "BU", "RU", "L", "V", "PP", "EG", "C", "CS", "Y", "M", "A", "B", "P", "J", "JM", "I",
+    "RB", "HC", "BU", "RU", "L", "V", "PP", "EG", "C", "CS", "Y", "M", "A", "B", "P", "J", "JM", "I", "RR"
 ]})
 
 # | 商品期货 AU, AG | 21:01~2:30, 09:01~10:15, 10:31~11:30, 13:31~15:00 |
