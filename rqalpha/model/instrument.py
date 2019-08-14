@@ -21,7 +21,7 @@ import datetime
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.utils import instrument_type_str2enum
+from rqalpha.utils import instrument_type_str2enum, TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr
 
 
@@ -283,6 +283,23 @@ class Instrument(object):
 
         now = Environment.get_instance().calendar_dt
         return self.listed_date <= now <= self.de_listed_date
+
+    STOCK_TRADING_PERIOD = [
+        TimeRange(start=datetime.time(9, 31), end=datetime.time(11, 30)),
+        TimeRange(start=datetime.time(13, 1), end=datetime.time(15, 0)),
+    ]
+
+    @property
+    def trading_hour(self):
+        try:
+            trading_hour = self.__dict__["trading_hour"]
+        except KeyError:
+            if self.enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
+                return self.STOCK_TRADING_PERIOD
+            return None
+        return [TimeRange(*(
+            datetime.datetime.strptime(time_str, "%H:%M").time() for time_str in period.split("-")
+        )) for period in trading_hour.split(",")]
 
     def days_from_listed(self):
         if self.listed_date == self.DEFAULT_LISTED_DATE:
