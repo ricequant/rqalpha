@@ -21,12 +21,10 @@ import six
 import numpy as np
 
 from rqalpha.interface import AbstractDataSource
-from rqalpha.const import MARGIN_TYPE
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
 
-from rqalpha.data.future_info_cn import CN_FUTURE_INFO
 from rqalpha.data.converter import StockBarConverter, IndexBarConverter
 from rqalpha.data.converter import FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
 
@@ -40,10 +38,11 @@ from rqalpha.data.simple_factor_store import SimpleFactorStore
 from rqalpha.data.share_transformation_store import ShareTransformationStore
 from rqalpha.data.adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
+from rqalpha.data.future_info_store import FutureInfoStore
 
 
 class BaseDataSource(AbstractDataSource):
-    def __init__(self, path):
+    def __init__(self, path, custom_future_info):
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 
@@ -67,6 +66,8 @@ class BaseDataSource(AbstractDataSource):
 
         self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
         self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+
+        self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
 
         self.get_yield_curve = self._yield_curve.get_yield_curve
         self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
@@ -205,9 +206,6 @@ class BaseDataSource(AbstractDataSource):
             s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
-    def get_commission_info(self, instrument):
-        return CN_FUTURE_INFO[instrument.underlying_symbol]
-
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError
 
@@ -231,7 +229,10 @@ class BaseDataSource(AbstractDataSource):
         elif instrument.type in ['ETF', 'LOF', 'FenjiB', 'FenjiA', 'FenjiMu']:
             return 0.001
         elif instrument.type == 'Future':
-            return CN_FUTURE_INFO[instrument.underlying_symbol]['tick_size']
+            return self._future_info_store.get_future_info(instrument)["tick_size"]
         else:
             # NOTE: you can override get_tick_size in your custom data source
             raise RuntimeError(_("Unsupported instrument type for tick size"))
+
+    def get_commission_info(self, instrument):
+        return self._future_info_store.get_future_info(instrument)
