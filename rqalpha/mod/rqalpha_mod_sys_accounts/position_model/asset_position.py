@@ -206,7 +206,7 @@ class AssetPosition(object):
             self._trade_cost += trade.last_price * trade.last_quantity
 
             if self.market_tplus >= 1:
-                self._non_closable += 1
+                self._non_closable += trade.last_quantity
             return 0
         else:
             if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
