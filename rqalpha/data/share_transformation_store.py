@@ -17,11 +17,12 @@
 #     limitations under the License.
 
 import json
+import codecs
 
 
 class ShareTransformationStore(object):
     def __init__(self, f):
-        with open(f, 'r', encoding="utf-8") as store:
+        with codecs.open(f, 'r', encoding="utf-8") as store:
             self._share_transformation = json.load(store)
 
     def get_share_transformation(self, order_book_id):
