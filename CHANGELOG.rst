@@ -7,7 +7,7 @@ CHANGELOG
 
 - 新增
 
-  - 股票下单 API 加入资金不足时改为使用所有剩余资金下单的功能
+  - 股票下单 API 加入资金不足时自动转为使用所有剩余资金下单的功能，见 `rqalpha_mod_sys_accounts <https://github.com/ricequant/rqalpha/tree/master/rqalpha/mod/rqalpha_mod_sys_accounts>`_
 
 - 变更
 
