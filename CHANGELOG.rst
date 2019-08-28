@@ -2,6 +2,27 @@
 CHANGELOG
 ==================
 
+3.4.0
+==================
+
+- 新增
+
+  - 股票下单 API 加入资金不足时改为使用所有剩余资金下单的功能
+
+- 变更
+
+  - 重构 :code:`rqalpha_mod_sys_accounts` 中的账户、持仓类，主要变化如下：
+
+    - 持仓类拆分为两层，核心同时兼容期货和股票的逻辑，上层兼容绝大部分旧有 API
+    - 期货保证金的计算逻辑改为跟随行情变化的动态保证金、不再维护持仓序列
+    - 新增 :code:`position_pnl` 昨仓盈亏、:code:`trading_pnl` 交易盈亏字段
+    - 删除 :code:`holding_pnl` 持仓盈亏、:code:`realized_pnl` 实现盈亏字段
+    - 降低账户类和持仓类之间的耦合程度
+
+  - 去掉配置项 :code:`base.resume_mode` 和 :code:`extra.force_run_init_when_pt_resume`，相关判断移交给 :code:`PersistProvider` 实现
+  - 去掉 :code:`Booking` 类，相关逻辑合并至持仓类
+
+
 3.3.3
 ==================
 
