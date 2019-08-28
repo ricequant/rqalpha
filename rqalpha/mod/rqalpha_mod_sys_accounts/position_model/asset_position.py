@@ -251,6 +251,7 @@ class AssetPositionProxy(AbstractPosition):
         raise NotImplementedError
 
     def get_state(self):
+        """"""
         return {
             "order_book_id": self.order_book_id,
             "long": self._long.get_state(),
@@ -258,6 +259,7 @@ class AssetPositionProxy(AbstractPosition):
         }
 
     def set_state(self, state):
+        """"""
         self._long.set_state(state["long"])
         self._short.set_state(state["short"])
 
