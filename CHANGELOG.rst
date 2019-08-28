@@ -2,6 +2,20 @@
 CHANGELOG
 ==================
 
+3.3.3
+==================
+
+- 新增
+
+  - 对期货 NR、UR、RR 的支持
+
+- 修复
+
+  - Python2.7 环境下依赖的 numpy 版本不正确的问题
+  - 进程启动后初次触发 settlement 事件时框架内部时间可能不正确的问题
+  - 期货下单 API 未拒绝不足一手的下单请求的问题
+
+
 3.3.2
 ==================
 
@@ -9,8 +23,8 @@ CHANGELOG
 
   - :code:`SelfTradeValidator` 模块，用于拦截策略可能产生自成交的订单
   - :code:`buy_close`、:code:`sell_close` API 将订单拆分成多个时给出 WARNING 提示
-  - 加入了对股票更换代码这一行为的支持
-  - 加入对期货 CJ 品种的支持
+  - 对股票更换代码这一行为的支持
+  - 对期货 CJ 品种的支持
 
 
 - 变更
@@ -33,7 +47,7 @@ CHANGELOG
 
 - 新增
 
-  - 加入对期货 SP, EG 品种的支持。
+  - 对期货 SP, EG 品种的支持。
   - 加入 python3.7 环境下的自动化测试。
   - 使用 :code:`run_func` 运行的策略不再需要显式地执行 :code:`from rqalpha.api import *`。
   - :code:`update-bundle` 命令增加中断重试功能。
