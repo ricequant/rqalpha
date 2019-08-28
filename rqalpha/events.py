@@ -149,6 +149,8 @@ class EVENT(Enum):
 
     # persist immediately
     DO_PERSIST = 'do_persist'
+    # reload immediately
+    DO_RESTORE = "do_restore"
 
     # 策略被暂停
     STRATEGY_HOLD_SET = 'strategy_hold_set'

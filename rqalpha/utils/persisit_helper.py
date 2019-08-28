@@ -58,8 +58,9 @@ class PersistHelper(object):
             event_bus.add_listener(EVENT.POST_BAR, self.persist)
             event_bus.add_listener(EVENT.DO_PERSIST, self.persist)
             event_bus.add_listener(EVENT.POST_SETTLEMENT, self.persist)
+            event_bus.add_listener(EVENT.DO_RESTORE, self.restore)
 
-    def persist(self, *args):
+    def persist(self, *_):
         for key, obj in six.iteritems(self._objects):
             try:
                 state = obj.get_state()
@@ -102,10 +103,17 @@ class PersistHelper(object):
             return True
         return False
 
-    def restore(self):
-        for key, obj in six.iteritems(self._objects):
-            state = self._persist_provider.load(key)
-            system_log.debug('restore {} with state = {}', key, state)
-            if not state:
-                continue
-            obj.set_state(state)
+    def restore(self, event):
+        key = getattr(event, "key", None)
+        if key:
+            self._restore_obj(key, self._objects[key])
+        else:
+            for key, obj in six.iteritems(self._objects):
+                self._restore_obj(key, obj)
+
+    def _restore_obj(self, key, obj):
+        state = self._persist_provider.load(key)
+        system_log.debug('restore {} with state = {}', key, state)
+        if not state:
+            return
+        obj.set_state(state)
