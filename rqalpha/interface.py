@@ -492,18 +492,6 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_trading_period(self, order_book_id_list, accounts):
-        """
-        获取标的交易时间
-        :param Sequence order_book_id_list: 标的代码序列
-        :param Sequence accounts: 账户类型列表。如 ["STOCK", "FUTURE"]
-        :return: list of TimeRange，如：[
-            TimeRange(start=time(9, 31), end=time(11, 30)),
-            TimeRange(start=time(13, 1), end=time(15, 0)),
-        ]
-        """
-        raise NotImplementedError
-
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):
     """
