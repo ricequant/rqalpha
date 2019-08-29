@@ -2,6 +2,41 @@
 CHANGELOG
 ==================
 
+3.4.0
+==================
+
+- 新增
+
+  - 股票下单 API 加入资金不足时自动转为使用所有剩余资金下单的功能，见 `rqalpha_mod_sys_accounts <https://github.com/ricequant/rqalpha/tree/master/rqalpha/mod/rqalpha_mod_sys_accounts>`_
+
+- 变更
+
+  - 重构 :code:`rqalpha_mod_sys_accounts` 中的账户、持仓类，主要变化如下：
+
+    - 持仓类拆分为两层，核心同时兼容期货和股票的逻辑，上层兼容绝大部分旧有 API
+    - 期货保证金的计算逻辑改为跟随行情变化的动态保证金、不再维护持仓序列
+    - 新增 :code:`position_pnl` 昨仓盈亏、:code:`trading_pnl` 交易盈亏字段
+    - 删除 :code:`holding_pnl` 持仓盈亏、:code:`realized_pnl` 实现盈亏字段
+    - 降低账户类和持仓类之间的耦合程度
+
+  - 去掉配置项 :code:`base.resume_mode` 和 :code:`extra.force_run_init_when_pt_resume`，相关判断移交给 :code:`PersistProvider` 实现
+  - 去掉 :code:`Booking` 类，相关逻辑合并至持仓类
+
+
+3.3.3
+==================
+
+- 新增
+
+  - 对期货 NR、UR、RR 的支持
+
+- 修复
+
+  - Python2.7 环境下依赖的 numpy 版本不正确的问题
+  - 进程启动后初次触发 settlement 事件时框架内部时间可能不正确的问题
+  - 期货下单 API 未拒绝不足一手的下单请求的问题
+
+
 3.3.2
 ==================
 
@@ -9,8 +44,8 @@ CHANGELOG
 
   - :code:`SelfTradeValidator` 模块，用于拦截策略可能产生自成交的订单
   - :code:`buy_close`、:code:`sell_close` API 将订单拆分成多个时给出 WARNING 提示
-  - 加入了对股票更换代码这一行为的支持
-  - 加入对期货 CJ 品种的支持
+  - 对股票更换代码这一行为的支持
+  - 对期货 CJ 品种的支持
 
 
 - 变更
@@ -33,7 +68,7 @@ CHANGELOG
 
 - 新增
 
-  - 加入对期货 SP, EG 品种的支持。
+  - 对期货 SP, EG 品种的支持。
   - 加入 python3.7 环境下的自动化测试。
   - 使用 :code:`run_func` 运行的策略不再需要显式地执行 :code:`from rqalpha.api import *`。
   - :code:`update-bundle` 命令增加中断重试功能。

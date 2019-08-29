@@ -51,30 +51,36 @@ class BarObject(object):
     @property
     def open(self):
         """
-        [float] 当日开盘价
+        [float] 开盘价
         """
         return self._data["open"]
 
     @property
     def close(self):
+        """
+        [float] 收盘价
+        """
         return self._data["close"]
 
     @property
     def low(self):
         """
-        [float] 截止到当前的最低价
+        [float] 最低价
         """
         return self._data["low"]
 
     @property
     def high(self):
         """
-        [float] 截止到当前的最高价
+        [float] 最高价
         """
         return self._data["high"]
 
     @property
     def limit_up(self):
+        """
+        [float] 涨停价
+        """
         try:
             v = self._data['limit_up']
             return v if v != 0 else np.nan
@@ -83,6 +89,9 @@ class BarObject(object):
 
     @property
     def limit_down(self):
+        """
+        [float] 跌停价
+        """
         try:
             v = self._data['limit_down']
             return v if v != 0 else np.nan
@@ -176,6 +185,9 @@ class BarObject(object):
 
     @property
     def settlement(self):
+        """
+        [float] 结算价（期货专用）
+        """
         return self._data['settlement']
 
     @property
@@ -203,6 +215,9 @@ class BarObject(object):
 
     @property
     def datetime(self):
+        """
+        [datetime.datetime] 时间戳
+        """
         if self._dt is not None:
             return self._dt
         return convert_int_to_datetime(self._data['datetime'])
@@ -228,7 +243,7 @@ class BarObject(object):
     @property
     def is_trading(self):
         """
-        [datetime.datetime] 时间戳
+        [bool] 是否有成交量
         """
         return self._data['volume'] > 0
 

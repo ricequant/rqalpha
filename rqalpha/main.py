@@ -222,7 +222,7 @@ def run(config, source_code=None, user_funcs=None):
 
         if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
-            persist_helper.restore()
+            env.event_bus.publish_event(Event(EVENT.DO_RESTORE))
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True

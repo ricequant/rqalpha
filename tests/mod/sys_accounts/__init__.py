@@ -17,8 +17,9 @@
 #     limitations under the License.
 
 from .test_account_model import test_strategies as test_account_model_strategies
+from .test_position_models import test_strategies as test_positions_models_strategies
 
-test_strategies = test_account_model_strategies
+test_strategies = test_account_model_strategies + test_positions_models_strategies
 
 __all__ = [
     "test_strategies"

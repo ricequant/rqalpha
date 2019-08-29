@@ -57,7 +57,7 @@ class FuturePositionProxy(AssetPositionProxy):
             })
 
             sell_old_quantity = sell_logical_old_quantity = sum(q for _, q in state.get("sell_old_holding_list", []))
-            self._long.set_state({
+            self._short.set_state({
                 "old_quantity": sell_old_quantity,
                 "logical_old_quantity": sell_logical_old_quantity,
                 "today_quantity": sum(q for _, q in state.get("sell_today_holding_list", [])),
