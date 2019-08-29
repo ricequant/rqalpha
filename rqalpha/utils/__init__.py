@@ -26,7 +26,7 @@ from contextlib import contextmanager
 import numpy as np
 
 from rqalpha.utils.exception import CustomError, CustomException
-from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
+from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN
 from rqalpha.utils.datetime_func import TimeRange
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.py2 import lru_cache
@@ -247,11 +247,9 @@ def get_upper_underlying_symbol(order_book_id):
 
 
 def is_night_trading(universe):
-    for order_book_id in universe:
-        underlying_symbol = get_upper_underlying_symbol(order_book_id)
-        if underlying_symbol in NIGHT_TRADING_NS:
-            return True
-    return False
+    # for compatible
+    from rqalpha.environment import Environment
+    return Environment.get_instance().data_proxy.is_night_trading(universe)
 
 
 def merge_trading_period(trading_period):
