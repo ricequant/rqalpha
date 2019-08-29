@@ -25,24 +25,24 @@ from ...utils import make_test_strategy_decorator
 test_strategies = []
 
 as_test_strategy = make_test_strategy_decorator({
-        "base": {
-            "start_date": "2016-03-07",
-            "end_date": "2016-03-08",
-            "frequency": "1d",
-            "accounts": {
-                "stock": 1000000,
-            }
-        },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            }
-        },
-    }, test_strategies)
+    "base": {
+        "start_date": "2016-03-07",
+        "end_date": "2016-03-08",
+        "frequency": "1d",
+        "accounts": {
+            "stock": 1000000,
+        }
+    },
+    "extra": {
+        "log_level": "error",
+    },
+    "mod": {
+        "sys_progress": {
+            "enabled": True,
+            "show": True,
+        }
+    },
+}, test_strategies)
 
 
 @as_test_strategy({

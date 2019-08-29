@@ -498,11 +498,11 @@ Bar
     :show-inheritance:
     :inherited-members:
 
-Snapshot
+Tick
 ------------------------------------------------------
-..  module:: rqalpha.model.snapshot
+..  module:: rqalpha.model.tick
 
-..  autoclass:: SnapshotObject
+..  autoclass:: TickObject
     :members:
     :show-inheritance:
     :inherited-members:

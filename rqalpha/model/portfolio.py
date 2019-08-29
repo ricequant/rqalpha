@@ -125,6 +125,9 @@ class Portfolio(object):
 
     @property
     def static_unit_net_value(self):
+        """
+        [float] 昨日净值
+        """
         return self._static_unit_net_value
 
     @property
@@ -179,7 +182,7 @@ class Portfolio(object):
     @property
     def positions(self):
         """
-        [dict] 持仓
+        [dict] 持仓字典
         """
         if self._mixed_positions is None:
             self._mixed_positions = MixedPositions(self._accounts)
@@ -194,10 +197,16 @@ class Portfolio(object):
 
     @property
     def dividend_receivable(self):
+        """
+        [float] 应收分红
+        """
         return sum(getattr(account, 'dividend_receivable', 0) for account in six.itervalues(self._accounts))
 
     @property
     def transaction_cost(self):
+        """
+        [float] 交易成本（税费）
+        """
         return sum(account.transaction_cost for account in six.itervalues(self._accounts))
 
     @property
@@ -209,14 +218,23 @@ class Portfolio(object):
 
     @property
     def pnl(self):
+        """
+        [float] 收益
+        """
         return (self.unit_net_value - 1) * self.units
 
     @property
     def starting_cash(self):
+        """
+        [float] 初始资金
+        """
         return self.units
 
     @property
     def frozen_cash(self):
+        """
+        [float] 冻结资金
+        """
         return sum(account.frozen_cash for account in six.itervalues(self._accounts))
 
 
