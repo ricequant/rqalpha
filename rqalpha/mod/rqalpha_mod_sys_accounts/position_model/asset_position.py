@@ -125,6 +125,8 @@ class AssetPosition(object):
     @property
     def position_pnl(self):
         quantity = self._logical_old_quantity
+        if quantity == 0:
+            return 0
         return quantity * self.contract_multiplier * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
