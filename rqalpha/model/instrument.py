@@ -291,15 +291,28 @@ class Instrument(object):
 
     @property
     def trading_hour(self):
+        # trading_hours='09:31-11:30,13:01-15:00'
         try:
-            trading_hour = self.__dict__["trading_hour"]
+            trading_hours = self.__dict__["trading_hours"]
         except KeyError:
             if self.enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
                 return self.STOCK_TRADING_PERIOD
             return None
-        return [TimeRange(*(
-            datetime.datetime.strptime(time_str, "%H:%M").time() for time_str in period.split("-")
-        )) for period in trading_hour.split(",")]
+        trading_period = []
+        trading_hours = trading_hours.replace("-", ":")
+        for time_range_str in trading_hours.split(","):
+            start_h, start_m, end_h, end_m = (int(i) for i in time_range_str.split(":"))
+            start, end = datetime.time(start_h, start_m), datetime.time(end_h, end_m)
+            if start > end:
+                trading_period.append(TimeRange(start, datetime.time(23, 59)))
+                trading_period.append(TimeRange(datetime.time(0, 0), end))
+            else:
+                trading_period.append(TimeRange(start, end))
+        return trading_period
+
+    @property
+    def trade_at_night(self):
+        return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hour or []))
 
     def days_from_listed(self):
         if self.listed_date == self.DEFAULT_LISTED_DATE:
