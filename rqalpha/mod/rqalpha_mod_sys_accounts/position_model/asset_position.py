@@ -22,6 +22,7 @@ from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION
 from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.utils.repr import property_repr
+from rqalpha.utils import is_valid_price
 
 
 class AssetPosition(object):
@@ -165,7 +166,7 @@ class AssetPosition(object):
 
     @property
     def prev_close(self):
-        if self._prev_close is None:
+        if not is_valid_price(self._prev_close):
             env = Environment.get_instance()
             self._prev_close = env.data_proxy.get_prev_close(self._order_book_id, env.trading_dt)
             if self._prev_close != self._prev_close:
