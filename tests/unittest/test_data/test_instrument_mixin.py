@@ -9,12 +9,6 @@ class InstrumentMixinTestCase(DataProxyFixture, RQAlphaTestCase):
         from datetime import time
         from rqalpha.utils import TimeRange
 
-        stock_time_range = self.data_proxy.get_trading_period(["000001.XSHE"])
-        self.assertSetEqual(
-            set(stock_time_range),
-            {TimeRange(start=time(9, 31), end=time(11, 30)), TimeRange(start=time(13, 1), end=time(15, 0))}
-        )
-
         rb_time_range = self.data_proxy.get_trading_period(["RB1912"])
         self.assertSetEqual(set(rb_time_range), {
             TimeRange(start=time(21, 1), end=time(23, 0)), TimeRange(start=time(9, 1), end=time(10, 15)),
