@@ -304,8 +304,8 @@ class Instrument(object):
             start_h, start_m, end_h, end_m = (int(i) for i in time_range_str.split(":"))
             start, end = datetime.time(start_h, start_m), datetime.time(end_h, end_m)
             if start > end:
-                trading_period.append(TimeRange(end, datetime.time(23, 59)))
-                trading_period.append(TimeRange(datetime.time(0, 0), start))
+                trading_period.append(TimeRange(start, datetime.time(23, 59)))
+                trading_period.append(TimeRange(datetime.time(0, 0), end))
             else:
                 trading_period.append(TimeRange(start, end))
         return trading_period
