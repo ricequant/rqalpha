@@ -169,10 +169,6 @@ class AssetPosition(object):
         if not is_valid_price(self._prev_close):
             env = Environment.get_instance()
             self._prev_close = env.data_proxy.get_prev_close(self._order_book_id, env.trading_dt)
-            if self._prev_close != self._prev_close:
-                raise RuntimeError(
-                    _("previous close price of position {} is not supposed to be nan").format(self._order_book_id)
-                )
         return self._prev_close
 
     @property

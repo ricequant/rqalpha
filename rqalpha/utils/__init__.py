@@ -333,7 +333,7 @@ def is_run_from_ipython():
 
 
 def is_valid_price(price):
-    return not np.isnan(price) and price > 0 and price is not None
+    return not (price is None or np.isnan(price) or price <= 0)
 
 
 @contextmanager
