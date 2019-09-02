@@ -25,3 +25,7 @@ class InstrumentMixinTestCase(DataProxyFixture, RQAlphaTestCase):
             TimeRange(start=time(9, 1), end=time(11, 30)),
             TimeRange(start=time(13, 1), end=time(15, 15)),
         })
+
+    def test_is_night_trading(self):
+        assert not self.data_proxy.is_night_trading(["TF1912"])
+        assert self.data_proxy.is_night_trading(["AG1912", "000001.XSHE"])
