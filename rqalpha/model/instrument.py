@@ -15,7 +15,7 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-
+import copy
 import datetime
 
 import numpy as np
@@ -41,7 +41,7 @@ class Instrument(object):
     __repr__ = property_repr
 
     def __init__(self, dic):
-        self.__dict__ = dic
+        self.__dict__ = copy.deepcopy(dic)
 
         if "listed_date" in dic:
             self.__dict__["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
