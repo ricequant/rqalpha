@@ -41,7 +41,7 @@ class Instrument(object):
     __repr__ = property_repr
 
     def __init__(self, dic):
-        self.__dict__ = copy.deepcopy(dic)
+        self.__dict__ = copy.copy(dic)
 
         if "listed_date" in dic:
             self.__dict__["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
