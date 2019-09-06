@@ -23,6 +23,7 @@ RQAlpha 风控 Mod
 ===============================
 
 ..  code-block:: python
+
     {
         # 检查限价单价格是否合法
         "validate_price": True,
