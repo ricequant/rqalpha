@@ -25,20 +25,16 @@ from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
 
-from rqalpha.data.converter import StockBarConverter, IndexBarConverter
-from rqalpha.data.converter import FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
-
-from rqalpha.data.daybar_store import DayBarStore
-from rqalpha.data.date_set import DateSet
-from rqalpha.data.dividend_store import DividendStore
-from rqalpha.data.instrument_store import InstrumentStore
-from rqalpha.data.trading_dates_store import TradingDatesStore
-from rqalpha.data.yield_curve_store import YieldCurveStore
-from rqalpha.data.simple_factor_store import SimpleFactorStore
-from rqalpha.data.share_transformation_store import ShareTransformationStore
-from rqalpha.data.adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
-from rqalpha.data.public_fund_commission import PUBLIC_FUND_COMMISSION
-from rqalpha.data.future_info_store import FutureInfoStore
+from .storages import (
+    DayBarStore, DividendStore, InstrumentStore, TradingDatesStore, YieldCurveStore, SimpleFactorStore,
+    ShareTransformationStore, FutureInfoStore
+)
+from .converter import (
+    StockBarConverter, IndexBarConverter, FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
+)
+from .date_set import DateSet
+from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
+from .public_fund_commission import PUBLIC_FUND_COMMISSION
 
 
 class BaseDataSource(AbstractDataSource):

@@ -144,7 +144,7 @@ def run(config, source_code=None, user_funcs=None):
             env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {})))
 
         if env.price_board is None:
-            from .core.bar_dict_price_board import BarDictPriceBoard
+            from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()
 
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))

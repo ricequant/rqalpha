@@ -126,7 +126,7 @@ class BarDictPriceBoardFixture(EnvironmentFixture):
         self.price_board = None
 
     def init_fixture(self):
-        from rqalpha.core.bar_dict_price_board import BarDictPriceBoard
+        from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
 
         super(BarDictPriceBoardFixture, self).init_fixture()
 

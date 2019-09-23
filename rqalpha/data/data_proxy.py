@@ -20,7 +20,7 @@ import six
 import numpy as np
 import pandas as pd
 
-from rqalpha.data import risk_free_helper
+from rqalpha.utils import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject
