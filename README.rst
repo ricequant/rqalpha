@@ -171,7 +171,7 @@ Mod名                        说明
 .. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
 .. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
 .. _sys_accounts: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_accounts/README.rst
-.. _sys_benchmark: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_bechmark/README.rst
+.. _sys_benchmark: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_benchmark/README.rst
 .. _sys_transaction_cost: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_transaction_cost/README.rst
 .. _RQData数据本地化服务: https://www.ricequant.com/doc/rqdata-institutional
 .. _点击链接免费开通: https://ricequant.mikecrm.com/h7ZFJnT
