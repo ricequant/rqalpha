@@ -4,7 +4,7 @@ sys_accounts Mod
 
 RQAlpha 扩展账户 Mod，实现了股票和期货的账户逻辑，提供了股票和期货的专用 API。
 
-开启或关闭策略回测/模拟 Mod
+开启或关闭账户 Mod
 ===============================
 
 ..  code-block:: bash

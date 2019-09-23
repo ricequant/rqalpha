@@ -147,14 +147,6 @@ Mod名                      说明
 
 
 .. toctree::
-    :caption: API
-    :hidden:
-
-    api/base_api
-    api/extend_api
-
-
-.. toctree::
     :caption: IPython
     :hidden:
     :maxdepth: 3
@@ -170,6 +162,14 @@ Mod名                      说明
     intro/run_algorithm
     intro/under_ide
     intro/optimizing_parameters
+
+
+.. toctree::
+    :caption: API
+    :hidden:
+
+    api/base_api
+    api/extend_api
 
 
 .. toctree::

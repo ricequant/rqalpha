@@ -85,19 +85,18 @@ RQAlpha 提供了极具拓展性的 Mod Hook 接口，这意味着开发者可�
 
 以下是目前已经集成的 Mod 列表:
 
-======================    ==================================================================================
-Mod名                      说明
-======================    ==================================================================================
-`sys_analyser`_           【系统模块】记录每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，并以csv、plot图标等形式输出分析结果
-`sys_funcat`_             【系统模块】支持以通达信公式的方式写策略
-`sys_progress`_           【系统模块】在控制台输出当前策略的回测进度
-`sys_risk`_               【系统模块】对订单进行事前风控校验
-`sys_simulation`_         【系统模块】支持回测、撮合、滑点控制等
-`incremental`_            【第三方模块】提供了回测中的持久化功能，用于增量运行回测
-`stock_realtime`_         【第三方模块】Demo 模块，用于展示如何接入自有行情进行回测/模拟/实盘
-`sentry`_                 【第三方模块】集成 sentry 的扩展，实现错误日志全自动采集、处理
-`tushare`_                【第三方模块】Demo Mod，用于展示如何通过tushare 获取实时Bar数据并组装以供RQAlpha使用
-======================    ==================================================================================
+========================    ==================================================================================
+Mod名                        说明
+========================    ==================================================================================
+`sys_accounts`_             【系统模块】为回测、模拟交易、实盘提供了股票和期货的账户模型及专用 API
+`sys_analyser`_             【系统模块】记录每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，并以csv、plot图标等形式输出分析结果
+`sys_funcat`_               【系统模块】支持以通达信公式的方式写策略
+`sys_progress`_             【系统模块】在控制台输出当前策略的回测进度
+`sys_risk`_                 【系统模块】对订单进行事前风控校验
+`sys_simulation`_           【系统模块】支持回测、撮合、滑点控制等
+`sys_benchmark`_            【系统模块】提供了使用单一标的作为基准的具体实现
+`sys_transaction_cost`_     【系统模块】实现了不同市场不同交易表的的税费计算逻辑
+========================    ==================================================================================
 
 如果您基于 RQAlpha 进行了 Mod 扩展，欢迎告知我们，在审核通过后，会在 Mod 列表中添加您的 Mod 信息和链接。
 
@@ -139,12 +138,6 @@ Mod名                      说明
 *  在 `Github Issues`_ 中提交issue
 *  RQAlpha 交流群「487188429」
 
-防骗声明
-============================
-
-近日有部分 RQAlpha 的贡献者和关注者收到邮件，内容类似 "谢谢您对Ricequant/rqalpha项目的付出，扫描下面二维码收下红包！" 并附有二维码。
-该邮件并非 Ricequant 米筐科技发出，请各位宽客不要扫描二维码，亦不要点击邮件中的链接，保护个人信息和财产安全，谨防上当受骗，
-
 
 .. _Github Issues: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
@@ -177,12 +170,9 @@ Mod名                      说明
 .. _sys_progress: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_progress/README.rst
 .. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
 .. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
-.. _incremental: https://github.com/ricequant/rqalpha-mod-incremental
-.. _stock_realtime: https://github.com/ricequant/rqalpha-mod-stock-realtime
-.. _vnpy: https://github.com/ricequant/rqalpha-mod-vnpy
-.. _sentry: https://github.com/ricequant/rqalpha-mod-sentry
-.. _tushare: https://github.com/ricequant/rqalpha-mod-tushare
-.. _shipane: https://github.com/wh1100717/rqalpha-mod-ShiPanE
+.. _sys_accounts: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_accounts/README.rst
+.. _sys_benchmark: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_benchmark/README.rst
+.. _sys_transaction_cost: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_transaction_cost/README.rst
 .. _RQData数据本地化服务: https://www.ricequant.com/doc/rqdata-institutional
 .. _点击链接免费开通: https://ricequant.mikecrm.com/h7ZFJnT
 
