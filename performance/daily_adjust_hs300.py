@@ -1,3 +1,5 @@
+import random
+
 HS300_2009 = [
     '600685.XSHG', '000629.XSHE', '601601.XSHG', '600653.XSHG', '600033.XSHG', '600108.XSHG', '600352.XSHG',
     '600548.XSHG', '000401.XSHE', '600104.XSHG', '601991.XSHG', '000768.XSHE', '000937.XSHE', '000807.XSHE',
@@ -64,6 +66,7 @@ CONFIG = {
 
 
 def init(context):
+    random.seed = 1
     context.counter = 0
 
 
@@ -72,6 +75,13 @@ def handle_bar(context, _):
     if context.counter == 1:
         for order_book_id in HS300_2009:
             order_shares(order_book_id, 200)
+    else:
+        for _ in range(5):
+            order_book_id = random.choice(HS300_2009)
+            order_shares(order_book_id, 200)
+        for _ in range(5):
+            order_book_id = random.choice(context.portfolio.positions.keys())
+            order_shares(order_book_id, -200)
 
 
 if __name__ == "__main__":
@@ -81,7 +91,7 @@ if __name__ == "__main__":
     """
     RQalpha 3.4.0
     
-    73.07s user 1.87s system 98% cpu 1:15.78 total
+    77.30s user 1.85s system 99% cpu 1:19.94 total
      
     iMac (Retina 5K, 27-inch, 2017)
     4.2 GHz Intel Core i7
