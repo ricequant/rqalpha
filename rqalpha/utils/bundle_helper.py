@@ -27,12 +27,13 @@ import six
 from rqalpha.utils.config import set_locale
 from rqalpha.utils.i18n import gettext as _
 
+CDN_URL = 'http://cdn.ricequant.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2'
+
 
 def get_exactly_url():
     day = datetime.date.today()
     while True:  # get exactly url
-        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2' % (
-            day.year, day.month, day.day)
+        url = CDN_URL % (day.year, day.month, day.day)
         six.print_(_(u"try {} ...").format(url))
         r = requests.get(url, stream=True)
         if r.status_code != 200:
@@ -43,10 +44,11 @@ def get_exactly_url():
     return url, total_length
 
 
-def down_load_helper(out, total_length, url):
+def download(out, total_length, url):
     retry_interval = 3
+    retry_times = 5
     with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
-        for i in range(10):  # try five times
+        for i in range(retry_times):
             try:
                 headers = {'Range': "bytes={}-".format(bar.pos), }
                 r = requests.get(url, headers=headers, stream=True, timeout=10)
@@ -56,12 +58,12 @@ def down_load_helper(out, total_length, url):
 
                 if total_length == bar.pos:
                     return True  # Download complete . exit
-            except (requests.exceptions.ConnectionError,
-                    requests.exceptions.ChunkedEncodingError,
-                    requests.exceptions.Timeout) as err:
-                six.print_(_("\nDownload failed, retry in {} seconds.".format(retry_interval)))
-                time.sleep(retry_interval)
-    raise requests.exceptions.ConnectionError("Can't download data : {}".format(url))
+            except requests.exceptions.RequestException:
+                if i < retry_times - 1:
+                    six.print_(_("\nDownload failed, retry in {} seconds.".format(retry_interval)))
+                    time.sleep(retry_interval)
+                else:
+                    raise
 
 
 def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
@@ -82,9 +84,8 @@ Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=T
     tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
     url, total_length = get_exactly_url()
 
-    out = open(tmp, 'wb')
-    down_load_helper(out, total_length, url)
-    out.close()
+    with open(tmp, 'wb') as out:
+        download(out, total_length, url)
 
     shutil.rmtree(data_bundle_path, ignore_errors=True)
     os.makedirs(data_bundle_path)
