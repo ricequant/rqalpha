@@ -189,7 +189,7 @@ class AssetAccount(AbstractAccount):
         期货账户总资金会受保证金变化的影响变化，期货账户总资金 = 总权益 - 保证金
 
         """
-        return self.total_value - self.margin
+        return self._static_total_value + self.daily_pnl - self.margin
 
     @property
     def position_pnl(self):
