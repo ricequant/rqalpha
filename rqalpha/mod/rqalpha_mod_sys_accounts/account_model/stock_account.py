@@ -99,7 +99,7 @@ class StockAccount(AssetAccount):
 
     def _on_settlement(self, event):
         env = Environment.get_instance()
-        self._static_total_value = self.total_value
+        self._static_total_value = super(StockAccount, self).total_value
         for position in list(self._positions.values()):
             order_book_id = position.order_book_id
             if position.is_de_listed() and position.quantity != 0:

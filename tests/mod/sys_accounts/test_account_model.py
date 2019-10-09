@@ -72,8 +72,11 @@ def test_stock_delist():
 
 @as_test_strategy({
     "base": {
-        "start_date": "2017-06-02",
+        "start_date": "2012-06-04",
         "end_date": "2018-07-9"
+    },
+    "extra": {
+        "log_level": "info"
     }
 })
 def test_stock_dividend():
@@ -82,14 +85,15 @@ def test_stock_dividend():
         context.last_cash = None
 
     def handle_bar(context, _):
-        if context.now.date() == date(2017, 6, 2):
-            order_shares(context.s, 1000)
-        elif context.now.date() == date(2017, 7, 7):
+        if context.now.date() in (date(2012, 6, 8), date(2017, 7, 7), date(2018, 7, 6)):
             context.last_cash = context.portfolio.cash
+
+        elif context.now.date() == date(2012, 6, 4):
+            order_shares(context.s, 1000)
+        elif context.now.date() == date(2012, 6, 18):
+            assert context.portfolio.cash == context.last_cash + 900
         elif context.now.date() == date(2017, 7, 11):
             assert context.portfolio.cash == context.last_cash + 2970
-        elif context.now.date() == date(2018, 7, 6):
-            context.last_cash = context.portfolio.cash
         elif context.now.date() == date(2018, 7, 9):
             assert context.portfolio.cash == context.last_cash + 91
 
