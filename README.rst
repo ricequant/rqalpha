@@ -103,7 +103,7 @@ Mod名                        说明
 基于 RQAlpha 的米筐期货程序化实盘终端
 ==================================
 
-米筐将 RQAlpha 打通期货实盘，实现了策略的全自动化交易。策略托管运行在云端，用户无需为策略的稳定运行和硬件支持担忧。 `立即获取免费Windows版实盘终端。<https://ricequant.pro/download/RQProAir/RQProAir-1.3.0.exe>`_
+米筐将 RQAlpha 打通期货实盘，实现了策略的全自动化交易。策略托管运行在云端，用户无需为策略的稳定运行和硬件支持担忧。 `立即获取免费Windows版实盘终端。<https://ricequant.pro/download/RQProAir/RQProAir-1.3.0.exe>`_ 
 
 .. image:: https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/source/_static/rqpro.png
 
