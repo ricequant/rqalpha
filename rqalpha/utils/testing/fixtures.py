@@ -112,13 +112,12 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
             else:
                 with open(os.path.join(self.temp_dir.name, "{}.pk".format(key)), "wb+") as out:
                     pickle.dump(obj, out, protocol=2)
-        os.symlink(
-            os.path.join(default_bundle_path, "share_transformation.json"),
-            os.path.join(self.temp_dir.name, "share_transformation.json")
-        )
+
+        for file in ("share_transformation.json", "future_info.json"):
+            os.symlink(os.path.join(default_bundle_path, file), os.path.join(self.temp_dir.name, file))
 
         # TODO: use mocked bcolz file
-        self.base_data_source = BaseDataSource(self.temp_dir.name)
+        self.base_data_source = BaseDataSource(self.temp_dir.name, {})
 
 
 class BarDictPriceBoardFixture(EnvironmentFixture):
@@ -127,7 +126,7 @@ class BarDictPriceBoardFixture(EnvironmentFixture):
         self.price_board = None
 
     def init_fixture(self):
-        from rqalpha.core.bar_dict_price_board import BarDictPriceBoard
+        from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
 
         super(BarDictPriceBoardFixture, self).init_fixture()
 

@@ -32,7 +32,6 @@ from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_universe import StrategyUniverse
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.core.strategy_context import StrategyContext
-from rqalpha.data import future_info_cn
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
@@ -49,7 +48,6 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
 from rqalpha.utils.scheduler import Scheduler
 from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
-from rqalpha.utils.dict_func import deep_update
 
 
 jsonpickle_numpy.register_handlers()
@@ -142,18 +140,11 @@ def run(config, source_code=None, user_funcs=None):
         mod_handler.set_env(env)
         mod_handler.start_up()
 
-        try:
-            future_info = config.base.future_info
-        except AttributeError:
-            pass
-        else:
-            deep_update(future_info, future_info_cn.CN_FUTURE_INFO)
-
         if not env.data_source:
-            env.set_data_source(BaseDataSource(config.base.data_bundle_path))
+            env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {})))
 
         if env.price_board is None:
-            from .core.bar_dict_price_board import BarDictPriceBoard
+            from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()
 
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))
