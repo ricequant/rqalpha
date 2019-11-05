@@ -2,6 +2,21 @@
 CHANGELOG
 ==================
 
+3.4.2
+==================
+
+- 变更
+
+  - 移除代码中硬编码的期货交易时间、佣金费率等信息，期货新品种上市不再需要更新 RQAlpha 版本，只需更新 bundle 数据（:ref:`intro-install-get-data`）
+  - 变更 :code:`rqalpha.data` 的目录结构
+  - :code:`rqalpha.utils.get_trading_period` 和 :code:`rqalpha.utils.is_night_trading` 函数变更为 :code:`DataProxy` 的方法
+  - 调整下载 bundle 的 URL
+
+- 新增
+
+  - :code:`Instrument` 对象新增交易时间相关的 :code:`trading_hours` 和 :code:`trade_at_night` property
+
+
 3.4.1
 ==================
 
