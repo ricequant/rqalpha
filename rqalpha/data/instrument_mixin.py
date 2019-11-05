@@ -78,7 +78,7 @@ class InstrumentMixin(object):
     def get_trading_period(self, sym_or_ids, default_trading_period=None):
         trading_period = default_trading_period or []
         for instrument in self.instruments(sym_or_ids):
-            trading_period.extend(instrument.trading_hour or [])
+            trading_period.extend(instrument.trading_hours or [])
         return merge_trading_period(trading_period)
 
     def is_night_trading(self, sym_or_ids):
