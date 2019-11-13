@@ -290,7 +290,7 @@ class Instrument(object):
     ]
 
     @property
-    def trading_hour(self):
+    def trading_hours(self):
         # trading_hours='09:31-11:30,13:01-15:00'
         try:
             trading_hours = self.__dict__["trading_hours"]
@@ -312,7 +312,7 @@ class Instrument(object):
 
     @property
     def trade_at_night(self):
-        return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hour or []))
+        return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
     def days_from_listed(self):
         if self.listed_date == self.DEFAULT_LISTED_DATE:
