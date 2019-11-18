@@ -8,7 +8,7 @@ pytest>=2.9.2
 logbook>=1.0.0
 click>=6.6
 bcolz>=1.1.0
-matplotlib>=1.5.1
+matplotlib==2.0.2
 jsonpickle==0.9.4
 simplejson>=3.10.0
 dill==0.2.5
