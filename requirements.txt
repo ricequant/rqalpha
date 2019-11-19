@@ -19,8 +19,7 @@ pandas >=0.18.1,<=0.22.0 ; python_version == '3.4'
 bcolz >=1.1.0 ; python_version != '3.4'
 bcolz >=1.1.0,<=1.2.0 ; python_version =='3.4'
 
-matplotlib >=1.5.1 ; python_version >= '3.5'
-matplotlib >=1.5.1,<=2.2.3 ; python_version <= '3.4'
+matplotlib >=1.5.1,<=2.2.3
 
 ipython ==6.5.0 ; python_version == '3.4'
 ipython ==5.3.0 ; python_version == '2.7'
