@@ -1,5 +1,5 @@
 Sphinx
 watchdog
 sphinx_rtd_theme
-nbsphinx
+nbsphinx ==0.3.5
 jupyter_client

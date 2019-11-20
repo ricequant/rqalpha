@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 import six
 import jsonpickle
@@ -39,9 +41,6 @@ class Portfolio(object):
             self.register_event()
 
     def register_event(self):
-        """
-        注册事件
-        """
         event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
@@ -126,6 +125,9 @@ class Portfolio(object):
 
     @property
     def static_unit_net_value(self):
+        """
+        [float] 昨日净值
+        """
         return self._static_unit_net_value
 
     @property
@@ -133,16 +135,14 @@ class Portfolio(object):
         """
         [float] 当日盈亏
         """
-        return self.total_value - self._static_unit_net_value * self.units
+        return sum(account.daily_pnl for account in six.itervalues(self._accounts))
 
     @property
     def daily_returns(self):
         """
         [float] 当前最新一天的日收益
         """
-        if self._static_unit_net_value == 0:
-            return np.nan
-        return 0 if self._static_unit_net_value == 0 else self.unit_net_value / self._static_unit_net_value - 1
+        return np.nan if self._static_unit_net_value == 0 else self.unit_net_value / self._static_unit_net_value - 1
 
     @property
     def total_returns(self):
@@ -156,9 +156,12 @@ class Portfolio(object):
         """
         [float] 累计年化收益率
         """
-        current_date = Environment.get_instance().trading_dt.date()
-        natural_start_date = Environment.get_instance().config.base.natural_start_date
-        return self.unit_net_value ** (DAYS_CNT.DAYS_A_YEAR / float((current_date - natural_start_date).days + 1)) - 1
+        if self.unit_net_value <= 0:
+            return -1
+
+        env = Environment.get_instance()
+        date_count = float(env.data_proxy.count_trading_dates(env.config.base.start_date, env.trading_dt.date()))
+        return self.unit_net_value ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
 
     @property
     def total_value(self):
@@ -177,7 +180,7 @@ class Portfolio(object):
     @property
     def positions(self):
         """
-        [dict] 持仓
+        [dict] 持仓字典
         """
         if self._mixed_positions is None:
             self._mixed_positions = MixedPositions(self._accounts)
@@ -192,10 +195,16 @@ class Portfolio(object):
 
     @property
     def dividend_receivable(self):
+        """
+        [float] 应收分红
+        """
         return sum(getattr(account, 'dividend_receivable', 0) for account in six.itervalues(self._accounts))
 
     @property
     def transaction_cost(self):
+        """
+        [float] 交易成本（税费）
+        """
         return sum(account.transaction_cost for account in six.itervalues(self._accounts))
 
     @property
@@ -207,14 +216,23 @@ class Portfolio(object):
 
     @property
     def pnl(self):
+        """
+        [float] 收益
+        """
         return (self.unit_net_value - 1) * self.units
 
     @property
     def starting_cash(self):
+        """
+        [float] 初始资金
+        """
         return self.units
 
     @property
     def frozen_cash(self):
+        """
+        [float] 冻结资金
+        """
         return sum(account.frozen_cash for account in six.itervalues(self._accounts))
 
 

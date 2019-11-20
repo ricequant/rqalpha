@@ -1,21 +1,21 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
-from rqalpha.api import *
 
 from ..utils import make_test_strategy_decorator
 
@@ -298,7 +298,6 @@ def test_current_snapshot():
 
 @as_test_strategy()
 def test_get_position():
-
     def assert_position(pos, obid, dir, today_quantity, old_quantity, avg_price):
         assert pos.order_book_id == obid
         assert pos.direction == dir, "Direction of {} is expected to be {} instead of {}".format(
@@ -327,12 +326,15 @@ def test_get_position():
         elif context.counter == 15:
             buy_close("RB1701", 2)
 
-        if 1 <= context.counter < 5:
+        if context.counter == 1:
             pos = get_positions()[0]
             assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 300, 0, context.expected_avg_price)
+        elif 1 < context.counter < 5:
+            pos = get_positions()[0]
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 300, context.expected_avg_price)
         elif 5 <= context.counter < 10:
             pos = get_position("000001.XSHE", POSITION_DIRECTION.LONG)
-            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 200, 0, context.expected_avg_price)
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 200, context.expected_avg_price)
         elif context.counter == 10:
             pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
             assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 5, 0, context.expected_avg_price)
@@ -344,3 +346,18 @@ def test_get_position():
             assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3, context.expected_avg_price)
 
     return init, handle_bar
+
+
+@as_test_strategy()
+def test_subscribe_event():
+    def init(_):
+        subscribe_event(EVENT.BEFORE_TRADING, on_before_trading)
+
+    def before_trading(context):
+        context.before_trading_ran = True
+
+    def on_before_trading(context, _):
+        assert context.before_trading_ran
+        context.before_trading_ran = False
+
+    return init, before_trading

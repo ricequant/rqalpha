@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 import datetime
 
@@ -137,6 +139,9 @@ class TickObject(object):
 
     @property
     def asks(self):
+        """
+        [list] 卖出报盘价格，asks[0]代表盘口卖一档报盘价
+        """
         try:
             return self._tick_dict['asks']
         except (KeyError, ValueError):
@@ -144,6 +149,9 @@ class TickObject(object):
 
     @property
     def ask_vols(self):
+        """
+        [list] 卖出报盘数量，ask_vols[0]代表盘口卖一档报盘数量
+        """
         try:
             return self._tick_dict['ask_vols']
         except (KeyError, ValueError):
@@ -151,6 +159,9 @@ class TickObject(object):
 
     @property
     def bids(self):
+        """
+        [list] 买入报盘价格，bids[0]代表盘口买一档报盘价
+        """
         try:
             return self._tick_dict['bids']
         except (KeyError, ValueError):
@@ -158,6 +169,9 @@ class TickObject(object):
 
     @property
     def bid_vols(self):
+        """
+        [list] 买入报盘数量，bids_vols[0]代表盘口买一档报盘数量
+        """
         try:
             return self._tick_dict['bid_vols']
         except (KeyError, ValueError):
@@ -165,6 +179,9 @@ class TickObject(object):
 
     @property
     def limit_up(self):
+        """
+        [float] 涨停价
+        """
         try:
             return self._tick_dict['limit_up']
         except (KeyError, ValueError):
@@ -172,6 +189,9 @@ class TickObject(object):
 
     @property
     def limit_down(self):
+        """
+        [float] 跌停价
+        """
         try:
             return self._tick_dict['limit_down']
         except (KeyError, ValueError):
@@ -191,48 +211,3 @@ class TickObject(object):
 
     def __getitem__(self, key):
         return getattr(self, key)
-
-
-class Tick(TickObject):
-    def __init__(self, order_book_id, tick):
-        system_log.warn("[deprecated] Tick class is no longer used. use TickObject class instead.")
-        try:
-            tick["asks"] = tick["ask"]
-        except KeyError:
-            pass
-
-        try:
-            tick["bids"] = tick["bid"]
-        except KeyError:
-            pass
-
-        try:
-            tick["ask_vols"] = tick["ask_vol"]
-        except KeyError:
-            pass
-
-        try:
-            tick["bid_vols"] = tick["bid_vol"]
-        except KeyError:
-            pass
-
-        super(Tick, self).__init__(
-            instrument=Environment.get_instance().data_proxy.instruments(order_book_id),
-            tick_dict=tick
-        )
-
-    @property
-    def ask(self):
-        return self.asks
-
-    @property
-    def bid(self):
-        return self.bids
-
-    @property
-    def ask_vol(self):
-        return self.ask_vols
-
-    @property
-    def bid_vol(self):
-        return self.bid_vols

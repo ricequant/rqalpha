@@ -1,4 +1,3 @@
-
 =================================
 RQAlpha Documentation Instruction
 =================================
@@ -20,6 +19,8 @@ Requirements
 .. code-block:: bash
 
     pip install Sphinx watchdog sphinx_rtd_theme nbsphinx jupyter_client
+
+# pandoc 需要下载 http://pandoc.org/installing.html 且重启pycharm（修改了环境变量）
 
 Usage
 -----

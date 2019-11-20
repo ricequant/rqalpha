@@ -89,9 +89,10 @@
 	run(config)
 
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-	for task in tasks:
-	    executor.submit(run_bt, task)
+    if __name__ == '__main__':
+        with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        for task in tasks:
+            executor.submit(run_bt, task)
 
 
 
@@ -129,9 +130,10 @@
 	os.system(cmd)
 
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-	for task in tasks:
-	    executor.submit(run_bt, task)
+    if __name__ == '__main__':
+        with concurrent.futures.ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        for task in tasks:
+            executor.submit(run_bt, task)
 
 
 

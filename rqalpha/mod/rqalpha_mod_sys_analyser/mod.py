@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
+
 import os
 import pickle
 import numbers
@@ -22,11 +25,11 @@ from enum import Enum
 import six
 import numpy as np
 import pandas as pd
+from rqrisk import Risk
 
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod
-from rqalpha.utils.risk import Risk
 
 
 class AnalyserMod(AbstractMod):
@@ -50,11 +53,14 @@ class AnalyserMod(AbstractMod):
         self._mod_config = mod_config
         self._enabled = (self._mod_config.record or self._mod_config.plot or self._mod_config.output_file or
                          self._mod_config.plot_save_file or self._mod_config.report_save_path)
+        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
 
-        if self._enabled:
-            env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
-            env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
-            env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
+    def _subscribe_events(self, _):
+        if not self._enabled:
+            return
+        self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
+        self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
+        self._env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
 
     def _collect_trade(self, event):
         self._trades.append(self._to_trade_record(event.trade))
@@ -62,7 +68,7 @@ class AnalyserMod(AbstractMod):
     def _collect_order(self, event):
         self._orders.append(event.order)
 
-    def _collect_daily(self, event):
+    def _collect_daily(self, _):
         date = self._env.calendar_dt.date()
         portfolio = self._env.portfolio
         benchmark_portfolio = self._env.benchmark_portfolio
@@ -107,7 +113,7 @@ class AnalyserMod(AbstractMod):
 
     ACCOUNT_FIELDS_MAP = {
         DEFAULT_ACCOUNT_TYPE.STOCK.name: ['dividend_receivable'],
-        DEFAULT_ACCOUNT_TYPE.FUTURE.name: ['holding_pnl', 'realized_pnl', 'daily_pnl', 'margin'],
+        DEFAULT_ACCOUNT_TYPE.FUTURE.name: ['position_pnl', 'trading_pnl', 'daily_pnl', 'margin'],
         DEFAULT_ACCOUNT_TYPE.BOND.name: [],
     }
 
@@ -184,7 +190,6 @@ class AnalyserMod(AbstractMod):
             'end_date': self._env.config.base.end_date.strftime('%Y-%m-%d'),
             'strategy_file': self._env.config.base.strategy_file,
             'run_type': self._env.config.base.run_type.value,
-            'benchmark': self._env.config.base.benchmark,
         }
         for account_type, starting_cash in six.iteritems(self._env.config.base.accounts):
             summary[account_type] = starting_cash
@@ -194,8 +199,7 @@ class AnalyserMod(AbstractMod):
             np.array(self._benchmark_daily_returns),
             data_proxy.get_risk_free_rate(
                 self._env.config.base.start_date, self._env.config.base.end_date
-            ),
-            (self._env.config.base.natural_end_date - self._env.config.base.natural_start_date).days + 1
+            )
         )
         summary.update({
             'alpha': self._safe_convert(risk.alpha, 3),

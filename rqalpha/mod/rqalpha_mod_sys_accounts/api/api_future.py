@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 from __future__ import division
 import six
@@ -21,7 +23,7 @@ from rqalpha.api.api_base import decorate_api_exc, cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE
+from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, POSITION_DIRECTION
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
@@ -55,6 +57,8 @@ def order(id_or_ins, amount, side, position_effect, style):
         raise RuntimeError
     if amount < 0:
         raise RuntimeError
+
+    amount = int(amount)
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
         return None
@@ -76,21 +80,22 @@ def order(id_or_ins, amount, side, position_effect, style):
         )
         return
 
-    amount = int(amount)
-
-    position = Environment.get_instance().portfolio.positions[order_book_id]
+    env = Environment.get_instance()
 
     orders = []
     if position_effect == POSITION_EFFECT.CLOSE:
         if side == SIDE.BUY:
+            position = env.portfolio.positions[order_book_id]
+            sell_quantity, sell_old_quantity = position.sell_quantity, position.sell_old_quantity
+
             # 如果平仓量大于持仓量，则 Warning 并 取消订单创建
-            if amount > position.sell_quantity:
+            if amount > sell_quantity:
                 user_system_log.warn(
                     _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=position.sell_quantity)
+                      u"quantity {quantity}").format(amount=amount, quantity=sell_quantity)
                 )
                 return []
-            sell_old_quantity = position.sell_old_quantity
+            sell_old_quantity = sell_old_quantity
             if amount > sell_old_quantity:
                 if sell_old_quantity != 0:
                     # 如果有昨仓，则创建一个 POSITION_EFFECT.CLOSE 的平仓单
@@ -119,13 +124,16 @@ def order(id_or_ins, amount, side, position_effect, style):
                     POSITION_EFFECT.CLOSE
                 ))
         else:
-            if amount > position.buy_quantity:
+            position = env.portfolio.positions[order_book_id]
+            buy_quantity, buy_old_quantity = position.buy_quantity, position.buy_old_quantity
+
+            if amount > buy_quantity:
                 user_system_log.warn(
                     _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=position.buy_quantity)
+                      u"quantity {quantity}").format(amount=amount, quantity=buy_quantity)
                 )
                 return []
-            buy_old_quantity = position.buy_old_quantity
+            buy_old_quantity = buy_old_quantity
             if amount > buy_old_quantity:
                 if buy_old_quantity != 0:
                     orders.append(Order.__from_create__(
@@ -159,10 +167,16 @@ def order(id_or_ins, amount, side, position_effect, style):
             position_effect
         ))
 
-    if not is_valid_price(price):
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id))
-        return []
+    if len(orders) > 1:
+        user_system_log.warn(_(
+            "Order was separated, original order: {original_order_repr}, new orders: [{new_orders_repr}]").format(
+                original_order_repr="Order(order_book_id={}, quantity={}, side={}, position_effect={})".format(
+                    order_book_id, amount, side, position_effect
+                ), new_orders_repr=", ".join(["Order({}, {}, {}, {})".format(
+                    o.order_book_id, o.quantity, o.side, o.position_effect
+                ) for o in orders])
+            )
+        )
 
     for o in orders:
         if o.type == ORDER_TYPE.MARKET:
@@ -185,7 +199,7 @@ def buy_open(id_or_ins, amount, price=None, style=None):
     买入开仓。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 
@@ -194,7 +208,7 @@ def buy_open(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object | None
+    :return: :class:`~Order` object | list[:class:`~Order`] | None
 
     :example:
 
@@ -212,7 +226,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
     平卖仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 
@@ -221,7 +235,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :param bool close_today: 是否指定发平进仓单，默认为False，发送平仓单
+    :param bool close_today: 是否指定发平今仓单，默认为False，发送平仓单
 
     :return: :class:`~Order` object | list[:class:`~Order`] | None
 
@@ -242,7 +256,7 @@ def sell_open(id_or_ins, amount, price=None, style=None):
     卖出开仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 
@@ -251,7 +265,7 @@ def sell_open(id_or_ins, amount, price=None, style=None):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :return: :class:`~Order` object | None
+    :return: :class:`~Order` object | list[:class:`~Order`] | None
     """
     return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
 
@@ -262,7 +276,7 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     平买仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+    :type id_or_ins: :class:`~Instrument` object | `str`
 
     :param int amount: 下单手数
 
@@ -271,7 +285,7 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :type style: `OrderStyle` object
 
-    :param bool close_today: 是否指定发平进仓单，默认为False，发送平仓单
+    :param bool close_today: 是否指定发平今仓单，默认为False，发送平仓单
 
     :return: :class:`~Order` object | list[:class:`~Order`] | None
     """

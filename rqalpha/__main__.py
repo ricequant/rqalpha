@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 import errno
 import sys
@@ -78,8 +80,8 @@ def update_bundle(data_bundle_path, locale):
     """
     Sync Data Bundle
     """
-    from rqalpha import main
-    main.update_bundle(data_bundle_path, locale)
+    import rqalpha.utils.bundle_helper
+    rqalpha.utils.bundle_helper.update_bundle(data_bundle_path, locale)
 
 
 @cli.command()
@@ -89,7 +91,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-f', '--strategy-file', 'base__strategy_file', type=click.Path(exists=True))
 @click.option('-s', '--start-date', 'base__start_date', type=Date())
 @click.option('-e', '--end-date', 'base__end_date', type=Date())
-@click.option('-bm', '--benchmark', 'base__benchmark', type=click.STRING, default=None)
 @click.option('-mm', '--margin-multiplier', 'base__margin_multiplier', type=click.FLOAT)
 @click.option('-a', '--account', 'base__accounts', nargs=2, multiple=True, help="set account type with starting cash")
 @click.option('--position', 'base__init_positions', type=click.STRING, help="set init position")
@@ -97,7 +98,6 @@ def update_bundle(data_bundle_path, locale):
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p', 'r']), default="b")
 @click.option('-rp', '--round-price', 'base__round_price', is_flag=True)
 @click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default=None)
-@click.option('--resume', 'base__resume_mode', is_flag=True)
 @click.option('--source-code', 'base__source_code')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
@@ -110,6 +110,8 @@ def update_bundle(data_bundle_path, locale):
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
 @click.option('-mc', '--mod-config', 'mod_configs', nargs=2, multiple=True, type=click.STRING, help="mod extra config")
+# for compatible
+@click.option('--resume', 'base__resume_mode', is_flag=True, help="[DEPRECATED] --resume is deprecated")
 def run(**kwargs):
     """
     Start to run a strategy
@@ -201,27 +203,25 @@ def mod(cmd, params):
         """
         List all mod configuration
         """
-        from colorama import init, Fore
         from tabulate import tabulate
         from rqalpha.utils.config import get_mod_conf
-        init()
 
         mod_config = get_mod_conf()
         table = []
 
         for mod_name, mod in six.iteritems(mod_config['mod']):
             table.append([
-                Fore.RESET + mod_name,
-                (Fore.GREEN + "enabled" if mod['enabled'] else Fore.RED + "disabled") + Fore.RESET
+                mod_name,
+                ("enabled" if mod['enabled'] else "disabled")
             ])
 
         headers = [
-            Fore.CYAN + "name",
-            Fore.CYAN + "status" + Fore.RESET
+            "name",
+            "status"
         ]
 
         six.print_(tabulate(table, headers=headers, tablefmt="psql"))
-        six.print_(Fore.LIGHTYELLOW_EX + "You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
+        six.print_("You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
 
     def install(params):
         """
@@ -270,7 +270,7 @@ def mod(cmd, params):
                     *   必须以 `rqalpha-mod-` 来开头，比如 `rqalpha-mod-xxx-yyy`
                     *   对应import的库名必须要 `rqalpha_mod_` 来开头，并且需要和包名后半部分一致，但是 `-` 需要替换为 `_`, 比如 `rqalpha_mod_xxx_yyy`
                 """
-                mod_name = _detect_package_name_from_dir()
+                mod_name = _detect_package_name_from_dir(params)
                 mod_name = mod_name.replace("-", "_").replace("rqalpha_mod_", "")
                 mod_list.append(mod_name)
 
@@ -382,8 +382,8 @@ def mod(cmd, params):
     locals()[cmd](params)
 
 
-def _detect_package_name_from_dir():
-    setup_path = os.path.join(os.path.abspath('.'), 'setup.py')
+def _detect_package_name_from_dir(params):
+    setup_path = os.path.join(os.path.abspath(params[-1]), 'setup.py')
     if not os.path.exists(setup_path):
         return None
     return os.path.split(os.path.dirname(setup_path))[1]

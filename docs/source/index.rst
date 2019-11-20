@@ -147,14 +147,6 @@ Mod名                      说明
 
 
 .. toctree::
-    :caption: API
-    :hidden:
-
-    api/base_api
-    api/extend_api
-
-
-.. toctree::
     :caption: IPython
     :hidden:
     :maxdepth: 3
@@ -173,6 +165,14 @@ Mod名                      说明
 
 
 .. toctree::
+    :caption: API
+    :hidden:
+
+    api/base_api
+    api/extend_api
+
+
+.. toctree::
     :caption: 开发
     :hidden:
 
@@ -181,6 +181,7 @@ Mod名                      说明
     development/mod
     development/event_source
     development/data_source
+    development/collecting_logs
 
 
 .. toctree::

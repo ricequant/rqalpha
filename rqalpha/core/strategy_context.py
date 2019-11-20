@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 import six
 import pickle
@@ -38,7 +40,6 @@ class RunInfo(object):
         self._frequency = config.base.frequency
         self._stock_starting_cash = config.base.accounts.get(DEFAULT_ACCOUNT_TYPE.STOCK.name, 0)
         self._future_starting_cash = config.base.accounts.get(DEFAULT_ACCOUNT_TYPE.FUTURE.name, 0)
-        self._benchmark = config.base.benchmark
         self._margin_multiplier = config.base.margin_multiplier
         self._run_type = config.base.run_type
 
@@ -46,12 +47,14 @@ class RunInfo(object):
 
         # FIXME: deprecationwarning
         self._matching_type = None
+        self._benchmark = None
         self._slippage = np.nan
         self._commission_multiplier = np.nan
         try:
             self._matching_type = config.mod.sys_simulation.matching_type
+            self._benchmark = config.mod.sys_benchmark.order_book_id
             self._slippage = config.mod.sys_simulation.slippage
-            self._commission_multiplier = config.mod.sys_simulation.commission_multiplier
+            self._commission_multiplier = config.mod.sys_transaction_cost.commission_multiplier
         except:
             pass
 

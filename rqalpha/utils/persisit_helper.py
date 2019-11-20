@@ -58,8 +58,9 @@ class PersistHelper(object):
             event_bus.add_listener(EVENT.POST_BAR, self.persist)
             event_bus.add_listener(EVENT.DO_PERSIST, self.persist)
             event_bus.add_listener(EVENT.POST_SETTLEMENT, self.persist)
+            event_bus.add_listener(EVENT.DO_RESTORE, self.restore)
 
-    def persist(self, *args):
+    def persist(self, *_):
         for key, obj in six.iteritems(self._objects):
             try:
                 state = obj.get_state()
@@ -74,6 +75,23 @@ class PersistHelper(object):
             else:
                 self._last_state[key] = md5
 
+    def should_resume(self):
+        try:
+            return self._persist_provider.should_resume()
+        except NotImplementedError:
+            # for compatible
+            for key in six.iterkeys(self._objects):
+                if self._persist_provider.load(key):
+                    return True
+            return False
+
+    def should_run_init(self):
+        try:
+            return self._persist_provider.should_run_init()
+        except NotImplementedError:
+            # for compatible
+            return not self.should_resume()
+
     def register(self, key, obj):
         if key in self._objects:
             raise RuntimeError('duplicated persist key found: {}'.format(key))
@@ -85,10 +103,17 @@ class PersistHelper(object):
             return True
         return False
 
-    def restore(self):
-        for key, obj in six.iteritems(self._objects):
-            state = self._persist_provider.load(key)
-            system_log.debug('restore {} with state = {}', key, state)
-            if not state:
-                continue
-            obj.set_state(state)
+    def restore(self, event):
+        key = getattr(event, "key", None)
+        if key:
+            self._restore_obj(key, self._objects[key])
+        else:
+            for key, obj in six.iteritems(self._objects):
+                self._restore_obj(key, obj)
+
+    def _restore_obj(self, key, obj):
+        state = self._persist_provider.load(key)
+        system_log.debug('restore {} with state = {}', key, state)
+        if not state:
+            return
+        obj.set_state(state)

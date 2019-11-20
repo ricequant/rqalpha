@@ -20,31 +20,16 @@ import re
 import six
 import collections
 from decimal import getcontext, ROUND_FLOOR
+from datetime import time
 
 from contextlib import contextmanager
 import numpy as np
 
 from rqalpha.utils.exception import CustomError, CustomException
-from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, NIGHT_TRADING_NS
+from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN
 from rqalpha.utils.datetime_func import TimeRange
-from rqalpha.utils.default_future_info import STOCK_TRADING_PERIOD, TRADING_PERIOD_DICT
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.py2 import lru_cache
-
-
-def safe_round(value, ndigits=3):
-    if isinstance(value, float):
-        return round(value, ndigits)
-    return value
-
-
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class RqAttrDict(object):
@@ -262,16 +247,14 @@ def get_upper_underlying_symbol(order_book_id):
 
 
 def is_night_trading(universe):
-    for order_book_id in universe:
-        underlying_symbol = get_upper_underlying_symbol(order_book_id)
-        if underlying_symbol in NIGHT_TRADING_NS:
-            return True
-    return False
+    # for compatible
+    from rqalpha.environment import Environment
+    return Environment.get_instance().data_proxy.is_night_trading(universe)
 
 
 def merge_trading_period(trading_period):
     result = []
-    for time_range in sorted(trading_period):
+    for time_range in sorted(set(trading_period)):
         if result and result[-1].end >= time_range.start:
             result[-1] = TimeRange(start=result[-1].start, end=max(result[-1].end, time_range.end))
         else:
@@ -279,18 +262,17 @@ def merge_trading_period(trading_period):
     return result
 
 
+STOCK_TRADING_PERIOD = [
+    TimeRange(start=time(9, 31), end=time(11, 30)),
+    TimeRange(start=time(13, 1), end=time(15, 0)),
+]
+
+
 def get_trading_period(universe, accounts):
-    trading_period = []
-    if DEFAULT_ACCOUNT_TYPE.STOCK.name in accounts:
-        trading_period += STOCK_TRADING_PERIOD
-
-    for order_book_id in universe:
-        if get_account_type(order_book_id) == DEFAULT_ACCOUNT_TYPE.STOCK.name:
-            continue
-        underlying_symbol = get_upper_underlying_symbol(order_book_id)
-        trading_period += TRADING_PERIOD_DICT[underlying_symbol]
-
-    return merge_trading_period(trading_period)
+    # for compatible
+    from rqalpha.environment import Environment
+    trading_period = STOCK_TRADING_PERIOD if DEFAULT_ACCOUNT_TYPE.STOCK.name in accounts else []
+    return Environment.get_instance().data_proxy.get_trading_period(universe, trading_period)
 
 
 def is_trading(dt, trading_period):
@@ -333,7 +315,7 @@ def is_run_from_ipython():
 
 
 def is_valid_price(price):
-    return not np.isnan(price) and price > 0 and price is not None
+    return not (price is None or np.isnan(price) or price <= 0)
 
 
 @contextmanager

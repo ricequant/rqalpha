@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 import time
 from decimal import Decimal
@@ -187,6 +189,11 @@ class Order(object):
         """
         [POSITION_EFFECT] 订单开平（期货专用）
         """
+        if self._position_effect is None:
+            if self._side == SIDE.BUY:
+                return POSITION_EFFECT.OPEN
+            else:
+                return POSITION_EFFECT.CLOSE
         return self._position_effect
 
     @property
@@ -323,6 +330,8 @@ class LimitOrder(OrderStyle):
     def round_price(self, tick_size):
         if tick_size:
             with decimal_rounding_floor():
-                self.limit_price = float((Decimal(self.limit_price) / Decimal(tick_size)).to_integral() * Decimal(tick_size))
+                limit_price_decimal = Decimal("{:.4f}".format(self.limit_price))
+                tick_size_decimal = Decimal("{:.4f}".format(tick_size))
+                self.limit_price = float((limit_price_decimal / tick_size_decimal).to_integral() * tick_size_decimal)
         else:
             user_system_log.warn('Invalid tick size: {}'.format(tick_size))

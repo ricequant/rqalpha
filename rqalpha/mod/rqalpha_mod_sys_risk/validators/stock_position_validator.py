@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
+
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import SIDE, DEFAULT_ACCOUNT_TYPE
@@ -40,10 +43,10 @@ class StockPositionValidator(AbstractFrontendValidator):
         ))
         return False
 
-    def can_submit_order(self, account, order):
-        if account.type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
+    def can_submit_order(self, order, account=None):
+        if account is not None and account.type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
             return self._stock_validator(account, order)
         return True
 
-    def can_cancel_order(self, account, order):
+    def can_cancel_order(self, order, account=None):
         return True

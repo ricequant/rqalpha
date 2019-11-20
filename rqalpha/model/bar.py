@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 import six
 import numpy as np
@@ -49,30 +51,36 @@ class BarObject(object):
     @property
     def open(self):
         """
-        [float] 当日开盘价
+        [float] 开盘价
         """
         return self._data["open"]
 
     @property
     def close(self):
+        """
+        [float] 收盘价
+        """
         return self._data["close"]
 
     @property
     def low(self):
         """
-        [float] 截止到当前的最低价
+        [float] 最低价
         """
         return self._data["low"]
 
     @property
     def high(self):
         """
-        [float] 截止到当前的最高价
+        [float] 最高价
         """
         return self._data["high"]
 
     @property
     def limit_up(self):
+        """
+        [float] 涨停价
+        """
         try:
             v = self._data['limit_up']
             return v if v != 0 else np.nan
@@ -81,6 +89,9 @@ class BarObject(object):
 
     @property
     def limit_down(self):
+        """
+        [float] 跌停价
+        """
         try:
             v = self._data['limit_down']
             return v if v != 0 else np.nan
@@ -90,7 +101,7 @@ class BarObject(object):
     @property
     def prev_close(self):
         """
-        [float] 截止到当前的最低价
+        [float] 昨日收盘价
         """
         try:
             return self._data['prev_close']
@@ -174,6 +185,9 @@ class BarObject(object):
 
     @property
     def settlement(self):
+        """
+        [float] 结算价（期货专用）
+        """
         return self._data['settlement']
 
     @property
@@ -201,6 +215,9 @@ class BarObject(object):
 
     @property
     def datetime(self):
+        """
+        [datetime.datetime] 时间戳
+        """
         if self._dt is not None:
             return self._dt
         return convert_int_to_datetime(self._data['datetime'])
@@ -226,7 +243,7 @@ class BarObject(object):
     @property
     def is_trading(self):
         """
-        [datetime.datetime] 时间戳
+        [bool] 是否有成交量
         """
         return self._data['volume'] > 0
 
@@ -339,6 +356,8 @@ class BarMap(object):
             return self._cache[order_book_id]
         except KeyError:
             try:
+                if not self._dt:
+                    return BarObject(instrument, NANDict, self._dt)
                 bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
             except Exception as e:
                 system_log.exception(e)

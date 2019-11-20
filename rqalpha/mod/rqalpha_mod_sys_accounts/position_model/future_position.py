@@ -1,379 +1,268 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
-from rqalpha.model.base_position import BasePosition
 from rqalpha.environment import Environment
-from rqalpha.const import SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
-from rqalpha.utils import is_valid_price
+from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, SIDE, POSITION_EFFECT
 
-from rqalpha.utils.i18n import gettext as _
+from .asset_position import AssetPositionProxy
 
 
-class FuturePosition(BasePosition):
+class FuturePositionProxy(AssetPositionProxy):
 
-    __abandon_properties__ = []
-
-    def __init__(self, order_book_id):
-        super(FuturePosition, self).__init__(order_book_id)
-        self._buy_old_holding_list = []
-        self._sell_old_holding_list = []
-        self._buy_today_holding_list = []
-        self._sell_today_holding_list = []
-        self._buy_transaction_cost = 0.
-        self._sell_transaction_cost = 0.
-        self._buy_realized_pnl = 0.
-        self._sell_realized_pnl = 0.
-
-        self._buy_avg_open_price = 0.
-        self._sell_avg_open_price = 0.
-
-    def __repr__(self):
-        return 'FuturePosition({})'.format(self.__dict__)
-
-    def get_state(self):
-        return {
-            'order_book_id': self._order_book_id,
-            'buy_old_holding_list': self._buy_old_holding_list,
-            'sell_old_holding_list': self._sell_old_holding_list,
-            'buy_today_holding_list': self._buy_today_holding_list,
-            'sell_today_holding_list': self._sell_today_holding_list,
-            'buy_transaction_cost': self._buy_transaction_cost,
-            'sell_transaction_cost': self._sell_transaction_cost,
-            'buy_realized_pnl': self._buy_realized_pnl,
-            'sell_realized_pnl': self._sell_realized_pnl,
-            'buy_avg_open_price': self._buy_avg_open_price,
-            'sell_avg_open_price': self._sell_avg_open_price,
-            # margin rate may change
-            'margin_rate': self.margin_rate,
-        }
-
-    def set_state(self, state):
-        assert self._order_book_id == state['order_book_id']
-        self._buy_old_holding_list = state['buy_old_holding_list']
-        self._sell_old_holding_list = state['sell_old_holding_list']
-        self._buy_today_holding_list = state['buy_today_holding_list']
-        self._sell_today_holding_list = state['sell_today_holding_list']
-        self._buy_transaction_cost = state['buy_transaction_cost']
-        self._sell_transaction_cost = state['sell_transaction_cost']
-        self._buy_avg_open_price = state['buy_avg_open_price']
-        self._sell_avg_open_price = state['sell_avg_open_price']
+    __abandon_properties__ = AssetPositionProxy.__abandon_properties__ +[
+        "holding_pnl",
+        "buy_holding_pnl",
+        "sell_holding_pnl",
+        "realized_pnl",
+        "buy_realized_pnl",
+        "sell_realized_pnl",
+        "buy_avg_holding_price",
+        "sell_avg_holding_price"
+    ]
 
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.FUTURE.name
 
-    @property
-    def margin_rate(self):
-        env = Environment.get_instance()
-        margin_info = env.data_proxy.get_margin_info(self.order_book_id)
-        margin_multiplier = env.config.base.margin_multiplier
-        return margin_info['long_margin_ratio'] * margin_multiplier
+    def set_state(self, state):
+        assert self.order_book_id == state['order_book_id']
+        if "long" in state and "short" in state:
+            super(FuturePositionProxy, self).set_state(state)
+        else:
+            # for compatible
+            buy_old_quantity = buy_logical_old_quantity = sum(q for _, q in state.get("buy_old_holding_list", []))
+            self._long.set_state({
+                "old_quantity": buy_old_quantity,
+                "logical_old_quantity": buy_logical_old_quantity,
+                "today_quantity": sum(q for _, q in state.get("buy_today_holding_list", [])),
+                "avg_price": state.get("buy_avg_open_price"),
+                "trade_cost": 0,
+                "transaction_cost": state.get("buy_transaction_cost")
+            })
+
+            sell_old_quantity = sell_logical_old_quantity = sum(q for _, q in state.get("sell_old_holding_list", []))
+            self._short.set_state({
+                "old_quantity": sell_old_quantity,
+                "logical_old_quantity": sell_logical_old_quantity,
+                "today_quantity": sum(q for _, q in state.get("sell_today_holding_list", [])),
+                "avg_price": state.get("sell_avg_open_price"),
+                "trade_cost": 0,
+                "transaction_cost": state.get("sell_transaction_cost")
+            })
 
     @property
-    def market_value(self):
-        return (self.buy_quantity - self.sell_quantity) * self.last_price * self.contract_multiplier
+    def margin_rate(self):
+        return self._long.margin_rate
+
+    @property
+    def contract_multiplier(self):
+        return self._long.contract_multiplier
 
     @property
     def buy_market_value(self):
-        return self.buy_quantity * self.last_price * self.contract_multiplier
+        """
+        [float] 多方向市值
+        """
+        return self._long.market_value
 
     @property
     def sell_market_value(self):
-        return self.sell_quantity * self.last_price * self.contract_multiplier
-
-    # -- PNL 相关
-    @property
-    def contract_multiplier(self):
-        return Environment.get_instance().get_instrument(self.order_book_id).contract_multiplier
+        """
+        [float] 空方向市值
+        """
+        return self._short.market_value
 
     @property
-    def open_orders(self):
-        return Environment.get_instance().broker.get_open_orders(self.order_book_id)
+    def buy_position_pnl(self):
+        """
+        [float] 多方向昨仓盈亏
+        """
+        return self._long.position_pnl
 
     @property
-    def buy_holding_pnl(self):
+    def sell_position_pnl(self):
         """
-        [float] 买方向当日持仓盈亏
+        [float] 空方向昨仓盈亏
         """
-        return (self.last_price - self.buy_avg_holding_price) * self.buy_quantity * self.contract_multiplier
+        return self._short.position_pnl
 
     @property
-    def sell_holding_pnl(self):
+    def buy_trading_pnl(self):
         """
-        [float] 卖方向当日持仓盈亏
+        [float] 多方向交易盈亏
         """
-        return (self.sell_avg_holding_price - self.last_price) * self.sell_quantity * self.contract_multiplier
+        return self._long.trading_pnl
 
     @property
-    def buy_realized_pnl(self):
+    def sell_trading_pnl(self):
         """
-        [float] 买方向平仓盈亏
+        [float] 空方向交易盈亏
         """
-        return self._buy_realized_pnl
-
-    @property
-    def sell_realized_pnl(self):
-        """
-        [float] 卖方向平仓盈亏
-        """
-        return self._sell_realized_pnl
-
-    @property
-    def holding_pnl(self):
-        """
-        [float] 当日持仓盈亏
-        """
-        return self.buy_holding_pnl + self.sell_holding_pnl
-
-    @property
-    def realized_pnl(self):
-        """
-        [float] 当日平仓盈亏
-        """
-        return self.buy_realized_pnl + self.sell_realized_pnl
+        return self._short.trading_pnl
 
     @property
     def buy_daily_pnl(self):
         """
-        [float] 当日买方向盈亏
+        [float] 多方向每日盈亏
         """
-        return self.buy_holding_pnl + self.buy_realized_pnl
+        return self.buy_position_pnl + self.buy_trading_pnl
 
     @property
     def sell_daily_pnl(self):
         """
-        [float] 当日卖方向盈亏
+        [float] 空方向每日盈亏
         """
-        return self.sell_holding_pnl + self.sell_realized_pnl
-
-    @property
-    def daily_pnl(self):
-        """
-        [float] 当日盈亏
-        """
-        return self.holding_pnl + self.realized_pnl
+        return self.sell_position_pnl + self.sell_trading_pnl
 
     @property
     def buy_pnl(self):
         """
         [float] 买方向累计盈亏
         """
-        return (self.last_price - self._buy_avg_open_price) * self.buy_quantity * self.contract_multiplier
+        return self._long.pnl
 
     @property
     def sell_pnl(self):
         """
-        [float] 卖方向累计盈亏
+        [float] 空方向累计盈亏
         """
-        return (self._sell_avg_open_price - self.last_price) * self.sell_quantity * self.contract_multiplier
-
-    @property
-    def pnl(self):
-        """
-        [float] 累计盈亏
-        """
-        return self.buy_pnl + self.sell_pnl
-
-    # -- Quantity 相关
-    @property
-    def buy_open_order_quantity(self):
-        """
-        [int] 买方向挂单量
-        """
-        return sum(order.unfilled_quantity for order in self.open_orders if
-                   order.side == SIDE.BUY and order.position_effect == POSITION_EFFECT.OPEN)
-
-    @property
-    def sell_open_order_quantity(self):
-        """
-        [int] 卖方向挂单量
-        """
-        return sum(order.unfilled_quantity for order in self.open_orders if
-                   order.side == SIDE.SELL and order.position_effect == POSITION_EFFECT.OPEN)
-
-    @property
-    def buy_close_order_quantity(self):
-        """
-        [int] 买方向挂单量
-        """
-        return sum(order.unfilled_quantity for order in self.open_orders if order.side == SIDE.BUY and
-                   order.position_effect in [POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY])
-
-    @property
-    def sell_close_order_quantity(self):
-        """
-        [int] 卖方向挂单量
-        """
-        return sum(order.unfilled_quantity for order in self.open_orders if order.side == SIDE.SELL and
-                   order.position_effect in [POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY])
-    
-    @property
-    def _buy_close_today_order_quantity(self):
-        return sum(order.unfilled_quantity for order in self.open_orders if order.side == SIDE.BUY and
-                   order.position_effect == POSITION_EFFECT.CLOSE_TODAY)
-
-    @property
-    def _sell_close_today_order_quantity(self):
-        return sum(order.unfilled_quantity for order in self.open_orders if order.side == SIDE.SELL and
-                   order.position_effect == POSITION_EFFECT.CLOSE_TODAY)
-
-    @property
-    def _closable_today_sell_quantity(self):
-        return self.sell_today_quantity - self._buy_close_today_order_quantity
-
-    @property
-    def _closable_today_buy_quantity(self):
-        return self.buy_today_quantity - self._sell_close_today_order_quantity
-
+        return self._short.pnl
 
     @property
     def buy_old_quantity(self):
         """
-        [int] 买方向昨仓
+        [int] 多方向昨仓
         """
-        return sum(amount for price, amount in self._buy_old_holding_list)
+        return self._long.old_quantity
 
     @property
     def sell_old_quantity(self):
         """
-        [int] 卖方向昨仓
+        [int] 空方向昨仓
         """
-        return sum(amount for price, amount in self._sell_old_holding_list)
+        return self._short.old_quantity
 
     @property
     def buy_today_quantity(self):
         """
-        [int] 买方向今仓
+        [int] 多方向今仓
         """
-        return sum(amount for price, amount in self._buy_today_holding_list)
+        return self._long.today_quantity
 
     @property
     def sell_today_quantity(self):
         """
-        [int] 卖方向今仓
+        [int] 空方向今仓
         """
-        return sum(amount for price, amount in self._sell_today_holding_list)
+        return self._short.today_quantity
 
     @property
     def buy_quantity(self):
         """
-        [int] 买方向持仓
+        [int] 多方向持仓
         """
         return self.buy_old_quantity + self.buy_today_quantity
 
     @property
     def sell_quantity(self):
         """
-        [int] 卖方向持仓
+        [int] 空方向持仓
         """
         return self.sell_old_quantity + self.sell_today_quantity
 
     @property
-    def closable_buy_quantity(self):
-        """
-        [float] 可平买方向持仓
-        """
-        return self.buy_quantity - self.sell_close_order_quantity
-
-    @property
-    def closable_sell_quantity(self):
-        """
-        [float] 可平卖方向持仓
-        """
-        return self.sell_quantity - self.buy_close_order_quantity
-
-    # -- Margin 相关
-    @property
     def buy_margin(self):
         """
-        [float] 买方向持仓保证金
+        [float] 多方向持仓保证金
         """
-        return self._buy_holding_cost * self.margin_rate
+        return self._long.margin
 
     @property
     def sell_margin(self):
         """
-        [float] 卖方向持仓保证金
+        [float] 空方向持仓保证金
         """
-        return self._sell_holding_cost * self.margin_rate
-
-    @property
-    def margin(self):
-        """
-        [float] 保证金
-        """
-        # TODO: 需要添加单向大边相关的处理逻辑
-        return self.buy_margin + self.sell_margin
-
-    @property
-    def buy_avg_holding_price(self):
-        """
-        [float] 买方向持仓均价
-        """
-        return 0 if self.buy_quantity == 0 else self._buy_holding_cost / self.buy_quantity / self.contract_multiplier
-
-    @property
-    def sell_avg_holding_price(self):
-        """
-        [float] 卖方向持仓均价
-        """
-        return 0 if self.sell_quantity == 0 else self._sell_holding_cost / self.sell_quantity / self.contract_multiplier
-
-    @property
-    def _buy_holding_cost(self):
-        return sum(p * a * self.contract_multiplier for p, a in self.buy_holding_list)
-
-    @property
-    def _sell_holding_cost(self):
-        return sum(p * a * self.contract_multiplier for p, a in self.sell_holding_list)
-
-    @property
-    def buy_holding_list(self):
-        return self._buy_old_holding_list + self._buy_today_holding_list
-
-    @property
-    def sell_holding_list(self):
-        return self._sell_old_holding_list + self._sell_today_holding_list
+        return self._short.margin
 
     @property
     def buy_avg_open_price(self):
-        return self._buy_avg_open_price
+        """
+        [float] 多方向平均开仓价格
+        """
+        return self._long.avg_price
 
     @property
     def sell_avg_open_price(self):
-        return self._sell_avg_open_price
+        """
+        [float] 空方向平均开仓价格
+        """
+        return self._short.avg_price
 
     @property
     def buy_transaction_cost(self):
-        return self._buy_transaction_cost
+        """
+        [float] 多方向交易费率
+        """
+        return self._long.transaction_cost
 
     @property
     def sell_transaction_cost(self):
-        return self._sell_transaction_cost
+        """
+        [float] 空方向交易费率
+        """
+        return self._short.transaction_cost
 
     @property
-    def transaction_cost(self):
-        return self._buy_transaction_cost + self._sell_transaction_cost
+    def closable_today_sell_quantity(self):
+        buy_close_today_order_quantity = sum(o.unfilled_quantity for o in self.open_orders if o.side == SIDE.BUY and
+                                             o.position_effect == POSITION_EFFECT.CLOSE_TODAY)
+        return self.sell_today_quantity - buy_close_today_order_quantity
 
-    # -- Function
+    @property
+    def closable_today_buy_quantity(self):
+        sell_close_today_order_quantity = sum(o.unfilled_quantity for o in self.open_orders if o.side == SIDE.SELL and
+                                              o.position_effect == POSITION_EFFECT.CLOSE_TODAY)
+        return self.buy_today_quantity - sell_close_today_order_quantity
+
+    @property
+    def closable_buy_quantity(self):
+        """
+        [float] 可平多方向持仓
+        """
+        sell_close_order_quantity = sum(o.unfilled_quantity for o in self.open_orders if o.side == SIDE.SELL and
+                                        o.position_effect in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY))
+        return self.buy_quantity - sell_close_order_quantity
+
+    @property
+    def closable_sell_quantity(self):
+        """
+        [float] 可平空方向持仓
+        """
+        buy_close_order_quantity = sum(o.unfilled_quantity for o in self.open_orders if o.side == SIDE.BUY and
+                                       o.position_effect in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY))
+        return self.sell_quantity - buy_close_order_quantity
+
     def is_de_listed(self):
         """
         判断合约是否过期
         """
-        instrument = Environment.get_instance().get_instrument(self._order_book_id)
+        instrument = Environment.get_instance().get_instrument(self.order_book_id)
         current_date = Environment.get_instance().trading_dt
         if instrument.de_listed_date is not None and current_date >= instrument.de_listed_date:
             return True
@@ -386,141 +275,11 @@ class FuturePosition(BasePosition):
             close_today_amount = trade_amount - self.sell_old_quantity
         return max(close_today_amount, 0)
 
-    def apply_settlement(self):
-        env = Environment.get_instance()
-        settle_price = env.data_proxy.get_settle_price(self.order_book_id, env.trading_dt)
-        if not is_valid_price(settle_price):
-            raise RuntimeError(_("Settlement price {settle_price} of {order_book_id} is invalid".format(
-                settle_price=settle_price, order_book_id=self.order_book_id
-            )))
-        self._buy_old_holding_list = [(settle_price, self.buy_quantity)]
-        self._sell_old_holding_list = [(settle_price, self.sell_quantity)]
-        self._buy_today_holding_list = []
-        self._sell_today_holding_list = []
-
-        self._buy_transaction_cost = 0.
-        self._sell_transaction_cost = 0.
-        self._buy_realized_pnl = 0.
-        self._sell_realized_pnl = 0.
-
-    def _margin_of(self, quantity, price):
-        env = Environment.get_instance()
-        instrument = env.data_proxy.instruments(self.order_book_id)
-        return quantity * instrument.contract_multiplier * price * self.margin_rate
-
-    def apply_trade(self, trade):
-        """
-        应用成交，并计算交易产生的现金变动。
-
-        开仓：
-        delta_cash
-        = -1 * margin
-        = -1 * quantity * contract_multiplier * price * margin_rate
-
-        平仓：
-        delta_cash
-        = old_margin - margin + delta_realized_pnl
-        = (sum of (cost_price * quantity) of closed trade) * contract_multiplier * margin_rate + delta_realized_pnl
-
-        :param trade: rqalpha.model.trade.Trade
-        :return: float
-        """
-        # close_trade: delta_cash = old_margin - margin + delta_realized_pnl
-        trade_quantity = trade.last_quantity
-        if trade.side == SIDE.BUY:
-            if trade.position_effect == POSITION_EFFECT.OPEN:
-                self._buy_avg_open_price = (self._buy_avg_open_price * self.buy_quantity +
-                                            trade_quantity * trade.last_price) / (self.buy_quantity + trade_quantity)
-                self._buy_transaction_cost += trade.transaction_cost
-                self._buy_today_holding_list.insert(0, (trade.last_price, trade_quantity))
-                return -1 * self._margin_of(trade_quantity, trade.last_price)
-            else:
-                old_margin = self.margin
-                self._sell_transaction_cost += trade.transaction_cost
-                delta_realized_pnl = self._close_holding(trade)
-                self._sell_realized_pnl += delta_realized_pnl
-                return old_margin - self.margin + delta_realized_pnl
-        else:
-            if trade.position_effect == POSITION_EFFECT.OPEN:
-                self._sell_avg_open_price = (self._sell_avg_open_price * self.sell_quantity +
-                                             trade_quantity * trade.last_price) / (self.sell_quantity + trade_quantity)
-                self._sell_transaction_cost += trade.transaction_cost
-                self._sell_today_holding_list.insert(0, (trade.last_price, trade_quantity))
-                return -1 * self._margin_of(trade_quantity, trade.last_price)
-            else:
-                old_margin = self.margin
-                self._buy_transaction_cost += trade.transaction_cost
-                delta_realized_pnl = self._close_holding(trade)
-                self._buy_realized_pnl += delta_realized_pnl
-                return old_margin - self.margin + delta_realized_pnl
-
-    def _close_holding(self, trade):
-        """
-        应用平仓，并计算平仓盈亏
-
-        买平：
-        delta_realized_pnl = sum of ((trade_price - cost_price)* quantity) of closed trades * contract_multiplier
-
-        卖平：
-        delta_realized_pnl = sum of ((cost_price - trade_price)* quantity) of closed trades * contract_multiplier
-
-        :param trade: rqalpha.model.trade.Trade
-        :return: float
-        """
-        left_quantity = trade.last_quantity
-        delta = 0
-        if trade.side == SIDE.BUY:
-            # 先平昨仓
-            if trade.position_effect == POSITION_EFFECT.CLOSE and len(self._sell_old_holding_list) != 0:
-                old_price, old_quantity = self._sell_old_holding_list.pop()
-
-                if old_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    self._sell_old_holding_list = [(old_price, old_quantity - left_quantity)]
-                else:
-                    consumed_quantity = old_quantity
-                left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(old_price, trade.last_price, trade.side, consumed_quantity)
-            # 再平今仓
-            while True:
-                if left_quantity <= 0:
-                    break
-                oldest_price, oldest_quantity = self._sell_today_holding_list.pop()
-                if oldest_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    self._sell_today_holding_list.append((oldest_price, oldest_quantity - left_quantity))
-                else:
-                    consumed_quantity = oldest_quantity
-                left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(oldest_price, trade.last_price, trade.side, consumed_quantity)
-        else:
-            # 先平昨仓
-            if trade.position_effect == POSITION_EFFECT.CLOSE and len(self._buy_old_holding_list) != 0:
-                old_price, old_quantity = self._buy_old_holding_list.pop()
-                if old_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    self._buy_old_holding_list = [(old_price, old_quantity - left_quantity)]
-                else:
-                    consumed_quantity = old_quantity
-                left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(old_price, trade.last_price, trade.side, consumed_quantity)
-            # 再平今仓
-            while True:
-                if left_quantity <= 0:
-                    break
-                oldest_price, oldest_quantity = self._buy_today_holding_list.pop()
-                if oldest_quantity > left_quantity:
-                    consumed_quantity = left_quantity
-                    self._buy_today_holding_list.append((oldest_price, oldest_quantity - left_quantity))
-                    left_quantity = 0
-                else:
-                    consumed_quantity = oldest_quantity
-                left_quantity -= consumed_quantity
-                delta += self._cal_realized_pnl(oldest_price, trade.last_price, trade.side, consumed_quantity)
-        return delta
-
-    def _cal_realized_pnl(self, cost_price, trade_price, side, consumed_quantity):
-        if side == SIDE.BUY:
-            return (cost_price - trade_price) * consumed_quantity * self.contract_multiplier
-        else:
-            return (trade_price - cost_price) * consumed_quantity * self.contract_multiplier
+    holding_pnl = deprecated_property("holding_pnl", "position_pnl")
+    buy_holding_pnl = deprecated_property("buy_holding_pnl", "buy_position_pnl")
+    sell_holding_pnl = deprecated_property("sell_holding_pnl", "sell_position_pnl")
+    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
+    buy_realized_pnl = deprecated_property("buy_realized_pnl", "buy_trading_pnl")
+    sell_realized_pnl = deprecated_property("sell_realized_pnl", "sell_trading_pnl")
+    buy_avg_holding_price = deprecated_property("buy_avg_holding_price", "buy_avg_open_price")
+    sell_avg_holding_price = deprecated_property("sell_avg_holding_price", "sell_avg_open_price")

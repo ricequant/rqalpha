@@ -7,9 +7,6 @@ def init(context):
     context.counter = 0
     subscribe('IH88')
 
-    # 实时打印日志
-    logger.info("RunInfo: {}".format(context.run_info))
-
 
 # before_trading此函数会在每天交易开始前被调用，当天只会被调用一次
 def before_trading(context):

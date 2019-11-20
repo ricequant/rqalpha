@@ -259,7 +259,7 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 基础数据
 ------------------------------------
 
-通过 `$ rqalpha update_bundle` 下载的数据有如下文件：
+通过 `$ rqalpha update-bundle` 下载的数据有如下文件：
 
 ..  code-block:: bash
 
@@ -277,7 +277,7 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
     ├── trading_dates.bcolz
     └── yield_curve.bcolz
 
-目前基础数据，比如 `Instruments`, `st_stocks`, `suspended_days`, `trading_dates` 都是全量数据，并且可以通过 `$ rqalpha update_bundle` 每天更新，因此没有相应的显式接口可以对其进行替换。
+目前基础数据，比如 `Instruments`, `st_stocks`, `suspended_days`, `trading_dates` 都是全量数据，并且可以通过 `$ rqalpha update-bundle` 每天更新，因此没有相应的显式接口可以对其进行替换。
 
 您如果想要替换，可以使用如下两种方式:
 

@@ -1,45 +1,45 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
-from rqalpha.api import *
 
 from ..utils import make_test_strategy_decorator, assert_order
 
 test_strategies = []
 
 as_test_strategy = make_test_strategy_decorator({
-        "base": {
-            "start_date": "2016-03-07",
-            "end_date": "2016-03-08",
-            "frequency": "1d",
-            "accounts": {
-                "stock": 100000000
-            }
+    "base": {
+        "start_date": "2016-03-07",
+        "end_date": "2016-03-08",
+        "frequency": "1d",
+        "accounts": {
+            "stock": 100000000
+        }
+    },
+    "extra": {
+        "log_level": "error",
+    },
+    "mod": {
+        "sys_progress": {
+            "enabled": True,
+            "show": True,
         },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }, test_strategies)
+    },
+}, test_strategies)
 
 
 @as_test_strategy({
@@ -65,11 +65,11 @@ def test_order_shares():
         elif context.counter == 3:
             assert context.portfolio.positions[context.s1].quantity == 2280
             o = order_shares(context.s1, -1010, bar_dict[context.s1].limit_down)
-            assert_order(o, side=SIDE.SELL, quantity=1000, status=ORDER_STATUS.FILLED)
+            assert_order(o, side=SIDE.SELL, quantity=1010, status=ORDER_STATUS.FILLED)
         elif context.counter == 4:
-            assert context.portfolio.positions[context.s1].quantity == 1280
-            o = order_shares(context.s1, -1280, bar_dict[context.s1].limit_down)
-            assert_order(o, quantity=1280, status=ORDER_STATUS.FILLED)
+            assert context.portfolio.positions[context.s1].quantity == 1270
+            o = order_shares(context.s1, -1270, bar_dict[context.s1].limit_down)
+            assert_order(o, quantity=1270, status=ORDER_STATUS.FILLED)
             assert context.portfolio.positions[context.s1].quantity == 0
 
     return init, handle_bar
@@ -95,7 +95,8 @@ def test_order_value():
 
     def handle_bar(context, bar_dict):
         order_price = bar_dict[context.s1].limit_up
-        o = order_value(context.s1, context.amount * order_price, order_price)
+        # 5 块最小手续费
+        o = order_value(context.s1, context.amount * order_price + 5, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=context.amount, price=order_price)
     return init, handle_bar
 
@@ -122,3 +123,24 @@ def test_order_target_value():
         o = order_target_percent(context.s1, 0.02, style=LimitOrder(bar_dict[context.s1].limit_up))
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
     return init, handle_bar
+
+
+@as_test_strategy({
+    "base": {
+        "start_date": "2016-03-07",
+        "end_date": "2016-03-07",
+        "accounts": {
+            "stock": 2000
+        }
+    },
+    "mod": {
+        "sys_accounts": {
+            "auto_switch_order_value": True
+        },
+    }
+})
+def test_auto_switch_order_value():
+    def handle_bar(context, _):
+        order_shares("000001.XSHE", 200)
+        assert context.portfolio.positions["000001.XSHE"].quantity == 100
+    return handle_bar

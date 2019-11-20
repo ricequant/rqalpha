@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 from enum import Enum
 
@@ -54,7 +56,6 @@ class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     *   目前暂时不添加其他 DEFAULT_ACCOUNT_TYPE 类型，如果需要增加自定义账户及类型，请参考 https://github.com/ricequant/rqalpha/issues/160
     """
     TOTAL = 0
-    BENCHMARK = 1
     # 股票
     STOCK = 2
     # 期货
@@ -185,6 +186,14 @@ class MARKET(CustomEnum):
     HK = "HK"
 
 
+# noinspection PyPep89Naming
+class FRONT_VALIDATOR_TYPE(CustomEnum):
+    CASH = "CASH"
+    POSITION = "POSITION"
+    PRICE = "PRICE"
+    OTHER = "OTHER"
+
+
 class CURRENCY(CustomEnum):
     CNY = "CNY"     # 人民币
     USD = "USD"     # 美元
@@ -206,6 +215,3 @@ class CURRENCY(CustomEnum):
 
 
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"
-
-NIGHT_TRADING_NS = ["CU", "AL", "ZN", "PB", "SN", "NI", "RB", "HC", "BU", "RU", "AU", "AG", "Y", "M", "A", "B", "P",
-                    "J", "JM", "I", "CF", "SR", "OI", "MA", "ZC", "FG", "RM", "CY", "TA", "SC"]

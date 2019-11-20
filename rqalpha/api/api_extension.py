@@ -1,31 +1,31 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
 
 import six
 
 from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
 from rqalpha.environment import Environment
-from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.arg_checker import apply_rules, verify_that, verify_env
+
 # noinspection PyUnresolvedReferences
 from rqalpha.model.order import LimitOrder, MarketOrder, Order
 
-__all__ = [
-    'order',
-    'order_to'
-]
+__all__ = ["order", "order_to"]
 
 
 def export_as_api(func):
@@ -50,7 +50,7 @@ def now_time_str(str_format="%H:%M:%S"):
 
 
 @export_as_api
-@apply_rules(verify_that('quantity').is_number())
+@apply_rules(verify_that("quantity").is_number())
 def order(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数
@@ -84,7 +84,7 @@ def order(order_book_id, quantity, price=None, style=None):
 
         # 当前仓位为0
         # RB1710 多方向调仓2手：调整后变为 BUY 2手
-        order('RB1710'， 2)
+        order('RB1710', 2)
 
         # RB1710 空方向调仓3手：先平多方向2手 在开空方向1手，调整后变为 SELL 1手
         order('RB1710', -3)
@@ -99,7 +99,7 @@ def order(order_book_id, quantity, price=None, style=None):
 
 
 @export_as_api
-@apply_rules(verify_that('quantity').is_number())
+@apply_rules(verify_that("quantity").is_number())
 def order_to(order_book_id, quantity, price=None, style=None):
     """
     全品种通用智能调仓函数
@@ -136,11 +136,13 @@ def order_to(order_book_id, quantity, price=None, style=None):
         order_to('RB1710', 2)
 
         # RB1710 调仓至 SELL 1手
-        order_to('RB1710'， -1)
+        order_to('RB1710', -1)
 
     """
     style = cal_style(price, style)
-    orders = Environment.get_instance().portfolio.order(order_book_id, quantity, style, target=True)
+    orders = Environment.get_instance().portfolio.order(
+        order_book_id, quantity, style, target=True
+    )
 
     if isinstance(orders, Order):
         return [orders]

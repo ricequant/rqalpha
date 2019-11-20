@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Ricequant, Inc
+# Copyright 2019 Ricequant, Inc
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# * Commercial Usage: please contact public@ricequant.com
+# * Non-Commercial Usage:
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
+
+from datetime import datetime
 
 from rqalpha.events import EVENT, Event
 from rqalpha.utils.rq_json import convert_dict_to_json, convert_json_to_dict
@@ -46,7 +50,13 @@ class Executor(object):
             self._env.calendar_dt = e.calendar_dt
             self._env.trading_dt = e.trading_dt
 
-        def publish_settlement():
+        def publish_settlement(e=None):
+            if e:
+                previous_trading_date = self._env.data_proxy.get_previous_trading_date(e.trading_dt).date()
+                if self._env.trading_dt.date() != previous_trading_date:
+                    self._env.trading_dt = datetime.combine(previous_trading_date, self._env.trading_dt.time())
+                    self._env.calendar_dt = datetime.combine(previous_trading_date, self._env.calendar_dt.time())
+
             event_bus.publish_event(PRE_SETTLEMENT)
             event_bus.publish_event(Event(EVENT.SETTLEMENT))
             event_bus.publish_event(POST_SETTLEMENT)
@@ -60,7 +70,7 @@ class Executor(object):
 
             if self._last_before_trading:
                 # don't publish settlement on first day
-                publish_settlement()
+                publish_settlement(e)
 
             self._last_before_trading = e.trading_dt.date()
             update_time(e)

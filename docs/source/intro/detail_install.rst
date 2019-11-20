@@ -13,7 +13,7 @@ Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQ
 
 .. note::
 
-    安装 Anaconda 需要下载 `最新的安装包 <https://www.continuum.io/downloads>`_, 如果速度比较慢，建议从 `清华源 <https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/>`_ 下载。
+    安装 Anaconda 比较简单，只需要去 `Anaconda 官网`_ 下载对应操作系统版本的安装包进行安装即可。
 
 当安装成功后，执行如下命令来查看是否安装成功:
 
@@ -24,12 +24,12 @@ Anaconda 环境包含了常用的 Python 科学计算库及依赖关系，而 RQ
 For GNU/Linux
 ------------------------------------
 
-如果您使用 GNU/Linux 系统，可以使用如下方式进行 Anaconda 环境的安装，下面以 CentOS 为例:
+如果您使用 GNU/Linux 系统，可以使用如下方式进行 Anaconda 环境（基于 **Python 3**）的安装，下面以 CentOS 为例:
 
 .. code-block:: bash
 
-    # 首先从清华的官方镜像下载 anaconda Linux64版本
-    $ wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-4.2.0-Linux-x86_64.sh
+    # 首先从 Anaconda 官网下载 anaconda Linux 64Bit 版本命令行安装包
+    $ wget https://repo.continuum.io/archive/Anaconda3-4.2.0-Linux-x86_64.sh
 
     # 修改权限让脚本可以运行
     $ chmod +x Anaconda3-4.2.0-Linux-x86_64.sh
@@ -75,22 +75,8 @@ For GNU/Linux
     rm -rf ~/.fontconfig
 
 
-更改 Anaconda 源，提高下载速度
-------------------------------------
+.. _`Anaconda 官网`: https://www.anaconda.com/distribution/
 
-conda 官方的服务器在国外，因此国内的网络环境使用 :code:`conda` 可能会比较慢，建议您根据自己的网络环境选择是否更换 `conda` 源。
-
-清华大学提供了Anaconda的仓库镜像，我们只需要配置Anaconda的配置文件，添加清华的镜像源，然后将其设置为第一搜索渠道即可：
-运行以下命令行:
-
-..  code-block:: bash
-
-    conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/'
-    conda config --set show_channel_urls yes
-
-设置好源后，就可以使用 :code:`conda install 【包名】` 安装需要的 Python 库了。大部分情况下，建议使用 :code:`conda` 来安装 Python 数据分析相关的库，因为 conda 做了很多的优化和版本依赖关系的管理。如果没有相关的库，则使用 :code:`pip install 【包名】` 的方式来安装。
-
-.. _intro-detail-create-env:
 
 conda 虚拟环境
 ------------------------------------
