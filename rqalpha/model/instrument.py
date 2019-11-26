@@ -21,7 +21,7 @@ import datetime
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.utils import instrument_type_str2enum
+from rqalpha.utils import instrument_type_str2enum, TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr
 
 
@@ -293,6 +293,36 @@ class Instrument(object):
 
         now = Environment.get_instance().calendar_dt
         return self.listed_date <= now <= self.de_listed_date
+
+    STOCK_TRADING_PERIOD = [
+        TimeRange(start=datetime.time(9, 31), end=datetime.time(11, 30)),
+        TimeRange(start=datetime.time(13, 1), end=datetime.time(15, 0)),
+    ]
+
+    @property
+    def trading_hours(self):
+        # trading_hours='09:31-11:30,13:01-15:00'
+        try:
+            trading_hours = self.__dict__["trading_hours"]
+        except KeyError:
+            if self.enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
+                return self.STOCK_TRADING_PERIOD
+            return None
+        trading_period = []
+        trading_hours = trading_hours.replace("-", ":")
+        for time_range_str in trading_hours.split(","):
+            start_h, start_m, end_h, end_m = (int(i) for i in time_range_str.split(":"))
+            start, end = datetime.time(start_h, start_m), datetime.time(end_h, end_m)
+            if start > end:
+                trading_period.append(TimeRange(start, datetime.time(23, 59)))
+                trading_period.append(TimeRange(datetime.time(0, 0), end))
+            else:
+                trading_period.append(TimeRange(start, end))
+        return trading_period
+
+    @property
+    def trade_at_night(self):
+        return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
     def days_from_listed(self):
         if self.listed_date == self.DEFAULT_LISTED_DATE:

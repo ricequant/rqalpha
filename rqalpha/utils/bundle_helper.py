@@ -27,7 +27,7 @@ import six
 from rqalpha.utils.config import set_locale
 from rqalpha.utils.i18n import gettext as _
 
-CDN_URL = 'http://cdn.ricequant.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2'
+CDN_URL = 'http://bundle.assets.ricequant.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2'
 
 
 def get_exactly_url():

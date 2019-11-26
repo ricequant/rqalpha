@@ -17,6 +17,8 @@
 #     limitations under the License.
 import six
 
+from rqalpha.utils import merge_trading_period
+
 
 class InstrumentMixin(object):
     def __init__(self, instruments):
@@ -72,3 +74,12 @@ class InstrumentMixin(object):
             return []
 
         return sorted(i.order_book_id for i in futures if i.listed_date <= date <= i.de_listed_date)
+
+    def get_trading_period(self, sym_or_ids, default_trading_period=None):
+        trading_period = default_trading_period or []
+        for instrument in self.instruments(sym_or_ids):
+            trading_period.extend(instrument.trading_hours or [])
+        return merge_trading_period(trading_period)
+
+    def is_night_trading(self, sym_or_ids):
+        return any((instrument.trade_at_night for instrument in self.instruments(sym_or_ids)))
