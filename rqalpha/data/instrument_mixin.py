@@ -14,7 +14,7 @@
 import re
 import six
 
-from rqalpha.utils import merge_trading_period
+from rqalpha.utils import merge_trading_period, INST_TYPE_IN_STOCK_ACCOUNT
 
 
 class InstrumentMixin(object):
@@ -42,9 +42,17 @@ class InstrumentMixin(object):
                 if v.type == 'CS' and v.industry_code == code]
 
     def all_instruments(self, types, dt=None):
-        return [i for i in self._instruments.values()
-                if ((dt is None or i.listed_date.date() <= dt.date() <= i.de_listed_date.date()) and
-                    (types is None or i.type in types))]
+        return [i for i in self._instruments.values() if (
+            (dt is None or (
+                i.listed_date.date() <= dt.date() < i.de_listed_date.date() if (
+                    i.enum_type in INST_TYPE_IN_STOCK_ACCOUNT
+                ) else (
+                    i.listed_date.date() <= dt.date() <= i.de_listed_date.date()
+                )
+            )) and (
+                types is None or i.type in types
+            )
+        )]
 
     def _instrument(self, sym_or_id):
         try:

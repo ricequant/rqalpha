@@ -176,30 +176,28 @@ def merge_dicts(*dict_args):
     return result
 
 
+INSTRUMENT_TYPE_STR_EHUM_MAP = {
+    "CS": INSTRUMENT_TYPE.CS,
+    "Future": INSTRUMENT_TYPE.FUTURE,
+    "Option": INSTRUMENT_TYPE.OPTION,
+    "ETF": INSTRUMENT_TYPE.ETF,
+    "LOF": INSTRUMENT_TYPE.LOF,
+    "INDX": INSTRUMENT_TYPE.INDX,
+    "FenjiMu": INSTRUMENT_TYPE.FENJI_MU,
+    "FenjiA": INSTRUMENT_TYPE.FENJI_A,
+    "FenjiB": INSTRUMENT_TYPE.FENJI_B,
+    'PublicFund': INSTRUMENT_TYPE.PUBLIC_FUND,
+    "Bond": INSTRUMENT_TYPE.BOND,
+    "Convertible": INSTRUMENT_TYPE.CONVERTIBLE,
+    "Spot": INSTRUMENT_TYPE.SPOT,
+    "Repo": INSTRUMENT_TYPE.REPO
+}
+
+
 def instrument_type_str2enum(type_str):
-    if type_str == "CS":
-        return INSTRUMENT_TYPE.CS
-    elif type_str == "Future":
-        return INSTRUMENT_TYPE.FUTURE
-    elif type_str == "Option":
-        return INSTRUMENT_TYPE.OPTION
-    elif type_str == "ETF":
-        return INSTRUMENT_TYPE.ETF
-    elif type_str == "LOF":
-        return INSTRUMENT_TYPE.LOF
-    elif type_str == "INDX":
-        return INSTRUMENT_TYPE.INDX
-    elif type_str == "FenjiMu":
-        return INSTRUMENT_TYPE.FENJI_MU
-    elif type_str == "FenjiA":
-        return INSTRUMENT_TYPE.FENJI_A
-    elif type_str == "FenjiB":
-        return INSTRUMENT_TYPE.FENJI_B
-    elif type_str == 'PublicFund':
-        return INSTRUMENT_TYPE.PUBLIC_FUND
-    elif type_str == "Bond":
-        return INSTRUMENT_TYPE.BOND
-    else:
+    try:
+        return INSTRUMENT_TYPE_STR_EHUM_MAP[type_str]
+    except KeyError:
         raise NotImplementedError
 
 

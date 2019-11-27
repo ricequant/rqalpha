@@ -135,6 +135,9 @@ class INSTRUMENT_TYPE(CustomEnum):
     FENJI_B = "FENJI_B"
     PUBLIC_FUND = 'PublicFund'
     BOND = "Bond"
+    CONVERTIBLE = "Convertible"
+    SPOT = "Spot"
+    REPO = "Repo"
 
 
 # noinspection PyPep8Naming

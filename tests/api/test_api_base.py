@@ -165,13 +165,16 @@ def test_history_bars():
     return handle_bar
 
 
-@as_test_strategy()
+@as_test_strategy({"base": {
+            "start_date": "2017-01-01",
+            "end_date": "2017-01-31",
+}})
 def test_all_instruments():
     def handle_bar(context, _):
         date = context.now.replace(hour=0, minute=0, second=0)
         df = all_instruments('CS')
         assert (df['listed_date'] <= date).all()
-        assert (df['de_listed_date'] >= date).all()
+        assert (df['de_listed_date'] > date).all()
         # assert all(not is_suspended(o) for o in df['order_book_id'])
         assert (df['type'] == 'CS').all()
 
