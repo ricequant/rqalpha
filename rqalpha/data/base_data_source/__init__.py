@@ -115,8 +115,6 @@ class BaseDataSource(AbstractDataSource):
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
         bars = self._all_day_bars_of(instrument)
-        if bars is None:
-            return None
         return bars[bars['volume'] > 0]
 
     def get_bar(self, instrument, dt, frequency):
@@ -124,7 +122,7 @@ class BaseDataSource(AbstractDataSource):
             raise NotImplementedError
 
         bars = self._all_day_bars_of(instrument)
-        if bars is None:
+        if len(bars) <=0 :
             return
         dt = np.uint64(convert_date_to_int(dt))
         pos = bars['datetime'].searchsorted(dt)
@@ -164,8 +162,11 @@ class BaseDataSource(AbstractDataSource):
         else:
             bars = self._all_day_bars_of(instrument)
 
-        if bars is None or not self._are_fields_valid(fields, bars.dtype.names):
+        if not self._are_fields_valid(fields, bars.dtype.names):
             return None
+
+        if len(bars) <= 0:
+            return bars
 
         dt = np.uint64(convert_date_to_int(dt))
         i = bars['datetime'].searchsorted(dt, side='right')

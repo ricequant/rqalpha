@@ -42,25 +42,24 @@ class DayBarStore(object):
             pass
 
     def get_bars(self, order_book_id, fields=None):
-        try:
-            s, e = self._index[order_book_id]
-        except KeyError:
-            six.print_(_(u"No data for {}").format(order_book_id))
-            return
-
         if fields is None:
             # the first is date
             fields = self._table.names[1:]
 
+        self._remove_(fields, 'datetime')
+        dtype = np.dtype([('datetime', np.uint64)] + [
+            (f, self._converter.field_type(f, self._table.cols[f].dtype)) for f in fields
+        ])
+
+        try:
+            s, e = self._index[order_book_id]
+        except KeyError:
+            six.print_(_(u"No data for {}").format(order_book_id))
+            return np.empty(0, dtype=dtype)
+
         if len(fields) == 1:
             return self._converter.convert(fields[0], self._table.cols[fields[0]][s:e])
 
-        # remove datetime if exist in fields
-        self._remove_(fields, 'datetime')
-
-        dtype = np.dtype([('datetime', np.uint64)] +
-                         [(f, self._converter.field_type(f, self._table.cols[f].dtype))
-                          for f in fields])
         result = np.empty(shape=(e - s, ), dtype=dtype)
         for f in fields:
             result[f] = self._converter.convert(f, self._table.cols[f][s:e])

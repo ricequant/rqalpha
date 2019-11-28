@@ -389,7 +389,7 @@ class AbstractDataSource(object):
         :param str adjust_type: 复权类型，'pre', 'none', 'post'
         :param datetime.datetime adjust_orig: 复权起点；
 
-        :return: `numpy.ndarray`
+        :return: `Optional[numpy.ndarray]`, fields 不合法时返回 None
 
         """
         raise NotImplementedError
