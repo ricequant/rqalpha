@@ -148,7 +148,7 @@ def test_unsubscribe():
     return init, handle_bar
 
 
-@as_test_strategy
+@as_test_strategy()
 def test_get_yield_curve():
     def handle_bar(_, __):
         df = get_yield_curve('20161101')
@@ -157,11 +157,22 @@ def test_get_yield_curve():
     return handle_bar
 
 
+@as_test_strategy({
+    "base": {
+        "start_date": "2005-01-04",
+        "end_date": "2005-01-31",
+    }
+})
 def test_history_bars():
+    import numpy
+
     def handle_bar(context, _):
-        return_list = history_bars(context.s1, 5, '1d', 'close')
-        if str(context.now.date()) == '2016-12-29':
-            assert return_list.tolist() == [9.08, 9.12, 9.08, 9.06, 9.08]
+        if str(context.now.date()) == '2005-01-10':
+            return_list = history_bars("000001.XSHE", 5, '1d', 'close')
+            assert return_list.tolist() == [6.52, 6.46, 6.52, 6.51, 6.59]
+        return_list = history_bars("600788.XSHG", 100, "1d")
+        assert len(return_list) == 0
+        assert isinstance(return_list, numpy.ndarray)
     return handle_bar
 
 
