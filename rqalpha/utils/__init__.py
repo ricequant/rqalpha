@@ -222,18 +222,22 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
 
 
 @lru_cache(None)
-def get_account_type(order_book_id):
+def get_account_type_enum(order_book_id):
     from rqalpha.environment import Environment
     instrument = Environment.get_instance().get_instrument(order_book_id)
     enum_type = instrument.enum_type
     if enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
-        return DEFAULT_ACCOUNT_TYPE.STOCK.name
+        return DEFAULT_ACCOUNT_TYPE.STOCK
     elif enum_type == INSTRUMENT_TYPE.FUTURE:
-        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
+        return DEFAULT_ACCOUNT_TYPE.FUTURE
     elif enum_type == INSTRUMENT_TYPE.BOND:
-        return DEFAULT_ACCOUNT_TYPE.BOND.name
+        return DEFAULT_ACCOUNT_TYPE.BOND
     else:
         raise NotImplementedError
+
+
+def get_account_type(order_book_id):
+    return get_account_type_enum(order_book_id).name
 
 
 def get_upper_underlying_symbol(order_book_id):
