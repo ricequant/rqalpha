@@ -64,87 +64,60 @@ class ArgumentChecker(AbstractChecker):
         self._rules.append(check_is_instance_of)
         return self
 
-    def raise_invalid_instrument_error(self, func_name, arg_name, value):
-        raise RQInvalidArgument(
-            _(u"function {}: invalid {} argument, expect a valid instrument/order_book_id/symbol, "
-              u"got {} (type: {})").format(
-                func_name, self._arg_name, value, type(value)
-            ))
+    def raise_invalid_instrument_error(self, func_name, value):
+        return self.raise_instrument_error(func_name, value, _("valid order_book_id/instrument"))
 
-    def raise_not_valid_stock_error(self, func_name, arg_name, value):
-        raise RQInvalidArgument(
-            _(u"function {}: invalid {} argument, expect a valid stock instrument/order_book_id/symbol, "
-              u"got {} (type: {})").format(
-                func_name, self._arg_name, value, type(value)
-            ))
+    def raise_not_valid_stock_error(self, func_name, value):
+        return self.raise_instrument_error(func_name, value, _("valid stock order_book_id/instrument"))
 
-    def raise_not_valid_future_error(self, func_name, arg_name, value):
-        raise RQInvalidArgument(
-            _(u"function {}: invalid {} argument, expect a valid future instrument/order_book_id/symbol, "
-              u"got {} (type: {})").format(
-                func_name, self._arg_name, value, type(value)
-            ))
+    def raise_not_valid_future_error(self, func_name, value):
+        return self.raise_instrument_error(func_name, value, _("valid future order_book_id/instrument"))
+
+    def raise_instrument_not_listed_error(self, func_name, value):
+        return self.raise_instrument_error(func_name, value, _("listed order_book_id/instrument"))
+
+    def raise_instrument_error(self, func_name, value, instrument_info):
+        raise RQInvalidArgument(_(
+            u"function {}: invalid {} argument, expected a {}, got {} (type: {})"
+        ).format(func_name, self._arg_name, instrument_info, value, type(value)))
 
     def _is_valid_instrument(self, func_name, value):
         instrument = None
         if isinstance(value, six.string_types):
             instrument = Environment.get_instance().get_instrument(value)
         elif isinstance(value, Instrument):
-            instrument = Instrument
+            instrument = value
 
         if instrument is None:
-            self.raise_invalid_instrument_error(func_name, self._arg_name, value)
-
-        # if instrument.type == 'Future' and ('88' in instrument.order_book_id or '99' in instrument.order_book_id):
-        #     config = Environment.get_instance().config
-        #     if config.base.run_type == RUN_TYPE.PAPER_TRADING:
-        #         if "88" in instrument.order_book_id:
-        #             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
-        #         if "99" in instrument.order_book_id:
-        #             raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
-        #     else:
-        #         if "88" in instrument.order_book_id:
-        #             global main_contract_warning_flag
-        #             if main_contract_warning_flag:
-        #                 main_contract_warning_flag = False
-        #                 user_system_log.warn(_(u"Main Future contracts[88] are not supported in paper trading."))
-        #         if "99" in instrument.order_book_id:
-        #             global index_contract_warning_flag
-        #             if index_contract_warning_flag:
-        #                 index_contract_warning_flag = False
-        #                 user_system_log.warn(_(u"Index Future contracts[99] are not supported in paper trading."))
+            self.raise_invalid_instrument_error(func_name, value)
+        return instrument
 
     def is_valid_instrument(self):
         self._rules.append(self._is_valid_instrument)
         return self
 
-    def _is_valid_stock(self, func_name, value):
-        instrument = None
-        if isinstance(value, six.string_types):
-            instrument = Environment.get_instance().get_instrument(value)
-        elif isinstance(value, Instrument):
-            instrument = Instrument
+    def _is_listed_instrument(self, func_name, value):
+        instrument = self._is_valid_instrument(func_name, value)
+        if not instrument.listed:
+            self.raise_instrument_not_listed_error(func_name, value)
 
-        if instrument is None:
-            self.raise_invalid_instrument_error(func_name, self._arg_name, value)
+    def is_listed_instrument(self):
+        self._rules.append(self._is_listed_instrument)
+        return self
+
+    def _is_valid_stock(self, func_name, value):
+        instrument = self._is_valid_instrument(func_name, value)
         if instrument.enum_type not in INST_TYPE_IN_STOCK_ACCOUNT:
-            self.raise_not_valid_stock_error(func_name, self._arg_name, value)
+            self.raise_not_valid_stock_error(func_name, value)
 
     def is_valid_stock(self):
         self._rules.append(self._is_valid_stock)
         return self
 
     def _is_valid_future(self, func_name, value):
-        instrument = None
-        if isinstance(value, six.string_types):
-            instrument = Environment.get_instance().get_instrument(value)
-        elif isinstance(value, Instrument):
-            instrument = Instrument
-
-        if instrument is None:
-            self.raise_invalid_instrument_error(func_name, self._arg_name, value)
+        instrument = self._is_valid_instrument(func_name, value)
         if instrument.enum_type != INSTRUMENT_TYPE.FUTURE:
-            self.raise_not_valid_future_error(func_name, self._arg_name, value)
+            self.raise_not_valid_future_error(func_name, value)
 
     def is_valid_future(self):
         self._rules.append(self._is_valid_future)
@@ -212,17 +185,14 @@ class ArgumentChecker(AbstractChecker):
     def _are_valid_instruments(self, func_name, values):
         if isinstance(values, (six.string_types, Instrument)):
             self._is_valid_instrument(func_name, values)
-            return
-
-        if isinstance(values, list):
+        elif isinstance(values, list):
             for v in values:
                 self._is_valid_instrument(func_name, v)
-            return
-
-        raise RQInvalidArgument(
-            _(u"function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
-                func_name, self._arg_name, repr(values), type(values)
-            ))
+        else:
+            raise RQInvalidArgument(
+                _(u"function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
+                    func_name, self._arg_name, repr(values), type(values)
+                ))
 
     def are_valid_instruments(self, ignore_none=False):
 
