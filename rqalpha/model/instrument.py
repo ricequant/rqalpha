@@ -276,9 +276,41 @@ class Instrument(object):
         """
         [bool] 该合约当前日期是否在交易
         """
+        trading_dt = Environment.get_instance().trading_dt
+        return self.listed_at(trading_dt) and not self.de_listed_at(trading_dt)
 
-        now = Environment.get_instance().calendar_dt
-        return self.listed_date <= now <= self.de_listed_date
+    @property
+    def listed(self):
+        """
+        [bool] 该合约当前交易日是否已上市
+        """
+        return self.listed_at(Environment.get_instance().trading_dt)
+
+    @property
+    def de_listed(self):
+        """
+        [bool] 该合约当前交易日是否已退市
+        """
+        return self.de_listed_at(Environment.get_instance().trading_dt)
+
+    def listed_at(self, dt):
+        """
+        该合约在指定日期是否已上日
+        :param dt: datetime.datetime
+        :return: bool
+        """
+        return self.listed_date <= dt
+
+    def de_listed_at(self, dt):
+        """
+        该合约在指定日期是否已退市
+        :param dt: datetime.datetime
+        :return: bool
+        """
+        if self.type == "Future":
+            return dt > self.de_listed_date
+        else:
+            return dt >= self.de_listed_date
 
     STOCK_TRADING_PERIOD = [
         TimeRange(start=datetime.time(9, 31), end=datetime.time(11, 30)),
