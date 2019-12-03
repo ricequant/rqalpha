@@ -277,7 +277,7 @@ class Instrument(object):
         [bool] 该合约当前日期是否在交易
         """
         trading_dt = Environment.get_instance().trading_dt
-        return self.listed_at(trading_dt) and not self.de_listed_at(trading_dt)
+        return self.listing_at(trading_dt)
 
     @property
     def listed(self):
@@ -292,6 +292,14 @@ class Instrument(object):
         [bool] 该合约当前交易日是否已退市
         """
         return self.de_listed_at(Environment.get_instance().trading_dt)
+
+    def listing_at(self, dt):
+        """
+        该合约在指定日期是否在交易
+        :param dt: datetime.datetime
+        :return: bool
+        """
+        return self.listed_at(dt) and not self.de_listed_at(dt)
 
     def listed_at(self, dt):
         """
@@ -308,7 +316,7 @@ class Instrument(object):
         :return: bool
         """
         if self.type == "Future":
-            return dt > self.de_listed_date
+            return dt.date() > self.de_listed_date.date()
         else:
             return dt >= self.de_listed_date
 
