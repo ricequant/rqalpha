@@ -31,6 +31,7 @@ from .converter import (
 from .date_set import DateSet
 from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 from .public_fund_commission import PUBLIC_FUND_COMMISSION
+from rqalpha.utils.exception import RQInvalidArgument
 
 
 class BaseDataSource(AbstractDataSource):
@@ -163,7 +164,7 @@ class BaseDataSource(AbstractDataSource):
             bars = self._all_day_bars_of(instrument)
 
         if not self._are_fields_valid(fields, bars.dtype.names):
-            return None
+            raise RQInvalidArgument("invalid fileds: {}".format(fields))
 
         if len(bars) <= 0:
             return bars
