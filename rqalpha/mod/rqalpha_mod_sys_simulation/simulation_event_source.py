@@ -20,7 +20,7 @@ from rqalpha.events import Event, EVENT
 from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET,MATCHING_TYPE
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -94,9 +94,15 @@ class SimulationEventSource(AbstractEventSource):
 
     def _get_day_bar_dt(self, date):
         if self._env.config.base.market == MARKET.CN:
-            return date.replace(hour=15, minute=0)
+            if self._env.config.mod.sys_simulation.matching_type == MATCHING_TYPE.CURRENT_BAR_OPEN:
+                return date.replace(hour=9, minute=30)
+            else:
+                return date.replace(hour=15, minute=0)
         elif self._env.config.base.market == MARKET.HK:
-            return date.replace(hour=16, minute=0)
+            if self._env.config.mod.sys_simulation.matching_type == MATCHING_TYPE.CURRENT_BAR_OPEN:
+                return date.replace(hour=10, minute=0)
+            else:
+                return date.replace(hour=16, minute=0)
         else:
             raise NotImplementedError(_("Unsupported market {}".format(self._env.config.base.market)))
 
@@ -113,7 +119,9 @@ class SimulationEventSource(AbstractEventSource):
             # 根据起始日期和结束日期，获取所有的交易日，然后再循环获取每一个交易日
             for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
                 date = day.to_pydatetime()
-                dt_before_trading = date.replace(hour=0, minute=0)
+                #dt_before_trading = date.replace(hour=0, minute=0)
+                #应该和分钟回测的before_trading保持一致，这个时间点需要数据源能获取当天凌晨公布财报的数据，才能及时做出响应。
+                dt_before_trading = date.replace(hour=8, minute=30)
 
                 dt_bar = self._get_day_bar_dt(date)
                 dt_after_trading = self._get_after_trading_dt(date)

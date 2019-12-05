@@ -30,7 +30,8 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._mod_config = mod_config
 
         self._matcher = Matcher(env, mod_config)
-        self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
+        #use current open price to match or use current close price to match, all mean match immediately
+        self._match_immediately = (mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE or mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_OPEN)
 
         self._open_orders = []
         self._delayed_orders = []

@@ -40,7 +40,6 @@ class SimulationMod(AbstractMod):
 
         if env.config.base.margin_multiplier <= 0:
             raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
-
         if env.config.base.frequency == "tick":
             mod_config.volume_limit = False
             if mod_config.matching_type not in [
@@ -53,6 +52,7 @@ class SimulationMod(AbstractMod):
             if mod_config.matching_type not in [
                 MATCHING_TYPE.NEXT_BAR_OPEN,
                 MATCHING_TYPE.CURRENT_BAR_CLOSE,
+                MATCHING_TYPE.CURRENT_BAR_OPEN,
             ]:
                 raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
 
@@ -74,6 +74,8 @@ class SimulationMod(AbstractMod):
             return MATCHING_TYPE.CURRENT_BAR_CLOSE
         elif me_str == "next_bar":
             return MATCHING_TYPE.NEXT_BAR_OPEN
+        elif me_str == "current_bar_open":
+            return MATCHING_TYPE.CURRENT_BAR_OPEN
         elif me_str == "last":
             return MATCHING_TYPE.NEXT_TICK_LAST
         elif me_str == "best_own":

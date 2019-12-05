@@ -16,7 +16,7 @@ import numpy as np
 
 from rqalpha.interface import AbstractPriceBoard
 from rqalpha.environment import Environment
-
+from rqalpha.const import MATCHING_TYPE
 
 class BarDictPriceBoard(AbstractPriceBoard):
     def __init__(self):
@@ -27,7 +27,11 @@ class BarDictPriceBoard(AbstractPriceBoard):
         return self._env.bar_dict
 
     def get_last_price(self, order_book_id):
-        return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].last
+        #日频回测，需要开盘价撮合时,返回日线的开盘价作为最新价
+        if self._env.config.mod.sys_simulation.matching_type == MATCHING_TYPE.CURRENT_BAR_OPEN:
+            return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].open
+        else:
+            return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].last
 
     def get_limit_up(self, order_book_id):
         return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].limit_up
