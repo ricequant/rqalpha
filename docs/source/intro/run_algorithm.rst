@@ -80,7 +80,7 @@ N/A           `- -` no-short-stock            [sys_risk]不允许股票卖空
 N/A           `- -` signal                    [sys_simulation]开启信号模式，不进行撮合，直接成交
 -sp           `- -` slippage                  [sys_simulation]设置滑点
 -cm           `- -` commission-multiplier     [sys_simulation]设置手续费乘数，默认为1
--me           `- -` match-engine              [sys_simulation]启用的回测引擎，目前支持 :code:`current_bar` (当前Bar收盘价撮合) 和 :code:`next_bar` (下一个Bar开盘价撮合)
+-me           `- -` match-engine              [sys_simulation]启用的回测引擎，目前支持 :code:`current_bar_open` (当前Bar开盘价撮合),code:`current_bar` (当前Bar收盘价撮合) 和 :code:`next_bar` (下一个Bar开盘价撮合)
 -r            `- -` rid                       [sys_simulation]可以指定回测的唯一ID，用户区分多次回测的结果
 ===========   =============================   ==============================================================================
 
