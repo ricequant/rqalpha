@@ -162,8 +162,8 @@ def test_api(specific_test=None):
     print(u"API test ends.")
 
 
-def test_strategy():
-    run_tests()
+def test_strategy(file_path=None):
+    run_tests(file_path)
 
 
 def write_csv(path, fields):
@@ -239,7 +239,10 @@ if __name__ == "__main__":
             end_time = datetime.now()
 
         elif sys.argv[1] == "strategy":
-            test_strategy()
+            if len(sys.argv) >= 3:
+                test_strategy(sys.argv[2])
+            else:
+                test_strategy(None)
             end_time = datetime.now()
 
         elif sys.argv[1] == "performance":
