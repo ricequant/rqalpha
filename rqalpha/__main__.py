@@ -230,9 +230,15 @@ def mod(cmd, params):
             from pip import main as pip_main
             from pip.commands.install import InstallCommand
 
+        if hasattr(InstallCommand, "name"):
+            install_command = InstallCommand()
+        else:
+            install_command = InstallCommand(name='install', summary='Install packages.')
+            pip_main = pip_main.main
+
         params = [param for param in params]
 
-        options, mod_list = InstallCommand().parse_args(params)
+        options, mod_list = install_command.parse_args(params)
         mod_list = [mod_name for mod_name in mod_list if mod_name != "."]
 
         params = ["install"] + params
@@ -295,9 +301,15 @@ def mod(cmd, params):
             from pip import main as pip_main
             from pip.commands.uninstall import UninstallCommand
 
+        if hasattr(UninstallCommand, "name"):
+            uninstall_command = UninstallCommand()
+        else:
+            uninstall_command = UninstallCommand(name='uninstall', summary='Uninstall packages.')
+            pip_main = pip_main.main
+
         params = [param for param in params]
 
-        options, mod_list = UninstallCommand().parse_args(params)
+        options, mod_list = uninstall_command.parse_args(params)
 
         params = ["uninstall"] + params
 
