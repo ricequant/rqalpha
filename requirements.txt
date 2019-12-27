@@ -4,7 +4,8 @@ numpy >=1.11.1,<=1.16.4; python_version == '2.7'
 python-dateutil >=2.5.3
 pytz >=2016.4
 six >=1.10.0
-pytest >=2.9.2
+pytest >=2.9.2,<=4.6; python_version == '2.7'
+pytest >=2.9.2; python_version >= '3.4'
 logbook >=1.0.0
 click >=7.0
 jsonpickle ==0.9.4
