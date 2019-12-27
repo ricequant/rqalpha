@@ -106,6 +106,7 @@ class POSITION_EFFECT(CustomEnum):
     OPEN = "OPEN"
     CLOSE = "CLOSE"
     CLOSE_TODAY = "CLOSE_TODAY"
+    EXERCISE = "EXERCISE"
 
 
 # noinspection PyPep8Naming
