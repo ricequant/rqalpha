@@ -230,7 +230,7 @@ def get_account_type_enum(order_book_id):
         return DEFAULT_ACCOUNT_TYPE.STOCK
     elif enum_type == INSTRUMENT_TYPE.FUTURE:
         return DEFAULT_ACCOUNT_TYPE.FUTURE
-    elif enum_type == INSTRUMENT_TYPE.BOND:
+    elif enum_type in (INSTRUMENT_TYPE.BOND, INSTRUMENT_TYPE.CONVERTIBLE):
         return DEFAULT_ACCOUNT_TYPE.BOND
     else:
         raise NotImplementedError
