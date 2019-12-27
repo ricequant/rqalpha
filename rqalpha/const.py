@@ -12,10 +12,32 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from enum import Enum
+from enum import Enum, EnumMeta
+
+import six
 
 
-class CustomEnum(Enum):
+class CustomEnumMeta(EnumMeta):
+    def __contains__(cls, member):
+        if super(CustomEnumMeta, cls).__contains__(member):
+            return True
+        if isinstance(member, str):
+            for value in cls._member_map_.values():
+                if value == member:
+                    return True
+        return False
+
+
+if six.PY2:
+    # six.with_metaclass not working
+    class CustomEnumCore(str, Enum):
+        __metaclass__ = CustomEnumMeta
+else:
+    exec("class CustomEnumCore(str, Enum, metaclass=CustomEnumMeta): pass")
+
+
+# noinspection PyUnresolvedReferences
+class CustomEnum(CustomEnumCore):
     def __repr__(self):
         return "%s.%s" % (
             self.__class__.__name__, self._name_)
@@ -51,15 +73,15 @@ class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     *   ACCOUNT_TYPE 不区分交易所，比如 A 股区分上海交易所和深圳交易所，但对应的都是一个账户，因此统一为 STOCK
     *   目前暂时不添加其他 DEFAULT_ACCOUNT_TYPE 类型，如果需要增加自定义账户及类型，请参考 https://github.com/ricequant/rqalpha/issues/160
     """
-    TOTAL = 0
+    TOTAL = "TOTAL"
     # 股票
-    STOCK = 2
+    STOCK = "STOCK"
     # 期货
-    FUTURE = 3
+    FUTURE = "FUTURE"
     # 期权
-    OPTION = 4
+    OPTION = "OPTION"
     # 债券
-    BOND = 5
+    BOND = "BOND"
 
 
 # noinspection PyPep8Naming
