@@ -15,7 +15,7 @@
 from six import iteritems
 
 from rqalpha.events import EventBus
-from rqalpha.utils import get_account_type
+from rqalpha.utils import get_account_type, account_type_str2enum
 from rqalpha.const import FRONT_VALIDATOR_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
 from rqalpha.utils.i18n import gettext as _
@@ -55,6 +55,7 @@ class Environment(object):
         self._account_model_dict = {}
         self._position_model_dict = {}
         self._transaction_cost_decider_dict = {}
+        self._ins_account_type_map = {}
 
     @classmethod
     def get_instance(cls):
@@ -102,7 +103,14 @@ class Environment(object):
     def add_frontend_validator(self, validator, validator_type=FRONT_VALIDATOR_TYPE.OTHER):
         self._frontend_validators.setdefault(validator_type, []).append(validator)
 
-    def set_account_model(self, account_type, account_model):
+    def set_account_model(self, account_type, account_model, supported_instrument_types=None):
+        if supported_instrument_types is None:
+            system_log.warning(
+                "supported_instrument_model not provided, "
+                "{} account cannot be accessed by env.get_account or env.get_account_type".format(account_type)
+            )
+        for instrument_type in supported_instrument_types:
+            self._ins_account_type_map[instrument_type] = account_type
         self._account_model_dict[account_type] = account_model
 
     def get_account_model(self, account_type):
@@ -179,7 +187,8 @@ class Environment(object):
 
     def get_account_type(self, order_book_id):
         # 如果新的account_type 可以通过重写该函数来进行扩展
-        return get_account_type(order_book_id)
+        instrument = self.data_proxy.instruments(order_book_id)
+        return account_type_str2enum(instrument.type)
 
     def get_account(self, order_book_id):
         account_type = get_account_type(order_book_id)

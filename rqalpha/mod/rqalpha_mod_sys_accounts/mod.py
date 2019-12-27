@@ -32,8 +32,10 @@ class AccountMod(AbstractMod):
         FutureAccount.forced_liquidation = mod_config.future_forced_liquidation
 
         # 注入 Account
-        env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount)
-        env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount)
+        env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount, (
+            "CS", "ETF", "LOF", "INDX", "FenjiMu", "FenjiA", "FenjiB", "PublicFund"
+        ))
+        env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount, ("Future", ))
 
         # 注入 Position
         env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPositionProxy)
