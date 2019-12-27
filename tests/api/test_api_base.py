@@ -177,7 +177,7 @@ def test_history_bars():
             else:
                 raise AssertionError("instrument has not been listed yet, RQInvalidArgument is supposed to be raised")
 
-        return_list = history_bars("600788.XSHG", 100, "1d")
+        return_list = history_bars("000003.XSHE", 100, "1d")
         assert len(return_list) == 0
         assert isinstance(return_list, numpy.ndarray)
     return handle_bar
