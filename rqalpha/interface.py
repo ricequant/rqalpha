@@ -23,6 +23,14 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     您可以在 Mod 的 start_up 阶段通过 env.set_account_model(account_type, AccountModel) 来注入和修改 AccountModel
     您也可以通过 env.get_account_model(account_type) 来获取指定类型的 AccountModel
     """
+    @property
+    @abc.abstractmethod
+    def supported_instrument_type(self):
+        """
+        [Required]
+        :return: list[str]: 该 Account 支持的 instrument_type 列表
+        """
+
     @abc.abstractmethod
     def fast_forward(self, orders, trades):
         """
