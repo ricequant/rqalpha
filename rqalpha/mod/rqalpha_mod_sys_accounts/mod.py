@@ -16,6 +16,7 @@
 from rqalpha.interface import AbstractMod
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 from rqalpha import export_as_api
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 
 from .account_model import StockAccount, FutureAccount
 from .position_model import StockPositionProxy, FuturePositionProxy
@@ -32,9 +33,7 @@ class AccountMod(AbstractMod):
         FutureAccount.forced_liquidation = mod_config.future_forced_liquidation
 
         # 注入 Account
-        env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount, (
-            "CS", "ETF", "LOF", "INDX", "FenjiMu", "FenjiA", "FenjiB", "PublicFund"
-        ))
+        env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount, INST_TYPE_IN_STOCK_ACCOUNT)
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount, ("Future", ))
 
         # 注入 Position

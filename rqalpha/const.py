@@ -18,14 +18,23 @@ import six
 
 
 class CustomEnumMeta(EnumMeta):
+    def __new__(metacls, cls, bases, classdict):
+        enum_class = super().__new__(metacls, cls, bases, classdict)
+        enum_class._member_reverse_map = {v.value: v for v in enum_class.__members__.values()}
+        return enum_class
+
     def __contains__(cls, member):
         if super(CustomEnumMeta, cls).__contains__(member):
             return True
         if isinstance(member, str):
-            for value in cls._member_map_.values():
-                if value == member:
-                    return True
+            return member in cls._member_reverse_map
         return False
+
+    def __getitem__(self, item):
+        try:
+            return super().__getitem__(item)
+        except KeyError:
+            return self._member_reverse_map[item]
 
 
 if six.PY2:
@@ -148,14 +157,14 @@ class EXC_TYPE(CustomEnum):
 # noinspection PyPep8Naming
 class INSTRUMENT_TYPE(CustomEnum):
     CS = "CS"
-    FUTURE = "FUTURE"
-    OPTION = "OPTION"
+    FUTURE = "Future"
+    OPTION = "Option"
     ETF = "ETF"
     LOF = "LOF"
     INDX = "INDX"
-    FENJI_MU = "FENJI_MU"
-    FENJI_A = "FENJI_A"
-    FENJI_B = "FENJI_B"
+    FENJI_MU = "FenjiMu"
+    FENJI_A = "FenjiA"
+    FENJI_B = "FenjiB"
     PUBLIC_FUND = 'PublicFund'
     BOND = "Bond"
     CONVERTIBLE = "Convertible"

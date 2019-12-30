@@ -176,37 +176,8 @@ def merge_dicts(*dict_args):
     return result
 
 
-INSTRUMENT_TYPE_STR_EHUM_MAP = {
-    "CS": INSTRUMENT_TYPE.CS,
-    "Future": INSTRUMENT_TYPE.FUTURE,
-    "Option": INSTRUMENT_TYPE.OPTION,
-    "ETF": INSTRUMENT_TYPE.ETF,
-    "LOF": INSTRUMENT_TYPE.LOF,
-    "INDX": INSTRUMENT_TYPE.INDX,
-    "FenjiMu": INSTRUMENT_TYPE.FENJI_MU,
-    "FenjiA": INSTRUMENT_TYPE.FENJI_A,
-    "FenjiB": INSTRUMENT_TYPE.FENJI_B,
-    'PublicFund': INSTRUMENT_TYPE.PUBLIC_FUND,
-    "Bond": INSTRUMENT_TYPE.BOND,
-    "Convertible": INSTRUMENT_TYPE.CONVERTIBLE,
-    "Spot": INSTRUMENT_TYPE.SPOT,
-    "Repo": INSTRUMENT_TYPE.REPO
-}
-
-
-def instrument_type_str2enum(type_str):
-    try:
-        return INSTRUMENT_TYPE_STR_EHUM_MAP[type_str]
-    except KeyError:
-        raise NotImplementedError
-
-
 def account_type_str2enum(type_str):
-    return {
-        DEFAULT_ACCOUNT_TYPE.STOCK.name: DEFAULT_ACCOUNT_TYPE.STOCK,
-        DEFAULT_ACCOUNT_TYPE.FUTURE.name: DEFAULT_ACCOUNT_TYPE.FUTURE,
-        DEFAULT_ACCOUNT_TYPE.BOND.name: DEFAULT_ACCOUNT_TYPE.BOND,
-    }[type_str]
+    return DEFAULT_ACCOUNT_TYPE[type_str]
 
 
 INST_TYPE_IN_STOCK_ACCOUNT = [
@@ -219,25 +190,6 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
     INSTRUMENT_TYPE.FENJI_B,
     INSTRUMENT_TYPE.PUBLIC_FUND
 ]
-
-
-@lru_cache(None)
-def get_account_type_enum(order_book_id):
-    from rqalpha.environment import Environment
-    instrument = Environment.get_instance().get_instrument(order_book_id)
-    enum_type = instrument.enum_type
-    if enum_type in INST_TYPE_IN_STOCK_ACCOUNT:
-        return DEFAULT_ACCOUNT_TYPE.STOCK
-    elif enum_type == INSTRUMENT_TYPE.FUTURE:
-        return DEFAULT_ACCOUNT_TYPE.FUTURE
-    elif enum_type in (INSTRUMENT_TYPE.BOND, INSTRUMENT_TYPE.CONVERTIBLE):
-        return DEFAULT_ACCOUNT_TYPE.BOND
-    else:
-        raise NotImplementedError
-
-
-def get_account_type(order_book_id):
-    return get_account_type_enum(order_book_id).name
 
 
 def get_upper_underlying_symbol(order_book_id):
@@ -266,13 +218,6 @@ STOCK_TRADING_PERIOD = [
     TimeRange(start=time(9, 31), end=time(11, 30)),
     TimeRange(start=time(13, 1), end=time(15, 0)),
 ]
-
-
-def get_trading_period(universe, accounts):
-    # for compatible
-    from rqalpha.environment import Environment
-    trading_period = STOCK_TRADING_PERIOD if DEFAULT_ACCOUNT_TYPE.STOCK.name in accounts else []
-    return Environment.get_instance().data_proxy.get_trading_period(universe, trading_period)
 
 
 def is_trading(dt, trading_period):
@@ -324,3 +269,27 @@ def decimal_rounding_floor():
     getcontext().rounding = ROUND_FLOOR
     yield
     getcontext().rounding = original_rounding_option
+
+
+# -------------- deprecated --------------
+
+def get_trading_period(universe, accounts):
+    # for compatible
+    from rqalpha.environment import Environment
+    trading_period = STOCK_TRADING_PERIOD if DEFAULT_ACCOUNT_TYPE.STOCK in accounts else []
+    return Environment.get_instance().data_proxy.get_trading_period(universe, trading_period)
+
+
+def get_account_type_enum(order_book_id):
+    from rqalpha.environment import Environment
+    return Environment.get_instance().get_account_type(order_book_id)
+
+
+get_account_type = get_account_type_enum
+
+
+def instrument_type_str2enum(type_str):
+    try:
+        return INSTRUMENT_TYPE[type_str]
+    except KeyError:
+        raise NotImplementedError

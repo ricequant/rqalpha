@@ -15,7 +15,6 @@
 from six import iteritems
 
 from rqalpha.events import EventBus
-from rqalpha.utils import get_account_type, account_type_str2enum
 from rqalpha.const import FRONT_VALIDATOR_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
 from rqalpha.utils.i18n import gettext as _
@@ -188,10 +187,10 @@ class Environment(object):
     def get_account_type(self, order_book_id):
         # 如果新的account_type 可以通过重写该函数来进行扩展
         instrument = self.data_proxy.instruments(order_book_id)
-        return account_type_str2enum(instrument.type)
+        return self._ins_account_type_map[instrument.type]
 
     def get_account(self, order_book_id):
-        account_type = get_account_type(order_book_id)
+        account_type = self.get_account_type(order_book_id)
         return self.portfolio.accounts[account_type]
 
     def get_open_orders(self, order_book_id=None):

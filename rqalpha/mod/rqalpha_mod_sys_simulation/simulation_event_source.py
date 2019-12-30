@@ -17,7 +17,6 @@ import datetime
 
 from rqalpha.interface import AbstractEventSource
 from rqalpha.events import Event, EVENT
-from rqalpha.utils import get_account_type
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET
@@ -77,7 +76,7 @@ class SimulationEventSource(AbstractEventSource):
         trading_minutes = set()
         universe = self._get_universe()
         for order_book_id in universe:
-            if get_account_type(order_book_id) == DEFAULT_ACCOUNT_TYPE.STOCK.name:
+            if self._env.get_account_type(order_book_id) == DEFAULT_ACCOUNT_TYPE.STOCK:
                 continue
             trading_minutes.update(self._env.data_proxy.get_trading_minutes_for(order_book_id, trading_date))
         return set([convert_int_to_datetime(minute) for minute in trading_minutes])

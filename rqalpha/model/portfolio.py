@@ -18,7 +18,7 @@ import numpy as np
 
 from rqalpha.environment import Environment
 from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE
-from rqalpha.utils import get_account_type, merge_dicts
+from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
 
@@ -42,7 +42,7 @@ class Portfolio(object):
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
 
     def order(self, order_book_id, quantity, style, target=False):
-        account_type = get_account_type(order_book_id)
+        account_type = Environment.get_instance().get_account_type(order_book_id)
         return self.accounts[account_type].order(order_book_id, quantity, style, target)
 
     def get_state(self):
@@ -239,7 +239,7 @@ class MixedPositions(dict):
         self._accounts = accounts
 
     def __missing__(self, key):
-        account_type = get_account_type(key)
+        account_type = Environment.get_instance().get_account_type(key)
         for a_type in self._accounts:
             if a_type == account_type:
                 return self._accounts[a_type].positions[key]

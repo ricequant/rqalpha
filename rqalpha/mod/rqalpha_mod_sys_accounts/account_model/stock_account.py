@@ -123,7 +123,7 @@ class StockAccount(AssetAccount):
 
     @property
     def type(self):
-        return DEFAULT_ACCOUNT_TYPE.STOCK.name
+        return DEFAULT_ACCOUNT_TYPE.STOCK
 
     def get_state(self):
         state = super(StockAccount, self).get_state()

@@ -174,7 +174,7 @@ class FutureAccount(AssetAccount):
 
     @property
     def type(self):
-        return DEFAULT_ACCOUNT_TYPE.FUTURE.name
+        return DEFAULT_ACCOUNT_TYPE.FUTURE
 
     @staticmethod
     def _frozen_cash_of_order(order):
