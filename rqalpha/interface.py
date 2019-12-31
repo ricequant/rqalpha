@@ -16,10 +16,11 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import Any, Union
+from typing import Any, Union, Optional
 
 from six import with_metaclass
 
+from rqalpha.model.order import OrderStyle, Order
 from rqalpha.const import POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
 
 
@@ -33,96 +34,76 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
     def order(self, order_book_id, quantity, style, target=False):
-        """
-        [Required]
-
-        系统下单函数会调用该函数来完成下单操作
-        """
+        # type: (str, float, OrderStyle, Optional[bool]) -> Optional[Order]
+        # 系统下单函数会调用该函数来完成下单操作
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_state(self):
-        """
-        [Required]
-
-        主要用于进行持久化时候，提供对应需要持久化的数据
-        """
+        # type: () -> Any
+        # 主要用于进行持久化时候，提供对应需要持久化的数据
         raise NotImplementedError
 
     @abc.abstractmethod
     def set_state(self, state):
-        """
-        [Requried]
-
-        主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
-        """
+        # type: (Any) -> None
+        # 主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def type(self):
-        """
-        [Required]
-
-        返回 String 类型的账户类型标示
-        """
+        # type: () -> Union[str, DEFAULT_ACCOUNT_TYPE]
+        # 返回 String 类型的账户类型标示
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def positions(self):
-        """
-        [Required]
-
-        返回当前账户的持仓数据
-
-        :return: Positions(PositionModel)
-        """
+        # 返回当前账户的持仓数据
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def frozen_cash(self):
-        """
-        [Required]
-
-        返回当前账户的冻结资金
-        """
+        # type: () -> float
+        # 返回当前账户的冻结资金
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cash(self):
-        """
-        [Required]
-
-        返回当前账户的可用资金
-        """
+        # type: () -> float
+        # 返回当前账户的可用资金
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def market_value(self):
-        """
-        [Required]
-
-        返回当前账户的市值
-        """
+        # type: () -> float
+        # 返回当前账户的市值
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def total_value(self):
-        """
-        [Required]
-
-        返回当前账户的总权益
-        """
+        # () -> float
+        # 返回当前账户的总权益
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def transaction_cost(self):
-        """
-        [Required]
-
-        返回当前账户的当日交易费用
-        """
+        # type: () -> float
+        # 返回当前账户的当日交易费用
         raise NotImplementedError
 
+    @property
+    @abc.abstractmethod
+    def daily_pnl(self):
+        # type: () -> float
+        # 返回当前账户的当日盈亏费用
+        raise NotImplementedError
 
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
@@ -411,7 +392,6 @@ class AbstractDataSource(object):
         :type instrument: :class:`~Instrument`
 
         :param int count: 获取的历史数据数量
-        :param str fields: 返回数据字段
 
         :param datetime.datetime dt: 时间
 
