@@ -14,11 +14,11 @@
 
 import time
 
-from rqalpha.utils import id_gen
+from rqalpha.utils import id_gen, get_position_direction
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_EFFECT, SIDE
+from rqalpha.const import POSITION_EFFECT, SIDE, POSITION_DIRECTION
 
 
 class Trade(object):
@@ -125,6 +125,11 @@ class Trade(object):
             else:
                 return POSITION_EFFECT.CLOSE
         return self._position_effect
+
+    @property
+    def position_direction(self):
+        # type: () -> POSITION_DIRECTION
+        return get_position_direction(self._side, self._position_effect)
 
     @property
     def exec_id(self):

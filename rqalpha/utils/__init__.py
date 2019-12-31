@@ -19,12 +19,16 @@ import six
 import collections
 from decimal import getcontext, ROUND_FLOOR
 from datetime import time
+from typing import Optional
 
 from contextlib import contextmanager
 import numpy as np
 
 from rqalpha.utils.exception import CustomError, CustomException
-from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN
+from rqalpha.const import (
+    EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, SIDE, POSITION_EFFECT,
+    POSITION_DIRECTION
+)
 from rqalpha.utils.datetime_func import TimeRange
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.py2 import lru_cache
@@ -261,6 +265,19 @@ def is_run_from_ipython():
 
 def is_valid_price(price):
     return not (price is None or np.isnan(price) or price <= 0)
+
+
+def get_position_direction(side, position_effect):
+    # type: (SIDE, Optional[POSITION_EFFECT]) -> POSITION_DIRECTION
+    if position_effect is None:
+        return POSITION_DIRECTION.LONG
+    if (side == SIDE.BUY and position_effect in (
+            POSITION_EFFECT.OPEN, POSITION_EFFECT.EXERCISE
+    )) or (side == SIDE.SELL and position_effect in (
+            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY
+    )):
+        return POSITION_DIRECTION.LONG
+    return POSITION_DIRECTION.SHORT
 
 
 @contextmanager

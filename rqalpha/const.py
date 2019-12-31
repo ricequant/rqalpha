@@ -142,7 +142,6 @@ class POSITION_EFFECT(CustomEnum):
 
 # noinspection PyPep8Naming
 class POSITION_DIRECTION(CustomEnum):
-    UNKNOWN = "UNKNOWN"
     LONG = "LONG"
     SHORT = "SHORT"
 

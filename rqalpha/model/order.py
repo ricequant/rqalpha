@@ -17,8 +17,8 @@ from decimal import Decimal
 
 import numpy as np
 
-from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
-from rqalpha.utils import id_gen, decimal_rounding_floor
+from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION
+from rqalpha.utils import id_gen, decimal_rounding_floor, get_position_direction
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
 from rqalpha.environment import Environment
@@ -86,7 +86,7 @@ class Order(object):
         if d['position_effect'] is None:
             self._position_effect = None
         else:
-            self._position_effect = self._str_to_enum(POSITION_EFFECT, d['position_effect'])
+            self._position_effect = POSITION_EFFECT[d['position_effect']]
         self._message = d['message']
         self._filled_quantity = d['filled_quantity']
         self._status = self._str_to_enum(ORDER_STATUS, d['status'])
@@ -191,6 +191,11 @@ class Order(object):
             else:
                 return POSITION_EFFECT.CLOSE
         return self._position_effect
+
+    @property
+    def position_direction(self):
+        # type: () -> POSITION_DIRECTION
+        return get_position_direction(self._side, self._position_effect)
 
     @property
     def message(self):
