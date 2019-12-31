@@ -243,18 +243,19 @@ class AssetAccount(AbstractAccount):
             else:
                 self._frozen_cash -= self._frozen_cash_of_order(order)
 
-    def _iter_pos(self):
-        # type: () -> Iterable[AssetPosition]
-        return chain(*[six.itervalues(p) for p in six.itervalues(self._positions)])
+    def _iter_pos(self, direction=None):
+        # type: (Optional[POSITION_DIRECTION]) -> Iterable[AssetPosition]
+        if direction:
+            return (p[direction] for p in six.itervalues(self._positions))
+        else:
+            return chain(*[six.itervalues(p) for p in six.itervalues(self._positions)])
 
     def _get_or_create_pos(self, order_book_id, direction):
         # type: (str, Union[str, POSITION_DIRECTION]) -> AssetPosition
         if order_book_id not in self._positions:
-            env = Environment.get_instance()
-            pos_model = env.get_position_model(env.get_account_type(order_book_id))
             positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: pos_model(order_book_id, POSITION_DIRECTION.LONG),
-                POSITION_DIRECTION.SHORT: pos_model(order_book_id, POSITION_DIRECTION.SHORT)
+                POSITION_DIRECTION.LONG: AssetPosition(order_book_id, POSITION_DIRECTION.LONG),
+                POSITION_DIRECTION.SHORT: AssetPosition(order_book_id, POSITION_DIRECTION.SHORT)
             })
         else:
             positions = self._positions[order_book_id]
