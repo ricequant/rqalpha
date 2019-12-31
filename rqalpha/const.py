@@ -19,7 +19,7 @@ import six
 
 class CustomEnumMeta(EnumMeta):
     def __new__(metacls, cls, bases, classdict):
-        enum_class = super().__new__(metacls, cls, bases, classdict)
+        enum_class = super(CustomEnumMeta, metacls).__new__(metacls, cls, bases, classdict)
         enum_class._member_reverse_map = {v.value: v for v in enum_class.__members__.values()}
         return enum_class
 
