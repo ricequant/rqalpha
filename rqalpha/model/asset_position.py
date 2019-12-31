@@ -31,7 +31,7 @@ class AssetPosition(AbstractPosition):
     def __init__(self, order_book_id, direction, t_plus_enabled=True):
         self._order_book_id = order_book_id
         self._direction = direction
-        self._t_plus_enabled = t_plus_enabeld
+        self._t_plus_enabled = t_plus_enabled
 
         self._old_quantity = 0
         self._logical_old_quantity = 0
@@ -197,6 +197,12 @@ class AssetPosition(AbstractPosition):
         if self._t_plus_enabled:
             return self.quantity - order_quantity - self._non_closable
         return self.quantity - order_quantity
+
+    @property
+    def today_closable(self):
+        return self.today_quantity - sum(
+            o.unfilled_quantity for o in self.open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
+        )
 
     def apply_settlement(self):
         self._old_quantity += self._today_quantity

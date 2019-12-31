@@ -12,33 +12,31 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from typing import Any
 
 from rqalpha.interface import AbstractMod
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha import export_as_api
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.environment import Environment
 
 from .account_model import StockAccount, FutureAccount
-from .position_model import StockPositionProxy, FuturePositionProxy
 from .api import api_future, api_stock, api_base
 
 
 class AccountMod(AbstractMod):
 
     def start_up(self, env, mod_config):
-
-        StockPositionProxy.stock_t1 = mod_config.stock_t1
-        StockAccount.dividend_reinvestment = mod_config.dividend_reinvestment
+        # type: (Environment, Any) -> None
 
         FutureAccount.forced_liquidation = mod_config.future_forced_liquidation
+        StockAccount.dividend_reinvestment = mod_config.dividend_reinvestment
+        StockAccount.cash_return_by_stock_delisted = mod_config.cash_return_by_stock_delisted
+        StockAccount.t1 = mod_config.stock_t1
 
         # 注入 Account
         env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount, INST_TYPE_IN_STOCK_ACCOUNT)
-        env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount, ("Future", ))
-
-        # 注入 Position
-        env.set_position_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockPositionProxy)
-        env.set_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FuturePositionProxy)
+        env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount, (INSTRUMENT_TYPE.FUTURE, ))
 
         # 注入 API
         for export_name in api_base.__all__:

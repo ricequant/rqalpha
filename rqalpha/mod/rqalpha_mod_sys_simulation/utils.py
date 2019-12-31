@@ -81,5 +81,5 @@ def init_portfolio(env):
         units += account.total_value
         accounts[account_type] = account
 
-    return Portfolio(config.base.start_date, 1, units, accounts)
+    return Portfolio(1, units, accounts)
 
