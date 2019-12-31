@@ -28,7 +28,7 @@ from rqalpha.utils import is_valid_price
 class AssetPosition(AbstractPosition):
     __repr__ = property_repr
 
-    def __init__(self, order_book_id, direction, t_plus_enabeld=False):
+    def __init__(self, order_book_id, direction, t_plus_enabled=True):
         self._order_book_id = order_book_id
         self._direction = direction
         self._t_plus_enabled = t_plus_enabeld

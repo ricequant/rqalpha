@@ -98,7 +98,7 @@ class SignalBroker(AbstractBroker):
                     bar_status=BAR_STATUS.LIMIT_DOWN
                 ))
 
-        ct_amount = account.positions.get_or_create(order_book_id).cal_close_today_amount(order.quantity, order.side)
+        ct_amount = account.cal_close_today_amount(order_book_id, order.quantity, order.position_direction)
         trade_price = self._slippage_decider.get_trade_price(order, deal_price)
         trade = Trade.__from_create__(
             order_id=order.order_id,

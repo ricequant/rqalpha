@@ -39,6 +39,12 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
+        # type: (str, float, POSITION_DIRECTION) -> float
+        # 根据计算当前不超过 trade_amount 的最大可平仓量
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def get_state(self):
         # type: () -> Any
         # 主要用于进行持久化时候，提供对应需要持久化的数据

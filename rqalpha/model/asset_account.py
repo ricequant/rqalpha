@@ -14,6 +14,7 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+from abc import ABCMeta
 
 import six
 from itertools import chain
@@ -31,7 +32,7 @@ from .order import Order
 from .trade import Trade
 
 
-class AssetAccount(AbstractAccount):
+class AssetAccount(AbstractAccount, six.with_metaclass(ABCMeta)):
 
     __repr__ = property_repr
 
@@ -114,21 +115,6 @@ class AssetAccount(AbstractAccount):
 
         # 计算 Frozen Cash
         self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
-
-    def order(self, order_book_id, quantity, style, target=False):
-        """"""
-        raise NotImplementedError
-
-    @property
-    def positions(self):
-        raise NotImplementedError
-
-    @property
-    def type(self):
-        """
-        [enum] 账户类型
-        """
-        raise NotImplementedError
 
     @property
     def frozen_cash(self):
