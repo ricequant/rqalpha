@@ -4,24 +4,29 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
-#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+
+from typing import Union, Iterable, Type, Optional
 
 from six import iteritems
 
 from rqalpha.events import EventBus
-from rqalpha.const import FRONT_VALIDATOR_TYPE
+from rqalpha.const import FRONT_VALIDATOR_TYPE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
 from rqalpha.utils.i18n import gettext as _
 
 
 class Environment(object):
-    _env = None
+    _env = None  # type: Environment
 
     def __init__(self, config):
         Environment._env = self
@@ -52,7 +57,6 @@ class Environment(object):
         self.user_strategy = None
         self._frontend_validators = {}
         self._account_model_dict = {}
-        self._position_model_dict = {}
         self._transaction_cost_decider_dict = {}
         self._ins_account_type_map = {}
 
@@ -102,13 +106,14 @@ class Environment(object):
     def add_frontend_validator(self, validator, validator_type=FRONT_VALIDATOR_TYPE.OTHER):
         self._frontend_validators.setdefault(validator_type, []).append(validator)
 
-    def set_account_model(self, account_type, account_model, supported_instrument_types=None):
-        if supported_instrument_types is None:
+    def set_account_model(self, account_type, account_model, instrument_types=None):
+        # type: (Union[str, DEFAULT_ACCOUNT_TYPE], Type, Optional[Iterable[Union[str, INSTRUMENT_TYPE]]]) -> None
+        if instrument_types is None:
             system_log.warning(
                 "supported_instrument_model not provided, "
                 "{} account cannot be accessed by env.get_account or env.get_account_type".format(account_type)
             )
-        for instrument_type in supported_instrument_types:
+        for instrument_type in instrument_types:
             self._ins_account_type_map[instrument_type] = account_type
         self._account_model_dict[account_type] = account_model
 
@@ -116,14 +121,6 @@ class Environment(object):
         if account_type not in self._account_model_dict:
             raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
         return self._account_model_dict[account_type]
-
-    def set_position_model(self, account_type, position_model):
-        self._position_model_dict[account_type] = position_model
-
-    def get_position_model(self, account_type):
-        if account_type not in self._position_model_dict:
-            raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
-        return self._position_model_dict[account_type]
 
     def validate_order_submission(self, order):
         if Environment.get_instance().config.extra.is_hold:
