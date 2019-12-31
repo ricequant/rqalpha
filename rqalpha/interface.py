@@ -105,6 +105,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         # 返回当前账户的当日盈亏费用
         raise NotImplementedError
 
+
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
     仓位接口，主要用于构建仓位信息
@@ -136,13 +137,6 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     def direction(self):
         # type: () -> POSITION_DIRECTION
         # 返回当前持仓的方向
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def type(self):
-        # type: () -> Union[DEFAULT_ACCOUNT_TYPE, str]
-        # 返回 String 类型的账户类型标示
         raise NotImplementedError
 
     @property

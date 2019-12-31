@@ -17,6 +17,7 @@ import datetime
 import numpy as np
 
 from rqalpha.environment import Environment
+from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils import instrument_type_str2enum, TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr
 
@@ -315,7 +316,7 @@ class Instrument(object):
         :param dt: datetime.datetime
         :return: bool
         """
-        if self.type == "Future":
+        if self.type == INSTRUMENT_TYPE.FUTURE:
             return dt.date() > self.de_listed_date.date()
         else:
             return dt >= self.de_listed_date

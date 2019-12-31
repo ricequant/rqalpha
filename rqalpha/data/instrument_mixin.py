@@ -14,7 +14,8 @@
 import re
 import six
 
-from rqalpha.utils import merge_trading_period, INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils import merge_trading_period
+from rqalpha.model.instrument import Instrument
 
 
 class InstrumentMixin(object):
