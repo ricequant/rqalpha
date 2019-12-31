@@ -184,7 +184,7 @@ class AssetAccount(AbstractAccount):
         """
         [float] 当日盈亏
         """
-        return self.trading_pnl + self.position_pnl
+        return self.trading_pnl + self.position_pnl - self.transaction_cost
 
     @property
     def total_value(self):
