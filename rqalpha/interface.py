@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import Any, Union, Optional
+from typing import Any, Union, Optional, Iterable
 
 from six import with_metaclass
 
@@ -54,6 +54,11 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def set_state(self, state):
         # type: (Any) -> None
         # 主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_position(self, order_book_id=None, direction=None):
+        # type: (Optional[str], Optional[POSITION_DIRECTION]) -> Union[AbstractPosition, Iterable[AbstractPosition]]
         raise NotImplementedError
 
     @property

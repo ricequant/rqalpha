@@ -50,7 +50,7 @@ class FutureAccount(AssetAccount):
         "realized_pnl",
     ]
 
-    def __init__(self, total_cash, positions, backward_trade_set=None):
+    def __init__(self, total_cash, positions=None, backward_trade_set=None):
         super(FutureAccount, self).__init__(total_cash, positions, backward_trade_set)
         self._position_proxy_dict = None
 
@@ -86,10 +86,11 @@ class FutureAccount(AssetAccount):
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
         # type: (str, float, POSITION_DIRECTION) -> float
-        close_today_amount = trade_amount - self._positions[position_direction].old_quantity
+        position = self._get_or_create_pos(order_book_id, position_direction)
+        close_today_amount = trade_amount - position.old_quantity
         return max(close_today_amount, 0)
 
-    def _on_settlement(self, event):
+    def apply_settlement(self):
         env = Environment.get_instance()
         current_date = env.trading_dt
         next_date = env.data_proxy.get_next_trading_date(current_date)

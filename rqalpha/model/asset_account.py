@@ -32,16 +32,16 @@ from .order import Order
 from .trade import Trade
 
 
-class AssetAccount(AbstractAccount, six.with_metaclass(ABCMeta)):
+class AssetAccount(AbstractAccount):
 
     __repr__ = property_repr
 
-    def __init__(self, total_cash, positions, backward_trade_set=None):
+    def __init__(self, total_cash, positions=None, backward_trade_set=None):
         # type: (float, Dict[str, Dict[POSITION_DIRECTION, AssetPosition]], set) -> None
         self._static_total_value = total_cash
-        self._positions = positions
-        self._frozen_cash = 0
+        self._positions = positions or {}
         self._backward_trade_set = backward_trade_set or set()
+        self._frozen_cash = 0
 
         self.register_event()
 
@@ -56,7 +56,7 @@ class AssetAccount(AbstractAccount, six.with_metaclass(ABCMeta)):
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
 
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
-        event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.add_listener(EVENT.SETTLEMENT, lambda e: self.apply_settlement())
 
         event_bus.add_listener(EVENT.BAR, self._update_last_price)
         event_bus.add_listener(EVENT.TICK, self._update_last_price)
@@ -98,7 +98,7 @@ class AssetAccount(AbstractAccount, six.with_metaclass(ABCMeta)):
                     self._positions.pop(p.order_book_id)
             self._static_total_value = state["total_cash"] + self.margin - self.daily_pnl + self.transaction_cost
 
-    def fast_forward(self, orders, trades=None):
+    def fast_forward(self, orders=None, trades=None):
         if trades:
             close_trades = []
             # 先处理开仓
@@ -114,7 +114,32 @@ class AssetAccount(AbstractAccount, six.with_metaclass(ABCMeta)):
                 self._apply_trade(trade)
 
         # 计算 Frozen Cash
-        self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
+        if orders:
+            self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
+
+    def get_position(self, order_book_id=None, direction=None):
+        if order_book_id:
+            return self._positions[order_book_id][direction]
+        else:
+            return self._iter_pos()
+
+    def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
+        raise NotImplementedError
+
+    def order(self, order_book_id, quantity, style, target=False):
+        raise NotImplementedError
+
+    @property
+    def positions(self):
+        raise NotImplementedError
+
+    @property
+    def type(self):
+        raise NotImplementedError
+
+    @property
+    def apply_settlement(self):
+        raise NotImplementedError
 
     @property
     def frozen_cash(self):
@@ -195,9 +220,6 @@ class AssetAccount(AbstractAccount, six.with_metaclass(ABCMeta)):
         """
         return sum(p.trading_pnl for p in self._iter_pos())
 
-    def _on_settlement(self, event):
-        raise NotImplementedError
-
     def _on_before_trading(self, event):
         raise NotImplementedError
 
@@ -249,7 +271,7 @@ class AssetAccount(AbstractAccount, six.with_metaclass(ABCMeta)):
 
     def _update_last_price(self, _):
         env = Environment.get_instance()
-        for order_book_id, positions in six.itervalues(self._positions):
+        for order_book_id, positions in six.iteritems(self._positions):
             price = env.get_last_price(order_book_id)
             if price == price:
                 for position in six.itervalues(positions):

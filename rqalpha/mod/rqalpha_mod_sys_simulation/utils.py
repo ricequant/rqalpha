@@ -15,7 +15,6 @@
 import datetime
 import six
 
-from rqalpha.model.positions import Positions
 from rqalpha.model.portfolio import Portfolio
 from rqalpha.model.trade import Trade
 from rqalpha.utils.i18n import gettext as _
@@ -49,9 +48,8 @@ def init_portfolio(env):
             raise RuntimeError(_(u"{} starting cash can not be 0, using `--account {} 100000`").format(account_type, account_type))
 
         account_model = env.get_account_model(account_type)
-        position_model = env.get_position_model(account_type)
-        positions = Positions(position_model)
 
+        trades = []
         for order_book_id, quantity in _filter_positions(env, account_type):
             instrument = env.get_instrument(order_book_id)
             if instrument is None:
@@ -66,18 +64,12 @@ def init_portfolio(env):
                 raise RuntimeError(_(u'the close price of {} in initial positions is not available').format(order_book_id))
 
             price = bars[0]
-            trade = _fake_trade(order_book_id, quantity, price)
-            if order_book_id not in positions:
-                positions[order_book_id] = position_model(order_book_id)
-            positions[order_book_id].apply_trade(trade)
-            # FIXME
-            positions[order_book_id]._last_price = price
+            trades.append(_fake_trade(order_book_id, quantity, price))
 
-        # 变成昨仓
-        for order_book_id, position in positions.items():
-            position.apply_settlement()
+        account = account_model(starting_cash)
+        account.fast_forward(trades=trades)
+        account.apply_settlement()
 
-        account = account_model(starting_cash, positions)
         units += account.total_value
         accounts[account_type] = account
 

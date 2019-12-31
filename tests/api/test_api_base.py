@@ -344,10 +344,10 @@ def test_get_position():
             buy_close("RB1701", 2)
 
         if context.counter == 1:
-            pos = get_positions()[0]
+            pos = [p for p in get_positions() if p.direction == POSITION_DIRECTION.LONG][0]
             assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 300, 0, context.expected_avg_price)
         elif 1 < context.counter < 5:
-            pos = get_positions()[0]
+            pos = [p for p in get_positions() if p.direction == POSITION_DIRECTION.LONG][0]
             assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 300, context.expected_avg_price)
         elif 5 <= context.counter < 10:
             pos = get_position("000001.XSHE", POSITION_DIRECTION.LONG)

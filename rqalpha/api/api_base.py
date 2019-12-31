@@ -1218,12 +1218,8 @@ def get_positions():
          BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
 
     """
-    booking = Environment.get_instance().booking
-    if not booking:
-        raise RuntimeError(
-            _("Booking has not been set, please check your broker configuration.")
-        )
-    return booking.get_positions()
+    portfolio = Environment.get_instance().portfolio
+    return portfolio.get_position()
 
 
 @export_as_api
@@ -1248,13 +1244,8 @@ def get_position(order_book_id, direction):
         [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
 
     """
-    booking = Environment.get_instance().booking
-    if not booking:
-        raise RuntimeError(
-            _("Booking has not been set, please check your broker configuration.")
-        )
-
-    return booking.get_position(order_book_id, direction)
+    portfolio = Environment.get_instance().portfolio
+    return portfolio.get_position(order_book_id, direction)
 
 
 @export_as_api

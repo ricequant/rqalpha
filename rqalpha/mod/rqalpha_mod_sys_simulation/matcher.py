@@ -161,7 +161,7 @@ class Matcher(object):
             else:
                 fill = order.unfilled_quantity
 
-            ct_amount = account.cal_close_today_amount(fill, order_book_id, order.position_direction)
+            ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
             price = self._slippage_decider.get_trade_price(order, deal_price)
 
             trade = Trade.__from_create__(

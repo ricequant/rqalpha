@@ -41,7 +41,7 @@ class StockAccount(AssetAccount):
 
     __abandon_properties__ = []
 
-    def __init__(self, total_cash, positions, backward_trade_set=None, dividend_receivable=None):
+    def __init__(self, total_cash, positions=None, backward_trade_set=None, dividend_receivable=None):
         super(StockAccount, self).__init__(total_cash, positions, backward_trade_set)
         self._dividend_receivable = dividend_receivable or {}
         self._pending_transform = {}
@@ -66,7 +66,7 @@ class StockAccount(AssetAccount):
         self._handle_split(trading_date)
         self._handle_transform()
 
-    def _on_settlement(self, event):
+    def apply_settlement(self):
         env = Environment.get_instance()
         current_date = env.trading_dt
         next_date = env.data_proxy.get_next_trading_date(current_date)
@@ -185,7 +185,7 @@ class StockAccount(AssetAccount):
         if not self._pending_transform:
             return
         for predecessor, (successor, conversion_ratio) in six.iteritems(self._pending_transform):
-            predecessor_position = self._positions.pop(predecessor)
+            predecessor_position = self._positions.pop(predecessor)[POSITION_DIRECTION.LONG]
 
             self._apply_trade(Trade.__from_create__(
                 order_id=None,
