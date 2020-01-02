@@ -13,14 +13,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import sys
+import abc
 import inspect
 import datetime
 import six
 import pandas as pd
-from typing import Iterable
 from functools import wraps
-from collections import OrderedDict
-from contextlib import contextmanager
 
 from dateutil.parser import parse as parse_date
 
@@ -37,7 +35,19 @@ main_contract_warning_flag = True
 index_contract_warning_flag = True
 
 
-class ArgumentChecker(object):
+class AbstractChecker(six.with_metaclass(abc.ABCMeta)):
+
+    @abc.abstractmethod
+    def verify(self, func_name, call_args):
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def pre_check(self):
+        raise NotImplementedError
+
+
+class ArgumentChecker(AbstractChecker):
     def __init__(self, arg_name, pre_check):
         self._arg_name = arg_name
         self._pre_check = pre_check
@@ -84,6 +94,25 @@ class ArgumentChecker(object):
 
         if instrument is None:
             self.raise_invalid_instrument_error(func_name, self._arg_name, value)
+
+        # if instrument.type == 'Future' and ('88' in instrument.order_book_id or '99' in instrument.order_book_id):
+        #     config = Environment.get_instance().config
+        #     if config.base.run_type == RUN_TYPE.PAPER_TRADING:
+        #         if "88" in instrument.order_book_id:
+        #             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
+        #         if "99" in instrument.order_book_id:
+        #             raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
+        #     else:
+        #         if "88" in instrument.order_book_id:
+        #             global main_contract_warning_flag
+        #             if main_contract_warning_flag:
+        #                 main_contract_warning_flag = False
+        #                 user_system_log.warn(_(u"Main Future contracts[88] are not supported in paper trading."))
+        #         if "99" in instrument.order_book_id:
+        #             global index_contract_warning_flag
+        #             if index_contract_warning_flag:
+        #                 index_contract_warning_flag = False
+        #                 user_system_log.warn(_(u"Index Future contracts[99] are not supported in paper trading."))
 
     def is_valid_instrument(self):
         self._rules.append(self._is_valid_instrument)
@@ -361,8 +390,27 @@ class ArgumentChecker(object):
         return self._pre_check
 
 
+class EnvChecker(AbstractChecker):
+    def __init__(self, pre_check):
+        self._pre_check = pre_check
+
+        self._rules = []
+
+    def verify(self, func_name, _):
+        for r in self._rules:
+            r(func_name)
+
+    @property
+    def pre_check(self):
+        return self._pre_check
+
+
 def verify_that(arg_name, pre_check=False):
     return ArgumentChecker(arg_name, pre_check)
+
+
+def verify_env(pre_check=False):
+    return EnvChecker(pre_check)
 
 
 def get_call_args(func, args, kwargs, traceback=None):
@@ -372,70 +420,42 @@ def get_call_args(func, args, kwargs, traceback=None):
         six.reraise(RQTypeError, RQTypeError(*e.args), traceback)
 
 
-class ApiArgumentsChecker(object):
-    def __init__(self, rules):
-        # type: (Iterable[ArgumentChecker]) -> ApiArgumentsChecker
-        self._rules = OrderedDict()
-        for r in rules:
-            self._rules[r.arg_name] = r
-
-    @property
-    def rules(self):
-        return self._rules
-
-    @property
-    def pre_check_rules(self):
-        for r in six.itervalues(self._rules):
-            if r.pre_check:
-                yield
-
-    @property
-    def post_check_rules(self):
-        for r in six.itervalues(self._rules):
-            if not r.pre_check:
-                yield
-
-    @contextmanager
-    def check(self, func, args, kwargs):
-        call_args = None
-        for r in self.pre_check_rules:
-            if call_args is None:
-                call_args = get_call_args(func, args, kwargs)
-            r.verify(func.__name__, call_args)
-
-        try:
-            yield
-        except RQInvalidArgument:
-            raise
-        except Exception as e:
-            exc_info = sys.exc_info()
-            t, v, tb = exc_info
-
-            if call_args is None:
-                call_args = get_call_args(func, args, kwargs, tb)
-            try:
-                for r in self.post_check_rules:
-                    r.verify(func.__name__, call_args)
-            except RQInvalidArgument as e:
-                six.reraise(RQInvalidArgument, e, tb)
-                return
-
-            if getattr(e, EXC_EXT_NAME, EXC_TYPE.NOTSET) == EXC_TYPE.NOTSET:
-                patch_system_exc(e)
-
-            raise
-
-
 def apply_rules(*rules):
-    checker = ApiArgumentsChecker(rules)
-
     def decorator(func):
         @wraps(func)
         def api_rule_check_wrapper(*args, **kwargs):
-            with checker.check(func, args, kwargs):
-                return func(*args, **kwargs)
+            call_args = None
+            for r in rules:
+                if not r.pre_check:
+                    continue
+                if call_args is None:
+                    call_args = get_call_args(func, args, kwargs)
+                r.verify(func.__name__, call_args)
 
-        api_rule_check_wrapper._rq_api_args_checker = checker
+            try:
+                return func(*args, **kwargs)
+            except RQInvalidArgument:
+                raise
+            except Exception as e:
+                exc_info = sys.exc_info()
+                t, v, tb = exc_info
+
+                if call_args is None:
+                    call_args = get_call_args(func, args, kwargs, tb)
+                try:
+                    for r in rules:
+                        if r.pre_check:
+                            continue
+                        r.verify(func.__name__, call_args)
+                except RQInvalidArgument as e:
+                    six.reraise(RQInvalidArgument, e, tb)
+                    return
+
+                if getattr(e, EXC_EXT_NAME, EXC_TYPE.NOTSET) == EXC_TYPE.NOTSET:
+                    patch_system_exc(e)
+
+                raise
+
         api_rule_check_wrapper._rq_exception_checked = True
         return api_rule_check_wrapper
 
