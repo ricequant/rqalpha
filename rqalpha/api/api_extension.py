@@ -16,7 +16,7 @@ import six
 
 from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
 from rqalpha.environment import Environment
-from rqalpha.utils.arg_checker import apply_rules, verify_that, verify_env
+from rqalpha.utils.arg_checker import apply_rules, verify_that
 
 # noinspection PyUnresolvedReferences
 from rqalpha.model.order import LimitOrder, MarketOrder, Order
