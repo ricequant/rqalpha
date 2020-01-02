@@ -48,7 +48,7 @@ class StockAccount(AssetAccount):
         self._position_proxy_dict = None
 
     def order(self, order_book_id, quantity, style, target=False):
-        position = self.positions[order_book_id][POSITION_DIRECTION]
+        position = self._positions[order_book_id][POSITION_DIRECTION]
         if target:
             # For order_to
             quantity = quantity - position.quantity
