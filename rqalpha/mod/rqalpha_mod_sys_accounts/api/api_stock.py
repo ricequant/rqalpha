@@ -24,7 +24,7 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
 from rqalpha.utils import is_valid_price
-from rqalpha.utils.arg_checker import apply_rules, verify_that, verify_env
+from rqalpha.utils.arg_checker import apply_rules, verify_that
 # noinspection PyUnresolvedReferences
 from rqalpha.utils.exception import patch_user_exc, RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
