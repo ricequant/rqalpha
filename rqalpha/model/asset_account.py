@@ -119,7 +119,10 @@ class AssetAccount(AbstractAccount):
 
     def get_position(self, order_book_id=None, direction=None):
         if order_book_id:
-            return self._positions[order_book_id][direction]
+            try:
+                return self._positions[order_book_id][direction]
+            except KeyError:
+                return AssetPosition(order_book_id, direction)
         else:
             return self._iter_pos()
 

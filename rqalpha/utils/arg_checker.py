@@ -82,8 +82,23 @@ class ArgumentChecker(object):
             self.raise_invalid_instrument_error(func_name, value)
         return instrument
 
-    def is_valid_instrument(self):
-        self._rules.append(self._is_valid_instrument)
+    def is_valid_instrument(self, valid_instrument_types=None):
+        def check_is_valid_instrument(func_name, value):
+            instrument = None
+            if isinstance(value, six.string_types):
+                instrument = Environment.get_instance().get_instrument(value)
+            elif isinstance(value, Instrument):
+                instrument = value
+
+            if instrument is None:
+                self.raise_invalid_instrument_error(func_name, value)
+            if valid_instrument_types and instrument.type not in valid_instrument_types:
+                raise RQInvalidArgument(_(
+                    u"function {}: invalid {} argument, expected instrument with types {}, got instrument with type {}"
+                ).format(func_name, self._arg_name, valid_instrument_types, instrument.type))
+            return instrument
+
+        self._rules.append(check_is_valid_instrument)
         return self
 
     def _is_listed_instrument(self, func_name, value):

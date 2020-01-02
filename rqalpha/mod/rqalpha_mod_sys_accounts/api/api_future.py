@@ -13,14 +13,16 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from __future__ import division
-import six
 
 from rqalpha.api.api_base import decorate_api_exc, cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.const import EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, POSITION_DIRECTION
+from rqalpha.const import (
+    EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
+)
 from rqalpha.model.instrument import Instrument
+from rqalpha.model.asset_position import AssetPosition
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
@@ -43,7 +45,7 @@ def export_as_api(func):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
-@apply_rules(verify_that('id_or_ins').is_valid_future(),
+@apply_rules(verify_that('id_or_ins', pre_check=True).is_valid_future(),
              verify_that('amount').is_number().is_greater_or_equal_than(0),
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
@@ -61,9 +63,10 @@ def order(id_or_ins, amount, side, position_effect, style):
     if isinstance(style, LimitOrder) and style.get_limit_price() <= 0:
         raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
-    order_book_id = assure_future_order_book_id(id_or_ins)
+    instrument = assure_instrument(id_or_ins)
+    order_book_id = instrument.order_book_id
     env = Environment.get_instance()
-    if env.config.base.run_type != RUN_TYPE.BACKTEST:
+    if env.config.base.run_type != RUN_TYPE.BACKTEST and instrument.type == INSTRUMENT_TYPE.FUTURE:
         if "88" in order_book_id:
             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
         if "99" in order_book_id:
@@ -79,89 +82,34 @@ def order(id_or_ins, amount, side, position_effect, style):
     env = Environment.get_instance()
 
     orders = []
+
     if position_effect == POSITION_EFFECT.CLOSE:
-        if side == SIDE.BUY:
-            position = env.portfolio.positions[order_book_id]
-            sell_quantity, sell_old_quantity = position.sell_quantity, position.sell_old_quantity
-
-            # 如果平仓量大于持仓量，则 Warning 并 取消订单创建
-            if amount > sell_quantity:
-                user_system_log.warn(
-                    _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=sell_quantity)
-                )
-                return []
-            sell_old_quantity = sell_old_quantity
-            if amount > sell_old_quantity:
-                if sell_old_quantity != 0:
-                    # 如果有昨仓，则创建一个 POSITION_EFFECT.CLOSE 的平仓单
-                    orders.append(Order.__from_create__(
-                        order_book_id,
-                        sell_old_quantity,
-                        side,
-                        style,
-                        POSITION_EFFECT.CLOSE
-                    ))
-                # 剩下还有仓位，则创建一个 POSITION_EFFECT.CLOSE_TODAY 的平今单
+        direction = POSITION_DIRECTION.LONG if side == SIDE.SELL else POSITION_DIRECTION.SHORT
+        position = env.portfolio.get_position(order_book_id, direction)  # type: AssetPosition
+        quantity, old_quantity = position.quantity, position.old_quantity
+        if amount > quantity:
+            user_system_log.warn(_(
+                u"Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
+                amount=amount, quantity=quantity
+            ))
+            return []
+        if amount > old_quantity:
+            if old_quantity != 0:
+                # 如果有昨仓，则创建一个 POSITION_EFFECT.CLOSE 的平仓单
                 orders.append(Order.__from_create__(
-                    order_book_id,
-                    amount - sell_old_quantity,
-                    side,
-                    style,
-                    POSITION_EFFECT.CLOSE_TODAY
+                    order_book_id, old_quantity, side, style, POSITION_EFFECT.CLOSE
                 ))
-            else:
-                # 创建 POSITION_EFFECT.CLOSE 的平仓单
-                orders.append(Order.__from_create__(
-                    order_book_id,
-                    amount,
-                    side,
-                    style,
-                    POSITION_EFFECT.CLOSE
-                ))
+            # 剩下还有仓位，则创建一个 POSITION_EFFECT.CLOSE_TODAY 的平今单
+            orders.append(Order.__from_create__(
+                order_book_id, amount - old_quantity, side, style, POSITION_EFFECT.CLOSE_TODAY
+            ))
         else:
-            position = env.portfolio.positions[order_book_id]
-            buy_quantity, buy_old_quantity = position.buy_quantity, position.buy_old_quantity
-
-            if amount > buy_quantity:
-                user_system_log.warn(
-                    _(u"Order Creation Failed: close amount {amount} is larger than position "
-                      u"quantity {quantity}").format(amount=amount, quantity=buy_quantity)
-                )
-                return []
-            buy_old_quantity = buy_old_quantity
-            if amount > buy_old_quantity:
-                if buy_old_quantity != 0:
-                    orders.append(Order.__from_create__(
-                        order_book_id,
-                        buy_old_quantity,
-                        side,
-                        style,
-                        POSITION_EFFECT.CLOSE
-                    ))
-                orders.append(Order.__from_create__(
-                    order_book_id,
-                    amount - buy_old_quantity,
-                    side,
-                    style,
-                    POSITION_EFFECT.CLOSE_TODAY
-                ))
-            else:
-                orders.append(Order.__from_create__(
-                    order_book_id,
-                    amount,
-                    side,
-                    style,
-                    POSITION_EFFECT.CLOSE
-                ))
+            # 创建 POSITION_EFFECT.CLOSE 的平仓单
+            orders.append(Order.__from_create__(order_book_id, amount, side, style, POSITION_EFFECT.CLOSE))
+    elif position_effect == POSITION_EFFECT.OPEN:
+        orders.append(Order.__from_create__(order_book_id, amount, side, style, position_effect))
     else:
-        orders.append(Order.__from_create__(
-            order_book_id,
-            amount,
-            side,
-            style,
-            position_effect
-        ))
+        raise NotImplementedError()
 
     if len(orders) > 1:
         user_system_log.warn(_(
@@ -289,18 +237,11 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
 
 
-def assure_future_order_book_id(id_or_symbols):
+def assure_instrument(id_or_symbols):
     if isinstance(id_or_symbols, Instrument):
-        if id_or_symbols.type != "Future":
-            raise RQInvalidArgument(
-                _(u"{order_book_id} is not supported in current strategy type").format(
-                    order_book_id=id_or_symbols.order_book_id))
-        else:
-            return id_or_symbols.order_book_id
-    elif isinstance(id_or_symbols, six.string_types):
-        return assure_future_order_book_id(Environment.get_instance().data_proxy.instruments(id_or_symbols))
+        return id_or_symbols
     else:
-        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
+        return Environment.get_instance().data_proxy.instruments(id_or_symbols)
 
 
 @export_as_api
