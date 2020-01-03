@@ -21,7 +21,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import is_valid_price, account_type_str2enum
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
-from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE
+from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE, POSITION_EFFECT
 
 from .slippage import SlippageDecider
 from .utils import init_portfolio
@@ -47,7 +47,6 @@ class SignalBroker(AbstractBroker):
             return
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=copy(order)))
-        self._match(account, order)
 
     def cancel_order(self, order):
         user_system_log.error(_(u"cancel_order function is not supported in signal mode"))
@@ -84,19 +83,20 @@ class SignalBroker(AbstractBroker):
             """
             在 Signal 模式下，不再阻止涨跌停是否买进，price_limit 参数表示是否给出警告提示。
             """
-            if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-                user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
-                    order_book_id=order_book_id,
-                    quantity=order.quantity,
-                    bar_status=BAR_STATUS.LIMIT_UP
-                ))
+            if order.position_effect != POSITION_EFFECT.EXERCISE:
+                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                    user_system_log.warning(
+                        _(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+                            order_book_id=order_book_id, quantity=order.quantity, bar_status=BAR_STATUS.LIMIT_UP
+                        )
+                    )
 
-            if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                user_system_log.warning(_(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
-                    order_book_id=order_book_id,
-                    quantity=order.quantity,
-                    bar_status=BAR_STATUS.LIMIT_DOWN
-                ))
+                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                    user_system_log.warning(
+                        _(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+                            order_book_id=order_book_id, quantity=order.quantity, bar_status=BAR_STATUS.LIMIT_DOWN
+                        )
+                    )
 
         ct_amount = account.calc_close_today_amount(order_book_id, order.quantity, order.position_direction)
         trade_price = self._slippage_decider.get_trade_price(order, deal_price)
