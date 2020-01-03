@@ -34,13 +34,6 @@ from .position_proxy import FuturePositionProxy, PositionProxyDict
 PositionsType = Dict[POSITION_DIRECTION, AssetPosition]
 
 
-def margin_of(order_book_id, quantity, price):
-    env = Environment.get_instance()
-    margin_multiplier = env.config.base.margin_multiplier
-    instrument = env.get_instrument(order_book_id)
-    return quantity * instrument.contract_multiplier * price * instrument.margin_rate * margin_multiplier
-
-
 class FutureAccount(AssetAccount):
 
     forced_liquidation = True
@@ -124,15 +117,6 @@ class FutureAccount(AssetAccount):
     @property
     def type(self):
         return DEFAULT_ACCOUNT_TYPE.FUTURE
-
-    @staticmethod
-    def _frozen_cash_of_order(order):
-        order_cost = margin_of(
-            order.order_book_id, order.quantity, order.frozen_price
-        ) if order.position_effect == POSITION_EFFECT.OPEN else 0
-        return order_cost + Environment.get_instance().get_order_transaction_cost(
-            DEFAULT_ACCOUNT_TYPE.FUTURE, order
-        )
 
     @property
     def buy_margin(self):

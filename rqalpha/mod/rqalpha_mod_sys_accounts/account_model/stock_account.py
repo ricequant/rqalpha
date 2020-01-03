@@ -131,11 +131,6 @@ class StockAccount(AssetAccount):
         y, m = divmod(r, 100)
         return datetime.date(year=y, month=m, day=d)
 
-    @staticmethod
-    def _frozen_cash_of_order(order):
-        order_cost = order.frozen_price * order.quantity if order.side == SIDE.BUY else 0
-        return order_cost + Environment.get_instance().get_order_transaction_cost(DEFAULT_ACCOUNT_TYPE.STOCK, order)
-
     def _handle_dividend_book_closure(self, trading_date):
         for order_book_id, positions in six.iteritems(self._positions):
             dividend = Environment.get_instance().data_proxy.get_dividend_by_book_date(order_book_id, trading_date)

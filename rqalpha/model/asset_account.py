@@ -14,7 +14,6 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from abc import ABCMeta
 
 import six
 from itertools import chain
@@ -288,7 +287,10 @@ class AssetAccount(AbstractAccount):
                 for position in six.itervalues(positions):
                     position.update_last_price(price)
 
-    @staticmethod
-    def _frozen_cash_of_order(order):
-        # type: (Order) -> float
-        raise NotImplementedError
+    def _frozen_cash_of_order(self, order):
+        env = Environment.get_instance()
+        if order.position_effect == POSITION_EFFECT.OPEN:
+            order_cost = env.data_proxy.instruments(order.order_book_id).calc_margin(order.frozen_price, order.quantity)
+        else:
+            order_cost = 0
+        return order_cost + env.get_order_transaction_cost(self.type, order)
