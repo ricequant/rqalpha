@@ -278,11 +278,12 @@ class Order(object):
         quantity = trade.last_quantity
         assert self.filled_quantity + quantity <= self.quantity
         new_quantity = self._filled_quantity + quantity
-        self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
         self._transaction_cost += trade.commission + trade.tax
         self._filled_quantity = new_quantity
         if self.unfilled_quantity == 0:
             self._status = ORDER_STATUS.FILLED
+        if self._position_effect != POSITION_EFFECT.EXERCISE:
+            self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
 
     def mark_rejected(self, reject_reason):
         if not self.is_final():

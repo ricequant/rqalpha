@@ -532,12 +532,8 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
     def submit_order(self, order):
-        """
-        [Required]
-
-        提交订单。在当前版本，RQAlpha 会生成 :class:`~Order` 对象，再通过此接口提交到 Broker。
-        TBD: 由 Broker 对象生成 Order 并返回？
-        """
+        # type: (Order) -> None
+        # 提交订单。RQAlpha 会生成 :class:`~Order` 对象，再通过此接口提交到 Broker。
         raise NotImplementedError
 
     @abc.abstractmethod

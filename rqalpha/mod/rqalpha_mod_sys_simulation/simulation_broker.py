@@ -4,11 +4,14 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
-#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
@@ -18,7 +21,7 @@ import jsonpickle
 from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
-from rqalpha.const import MATCHING_TYPE, ORDER_STATUS
+from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT
 from rqalpha.model.order import Order
 from .matcher import Matcher
 from .utils import init_portfolio
@@ -33,6 +36,8 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []
+        self._open_exercise_orders = []
+
         self._delayed_orders = []
         self._frontend_validator = {}
 
@@ -44,6 +49,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
+        self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
 
     def get_portfolio(self):
         return init_portfolio(self._env)
@@ -84,7 +90,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
-        self._open_orders.append((account, order))
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            self._open_exercise_orders.append((account, order))
+        else:
+            self._open_orders.append((account, order))
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         if self._match_immediately:
@@ -107,12 +116,12 @@ class SimulationBroker(AbstractBroker, Persistable):
             except ValueError:
                 pass
 
-    def before_trading(self, event):
+    def before_trading(self, _):
         for account, order in self._open_orders:
             order.active()
             self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
 
-    def after_trading(self, event):
+    def after_trading(self, __):
         for account, order in self._open_orders:
             order.mark_rejected(_(u"Order Rejected: {order_book_id} can not match. Market close.").format(
                 order_book_id=order.order_book_id
@@ -121,7 +130,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
 
-    def on_bar(self, event):
+    def on_bar(self, _):
         self._matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match()
 
@@ -129,6 +138,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         tick = event.tick
         self._matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match(tick.order_book_id)
+
+    def pre_settlement(self, _):
+        self._matcher.match(self._open_exercise_orders)
+        self._open_exercise_orders.clear()
 
     def _match(self, order_book_id=None):
         open_orders = self._open_orders
