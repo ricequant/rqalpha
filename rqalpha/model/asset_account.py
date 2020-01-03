@@ -36,6 +36,8 @@ class AssetAccount(AbstractAccount):
 
     __repr__ = property_repr
 
+    enable_position_validator = True
+
     def __init__(self, total_cash, positions=None, backward_trade_set=None):
         # type: (float, Dict[str, Dict[POSITION_DIRECTION, AssetPosition]], set) -> None
         self._static_total_value = total_cash
@@ -224,6 +226,10 @@ class AssetAccount(AbstractAccount):
         [float] 交易盈亏
         """
         return sum(p.trading_pnl for p in self._iter_pos())
+
+    @property
+    def position_validator_enabled(self):  # type: () -> bool
+        return self.enable_position_validator
 
     def _on_before_trading(self, event):
         raise NotImplementedError

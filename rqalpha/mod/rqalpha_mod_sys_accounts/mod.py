@@ -30,6 +30,8 @@ class AccountMod(AbstractMod):
         # type: (Environment, Any) -> None
 
         FutureAccount.forced_liquidation = mod_config.future_forced_liquidation
+        FutureAccount.enable_position_validator = mod_config.validate_future_position
+        StockAccount.enable_position_validator = mod_config.validate_stock_position
         StockAccount.dividend_reinvestment = mod_config.dividend_reinvestment
         StockAccount.cash_return_by_stock_delisted = mod_config.cash_return_by_stock_delisted
         StockAccount.t1 = mod_config.stock_t1

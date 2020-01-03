@@ -121,6 +121,13 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         # 返回当前账户的当日盈亏费用
         raise NotImplementedError
 
+    @property
+    @abc.abstractmethod
+    def position_validator_enabled(self):
+        # type: () -> bool
+        # 返回当前账户是否开启验券风控
+        raise NotImplementedError
+
 
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
@@ -188,6 +195,20 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     def trading_pnl(self):
         # type: () -> float
         # 返回当前持仓当日的交易盈亏
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def closable(self):
+        # type: () -> float
+        # 返回可平仓位
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def today_closable(self):
+        # type: () -> float
+        # 返回今仓中的可平仓位
         raise NotImplementedError
 
 

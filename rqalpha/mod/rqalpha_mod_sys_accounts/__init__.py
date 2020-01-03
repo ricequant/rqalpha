@@ -26,7 +26,11 @@ __config__ = {
     # 当持仓股票退市时，按照退市价格返还现金
     "cash_return_by_stock_delisted": True,
     # 股票下单因资金不足被拒时改为使用全部剩余资金下单
-    "auto_switch_order_value": False
+    "auto_switch_order_value": False,
+    # 检查股票可平仓位是否充足
+    "validate_stock_position": True,
+    # 检查期货可平仓位是否充足
+    "validate_future_position": True,
 }
 
 
@@ -62,5 +66,14 @@ cli.commands['run'].params.append(
         ),
         default=True,
         help="[sys_simulation] return cash when stock delisted"
+    )
+)
+
+
+cli.commands['run'].params.append(
+    click.Option(
+        ("--no-short-stock/--short-stock", cli_prefix + "validate_stock_position"),
+        is_flag=True, default=True,
+        help="[sys_simulation] enable stock shorting"
     )
 )
