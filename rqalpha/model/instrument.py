@@ -377,6 +377,14 @@ class Instrument(object):
     def tick_size(self):
         return Environment.get_instance().data_proxy.get_tick_size(self.order_book_id)
 
+    def calc_margin(self, price, amount):
+        if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
+            return price * amount
+        elif self.type == INSTRUMENT_TYPE.FUTURE:
+            return price * amount * self.contract_multiplier * self.margin_rate
+        else:
+            raise NotImplementedError
+
 
 class SectorCodeItem(object):
     def __init__(self, cn, en, name):
