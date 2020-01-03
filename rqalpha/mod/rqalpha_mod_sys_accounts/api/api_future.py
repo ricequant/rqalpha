@@ -46,16 +46,11 @@ def export_as_api(func):
                                 EXECUTION_PHASE.SCHEDULED,
                                 EXECUTION_PHASE.GLOBAL)
 @apply_rules(verify_that('id_or_ins', pre_check=True).is_valid_future(),
-             verify_that('amount').is_number().is_greater_or_equal_than(0),
+             verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
-             verify_that('style').is_instance_of((LimitOrder, MarketOrder, type(None))))
+             verify_that('style', pre_check=True).is_instance_of((LimitOrder, MarketOrder, type(None))))
 def order(id_or_ins, amount, side, position_effect, style):
-    if not isinstance(style, OrderStyle):
-        raise RuntimeError
-    if amount < 0:
-        raise RuntimeError
-
     amount = int(amount)
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))

@@ -250,9 +250,8 @@ class Instrument(object):
 
     @property
     def maturity_date(self):
-        """
-        [datetime] 期货到期日。主力连续合约与指数连续合约都为 datetime(2999, 12, 31)（期货专用）
-        """
+        # type: () -> datetime.datetime
+        # 期货交割日/期权行权日
         try:
             return self.__dict__["maturity_date"]
         except (KeyError, ValueError):
