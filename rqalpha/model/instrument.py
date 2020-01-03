@@ -251,7 +251,7 @@ class Instrument(object):
     @property
     def maturity_date(self):
         # type: () -> datetime.datetime
-        # 期货交割日/期权行权日
+        # 到期日
         try:
             return self.__dict__["maturity_date"]
         except (KeyError, ValueError):

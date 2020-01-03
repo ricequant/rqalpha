@@ -210,7 +210,8 @@ def get_open_orders():
 
     :return: List[:class:`~Order` object]
     """
-    return Environment.get_instance().broker.get_open_orders()
+    broker = Environment.get_instance().broker
+    return [o for o in broker.get_open_orders() if o.position_effect != POSITION_EFFECT.EXERCISE]
 
 
 @export_as_api
