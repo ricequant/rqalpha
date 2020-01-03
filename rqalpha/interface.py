@@ -57,8 +57,13 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_position(self, order_book_id=None, direction=None):
-        # type: (Optional[str], Optional[POSITION_DIRECTION]) -> Union[AbstractPosition, Iterable[AbstractPosition]]
+    def get_positions(self):
+        # type: () -> Iterable[AbstractPosition]
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_position(self, order_book_id, direction):
+        # type: (str, POSITION_DIRECTION) -> AbstractPosition
         raise NotImplementedError
 
     @property
@@ -637,12 +642,12 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     """
     @abc.abstractmethod
     def can_submit_order(self, order, account=None):
-        # FIXME: need a better name
+        # type: (Order, Optional[AbstractAccount]) -> bool
         raise NotImplementedError
 
     @abc.abstractmethod
     def can_cancel_order(self, order, account=None):
-        # FIXME: need a better name
+        # type: (Order, Optional[AbstractAccount]) -> bool
         raise NotImplementedError
 
 

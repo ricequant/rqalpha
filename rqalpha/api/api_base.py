@@ -1219,7 +1219,7 @@ def get_positions():
 
     """
     portfolio = Environment.get_instance().portfolio
-    return portfolio.get_position()
+    return portfolio.get_positions()
 
 
 @export_as_api

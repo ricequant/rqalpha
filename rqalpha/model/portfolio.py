@@ -80,12 +80,12 @@ class Portfolio(object):
     def _post_settlement(self, event):
         self._last_unit_net_value = self.unit_net_value
 
-    def get_position(self, order_book_id=None, direction=None):
-        if order_book_id:
-            account = self._accounts[Environment.get_instance().get_account_type(order_book_id)]
-            return account.get_position(order_book_id, direction)
-        else:
-            return list(chain(*(a.get_position() for a in six.itervalues(self._accounts))))
+    def get_positions(self):
+        return list(chain(*(a.get_positions() for a in six.itervalues(self._accounts))))
+
+    def get_position(self, order_book_id, direction):
+        account = self._accounts[Environment.get_instance().get_account_type(order_book_id)]
+        return account.get_position(order_book_id, direction)
 
     @property
     def accounts(self):

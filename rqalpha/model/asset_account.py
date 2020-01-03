@@ -117,14 +117,16 @@ class AssetAccount(AbstractAccount):
         if orders:
             self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
 
-    def get_position(self, order_book_id=None, direction=None):
-        if order_book_id:
-            try:
-                return self._positions[order_book_id][direction]
-            except KeyError:
-                return AssetPosition(order_book_id, direction)
-        else:
-            return self._iter_pos()
+    def get_positions(self):
+        # type: () -> Iterable[AssetPosition]
+        return self._iter_pos()
+
+    def get_position(self, order_book_id, direction):
+        # type: (str, POSITION_DIRECTION) -> AssetPosition
+        try:
+            return self._positions[order_book_id][direction]
+        except KeyError:
+            return AssetPosition(order_book_id, direction)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
         raise NotImplementedError
