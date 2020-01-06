@@ -42,6 +42,8 @@ class SignalBroker(AbstractBroker):
         return []
 
     def submit_order(self, order):
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            raise NotImplementedError("SignalBroker does not support exercise order temporarily")
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=copy(order)))
         if order.is_final():

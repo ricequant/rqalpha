@@ -207,8 +207,11 @@ class Matcher(object):
                 raise RuntimeError(
                     "matcher.match_exercise is not able to handle {} order".format(order.position_effect)
                 )
+            underlying_order_book_id = self._env.data_proxy.instruments(order.order_book_id).order_book_id
+            underlying_price = self._env.data_proxy.get_last_price(underlying_order_book_id)
+            price = self._slippage_decider.get_exercise_price(order, underlying_price)
             trade = Trade.__from_create__(
-                order.order_id, None, order.quantity, order.side, order.position_effect, order.order_book_id
+                order.order_id, price, order.quantity, order.side, order.position_effect, order.order_book_id
             )
             trade._commission = self._env.get_trade_commission(account.type, trade)
             trade._tax = self._env.get_trade_tax(account.type, trade)
