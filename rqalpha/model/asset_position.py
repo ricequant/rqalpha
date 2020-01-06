@@ -113,12 +113,7 @@ class AssetPosition(AbstractPosition):
         return self._transaction_cost
 
     @property
-    def trade_cost(self):
-        return self._trade_cost
-
-    @property
     def trading_pnl(self):
-        # 今日交易产生的持仓差
         trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
         return self.contract_multiplier * (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
