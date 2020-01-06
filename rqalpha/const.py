@@ -224,6 +224,12 @@ class FRONT_VALIDATOR_TYPE(CustomEnum):
     OTHER = "OTHER"
 
 
+# noinspection PyPep8Naming
+class OPTION_TYPE(CustomEnum):
+    CALL = "C"
+    PUT = "P"
+
+
 class CURRENCY(CustomEnum):
     CNY = "CNY"     # 人民币
     USD = "USD"     # 美元

@@ -31,7 +31,9 @@ from .slippage import SlippageDecider
 
 class Matcher(object):
     def __init__(self, env, mod_config):
-        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
+        self._slippage_decider = SlippageDecider(
+            mod_config.slippage_model, mod_config.slippage, mod_config.exercise_splippage
+        )
         self._turnover = defaultdict(int)
         self._calendar_dt = None
         self._trading_dt = None

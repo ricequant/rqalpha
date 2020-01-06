@@ -24,4 +24,4 @@ class BaseDataSourceTestCase(BaseDataSourceFixture, RQAlphaTestCase):
             mock_instrument(_type="Future", underlying_symbol="SM")
         ), 2)
         with self.assertRaises(RuntimeError):
-            self.base_data_source.get_tick_size(mock_instrument(_type=None))
+            self.base_data_source.get_tick_size(mock_instrument(_type="Bond"))

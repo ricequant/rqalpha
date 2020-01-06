@@ -112,7 +112,7 @@ class ArgumentChecker(object):
 
     def _is_valid_stock(self, func_name, value):
         instrument = self._is_valid_instrument(func_name, value)
-        if instrument.enum_type not in INST_TYPE_IN_STOCK_ACCOUNT:
+        if instrument.type not in INST_TYPE_IN_STOCK_ACCOUNT:
             self.raise_not_valid_stock_error(func_name, value)
 
     def is_valid_stock(self):
@@ -121,7 +121,7 @@ class ArgumentChecker(object):
 
     def _is_valid_future(self, func_name, value):
         instrument = self._is_valid_instrument(func_name, value)
-        if instrument.enum_type != INSTRUMENT_TYPE.FUTURE:
+        if instrument.type != INSTRUMENT_TYPE.FUTURE:
             self.raise_not_valid_future_error(func_name, value)
 
     def is_valid_future(self):

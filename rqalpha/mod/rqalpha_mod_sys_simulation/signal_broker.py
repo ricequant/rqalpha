@@ -30,7 +30,9 @@ from .utils import init_portfolio
 class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
-        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
+        self._slippage_decider = SlippageDecider(
+            mod_config.slippage_model, mod_config.slippage, mod_config.exercise_splippage
+        )
         self._price_limit = mod_config.price_limit
 
     def get_portfolio(self):

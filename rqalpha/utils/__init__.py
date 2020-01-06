@@ -303,10 +303,3 @@ def get_account_type_enum(order_book_id):
 
 
 get_account_type = get_account_type_enum
-
-
-def instrument_type_str2enum(type_str):
-    try:
-        return INSTRUMENT_TYPE[type_str]
-    except KeyError:
-        raise NotImplementedError
