@@ -17,6 +17,7 @@
 
 import abc
 from typing import Any, Union, Optional, Iterable
+from numbers import Real
 
 from six import with_metaclass
 
@@ -34,13 +35,13 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
     def order(self, order_book_id, quantity, style, target=False):
-        # type: (str, float, OrderStyle, Optional[bool]) -> Optional[Order]
+        # type: (str, Real, OrderStyle, Optional[bool]) -> Optional[Order]
         # 系统下单函数会调用该函数来完成下单操作
         raise NotImplementedError
 
     @abc.abstractmethod
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
-        # type: (str, float, POSITION_DIRECTION) -> float
+        # type: (str, Real, POSITION_DIRECTION) -> Real
         # 根据计算当前不超过 trade_amount 的最大可平仓量
         raise NotImplementedError
 
@@ -82,42 +83,42 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     @property
     @abc.abstractmethod
     def frozen_cash(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前账户的冻结资金
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def cash(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前账户的可用资金
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def market_value(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前账户的市值
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def total_value(self):
-        # () -> float
+        # type: () -> Real
         # 返回当前账户的总权益
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def transaction_cost(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前账户的当日交易费用
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def daily_pnl(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前账户的当日盈亏费用
         raise NotImplementedError
 
@@ -165,49 +166,49 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     @property
     @abc.abstractmethod
     def market_value(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前持仓的市值
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def margin(self):
-        # type: () -> float
+        # type: () -> Real
         # 衍生品返回当前持仓所占保证金，权益类返回当前持仓市值
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def transaction_cost(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前持仓的当日交易费用
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def position_pnl(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前持仓当日的昨仓盈亏
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def trading_pnl(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回当前持仓当日的交易盈亏
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def closable(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回可平仓位
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def today_closable(self):
-        # type: () -> float
+        # type: () -> Real
         # 返回今仓中的可平仓位
         raise NotImplementedError
 

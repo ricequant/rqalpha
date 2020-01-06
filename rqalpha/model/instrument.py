@@ -13,6 +13,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import copy
 import datetime
+from numbers import Real
 
 import numpy as np
 
@@ -377,6 +378,7 @@ class Instrument(object):
         return Environment.get_instance().data_proxy.get_tick_size(self.order_book_id)
 
     def calc_margin(self, price, amount):
+        # type: (Real, Real) -> Real
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * amount
         elif self.type == INSTRUMENT_TYPE.FUTURE:
