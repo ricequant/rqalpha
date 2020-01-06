@@ -232,7 +232,7 @@ class AssetPosition(AbstractPosition):
         else:
             if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
                 self._today_quantity -= trade.last_quantity
-            elif trade.position_effect == POSITION_EFFECT.CLOSE:
+            elif trade.position_effect in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.EXERCISE):
                 # 先平昨，后平今
                 self._old_quantity -= trade.last_quantity
                 if self._old_quantity < 0:
