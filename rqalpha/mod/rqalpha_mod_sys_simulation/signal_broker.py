@@ -25,7 +25,6 @@ from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE, POSITION_EFFECT
 
 from .slippage import SlippageDecider
 from .utils import init_portfolio
-# from .booking import SimulationBooking
 
 
 class SignalBroker(AbstractBroker):
@@ -47,6 +46,7 @@ class SignalBroker(AbstractBroker):
             return
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=copy(order)))
+        self._match(account, order)
 
     def cancel_order(self, order):
         user_system_log.error(_(u"cancel_order function is not supported in signal mode"))
