@@ -4,23 +4,30 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
-#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+
+from datetime import datetime
 
 import six
 import numpy as np
 import pandas as pd
 
+from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject
 from rqalpha.model.tick import TickObject
+from rqalpha.model.instrument import Instrument
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 
@@ -123,11 +130,24 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
             return np.nan
         return bar[0]
 
+    @lru_cache(10240)
+    def _get_settlement(self, instrument, dt):
+        bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', dt, skip_suspended=False)
+        if bar is None or len(bar) == 0:
+            raise LookupError("'{}', dt={}".format(instrument.order_book_id, dt))
+        return bar[0]
+
     def get_prev_settlement(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
-        if instrument.type != 'Future':
+        if instrument.type not in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
             return np.nan
         return self._get_prev_settlement(instrument, dt)
+
+    def get_settlement(self, instrument, dt):
+        # type: (Instrument, datetime) -> float
+        if instrument.type != INSTRUMENT_TYPE.FUTURE:
+            raise LookupError("'{}', instrument_type={}".format(instrument.order_book_id, instrument.type))
+        return self._get_settlement(instrument, dt)
 
     def get_settle_price(self, order_book_id, date):
         instrument = self.instruments(order_book_id)

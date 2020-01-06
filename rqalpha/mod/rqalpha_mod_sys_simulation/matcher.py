@@ -19,12 +19,14 @@ from typing import Iterable, Tuple
 from collections import defaultdict
 
 from rqalpha.utils import is_valid_price
-from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT
+from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT, INSTRUMENT_TYPE
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.model.order import Order
+from rqalpha.model.instrument import Instrument
 from rqalpha.interface import AbstractAccount
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.environment import Environment
 
 from .slippage import SlippageDecider
 
@@ -41,7 +43,7 @@ class Matcher(object):
         self._price_limit = mod_config.price_limit
         self._liquidity_limit = mod_config.liquidity_limit
         self._volume_limit = mod_config.volume_limit
-        self._env = env
+        self._env = env  # type: Environment
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
@@ -207,8 +209,11 @@ class Matcher(object):
                 raise RuntimeError(
                     "matcher.match_exercise is not able to handle {} order".format(order.position_effect)
                 )
-            underlying_order_book_id = self._env.data_proxy.instruments(order.order_book_id).order_book_id
-            underlying_price = self._env.data_proxy.get_last_price(underlying_order_book_id)
+            underlying = self._env.data_proxy.instruments(order.order_book_id)  # type: Instrument
+            if underlying.type == INSTRUMENT_TYPE.FUTURE:
+                underlying_price = self._env.data_proxy.get_settlement(underlying, self._env.trading_dt)
+            else:
+                underlying_price = self._env.data_proxy.get_last_price(underlying.order_book_id)
             price = self._slippage_decider.get_exercise_price(order, underlying_price)
             trade = Trade.__from_create__(
                 order.order_id, price, order.quantity, order.side, order.position_effect, order.order_book_id
