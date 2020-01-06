@@ -19,7 +19,7 @@ from typing import Iterable, Tuple
 from collections import defaultdict
 
 from rqalpha.utils import is_valid_price
-from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT, INSTRUMENT_TYPE
+from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.model.order import Order
@@ -215,10 +215,31 @@ class Matcher(object):
             else:
                 underlying_price = self._env.data_proxy.get_last_price(underlying.order_book_id)
             price = self._slippage_decider.get_exercise_price(order, underlying_price)
+            long_position = account.get_position(order.order_book_id, POSITION_DIRECTION.LONG)
+            short_position = account.get_position(order.order_book_id, POSITION_DIRECTION.SHORT)
+            if long_position.quantity <= 0:
+                exercisable_quantity = 0
+            else:
+                exercisable_quantity = max(long_position.quantity - short_position.quantity, 0)
+            if exercisable_quantity == 0:
+                order.mark_cancelled(_(u"Order Cancelled: {} has no exercisable quantity").format(order.order_book_id))
+                return
+
+            exercised_quantity = min(exercisable_quantity, order.quantity)
             trade = Trade.__from_create__(
-                order.order_id, price, order.quantity, order.side, order.position_effect, order.order_book_id
+                order.order_id, price, exercised_quantity, order.side, order.position_effect, order.order_book_id
             )
             trade._commission = self._env.get_trade_commission(account.type, trade)
             trade._tax = self._env.get_trade_tax(account.type, trade)
             order.fill(trade)
             self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
+            if order.unfilled_quantity != 0:
+                order.mark_cancelled((
+                    u"Order Cancelled: exercisable amount of {order_book_id} is {exercisable_quantity}, "
+                    u"order amount is {order_quantity}, actual exercised amount is {exercised_quantity}"
+                ).format(
+                    order_book_id=order.order_book_id,
+                    exercisable_quantity=exercisable_quantity,
+                    exercised_quantity=exercised_quantity,
+                    order_quantity=order.quantity
+                ))

@@ -212,6 +212,13 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
         # 返回今仓中的可平仓位
         raise NotImplementedError
 
+    @property
+    @abc.abstractmethod
+    def quantity(self):
+        # type: () -> Real
+        # 返回当前持仓量
+        raise NotImplementedError
+
 
 class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     """
