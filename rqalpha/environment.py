@@ -20,6 +20,7 @@ from typing import Union, Iterable, Type, Optional
 
 from six import iteritems
 
+import rqalpha
 from rqalpha.events import EventBus
 from rqalpha.const import FRONT_VALIDATOR_TYPE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
@@ -33,7 +34,7 @@ class Environment(object):
         Environment._env = self
         self.config = config
         self._universe = None
-        self.data_proxy = None
+        self.data_proxy = None  # type: Optional[rqalpha.data.data_proxy.DataProxy]
         self.data_source = None
         self.price_board = None
         self.event_source = None

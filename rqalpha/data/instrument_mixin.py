@@ -13,9 +13,10 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import re
 import six
+from typing import Union, List, Iterable
 
-from rqalpha.utils import merge_trading_period
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils import merge_trading_period
 
 
 class InstrumentMixin(object):
@@ -60,6 +61,7 @@ class InstrumentMixin(object):
                 return None
 
     def instruments(self, sym_or_ids):
+        # type: (Union[str, Iterable[str]]) -> Union[Instrument, List[Instrument]]
         if isinstance(sym_or_ids, six.string_types):
             return self._instrument(sym_or_ids)
 
