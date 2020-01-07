@@ -23,13 +23,15 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
 from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT
 from rqalpha.model.order import Order
+from rqalpha.environment import Environment
+
 from .matcher import Matcher
 from .utils import init_portfolio
 
 
 class SimulationBroker(AbstractBroker, Persistable):
     def __init__(self, env, mod_config):
-        self._env = env
+        self._env = env  # type: Environment
         self._mod_config = mod_config
 
         self._matcher = Matcher(env, mod_config)
@@ -49,7 +51,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
-        self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
+        self._env.event_bus.prepend_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
 
     def get_portfolio(self):
         return init_portfolio(self._env)
