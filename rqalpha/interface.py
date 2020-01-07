@@ -16,11 +16,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import Any, Union, Optional, Iterable
+from typing import Any, Union, Optional, Iterable, List
 
 from six import with_metaclass
 
 from rqalpha.model.order import OrderStyle, Order
+from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
 
 
@@ -563,6 +564,14 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         获得当前未完成的订单。
 
         :return: list[:class:`~Order`]
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def tentatively_match(self, order):
+        # type: (Order) -> List[Trade]
+        """
+        使用当前行情尝试撮合订单，并返回撮合产生的
         """
         raise NotImplementedError
 
