@@ -34,7 +34,7 @@ __config__ = {
     # 设置滑点
     "slippage": 0,
     # 行权滑点
-    "exercise_splippage": 0.1
+    "exercise_slippage": 0
 }
 
 

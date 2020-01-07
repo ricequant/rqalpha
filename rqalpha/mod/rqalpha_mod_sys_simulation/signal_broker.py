@@ -34,7 +34,7 @@ class SignalBroker(AbstractBroker):
     def __init__(self, env, mod_config):
         self._env = env
         self._slippage_decider = SlippageDecider(
-            mod_config.slippage_model, mod_config.slippage, mod_config.exercise_splippage
+            mod_config.slippage_model, mod_config.slippage, mod_config.exercise_slippage
         )
         self._price_limit = mod_config.price_limit
 
