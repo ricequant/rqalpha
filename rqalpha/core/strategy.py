@@ -75,6 +75,7 @@ class Strategy(object):
                 self._init(self._user_context)
 
         Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_INIT))
+        Environment.get_instance().event_bus.publish_event(Event(EVENT.DO_PERSIST))
 
     @run_when_strategy_not_hold
     def before_trading(self, event):
