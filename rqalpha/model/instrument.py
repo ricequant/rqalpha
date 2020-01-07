@@ -339,7 +339,7 @@ class Instrument(object):
         :param dt: datetime.datetime
         :return: bool
         """
-        if self.type == INSTRUMENT_TYPE.FUTURE:
+        if self.type in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
             return dt.date() > self.de_listed_date.date()
         else:
             return dt >= self.de_listed_date

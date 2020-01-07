@@ -31,8 +31,6 @@ from rqalpha.utils.i18n import gettext as _
 from ..api.api_future import order
 from .position_proxy import FuturePositionProxy, PositionProxyDict
 
-PositionsType = Dict[POSITION_DIRECTION, AssetPosition]
-
 
 class FutureAccount(AssetAccount):
 
@@ -90,7 +88,7 @@ class FutureAccount(AssetAccount):
 
         self._static_total_value = self.total_value
 
-        for order_book_id, positions in list(six.iteritems(self._positions)):  # type: (str, PositionsType)
+        for order_book_id, positions in list(six.iteritems(self._positions)):
             instrument = env.data_proxy.instruments(order_book_id)  # type: Instrument
             if positions[POSITION_DIRECTION.LONG].quantity == 0 and positions[POSITION_DIRECTION.SHORT] == 0:
                 del self._positions[order_book_id]
