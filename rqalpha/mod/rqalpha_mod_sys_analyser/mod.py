@@ -108,9 +108,10 @@ class AnalyserMod(AbstractMod):
         }
 
     ACCOUNT_FIELDS_MAP = {
-        DEFAULT_ACCOUNT_TYPE.STOCK.name: ['dividend_receivable'],
-        DEFAULT_ACCOUNT_TYPE.FUTURE.name: ['position_pnl', 'trading_pnl', 'daily_pnl', 'margin'],
-        DEFAULT_ACCOUNT_TYPE.BOND.name: [],
+        DEFAULT_ACCOUNT_TYPE.STOCK: ['dividend_receivable'],
+        DEFAULT_ACCOUNT_TYPE.FUTURE: ['position_pnl', 'trading_pnl', 'daily_pnl', 'margin'],
+        DEFAULT_ACCOUNT_TYPE.OPTION: ['position_pnl', 'trading_pnl', 'daily_pnl', 'margin'],
+        DEFAULT_ACCOUNT_TYPE.BOND: [],
     }
 
     def _to_account_record(self, date, account):
