@@ -250,12 +250,14 @@ class AssetAccount(AbstractAccount):
 
     def _apply_trade(self, trade, order=None):
         # type: (Trade, Optional[Order]) -> None
-        if trade.position_effect == POSITION_EFFECT.EXERCISE:
-            raise NotImplementedError
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
-        self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
+        if trade.position_effect == POSITION_EFFECT.MATCH:
+            self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG).apply_trade(trade)
+            self._get_or_create_pos(order_book_id, POSITION_DIRECTION.SHORT).apply_trade(trade)
+        else:
+            self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
         if order:
             if trade.last_quantity != order.quantity:

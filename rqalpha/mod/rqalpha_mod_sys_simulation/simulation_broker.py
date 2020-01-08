@@ -83,7 +83,7 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._delayed_orders.append((account, o))
 
     def submit_order(self, order):
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
+        if order.position_effect in (POSITION_EFFECT.EXERCISE, POSITION_EFFECT.MATCH):
             raise NotImplementedError
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))

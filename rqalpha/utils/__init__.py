@@ -268,13 +268,15 @@ def is_valid_price(price):
 
 
 def get_position_direction(side, position_effect):
-    # type: (SIDE, Optional[POSITION_EFFECT]) -> POSITION_DIRECTION
+    # type: (SIDE, Optional[POSITION_EFFECT]) -> Optional[POSITION_DIRECTION]
     if position_effect is None:
         return POSITION_DIRECTION.LONG
+    if position_effect == POSITION_EFFECT.MATCH:
+        return None
     if (side == SIDE.BUY and position_effect in (
-            POSITION_EFFECT.OPEN, POSITION_EFFECT.EXERCISE
+        POSITION_EFFECT.OPEN, POSITION_EFFECT.EXERCISE
     )) or (side == SIDE.SELL and position_effect in (
-            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY
+        POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY
     )):
         return POSITION_DIRECTION.LONG
     return POSITION_DIRECTION.SHORT
