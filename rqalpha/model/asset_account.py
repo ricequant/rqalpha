@@ -143,7 +143,6 @@ class AssetAccount(AbstractAccount):
     def type(self):
         raise NotImplementedError
 
-    @property
     def apply_settlement(self):
         raise NotImplementedError
 
