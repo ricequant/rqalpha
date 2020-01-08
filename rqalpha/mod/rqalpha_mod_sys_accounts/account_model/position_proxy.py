@@ -429,3 +429,6 @@ class PositionProxyDict(UserDict):
 
     def __delitem__(self, key):
         raise TypeError("{} object does not support item deletion".format(self.__class__.__name__))
+
+    def __repr__(self):
+        return repr({k: self[k] for k in self._positions.keys()})
