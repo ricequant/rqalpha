@@ -47,7 +47,7 @@ class AssetPosition(AbstractPosition):
 
         self._contract_multiplier = None
         self._margin_rate = None
-        self._market_tplus = None
+        self._market_tplus_ = None
 
         self._last_price = float("NaN")
 
@@ -144,13 +144,6 @@ class AssetPosition(AbstractPosition):
         return self._contract_multiplier
 
     @property
-    def market_tplus(self):
-        if self._market_tplus is None:
-            env = Environment.get_instance()
-            self._market_tplus = env.data_proxy.instruments(self._order_book_id).market_tplus
-        return self._market_tplus
-
-    @property
     def margin_rate(self):
         if not self._margin_rate:
             env = Environment.get_instance()
@@ -178,15 +171,8 @@ class AssetPosition(AbstractPosition):
         return self._last_price
 
     @property
-    def open_orders(self):
-        # type: () -> Iterable[Order]
-        for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
-            if order.position_direction == self._direction:
-                yield order
-
-    @property
     def closable(self):
-        order_quantity = sum(o for o in self.open_orders if o.position_effect in (
+        order_quantity = sum(o for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
         if self._t_plus_enabled:
@@ -196,8 +182,22 @@ class AssetPosition(AbstractPosition):
     @property
     def today_closable(self):
         return self.today_quantity - sum(
-            o.unfilled_quantity for o in self.open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
+            o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
         )
+
+    @property
+    def _open_orders(self):
+        # type: () -> Iterable[Order]
+        for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
+            if order.position_direction == self._direction:
+                yield order
+
+    @property
+    def _market_tplus(self):
+        if self._market_tplus_ is None:
+            env = Environment.get_instance()
+            self._market_tplus_ = env.data_proxy.instruments(self._order_book_id).market_tplus
+        return self._market_tplus_
 
     def apply_settlement(self):
         self._old_quantity += self._today_quantity
@@ -221,7 +221,7 @@ class AssetPosition(AbstractPosition):
             self._today_quantity += trade.last_quantity
             self._trade_cost += trade.last_price * trade.last_quantity
 
-            if self.market_tplus >= 1:
+            if self._market_tplus >= 1:
                 self._non_closable += trade.last_quantity
             return 0
         else:
