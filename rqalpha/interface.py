@@ -567,14 +567,6 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def tentatively_match(self, order):
-        # type: (Order) -> List[Trade]
-        """
-        使用当前行情尝试撮合订单，并返回撮合产生的
-        """
-        raise NotImplementedError
-
 
 class AbstractMod(with_metaclass(abc.ABCMeta)):
     """

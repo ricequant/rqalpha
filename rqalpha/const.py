@@ -210,24 +210,18 @@ class DAYS_CNT(object):
     TRADING_DAYS_A_YEAR = 252
 
 
-# noinspection PyPep89Naming
+# noinspection PyPep8Naming
 class MARKET(CustomEnum):
     CN = "CN"
     HK = "HK"
 
 
-# noinspection PyPep89Naming
+# noinspection PyPep8Naming
 class FRONT_VALIDATOR_TYPE(CustomEnum):
     CASH = "CASH"
     POSITION = "POSITION"
     PRICE = "PRICE"
     OTHER = "OTHER"
-
-
-# noinspection PyPep8Naming
-class OPTION_TYPE(CustomEnum):
-    CALL = "C"
-    PUT = "P"
 
 
 class CURRENCY(CustomEnum):

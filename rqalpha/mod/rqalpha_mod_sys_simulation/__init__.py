@@ -33,8 +33,6 @@ __config__ = {
     "slippage_model": "PriceRatioSlippage",
     # 设置滑点
     "slippage": 0,
-    # 行权滑点
-    "exercise_slippage": 0
 }
 
 

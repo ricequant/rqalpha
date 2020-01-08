@@ -38,7 +38,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []
-        self._open_exercise_orders = []
 
         self._delayed_orders = []
         self._frontend_validator = {}
@@ -51,7 +50,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
-        self._env.event_bus.prepend_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
 
     def get_portfolio(self):
         return init_portfolio(self._env)
@@ -85,6 +83,8 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._delayed_orders.append((account, o))
 
     def submit_order(self, order):
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            raise NotImplementedError
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
         if order.is_final():
@@ -92,10 +92,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
-            self._open_exercise_orders.append((account, order))
-        else:
-            self._open_orders.append((account, order))
+        self._open_orders.append((account, order))
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         if self._match_immediately:
@@ -140,10 +137,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         tick = event.tick
         self._matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match(tick.order_book_id)
-
-    def pre_settlement(self, _):
-        self._matcher.match(self._open_exercise_orders)
-        self._open_exercise_orders.clear()
 
     def _match(self, order_book_id=None):
         open_orders = self._open_orders

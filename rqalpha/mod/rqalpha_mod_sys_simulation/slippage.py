@@ -22,7 +22,7 @@ from rqalpha.utils import is_valid_price
 
 from six import with_metaclass
 
-from rqalpha.const import SIDE, OPTION_TYPE
+from rqalpha.const import SIDE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.environment import Environment
 
@@ -30,7 +30,7 @@ from rqalpha.utils.i18n import gettext as _
 
 
 class SlippageDecider(object):
-    def __init__(self, module_name, rate, exercise_rate):
+    def __init__(self, module_name, rate):
         try:
             if "." not in module_name:
                 module = importlib.import_module("rqalpha.mod.rqalpha_mod_sys_simulation.slippage")
@@ -44,14 +44,9 @@ class SlippageDecider(object):
             raise RuntimeError(_("Missing SlippageModel {}").format(module_name))
 
         self.decider = slippage_cls(rate)  # type: BaseSlippage
-        self.exercise_decider = PriceRatioSlippage(exercise_rate)
 
     def get_trade_price(self, order, price):
         return self.decider.decide_price(order.order_book_id, price, order.side == SIDE.BUY)
-
-    def get_exercise_price(self, order, price):
-        instrument = Environment.get_instance().data_proxy.instruments(order.order_book_id)
-        return self.exercise_decider.decide_price(order.order_book_id, price, instrument.option_type == OPTION_TYPE.PUT)
 
 
 class BaseSlippage(with_metaclass(abc.ABCMeta)):
@@ -99,6 +94,8 @@ class TickSizeSlippage(BaseSlippage):
         price = price + tick_size * self.rate * (1 if price_up else -1)
 
         if price <= 0:
-            raise patch_user_exc(ValueError(_(u"invalid slippage rate value {} which cause price <= 0").format(self.rate)))
+            raise patch_user_exc(ValueError(_(
+                u"invalid slippage rate value {} which cause price <= 0"
+            ).format(self.rate)))
 
         return price

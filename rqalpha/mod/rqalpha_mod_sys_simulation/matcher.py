@@ -15,16 +15,12 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Iterable, Tuple
 from collections import defaultdict
 
 from rqalpha.utils import is_valid_price
-from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT, INSTRUMENT_TYPE, POSITION_DIRECTION
+from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
-from rqalpha.model.order import Order
-from rqalpha.model.instrument import Instrument
-from rqalpha.interface import AbstractAccount
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.environment import Environment
 
@@ -33,9 +29,7 @@ from .slippage import SlippageDecider
 
 class Matcher(object):
     def __init__(self, env, mod_config):
-        self._slippage_decider = SlippageDecider(
-            mod_config.slippage_model, mod_config.slippage, mod_config.exercise_slippage
-        )
+        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._turnover = defaultdict(int)
         self._calendar_dt = None
         self._trading_dt = None
@@ -201,45 +195,3 @@ class Matcher(object):
                     volume_percent_limit=self._volume_percent * 100.0
                 )
                 order.mark_cancelled(reason)
-
-    def match_exercise(self, exercise_orders):
-        # type: (Iterable[Tuple[AbstractAccount, Order]]) -> None
-        for account, order in exercise_orders:
-            if order.position_effect != POSITION_EFFECT.EXERCISE:
-                raise RuntimeError(
-                    "matcher.match_exercise is not able to handle {} order".format(order.position_effect)
-                )
-            underlying = self._env.data_proxy.instruments(order.order_book_id)  # type: Instrument
-            if underlying.type == INSTRUMENT_TYPE.FUTURE:
-                underlying_price = self._env.data_proxy.get_settlement(underlying, self._env.trading_dt)
-            else:
-                underlying_price = self._env.data_proxy.get_last_price(underlying.order_book_id)
-            price = self._slippage_decider.get_exercise_price(order, underlying_price)
-            long_position = account.get_position(order.order_book_id, POSITION_DIRECTION.LONG)
-            short_position = account.get_position(order.order_book_id, POSITION_DIRECTION.SHORT)
-            if long_position.quantity <= 0:
-                exercisable_quantity = 0
-            else:
-                exercisable_quantity = max(long_position.quantity - short_position.quantity, 0)
-            if exercisable_quantity == 0:
-                order.mark_cancelled(_(u"Order Cancelled: {} has no exercisable quantity").format(order.order_book_id))
-                return
-
-            exercised_quantity = min(exercisable_quantity, order.quantity)
-            trade = Trade.__from_create__(
-                order.order_id, price, exercised_quantity, order.side, order.position_effect, order.order_book_id
-            )
-            trade._commission = self._env.get_trade_commission(account.type, trade)
-            trade._tax = self._env.get_trade_tax(account.type, trade)
-            order.fill(trade)
-            self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
-            if order.unfilled_quantity != 0:
-                order.mark_cancelled((
-                    u"Order Cancelled: exercisable amount of {order_book_id} is {exercisable_quantity}, "
-                    u"order amount is {order_quantity}, actual exercised amount is {exercised_quantity}"
-                ).format(
-                    order_book_id=order.order_book_id,
-                    exercisable_quantity=exercisable_quantity,
-                    exercised_quantity=exercised_quantity,
-                    order_quantity=order.quantity
-                ))

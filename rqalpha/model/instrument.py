@@ -22,7 +22,7 @@ from numbers import Real
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.const import INSTRUMENT_TYPE, OPTION_TYPE
+from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr
 
@@ -306,16 +306,6 @@ class Instrument(object):
         [bool] 该合约当前交易日是否已退市
         """
         return self.de_listed_at(Environment.get_instance().trading_dt)
-
-    @property
-    def option_type(self):
-        # type: () -> OPTION_TYPE
-        """
-        [OPTION_TYPE] 期权类型，看涨/看跌，只有期权合约有该字段
-        """
-        if self.type != INSTRUMENT_TYPE.OPTION:
-            raise AttributeError("Instrument({}) has no attribute 'option_type'".format(self.order_book_id))
-        return OPTION_TYPE[self.__dict__["option_type"]]
 
     def listing_at(self, dt):
         """
