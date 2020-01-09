@@ -8,7 +8,7 @@ CHANGELOG
 
 - 修复
 
-  - 修复与 ``rqalpha mod install/uninstall`` 命令与 pip 19.3.1 的兼容性问题
+  - 修复 ``rqalpha mod install/uninstall`` 命令与 pip 19.3.1 的兼容性问题
 
 - 变更
 
