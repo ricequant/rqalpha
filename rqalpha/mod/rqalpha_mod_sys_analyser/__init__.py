@@ -26,6 +26,8 @@ __config__ = {
     'plot': False,
     # 如果指定路径，则输出 plot 对应的图片文件
     'plot_save_file': None,
+    # 基准 order_book_id
+    "benchmark": None
 }
 
 
@@ -39,6 +41,8 @@ def load_mod():
 --output-file
 
 """
+cli_prefix = "mod__sys_analyser__"
+
 cli.commands['run'].params.append(
     click.Option(
         ('--report', 'mod__sys_analyser__report_save_path'),
@@ -65,6 +69,13 @@ cli.commands['run'].params.append(
         ('--plot-save', 'mod__sys_analyser__plot_save_file'),
         default=None,
         help="[sys_analyser] save plot to file"
+    )
+)
+cli.commands["run"].params.append(
+    click.Option(
+        ("-bm", "--benchmark", cli_prefix + "benchmark"),
+        type=click.STRING,
+        help="[sys_analyser] order_book_id of benchmark"
     )
 )
 

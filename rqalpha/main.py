@@ -39,7 +39,6 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
-from rqalpha.model.benchmark_portfolio import BenchmarkPortfolio
 from rqalpha.const import RUN_TYPE
 from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler, RqAttrDict
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
@@ -164,8 +163,6 @@ def run(config, source_code=None, user_funcs=None):
         broker = env.broker
         assert broker is not None
         env.portfolio = broker.get_portfolio()
-        if env.benchmark_provider:
-            env.benchmark_portfolio = BenchmarkPortfolio(env.benchmark_provider, env.portfolio.units)
 
         event_source = env.event_source
         assert event_source is not None

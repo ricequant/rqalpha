@@ -4,11 +4,14 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
-#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
@@ -17,15 +20,19 @@ import pickle
 import numbers
 from collections import defaultdict
 from enum import Enum
+from datetime import date
+from typing import Dict, Optional
 
 import six
 import numpy as np
 import pandas as pd
 from rqrisk import Risk
 
-from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, RUN_TYPE
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod
+
+from .bechmark import Benchmark
 
 
 class AnalyserMod(AbstractMod):
@@ -44,16 +51,26 @@ class AnalyserMod(AbstractMod):
         self._benchmark_daily_returns = []
         self._portfolio_daily_returns = []
 
+        self._benchmark = None  # type: Optional[Benchmark]
+
     def start_up(self, env, mod_config):
         self._env = env
         self._mod_config = mod_config
-        self._enabled = (self._mod_config.record or self._mod_config.plot or self._mod_config.output_file or
-                         self._mod_config.plot_save_file or self._mod_config.report_save_path)
-        env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
+        self._enabled = (
+            mod_config.record or mod_config.plot or mod_config.output_file or
+            mod_config.plot_save_file or mod_config.report_save_path or mod_config.bechmark
+        )
+        if self._enabled:
+            env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
+            if mod_config.benchmark:
+                if env.config.base.run_type == RUN_TYPE.BACKTEST:
+                    from .bechmark import BackTestPriceSeriesBenchmark
+                    self._benchmark = BackTestPriceSeriesBenchmark(mod_config.benchmark, env)
+                else:
+                    from .bechmark import RealTimePriceSeriesBenchmark
+                    self._benchmark = RealTimePriceSeriesBenchmark(mod_config.benchmark, env)
 
     def _subscribe_events(self, _):
-        if not self._enabled:
-            return
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
@@ -67,16 +84,18 @@ class AnalyserMod(AbstractMod):
     def _collect_daily(self, _):
         date = self._env.calendar_dt.date()
         portfolio = self._env.portfolio
-        benchmark_portfolio = self._env.benchmark_portfolio
 
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
 
-        if benchmark_portfolio is None:
+        if self._benchmark is None:
             self._benchmark_daily_returns.append(0)
         else:
-            self._benchmark_daily_returns.append(benchmark_portfolio.daily_returns)
-            self._total_benchmark_portfolios.append(self._to_portfolio_record(date, benchmark_portfolio))
+            self._benchmark_daily_returns.append(self._benchmark.daily_returns)
+            self._total_benchmark_portfolios.append({
+                "date": date,
+                "unit_net_value": self._benchmark.total_returns + 1
+            })
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
             self._sub_accounts[account_type].append(self._to_account_record(date, account))
@@ -105,6 +124,13 @@ class AnalyserMod(AbstractMod):
             'unit_net_value': self._safe_convert(portfolio.unit_net_value, 6),
             'units': portfolio.units,
             'static_unit_net_value': self._safe_convert(portfolio.static_unit_net_value),
+        }
+
+    def _to_benchmark_record(self, date, unit_net_value):
+        # type: (date, float) -> Dict
+        return {
+            "date": date,
+            "unit_net_value": unit_net_value
         }
 
     ACCOUNT_FIELDS_MAP = {
@@ -219,10 +245,9 @@ class AnalyserMod(AbstractMod):
             'units': self._env.portfolio.units,
         })
 
-        if self._env.benchmark_portfolio:
-            summary['benchmark_total_returns'] = self._safe_convert(self._env.benchmark_portfolio.total_returns)
-            summary['benchmark_annualized_returns'] = self._safe_convert(
-                self._env.benchmark_portfolio.annualized_returns)
+        if self._benchmark:
+            summary['benchmark_total_returns'] = self._safe_convert(self._benchmark.total_returns)
+            summary['benchmark_annualized_returns'] = self._safe_convert(self._benchmark.annualized_returns)
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
@@ -240,7 +265,7 @@ class AnalyserMod(AbstractMod):
             'portfolio': total_portfolios,
         }
 
-        if self._env.benchmark_portfolio is not None:
+        if self._benchmark:
             b_df = pd.DataFrame(self._total_benchmark_portfolios)
             df['date'] = pd.to_datetime(df['date'])
             benchmark_portfolios = b_df.set_index('date').sort_index()
