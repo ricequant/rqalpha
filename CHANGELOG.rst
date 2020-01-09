@@ -2,6 +2,19 @@
 CHANGELOG
 ==================
 
+
+3.4.4
+==================
+
+- 修复
+
+  - 修复 ``rqalpha mod install/uninstall`` 命令与 pip 19.3.1 的兼容性问题
+
+- 变更
+
+  - :code:`history_bars` 取不到行情时返回空 ndarray 而非 None
+
+
 3.4.2
 ==================
 
