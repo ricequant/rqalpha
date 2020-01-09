@@ -170,7 +170,7 @@ def test_history_bars():
         if str(context.now.date()) == '2005-01-10':
             return_list = history_bars("000001.XSHE", 5, '1d', 'close')
             assert return_list.tolist() == [6.52, 6.46, 6.52, 6.51, 6.59]
-        return_list = history_bars("600788.XSHG", 100, "1d")
+        return_list = history_bars("000003.XSHE", 100, "1d")
         assert len(return_list) == 0
         assert isinstance(return_list, numpy.ndarray)
     return handle_bar
