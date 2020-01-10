@@ -31,6 +31,8 @@ from rqrisk import Risk
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, RUN_TYPE
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 from .bechmark import Benchmark
 
@@ -62,6 +64,13 @@ class AnalyserMod(AbstractMod):
         )
         if self._enabled:
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
+
+            if not mod_config.bechmark:
+                if getattr(env.config.base, "benchmark", None):
+                    user_system_log.warning(
+                        _("config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark instead'")
+                    )
+                    mod_config.bechmark = getattr(env.config.base, "benchmark")
             if mod_config.benchmark:
                 if env.config.base.run_type == RUN_TYPE.BACKTEST:
                     from .bechmark import BackTestPriceSeriesBenchmark
