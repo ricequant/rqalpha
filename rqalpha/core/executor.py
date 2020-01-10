@@ -15,6 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from copy import copy
 from datetime import datetime
 
 from rqalpha.events import EVENT, Event
@@ -33,54 +34,25 @@ class Executor(object):
         self._last_before_trading = convert_json_to_dict(state.decode('utf-8')).get("last_before_trading")
 
     def run(self, bar_dict):
-
-        start_date = self._env.config.base.start_date
-        end_date = self._env.config.base.end_date
-        frequency = self._env.config.base.frequency
-        event_bus = self._env.event_bus
-
-        for event in self._env.event_source.events(start_date, end_date, frequency):
+        conf = self._env.config.base
+        for event in self._env.event_source.events(conf.start_date, conf.end_date, conf.frequency):
             if event.event_type == EVENT.TICK:
                 if self._ensure_before_trading(event):
-                    self._env.update_time(event.calendar_dt, event.trading_dt)
-                    event_bus.publish_event(Event(EVENT.PRE_TICK))
-                    event_bus.publish_event(event)
-                    event_bus.publish_event(Event(EVENT.POST_TICK))
-
+                    self._split_and_publish(event)
             elif event.event_type == EVENT.BAR:
                 if self._ensure_before_trading(event):
-                    self._env.update_time(event.calendar_dt, event.trading_dt)
                     bar_dict.update_dt(event.calendar_dt)
-                    event_bus.publish_event(Event(EVENT.PRE_BAR, bar_dict=bar_dict))
                     event.bar_dict = bar_dict
-                    event_bus.publish_event(event)
-                    event_bus.publish_event(Event(EVENT.POST_BAR, bar_dict=bar_dict))
-
+                    self._split_and_publish(event)
             elif event.event_type == EVENT.BEFORE_TRADING:
                 self._ensure_before_trading(event)
-
             elif event.event_type == EVENT.AFTER_TRADING:
-                self._env.update_time(event.calendar_dt, event.trading_dt)
-                event_bus.publish_event(Event(EVENT.PRE_AFTER_TRADING))
-                event_bus.publish_event(event)
-                event_bus.publish_event(Event(EVENT.POST_AFTER_TRADING))
-
+                self._split_and_publish(Event(EVENT.AFTER_TRADING))
             else:
-                event_bus.publish_event(event)
+                self._env.event_bus.publish_event(event)
 
         # publish settlement after last day
-        self._publish_settlement()
-
-    def _publish_settlement(self, event=None):
-        if event:
-            previous_trading_date = self._env.data_proxy.get_previous_trading_date(event.trading_dt).date()
-            if self._env.trading_dt.date() != previous_trading_date:
-                self._env.trading_dt = datetime.combine(previous_trading_date, self._env.trading_dt.time())
-                self._env.calendar_dt = datetime.combine(previous_trading_date, self._env.calendar_dt.time())
-
-        self._env.event_bus.publish_event(Event(EVENT.PRE_SETTLEMENT))
-        self._env.event_bus.publish_event(Event(EVENT.SETTLEMENT))
-        self._env.event_bus.publish_event(Event(EVENT.POST_SETTLEMENT))
+        self._split_and_publish(Event(EVENT.SETTLEMENT))
 
     def _ensure_before_trading(self, event):
         # return True if before_trading won't run this time
@@ -88,14 +60,29 @@ class Executor(object):
             return True
         if self._last_before_trading:
             # don't publish settlement on first day
-            self._publish_settlement(event)
-
+            previous_trading_date = self._env.data_proxy.get_previous_trading_date(event.trading_dt).date()
+            if self._env.trading_dt.date() != previous_trading_date:
+                self._env.update_time(
+                    datetime.combine(previous_trading_date, self._env.calendar_dt.time()),
+                    datetime.combine(previous_trading_date, self._env.trading_dt.time())
+                )
+            self._split_and_publish(Event(EVENT.SETTLEMENT))
         self._last_before_trading = event.trading_dt.date()
-        self._env.update_time(event.calendar_dt, event.trading_dt)
-        self._env.event_bus.publish_event(Event(EVENT.PRE_BEFORE_TRADING))
-        self._env.event_bus.publish_event(Event(
-            EVENT.BEFORE_TRADING, calendar_dt=event.calendar_dt, trading_dt=event.trading_dt
-        ))
-        self._env.event_bus.publish_event(Event(EVENT.POST_BEFORE_TRADING))
-
+        self._split_and_publish(Event(EVENT.BEFORE_TRADING, calendar_dt=event.calendar_dt, trading_dt=event.trading_dt))
         return False
+
+    EVENT_SPLIT_MAP = {
+        EVENT.BEFORE_TRADING: (EVENT.PRE_BEFORE_TRADING, EVENT.BEFORE_TRADING, EVENT.POST_BEFORE_TRADING),
+        EVENT.BAR: (EVENT.PRE_BAR, EVENT.BAR, EVENT.POST_BAR),
+        EVENT.TICK: (EVENT.PRE_TICK, EVENT.TICK, EVENT.POST_TICK),
+        EVENT.AFTER_TRADING: (EVENT.PRE_AFTER_TRADING, EVENT.AFTER_TRADING, EVENT.POST_AFTER_TRADING),
+        EVENT.SETTLEMENT: (EVENT.PRE_SETTLEMENT, EVENT.SETTLEMENT, EVENT.POST_SETTLEMENT)
+    }
+
+    def _split_and_publish(self, event):
+        if hasattr(event, "calendar_dt") and hasattr(event, "trading_dt"):
+            self._env.update_time(event.calendar_dt, event.trading_dt)
+        for event_type in self.EVENT_SPLIT_MAP[event.event_type]:
+            e = copy(event)
+            e.event_type = event_type
+            self._env.event_bus.publish_event(e)
