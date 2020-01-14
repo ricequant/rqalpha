@@ -212,3 +212,8 @@ class Environment(object):
 
     def get_order_transaction_cost(self, account_type, order):
         return self._get_transaction_cost_decider(account_type).get_order_transaction_cost(order)
+
+    def update_time(self, calendar_dt, trading_dt):
+        # type: (datetime, datetime) -> None
+        self.calendar_dt = calendar_dt
+        self.trading_dt = trading_dt
