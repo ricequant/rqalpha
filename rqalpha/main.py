@@ -167,8 +167,7 @@ def run(config, source_code=None, user_funcs=None):
         event_source = env.event_source
         assert event_source is not None
 
-        bar_dict = BarMap(env.data_proxy, config.base.frequency)
-        env.set_bar_dict(bar_dict)
+
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
@@ -226,6 +225,7 @@ def run(config, source_code=None, user_funcs=None):
         if should_resume and should_run_init:
             user_strategy.init()
 
+        bar_dict = BarMap(env.data_proxy, config.base.frequency)
         executor.run(bar_dict)
 
         if env.profile_deco:

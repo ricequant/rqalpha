@@ -25,7 +25,7 @@ from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
-from rqalpha.model.bar import BarObject
+from rqalpha.model.bar import BarObject, NANDict
 from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.py2 import lru_cache
@@ -156,6 +156,8 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return self._data_source.get_settle_price(instrument, date)
 
     def get_bar(self, order_book_id, dt, frequency='1d'):
+        if dt is None:
+            return BarObject(NANDict, dt)
         instrument = self.instruments(order_book_id)
         bar = self._data_source.get_bar(instrument, dt, frequency)
         if bar:

@@ -12,6 +12,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from functools import lru_cache
+
 import six
 import numpy as np
 
@@ -22,7 +24,7 @@ from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.exception import patch_user_exc
-from rqalpha.const import EXECUTION_PHASE, BAR_STATUS
+from rqalpha.const import EXECUTION_PHASE
 
 
 NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down', 'volume', 'total_turnover',
@@ -35,13 +37,6 @@ class BarObject(object):
     def __init__(self, instrument, data, dt=None):
         self._dt = dt
         self._data = data if data is not None else NANDict
-        self._prev_close = None
-        self._prev_settlement = None
-        self._basis_spread = None
-        self._limit_up = None
-        self._limit_down = None
-        self.__internal_limit_up = None
-        self.__internal_limit_down = None
         self._instrument = instrument
 
     @property
@@ -95,6 +90,7 @@ class BarObject(object):
             return np.nan
 
     @property
+    @lru_cache(None)
     def prev_close(self):
         """
         [float] 昨日收盘价
@@ -102,26 +98,9 @@ class BarObject(object):
         try:
             return self._data['prev_close']
         except (ValueError, KeyError):
-            pass
-
-        if self._prev_close is None:
             trading_dt = Environment.get_instance().trading_dt
             data_proxy = Environment.get_instance().data_proxy
-            self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
-        return self._prev_close
-
-    @property
-    def _bar_status(self):
-        """
-        WARNING: 获取 bar_status 比较耗费性能，而且是lazy_compute，因此不要多次调用！！！！
-        """
-        if self.isnan or np.isnan(self.limit_up):
-            return BAR_STATUS.ERROR
-        if self.close >= self.limit_up:
-            return BAR_STATUS.LIMIT_UP
-        if self.close <= self.limit_down:
-            return BAR_STATUS.LIMIT_DOWN
-        return BAR_STATUS.NORMAL
+            return data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
 
     @property
     def last(self):
@@ -163,21 +142,19 @@ class BarObject(object):
     }
 
     @property
+    @lru_cache(None)
     def basis_spread(self):
         try:
             return self._data['basis_spread']
         except (ValueError, KeyError):
             if self._instrument.type != 'Future' or Environment.get_instance().config.base.run_type != RUN_TYPE.PAPER_TRADING:
                 raise
-
-        if self._basis_spread is None:
             if self._instrument.underlying_symbol in ['IH', 'IC', 'IF']:
                 order_book_id = self.INDEX_MAP[self._instrument.underlying_symbol]
                 bar = Environment.get_instance().data_proxy.get_bar(order_book_id, None, '1m')
-                self._basis_spread = self.close - bar.close
+                return self.close - bar.close
             else:
-                self._basis_spread = np.nan
-        return self._basis_spread
+                return np.nan
 
     @property
     def settlement(self):
@@ -187,6 +164,7 @@ class BarObject(object):
         return self._data['settlement']
 
     @property
+    @lru_cache(None)
     def prev_settlement(self):
         """
         [float] 昨日结算价（期货专用）
@@ -194,13 +172,9 @@ class BarObject(object):
         try:
             return self._data['prev_settlement']
         except (ValueError, KeyError):
-            pass
-
-        if self._prev_settlement is None:
             trading_dt = Environment.get_instance().trading_dt
             data_proxy = Environment.get_instance().data_proxy
-            self._prev_settlement = data_proxy.get_prev_settlement(self._instrument.order_book_id, trading_dt)
-        return self._prev_settlement
+            return data_proxy.get_prev_settlement(self._instrument.order_book_id, trading_dt)
 
     @property
     def open_interest(self):

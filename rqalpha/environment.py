@@ -53,7 +53,6 @@ class Environment(object):
         self.trading_dt = None  # type: Optional[datetime]
         self.mod_dict = None
         self.plot_store = None
-        self.bar_dict = None
         self.user_strategy = None
         self._frontend_validators = {}
         self._account_model_dict = {}
@@ -154,9 +153,6 @@ class Environment(object):
     def can_cancel_order(self, order):
         return self.validate_order_cancellation(order) is None
 
-    def set_bar_dict(self, bar_dict):
-        self.bar_dict = bar_dict
-
     def get_universe(self):
         return self._universe.get()
 
@@ -173,7 +169,7 @@ class Environment(object):
         self.get_plot_store().add_plot(self.trading_dt.date(), series_name, value)
 
     def get_bar(self, order_book_id):
-        return self.bar_dict[order_book_id]
+        return self.data_proxy.get_bar(order_book_id, self.calendar_dt, self.config.base.frequency)
 
     def get_last_price(self, order_book_id):
         return self.data_proxy.get_last_price(order_book_id)

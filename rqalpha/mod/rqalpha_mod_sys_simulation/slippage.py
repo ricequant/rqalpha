@@ -67,11 +67,8 @@ class PriceRatioSlippage(BaseSlippage):
     def decide_price(self, order_book_id, price, price_up):
         # type: (str, float, bool) -> float
         temp_price = price + price * self.rate * (1 if price_up else -1)
-        try:
-            temp_bar = Environment.get_instance().bar_dict[order_book_id]
-        except KeyError:
-            pass
-        else:
+        temp_bar = Environment.get_instance().get_bar(order_book_id)
+        if temp_bar:
             limit_up, limit_down = temp_bar.limit_up, temp_bar.limit_down
             if is_valid_price(limit_up):
                 temp_price = min(temp_price, limit_up)

@@ -56,13 +56,13 @@ class Matcher(object):
 
     def _current_bar_close_decider(self, order_book_id, _):
         try:
-            return self._env.bar_dict[order_book_id].close
+            return self._env.get_bar(order_book_id).close
         except (KeyError, TypeError):
             return 0
 
     def _next_bar_open_decider(self, order_book_id, _):
         try:
-            return self._env.bar_dict[order_book_id].open
+            return self._env.get_bar(order_book_id).open
         except (KeyError, TypeError):
             return 0
 
@@ -145,7 +145,7 @@ class Matcher(object):
                         continue
 
             if self._volume_limit:
-                bar = self._env.bar_dict[order_book_id]
+                bar = self._env.get_bar(order_book_id)
                 volume_limit = round(bar.volume * self._volume_percent) - self._turnover[order.order_book_id]
                 round_lot = instrument.round_lot
                 volume_limit = (volume_limit // round_lot) * round_lot
