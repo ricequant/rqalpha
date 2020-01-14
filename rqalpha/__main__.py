@@ -182,15 +182,13 @@ def generate_config(directory):
     ignore_unknown_options=True,
 ))
 @click.help_option('-h', '--help')
-@click.argument('cmd', nargs=1, type=click.Choice(['list', 'enable', 'disable', 'install', 'uninstall']))
+@click.argument('cmd', nargs=1, type=click.Choice(['list', 'enable', 'disable']))
 @click.argument('params', nargs=-1)
 def mod(cmd, params):
     """
     Mod management command
 
     rqalpha mod list \n
-    rqalpha mod install xxx \n
-    rqalpha mod uninstall xxx \n
     rqalpha mod enable xxx \n
     rqalpha mod disable xxx \n
 
@@ -219,126 +217,6 @@ def mod(cmd, params):
         six.print_(tabulate(table, headers=headers, tablefmt="psql"))
         six.print_("You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
 
-    def install(params):
-        """
-        Install third-party Mod
-        """
-        try:
-            from pip._internal import main as pip_main
-            from pip._internal.commands.install import InstallCommand
-        except ImportError:
-            from pip import main as pip_main
-            from pip.commands.install import InstallCommand
-
-        if hasattr(InstallCommand, "name"):
-            install_command = InstallCommand()
-        else:
-            install_command = InstallCommand(name='install', summary='Install packages.')
-            pip_main = pip_main.main
-
-        params = [param for param in params]
-
-        options, mod_list = install_command.parse_args(params)
-        mod_list = [mod_name for mod_name in mod_list if mod_name != "."]
-
-        params = ["install"] + params
-
-        for mod_name in mod_list:
-            mod_name_index = params.index(mod_name)
-            if mod_name.startswith("rqalpha_mod_sys_"):
-                six.print_('System Mod can not be installed or uninstalled')
-                return
-            if "rqalpha_mod_" in mod_name:
-                lib_name = mod_name
-            else:
-                lib_name = "rqalpha_mod_" + mod_name
-            params[mod_name_index] = lib_name
-
-        # Install Mod
-        installed_result = pip_main(params)
-
-        # Export config
-        from rqalpha.utils.config import load_yaml, user_mod_conf_path
-        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
-
-        if installed_result == 0:
-            # 如果为0，则说明安装成功
-            if len(mod_list) == 0:
-                """
-                主要是方便 `pip install -e .` 这种方式 本地调试 Mod 使用，需要满足以下条件:
-                1.  `rqalpha mod install -e .` 命令是在对应 自定义 Mod 的根目录下
-                2.  该 Mod 必须包含 `setup.py` 文件（否则也不能正常的 `pip install -e .` 来安装）
-                3.  该 Mod 包名必须按照 RQAlpha 的规范来命名，具体规则如下
-                    *   必须以 `rqalpha-mod-` 来开头，比如 `rqalpha-mod-xxx-yyy`
-                    *   对应import的库名必须要 `rqalpha_mod_` 来开头，并且需要和包名后半部分一致，但是 `-` 需要替换为 `_`, 比如 `rqalpha_mod_xxx_yyy`
-                """
-                mod_name = _detect_package_name_from_dir(params)
-                mod_name = mod_name.replace("-", "_").replace("rqalpha_mod_", "")
-                mod_list.append(mod_name)
-
-            for mod_name in mod_list:
-                if "rqalpha_mod_" in mod_name:
-                    mod_name = mod_name.replace("rqalpha_mod_", "")
-                if "==" in mod_name:
-                    mod_name = mod_name.split('==')[0]
-                user_conf['mod'][mod_name] = {}
-                user_conf['mod'][mod_name]['enabled'] = False
-
-            dump_config(user_mod_conf_path(), user_conf)
-
-        return installed_result
-
-    def uninstall(params):
-        """
-        Uninstall third-party Mod
-        """
-
-        try:
-            from pip._internal import main as pip_main
-            from pip._internal.commands.uninstall import UninstallCommand
-        except ImportError:
-            # be compatible with pip < 10.0
-            from pip import main as pip_main
-            from pip.commands.uninstall import UninstallCommand
-
-        if hasattr(UninstallCommand, "name"):
-            uninstall_command = UninstallCommand()
-        else:
-            uninstall_command = UninstallCommand(name='uninstall', summary='Uninstall packages.')
-            pip_main = pip_main.main
-
-        params = [param for param in params]
-
-        options, mod_list = uninstall_command.parse_args(params)
-
-        params = ["uninstall"] + params
-
-        for mod_name in mod_list:
-            mod_name_index = params.index(mod_name)
-            if mod_name.startswith("rqalpha_mod_sys_"):
-                six.print_('System Mod can not be installed or uninstalled')
-                return
-            if "rqalpha_mod_" in mod_name:
-                lib_name = mod_name
-            else:
-                lib_name = "rqalpha_mod_" + mod_name
-            params[mod_name_index] = lib_name
-
-        # Uninstall Mod
-        uninstalled_result = pip_main(params)
-        # Remove Mod Config
-        from rqalpha.utils.config import user_mod_conf_path, load_yaml
-        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
-
-        for mod_name in mod_list:
-            if "rqalpha_mod_" in mod_name:
-                mod_name = mod_name.replace("rqalpha_mod_", "")
-
-            del user_conf['mod'][mod_name]
-
-        dump_config(user_mod_conf_path(), user_conf)
-        return uninstalled_result
-
     def enable(params):
         """
         enable mod
@@ -351,12 +229,8 @@ def mod(cmd, params):
         module_name = "rqalpha_mod_" + mod_name
         if module_name.startswith("rqalpha_mod_sys_"):
             module_name = "rqalpha.mod." + module_name
-        try:
-            import_module(module_name)
-        except ImportError:
-            installed_result = install([module_name])
-            if installed_result != 0:
-                return
+
+        import_module(module_name)
 
         from rqalpha.utils.config import user_mod_conf_path, load_yaml
         user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
