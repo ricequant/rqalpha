@@ -86,7 +86,6 @@ SYSTEM_MOD_LIST = [
     "sys_accounts",
     "sys_analyser",
     "sys_progress",
-    "sys_funcat",
     "sys_risk",
     "sys_simulation",
     "sys_transaction_cost",
