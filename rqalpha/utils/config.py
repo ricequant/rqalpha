@@ -1,81 +1,117 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
 import os
-import ruamel.yaml as yaml
-import datetime
-import logbook
 import locale
-from pprint import pformat
 import codecs
-import shutil
 
-from . import RqAttrDict, logger
-from .exception import patch_user_exc
-from .logger import user_log, user_system_log, system_log, std_log, user_std_handler
-from ..const import ACCOUNT_TYPE, MATCHING_TYPE, RUN_TYPE, PERSIST_MODE
-from ..utils.i18n import gettext as _, localization
-from ..utils.dict_func import deep_update
-from ..mod.utils import mod_config_value_parse
+import pandas as pd
+import yaml
+import simplejson as json
+import six
 
-
-def load_config(config_path, loader=yaml.Loader, verify_version=True):
-    if not os.path.exists(config_path):
-        system_log.error(_("config.yml not found in {config_path}").format(config_path))
-        return False
-    with codecs.open(config_path, encoding="utf-8") as stream:
-        config = yaml.load(stream, loader)
-    if verify_version:
-        config = config_version_verify(config, config_path)
-    return config
+from rqalpha.const import RUN_TYPE, PERSIST_MODE, MARKET, COMMISSION_TYPE
+from rqalpha.utils import RqAttrDict, logger
+from rqalpha.utils.i18n import gettext as _, localization
+from rqalpha.utils.dict_func import deep_update
+from rqalpha.utils.py2 import to_utf8
+from rqalpha.utils.logger import system_log
+from rqalpha.mod.utils import mod_config_value_parse
 
 
-def dump_config(config_path, config, dumper=yaml.RoundTripDumper):
-    with codecs.open(config_path, mode='w', encoding='utf-8') as file:
-        file.write(yaml.dump(config, Dumper=dumper))
+rqalpha_path = "~/.rqalpha"
 
 
-def get_default_config_path():
-    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
-    default_config_path = os.path.abspath(os.path.expanduser("~/.rqalpha/config.yml"))
-    if not os.path.exists(default_config_path):
-        dir_path = os.path.dirname(default_config_path)
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-        shutil.copy(config_template_path, default_config_path)
-    return default_config_path
+def load_yaml(path):
+    with codecs.open(path, encoding='utf-8') as f:
+        return yaml.safe_load(f)
 
 
-def config_version_verify(config, config_path):
-    config_template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config_template.yml")
-    default_config = load_config(config_template_path, verify_version=False)
-    config_version = config.get("version", None)
-    if config_version != default_config["version"]:
-        back_config_file_path = config_path + "." + datetime.datetime.now().date().strftime("%Y%m%d") + ".bak"
-        shutil.move(config_path, back_config_file_path)
-        shutil.copy(config_template_path, config_path)
+def load_json(path):
+    with codecs.open(path, encoding='utf-8') as f:
+        return json.loads(f.read())
 
-        system_log.warning(_("""
-Your current config file {config_file_path} is too old and may cause RQAlpha running error.
-RQAlpha has replaced the config file with the newest one.
-the backup config file has been saved in {back_config_file_path}.
-        """).format(config_file_path=config_path, back_config_file_path=back_config_file_path))
-        config = default_config
-    return config
+
+default_config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yml')
+default_mod_config_path = os.path.join(os.path.dirname(__file__), '..', 'mod_config.yml')
+
+
+def user_mod_conf_path():
+    return os.path.join(os.path.expanduser(rqalpha_path), 'mod_config.yml')
+
+
+def get_mod_conf():
+    base = load_yaml(default_mod_config_path)
+    user_mod_conf = os.path.join(os.path.expanduser(rqalpha_path), 'mod_config.yml')
+    user = load_yaml(user_mod_conf) if os.path.exists(user_mod_conf) else {}
+    deep_update(user, base)
+    return base
+
+
+def load_config_from_folder(folder):
+    folder = os.path.expanduser(folder)
+    path = os.path.join(folder, 'config.yml')
+    base = load_yaml(path) if os.path.exists(path) else {}
+    mod_path = os.path.join(folder, 'mod_config.yml')
+    mod = load_yaml(mod_path) if os.path.exists(mod_path) else {}
+
+    deep_update(mod, base)
+    return base
+
+
+def default_config():
+    base = load_yaml(default_config_path)
+    base['base']['source_code'] = None
+    mod = load_yaml(default_mod_config_path)
+    deep_update(mod, base)
+    return base
+
+
+def user_config():
+    return load_config_from_folder(rqalpha_path)
+
+
+def project_config():
+    return load_config_from_folder(os.getcwd())
+
+
+def code_config(config, source_code=None):
+    try:
+        if source_code is None:
+            with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
+                source_code = f.read()
+
+        # FIXME: hardcode for parametric mod
+        def noop(*args, **kwargs):
+            pass
+        scope = {'define_parameter': noop}
+
+        code = compile(source_code, config["base"]["strategy_file"], 'exec')
+        six.exec_(code, scope)
+
+        return scope.get('__config__', {})
+    except Exception as e:
+        system_log.error(_(u"in parse_user_config, exception: {e}").format(e=e))
+        return {}
+
+
+def dump_config(config_path, config, dumper=yaml.Dumper):
+    dirname = os.path.dirname(config_path)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
+        stream.write(to_utf8(yaml.dump(config, Dumper=dumper)))
 
 
 def set_locale(lc):
@@ -90,182 +126,177 @@ def set_locale(lc):
     localization.set_locale([lc])
 
 
-def parse_config(config_args, config_path=None, click_type=True, source_code=None):
-    mod_configs = config_args.pop("mod_configs", [])
-    for cfg, value in mod_configs:
-        key = "mod__{}".format(cfg.replace(".", "__"))
-        config_args[key] = mod_config_value_parse(value)
+def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
+    conf = default_config()
+    deep_update(user_config(), conf)
+    deep_update(project_config(), conf)
+    if config_path is not None:
+        deep_update(load_yaml(config_path), conf)
 
-    set_locale(config_args.get("extra__locale", None))
+    if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
+        # FIXME: ugly, we need this to get code
+        conf['base']['strategy_file'] = config_args['base__strategy_file']
+    elif ('base' in config_args and 'strategy_file' in config_args['base'] and
+          config_args['base']['strategy_file']):
+        conf['base']['strategy_file'] = config_args['base']['strategy_file']
 
-    config_path = get_default_config_path() if config_path is None else os.path.abspath(config_path)
+    if user_funcs is None:
+        for k, v in six.iteritems(code_config(conf, source_code)):
+            if k in conf['whitelist']:
+                deep_update(v, conf[k])
 
-    config = load_config(config_path)
+    mod_configs = config_args.pop('mod_configs', [])
+    for k, v in mod_configs:
+        key = 'mod__{}'.format(k.replace('.', '__'))
+        config_args[key] = mod_config_value_parse(v)
 
     if click_type:
-        for key, value in six.iteritems(config_args):
-            if key in ["config_path"]:
+        for k, v in six.iteritems(config_args):
+            if v is None:
                 continue
-            if config_args[key] is not None:
-                keys = key.split("__")
-                keys.reverse()
-                sub_config = config[keys.pop()]
-                while True:
-                    if len(keys) == 0:
-                        break
-                    k = keys.pop()
-                    if len(keys) == 0:
-                        sub_config[k] = value
-                    else:
-                        sub_config = sub_config[k]
+            if k == 'base__accounts' and not v:
+                continue
+
+            key_path = k.split('__')
+            sub_dict = conf
+            for p in key_path[:-1]:
+                if p not in sub_dict:
+                    sub_dict[p] = {}
+                sub_dict = sub_dict[p]
+            sub_dict[key_path[-1]] = v
     else:
-        deep_update(config_args, config)
+        deep_update(config_args, conf)
 
-    config = parse_user_config(config, source_code)
+    config = RqAttrDict(conf)
 
-    config = RqAttrDict(config)
+    set_locale(config.extra.locale)
 
-    base_config = config.base
-    extra_config = config.extra
+    def _to_date(v):
+        return pd.Timestamp(v).date()
 
-    set_locale(extra_config.locale)
+    config.base.start_date = _to_date(config.base.start_date)
+    config.base.end_date = _to_date(config.base.end_date)
 
-    if isinstance(base_config.start_date, six.string_types):
-        base_config.start_date = datetime.datetime.strptime(base_config.start_date, "%Y-%m-%d")
-    if isinstance(base_config.start_date, datetime.datetime):
-        base_config.start_date = base_config.start_date.date()
-    if isinstance(base_config.end_date, six.string_types):
-        base_config.end_date = datetime.datetime.strptime(base_config.end_date, "%Y-%m-%d")
-    if isinstance(base_config.end_date, datetime.datetime):
-        base_config.end_date = base_config.end_date.date()
-    if base_config.commission_multiplier < 0:
-        raise patch_user_exc(ValueError(_("invalid commission multiplier value: value range is [0, +∞)")))
-    if base_config.margin_multiplier <= 0:
-        raise patch_user_exc(ValueError(_("invalid margin multiplier value: value range is (0, +∞]")))
+    if config.base.data_bundle_path is None:
+        config.base.data_bundle_path = os.path.join(os.path.expanduser(rqalpha_path), "bundle")
 
-    if base_config.data_bundle_path is None:
-        base_config.data_bundle_path = os.path.expanduser("~/.rqalpha")
+    config.base.run_type = parse_run_type(config.base.run_type)
+    config.base.accounts = parse_accounts(config.base.accounts)
+    config.base.init_positions = parse_init_positions(config.base.init_positions)
+    config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
+    config.base.market = parse_market(config.base.market)
+    config.base.future_info = parse_future_info(config.base.future_info)
 
-    base_config.data_bundle_path = os.path.abspath(base_config.data_bundle_path)
+    if config.extra.context_vars:
+        if isinstance(config.extra.context_vars, six.string_types):
+            config.extra.context_vars = json.loads(to_utf8(config.extra.context_vars))
 
-    if os.path.basename(base_config.data_bundle_path) != "bundle":
-        base_config.data_bundle_path = os.path.join(base_config.data_bundle_path, "./bundle")
-
-    if not os.path.exists(base_config.data_bundle_path):
-        system_log.error(
-            _("data bundle not found in {bundle_path}. Run `rqalpha update_bundle` to download data bundle.").format(
-                bundle_path=base_config.data_bundle_path))
-        return
-
-    if source_code is None and not os.path.exists(base_config.strategy_file):
-        system_log.error(
-            _("strategy file not found in {strategy_file}").format(strategy_file=base_config.strategy_file))
-        return
-
-    base_config.run_type = parse_run_type(base_config.run_type)
-    base_config.account_list = gen_account_list(base_config.strategy_type)
-    base_config.matching_type = parse_matching_type(base_config.matching_type)
-    base_config.persist_mode = parse_persist_mode(base_config.persist_mode)
-
-    if extra_config.log_level.upper() != "NONE":
-        user_log.handlers.append(user_std_handler)
-        if not extra_config.user_system_log_disabled:
-            user_system_log.handlers.append(user_std_handler)
-
-    if extra_config.context_vars:
-        import base64
-        import json
-        extra_config.context_vars = json.loads(base64.b64decode(extra_config.context_vars).decode('utf-8'))
-
-    if base_config.stock_starting_cash < 0:
-        raise patch_user_exc(ValueError(_('invalid stock starting cash: {}').format(base_config.stock_starting_cash)))
-
-    if base_config.future_starting_cash < 0:
-        raise patch_user_exc(ValueError(_('invalid future starting cash: {}').format(base_config.future_starting_cash)))
-
-    if base_config.stock_starting_cash + base_config.future_starting_cash == 0:
-        raise patch_user_exc(ValueError(_('stock starting cash and future starting cash can not be both 0.')))
-
-    system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
-    std_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
-    user_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
-    user_system_log.level = getattr(logbook, extra_config.log_level.upper(), logbook.NOTSET)
-
-    if base_config.frequency == "1d":
+    if config.base.frequency == "1d":
         logger.DATETIME_FORMAT = "%Y-%m-%d"
-
-    system_log.debug("\n" + pformat(config))
 
     return config
 
 
-def parse_user_config(config, source_code=None):
-    try:
-        if source_code is None:
-            with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
-                source_code = f.read()
+def parse_future_info(future_info):
+    new_info = {}
 
-        scope = {}
+    for underlying_symbol, info in six.iteritems(future_info):
+        try:
+            underlying_symbol = underlying_symbol.upper()
+        except AttributeError:
+            raise RuntimeError(_("Invalid future info: underlying_symbol {} is illegal.".format(underlying_symbol)))
 
-        code = compile(source_code, config["base"]["strategy_file"], 'exec')
-        six.exec_(code, scope)
-
-        __config__ = scope.get("__config__", {})
-
-        deep_update(__config__, config)
-
-        for sub_key, sub_dict in six.iteritems(__config__):
-            if sub_key not in config["whitelist"]:
-                continue
-            deep_update(sub_dict, config[sub_key])
-
-    except Exception as e:
-        system_log.error(_('in parse_user_config, exception: {e}').format(e=e))
-    finally:
-        return config
-
-
-def gen_account_list(account_list_str):
-    assert isinstance(account_list_str, six.string_types)
-    account_list = account_list_str.split("_")
-    return [parse_account_type(account_str) for account_str in account_list]
+        for field, value in six.iteritems(info):
+            if field in (
+                "open_commission_ratio", "close_commission_ratio", "close_commission_today_ratio"
+            ):
+                new_info.setdefault(underlying_symbol, {})[field] = float(value)
+            elif field == "commission_type":
+                if isinstance(value, six.string_types) and value.upper() == "BY_MONEY":
+                    new_info.setdefault(underlying_symbol, {})[field] = COMMISSION_TYPE.BY_MONEY
+                elif isinstance(value, six.string_types) and value.upper() == "BY_VOLUME":
+                    new_info.setdefault(underlying_symbol, {})[field] = COMMISSION_TYPE.BY_VOLUME
+                elif isinstance(value, COMMISSION_TYPE):
+                    new_info.setdefault(underlying_symbol, {})[field] = value
+                else:
+                    raise RuntimeError(_(
+                        "Invalid future info: commission_type is suppose to be BY_MONEY or BY_VOLUME"
+                    ))
+            else:
+                raise RuntimeError(_("Invalid future info: field {} is not valid".format(field)))
+    return new_info
 
 
-def parse_account_type(account_type_str):
-    assert isinstance(account_type_str, six.string_types)
-    if account_type_str == "stock":
-        return ACCOUNT_TYPE.STOCK
-    elif account_type_str == "future":
-        return ACCOUNT_TYPE.FUTURE
+def parse_accounts(accounts):
+    a = {}
+    if isinstance(accounts, tuple):
+        accounts = {account_type: starting_cash for account_type, starting_cash in accounts}
+
+    for account_type, starting_cash in six.iteritems(accounts):
+        if starting_cash is None:
+            continue
+        starting_cash = float(starting_cash)
+        a[account_type.upper()] = starting_cash
+
+    # if len(a) == 0:
+    #     raise RuntimeError(_(u"None account type has been selected."))
+
+    return a
 
 
-def parse_matching_type(me_str):
-    assert isinstance(me_str, six.string_types)
-    if me_str == "current_bar":
-        return MATCHING_TYPE.CURRENT_BAR_CLOSE
-    elif me_str == "next_bar":
-        return MATCHING_TYPE.NEXT_BAR_OPEN
-    else:
-        raise NotImplementedError
+def parse_init_positions(positions):
+    # --position 000001.XSHE:1000,IF1701:-1
+    result = []
+    if not isinstance(positions, str):
+        return result
+    for s in positions.split(','):
+        try:
+            order_book_id, quantity = s.split(':')
+        except ValueError:
+            raise RuntimeError(_(u"invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
+
+        try:
+            result.append((order_book_id, float(quantity)))
+        except ValueError:
+            raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
+                order_book_id=order_book_id, quantity=quantity))
+    return result
 
 
 def parse_run_type(rt_str):
     assert isinstance(rt_str, six.string_types)
-    if rt_str == "b":
-        return RUN_TYPE.BACKTEST
-    elif rt_str == "p":
-        return RUN_TYPE.PAPER_TRADING
-    elif rt_str == "CTP":
-        return RUN_TYPE.CTP
-    else:
-        raise NotImplementedError
+    mapping = {
+        "b": RUN_TYPE.BACKTEST,
+        "p": RUN_TYPE.PAPER_TRADING,
+        "r": RUN_TYPE.LIVE_TRADING,
+    }
+    try:
+        return mapping[rt_str]
+    except KeyError:
+        raise RuntimeError(_(u"unknown run type: {}").format(rt_str))
 
 
 def parse_persist_mode(persist_mode):
     assert isinstance(persist_mode, six.string_types)
-    if persist_mode == 'real_time':
-        return PERSIST_MODE.REAL_TIME
-    elif persist_mode == 'on_crash':
-        return PERSIST_MODE.ON_CRASH
-    else:
-        raise RuntimeError(_('unknown persist mode: {persist_mode}').format(persist_mode=persist_mode))
+    mapping = {
+        "real_time": PERSIST_MODE.REAL_TIME,
+        "on_crash": PERSIST_MODE.ON_CRASH,
+        "on_normal_exit": PERSIST_MODE.ON_NORMAL_EXIT,
+    }
+    try:
+        return mapping[persist_mode]
+    except KeyError:
+        raise RuntimeError(_(u"unknown persist mode: {}").format(persist_mode))
+
+
+def parse_market(market):
+    assert isinstance(market, six.string_types)
+    mapping = {
+        "cn": MARKET.CN,
+        "hk": MARKET.HK
+    }
+
+    try:
+        return mapping[market.lower()]
+    except KeyError:
+        raise RuntimeError(_(u"unknown market type: {}".format(market)))

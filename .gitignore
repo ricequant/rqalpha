@@ -9,7 +9,6 @@ rqalpha.system.log
 *.pk
 *.h5
 .vscode
-.idea
 *.c
 *.so
 *.pyc

@@ -1,24 +1,61 @@
-#!/usr/bin/env python
-# encoding: utf-8
-import inspect
+# -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
+#
+# 除非遵守当前许可，否则不得使用本软件。
+#
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
+#
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
+
+from ..utils import make_test_strategy_decorator
+
+test_strategies = []
+
+as_test_strategy = make_test_strategy_decorator({
+        "base": {
+            "start_date": "2016-12-01",
+            "end_date": "2016-12-31",
+            "frequency": "1d",
+            "accounts": {
+                "stock": 1000000,
+                "future": 1000000,
+            }
+        },
+        "extra": {
+            "log_level": "error",
+        },
+        "mod": {
+            "sys_progress": {
+                "enabled": True,
+                "show": True,
+            },
+        },
+    }, test_strategies)
+
+
+@as_test_strategy()
 def test_get_order():
-    from rqalpha.api import order_shares, get_order
     def init(context):
         context.s1 = '000001.XSHE'
         context.amount = 100
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         order_id = order_shares(context.s1, context.amount, style=LimitOrder(9.5))
         order = get_order(order_id)
         assert order.order_book_id == context.s1
         assert order.quantity == context.amount
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
-test_get_order_code_new = "".join(inspect.getsourcelines(test_get_order)[0])
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_get_open_order():
-    from rqalpha.api import order_shares, get_open_orders, get_order
     def init(context):
         context.s1 = '000001.XSHE'
         context.limitprice = 8.9
@@ -26,194 +63,188 @@ def test_get_open_order():
         context.counter = 0
         context.order_id = None
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         context.counter += 1
 
         order = order_shares(context.s1, context.amount, style=LimitOrder(context.limitprice))
         context.order_id = order.order_id
-        print('cash: ', context.portfolio.cash)
-        print('check_get_open_orders done')
-        print(order.order_id)
-        print(get_open_orders().keys())
-        print(get_open_orders())
-        print(get_order(order.order_id))
         if context.counter == 2:
             assert order.order_id in get_open_orders()
         context.counter = 0
-test_get_open_order_code_new = "".join(inspect.getsourcelines(test_get_open_order)[0])
+    return init, handle_bar
 
 
-def test_cancel_order():
-    from rqalpha.api import order_shares, cancel_order, get_order
+@as_test_strategy()
+def test_submit_order():
     def init(context):
         context.s1 = '000001.XSHE'
-        context.limitprice = 8.59
+        context.amount = 100
+        context.fired = False
+
+    def handle_bar(context, bar_dict):
+        if not context.fired:
+            submit_order(context.s1, context.amount, SIDE.BUY, bar_dict[context.s1].limit_up * 0.99)
+            context.fired = True
+        if context.fired:
+            assert context.portfolio.positions[context.s1].quantity == context.amount
+    return init, handle_bar
+
+
+@as_test_strategy()
+def test_cancel_order():
+    def init(context):
+        context.s1 = '000001.XSHE'
         context.amount = 100
 
     def handle_bar(context, bar_dict):
-        order_id = order_shares(context.s1, context.amount, style=LimitOrder(context.limitprice))
-        cancel_order(order_id)
-        order = get_order(order_id)
+        order = order_shares(context.s1, context.amount, style=LimitOrder(bar_dict[context.s1].limit_down))
+        cancel_order(order)
         assert order.order_book_id == context.s1
         assert order.filled_quantity == 0
-        return order_id
-        assert order.price == context.limitprice
-test_cancel_order_code_new = "".join(inspect.getsourcelines(test_cancel_order)[0])
+        assert order.price == bar_dict[context.s1].limit_down
+        assert order.status == ORDER_STATUS.CANCELLED
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_update_universe():
-    from rqalpha.api import update_universe, history_bars
     def init(context):
         context.s1 = '000001.XSHE'
         context.s2 = '600340.XSHG'
         context.order_count = 0
         context.amount = 100
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         context.order_count += 1
         if context.order_count == 1:
             update_universe(context.s2)
             his = history_bars(context.s2, 5, '1d', 'close')
-            print(sorted(his.tolist()))
-            print(sorted([24.1, 23.71, 23.82, 23.93, 23.66]))
             assert sorted(his.tolist()) == sorted([26.06, 26.13, 26.54, 26.6, 26.86])
-test_update_universe_code_new = "".join(inspect.getsourcelines(test_update_universe)[0])
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_subscribe():
-    from rqalpha.api import subscribe
     def init(context):
         context.f1 = 'AU88'
         context.amount = 1
         subscribe(context.f1)
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         assert context.f1 in context.universe
-test_subscribe_code_new = "".join(inspect.getsourcelines(test_subscribe)[0])
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_unsubscribe():
-    from rqalpha.api import subscribe, unsubscribe
     def init(context):
         context.f1 = 'AU88'
         context.amount = 1
         subscribe(context.f1)
         unsubscribe(context.f1)
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         assert context.f1 not in context.universe
-test_unsubscribe_code_new = "".join(inspect.getsourcelines(test_unsubscribe)[0])
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_get_yield_curve():
-    from rqalpha.api import get_yield_curve
-    def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
+    def handle_bar(_, __):
         df = get_yield_curve('20161101')
         assert df.iloc[0, 0] == 0.019923
         assert df.iloc[0, 6] == 0.021741
-test_get_yield_curve_code_new = "".join(inspect.getsourcelines(test_get_yield_curve)[0])
+    return handle_bar
 
 
+@as_test_strategy({
+    "base": {
+        "start_date": "2005-01-04",
+        "end_date": "2005-01-31",
+    }
+})
 def test_history_bars():
-    from rqalpha.api import history_bars
-    def init(context):
-        context.s1 = '000001.XSHE'
-        pass
+    import numpy
 
-    def handle_bar(context, bar_dict):
-        return_list = history_bars(context.s1, 5, '1d', 'close')
-        if str(context.now.date()) == '2016-12-29':
-            assert return_list.tolist() == [9.08, 9.1199, 9.08, 9.06, 9.08]
-test_history_bars_code_new = "".join(inspect.getsourcelines(test_history_bars)[0])
+    def handle_bar(context, _):
+        if str(context.now.date()) == '2005-01-10':
+            return_list = history_bars("000001.XSHE", 5, '1d', 'close')
+            assert return_list.tolist() == [6.52, 6.46, 6.52, 6.51, 6.59]
+        return_list = history_bars("000003.XSHE", 100, "1d")
+        assert len(return_list) == 0
+        assert isinstance(return_list, numpy.ndarray)
+    return handle_bar
 
 
+@as_test_strategy({"base": {
+            "start_date": "2017-01-01",
+            "end_date": "2017-01-31",
+}})
 def test_all_instruments():
-    from rqalpha.api import all_instruments
-    def init(context):
-        pass
+    def handle_bar(context, _):
+        date = context.now.replace(hour=0, minute=0, second=0)
+        df = all_instruments('CS')
+        assert (df['listed_date'] <= date).all()
+        assert (df['de_listed_date'] > date).all()
+        # assert all(not is_suspended(o) for o in df['order_book_id'])
+        assert (df['type'] == 'CS').all()
 
-    def handle_bar(context, bar_dict):
-        df = all_instruments('FenjiA')
-        df_to_assert = df.loc[df['order_book_id'] == '150247.XSHE']
-        assert df_to_assert.iloc[0, 0] == 'CMAJ'
-        assert df_to_assert.iloc[0, 7] == '工银中证传媒A'
-        assert all_instruments().shape >= (8000, 4)
-        assert all_instruments('CS').shape >= (3000, 16)
-        assert all_instruments('ETF').shape >= (120, 9)
-        assert all_instruments('LOF').shape >= (130, 9)
-        assert all_instruments('FenjiMu').shape >= (10, 9)
-        assert all_instruments('FenjiA').shape >= (120, 9)
-        assert all_instruments('FenjiB').shape >= (140, 9)
-        assert all_instruments('INDX').shape >= (500, 8)
-        assert all_instruments('Future').shape >= (3500, 16)
-test_all_instruments_code_new = "".join(inspect.getsourcelines(test_all_instruments)[0])
+        df1 = all_instruments('Stock')
+        assert sorted(df['order_book_id']) == sorted(df1['order_book_id'])
 
+        df2 = all_instruments('Future')
+
+        assert (df2['type'] == 'Future').all()
+        assert (df2['listed_date'] <= date).all()
+        assert (df2['de_listed_date'] >= date).all()
+
+        df3 = all_instruments(['Future', 'Stock'])
+        assert sorted(list(df['order_book_id']) + list(df2['order_book_id'])) == sorted(df3['order_book_id'])
+    return handle_bar
+
+
+@as_test_strategy()
 def test_instruments_code():
-    from rqalpha.api import instruments
     def init(context):
         context.s1 = '000001.XSHE'
-        pass
 
-    def handle_bar(context, bar_dict):
-        print('hello')
+    def handle_bar(context, _):
         ins = instruments(context.s1)
         assert ins.sector_code_name == '金融'
         assert ins.symbol == '平安银行'
         assert ins.order_book_id == context.s1
         assert ins.type == 'CS'
-        print('world')
-test_instruments_code_new = "".join(inspect.getsourcelines(test_instruments_code)[0])
+    return init, handle_bar
 
 
+@as_test_strategy()
 def test_sector():
-    from rqalpha.api import sector
-    def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
-        assert len(sector('金融')) >= 180
-test_sector_code_new = "".join(inspect.getsourcelines(test_sector)[0])
+    def handle_bar(_, __):
+        assert len(sector('金融')) >= 80, "sector('金融') 返回结果少于 80 个"
+    return handle_bar
 
 
+@as_test_strategy()
 def test_industry():
-    from rqalpha.api import industry, instruments
     def init(context):
         context.s1 = '000001.XSHE'
         context.s2 = '600340.XSHG'
 
-    def handle_bar(context, bar_dict):
+    def handle_bar(context, _):
         ins_1 = instruments(context.s1)
         ins_2 = instruments(context.s2)
         industry_list_1 = industry(ins_1.industry_name)
         industry_list_2 = industry(ins_2.industry_name)
         assert context.s1 in industry_list_1
         assert context.s2 in industry_list_2
-test_industry_code_new = "".join(inspect.getsourcelines(test_industry)[0])
+    return init, handle_bar
 
 
-def test_concept():
-    from rqalpha.api import concept, instruments
-    def init(context):
-        context.s1 = '000002.XSHE'
-
-    def handle_bar(context, bar_dict):
-        ins = instruments(context.s1)
-        concept_list = concept(ins.concept_names[:4])  # 取 concept_names 的前4个字，即 context.s1 的第一个概念
-        assert context.s1 in concept_list
-        assert len(concept_list) >= 90
-test_concept_code_new = "".join(inspect.getsourcelines(test_concept)[0])
-
-
+@as_test_strategy()
 def test_get_trading_dates():
-    from rqalpha.api import get_trading_dates
     import datetime
-    def init(context):
-        pass
 
-    def handle_bar(context, bar_dict):
+    def init(_):
         trading_dates_list = get_trading_dates('2016-12-15', '2017-01-03')
         correct_dates_list = [datetime.date(2016, 12, 15), datetime.date(2016, 12, 16), datetime.date(2016, 12, 19),
                               datetime.date(2016, 12, 20), datetime.date(2016, 12, 21), datetime.date(2016, 12, 22),
@@ -223,15 +254,12 @@ def test_get_trading_dates():
         assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted(
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
-test_get_trading_dates_code_new = "".join(inspect.getsourcelines(test_get_trading_dates)[0])
+    return init
 
 
+@as_test_strategy()
 def test_get_previous_trading_date():
-    from rqalpha.api import get_previous_trading_date
-    def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
+    def init(_):
         assert str(get_previous_trading_date('2017-01-03').date()) == '2016-12-30'
         assert str(get_previous_trading_date('2016-01-03').date()) == '2015-12-31'
         assert str(get_previous_trading_date('2015-01-03').date()) == '2014-12-31'
@@ -239,285 +267,107 @@ def test_get_previous_trading_date():
         assert str(get_previous_trading_date('2010-01-03').date()) == '2009-12-31'
         assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
         assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
-test_get_previous_trading_date_code_new = "".join(inspect.getsourcelines(test_get_previous_trading_date)[0])
+    return init
 
 
+@as_test_strategy()
 def test_get_next_trading_date():
-    from rqalpha.api import get_next_trading_date
-    def init(context):
-        pass
-
-    def handle_bar(context, bar_dict):
+    def init(_):
         assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
         assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
-test_get_next_trading_date_code_new = "".join(inspect.getsourcelines(test_get_next_trading_date)[0])
+    return init
 
 
+@as_test_strategy()
 def test_get_dividend():
-    from rqalpha.api import get_dividend
-    import pandas
+    def handle_bar(_, __):
+        df = get_dividend('000001.XSHE', start_date='20130104')
+        df_to_assert = df[df['book_closure_date'] == 20130619]
+        assert len(df) >= 4
+        assert df_to_assert[0]['dividend_cash_before_tax'] == 1.7
+        assert df_to_assert[0]['payable_date'] == 20130620
+    return handle_bar
+
+
+@as_test_strategy()
+def test_current_snapshot():
+    def handle_bar(_, bar_dict):
+        snapshot = current_snapshot('000001.XSHE')
+        bar = bar_dict['000001.XSHE']
+
+        assert snapshot.last == bar.close
+        for field in (
+            "open", "high", "low", "prev_close", "volume", "total_turnover", "order_book_id", "datetime",
+            "limit_up", "limit_down"
+        ):
+            assert getattr(bar, field) == getattr(snapshot, field), "snapshot.{} = {}, bar.{} = {}".format(
+                field, getattr(snapshot, field), field, getattr(bar, field)
+            )
+    return handle_bar
+
+
+@as_test_strategy()
+def test_get_position():
+    def assert_position(pos, obid, dir, today_quantity, old_quantity, avg_price):
+        assert pos.order_book_id == obid
+        assert pos.direction == dir, "Direction of {} is expected to be {} instead of {}".format(
+            pos.order_book_id, dir, pos.direction
+        )
+        assert pos.today_quantity == today_quantity
+        assert pos.old_quantity == old_quantity
+        assert pos.quantity == (today_quantity + old_quantity)
+        assert pos.avg_price == avg_price
+
     def init(context):
-        pass
+        context.counter = 0
+        context.expected_avg_price = None
 
     def handle_bar(context, bar_dict):
-        df = get_dividend('000001.XSHE', start_date='20130104')
-        df_to_assert = df.loc[df['book_closure_date'] == '	2013-06-19']
-        assert df.shape >= (4, 5)
-        assert df_to_assert.iloc[0, 1] == 0.9838
-        assert df_to_assert.iloc[0, 3] == pandas.tslib.Timestamp('2013-06-20 00:00:00')
-test_get_dividend_code_new = "".join(inspect.getsourcelines(test_get_dividend)[0])
+        context.counter += 1
 
-# =================== 以下把代码写为纯字符串 ===================
+        if context.counter == 1:
+            order_shares("000001.XSHE", 300)
+            context.expected_avg_price = bar_dict["000001.XSHE"].close
+        elif context.counter == 5:
+            order_shares("000001.XSHE", -100)
+        elif context.counter == 10:
+            sell_open("RB1701", 5)
+            context.expected_avg_price = bar_dict["RB1701"].close
+        elif context.counter == 15:
+            buy_close("RB1701", 2)
 
-test_get_order_code = '''
-from rqalpha.api import order_shares, get_order
-def init(context):
-    context.s1 = '000001.XSHE'
-    context.amount = 100
+        if context.counter == 1:
+            pos = get_positions()[0]
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 300, 0, context.expected_avg_price)
+        elif 1 < context.counter < 5:
+            pos = get_positions()[0]
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 300, context.expected_avg_price)
+        elif 5 <= context.counter < 10:
+            pos = get_position("000001.XSHE", POSITION_DIRECTION.LONG)
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 200, context.expected_avg_price)
+        elif context.counter == 10:
+            pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
+            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 5, 0, context.expected_avg_price)
+        elif 10 < context.counter < 15:
+            pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
+            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 5, context.expected_avg_price)
+        elif context.counter >= 15:
+            pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
+            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3, context.expected_avg_price)
 
-def handle_bar(context, bar_dict):
-    assert 1 == 2
-    order_id = order_shares(context.s1, context.amount, style=LimitOrder(9.5))
-    order = get_order(order_id)
-    assert order.order_book_id == context.s1
-    assert order.quantity == context.amount
-    assert order.unfilled_quantity + order.filled_quantity == order.quantity
+    return init, handle_bar
 
-'''
 
-test_get_open_order_code = '''
-from rqalpha.api import order_shares, get_open_orders
-def init(context):
-    context.s1 = '000001.XSHE'
-    context.limitprice = 8.9
-    context.amount = 100
-    context.counter = 0
-    context.order_id = None
+@as_test_strategy()
+def test_subscribe_event():
+    def init(_):
+        subscribe_event(EVENT.BEFORE_TRADING, on_before_trading)
 
-def handle_bar(context, bar_dict):
-    context.counter += 1
+    def before_trading(context):
+        context.before_trading_ran = True
 
-    order = order_shares(context.s1, context.amount, style=LimitOrder(context.limitprice))
-    context.order_id = order.order_id
-    print('cash: ', context.portfolio.cash)
-    print('check_get_open_orders done')
-    print(order.order_id)
-    print(get_open_orders().keys())
-    print(get_open_orders())
-    print(get_order(order.order_id))
-    if context.counter == 2:
-        assert order.order_id in get_open_orders()
-    context.counter = 0
-'''
+    def on_before_trading(context, _):
+        assert context.before_trading_ran
+        context.before_trading_ran = False
 
-test_cancel_order_code = '''
-from rqalpha.api import order_shares, cancel_order, get_order
-def init(context):
-    context.s1 = '000001.XSHE'
-    context.limitprice = 8.59
-    context.amount = 100
-
-def handle_bar(context, bar_dict):
-    order_id = order_shares(context.s1, context.amount, style=LimitOrder(context.limitprice))
-    cancel_order(order_id)
-    order = get_order(order_id)
-    assert order.order_book_id == context.s1
-    assert order.filled_quantity == 0
-    return order_id
-    assert order.price == context.limitprice
-'''
-
-test_update_universe_code = '''
-from rqalpha.api import update_universe, history_bars
-def init(context):
-    context.s1 = '000001.XSHE'
-    context.s2 = '600340.XSHG'
-    context.order_count = 0
-    context.amount = 100
-
-def handle_bar(context, bar_dict):
-    context.order_count += 1
-    if context.order_count == 1:
-        update_universe(context.s2)
-        his = history_bars(context.s2, 5, '1d', 'close')
-        print(sorted(his.tolist()))
-        print(sorted([24.1, 23.71, 23.82, 23.93, 23.66]))
-        assert sorted(his.tolist()) == sorted([26.06, 26.13, 26.54, 26.6, 26.86])
-'''
-
-test_subscribe_code = '''
-from rqalpha.api import subscribe
-def init(context):
-    context.f1 = 'AU88'
-    context.amount = 1
-    subscribe(context.f1)
-
-def handle_bar(context, bar_dict):
-    assert context.f1 in context.universe
-'''
-
-test_unsubscribe_code = '''
-from rqalpha.api import subscribe, unsubscribe
-def init(context):
-    context.f1 = 'AU88'
-    context.amount = 1
-    subscribe(context.f1)
-    unsubscribe(context.f1)
-
-def handle_bar(context, bar_dict):
-    assert context.f1 not in context.universe
-'''
-
-test_get_yield_curve_code = '''
-from rqalpha.api import get_yield_curve
-def init(context):
-    pass
-
-def handle_bar(context, bar_dict):
-    df = get_yield_curve('20161101')
-    assert df.iloc[0, 0] == 0.019923
-    assert df.iloc[0, 6] == 0.021741
-'''
-
-test_history_bars_code = '''
-from rqalpha.api import history_bars
-def init(context):
-    context.s1 = '000001.XSHE'
-    pass
-
-def handle_bar(context, bar_dict):
-    return_list = history_bars(context.s1, 5, '1d', 'close')
-    if str(context.now.date()) == '2016-12-29':
-        assert return_list.tolist() == [9.08, 9.1199, 9.08, 9.06, 9.08]
-'''
-
-test_all_instruments_code = '''
-from rqalpha.api import all_instruments
-def init(context):
-    pass
-
-def handle_bar(context, bar_dict):
-    df = all_instruments('FenjiA')
-    df_to_assert = df.loc[df['order_book_id'] == '150247.XSHE']
-    assert df_to_assert.iloc[0, 0] == 'CMAJ'
-    assert df_to_assert.iloc[0, 7] == '工银中证传媒A'
-    assert all_instruments().shape >= (8000, 4)
-    assert all_instruments('CS').shape >= (3000, 16)
-    assert all_instruments('ETF').shape >= (120, 9)
-    assert all_instruments('LOF').shape >= (130, 9)
-    assert all_instruments('FenjiMu').shape >= (10, 9)
-    assert all_instruments('FenjiA').shape >= (120, 9)
-    assert all_instruments('FenjiB').shape >= (140, 9)
-    assert all_instruments('INDX').shape >= (500, 8)
-    assert all_instruments('Future').shape >= (3500, 16)
-'''
-
-test_instruments_code = '''
-from rqalpha.api import instruments
-def init(context):
-    context.s1 = '000001.XSHE'
-    pass
-
-def handle_bar(context, bar_dict):
-    print('hello')
-    ins = instruments(context.s1)
-    assert ins.sector_code_name == '金融'
-    assert ins.symbol == '平安银行'
-    assert ins.order_book_id == context.s1
-    assert ins.type == 'CS'
-    print('world')
-'''
-
-test_sector_code = '''
-from rqalpha.api import sector
-def init(context):
-    pass
-
-def handle_bar(context, bar_dict):
-    assert len(sector('金融')) >= 180
-'''
-
-test_industry_code = '''
-from rqalpha.api import industry, instruments
-def init(context):
-    context.s1 = '000001.XSHE'
-    context.s2 = '600340.XSHG'
-
-def handle_bar(context, bar_dict):
-    ins_1 = instruments(context.s1)
-    ins_2 = instruments(context.s2)
-    industry_list_1 = industry(ins_1.industry_name)
-    industry_list_2 = industry(ins_2.industry_name)
-    assert context.s1 in industry_list_1
-    assert context.s2 in industry_list_2
-'''
-
-test_concept_code = '''
-from rqalpha.api import concept, instruments
-def init(context):
-    context.s1 = '000002.XSHE'
-
-def handle_bar(context, bar_dict):
-    ins = instruments(context.s1)
-    concept_list = concept(ins.concept_names[:4])  # 取 concept_names 的前4个字，即 context.s1 的第一个概念
-    assert context.s1 in concept_list
-    assert len(concept_list) >= 90
-'''
-
-test_get_trading_dates_code = '''
-from rqalpha.api import get_trading_dates
-import datetime
-def init(context):
-    pass
-
-def handle_bar(context, bar_dict):
-    trading_dates_list = get_trading_dates('2016-12-15', '2017-01-03')
-    correct_dates_list = [datetime.date(2016, 12, 15), datetime.date(2016, 12, 16), datetime.date(2016, 12, 19),
-                          datetime.date(2016, 12, 20), datetime.date(2016, 12, 21), datetime.date(2016, 12, 22),
-                          datetime.date(2016, 12, 23), datetime.date(2016, 12, 26), datetime.date(2016, 12, 27),
-                          datetime.date(2016, 12, 28), datetime.date(2016, 12, 29), datetime.date(2016, 12, 30),
-                          datetime.date(2017, 1, 3)]
-    assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted([item.strftime("%Y%m%d") for item
-                                                                                       in trading_dates_list])
-'''
-
-test_get_previous_trading_date_code = '''
-from rqalpha.api import get_previous_trading_date
-def init(context):
-    pass
-
-def handle_bar(context, bar_dict):
-    assert str(get_previous_trading_date('2017-01-03').date()) == '2016-12-30'
-    assert str(get_previous_trading_date('2016-01-03').date()) == '2015-12-31'
-    assert str(get_previous_trading_date('2015-01-03').date()) == '2014-12-31'
-    assert str(get_previous_trading_date('2014-01-03').date()) == '2014-01-02'
-    assert str(get_previous_trading_date('2010-01-03').date()) == '2009-12-31'
-    assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
-    assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
-'''
-
-test_get_next_trading_date_code = '''
-
-from rqalpha.api import get_next_trading_date
-def init(context):
-    pass
-
-def handle_bar(context, bar_dict):
-    assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
-    assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
-
-'''
-
-test_get_dividend_code = '''
-from rqalpha.api import get_dividend
-import pandas
-def init(context):
-    pass
-
-def handle_bar(context, bar_dict):
-    df = get_dividend('000001.XSHE', start_date='20130104')
-    df_to_assert = df.loc[df['book_closure_date'] == '	2013-06-19']
-    assert df.shape >= (4, 5)
-    assert df_to_assert.iloc[0, 1] == 0.9838
-    assert df_to_assert.iloc[0, 3] == pandas.tslib.Timestamp('2013-06-20 00:00:00')
-'''
+    return init, before_trading

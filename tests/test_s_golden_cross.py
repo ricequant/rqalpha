@@ -38,25 +38,26 @@ def handle_bar(context, bar_dict):
 
 __config__ = {
     "base": {
-        "strategy_type": "stock",
         "start_date": "2008-07-01",
         "end_date": "2017-01-01",
         "frequency": "1d",
         "matching_type": "current_bar",
-        "stock_starting_cash": 100000,
         "benchmark": "000001.XSHE",
-        "slippage": 0.00123,
+        "accounts": {
+            "stock": 100000
+        }
     },
     "extra": {
         "log_level": "error",
     },
     "mod": {
-        "progress": {
+        "sys_progress": {
             "enabled": True,
-            "priority": 400,
+            "show": True,
         },
-        "funcat_api": {
+        "sys_funcat": {
             "enabled": True,
+            "show": True,
         },
     },
 }

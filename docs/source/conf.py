@@ -18,6 +18,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import sys
+import os
 from os import path
 
 sys.path.insert(0, path.dirname(path.dirname(path.dirname(__file__))))
@@ -34,6 +35,10 @@ sys.path.insert(0, path.dirname(path.dirname(path.dirname(__file__))))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.todo',
+    'nbsphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -91,7 +96,9 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = [
+    '**.ipynb_checkpoints',
+]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -113,7 +120,7 @@ exclude_patterns = []
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -130,10 +137,22 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
 
-import sphinx_rtd_theme
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# import sphinx_rtd_theme
+# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    try:
+        import sphinx_rtd_theme
+    except ImportError:
+        html_theme = 'default'
+        html_theme_path = []
+    else:
+        html_theme = 'sphinx_rtd_theme'
+        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -200,8 +219,8 @@ html_last_updated_fmt = '%b %d, %Y'
 # html_domain_indices = True
 
 # If false, no index is generated.
-#
-# html_use_index = True
+
+html_use_index = True
 
 # If true, the index is split into individual pages for each letter.
 #
@@ -212,12 +231,12 @@ html_last_updated_fmt = '%b %d, %Y'
 # html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-#
-# html_show_sphinx = True
+
+html_show_sphinx = False
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-#
-# html_show_copyright = True
+
+html_show_copyright = True
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
@@ -249,3 +268,11 @@ html_last_updated_fmt = '%b %d, %Y'
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'rqalphadoc'
 
+# Use this kernel instead of the one stored in the notebook metadata:
+nbsphinx_kernel_name = 'python3'
+
+# Execute notebooks before conversion: 'always', 'never', 'auto' (default)
+nbsphinx_execute = 'never'
+
+# If window is narrower than this, input/output prompts are on separate lines:
+# nbsphinx_responsive_width = '800px'

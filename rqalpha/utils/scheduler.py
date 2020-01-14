@@ -1,34 +1,28 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
 import json
 
 from dateutil.parser import parse
 
-from ..execution_context import ExecutionContext
-from ..utils.exception import patch_user_exc, ModifyExceptionFromType
-from ..const import EXC_TYPE, EXECUTION_PHASE
-from ..environment import Environment
-from ..events import EVENT
-
-try:
-    from inspect import signature
-except ImportError:
-    from funcsigs import signature
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.environment import Environment
+from rqalpha.const import EXC_TYPE, EXECUTION_PHASE
+from rqalpha.events import EVENT
+from rqalpha.utils.py2 import signature
+from rqalpha.utils.exception import patch_user_exc, ModifyExceptionFromType
 
 
 def market_close(hour=0, minute=0):
@@ -66,8 +60,8 @@ def run_monthly(func, tradingday=None, time_rule=None, **kwargs):
 def _verify_function(name, func):
     if not callable(func):
         raise patch_user_exc(ValueError('scheduler.{}: func should be callable'.format(name)))
-    signature = signature(func)
-    if len(signature.parameters) != 2:
+    sig = signature(func)
+    if len(sig.parameters) != 2:
         raise patch_user_exc(TypeError(
             'scheduler.{}: func should take exactly 2 arguments (context, bar_dict)'.format(name)))
 
@@ -131,6 +125,9 @@ class Scheduler(object):
         if time_rule == 'before_trading':
             return lambda: self._is_before_trading()
 
+        if time_rule is not None and not isinstance(time_rule, int):
+            raise patch_user_exc(ValueError('invalid time_rule, "before_trading" or int expected, got {}'.format(repr(time_rule))))
+
         time_rule = time_rule if time_rule else self._minutes_since_midnight(9, 31)
         return lambda: self._should_trigger(time_rule)
 
@@ -164,11 +161,15 @@ class Scheduler(object):
         _verify_function('run_monthly', func)
         if tradingday is None and 'monthday' in kwargs:
             tradingday = kwargs.pop('monthday')
+
         if kwargs:
             raise patch_user_exc(ValueError('unknown argument: {}'.format(kwargs)))
 
         if tradingday is None:
             raise patch_user_exc(ValueError('tradingday is required'))
+
+        if not isinstance(tradingday, int):
+            raise patch_user_exc(ValueError('tradingday: <int> excpected, {} got'.format(repr(tradingday))))
 
         if tradingday > 23 or tradingday < -23 or tradingday == 0:
             raise patch_user_exc(ValueError('invalid tradingday, should be in [-23, 0), (0, 23]'))
@@ -180,7 +181,7 @@ class Scheduler(object):
         self._registry.append((lambda: self._is_nth_trading_day_in_month(tradingday),
                                time_checker, func))
 
-    def next_day_(self):
+    def next_day_(self, event):
         if len(self._registry) == 0:
             return
 
@@ -196,8 +197,9 @@ class Scheduler(object):
     def _minutes_since_midnight(hour, minute):
         return hour * 60 + minute
 
-    def next_bar_(self, bars):
-        with ExecutionContext(EXECUTION_PHASE.SCHEDULED, bars):
+    def next_bar_(self, event):
+        bars = event.bar_dict
+        with ExecutionContext(EXECUTION_PHASE.SCHEDULED):
             self._current_minute = self._minutes_since_midnight(self._ucontext.now.hour, self._ucontext.now.minute)
             for day_rule, time_rule, func in self._registry:
                 if day_rule() and time_rule():
@@ -205,7 +207,7 @@ class Scheduler(object):
                         func(self._ucontext, bars)
             self._last_minute = self._current_minute
 
-    def before_trading_(self):
+    def before_trading_(self, event):
         with ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING):
             self._stage = 'before_trading'
             for day_rule, time_rule, func in self._registry:
@@ -216,7 +218,7 @@ class Scheduler(object):
 
     def _fill_week(self):
         weekday = self._today.isoweekday()
-        weekend = self._today + datetime.timedelta(days=7-weekday)
+        weekend = self._today + datetime.timedelta(days=7 - weekday)
         week_start = weekend - datetime.timedelta(days=6)
 
         left = self._TRADING_DATES.searchsorted(week_start)
@@ -225,9 +227,9 @@ class Scheduler(object):
 
     def _fill_month(self):
         try:
-            month_end = self._today.replace(month=self._today.month+1, day=1)
+            month_end = self._today.replace(month=self._today.month + 1, day=1)
         except ValueError:
-            month_end = self._today.replace(year=self._today.year+1, month=1, day=1)
+            month_end = self._today.replace(year=self._today.year + 1, month=1, day=1)
 
         month_begin = self._today.replace(day=1)
         left, right = self._TRADING_DATES.searchsorted(month_begin), self._TRADING_DATES.searchsorted(month_end)

@@ -1,0 +1,60 @@
+# see more config
+# http://rqalpha.readthedocs.io/zh_CN/stable/intro/run_algorithm.html
+version: 0.1.6
+
+# 白名单，设置可以直接在策略代码中指定哪些模块的配置项目
+whitelist: [base, extra, validator, mod]
+
+base:
+  # 数据源所存储的文件路径
+  data_bundle_path: ~
+  # 启动的策略文件路径
+  strategy_file: strategy.py
+  # 策略源代码
+  source_code: ~
+  # 回测起始日期
+  start_date: 2015-06-01
+  # 回测结束日期(如果是实盘，则忽略该配置)
+  end_date: 2050-01-01
+  # 设置保证金乘数，默认为1
+  margin_multiplier: 1
+  # 运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易。
+  run_type: b
+  # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
+  frequency: 1d
+  # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，
+  # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
+  persist: false
+  persist_mode: real_time
+  # 设置策略可交易品种，目前支持 `stock` (股票账户)、`future` (期货账户)，您也可以自行扩展
+  accounts:
+    # 如果想设置使用某个账户，只需要增加对应的初始资金即可
+    stock: ~
+    future: ~
+  # 交易市场，如 cn 中国市场，hk 香港市场
+  market: cn
+  # 设置初始仓位
+  init_positions: {}
+  # 根据价格最小变动单位调整发单价格
+  round_price: false
+  # 用户自定义的期货合约数据，用于设置期货手续菲费率
+  future_info: {}
+
+
+extra:
+  # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
+  # 或者设置 `error` 只查看错误级别的日志输出
+  log_level: info
+  user_system_log_disabled: false
+  user_log_disabled: false
+  # 通过该参数可以将预定义变量传入 `context` 内。
+  context_vars: ~
+  # enable_profiler: 是否启动性能分析
+  enable_profiler: false
+  is_hold: false
+  locale: zh_Hans_CN
+  logger: []
+
+validator:
+  # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
+  close_amount: true

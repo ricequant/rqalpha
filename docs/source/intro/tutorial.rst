@@ -1,7 +1,7 @@
 .. _intro-tutorial:
 
 ====================
-10分钟学会 RQAlpha
+10分钟教程
 ====================
 
 在本教程中，我们假设 RQAlpha 已经正确安装在您的系统中，并且已经完成了相应回测数据的同步，如果有任何安装相关的问题，请首先查看 :ref:`intro-install`
@@ -11,7 +11,9 @@
 
 我们从 :ref:`intro-examples` 中选取 :ref:`intro-examples-buy-and-hold` 来进行回测。
 
-在进行回测的过程中需要明确以下几个回测要素：
+如果对于策略、数据路径存在疑问，请参考：:ref:`FAQ-examples-path`
+
+在进行回测的过程中需要明确以下几个回测要素，您可通过生成config.yml传参 :ref:`intro-config` 或者通过命令行传参：
 
 *   数据源路径
 *   策略文件路径
@@ -20,27 +22,27 @@
 *   起始资金
 *   Benchmark
 
-假如我们的策略存放在了 :code:`./rqalpha/examples/buy_and_hold.py` 路径下， 数据源存放在 :code:`./rqalpha/bundle/` 路径下，回测的起始时间为 :code:`2016-06-01`, 结束时间为 :code:`2016-12-01`，我们给策略分配的起始资金为 :code:`100000`, Benchmark 设置为 :code:`000300.XSHG`
+假如我们的策略存放在了 :code:`./rqalpha/examples/buy_and_hold.py` 路径下，回测的起始时间为 :code:`2016-06-01`, 结束时间为 :code:`2016-12-01`，我们给策略分配的起始资金为 :code:`100000`, Benchmark 设置为 :code:`000300.XSHG`
 
 那么我们通过如下命令来运行回测
 
 ..  code-block:: bash
 
-    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG
 
 如果我们想要以图形的方式查看回测的结果， 则增加 :code:`--plot` 参数
 
 ..  code-block:: bash
 
-    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG --plot
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot
 
-.. image:: ../_static/buy_and_hold.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/buy_and_hold.png
 
 如果想把回测的数据保存下来，可以通过 :code:`-o` 参数将结果保存成 :code:`pkl` 文件。
 
 ..  code-block:: bash
 
-    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --stock-starting-cash 100000 --benchmark 000300.XSHG --plot -o result.pkl
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot -o result.pkl
 
 
 等回测结束后可以通过 :code:`pandas.read_pickle` 函数来读取数据进行之后的数据分析。
@@ -55,7 +57,6 @@
     result_dict.keys()
     # [out]dict_keys(['total_portfolios', 'summary', 'benchmark_portfolios', 'benchmark_positions', 'stock_positions', 'trades', 'stock_portfolios'])
 
-更多参数配置请查看 :ref:`api-config`
 
 策略编写流程
 ------------------------------------------------------
@@ -189,7 +190,7 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
     *   :func:`order_target_percent`: 【股票专用】按照目标比例下单
     *   :func:`buy_open`: 【期货专用】买开
     *   :func:`sell_close`:【期货专用】 平买仓
-    *   :func:`sell_opem`: 【期货专用】卖开
+    *   :func:`sell_open`: 【期货专用】卖开
     *   :func:`buy_close`: 【期货专用】平卖仓
     *   :func:`cancel_order`: 撤单
     *   :func:`get_open_orders`: 获取未成交订单数据
@@ -253,7 +254,7 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
 
 .. code-block:: bash
 
-    $ rqalpha run -s 2014-01-01 -e 2016-01-01 -f rqalpha/examples/golden_cross.py -sc 100000 -p -bm 000001.XSHE
+    $ rqalpha run -s 2014-01-01 -e 2016-01-01 -f rqalpha/examples/golden_cross.py --account stock 100000 -p -bm 000001.XSHE
 
 
-.. image:: ../_static/golden_cross.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/golden_cross.png

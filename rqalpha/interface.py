@@ -1,23 +1,194 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 import abc
 
-
 from six import with_metaclass
+
+
+class AbstractAccount(with_metaclass(abc.ABCMeta)):
+    """
+    账户接口，主要用于构建账户信息
+
+    您可以在 Mod 的 start_up 阶段通过 env.set_account_model(account_type, AccountModel) 来注入和修改 AccountModel
+    您也可以通过 env.get_account_model(account_type) 来获取指定类型的 AccountModel
+    """
+    @abc.abstractmethod
+    def fast_forward(self, orders, trades):
+        """
+        [Required]
+
+        fast_forward 函数接受当日订单数据和成交数据，从而将当前的持仓快照快速推进到最新持仓状态
+
+        :param list orders: 当日订单列表
+        :param list trades: 当日成交列表
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def order(self, order_book_id, quantity, style, target=False):
+        """
+        [Required]
+
+        系统下单函数会调用该函数来完成下单操作
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_state(self):
+        """
+        [Required]
+
+        主要用于进行持久化时候，提供对应需要持久化的数据
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def set_state(self, state):
+        """
+        [Requried]
+
+        主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def type(self):
+        """
+        [Required]
+
+        返回 String 类型的账户类型标示
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def positions(self):
+        """
+        [Required]
+
+        返回当前账户的持仓数据
+
+        :return: Positions(PositionModel)
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def frozen_cash(self):
+        """
+        [Required]
+
+        返回当前账户的冻结资金
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def cash(self):
+        """
+        [Required]
+
+        返回当前账户的可用资金
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def market_value(self):
+        """
+        [Required]
+
+        返回当前账户的市值
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def total_value(self):
+        """
+        [Required]
+
+        返回当前账户的总权益
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def transaction_cost(self):
+        """
+        [Required]
+
+        返回当前账户的当日交易费用
+        """
+        raise NotImplementedError
+
+
+class AbstractPosition(with_metaclass(abc.ABCMeta)):
+    """
+    仓位接口，主要用于构建仓位信息
+
+    您可以在 Mod 的 start_up 阶段通过 env.set_position_model(account_type, PositionModel) 来注入和修改 PositionModel
+    您也可以通过 env.get_position_model(account_type) 来获取制定类型的 PositionModel
+    """
+
+    @abc.abstractmethod
+    def get_state(self):
+        """
+        [Required]
+
+        主要用于进行持久化时候，提供对应需要持久化的数据
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def set_state(self, state):
+        """
+        [Requried]
+
+        主要用于持久化恢复时，根据提供的持久化数据进行恢复 Position 的实现
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def order_book_id(self):
+        """
+        [Required]
+
+        返回当前持仓的 order_book_id
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def type(self):
+        """
+        [Required]
+
+        返回 String 类型的账户类型标示
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def market_value(self):
+        """
+        [Required]
+
+        返回当前持仓的市值
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def transaction_cost(self):
+        """
+        [Required]
+
+        返回当前持仓的当日交易费用
+        """
+        raise NotImplementedError
 
 
 class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
@@ -27,13 +198,12 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     在扩展模块中，可以通过调用 ``env.set_strategy_loader`` 来替换默认的策略加载器。
     """
     @abc.abstractmethod
-    def load(self, strategy, scope):
+    def load(self, scope):
         """
-        【Required】
+        [Required]
 
         load 函数负责组装策略代码和策略代码所在的域，并输出最终组装好的可执行域。
 
-        :param str strategy: 策略标识符，对应 ``config.base.strategy_file``，相应的命令行参数为 ``-f``。
         :param dict scope: 策略代码运行环境，在传入时，包含了所有基础API。
             通过在 scope 中添加函数可以实现自定义API；通过覆盖 scope 中相应的函数，可以覆盖原API。
 
@@ -51,7 +221,7 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def events(self, start_date, end_date, frequency):
         """
-        【Required】
+        [Required]
 
         扩展 EventSource 必须实现 events 函数。
 
@@ -71,6 +241,34 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
 
         :return: None
         """
+        raise NotImplementedError
+
+
+class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
+    """
+    RQAlpha多个地方需要使用最新「行情」，不同的数据源其最新价格获取的方式不尽相同
+
+    因此抽离出 `AbstractPriceBoard`, 您可以自行进行扩展并替换默认 PriceBoard
+    """
+    @abc.abstractmethod
+    def get_last_price(self, order_book_id):
+        """
+        获取证券的最新价格
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_limit_up(self, order_book_id):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_limit_down(self, order_book_id):
+        raise NotImplementedError
+
+    def get_a1(self, order_book_id):
+        raise NotImplementedError
+
+    def get_b1(self, order_book_id):
         raise NotImplementedError
 
 
@@ -108,12 +306,11 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_dividend(self, order_book_id, adjusted=True):
+    def get_dividend(self, order_book_id):
         """
         获取股票/基金分红信息
 
         :param str order_book_id: 合约名
-        :param bool adjusted: 是否经过前复权处理
         :return:
         """
         raise NotImplementedError
@@ -157,7 +354,8 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True,
+                     include_now=False, adjust_type='pre', adjust_orig=None):
         """
         获取历史数据
 
@@ -186,10 +384,29 @@ class AbstractDataSource(object):
         =========================   ===================================================
 
         :param datetime.datetime dt: 时间
-
         :param bool skip_suspended: 是否跳过停牌日
+        :param bool include_now: 是否包含当天最新数据
+        :param str adjust_type: 复权类型，'pre', 'none', 'post'
+        :param datetime.datetime adjust_orig: 复权起点；
 
-        :return: `numpy.ndarray`
+        :return: `Optional[numpy.ndarray]`, fields 不合法时返回 None
+
+        """
+        raise NotImplementedError
+
+    def history_ticks(self, instrument, count, dt):
+        """
+        获取历史tick数据
+
+        :param instrument: 合约对象
+        :type instrument: :class:`~Instrument`
+
+        :param int count: 获取的历史数据数量
+        :param str fields: 返回数据字段
+
+        :param datetime.datetime dt: 时间
+
+        :return: list of `Tick`
 
         """
         raise NotImplementedError
@@ -214,7 +431,6 @@ class AbstractDataSource(object):
 
     def get_trading_minutes_for(self, instrument, trading_dt):
         """
-
         获取证券某天的交易时段，用于期货回测
 
         :param instrument: 合约对象
@@ -236,13 +452,39 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_future_info(self, order_book_id, hedge_type):
+    def get_commission_info(self, instrument):
         """
-        获取期货合约手续费、保证金等数据
+        获取合约的手续费信息
+        :param instrument:
+        :return:
+        """
+        raise NotImplementedError
 
-        :param str order_book_id: 合约名
-        :param HEDGE_TYPE hedge_type: 枚举类型，账户对冲类型
-        :return: dict
+    def get_tick_size(self, instrument):
+        """
+        获取合约的 tick size
+        :param instrument:
+        :return:
+        """
+        raise NotImplementedError
+
+    def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
+        """
+        获取合并的 ticks
+
+        :param list order_book_id_list: 合约名列表
+        :param datetime.date trading_date: 交易日
+        :param datetime.datetime last_dt: 仅返回 last_dt 之后的时间
+
+        :return: Iterable object of Tick
+        """
+        raise NotImplementedError
+
+    def get_share_transformation(self, order_book_id):
+        """
+        获取股票转换信息
+        :param order_book_id: 合约代码
+        :return: (successor, conversion_ratio), (转换后的合约代码，换股倍率)
         """
         raise NotImplementedError
 
@@ -256,24 +498,22 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
     在扩展模块中，可以通过调用 ``env.set_broker`` 来替换默认的 Broker。
     """
+
     @abc.abstractmethod
-    def get_accounts(self):
+    def get_portfolio(self):
         """
         [Required]
 
-        获取账号信息。系统初始化时，RQAlpha 会调用此接口，获取账户信息。
+        获取投资组合。系统初始化时，会调用此接口，获取包含账户信息、净值、份额等内容的投资组合
 
-        RQAlpha 支持混合策略，因此返回的账户信息为一个字典(dict)，key 为账户类型（``rqalpha.const.ACCOUNT_TYPE``)，
-        value 为对应的 :class:`~Account` 对象。
-
-        :return: dict
+        :return: Portfolio
         """
         raise NotImplementedError
 
     @abc.abstractmethod
     def submit_order(self, order):
         """
-        【Required】
+        [Required]
 
         提交订单。在当前版本，RQAlpha 会生成 :class:`~Order` 对象，再通过此接口提交到 Broker。
         TBD: 由 Broker 对象生成 Order 并返回？
@@ -283,7 +523,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def cancel_order(self, order):
         """
-        【Required】
+        [Required]
 
         撤单。
 
@@ -293,45 +533,15 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_open_orders(self):
+    def get_open_orders(self, order_book_id=None):
         """
-        【Required】
+        [Required]
 
         获得当前未完成的订单。
 
         :return: list[:class:`~Order`]
         """
         raise NotImplementedError
-
-    def before_trading(self):
-        """
-        【Optional】
-
-        RQAlpha 会在 `EVENT.BEFORE_TRADING` 事件被触发前调用此接口。
-        """
-        pass
-
-    def after_trading(self):
-        """
-        【Optional】
-
-        RQAlpha 会在 `EVENT.AFTER_TRADING` 事件被触发前调用此接口。
-        """
-        pass
-
-    def bar(self, bar_dict):
-        """
-        【Optional】
-
-        RQAlpha 会在 `EVENT.BAR` 事件被出发前调用此接口。
-
-        Broker 根据自己的业务场景来选择是否实现，比如说自带撮合引擎的Broker，会通过 `update` 函数来触发撮合。
-
-        :param calendar_dt: 实际时间
-        :param trading_dt: 交易时间
-        :param bar_dict: dict[:class:`~BarObject`]
-        """
-        pass
 
 
 class AbstractMod(with_metaclass(abc.ABCMeta)):
@@ -385,6 +595,22 @@ class AbstractPersistProvider(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def should_resume(self):
+        """
+        是否应该以 resume 模式运行
+        :return: bool
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def should_run_init(self):
+        """
+        是否应该执行策略的 init 函数
+        :return: bool
+        """
+        raise NotImplementedError
+
 
 class Persistable(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
@@ -409,3 +635,57 @@ class Persistable(with_metaclass(abc.ABCMeta)):
                     any("set_state" in B.__dict__ for B in C.__mro__)):
                 return True
         return NotImplemented
+
+
+class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
+    """
+    前端风控接口，下撤单请求在到达券商代理模块前会经过前端风控。
+    """
+    @abc.abstractmethod
+    def can_submit_order(self, order, account=None):
+        # FIXME: need a better name
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def can_cancel_order(self, order, account=None):
+        # FIXME: need a better name
+        raise NotImplementedError
+
+
+class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
+    """
+    订单税费计算接口，通过实现次接口可以定义不同市场、不同合约的个性化税费计算逻辑。
+    """
+    @abc.abstractmethod
+    def get_trade_tax(self, trade):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_trade_commission(self, trade):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_order_transaction_cost(self, order):
+        raise NotImplementedError
+
+
+class AbstractBenchmarkProvider(with_metaclass(abc.ABCMeta)):
+    """
+    基准组合模块，通过实现该接口可以定义基准组合的实现逻辑，基准组合的收益率将被用于画图及策略分析
+    """
+    @property
+    @abc.abstractmethod
+    def daily_returns(self):
+        """
+        [float] 当前最新一天的日收益
+        """
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def total_returns(self):
+        """
+        [float] 累计收益率
+        """
+        raise NotImplementedError
+

@@ -1,30 +1,28 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import six
 import numpy as np
 
-from ..environment import Environment
-from ..const import RUN_TYPE
-from ..utils.datetime_func import convert_int_to_datetime
-from ..utils.i18n import gettext as _
-from ..utils.logger import system_log
-from ..utils.exception import patch_user_exc
-from ..execution_context import ExecutionContext
-from ..const import EXECUTION_PHASE, BAR_STATUS
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.environment import Environment
+from rqalpha.const import RUN_TYPE
+from rqalpha.utils.datetime_func import convert_int_to_datetime
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import system_log
+from rqalpha.utils.exception import patch_user_exc
+from rqalpha.const import EXECUTION_PHASE, BAR_STATUS
 
 
 NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down', 'volume', 'total_turnover',
@@ -49,92 +47,57 @@ class BarObject(object):
     @property
     def open(self):
         """
-        【float】当日开盘价
+        [float] 开盘价
         """
         return self._data["open"]
 
     @property
     def close(self):
+        """
+        [float] 收盘价
+        """
         return self._data["close"]
 
     @property
     def low(self):
         """
-        【float】截止到当前的最低价
+        [float] 最低价
         """
         return self._data["low"]
 
     @property
     def high(self):
         """
-        【float】截止到当前的最高价
+        [float] 最高价
         """
         return self._data["high"]
 
     @property
     def limit_up(self):
+        """
+        [float] 涨停价
+        """
         try:
             v = self._data['limit_up']
             return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self._limit_up is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
-                    self._limit_up = np.floor(self.prev_close * 10500) / 10000
-                else:
-                    self._limit_up = np.floor(self.prev_close * 11000) / 10000
-            return self._limit_up
+        except (KeyError, ValueError):
+            return np.nan
 
     @property
     def limit_down(self):
+        """
+        [float] 跌停价
+        """
         try:
             v = self._data['limit_down']
             return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self._limit_down is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
-                    self._limit_down = np.ceil(self.prev_close * 9500) / 10000
-                else:
-                    self._limit_down = np.ceil(self.prev_close * 9000) / 10000
-            return self._limit_down
-
-    @property
-    def _internal_limit_up(self):
-        try:
-            v = self._data['limit_up']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self.__internal_limit_up is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
-                    self.__internal_limit_up = np.floor(self.prev_close * 10490) / 10000
-                else:
-                    self.__internal_limit_up = np.floor(self.prev_close * 10990) / 10000
-            return self.__internal_limit_up
-
-    @property
-    def _internal_limit_down(self):
-        try:
-            v = self._data['limit_down']
-            return v if v != 0 else np.nan
-        except (ValueError, KeyError):
-            if self.__internal_limit_down is None:
-                data_proxy = ExecutionContext.data_proxy
-                dt = ExecutionContext.get_current_trading_dt()
-                if data_proxy.is_st_stock(self._instrument.order_book_id, dt):
-                    self.__internal_limit_down = np.ceil(self.prev_close * 9510) / 10000
-                else:
-                    self.__internal_limit_down = np.ceil(self.prev_close * 9010) / 10000
-            return self.__internal_limit_down
+        except (KeyError, ValueError):
+            return np.nan
 
     @property
     def prev_close(self):
         """
-        【float】截止到当前的最低价
+        [float] 昨日收盘价
         """
         try:
             return self._data['prev_close']
@@ -142,9 +105,9 @@ class BarObject(object):
             pass
 
         if self._prev_close is None:
-            data_proxy = ExecutionContext.data_proxy
-            dt = ExecutionContext.get_current_trading_dt()
-            self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, dt)
+            trading_dt = Environment.get_instance().trading_dt
+            data_proxy = Environment.get_instance().data_proxy
+            self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
         return self._prev_close
 
     @property
@@ -154,30 +117,30 @@ class BarObject(object):
         """
         if self.isnan or np.isnan(self.limit_up):
             return BAR_STATUS.ERROR
-        if self.close >= self._internal_limit_up:
+        if self.close >= self.limit_up:
             return BAR_STATUS.LIMIT_UP
-        if self.close <= self._internal_limit_down:
+        if self.close <= self.limit_down:
             return BAR_STATUS.LIMIT_DOWN
         return BAR_STATUS.NORMAL
 
     @property
     def last(self):
         """
-        【float】当前最新价
+        [float] 当前最新价
         """
         return self.close
 
     @property
     def volume(self):
         """
-        【float】截止到当前的成交量
+        [float] 截止到当前的成交量
         """
         return self._data["volume"]
 
     @property
     def total_turnover(self):
         """
-        【float】截止到当前的成交额
+        [float] 截止到当前的成交额
         """
         return self._data['total_turnover']
 
@@ -204,13 +167,13 @@ class BarObject(object):
         try:
             return self._data['basis_spread']
         except (ValueError, KeyError):
-            if self._instrument.type != 'Future' or ExecutionContext.config.base.run_type != RUN_TYPE.PAPER_TRADING:
+            if self._instrument.type != 'Future' or Environment.get_instance().config.base.run_type != RUN_TYPE.PAPER_TRADING:
                 raise
 
         if self._basis_spread is None:
             if self._instrument.underlying_symbol in ['IH', 'IC', 'IF']:
                 order_book_id = self.INDEX_MAP[self._instrument.underlying_symbol]
-                bar = ExecutionContext.data_proxy.get_bar(order_book_id, None, '1m')
+                bar = Environment.get_instance().data_proxy.get_bar(order_book_id, None, '1m')
                 self._basis_spread = self.close - bar.close
             else:
                 self._basis_spread = np.nan
@@ -218,12 +181,15 @@ class BarObject(object):
 
     @property
     def settlement(self):
+        """
+        [float] 结算价（期货专用）
+        """
         return self._data['settlement']
 
     @property
     def prev_settlement(self):
         """
-        【float】昨日结算价（期货专用）
+        [float] 昨日结算价（期货专用）
         """
         try:
             return self._data['prev_settlement']
@@ -231,20 +197,23 @@ class BarObject(object):
             pass
 
         if self._prev_settlement is None:
-            data_proxy = ExecutionContext.data_proxy
-            dt = ExecutionContext.get_current_trading_dt().date()
-            self._prev_settlement = data_proxy.get_prev_settlement(self._instrument.order_book_id, dt)
+            trading_dt = Environment.get_instance().trading_dt
+            data_proxy = Environment.get_instance().data_proxy
+            self._prev_settlement = data_proxy.get_prev_settlement(self._instrument.order_book_id, trading_dt)
         return self._prev_settlement
 
     @property
     def open_interest(self):
         """
-        【float】截止到当前的持仓量（期货专用）
+        [float] 截止到当前的持仓量（期货专用）
         """
         return self._data['open_interest']
 
     @property
     def datetime(self):
+        """
+        [datetime.datetime] 时间戳
+        """
         if self._dt is not None:
             return self._dt
         return convert_int_to_datetime(self._data['datetime'])
@@ -256,21 +225,21 @@ class BarObject(object):
     @property
     def order_book_id(self):
         """
-        【str】交易标的代码
+        [str] 交易标的代码
         """
         return self._instrument.order_book_id
 
     @property
     def symbol(self):
         """
-        【str】合约简称
+        [str] 合约简称
         """
         return self._instrument.symbol
 
     @property
     def is_trading(self):
         """
-        【datetime.datetime】 时间戳
+        [bool] 是否有成交量
         """
         return self._data['volume'] > 0
 
@@ -283,8 +252,7 @@ class BarObject(object):
         if self.isnan:
             return True
 
-        data_proxy = ExecutionContext.data_proxy
-        return data_proxy.is_suspended(self._instrument.order_book_id, int(self._data['datetime'] // 1000000))
+        return Environment.get_instance().data_proxy.is_suspended(self._instrument.order_book_id, int(self._data['datetime'] // 1000000))
 
     def mavg(self, intervals, frequency='1d'):
         if frequency == 'day':
@@ -293,14 +261,13 @@ class BarObject(object):
             frequency = '1m'
 
         # copy form history
-        dt = ExecutionContext.get_current_calendar_dt()
-        data_proxy = ExecutionContext.data_proxy
+        env = Environment.get_instance()
+        dt = env.calendar_dt
 
-        if (Environment.get_instance().config.base.frequency == '1m' and frequency == '1d') or \
-                        ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
-            dt = data_proxy.get_previous_trading_date(dt.date())
-        bars = data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, 'close', dt)
+            dt = env.data_proxy.get_previous_trading_date(env.calendar_dt.date())
+        bars = env.data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, 'close', dt)
         return bars.mean()
 
     def vwap(self, intervals, frequency='1d'):
@@ -310,14 +277,13 @@ class BarObject(object):
             frequency = '1m'
 
         # copy form history
-        dt = ExecutionContext.get_current_calendar_dt()
-        data_proxy = ExecutionContext.data_proxy
+        env = Environment.get_instance()
+        dt = env.calendar_dt
 
-        if (Environment.get_instance().config.base.frequency == '1m' and frequency == '1d') or \
-                        ExecutionContext.get_active().phase == EXECUTION_PHASE.BEFORE_TRADING:
+        if (env.config.base.frequency == '1m' and frequency == '1d') or ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING:
             # 在分钟回测获取日线数据, 应该推前一天
-            dt = data_proxy.get_previous_trading_date(dt.date())
-        bars = data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, ['close', 'volume'], dt)
+            dt = env.data_proxy.get_previous_trading_date(env.calendar_dt.date())
+        bars = env.data_proxy.fast_history(self._instrument.order_book_id, intervals, frequency, ['close', 'volume'], dt)
         sum = bars['volume'].sum()
         if sum == 0:
             # 全部停牌
@@ -359,19 +325,19 @@ class BarMap(object):
         self._cache.clear()
 
     def items(self):
-        return ((o, self.__getitem__(o)) for o in Environment.get_instance().universe)
+        return ((o, self.__getitem__(o)) for o in Environment.get_instance().get_universe())
 
     def keys(self):
-        return (o for o in Environment.get_instance().universe)
+        return (o for o in Environment.get_instance().get_universe())
 
     def values(self):
-        return (self.__getitem__(o) for o in Environment.get_instance().universe)
+        return (self.__getitem__(o) for o in Environment.get_instance().get_universe())
 
     def __contains__(self, o):
-        return o in Environment.get_instance().universe
+        return o in Environment.get_instance().get_universe()
 
     def __len__(self):
-        return len(Environment.get_instance().universe)
+        return len(Environment.get_instance().get_universe())
 
     def __getitem__(self, key):
         if not isinstance(key, six.string_types):
@@ -386,10 +352,12 @@ class BarMap(object):
             return self._cache[order_book_id]
         except KeyError:
             try:
+                if not self._dt:
+                    return BarObject(instrument, NANDict, self._dt)
                 bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
             except Exception as e:
                 system_log.exception(e)
-                raise patch_user_exc(KeyError(_("id_or_symbols {} does not exist").format(key)))
+                raise patch_user_exc(KeyError(_(u"id_or_symbols {} does not exist").format(key)))
             if bar is None:
                 return BarObject(instrument, NANDict, self._dt)
             else:

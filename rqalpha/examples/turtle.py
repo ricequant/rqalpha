@@ -13,15 +13,14 @@ def get_extreme(array_high_price_result, array_low_price_result):
     return [max_result, min_result]
 
 
-def  get_atr_and_unit( atr_array_result,  atr_length_result, portfolio_value_result):
-    atr =  atr_array_result[ atr_length_result-1]
+def get_atr_and_unit(atr_array_result, atr_length_result, portfolio_value_result):
+    atr =  atr_array_result[atr_length_result-1]
     unit = math.floor(portfolio_value_result * .01 / atr)
     return [atr, unit]
 
 
 def get_stop_price(first_open_price_result, units_hold_result, atr_result):
-    stop_price = first_open_price_result - 2 * atr_result \
-                 + (units_hold_result - 1) * 0.5 * atr_result
+    stop_price = first_open_price_result - 2 * atr_result + (units_hold_result - 1) * 0.5 * atr_result
     return stop_price
 
 
@@ -44,10 +43,10 @@ def init(context):
 
 def handle_bar(context, bar_dict):
     portfolio_value = context.portfolio.portfolio_value
-    high_price = history_bars(context.s, context.open_observe_time+1, '1d', 'high')
-    low_price_for_atr = history_bars(context.s, context.open_observe_time+1, '1d', 'low')
-    low_price_for_extreme = history_bars(context.s, context.close_observe_time+1, '1d', 'low')
-    close_price = history_bars(context.s, context.open_observe_time+2, '1d', 'close')
+    high_price = history_bars(context.s, context.open_observe_time + 1, '1d', 'high')
+    low_price_for_atr = history_bars(context.s, context.open_observe_time + 1, '1d', 'low')
+    low_price_for_extreme = history_bars(context.s, context.close_observe_time + 1, '1d', 'low')
+    close_price = history_bars(context.s, context.open_observe_time + 2, '1d', 'close')
     close_price_for_atr = close_price[:-1]
 
     atr_array = talib.ATR(high_price, low_price_for_atr, close_price_for_atr, timeperiod=context.atr_time)
