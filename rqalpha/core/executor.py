@@ -44,6 +44,11 @@ class Executor(object):
                     bar_dict.update_dt(event.calendar_dt)
                     event.bar_dict = bar_dict
                     self._split_and_publish(event)
+            elif event.event_type == EVENT.OPEN_AUCTION:
+                if self._ensure_before_trading(event):
+                    bar_dict.update_dt(event.calendar_dt)
+                    event.bar_dict = bar_dict
+                    self._split_and_publish(event)
             elif event.event_type == EVENT.BEFORE_TRADING:
                 self._ensure_before_trading(event)
             elif event.event_type == EVENT.AFTER_TRADING:
@@ -76,7 +81,8 @@ class Executor(object):
         EVENT.BAR: (EVENT.PRE_BAR, EVENT.BAR, EVENT.POST_BAR),
         EVENT.TICK: (EVENT.PRE_TICK, EVENT.TICK, EVENT.POST_TICK),
         EVENT.AFTER_TRADING: (EVENT.PRE_AFTER_TRADING, EVENT.AFTER_TRADING, EVENT.POST_AFTER_TRADING),
-        EVENT.SETTLEMENT: (EVENT.PRE_SETTLEMENT, EVENT.SETTLEMENT, EVENT.POST_SETTLEMENT)
+        EVENT.SETTLEMENT: (EVENT.PRE_SETTLEMENT, EVENT.SETTLEMENT, EVENT.POST_SETTLEMENT),
+        EVENT.OPEN_AUCTION: (EVENT.PRE_OPEN_AUCTION, EVENT.OPEN_AUCTION, EVENT.POST_OPEN_AUCTION),
     }
 
     def _split_and_publish(self, event):
