@@ -126,6 +126,7 @@ def run_func(**kwargs):
         'init': kwargs.get('init', dummy_func),
         'handle_bar': kwargs.get('handle_bar', dummy_func),
         'handle_tick': kwargs.get('handle_tick', dummy_func),
+        'open_auction': kwargs.get('open_auction', dummy_func),
         'before_trading': kwargs.get('before_trading', dummy_func),
         'after_trading': kwargs.get('after_trading', dummy_func)
     }

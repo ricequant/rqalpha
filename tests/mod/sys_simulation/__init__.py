@@ -13,8 +13,9 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from .test_signal_broker import test_strategies as test_signal_broker_strategies
+from .test_simulation_event_source import test_strategies as test_simulation_strategies
 
-test_strategies = test_signal_broker_strategies
+test_strategies = test_signal_broker_strategies + test_simulation_strategies
 
 __all__ = [
     "test_strategies"

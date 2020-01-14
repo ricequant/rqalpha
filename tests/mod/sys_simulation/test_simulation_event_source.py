@@ -15,13 +15,15 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+
 from ...utils import make_test_strategy_decorator
 
+test_strategies = []
 
 as_test_strategy = make_test_strategy_decorator({
     "base": {
         "start_date": "2015-04-10",
-        "end_date": "2015-04-10",
+        "end_date": "2015-04-20",
         "frequency": "1d",
         "accounts": {
             "stock": 1000000,
@@ -39,13 +41,23 @@ as_test_strategy = make_test_strategy_decorator({
             "signal": True,
         }
     },
-})
+}, test_strategies)
 
 
 @as_test_strategy()
-def test_price_limit():
+def test_open_auction():
+    def init(context):
+        context.s = "000001.XSHE"
+        context.open_auction_prices = ()
+
+    def open_auction(context, bar_dict):
+        bar = bar_dict[context.s]
+        assert (not hasattr(bar, "close"))
+        context.open_auction_prices = (bar.open, bar.limit_up, bar.limit_down, bar.prev_close, bar.prev_settlement)
+
     def handle_bar(context, bar_dict):
-        stock = "000001.XSHE"
-        order_shares(stock, 100, bar_dict[stock].limit_up)
-        assert context.portfolio.positions[stock].quantity == 100
-    return handle_bar
+        bar = bar_dict[context.s]
+        assert hasattr(bar, "close")
+        assert context.open_auction_prices == (bar.open, bar.limit_up, bar.limit_down, bar.prev_close, bar.prev_settlement)
+
+    return locals()

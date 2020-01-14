@@ -20,7 +20,6 @@ from functools import lru_cache
 import six
 import numpy as np
 
-from rqalpha.data.data_proxy import DataProxy
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.const import RUN_TYPE
@@ -307,7 +306,7 @@ class BarObject(object):
 class BarMap(object):
     def __init__(self, data_proxy, frequency):
         self._dt = None
-        self._data_proxy = data_proxy  # type: DataProxy
+        self._data_proxy = data_proxy
         self._frequency = frequency
         self._cache = {}
 
