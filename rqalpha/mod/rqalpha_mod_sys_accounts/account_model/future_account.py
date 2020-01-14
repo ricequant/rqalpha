@@ -189,11 +189,9 @@ class FutureAccount(AssetAccount):
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
-        new_position = order_book_id not in self._positions
         position = self._positions.get_or_create(order_book_id)
         position.apply_trade(trade)
-        if new_position:
-            position.update_last_price()
+        position.update_last_price()
         self._backward_trade_set.add(trade.exec_id)
         if order:
             if trade.last_quantity != order.quantity:

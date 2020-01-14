@@ -142,11 +142,9 @@ class StockAccount(AssetAccount):
         if trade.exec_id in self._backward_trade_set:
             return
 
-        new_position = trade.order_book_id not in self._positions
         position = self._positions.get_or_create(trade.order_book_id)
         position.apply_trade(trade)
-        if new_position:
-            position.update_last_price()
+        position.update_last_price()
         if order:
             if trade.last_quantity != order.quantity:
                 self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
