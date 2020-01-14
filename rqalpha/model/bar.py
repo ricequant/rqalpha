@@ -4,20 +4,16 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
-#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
-#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
-#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
-#         否则米筐科技有权追究相应的知识产权侵权责任。
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import six
 import numpy as np
-from functools import lru_cache
 
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
@@ -26,7 +22,7 @@ from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.exception import patch_user_exc
-from rqalpha.const import EXECUTION_PHASE
+from rqalpha.const import EXECUTION_PHASE, BAR_STATUS
 
 
 NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down', 'volume', 'total_turnover',
@@ -35,10 +31,17 @@ NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down',
 NANDict = {i: np.nan for i in NAMES}
 
 
-class PartialBarObject(object):
+class BarObject(object):
     def __init__(self, instrument, data, dt=None):
         self._dt = dt
         self._data = data if data is not None else NANDict
+        self._prev_close = None
+        self._prev_settlement = None
+        self._basis_spread = None
+        self._limit_up = None
+        self._limit_down = None
+        self.__internal_limit_up = None
+        self.__internal_limit_down = None
         self._instrument = instrument
 
     @property
@@ -47,6 +50,27 @@ class PartialBarObject(object):
         [float] 开盘价
         """
         return self._data["open"]
+
+    @property
+    def close(self):
+        """
+        [float] 收盘价
+        """
+        return self._data["close"]
+
+    @property
+    def low(self):
+        """
+        [float] 最低价
+        """
+        return self._data["low"]
+
+    @property
+    def high(self):
+        """
+        [float] 最高价
+        """
+        return self._data["high"]
 
     @property
     def limit_up(self):
@@ -71,7 +95,6 @@ class PartialBarObject(object):
             return np.nan
 
     @property
-    @lru_cache(None)
     def prev_close(self):
         """
         [float] 昨日收盘价
@@ -81,74 +104,24 @@ class PartialBarObject(object):
         except (ValueError, KeyError):
             pass
 
-        trading_dt = Environment.get_instance().trading_dt
-        data_proxy = Environment.get_instance().data_proxy
-        return data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
+        if self._prev_close is None:
+            trading_dt = Environment.get_instance().trading_dt
+            data_proxy = Environment.get_instance().data_proxy
+            self._prev_close = data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
+        return self._prev_close
 
     @property
-    @lru_cache()
-    def prev_settlement(self):
+    def _bar_status(self):
         """
-        [float] 昨日结算价（期货专用）
+        WARNING: 获取 bar_status 比较耗费性能，而且是lazy_compute，因此不要多次调用！！！！
         """
-        try:
-            return self._data['prev_settlement']
-        except (ValueError, KeyError):
-            pass
-
-        trading_dt = Environment.get_instance().trading_dt
-        data_proxy = Environment.get_instance().data_proxy
-        return data_proxy.get_prev_settlement(self._instrument.order_book_id, trading_dt)
-
-    @property
-    def datetime(self):
-        """
-        [datetime.datetime] 时间戳
-        """
-        if self._dt is not None:
-            return self._dt
-        return convert_int_to_datetime(self._data['datetime'])
-
-    @property
-    def instrument(self):
-        return self._instrument
-
-    @property
-    def order_book_id(self):
-        """
-        [str] 交易标的代码
-        """
-        return self._instrument.order_book_id
-
-    @property
-    def symbol(self):
-        """
-        [str] 合约简称
-        """
-        return self._instrument.symbol
-
-
-class BarObject(PartialBarObject):
-    @property
-    def close(self):
-        """
-        [float] 收盘价
-        """
-        return self._data["close"]
-
-    @property
-    def low(self):
-        """
-        [float] 最低价
-        """
-        return self._data["low"]
-
-    @property
-    def high(self):
-        """
-        [float] 最高价
-        """
-        return self._data["high"]
+        if self.isnan or np.isnan(self.limit_up):
+            return BAR_STATUS.ERROR
+        if self.close >= self.limit_up:
+            return BAR_STATUS.LIMIT_UP
+        if self.close <= self.limit_down:
+            return BAR_STATUS.LIMIT_DOWN
+        return BAR_STATUS.NORMAL
 
     @property
     def last(self):
@@ -190,7 +163,6 @@ class BarObject(PartialBarObject):
     }
 
     @property
-    @lru_cache()
     def basis_spread(self):
         try:
             return self._data['basis_spread']
@@ -198,12 +170,14 @@ class BarObject(PartialBarObject):
             if self._instrument.type != 'Future' or Environment.get_instance().config.base.run_type != RUN_TYPE.PAPER_TRADING:
                 raise
 
-        if self._instrument.underlying_symbol in ['IH', 'IC', 'IF']:
-            order_book_id = self.INDEX_MAP[self._instrument.underlying_symbol]
-            bar = Environment.get_instance().data_proxy.get_bar(order_book_id, None, '1m')
-            return self.close - bar.close
-        else:
-            return np.nan
+        if self._basis_spread is None:
+            if self._instrument.underlying_symbol in ['IH', 'IC', 'IF']:
+                order_book_id = self.INDEX_MAP[self._instrument.underlying_symbol]
+                bar = Environment.get_instance().data_proxy.get_bar(order_book_id, None, '1m')
+                self._basis_spread = self.close - bar.close
+            else:
+                self._basis_spread = np.nan
+        return self._basis_spread
 
     @property
     def settlement(self):
@@ -213,11 +187,54 @@ class BarObject(PartialBarObject):
         return self._data['settlement']
 
     @property
+    def prev_settlement(self):
+        """
+        [float] 昨日结算价（期货专用）
+        """
+        try:
+            return self._data['prev_settlement']
+        except (ValueError, KeyError):
+            pass
+
+        if self._prev_settlement is None:
+            trading_dt = Environment.get_instance().trading_dt
+            data_proxy = Environment.get_instance().data_proxy
+            self._prev_settlement = data_proxy.get_prev_settlement(self._instrument.order_book_id, trading_dt)
+        return self._prev_settlement
+
+    @property
     def open_interest(self):
         """
         [float] 截止到当前的持仓量（期货专用）
         """
         return self._data['open_interest']
+
+    @property
+    def datetime(self):
+        """
+        [datetime.datetime] 时间戳
+        """
+        if self._dt is not None:
+            return self._dt
+        return convert_int_to_datetime(self._data['datetime'])
+
+    @property
+    def instrument(self):
+        return self._instrument
+
+    @property
+    def order_book_id(self):
+        """
+        [str] 交易标的代码
+        """
+        return self._instrument.order_book_id
+
+    @property
+    def symbol(self):
+        """
+        [str] 合约简称
+        """
+        return self._instrument.symbol
 
     @property
     def is_trading(self):

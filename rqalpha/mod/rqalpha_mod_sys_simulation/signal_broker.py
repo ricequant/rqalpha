@@ -24,7 +24,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import is_valid_price, account_type_str2enum
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
-from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT
+from rqalpha.const import BAR_STATUS, SIDE, ORDER_TYPE, POSITION_EFFECT
 
 from .slippage import SlippageDecider
 from .utils import init_portfolio
@@ -91,15 +91,15 @@ class SignalBroker(AbstractBroker):
             if order.position_effect != POSITION_EFFECT.EXERCISE:
                 if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
                     user_system_log.warning(
-                        _(u"You have traded {order_book_id} with {quantity} lots in limit up status").format(
-                            order_book_id=order_book_id, quantity=order.quantity
+                        _(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+                            order_book_id=order_book_id, quantity=order.quantity, bar_status=BAR_STATUS.LIMIT_UP
                         )
                     )
 
                 if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
                     user_system_log.warning(
-                        _(u"You have traded {order_book_id} with {quantity} lots in limit down status").format(
-                            order_book_id=order_book_id, quantity=order.quantity
+                        _(u"You have traded {order_book_id} with {quantity} lots in {bar_status}").format(
+                            order_book_id=order_book_id, quantity=order.quantity, bar_status=BAR_STATUS.LIMIT_DOWN
                         )
                     )
 
