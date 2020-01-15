@@ -48,11 +48,11 @@ def test_open_auction():
     def open_auction(context, bar_dict):
         bar = bar_dict[context.s]
         assert (not hasattr(bar, "close"))
-        context.open_auction_prices = (bar.open, bar.limit_up, bar.limit_down, bar.prev_close, bar.prev_settlement)
+        context.open_auction_prices = (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
 
     def handle_bar(context, bar_dict):
         bar = bar_dict[context.s]
         assert hasattr(bar, "close")
-        assert context.open_auction_prices == (bar.open, bar.limit_up, bar.limit_down, bar.prev_close, bar.prev_settlement)
+        assert context.open_auction_prices == (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
 
     return locals()

@@ -344,7 +344,7 @@ class BarMap(object):
             try:
                 if not self._dt:
                     return BarObject(instrument, NANDict, self._dt)
-                if ExecutionContext.phase == EXECUTION_PHASE.OPEN_AUCTION:
+                if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
                     bar = PartialBarObject(self._data_proxy.current_snapshot(order_book_id, "1d", self._dt))
                 else:
                     bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)

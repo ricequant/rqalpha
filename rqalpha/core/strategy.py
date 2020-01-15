@@ -97,7 +97,7 @@ class Strategy(object):
 
     @run_when_strategy_not_hold
     def open_auction(self, event):
-        if self._open_auction and (self._force_run_before_trading is not None):
+        if self._force_run_before_trading and (self._before_trading is not None):
             self.before_trading(event)
         else:
             bar_dict = event.bar_dict
