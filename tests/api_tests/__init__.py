@@ -23,7 +23,6 @@ from importlib import import_module
 import six
 
 
-
 def deep_update(from_dict, to_dict):
     for (key, value) in from_dict.items():
         if (key in to_dict.keys() and

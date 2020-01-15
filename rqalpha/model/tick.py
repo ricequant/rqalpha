@@ -19,8 +19,6 @@ import datetime
 
 import numpy as np
 
-from rqalpha.environment import Environment
-from rqalpha.utils.logger import system_log
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_ms_int_to_datetime
 
 
