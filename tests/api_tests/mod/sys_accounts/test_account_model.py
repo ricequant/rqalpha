@@ -96,7 +96,7 @@ def test_stock_dividend():
         elif context.now.date() == date(2018, 7, 9):
             assert context.portfolio.cash == context.last_cash + 91
 
-    return init, handle_bar
+    return locals()
 
 
 def test_stock_transform():
@@ -117,4 +117,4 @@ def test_stock_transform():
         elif context.now.date() >= date(2015, 5, 20):
             assert int(context.portfolio.positions[context.s2].quantity) == 220
 
-    return init, handle_bar
+    return locals()

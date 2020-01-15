@@ -18,43 +18,44 @@ from ..utils import make_test_strategy_decorator
 
 test_strategies = []
 
-as_test_strategy = make_test_strategy_decorator({
-        "base": {
-            "start_date": "2018-04-01",
-            "end_date": "2018-05-01",
-            "frequency": "1d",
-            "accounts": {
-                "future": 10000000000
-            }
+__config__ = {
+    "base": {
+        "start_date": "2018-04-01",
+        "end_date": "2018-05-01",
+        "frequency": "1d",
+        "accounts": {
+            "future": 10000000000
+        }
+    },
+    "extra": {
+        "log_level": "error",
+    },
+    "mod": {
+        "sys_progress": {
+            "enabled": True,
+            "show": True,
         },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }, test_strategies)
+    },
+}
 
 
 def assert_almost_equal(first, second):
     assert round(abs(first - second), 10) == 0
 
 
-@as_test_strategy({
-    "base": {
-        "future_info": {
-            "SC": {
-                "close_commission_ratio": 0.0001,
-                "open_commission_ratio": 0.0002,
-                "commission_type": "BY_MONEY",
+def test_future_info():
+    __config__ = {
+        "base": {
+            "future_info": {
+                "SC": {
+                    "close_commission_ratio": 0.0001,
+                    "open_commission_ratio": 0.0002,
+                    "commission_type": "BY_MONEY",
+                }
             }
         }
-    }
-})
-def test_future_info():
+        }
+
     def init(context):
         context.f1 = "SC1809"
         subscribe_event(EVENT.TRADE, on_trade)
@@ -77,4 +78,4 @@ def test_future_info():
         else:
             assert trade.transaction_cost == 0
 
-    return init, handle_bar
+    return locals()

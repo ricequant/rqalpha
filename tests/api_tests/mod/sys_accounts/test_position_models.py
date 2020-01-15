@@ -14,9 +14,7 @@
 
 from rqalpha.api import *
 
-from ...utils import make_test_strategy_decorator
-
-as_test_strategy = make_test_strategy_decorator({
+__config__ = {
     "base": {
         "start_date": "2016-03-07",
         "end_date": "2016-03-08",
@@ -34,10 +32,9 @@ as_test_strategy = make_test_strategy_decorator({
             "show": True,
         }
     },
-})
+}
 
 
-@as_test_strategy()
 def test_stock_sellable():
     def init(context):
         context.fired = False
@@ -50,5 +47,5 @@ def test_stock_sellable():
             assert sellable == 0, "wrong sellable {}, supposed to be {}".format(sellable, 0)
             context.fired = True
 
-    return init, handle_bar
+    return locals()
 

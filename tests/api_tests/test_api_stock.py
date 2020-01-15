@@ -13,11 +13,9 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 
-from ..utils import make_test_strategy_decorator, assert_order
+from ..utils import assert_order
 
-test_strategies = []
-
-as_test_strategy = make_test_strategy_decorator({
+__config__ = {
     "base": {
         "start_date": "2016-03-07",
         "end_date": "2016-03-08",
@@ -35,16 +33,17 @@ as_test_strategy = make_test_strategy_decorator({
             "show": True,
         },
     },
-}, test_strategies)
+}
 
 
-@as_test_strategy({
-    "base": {
-        "start_date": "2016-06-14",
-        "end_date": "2016-06-19",
-    },
-})
 def test_order_shares():
+    __config__ = {
+        "base": {
+            "start_date": "2016-06-14",
+            "end_date": "2016-06-19",
+        },
+    }
+
     # FIXME: supposed to check portfolio
     def init(context):
         context.counter = 0
@@ -68,10 +67,9 @@ def test_order_shares():
             assert_order(o, quantity=1270, status=ORDER_STATUS.FILLED)
             assert context.portfolio.positions[context.s1].quantity == 0
 
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_order_lots():
     def init(context):
         context.s1 = "000001.XSHE"
@@ -80,10 +78,9 @@ def test_order_lots():
         order_price = bar_dict[context.s1].limit_up
         o = order_lots(context.s1, 1, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=100, price=order_price)
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_order_value():
     def init(context):
         context.s1 = "000001.XSHE"
@@ -94,10 +91,9 @@ def test_order_value():
         # 5 块最小手续费
         o = order_value(context.s1, context.amount * order_price + 5, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=context.amount, price=order_price)
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_order_percent():
     def init(context):
         context.s1 = "000001.XSHE"
@@ -105,10 +101,9 @@ def test_order_percent():
     def handle_bar(context, bar_dict):
         o = order_percent(context.s1, 0.0001, bar_dict[context.s1].limit_up)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_order_target_value():
     def init(context):
         context.order_count = 0
@@ -118,25 +113,26 @@ def test_order_target_value():
     def handle_bar(context, bar_dict):
         o = order_target_percent(context.s1, 0.02, style=LimitOrder(bar_dict[context.s1].limit_up))
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy({
-    "base": {
-        "start_date": "2016-03-07",
-        "end_date": "2016-03-07",
-        "accounts": {
-            "stock": 2000
-        }
-    },
-    "mod": {
-        "sys_accounts": {
-            "auto_switch_order_value": True
-        },
-    }
-})
 def test_auto_switch_order_value():
+    __config__ = {
+        "base": {
+            "start_date": "2016-03-07",
+            "end_date": "2016-03-07",
+            "accounts": {
+                "stock": 2000
+            }
+        },
+        "mod": {
+            "sys_accounts": {
+                "auto_switch_order_value": True
+            },
+        }
+    }
+
     def handle_bar(context, _):
         order_shares("000001.XSHE", 200)
         assert context.portfolio.positions["000001.XSHE"].quantity == 100
-    return handle_bar
+    return locals()

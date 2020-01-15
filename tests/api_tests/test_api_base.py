@@ -12,34 +12,28 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-
-from ..utils import make_test_strategy_decorator
-
-test_strategies = []
-
-as_test_strategy = make_test_strategy_decorator({
-        "base": {
-            "start_date": "2016-12-01",
-            "end_date": "2016-12-31",
-            "frequency": "1d",
-            "accounts": {
-                "stock": 1000000,
-                "future": 1000000,
-            }
+__config__ = {
+    "base": {
+        "start_date": "2016-12-01",
+        "end_date": "2016-12-31",
+        "frequency": "1d",
+        "accounts": {
+            "stock": 1000000,
+            "future": 1000000,
+        }
+    },
+    "extra": {
+        "log_level": "error",
+    },
+    "mod": {
+        "sys_progress": {
+            "enabled": True,
+            "show": True,
         },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }, test_strategies)
+    },
+}
 
 
-@as_test_strategy()
 def test_get_order():
     def init(context):
         context.s1 = '000001.XSHE'
@@ -51,10 +45,9 @@ def test_get_order():
         assert order.order_book_id == context.s1
         assert order.quantity == context.amount
         assert order.unfilled_quantity + order.filled_quantity == order.quantity
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_get_open_order():
     def init(context):
         context.s1 = '000001.XSHE'
@@ -71,10 +64,9 @@ def test_get_open_order():
         if context.counter == 2:
             assert order.order_id in get_open_orders()
         context.counter = 0
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_submit_order():
     def init(context):
         context.s1 = '000001.XSHE'
@@ -87,10 +79,9 @@ def test_submit_order():
             context.fired = True
         if context.fired:
             assert context.portfolio.positions[context.s1].quantity == context.amount
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_cancel_order():
     def init(context):
         context.s1 = '000001.XSHE'
@@ -103,10 +94,9 @@ def test_cancel_order():
         assert order.filled_quantity == 0
         assert order.price == bar_dict[context.s1].limit_down
         assert order.status == ORDER_STATUS.CANCELLED
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_update_universe():
     def init(context):
         context.s1 = '000001.XSHE'
@@ -120,10 +110,9 @@ def test_update_universe():
             update_universe(context.s2)
             his = history_bars(context.s2, 5, '1d', 'close')
             assert sorted(his.tolist()) == sorted([26.06, 26.13, 26.54, 26.6, 26.86])
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_subscribe():
     def init(context):
         context.f1 = 'AU88'
@@ -132,10 +121,9 @@ def test_subscribe():
 
     def handle_bar(context, _):
         assert context.f1 in context.universe
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_unsubscribe():
     def init(context):
         context.f1 = 'AU88'
@@ -145,26 +133,26 @@ def test_unsubscribe():
 
     def handle_bar(context, _):
         assert context.f1 not in context.universe
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_get_yield_curve():
     def handle_bar(_, __):
         df = get_yield_curve('20161101')
         assert df.iloc[0, 0] == 0.019923
         assert df.iloc[0, 6] == 0.021741
-    return handle_bar
+    return locals()
 
 
-@as_test_strategy({
-    "base": {
-        "start_date": "2005-01-04",
-        "end_date": "2005-01-31",
-    }
-})
 def test_history_bars():
     import numpy
+
+    __config__ = {
+        "base": {
+            "start_date": "2005-01-04",
+            "end_date": "2005-01-31",
+        }
+    }
 
     def handle_bar(context, _):
         if str(context.now.date()) == '2005-01-10':
@@ -180,14 +168,15 @@ def test_history_bars():
         return_list = history_bars("000003.XSHE", 100, "1d")
         assert len(return_list) == 0
         assert isinstance(return_list, numpy.ndarray)
-    return handle_bar
+    return locals()
 
 
-@as_test_strategy({"base": {
-            "start_date": "2017-01-01",
-            "end_date": "2017-01-31",
-}})
 def test_all_instruments():
+    __config__ = {"base": {
+        "start_date": "2017-01-01",
+        "end_date": "2017-01-31",
+    }}
+
     def handle_bar(context, _):
         date = context.now.replace(hour=0, minute=0, second=0)
         df = all_instruments('CS')
@@ -207,10 +196,9 @@ def test_all_instruments():
 
         df3 = all_instruments(['Future', 'Stock'])
         assert sorted(list(df['order_book_id']) + list(df2['order_book_id'])) == sorted(df3['order_book_id'])
-    return handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_instruments_code():
     def init(context):
         context.s1 = '000001.XSHE'
@@ -221,17 +209,15 @@ def test_instruments_code():
         assert ins.symbol == '平安银行'
         assert ins.order_book_id == context.s1
         assert ins.type == 'CS'
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_sector():
     def handle_bar(_, __):
         assert len(sector('金融')) >= 80, "sector('金融') 返回结果少于 80 个"
-    return handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_industry():
     def init(context):
         context.s1 = '000001.XSHE'
@@ -244,10 +230,9 @@ def test_industry():
         industry_list_2 = industry(ins_2.industry_name)
         assert context.s1 in industry_list_1
         assert context.s2 in industry_list_2
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_get_trading_dates():
     import datetime
 
@@ -261,10 +246,9 @@ def test_get_trading_dates():
         assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted(
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
-    return init
+    return locals()
 
 
-@as_test_strategy()
 def test_get_previous_trading_date():
     def init(_):
         assert str(get_previous_trading_date('2017-01-03').date()) == '2016-12-30'
@@ -274,18 +258,16 @@ def test_get_previous_trading_date():
         assert str(get_previous_trading_date('2010-01-03').date()) == '2009-12-31'
         assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
         assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
-    return init
+    return locals()
 
 
-@as_test_strategy()
 def test_get_next_trading_date():
     def init(_):
         assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
         assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
-    return init
+    return locals()
 
 
-@as_test_strategy()
 def test_get_dividend():
     def handle_bar(_, __):
         df = get_dividend('000001.XSHE', start_date='20130104')
@@ -293,10 +275,9 @@ def test_get_dividend():
         assert len(df) >= 4
         assert df_to_assert[0]['dividend_cash_before_tax'] == 1.7
         assert df_to_assert[0]['payable_date'] == 20130620
-    return handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_current_snapshot():
     def handle_bar(_, bar_dict):
         snapshot = current_snapshot('000001.XSHE')
@@ -310,10 +291,9 @@ def test_current_snapshot():
             assert getattr(bar, field) == getattr(snapshot, field), "snapshot.{} = {}, bar.{} = {}".format(
                 field, getattr(snapshot, field), field, getattr(bar, field)
             )
-    return handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_get_position():
     def assert_position(pos, obid, dir, today_quantity, old_quantity, avg_price):
         assert pos.order_book_id == obid
@@ -362,10 +342,9 @@ def test_get_position():
             pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
             assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3, context.expected_avg_price)
 
-    return init, handle_bar
+    return locals()
 
 
-@as_test_strategy()
 def test_subscribe_event():
     def init(_):
         subscribe_event(EVENT.BEFORE_TRADING, on_before_trading)
@@ -377,4 +356,4 @@ def test_subscribe_event():
         assert context.before_trading_ran
         context.before_trading_ran = False
 
-    return init, before_trading
+    return locals()
