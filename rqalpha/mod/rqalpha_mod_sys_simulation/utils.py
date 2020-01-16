@@ -68,7 +68,7 @@ def init_portfolio(env):
 
         account = account_model(starting_cash)
         account.fast_forward(trades=trades)
-        account.apply_settlement()
+        account.settlement()
 
         units += account.total_value
         accounts[account_type] = account

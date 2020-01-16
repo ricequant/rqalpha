@@ -95,7 +95,7 @@ class StockAccount(AssetAccount):
                 self._positions.pop(order_book_id, None)
             else:
                 for pos in six.itervalues(positions):
-                    pos.apply_settlement()
+                    pos.settlement()
 
         self._backward_trade_set.clear()
 

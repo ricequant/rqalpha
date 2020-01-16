@@ -15,6 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from typing import Iterable
+from datetime import date
 
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
@@ -199,12 +200,20 @@ class AssetPosition(AbstractPosition):
             self._market_tplus_ = env.data_proxy.instruments(self._order_book_id).market_tplus
         return self._market_tplus_
 
-    def apply_settlement(self):
+    def before_trading(self, trading_date):
+        # type: (date) -> float
+        # 返回该阶段导致账户权益的变化量
+        return 0
+
+    def settlement(self):
+        # type: () -> float
+        # 返回该阶段导致账户权益的变化量
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
         self._contract_multiplier = self._margin_rate = None
         self._prev_close = self.last_price
+        return 0
 
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost

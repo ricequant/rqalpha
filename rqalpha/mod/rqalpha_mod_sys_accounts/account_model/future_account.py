@@ -96,7 +96,7 @@ class FutureAccount(AssetAccount):
                 del self._positions[order_book_id]
             else:
                 for pos in six.itervalues(positions):
-                    pos.apply_settlement()
+                    pos.settlement()
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         if self._static_total_value <= 0 and self.forced_liquidation:

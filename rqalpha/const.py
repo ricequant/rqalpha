@@ -138,6 +138,12 @@ class POSITION_EFFECT(CustomEnum):
 
 
 # noinspection PyPep8Naming
+class RIGHT_TYPE(CustomEnum):
+    CONVERT = "CONVERT"  # 转股
+    SELL_BACK = "SELL_BACK"  # 回售
+
+
+# noinspection PyPep8Naming
 class POSITION_DIRECTION(CustomEnum):
     LONG = "LONG"
     SHORT = "SHORT"
