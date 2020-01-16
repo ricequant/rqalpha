@@ -14,16 +14,21 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from typing import Iterable
+from typing import Iterable, Tuple, List, Optional
 from datetime import date
+from collections import namedtuple
 
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_EFFECT, POSITION_DIRECTION
 from rqalpha.model.order import Order
+from rqalpha.model.trade import Trade
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr
 from rqalpha.utils import is_valid_price
+
+
+DeltaPosition = namedtuple("DeltaPosition", ("order_book_id", "direction", "quantity", "avg_price"))
 
 
 class AssetPosition(AbstractPosition):
@@ -187,6 +192,10 @@ class AssetPosition(AbstractPosition):
         )
 
     @property
+    def receivable(self):
+        return 0.
+
+    @property
     def _open_orders(self):
         # type: () -> Iterable[Order]
         for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
@@ -205,15 +214,15 @@ class AssetPosition(AbstractPosition):
         # 返回该阶段导致账户权益的变化量
         return 0
 
-    def settlement(self):
-        # type: () -> float
-        # 返回该阶段导致账户权益的变化量
+    def settlement(self, trading_date):
+        # type: (date) -> Tuple[float, Optional[Trade]]
+        # 返回该阶段导致账户权益的变化量以及反映该阶段引起其他持仓变化的虚拟交易
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
         self._contract_multiplier = self._margin_rate = None
         self._prev_close = self.last_price
-        return 0
+        return 0, None
 
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost

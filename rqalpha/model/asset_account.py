@@ -17,14 +17,15 @@
 
 import six
 from itertools import chain
-from typing import Dict, Iterable, Union, Optional
+from typing import Dict, Iterable, Union, Optional, Type
 
 from rqalpha.const import POSITION_EFFECT
 from rqalpha.interface import AbstractAccount
 from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_DIRECTION
+from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
+from rqalpha.utils.class_helper import deprecated_property
 
 from .asset_position import AssetPosition
 from .order import Order
@@ -36,6 +37,7 @@ class AssetAccount(AbstractAccount):
     __repr__ = property_repr
 
     enable_position_validator = True
+    position_types = {}  # type: Dict[INSTRUMENT_TYPE, Type[AssetPosition]]
 
     def __init__(self, total_cash, positions=None, backward_trade_set=None):
         # type: (float, Dict[str, Dict[POSITION_DIRECTION, AssetPosition]], set) -> None
@@ -57,7 +59,7 @@ class AssetAccount(AbstractAccount):
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
 
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
-        event_bus.add_listener(EVENT.SETTLEMENT, lambda e: self.apply_settlement())
+        event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
         event_bus.add_listener(EVENT.BAR, self._update_last_price)
         event_bus.add_listener(EVENT.TICK, self._update_last_price)
@@ -89,6 +91,7 @@ class AssetAccount(AbstractAccount):
         if "static_total_value" in state:
             self._static_total_value = state["static_total_value"]
         else:
+            # forward compatible
             static_total_value = state["total_cash"]
             for p in self._iter_pos():
                 try:
@@ -98,6 +101,16 @@ class AssetAccount(AbstractAccount):
                     static_total_value += p.margin
                     self._positions.pop(p.order_book_id)
             self._static_total_value = state["total_cash"] + self.margin - self.daily_pnl + self.transaction_cost
+
+        # forward compatible
+        if "dividend_receivable" in state:
+            for order_book_id, dividend in six.iteritems(state["dividend_receivable"]):
+                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._dividend_receivable = (
+                    dividend["payable_date"], dividend["quantity"] * dividend["dividend_per_share"]
+                )
+        if "pending_transform" in state:
+            for order_book_id, transform_info in six.iteritems(state["pending_transform"]):
+                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._pending_transform = transform_info
 
     def fast_forward(self, orders=None, trades=None):
         if trades:
@@ -141,9 +154,6 @@ class AssetAccount(AbstractAccount):
 
     @property
     def type(self):
-        raise NotImplementedError
-
-    def apply_settlement(self):
         raise NotImplementedError
 
     @property
@@ -199,7 +209,7 @@ class AssetAccount(AbstractAccount):
         期货账户总权益 = 期货昨日总权益 + 当日盈亏
 
         """
-        return self._static_total_value + self.daily_pnl
+        return self._static_total_value + self.daily_pnl + self.receivable
 
     @property
     def total_cash(self):
@@ -226,11 +236,42 @@ class AssetAccount(AbstractAccount):
         return sum(p.trading_pnl for p in self._iter_pos())
 
     @property
+    def receivable(self):
+        # type: () -> float
+        return sum(p.receivable for p in self._iter_pos())
+
+    @property
     def position_validator_enabled(self):  # type: () -> bool
         return self.enable_position_validator
 
-    def _on_before_trading(self, event):
-        raise NotImplementedError
+    def _on_before_trading(self, _):
+        trading_date = Environment.get_instance().trading_dt.date()
+        for position in self._iter_pos():
+            self._static_total_value += position.before_trading(trading_date)
+
+    def _on_settlement(self):
+        trading_date = Environment.get_instance().trading_dt.date()
+        self._static_total_value += self.daily_pnl
+
+        virtual_trades = []
+        for order_book_id, positions in list(six.iteritems(self._positions)):
+            for position in six.itervalues(positions):
+                delta_static_total_value, virtual_trade = position.settlement(trading_date)
+                self._static_total_value += delta_static_total_value
+                virtual_trades.append(virtual_trade)
+        for virtual_trade in virtual_trades:
+            self._apply_trade(virtual_trade)
+
+        for order_book_id, positions in list(six.iteritems(self._positions)):
+            if all(p.quantity == 0 for p in six.itervalues(positions)):
+                del self._positions[order_book_id]
+
+        self._backward_trade_set.clear()
+
+    @classmethod
+    def register_position_type(cls, instrument_type, position_type):
+        # type: (INSTRUMENT_TYPE, Type[AssetPosition]) -> None
+        cls.position_types[INSTRUMENT_TYPE] = position_type
 
     def _on_order_pending_new(self, event):
         if event.account != self:
@@ -274,9 +315,11 @@ class AssetAccount(AbstractAccount):
     def _get_or_create_pos(self, order_book_id, direction):
         # type: (str, Union[str, POSITION_DIRECTION]) -> AssetPosition
         if order_book_id not in self._positions:
+            instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+            position_type = self.position_types.get(instrument_type, AssetPosition)
             positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: AssetPosition(order_book_id, POSITION_DIRECTION.LONG),
-                POSITION_DIRECTION.SHORT: AssetPosition(order_book_id, POSITION_DIRECTION.SHORT)
+                POSITION_DIRECTION.LONG: position_type(order_book_id, POSITION_DIRECTION.LONG),
+                POSITION_DIRECTION.SHORT: position_type(order_book_id, POSITION_DIRECTION.SHORT)
             })
         else:
             positions = self._positions[order_book_id]
@@ -297,3 +340,5 @@ class AssetAccount(AbstractAccount):
         else:
             order_cost = 0
         return order_cost + env.get_order_transaction_cost(self.type, order)
+
+    dividend_receivable = deprecated_property("dividend_receivable", "receivable")
