@@ -19,9 +19,9 @@ from typing import Tuple, Optional
 from datetime import date
 
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
 from rqalpha.environment import Environment
-from rqalpha.model.asset_position import AssetPosition, PositionProxy
+from rqalpha.portfolio.base_position import BasePosition, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property
@@ -34,7 +34,7 @@ def _int_to_date(d):
     return date(year=y, month=m, day=d)
 
 
-class StockPosition(AssetPosition):
+class StockPosition(BasePosition):
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
@@ -169,7 +169,7 @@ class StockPosition(AssetPosition):
         self.apply_split(ratio)
 
 
-class FuturePosition(AssetPosition):
+class FuturePosition(BasePosition):
     enable_position_validator = True
 
     @property

@@ -27,20 +27,18 @@ from rqalpha.events import EVENT
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
 from rqalpha.utils.class_helper import deprecated_property
-from rqalpha.model.order import OrderStyle
+from rqalpha.model.order import OrderStyle, Order
+from rqalpha.model.trade import Trade
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 
-from .asset_position import AssetPosition, PositionProxyDict
-from .asset_position import PositionTypeDictType, PositionDictType
-from .order import Order
-from .trade import Trade
+from .base_position import BasePosition, PositionProxyDict
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
-PositionType = Type[AssetPosition]
+PositionType = Type[BasePosition]
 
 
-class AssetAccount(AbstractAccount):
+class Account(AbstractAccount):
 
     __repr__ = property_repr
 
@@ -50,28 +48,27 @@ class AssetAccount(AbstractAccount):
         "dividend_receivable",
     ]
 
-    _position_types = {}  # type: PositionTypeDictType
-    _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
+    _position_types = {}  # type: Dict[INSTRUMENT_TYPE, PositionType]
 
-    def __init__(self, type, total_cash, positions=None, backward_trade_set=None):
-        # type: (str, float, PositionDictType, set) -> None
+    def __init__(self, type, total_cash, init_positions):
+        # type: (str, float, Dict[str, int]) -> None
         self._type = type
         self._static_total_value = total_cash
-        self._positions = positions or {}
-        self._backward_trade_set = backward_trade_set or set()
+
+        self._positions = {}
+        self._backward_trade_set = set()
         self._frozen_cash = 0
 
         self.register_event()
+
+        for order_book_id, init_quantity in six.iteritems(init_positions):
+            position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
+            self._get_or_create_pos(order_book_id, position_direction, init_quantity)
 
     @classmethod
     def register_position_type(cls, instrument_type, position_type):
         # type: (INSTRUMENT_TYPE, PositionType) -> None
         cls._position_types[instrument_type] = position_type
-
-    @classmethod
-    def register_order_api(cls, instrument_type, order_func):
-        # type: (INSTRUMENT_TYPE, OrderApiType) -> None
-        cls._order_apis[instrument_type] = order_func
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
@@ -157,27 +154,18 @@ class AssetAccount(AbstractAccount):
             self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
 
     def get_positions(self):
-        # type: () -> Iterable[AssetPosition]
+        # type: () -> Iterable[BasePosition]
         return self._iter_pos()
 
     def get_position(self, order_book_id, direction):
-        # type: (str, POSITION_DIRECTION) -> AssetPosition
+        # type: (str, POSITION_DIRECTION) -> BasePosition
         try:
             return self._positions[order_book_id][direction]
         except KeyError:
-            return AssetPosition(order_book_id, direction)
+            return BasePosition(order_book_id, direction)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
         return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount)
-
-    def order(self, order_book_id, quantity, style, target=False):
-        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> List[Order]
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-        try:
-            order_func = self._order_apis[instrument_type]  # type: OrderApiType
-        except KeyError:
-            raise NotImplementedError("no implementation for API order, order_book_id={}".format(order_book_id))
-        return order_func(order_book_id, quantity, style, target)
 
     @property
     def type(self):
@@ -352,20 +340,25 @@ class AssetAccount(AbstractAccount):
                 self._frozen_cash -= self._frozen_cash_of_order(order)
 
     def _iter_pos(self, direction=None):
-        # type: (Optional[POSITION_DIRECTION]) -> Iterable[AssetPosition]
+        # type: (Optional[POSITION_DIRECTION]) -> Iterable[BasePosition]
         if direction:
             return (p[direction] for p in six.itervalues(self._positions))
         else:
             return chain(*[six.itervalues(p) for p in six.itervalues(self._positions)])
 
-    def _get_or_create_pos(self, order_book_id, direction):
-        # type: (str, Union[str, POSITION_DIRECTION]) -> AssetPosition
+    def _get_or_create_pos(self, order_book_id, direction, init_quantity=0):
+        # type: (str, Union[str, POSITION_DIRECTION], Optional[int]) -> BasePosition
         if order_book_id not in self._positions:
             instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-            position_type = self._position_types.get(instrument_type, AssetPosition)
+            position_type = self._position_types.get(instrument_type, BasePosition)
+            if direction == POSITION_DIRECTION.LONG:
+                long_init_position, short_init_position = init_quantity, 0
+            else:
+                long_init_position, short_init_position = 0, init_quantity
+
             positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: position_type(order_book_id, POSITION_DIRECTION.LONG),
-                POSITION_DIRECTION.SHORT: position_type(order_book_id, POSITION_DIRECTION.SHORT)
+                POSITION_DIRECTION.LONG: position_type(order_book_id, POSITION_DIRECTION.LONG, long_init_position),
+                POSITION_DIRECTION.SHORT: position_type(order_book_id, POSITION_DIRECTION.SHORT, short_init_position)
             })
         else:
             positions = self._positions[order_book_id]

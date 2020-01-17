@@ -26,7 +26,6 @@ from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
 from .matcher import Matcher
-from .utils import init_portfolio
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -50,9 +49,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
-
-    def get_portfolio(self):
-        return init_portfolio(self._env)
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:

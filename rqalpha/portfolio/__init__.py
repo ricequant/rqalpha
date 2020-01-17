@@ -15,42 +15,83 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Dict, Union
+from functools import lru_cache
+from typing import Dict, Union, Callable, List, Optional
 from itertools import chain
-
+from datetime import datetime, time
 
 import six
 import jsonpickle
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.interface import AbstractAccount
-from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
+from rqalpha.model.order import OrderStyle, Order
+
+from .account import Account
+from .base_position import PositionType, PositionProxyType
+
+OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
 
 class Portfolio(object):
     __repr__ = property_repr
 
-    def __init__(self, static_unit_net_value, units, accounts):
-        # type: (float, int, Dict[Union[str, DEFAULT_ACCOUNT_TYPE], AbstractAccount]) -> Portfolio
-        self._static_unit_net_value = static_unit_net_value
-        self._last_unit_net_value = static_unit_net_value
-        self._units = units
-        self._accounts = accounts
-        self._mixed_positions = None
-        self.register_event()
+    _account_types = {}  # type: Dict[INSTRUMENT_TYPE, str]
+    _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
-    def register_event(self):
-        event_bus = Environment.get_instance().event_bus
-        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
-        event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+    def __init__(self, starting_cash, init_positions):
+        # type: (Dict[str, float], Dict[str, int]) -> Portfolio
+        self._static_unit_net_value = 1
+        self._last_unit_net_value = 1
+
+        account_args = {}
+        for account_type, cash in six.iteritems(starting_cash):
+            account_args[account_type] = {"type": account_type, "total_cash": cash, "init_positions": {}}
+        for order_book_id, quantity in six.iteritems(init_positions):
+            account_type = self._get_account_type(order_book_id)
+            if account_type in account_args:
+                account_args[account_type]["init_positions"][order_book_id] = quantity
+        self._accounts = {account_type: Account(**args) for account_type, args in six.iteritems(account_args)}
+        self._units = sum(account.total_value for account in six.itervalues(self._accounts))
+
+        self._register_event()
+
+    @classmethod
+    def register_instrument_type(
+            cls,
+            instrument_type,  # type: Union[INSTRUMENT_TYPE, str]
+            upper_account_type,  # type: Union[DEFAULT_ACCOUNT_TYPE, str]
+            position_cls,  # type: PositionType
+            order_api,  # type: OrderApiType
+            position_proxy_cls=None  # type: Optional[PositionProxyType]
+    ):
+        """
+        注册新的合约类型，需在 Portfolio 被实例化前调用
+        instrument_type: 合约类型
+        upper_account_type: 该合约所属的持仓归属的账户类型
+        position_cls: 该合约的持仓类
+        order_api: 该合约使用的智能下单函数
+        position_proxy_cls: 该合约持仓的 Proxy 类，服务于 portfolio.positions 和 account.positions, 非必须
+        """
+        cls._account_types[instrument_type] = upper_account_type
+        cls._order_apis[instrument_type] = order_api
+        Account.register_position_type(instrument_type, position_cls)
+        if position_proxy_cls:
+            from .base_position import PositionProxyDict
+            PositionProxyDict.register_position_proxy_dict(instrument_type, position_proxy_cls)
 
     def order(self, order_book_id, quantity, style, target=False):
-        account_type = Environment.get_instance().get_account_type(order_book_id)
-        return self.accounts[account_type].order(order_book_id, quantity, style, target)
+        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> List[Order]
+        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+        try:
+            order_func = self._order_apis[instrument_type]  # type: OrderApiType
+        except KeyError:
+            raise NotImplementedError("no implementation for API order, order_book_id={}".format(order_book_id))
+        return order_func(order_book_id, quantity, style, target)
 
     def get_state(self):
         return jsonpickle.encode({
@@ -70,15 +111,6 @@ class Portfolio(object):
         self._units = value['units']
         for k, v in six.iteritems(value['accounts']):
             self._accounts[k].set_state(v)
-
-    def _pre_before_trading(self, _):
-        if not np.isnan(self.unit_net_value):
-            self._static_unit_net_value = self.unit_net_value
-        else:
-            self._static_unit_net_value = self._last_unit_net_value
-
-    def _post_settlement(self, event):
-        self._last_unit_net_value = self.unit_net_value
 
     def get_positions(self):
         return list(chain(*(a.get_positions() for a in six.itervalues(self._accounts))))
@@ -186,13 +218,12 @@ class Portfolio(object):
         return self.total_value
 
     @property
+    @lru_cache()
     def positions(self):
         """
         [dict] 持仓字典
         """
-        if self._mixed_positions is None:
-            self._mixed_positions = MixedPositions(self._accounts)
-        return self._mixed_positions
+        return MixedPositions(self._accounts)
 
     @property
     def cash(self):
@@ -242,6 +273,29 @@ class Portfolio(object):
         [float] 冻结资金
         """
         return sum(account.frozen_cash for account in six.itervalues(self._accounts))
+
+    def _pre_before_trading(self, _):
+        if not np.isnan(self.unit_net_value):
+            self._static_unit_net_value = self.unit_net_value
+        else:
+            self._static_unit_net_value = self._last_unit_net_value
+
+    def _post_settlement(self, event):
+        self._last_unit_net_value = self.unit_net_value
+
+    def _register_event(self):
+        event_bus = Environment.get_instance().event_bus
+        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
+        event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+
+    def _get_account_type(self, order_book_id):
+        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).ty
+        try:
+            return self._account_types[instrument_type]
+        except KeyError:
+            raise NotImplementedError("no account_type registered, order_book_id={}, instrument_type={}".format(
+                order_book_id, instrument_type
+            ))
 
 
 class MixedPositions(dict):

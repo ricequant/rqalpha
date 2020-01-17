@@ -82,6 +82,9 @@ class Environment(object):
     def set_strategy_loader(self, strategy_loader):
         self.strategy_loader = strategy_loader
 
+    def set_portfolio(self, portfolio):
+        self.portfolio = portfolio
+
     def set_global_vars(self, global_vars):
         self.global_vars = global_vars
 

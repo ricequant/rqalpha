@@ -27,7 +27,6 @@ from rqalpha.model.trade import Trade
 from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT
 
 from .slippage import SlippageDecider
-from .utils import init_portfolio
 
 
 class SignalBroker(AbstractBroker):
@@ -35,9 +34,6 @@ class SignalBroker(AbstractBroker):
         self._env = env
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._price_limit = mod_config.price_limit
-
-    def get_portfolio(self):
-        return init_portfolio(self._env)
 
     def get_open_orders(self, order_book_id=None):
         return []

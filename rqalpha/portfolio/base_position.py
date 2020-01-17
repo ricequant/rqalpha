@@ -30,14 +30,14 @@ from rqalpha.utils.repr import property_repr
 from rqalpha.utils import is_valid_price
 
 
-class AssetPosition(AbstractPosition):
+class BasePosition(AbstractPosition):
     __repr__ = property_repr
 
-    def __init__(self, order_book_id, direction):
+    def __init__(self, order_book_id, direction, init_quantity=0):
         self._order_book_id = order_book_id
         self._direction = direction
 
-        self._old_quantity = 0
+        self._old_quantity = init_quantity
         self._logical_old_quantity = 0
         self._today_quantity = 0
 
@@ -279,7 +279,7 @@ class PositionProxy(object):
     ]
 
     def __init__(self, long, short):
-        # type: (AssetPosition, AssetPosition) -> PositionProxy
+        # type: (BasePosition, BasePosition) -> PositionProxy
         self._long = long
         self._short = short
 
@@ -383,19 +383,18 @@ class PositionProxy(object):
         return self._short
 
 
-PositionType = Type[AssetPosition]
-PositionTypeDictType = Dict[INSTRUMENT_TYPE, PositionType]
-PositionDictType = Dict[str, Dict[POSITION_DIRECTION, AssetPosition]]
-PositionProxyDictType = Dict[INSTRUMENT_TYPE, Type[PositionProxy]]
+PositionType = Type[BasePosition]
+PositionProxyType = Type[PositionProxy]
+PositionDictType = Dict[str, Dict[POSITION_DIRECTION, BasePosition]]
 
 
 class PositionProxyDict(UserDict):
-    _position_proxy_types = {}  # type: PositionProxyDictType
+    _position_proxy_types = {}  # type: Dict[INSTRUMENT_TYPE, PositionProxyType]
 
     def __init__(self, positions, position_types):
         super(PositionProxyDict, self).__init__()
         self._positions = positions  # type: PositionDictType
-        self._position_types = position_types  # type: PositionTypeDictType
+        self._position_types = position_types  # type: Dict[INSTRUMENT_TYPE, PositionType]
 
     @classmethod
     def register_position_proxy_dict(cls, instrument_type, position_proxy_type):
@@ -436,8 +435,8 @@ class PositionProxyDict(UserDict):
 
     @lru_cache(1024)
     def _get_position_types(self, order_book_id):
-        # type: (str) -> Tuple[Type[AssetPosition], Type[PositionProxy]]
+        # type: (str) -> Tuple[Type[BasePosition], Type[PositionProxy]]
         instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-        position_type = self._position_types.get(instrument_type, AssetPosition)
+        position_type = self._position_types.get(instrument_type, BasePosition)
         position_proxy_type = self._position_proxy_types.get(instrument_type, PositionProxy)
         return position_type, position_proxy_type

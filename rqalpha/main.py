@@ -162,7 +162,9 @@ def run(config, source_code=None, user_funcs=None):
 
         broker = env.broker
         assert broker is not None
-        env.portfolio = broker.get_portfolio()
+        if env.portfolio is None:
+            from rqalpha.portfolio import Portfolio
+            env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
 
         event_source = env.event_source
         assert event_source is not None

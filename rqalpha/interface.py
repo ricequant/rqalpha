@@ -16,12 +16,11 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import Any, Union, Optional, Iterable, List
+from typing import Any, Union, Optional, Iterable
 
 from six import with_metaclass
 
-from rqalpha.model.order import OrderStyle, Order
-from rqalpha.model.trade import Trade
+from rqalpha.model.order import Order
 from rqalpha.const import POSITION_DIRECTION
 
 
@@ -32,12 +31,6 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     您可以在 Mod 的 start_up 阶段通过 env.set_account_model(account_type, AccountModel) 来注入和修改 AccountModel
     您也可以通过 env.get_account_model(account_type) 来获取指定类型的 AccountModel
     """
-
-    @abc.abstractmethod
-    def order(self, order_book_id, quantity, style, target=False):
-        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> List[Order]
-        # 系统下单函数会调用该函数来完成下单操作
-        raise NotImplementedError
 
     @abc.abstractmethod
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
@@ -518,17 +511,6 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
 
     在扩展模块中，可以通过调用 ``env.set_broker`` 来替换默认的 Broker。
     """
-
-    @abc.abstractmethod
-    def get_portfolio(self):
-        """
-        [Required]
-
-        获取投资组合。系统初始化时，会调用此接口，获取包含账户信息、净值、份额等内容的投资组合
-
-        :return: Portfolio
-        """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def submit_order(self, order):
