@@ -33,7 +33,7 @@ class CashValidator(AbstractFrontendValidator):
             return True
         instrument = self._env.data_proxy.instruments(order.order_book_id)
         cost_money = instrument.calc_margin(order.frozen_price, order.quantity)
-        cost_money += self._env.get_order_transaction_cost(account.type, order)
+        cost_money += self._env.get_order_transaction_cost(order)
         if cost_money <= account.cash:
             return True
         user_system_log.warn(

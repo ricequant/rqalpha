@@ -21,8 +21,6 @@ __config__ = {
     "stock_t1": True,
     # 分红再投资
     "dividend_reinvestment": False,
-    # 强平
-    "future_forced_liquidation": True,
     # 当持仓股票退市时，按照退市价格返还现金
     "cash_return_by_stock_delisted": True,
     # 股票下单因资金不足被拒时改为使用全部剩余资金下单

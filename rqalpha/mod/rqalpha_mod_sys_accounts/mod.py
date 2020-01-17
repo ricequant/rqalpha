@@ -20,11 +20,11 @@ from rqalpha import export_as_api
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.environment import Environment
 from rqalpha.model.asset_account import AssetAccount
+from rqalpha.model.asset_position import PositionProxyDict
 
-from .account_model import FutureAccount
 from .api import api_future, api_stock, api_base
-from .api.order import order_stock
-from .position_model.stock_position import StockPosition
+from .api.order import order_stock, order_future
+from .position_model import StockPosition, FuturePosition, StockPositionProxy, FuturePositionProxy
 
 
 class AccountMod(AbstractMod):
@@ -32,33 +32,34 @@ class AccountMod(AbstractMod):
     def start_up(self, env, mod_config):
         # type: (Environment, Any) -> None
 
-        FutureAccount.forced_liquidation = mod_config.future_forced_liquidation
-        FutureAccount.enable_position_validator = mod_config.validate_future_position
+        FuturePosition.enable_position_validator = mod_config.validate_future_position
 
         StockPosition.dividend_reinvestment = mod_config.dividend_reinvestment
         StockPosition.cash_return_by_stock_delisted = mod_config.cash_return_by_stock_delisted
         StockPosition.t_plus_enabled = mod_config.stock_t1
         StockPosition.enable_position_validator = mod_config.validate_stock_position
 
-        # 注入 Account
-        # env.set_account_model(DEFAULT_ACCOUNT_TYPE.STOCK.name, StockAccount, INST_TYPE_IN_STOCK_ACCOUNT)
-        env.set_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name, FutureAccount, (INSTRUMENT_TYPE.FUTURE, ))
-
         # 注入 API
         for export_name in api_base.__all__:
             export_as_api(getattr(api_base, export_name))
 
-        if DEFAULT_ACCOUNT_TYPE.FUTURE.name in env.config.base.accounts:
+        if DEFAULT_ACCOUNT_TYPE.FUTURE in env.config.base.accounts:
             # 注入期货API
             for export_name in api_future.__all__:
                 export_as_api(getattr(api_future, export_name))
-        if DEFAULT_ACCOUNT_TYPE.STOCK.name in env.config.base.accounts:
+        if DEFAULT_ACCOUNT_TYPE.STOCK in env.config.base.accounts:
             # 注入股票API
             for export_name in api_stock.__all__:
                 export_as_api(getattr(api_stock, export_name))
 
         for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
             AssetAccount.register_order_api(instrument_type, order_stock)
+            AssetAccount.register_position_type(instrument_type, StockPosition)
+            PositionProxyDict.register_position_proxy_dict(instrument_type, StockPositionProxy)
+
+        AssetAccount.register_order_api(INSTRUMENT_TYPE.FUTURE, order_future)
+        AssetAccount.register_position_type(INSTRUMENT_TYPE.FUTURE, FuturePosition)
+        PositionProxyDict.register_position_proxy_dict(INSTRUMENT_TYPE.FUTURE, FuturePositionProxy)
 
     def tear_down(self, code, exception=None):
         pass

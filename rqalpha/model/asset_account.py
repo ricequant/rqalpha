@@ -28,6 +28,8 @@ from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.model.order import OrderStyle
+from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.i18n import gettext as _
 
 from .asset_position import AssetPosition, PositionProxyDict
 from .asset_position import PositionTypeDictType, PositionDictType
@@ -42,11 +44,18 @@ class AssetAccount(AbstractAccount):
 
     __repr__ = property_repr
 
+    __abandon_properties__ = [
+        "holding_pnl",
+        "realized_pnl",
+        "dividend_receivable",
+    ]
+
     _position_types = {}  # type: PositionTypeDictType
     _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
-    def __init__(self, total_cash, positions=None, backward_trade_set=None):
-        # type: (float, PositionDictType, set) -> None
+    def __init__(self, type, total_cash, positions=None, backward_trade_set=None):
+        # type: (str, float, PositionDictType, set) -> None
+        self._type = type
         self._static_total_value = total_cash
         self._positions = positions or {}
         self._backward_trade_set = backward_trade_set or set()
@@ -171,6 +180,10 @@ class AssetAccount(AbstractAccount):
         return order_func(order_book_id, quantity, style, target)
 
     @property
+    def type(self):
+        return self._type
+
+    @property
     @lru_cache(None)
     def positions(self):
         return PositionProxyDict(self._positions, self._position_types)
@@ -212,6 +225,18 @@ class AssetAccount(AbstractAccount):
         [float] 总保证金
         """
         return sum(p.margin for p in self._iter_pos())
+
+    @property
+    def buy_margin(self):
+        # type: () -> float
+        # 多方向保证金
+        return sum(p.margin for p in self._iter_pos(POSITION_DIRECTION.LONG))
+
+    @property
+    def sell_margin(self):
+        # type: () -> float
+        # [float] 空方向保证金
+        return sum(p.margin for p in self._iter_pos(POSITION_DIRECTION.SHORT))
 
     @property
     def daily_pnl(self):
@@ -286,6 +311,14 @@ class AssetAccount(AbstractAccount):
 
         self._backward_trade_set.clear()
 
+        # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
+        forced_liquidation = Environment.get_instance().config.base.force_liquidation
+        if self._static_total_value <= 0 and forced_liquidation:
+            if self._positions:
+                user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
+            self._positions.clear()
+            self._static_total_value = 0
+
     def _on_order_pending_new(self, event):
         if event.account != self:
             return
@@ -352,6 +385,8 @@ class AssetAccount(AbstractAccount):
             order_cost = env.data_proxy.instruments(order.order_book_id).calc_margin(order.frozen_price, order.quantity)
         else:
             order_cost = 0
-        return order_cost + env.get_order_transaction_cost(self.type, order)
+        return order_cost + env.get_order_transaction_cost(order)
 
     dividend_receivable = deprecated_property("dividend_receivable", "receivable")
+    holding_pnl = deprecated_property("holding_pnl", "position_pnl")
+    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")

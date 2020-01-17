@@ -21,8 +21,9 @@ from typing import Union, Iterable, Type, Optional
 from six import iteritems
 
 import rqalpha
+from rqalpha.interface import AbstractTransactionCostDecider
 from rqalpha.events import EventBus
-from rqalpha.const import FRONT_VALIDATOR_TYPE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
+from rqalpha.const import FRONT_VALIDATOR_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
 from rqalpha.utils.i18n import gettext as _
 
@@ -105,22 +106,6 @@ class Environment(object):
     def add_frontend_validator(self, validator, validator_type=FRONT_VALIDATOR_TYPE.OTHER):
         self._frontend_validators.setdefault(validator_type, []).append(validator)
 
-    def set_account_model(self, account_type, account_model, instrument_types=None):
-        # type: (Union[str, DEFAULT_ACCOUNT_TYPE], Type, Optional[Iterable[Union[str, INSTRUMENT_TYPE]]]) -> None
-        if instrument_types is None:
-            system_log.warning(
-                "supported_instrument_model not provided, "
-                "{} account cannot be accessed by env.get_account or env.get_account_type".format(account_type)
-            )
-        for instrument_type in instrument_types:
-            self._ins_account_type_map[instrument_type] = account_type
-        self._account_model_dict[account_type] = account_model
-
-    def get_account_model(self, account_type):
-        if account_type not in self._account_model_dict:
-            raise RuntimeError(_(u"Unknown Account Type {}").format(account_type))
-        return self._account_model_dict[account_type]
-
     def validate_order_submission(self, order):
         if Environment.get_instance().config.extra.is_hold:
             return False
@@ -189,25 +174,27 @@ class Environment(object):
     def get_open_orders(self, order_book_id=None):
         return self.broker.get_open_orders(order_book_id)
 
-    def set_transaction_cost_decider(self, account_type, decider):
-        self._transaction_cost_decider_dict[account_type] = decider
+    def set_transaction_cost_decider(self, instrument_type, decider):
+        # type: (INSTRUMENT_TYPE, AbstractTransactionCostDecider) -> None
+        self._transaction_cost_decider_dict[instrument_type] = decider
 
-    def _get_transaction_cost_decider(self, account_type):
+    def _get_transaction_cost_decider(self, order_book_id):
+        instrument_type = self.data_proxy.instruments(order_book_id).type
         try:
-            return self._transaction_cost_decider_dict[account_type]
+            return self._transaction_cost_decider_dict[instrument_type]
         except KeyError:
-            raise NotImplementedError(_(u"No such transaction cost decider for such account_type {}.".format(
-                account_type
+            raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}.".format(
+                order_book_id
             )))
 
-    def get_trade_tax(self, account_type, trade):
-        return self._get_transaction_cost_decider(account_type).get_trade_tax(trade)
+    def get_trade_tax(self, trade):
+        return self._get_transaction_cost_decider(trade.order_book_id).get_trade_tax(trade)
 
-    def get_trade_commission(self, account_type, trade):
-        return self._get_transaction_cost_decider(account_type).get_trade_commission(trade)
+    def get_trade_commission(self, trade):
+        return self._get_transaction_cost_decider(trade.order_book_id).get_trade_commission(trade)
 
-    def get_order_transaction_cost(self, account_type, order):
-        return self._get_transaction_cost_decider(account_type).get_order_transaction_cost(order)
+    def get_order_transaction_cost(self, order):
+        return self._get_transaction_cost_decider(order.order_book_id).get_order_transaction_cost(order)
 
     def update_time(self, calendar_dt, trading_dt):
         # type: (datetime, datetime) -> None

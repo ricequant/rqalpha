@@ -22,7 +22,7 @@ from six import with_metaclass
 
 from rqalpha.model.order import OrderStyle, Order
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import POSITION_DIRECTION
 
 
 class AbstractAccount(with_metaclass(abc.ABCMeta)):

@@ -14,127 +14,185 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from functools import lru_cache
-from collections import UserDict
-from typing import Dict, Type, Tuple
 
+from typing import Tuple, Optional
+from datetime import date
+
+from rqalpha.model.trade import Trade
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT
 from rqalpha.environment import Environment
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, INSTRUMENT_TYPE
-from rqalpha.model.asset_position import AssetPosition
-from rqalpha.utils.repr import property_repr
+from rqalpha.model.asset_position import AssetPosition, PositionProxy
+from rqalpha.data.data_proxy import DataProxy
+from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils.i18n import gettext as _
 
 
-class PositionProxy(object):
-    __abandon_properties__ = [
-        "positions",
-        "long",
-        "short"
-    ]
+def _int_to_date(d):
+    r, d = divmod(d, 100)
+    y, m = divmod(r, 100)
+    return date(year=y, month=m, day=d)
 
-    def __init__(self, long, short):
-        # type: (AssetPosition, AssetPosition) -> PositionProxy
-        self._long = long
-        self._short = short
 
-    __repr__ = property_repr
+class StockPosition(AssetPosition):
+    dividend_reinvestment = False
+    cash_return_by_stock_delisted = True
+    t_plus_enabled = True
+    enable_position_validator = True
 
-    @property
-    def type(self):
-        raise NotImplementedError
-
-    @property
-    def order_book_id(self):
-        return self._long.order_book_id
+    def __init__(self, order_book_id, direction):
+        super(StockPosition, self).__init__(order_book_id, direction)
+        self._dividend_receivable = None
+        self._pending_transform = None
 
     @property
-    def last_price(self):
-        return self._long.last_price
+    def dividend_receivable(self):
+        if self._dividend_receivable:
+            _, dividend_value = self._dividend_receivable
+            return dividend_value
+        return 0
 
     @property
-    def market_value(self):
-        return self._long.market_value - self._short.market_value
-
-    # -- PNL 相关
-    @property
-    def position_pnl(self):
-        """
-        [float] 昨仓盈亏，当前交易日盈亏中来源于昨仓的部分
-
-        多方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (最新价 - 昨收价)
-        空方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (昨收价 - 最新价)
-
-        """
-        return self._long.position_pnl + self._short.position_pnl
+    def receivable(self):
+        return self.dividend_receivable
 
     @property
-    def trading_pnl(self):
-        """
-        [float] 交易盈亏，当前交易日盈亏中来源于当日成交的部分
-
-        单比买方向成交的交易盈亏 = 成交量 * (最新价 - 成交价)
-        单比卖方向成交的交易盈亏 = 成交量 * (成交价 - 最新价)
-
-        """
-        return self._long.trading_pnl + self._short.trading_pnl
+    def closable(self):
+        order_quantity = sum(o for o in self._open_orders if o.position_effect in (
+            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
+        ))
+        if self.t_plus_enabled:
+            return self.quantity - order_quantity - self._non_closable
+        return self.quantity - order_quantity
 
     @property
-    def daily_pnl(self):
-        """
-        [float] 当日盈亏
+    def position_validator_enabled(self):
+        return self.enable_position_validator
 
-        当日盈亏 = 昨仓盈亏 + 交易盈亏
+    def set_state(self, state):
+        super(StockPosition, self).set_state(state)
+        self._dividend_receivable = state.get("dividend_receivable")
+        self._pending_transform = state.get("pending_transform")
 
-        """
-        return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl +\
-               self._short.trading_pnl - self.transaction_cost
+    def get_state(self):
+        state = super(StockPosition, self).get_state()
+        state.update({
+            "dividend_receivable": self._dividend_receivable,
+            "pending_transform": self._pending_transform,
+        })
+
+    def before_trading(self, trading_date):
+        # type: (date) -> float
+        delta_static_total_value = super(StockPosition, self).before_trading(trading_date)
+        if self.quantity == 0:
+            return delta_static_total_value
+        if self.direction != POSITION_DIRECTION.LONG:
+            raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
+        data_proxy = Environment.get_instance().data_proxy
+        self._handle_dividend_book_closure(trading_date, data_proxy)
+        delta_static_total_value += self._handle_dividend_payable(trading_date)
+        self._handle_split(trading_date, data_proxy)
+
+    def settlement(self, trading_date):
+        # type: (date) -> Tuple[float, Optional[Trade]]
+        delta_static_total_value, _ = super(StockPosition, self).settlement(trading_date)
+        virtual_trade = None
+        if self.quantity == 0:
+            return 0, None
+        if self.direction != POSITION_DIRECTION.LONG:
+            raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
+        data_proxy = Environment.get_instance().data_proxy
+        next_date = data_proxy.get_next_trading_date(trading_date)
+        instrument = data_proxy.instruments(self._order_book_id)
+        if instrument.de_listed_at(next_date):
+            try:
+                transform_data = data_proxy.get_share_transformation(self._order_book_id)
+            except NotImplementedError:
+                pass
+            else:
+                if transform_data is not None:
+                    successor, conversion_ratio = transform_data
+                    virtual_trade = Trade.__from_create__(
+                        order_id=None,
+                        price=self.avg_price / conversion_ratio,
+                        amount=self.quantity * conversion_ratio,
+                        side=SIDE.BUY,
+                        position_effect=POSITION_EFFECT.OPEN,
+                        order_book_id=successor
+                    )
+            self._today_quantity = self._old_quantity = 0
+            if virtual_trade is None and not self.cash_return_by_stock_delisted:
+                delta_static_total_value -= self.market_value
+        return delta_static_total_value, virtual_trade
+
+    def calc_close_today_amount(self, trade_amount):
+        return 0
+
+    def _handle_dividend_book_closure(self, trading_date, data_proxy):
+        # type: (date, DataProxy) -> None
+        last_date = data_proxy.get_previous_trading_date(trading_date)
+        dividend = data_proxy.get_dividend_by_book_date(self._order_book_id, last_date)
+        if dividend is None:
+            return
+        dividend_per_share = sum(dividend['dividend_cash_before_tax'] / dividend['round_lot'])
+        if dividend_per_share != dividend_per_share:
+            raise RuntimeError("Dividend per share of {} is not supposed to be nan.".format(self._order_book_id))
+        self.apply_dividend(dividend_per_share)
+
+        try:
+            payable_date = _int_to_date(dividend["payable_date"][0])
+        except ValueError:
+            payable_date = _int_to_date(dividend["ex_dividend_date"][0])
+
+        self._dividend_receivable = (payable_date, self.quantity * dividend_per_share)
+
+    def _handle_dividend_payable(self, trading_date):
+        # type: (date) -> float
+        # 返回静态权益的变化量
+        if not self._dividend_receivable:
+            return 0
+        payable_date, dividend_value = self._dividend_receivable
+        if payable_date != trading_date:
+            return 0
+        if self.dividend_reinvestment:
+            last_price = self.last_price
+            self.apply_trade(Trade.__from_create__(
+                None, last_price, dividend_value / last_price, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id
+            ))
+        self._dividend_receivable = None
+        return dividend_value
+
+    def _handle_split(self, trading_date, data_proxy):
+        ratio = data_proxy.get_split_by_ex_date(self._order_book_id, trading_date)
+        if ratio is None:
+            return
+        self.apply_split(ratio)
+
+
+class FuturePosition(AssetPosition):
+    enable_position_validator = True
 
     @property
-    def pnl(self):
-        """
-        [float] 累计盈亏
+    def position_validator_enabled(self):
+        return self.enable_position_validator
 
-        (最新价 - 平均开仓价格) * 持仓量 * 合约乘数
+    def calc_close_today_amount(self, trade_amount):
+        close_today_amount = trade_amount - self.old_quantity
+        return max(close_today_amount, 0)
 
-        """
-        return self._long.pnl + self._short.pnl
-
-    # -- Quantity 相关
-    @property
-    def open_orders(self):
-        return Environment.get_instance().broker.get_open_orders(self.order_book_id)
-
-    # -- Margin 相关
-    @property
-    def margin(self):
-        """
-        [float] 保证金
-
-        保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
-
-        股票保证金 = 市值 = 持仓量 * 最新价
-
-        """
-        return self._long.margin + self._short.margin
-
-    @property
-    def transaction_cost(self):
-        """
-        [float] 交易费率
-        """
-        return self._long.transaction_cost + self._short.transaction_cost
-
-    @property
-    def positions(self):
-        return [self._long, self._short]
-
-    @property
-    def long(self):
-        return self._long
-
-    @property
-    def short(self):
-        return self._short
+    def settlement(self, trading_date):
+        # type: (date) -> Tuple[float, Optional[Trade]]
+        delta_static_total_value, virtual_trade = super(FuturePosition, self).settlement(trading_date)
+        if self.quantity == 0:
+            return 0, None
+        data_proxy = Environment.get_instance().data_proxy
+        instrument = data_proxy.instruments(self._order_book_id)
+        next_date = data_proxy.get_next_trading_date(trading_date)
+        if instrument.de_listed_at(next_date):
+            user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
+                order_book_id=self._order_book_id
+            ))
+            self._today_quantity = self._old_quantity = 0
 
 
 class StockPositionProxy(PositionProxy):
@@ -145,7 +203,7 @@ class StockPositionProxy(PositionProxy):
 
     @property
     def type(self):
-        return DEFAULT_ACCOUNT_TYPE.STOCK
+        return "STOCK"
 
     def split_(self, ratio):
         self._long.apply_split(ratio)
@@ -198,7 +256,7 @@ class FuturePositionProxy(PositionProxy):
 
     @property
     def type(self):
-        return DEFAULT_ACCOUNT_TYPE.FUTURE
+        return "FUTURE"
 
     @property
     def margin_rate(self):
@@ -392,57 +450,3 @@ class FuturePositionProxy(PositionProxy):
     sell_realized_pnl = deprecated_property("sell_realized_pnl", "sell_trading_pnl")
     buy_avg_holding_price = deprecated_property("buy_avg_holding_price", "buy_avg_open_price")
     sell_avg_holding_price = deprecated_property("sell_avg_holding_price", "sell_avg_open_price")
-
-
-class PositionProxyDict(UserDict):
-    _position_proxy_types = {}  # type: Dict[INSTRUMENT_TYPE, Type[PositionProxy]]
-
-    def __init__(self, positions, position_types):
-        super(PositionProxyDict, self).__init__()
-        self._positions = positions  # type: Dict[str, Dict[POSITION_DIRECTION, AssetPosition]]
-        self._position_types = position_types  # type: Dict[INSTRUMENT_TYPE, Type[AssetPosition]]
-
-    @classmethod
-    def register_position_proxy_dict(cls, instrument_type, position_proxy_type):
-        # type: (INSTRUMENT_TYPE, Type[PositionProxy]) -> None
-        cls._position_proxy_types[instrument_type] = position_proxy_type
-
-    def keys(self):
-        return self._positions.keys()
-
-    def __getitem__(self, order_book_id):
-        position_type, position_proxy_type = self._get_position_types(order_book_id)
-        if order_book_id not in self._positions:
-            long = position_type(order_book_id, POSITION_DIRECTION.LONG)
-            short = position_type(order_book_id, POSITION_DIRECTION.SHORT)
-        else:
-            positions = self._positions[order_book_id]
-            long = positions[POSITION_DIRECTION.LONG]
-            short = positions[POSITION_DIRECTION.SHORT]
-        return position_proxy_type(long, short)
-
-    def __contains__(self, item):
-        return item in self._positions
-
-    def __iter__(self):
-        return iter(self._positions)
-
-    def __len__(self):
-        return len(self._positions)
-
-    def __setitem__(self, key, value):
-        raise TypeError("{} object does not support item assignment".format(self.__class__.__name__))
-
-    def __delitem__(self, key):
-        raise TypeError("{} object does not support item deletion".format(self.__class__.__name__))
-
-    def __repr__(self):
-        return repr({k: self[k] for k in self._positions.keys()})
-
-    @lru_cache(1024)
-    def _get_position_types(self, order_book_id):
-        # type: (str) -> Tuple[Type[AssetPosition], Type[PositionProxy]]
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-        position_type = self._position_types.get(instrument_type, AssetPosition)
-        position_proxy_type = self._position_proxy_types.get(instrument_type, PositionProxy)
-        return position_type, position_proxy_type

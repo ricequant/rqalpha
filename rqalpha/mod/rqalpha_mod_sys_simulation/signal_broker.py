@@ -115,8 +115,8 @@ class SignalBroker(AbstractBroker):
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
-        trade._commission = self._env.get_trade_commission(account_type_str2enum(account.type), trade)
-        trade._tax = self._env.get_trade_tax(account_type_str2enum(account.type), trade)
+        trade._commission = self._env.get_trade_commission(trade)
+        trade._tax = self._env.get_trade_tax(trade)
         order.fill(trade)
 
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))

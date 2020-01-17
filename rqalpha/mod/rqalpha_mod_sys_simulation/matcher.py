@@ -177,8 +177,8 @@ class Matcher(object):
                 frozen_price=order.frozen_price,
                 close_today_amount=ct_amount
             )
-            trade._commission = self._env.get_trade_commission(account.type, trade)
-            trade._tax = self._env.get_trade_tax(account.type, trade)
+            trade._commission = self._env.get_trade_commission(trade)
+            trade._tax = self._env.get_trade_tax(trade)
             order.fill(trade)
             self._turnover[order.order_book_id] += fill
 
