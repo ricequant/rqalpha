@@ -33,7 +33,7 @@ class PositionValidator(AbstractFrontendValidator):
         # type: (Order, Optional[AbstractAccount]) -> bool
         if account is None:
             return True
-        if not account.position_validator_enabled:
+        if not account.position_validator_enabled(order.order_book_id):
             return True
         if order.position_effect == POSITION_EFFECT.OPEN:
             return True

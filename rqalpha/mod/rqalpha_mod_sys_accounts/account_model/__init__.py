@@ -13,4 +13,3 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from .future_account import FutureAccount
-from .stock_account import StockAccount

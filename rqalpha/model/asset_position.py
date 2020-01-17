@@ -14,9 +14,9 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from typing import Iterable, Tuple, List, Optional
+from typing import Iterable, Tuple, Optional, Dict, Type
 from datetime import date
-from collections import namedtuple
+from collections import namedtuple, UserDict
 
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
@@ -34,10 +34,9 @@ DeltaPosition = namedtuple("DeltaPosition", ("order_book_id", "direction", "quan
 class AssetPosition(AbstractPosition):
     __repr__ = property_repr
 
-    def __init__(self, order_book_id, direction, t_plus_enabled=True):
+    def __init__(self, order_book_id, direction):
         self._order_book_id = order_book_id
         self._direction = direction
-        self._t_plus_enabled = t_plus_enabled
 
         self._old_quantity = 0
         self._logical_old_quantity = 0
@@ -59,28 +58,6 @@ class AssetPosition(AbstractPosition):
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
         self._margin_multiplier = Environment.get_instance().config.base.margin_multiplier
-
-    def get_state(self):
-        return {
-            "old_quantity": self._old_quantity,
-            "logical_old_quantity": self._logical_old_quantity,
-            "today_quantity": self._today_quantity,
-            "avg_price": self._avg_price,
-            "trade_cost": self._trade_cost,
-            "transaction_cost": self._transaction_cost,
-            "non_closable": self._non_closable,
-            "prev_close": self._prev_close
-        }
-
-    def set_state(self, state):
-        self._old_quantity = state.get("old_quantity", 0)
-        self._logical_old_quantity = state.get("logical_old_quantity", self._old_quantity)
-        self._today_quantity = state.get("today_quantity", 0)
-        self._avg_price = state.get("avg_price", 0)
-        self._trade_cost = state.get("trade_cost", 0)
-        self._transaction_cost = state.get("transaction_cost", 0)
-        self._non_closable = state.get("non_closable", 0)
-        self._prev_close = state.get("prev_close")
 
     @property
     def order_book_id(self):
@@ -181,8 +158,6 @@ class AssetPosition(AbstractPosition):
         order_quantity = sum(o for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
-        if self._t_plus_enabled:
-            return self.quantity - order_quantity - self._non_closable
         return self.quantity - order_quantity
 
     @property
@@ -196,18 +171,30 @@ class AssetPosition(AbstractPosition):
         return 0.
 
     @property
-    def _open_orders(self):
-        # type: () -> Iterable[Order]
-        for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
-            if order.position_direction == self._direction:
-                yield order
+    def position_validator_enabled(self):
+        return True
 
-    @property
-    def _market_tplus(self):
-        if self._market_tplus_ is None:
-            env = Environment.get_instance()
-            self._market_tplus_ = env.data_proxy.instruments(self._order_book_id).market_tplus
-        return self._market_tplus_
+    def get_state(self):
+        return {
+            "old_quantity": self._old_quantity,
+            "logical_old_quantity": self._logical_old_quantity,
+            "today_quantity": self._today_quantity,
+            "avg_price": self._avg_price,
+            "trade_cost": self._trade_cost,
+            "transaction_cost": self._transaction_cost,
+            "non_closable": self._non_closable,
+            "prev_close": self._prev_close
+        }
+
+    def set_state(self, state):
+        self._old_quantity = state.get("old_quantity", 0)
+        self._logical_old_quantity = state.get("logical_old_quantity", self._old_quantity)
+        self._today_quantity = state.get("today_quantity", 0)
+        self._avg_price = state.get("avg_price", 0)
+        self._trade_cost = state.get("trade_cost", 0)
+        self._transaction_cost = state.get("transaction_cost", 0)
+        self._non_closable = state.get("non_closable", 0)
+        self._prev_close = state.get("prev_close")
 
     def before_trading(self, trading_date):
         # type: (date) -> float
@@ -266,3 +253,174 @@ class AssetPosition(AbstractPosition):
 
     def update_last_price(self, price):
         self._last_price = price
+
+    def order(self, quantity, style, target=False):
+        raise NotImplementedError
+
+    def calc_close_today_amount(self, trade_amount):
+        raise NotImplementedError
+
+    @property
+    def _open_orders(self):
+        # type: () -> Iterable[Order]
+        for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
+            if order.position_direction == self._direction:
+                yield order
+
+    @property
+    def _market_tplus(self):
+        if self._market_tplus_ is None:
+            env = Environment.get_instance()
+            self._market_tplus_ = env.data_proxy.instruments(self._order_book_id).market_tplus
+        return self._market_tplus_
+
+
+class PositionProxy(object):
+    __abandon_properties__ = [
+        "positions",
+        "long",
+        "short"
+    ]
+
+    def __init__(self, long, short):
+        # type: (AssetPosition, AssetPosition) -> PositionProxy
+        self._long = long
+        self._short = short
+
+    __repr__ = property_repr
+
+    @property
+    def type(self):
+        raise NotImplementedError
+
+    @property
+    def order_book_id(self):
+        return self._long.order_book_id
+
+    @property
+    def last_price(self):
+        return self._long.last_price
+
+    @property
+    def market_value(self):
+        return self._long.market_value - self._short.market_value
+
+    # -- PNL 相关
+    @property
+    def position_pnl(self):
+        """
+        [float] 昨仓盈亏，当前交易日盈亏中来源于昨仓的部分
+
+        多方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (最新价 - 昨收价)
+        空方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (昨收价 - 最新价)
+
+        """
+        return self._long.position_pnl + self._short.position_pnl
+
+    @property
+    def trading_pnl(self):
+        """
+        [float] 交易盈亏，当前交易日盈亏中来源于当日成交的部分
+
+        单比买方向成交的交易盈亏 = 成交量 * (最新价 - 成交价)
+        单比卖方向成交的交易盈亏 = 成交量 * (成交价 - 最新价)
+
+        """
+        return self._long.trading_pnl + self._short.trading_pnl
+
+    @property
+    def daily_pnl(self):
+        """
+        [float] 当日盈亏
+
+        当日盈亏 = 昨仓盈亏 + 交易盈亏
+
+        """
+        return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl +\
+               self._short.trading_pnl - self.transaction_cost
+
+    @property
+    def pnl(self):
+        """
+        [float] 累计盈亏
+
+        (最新价 - 平均开仓价格) * 持仓量 * 合约乘数
+
+        """
+        return self._long.pnl + self._short.pnl
+
+    # -- Quantity 相关
+    @property
+    def open_orders(self):
+        return Environment.get_instance().broker.get_open_orders(self.order_book_id)
+
+    # -- Margin 相关
+    @property
+    def margin(self):
+        """
+        [float] 保证金
+
+        保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
+
+        股票保证金 = 市值 = 持仓量 * 最新价
+
+        """
+        return self._long.margin + self._short.margin
+
+    @property
+    def transaction_cost(self):
+        """
+        [float] 交易费率
+        """
+        return self._long.transaction_cost + self._short.transaction_cost
+
+    @property
+    def positions(self):
+        return [self._long, self._short]
+
+    @property
+    def long(self):
+        return self._long
+
+    @property
+    def short(self):
+        return self._short
+
+
+class PositionProxyDict(UserDict):
+    def __init__(self, positions, position_proxy_cls):
+        # type: (Dict[str, Dict[POSITION_DIRECTION, AssetPosition]], Type) -> PositionProxyDict
+        super(PositionProxyDict, self).__init__()
+        self._positions = positions
+        self._position_proxy_cls = position_proxy_cls
+
+    def __getitem__(self, order_book_id):
+        if order_book_id not in self._positions:
+            long = AssetPosition(order_book_id, POSITION_DIRECTION.LONG)
+            short = AssetPosition(order_book_id, POSITION_DIRECTION.SHORT)
+        else:
+            positions = self._positions[order_book_id]
+            long = positions[POSITION_DIRECTION.LONG]
+            short = positions[POSITION_DIRECTION.SHORT]
+        return self._position_proxy_cls(long, short)
+
+    def keys(self):
+        return self._positions.keys()
+
+    def __contains__(self, item):
+        return item in self._positions
+
+    def __iter__(self):
+        return iter(self._positions)
+
+    def __len__(self):
+        return len(self._positions)
+
+    def __setitem__(self, key, value):
+        raise TypeError("{} object does not support item assignment".format(self.__class__.__name__))
+
+    def __delitem__(self, key):
+        raise TypeError("{} object does not support item deletion".format(self.__class__.__name__))
+
+    def __repr__(self):
+        return repr({k: self[k] for k in self._positions.keys()})

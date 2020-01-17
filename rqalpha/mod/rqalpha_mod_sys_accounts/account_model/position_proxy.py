@@ -14,13 +14,12 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-import six
+from functools import lru_cache
 from collections import UserDict
-from collections.abc import Mapping
-from typing import Dict, Type
+from typing import Dict, Type, Tuple
 
 from rqalpha.environment import Environment
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, INSTRUMENT_TYPE
 from rqalpha.model.asset_position import AssetPosition
 from rqalpha.utils.repr import property_repr
 from rqalpha.utils.class_helper import deprecated_property
@@ -396,24 +395,31 @@ class FuturePositionProxy(PositionProxy):
 
 
 class PositionProxyDict(UserDict):
-    def __init__(self, positions, position_proxy_cls):
-        # type: (Dict[str, Dict[POSITION_DIRECTION, AssetPosition]], Type) -> PositionProxyDict
+    _position_proxy_types = {}  # type: Dict[INSTRUMENT_TYPE, Type[PositionProxy]]
+
+    def __init__(self, positions, position_types):
         super(PositionProxyDict, self).__init__()
-        self._positions = positions
-        self._position_proxy_cls = position_proxy_cls
+        self._positions = positions  # type: Dict[str, Dict[POSITION_DIRECTION, AssetPosition]]
+        self._position_types = position_types  # type: Dict[INSTRUMENT_TYPE, Type[AssetPosition]]
+
+    @classmethod
+    def register_position_proxy_dict(cls, instrument_type, position_proxy_type):
+        # type: (INSTRUMENT_TYPE, Type[PositionProxy]) -> None
+        cls._position_proxy_types[instrument_type] = position_proxy_type
+
+    def keys(self):
+        return self._positions.keys()
 
     def __getitem__(self, order_book_id):
+        position_type, position_proxy_type = self._get_position_types(order_book_id)
         if order_book_id not in self._positions:
-            long = AssetPosition(order_book_id, POSITION_DIRECTION.LONG)
-            short = AssetPosition(order_book_id, POSITION_DIRECTION.SHORT)
+            long = position_type(order_book_id, POSITION_DIRECTION.LONG)
+            short = position_type(order_book_id, POSITION_DIRECTION.SHORT)
         else:
             positions = self._positions[order_book_id]
             long = positions[POSITION_DIRECTION.LONG]
             short = positions[POSITION_DIRECTION.SHORT]
-        return self._position_proxy_cls(long, short)
-
-    def keys(self):
-        return self._positions.keys()
+        return position_proxy_type(long, short)
 
     def __contains__(self, item):
         return item in self._positions
@@ -432,3 +438,11 @@ class PositionProxyDict(UserDict):
 
     def __repr__(self):
         return repr({k: self[k] for k in self._positions.keys()})
+
+    @lru_cache(1024)
+    def _get_position_types(self, order_book_id):
+        # type: (str) -> Tuple[Type[AssetPosition], Type[PositionProxy]]
+        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+        position_type = self._position_types.get(instrument_type, AssetPosition)
+        position_proxy_type = self._position_proxy_types.get(instrument_type, PositionProxy)
+        return position_type, position_proxy_type

@@ -35,7 +35,7 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
     def order(self, order_book_id, quantity, style, target=False):
-        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> Optional[Order]
+        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> List[Order]
         # 系统下单函数会调用该函数来完成下单操作
         raise NotImplementedError
 
@@ -67,11 +67,10 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         # type: (str, POSITION_DIRECTION) -> AbstractPosition
         raise NotImplementedError
 
-    @property
     @abc.abstractmethod
-    def type(self):
-        # type: () -> Union[str, DEFAULT_ACCOUNT_TYPE]
-        # 返回 String 类型的账户类型标示
+    def position_validator_enabled(self, order_book_id):
+        # type: (str) -> bool
+        # 返回当前账户是否开启验券风控
         raise NotImplementedError
 
     @property
@@ -120,13 +119,6 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     def daily_pnl(self):
         # type: () -> Union[int, float]
         # 返回当前账户的当日盈亏费用
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def position_validator_enabled(self):
-        # type: () -> bool
-        # 返回当前账户是否开启验券风控
         raise NotImplementedError
 
 

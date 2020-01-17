@@ -16,8 +16,9 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import six
+from functools import lru_cache
 from itertools import chain
-from typing import Dict, Iterable, Union, Optional, Type
+from typing import Dict, Iterable, Union, Optional, Type, Callable, List
 
 from rqalpha.const import POSITION_EFFECT
 from rqalpha.interface import AbstractAccount
@@ -26,18 +27,22 @@ from rqalpha.events import EVENT
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
 from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.model.order import OrderStyle
 
-from .asset_position import AssetPosition
+from .asset_position import AssetPosition, PositionProxyDict
 from .order import Order
 from .trade import Trade
+
+OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
+PositionType = Type[AssetPosition]
 
 
 class AssetAccount(AbstractAccount):
 
     __repr__ = property_repr
 
-    enable_position_validator = True
-    position_types = {}  # type: Dict[INSTRUMENT_TYPE, Type[AssetPosition]]
+    _position_types = {}  # type: Dict[INSTRUMENT_TYPE, PositionType]
+    _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
     def __init__(self, total_cash, positions=None, backward_trade_set=None):
         # type: (float, Dict[str, Dict[POSITION_DIRECTION, AssetPosition]], set) -> None
@@ -47,6 +52,16 @@ class AssetAccount(AbstractAccount):
         self._frozen_cash = 0
 
         self.register_event()
+
+    @classmethod
+    def register_position_type(cls, instrument_type, position_type):
+        # type: (INSTRUMENT_TYPE, PositionType) -> None
+        cls._position_types[instrument_type] = position_type
+
+    @classmethod
+    def register_order_api(cls, instrument_type, order_func):
+        # type: (INSTRUMENT_TYPE, OrderApiType) -> None
+        cls._order_apis[instrument_type] = order_func
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
@@ -143,18 +158,21 @@ class AssetAccount(AbstractAccount):
             return AssetPosition(order_book_id, direction)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
-        raise NotImplementedError
+        return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount)
 
     def order(self, order_book_id, quantity, style, target=False):
-        raise NotImplementedError
+        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> List[Order]
+        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+        try:
+            order_func = self._order_apis[instrument_type]  # type: OrderApiType
+        except KeyError:
+            raise NotImplementedError("no implementation for API order, order_book_id={}".format(order_book_id))
+        return order_func(order_book_id, quantity, style, target)
 
     @property
+    @lru_cache(None)
     def positions(self):
-        raise NotImplementedError
-
-    @property
-    def type(self):
-        raise NotImplementedError
+        return PositionProxyDict(self._positions, self._position_types)
 
     @property
     def frozen_cash(self):
@@ -240,9 +258,8 @@ class AssetAccount(AbstractAccount):
         # type: () -> float
         return sum(p.receivable for p in self._iter_pos())
 
-    @property
-    def position_validator_enabled(self):  # type: () -> bool
-        return self.enable_position_validator
+    def position_validator_enabled(self, order_book_id):  # type: (str) -> bool
+        return self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG).position_validator_enabled
 
     def _on_before_trading(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
@@ -267,11 +284,6 @@ class AssetAccount(AbstractAccount):
                 del self._positions[order_book_id]
 
         self._backward_trade_set.clear()
-
-    @classmethod
-    def register_position_type(cls, instrument_type, position_type):
-        # type: (INSTRUMENT_TYPE, Type[AssetPosition]) -> None
-        cls.position_types[INSTRUMENT_TYPE] = position_type
 
     def _on_order_pending_new(self, event):
         if event.account != self:
@@ -316,7 +328,7 @@ class AssetAccount(AbstractAccount):
         # type: (str, Union[str, POSITION_DIRECTION]) -> AssetPosition
         if order_book_id not in self._positions:
             instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-            position_type = self.position_types.get(instrument_type, AssetPosition)
+            position_type = self._position_types.get(instrument_type, AssetPosition)
             positions = self._positions.setdefault(order_book_id, {
                 POSITION_DIRECTION.LONG: position_type(order_book_id, POSITION_DIRECTION.LONG),
                 POSITION_DIRECTION.SHORT: position_type(order_book_id, POSITION_DIRECTION.SHORT)

@@ -7,6 +7,8 @@ from rqalpha.environment import Environment
 from rqalpha.model.asset_position import AssetPosition, DeltaPosition
 from rqalpha.data.data_proxy import DataProxy
 
+from ..api.api_stock import order_shares
+
 
 def _int_to_date(d):
     r, d = divmod(d, 100)
@@ -17,11 +19,37 @@ def _int_to_date(d):
 class StockPosition(AssetPosition):
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
+    t_plus_enabled = True
+    enable_position_validator = True
 
-    def __init__(self, order_book_id, direction, t_plus_enabled=True):
-        super(StockPosition, self).__init__(order_book_id, direction, t_plus_enabled)
+    def __init__(self, order_book_id, direction):
+        super(StockPosition, self).__init__(order_book_id, direction)
         self._dividend_receivable = None
         self._pending_transform = None
+
+    @property
+    def dividend_receivable(self):
+        if self._dividend_receivable:
+            _, dividend_value = self._dividend_receivable
+            return dividend_value
+        return 0
+
+    @property
+    def receivable(self):
+        return self.dividend_receivable
+
+    @property
+    def closable(self):
+        order_quantity = sum(o for o in self._open_orders if o.position_effect in (
+            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
+        ))
+        if self.t_plus_enabled:
+            return self.quantity - order_quantity - self._non_closable
+        return self.quantity - order_quantity
+
+    @property
+    def position_validator_enabled(self):
+        return self.enable_position_validator
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
@@ -78,16 +106,13 @@ class StockPosition(AssetPosition):
                 delta_static_total_value -= self.market_value
         return delta_static_total_value, virtual_trade
 
-    @property
-    def dividend_receivable(self):
-        if self._dividend_receivable:
-            _, dividend_value = self._dividend_receivable
-            return dividend_value
-        return 0
+    def order(self, quantity, style, target=False):
+        if target:
+            quantity = quantity - self,quantity
+        return order_shares(self._order_book_id, quantity, style=style)
 
-    @property
-    def receivable(self):
-        return self.dividend_receivable
+    def calc_close_today_amount(self, trade_amount):
+        return 0
 
     def _handle_dividend_book_closure(self, trading_date, data_proxy):
         # type: (date, DataProxy) -> None
