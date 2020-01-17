@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime
-from typing import Union, Iterable, Type, Optional
+from typing import Optional
 
 from six import iteritems
 
@@ -56,9 +56,7 @@ class Environment(object):
         self.plot_store = None
         self.user_strategy = None
         self._frontend_validators = {}
-        self._account_model_dict = {}
         self._transaction_cost_decider_dict = {}
-        self._ins_account_type_map = {}
 
     @classmethod
     def get_instance(cls):
@@ -113,7 +111,7 @@ class Environment(object):
         if Environment.get_instance().config.extra.is_hold:
             return False
         try:
-            account = self.get_account(order.order_book_id)
+            account = self.portfolio.get_account(order.order_book_id)
         except NotImplementedError:
             account = None
 
@@ -166,13 +164,10 @@ class Environment(object):
         return self.data_proxy.instruments(order_book_id)
 
     def get_account_type(self, order_book_id):
-        # 如果新的account_type 可以通过重写该函数来进行扩展
-        instrument = self.data_proxy.instruments(order_book_id)
-        return self._ins_account_type_map[instrument.type]
+        return self.portfolio.get_account_type(order_book_id)
 
     def get_account(self, order_book_id):
-        account_type = self.get_account_type(order_book_id)
-        return self.portfolio.accounts[account_type]
+        return self.portfolio.get_account(order_book_id)
 
     def get_open_orders(self, order_book_id=None):
         return self.broker.get_open_orders(order_book_id)

@@ -52,7 +52,7 @@ class Portfolio(object):
         for account_type, cash in six.iteritems(starting_cash):
             account_args[account_type] = {"type": account_type, "total_cash": cash, "init_positions": {}}
         for order_book_id, quantity in six.iteritems(init_positions):
-            account_type = self._get_account_type(order_book_id)
+            account_type = self.get_account_type(order_book_id)
             if account_type in account_args:
                 account_args[account_type]["init_positions"][order_book_id] = quantity
         self._accounts = {account_type: Account(**args) for account_type, args in six.iteritems(account_args)}
@@ -116,8 +116,21 @@ class Portfolio(object):
         return list(chain(*(a.get_positions() for a in six.itervalues(self._accounts))))
 
     def get_position(self, order_book_id, direction):
-        account = self._accounts[Environment.get_instance().get_account_type(order_book_id)]
+        account = self._accounts[self.get_account_type(order_book_id)]
         return account.get_position(order_book_id, direction)
+
+    @classmethod
+    def get_account_type(cls, order_book_id):
+        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).ty
+        try:
+            return cls._account_types[instrument_type]
+        except KeyError:
+            raise NotImplementedError("no account_type registered, order_book_id={}, instrument_type={}".format(
+                order_book_id, instrument_type
+            ))
+
+    def get_account(self, order_book_id):
+        return self._accounts[self.get_account_type(order_book_id)]
 
     @property
     def accounts(self):
@@ -288,15 +301,6 @@ class Portfolio(object):
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
 
-    def _get_account_type(self, order_book_id):
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).ty
-        try:
-            return self._account_types[instrument_type]
-        except KeyError:
-            raise NotImplementedError("no account_type registered, order_book_id={}, instrument_type={}".format(
-                order_book_id, instrument_type
-            ))
-
 
 class MixedPositions(dict):
 
@@ -305,7 +309,7 @@ class MixedPositions(dict):
         self._accounts = accounts
 
     def __missing__(self, key):
-        account_type = Environment.get_instance().get_account_type(key)
+        account_type = Portfolio.get_account_type(key)
         for a_type in self._accounts:
             if a_type == account_type:
                 return self._accounts[a_type].positions[key]

@@ -297,11 +297,3 @@ def get_trading_period(universe, accounts):
     from rqalpha.environment import Environment
     trading_period = STOCK_TRADING_PERIOD if DEFAULT_ACCOUNT_TYPE.STOCK in accounts else []
     return Environment.get_instance().data_proxy.get_trading_period(universe, trading_period)
-
-
-def get_account_type_enum(order_book_id):
-    from rqalpha.environment import Environment
-    return Environment.get_instance().get_account_type(order_book_id)
-
-
-get_account_type = get_account_type_enum
