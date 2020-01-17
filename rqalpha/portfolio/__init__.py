@@ -246,6 +246,10 @@ class Portfolio(object):
         return sum(account.cash for account in six.itervalues(self._accounts))
 
     @property
+    def dividend_receivable(self):
+        return sum(a.dividend_receivable for a in six.itervalues(self._accounts))
+
+    @property
     def receivable(self):
         return sum(a.receivable for a in six.itervalues(self._accounts))
 
@@ -297,8 +301,6 @@ class Portfolio(object):
         event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
-
-    deprecated_property("dividend_receivable", "receivable")
 
 
 class MixedPositions(dict):
