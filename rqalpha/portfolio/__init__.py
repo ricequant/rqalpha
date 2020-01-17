@@ -29,6 +29,7 @@ from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
+from rqalpha.utils.class_helper import deprecated_property
 
 from .account import Account
 from .base_position import PositionType, PositionProxyType
@@ -245,11 +246,8 @@ class Portfolio(object):
         return sum(account.cash for account in six.itervalues(self._accounts))
 
     @property
-    def dividend_receivable(self):
-        """
-        [float] 应收分红
-        """
-        return sum(getattr(account, 'dividend_receivable', 0) for account in six.itervalues(self._accounts))
+    def receivable(self):
+        return sum(a.receivable for a in six.itervalues(self._accounts))
 
     @property
     def transaction_cost(self):
@@ -299,6 +297,8 @@ class Portfolio(object):
         event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+
+    deprecated_property("dividend_receivable", "receivable")
 
 
 class MixedPositions(dict):

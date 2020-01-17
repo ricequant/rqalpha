@@ -92,7 +92,7 @@ class StockPosition(BasePosition):
         self._handle_dividend_book_closure(trading_date, data_proxy)
         delta_static_total_value += self._handle_dividend_payable(trading_date)
         self._handle_split(trading_date, data_proxy)
-        return 0
+        return delta_static_total_value
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
