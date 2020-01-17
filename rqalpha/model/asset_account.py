@@ -30,6 +30,7 @@ from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.model.order import OrderStyle
 
 from .asset_position import AssetPosition, PositionProxyDict
+from .asset_position import PositionTypeDictType, PositionDictType
 from .order import Order
 from .trade import Trade
 
@@ -41,11 +42,11 @@ class AssetAccount(AbstractAccount):
 
     __repr__ = property_repr
 
-    _position_types = {}  # type: Dict[INSTRUMENT_TYPE, PositionType]
+    _position_types = {}  # type: PositionTypeDictType
     _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
     def __init__(self, total_cash, positions=None, backward_trade_set=None):
-        # type: (float, Dict[str, Dict[POSITION_DIRECTION, AssetPosition]], set) -> None
+        # type: (float, PositionDictType, set) -> None
         self._static_total_value = total_cash
         self._positions = positions or {}
         self._backward_trade_set = backward_trade_set or set()
