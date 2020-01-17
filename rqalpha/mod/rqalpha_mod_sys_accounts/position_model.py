@@ -40,8 +40,8 @@ class StockPosition(BasePosition):
     t_plus_enabled = True
     enable_position_validator = True
 
-    def __init__(self, order_book_id, direction):
-        super(StockPosition, self).__init__(order_book_id, direction)
+    def __init__(self, order_book_id, direction, init_quantity=0):
+        super(StockPosition, self).__init__(order_book_id, direction, init_quantity)
         self._dividend_receivable = None
         self._pending_transform = None
 
@@ -92,6 +92,7 @@ class StockPosition(BasePosition):
         self._handle_dividend_book_closure(trading_date, data_proxy)
         delta_static_total_value += self._handle_dividend_payable(trading_date)
         self._handle_split(trading_date, data_proxy)
+        return 0
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
@@ -193,6 +194,7 @@ class FuturePosition(BasePosition):
                 order_book_id=self._order_book_id
             ))
             self._today_quantity = self._old_quantity = 0
+        return 0, None
 
 
 class StockPositionProxy(PositionProxy):

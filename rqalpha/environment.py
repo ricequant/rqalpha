@@ -21,7 +21,6 @@ from typing import Optional
 from six import iteritems
 
 import rqalpha
-from rqalpha.interface import AbstractTransactionCostDecider
 from rqalpha.events import EventBus
 from rqalpha.const import FRONT_VALIDATOR_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
@@ -173,7 +172,7 @@ class Environment(object):
         return self.broker.get_open_orders(order_book_id)
 
     def set_transaction_cost_decider(self, instrument_type, decider):
-        # type: (INSTRUMENT_TYPE, AbstractTransactionCostDecider) -> None
+        # type: (INSTRUMENT_TYPE, rqalpha.interface.AbstractTransactionCostDecider) -> None
         self._transaction_cost_decider_dict[instrument_type] = decider
 
     def _get_transaction_cost_decider(self, order_book_id):

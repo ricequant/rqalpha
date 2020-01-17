@@ -433,7 +433,6 @@ class PositionProxyDict(UserDict):
     def __repr__(self):
         return repr({k: self[k] for k in self._positions.keys()})
 
-    @lru_cache(1024)
     def _get_position_types(self, order_book_id):
         # type: (str) -> Tuple[Type[BasePosition], Type[PositionProxy]]
         instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type

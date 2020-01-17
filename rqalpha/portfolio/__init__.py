@@ -16,9 +16,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from functools import lru_cache
-from typing import Dict, Union, Callable, List, Optional
+from typing import Dict, Union, Callable, List, Optional, Tuple
 from itertools import chain
-from datetime import datetime, time
 
 import six
 import jsonpickle
@@ -44,14 +43,14 @@ class Portfolio(object):
     _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
     def __init__(self, starting_cash, init_positions):
-        # type: (Dict[str, float], Dict[str, int]) -> Portfolio
+        # type: (Dict[str, float], List[Tuple[str, int]]) -> Portfolio
         self._static_unit_net_value = 1
         self._last_unit_net_value = 1
 
         account_args = {}
         for account_type, cash in six.iteritems(starting_cash):
             account_args[account_type] = {"type": account_type, "total_cash": cash, "init_positions": {}}
-        for order_book_id, quantity in six.iteritems(init_positions):
+        for order_book_id, quantity in init_positions:
             account_type = self.get_account_type(order_book_id)
             if account_type in account_args:
                 account_args[account_type]["init_positions"][order_book_id] = quantity
@@ -121,7 +120,7 @@ class Portfolio(object):
 
     @classmethod
     def get_account_type(cls, order_book_id):
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).ty
+        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
         try:
             return cls._account_types[instrument_type]
         except KeyError:

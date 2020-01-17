@@ -278,20 +278,26 @@ class Account(AbstractAccount):
     def _on_before_trading(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
         for position in self._iter_pos():
-            self._static_total_value += position.before_trading(trading_date)
+            delta_static_total_value = position.before_trading(trading_date)
+            if delta_static_total_value:
+                self._static_total_value += delta_static_total_value
 
-    def _on_settlement(self):
+    def _on_settlement(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
         self._static_total_value += self.daily_pnl
 
         virtual_trades = []
         for order_book_id, positions in list(six.iteritems(self._positions)):
             for position in six.itervalues(positions):
-                delta_static_total_value, virtual_trade = position.settlement(trading_date)
-                self._static_total_value += delta_static_total_value
-                virtual_trades.append(virtual_trade)
-        for virtual_trade in virtual_trades:
-            self._apply_trade(virtual_trade)
+                result = position.settlement(trading_date)
+                if result:
+                    delta_static_total_value, virtual_trade = result
+                    if delta_static_total_value:
+                        self._static_total_value += delta_static_total_value
+                    if virtual_trade:
+                        virtual_trades.append(virtual_trade)
+            for virtual_trade in virtual_trades:
+                self._apply_trade(virtual_trade)
 
         for order_book_id, positions in list(six.iteritems(self._positions)):
             if all(p.quantity == 0 for p in six.itervalues(positions)):
@@ -300,7 +306,7 @@ class Account(AbstractAccount):
         self._backward_trade_set.clear()
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
-        forced_liquidation = Environment.get_instance().config.base.force_liquidation
+        forced_liquidation = Environment.get_instance().config.base.forced_liquidation
         if self._static_total_value <= 0 and forced_liquidation:
             if self._positions:
                 user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
