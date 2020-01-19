@@ -14,6 +14,7 @@
 
 from __future__ import division
 
+from typing import Union, Optional
 import datetime
 import inspect
 import sys
@@ -38,12 +39,13 @@ from rqalpha.utils.exception import (
     RQInvalidArgument,
 )
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
 
 # noinspection PyUnresolvedReferences
 from rqalpha.utils.logger import user_log as logger
 from rqalpha.utils.logger import user_system_log
 
-from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
+from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem, Instrument
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 
 # noinspection PyUnresolvedReferences
@@ -311,6 +313,29 @@ def cancel_order(order):
     if env.can_cancel_order(order):
         env.broker.cancel_order(order)
     return order
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR, EXECUTION_PHASE.ON_TICK, EXECUTION_PHASE.OPEN_AUCTION)
+@apply_rules(
+    verify_that("id_or_ins", pre_check=True).is_valid_instrument((INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.FUTURE)),
+    verify_that("amount", pre_check=True).is_number().is_greater_or_equal_than(0),
+    verify_that("right_type", pre_check=True).is_in(RIGHT_TYPE, ignore_none=True)
+)
+def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
+    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE])
+    amount = int(amount)
+    if amount == 0:
+        user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
+        return None
+    env = Environment.get_instance()
+    if isinstance(id_or_ins, Instrument):
+        order_book_id = id_or_ins.order_book_id
+    else:
+        order_book_id = env.data_proxy.instruments(id_or_ins).order_book_id
+    order = Order.__from_create__(order_book_id, amount, SIDE.SELL, None, POSITION_EFFECT.EXERCISE)
+    if env.can_submit_order(order):
+        env.broker.submit_order(order)
 
 
 @export_as_api

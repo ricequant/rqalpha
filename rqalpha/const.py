@@ -134,7 +134,6 @@ class POSITION_EFFECT(CustomEnum):
     CLOSE = "CLOSE"
     CLOSE_TODAY = "CLOSE_TODAY"
     EXERCISE = "EXERCISE"
-    MATCH = "MATCH"
 
 
 # noinspection PyPep8Naming

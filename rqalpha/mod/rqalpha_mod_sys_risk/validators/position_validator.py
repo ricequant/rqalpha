@@ -35,7 +35,7 @@ class PositionValidator(AbstractFrontendValidator):
             return True
         if not account.position_validator_enabled(order.order_book_id):
             return True
-        if order.position_effect == POSITION_EFFECT.OPEN:
+        if order.position_effect in (POSITION_EFFECT.OPEN, POSITION_EFFECT.EXERCISE):
             return True
         position = account.get_position(order.order_book_id, order.position_direction)  # type: AbstractPosition
         if order.position_effect == POSITION_EFFECT.CLOSE_TODAY and order.quantity > position.today_closable:
@@ -47,9 +47,7 @@ class PositionValidator(AbstractFrontendValidator):
                 closable=position.today_closable,
             ))
             return False
-        if order.position_effect in (
-                POSITION_EFFECT.CLOSE, POSITION_EFFECT.EXERCISE
-        ) and order.quantity > position.closable:
+        if order.position_effect == POSITION_EFFECT.CLOSE and order.quantity > position.closable:
             user_system_log.warn(_(
                 "Order Creation Failed: not enough position {order_book_id} to close or exercise, target"
                 " sell quantity is {quantity}, closable quantity is {closable}").format(

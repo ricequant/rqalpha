@@ -15,7 +15,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from functools import lru_cache
 from typing import Iterable, Tuple, Optional, Dict, Type
 from datetime import date
 from collections import UserDict
@@ -237,10 +236,7 @@ class BasePosition(AbstractPosition):
                 if self._old_quantity < 0:
                     self._today_quantity += self._old_quantity
                     self._old_quantity = 0
-            if trade.position_effect == POSITION_EFFECT.MATCH:
-                self._trade_cost -= self.last_price * trade.last_quantity
-            else:
-                self._trade_cost -= trade.last_price * trade.last_quantity
+            self._trade_cost -= trade.last_price * trade.last_quantity
 
     def apply_split(self, ratio):
         self._today_quantity *= ratio

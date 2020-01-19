@@ -25,7 +25,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
-from .matcher import Matcher
+from .matcher import Matcher, ExerciseMatcher
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -34,9 +34,12 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._mod_config = mod_config
 
         self._matcher = Matcher(env, mod_config)
+        self._exercise_matcher = ExerciseMatcher(env, mod_config)
+
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []
+        self._open_exercise_orders = []
 
         self._delayed_orders = []
         self._frontend_validator = {}
@@ -79,8 +82,8 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._delayed_orders.append((account, o))
 
     def submit_order(self, order):
-        if order.position_effect in (POSITION_EFFECT.EXERCISE, POSITION_EFFECT.MATCH):
-            raise NotImplementedError
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            return self._open_exercise_orders.append(order)
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
         if order.is_final():
@@ -124,6 +127,10 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
         self._open_orders = self._delayed_orders
         self._delayed_orders = []
+
+    def pre_settlement(self, __):
+        self._exercise_matcher.match(self._open_exercise_orders)
+        self._open_exercise_orders.clear()
 
     def on_bar(self, _):
         self._matcher.update(self._env.calendar_dt, self._env.trading_dt)

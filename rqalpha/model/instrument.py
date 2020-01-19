@@ -22,7 +22,7 @@ from numbers import Real
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, RIGHT_TYPE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr
 
@@ -394,6 +394,10 @@ class Instrument(object):
             return price * amount * self.contract_multiplier * self.margin_rate
         else:
             raise NotImplementedError
+
+    def calc_exercise_price(self, right_type):
+        # type: (RIGHT_TYPE) -> float
+        raise NotImplementedError
 
 
 class SectorCodeItem(object):

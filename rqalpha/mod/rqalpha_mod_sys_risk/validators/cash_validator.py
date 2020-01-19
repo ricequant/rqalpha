@@ -27,9 +27,7 @@ class CashValidator(AbstractFrontendValidator):
         self._env = env
 
     def can_submit_order(self, order, account=None):
-        if account is None:
-            return True
-        if order.position_effect != POSITION_EFFECT.OPEN:
+        if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return True
         instrument = self._env.data_proxy.instruments(order.order_book_id)
         cost_money = instrument.calc_margin(order.frozen_price, order.quantity)
