@@ -25,6 +25,7 @@ from six import with_metaclass
 from rqalpha.const import SIDE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.environment import Environment
+from rqalpha.model.order import Order
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -46,13 +47,13 @@ class SlippageDecider(object):
         self.decider = slippage_cls(rate)  # type: BaseSlippage
 
     def get_trade_price(self, order, price):
-        return self.decider.decide_price(order.order_book_id, price, order.side == SIDE.BUY)
+        return self.decider.get_trade_price(order, price)
 
 
 class BaseSlippage(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
-    def decide_price(self, order_book_id, price, price_up):
-        # type: (str, float, bool) -> float
+    def get_trade_price(self, order, price):
+        # type: (Order, float) -> float
         raise NotImplementedError
 
 
@@ -64,10 +65,10 @@ class PriceRatioSlippage(BaseSlippage):
         else:
             raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is [0, 1)")))
 
-    def decide_price(self, order_book_id, price, price_up):
-        # type: (str, float, bool) -> float
-        temp_price = price + price * self.rate * (1 if price_up else -1)
-        temp_bar = Environment.get_instance().get_bar(order_book_id)
+    def get_trade_price(self, order, price):
+        # type: (Order, float) -> float
+        temp_price = price + price * self.rate * (1 if order.side == SIDE.BUY else -1)
+        temp_bar = Environment.get_instance().get_bar(order.order_book_id)
         if temp_bar:
             limit_up, limit_down = temp_bar.limit_up, temp_bar.limit_down
             if is_valid_price(limit_up):
@@ -84,11 +85,11 @@ class TickSizeSlippage(BaseSlippage):
         else:
             raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is greater than 0")))
 
-    def decide_price(self, order_book_id, price, price_up):
-        # type: (str, float, bool) -> float
-        tick_size = Environment.get_instance().data_proxy.instruments(order_book_id).tick_size()
+    def get_trade_price(self, order, price):
+        # type: (Order, float) -> float
+        tick_size = Environment.get_instance().data_proxy.instruments(order.order_book_id).tick_size()
 
-        price = price + tick_size * self.rate * (1 if price_up else -1)
+        price = price + tick_size * self.rate * (1 if order.side == SIDE.BUY else -1)
 
         if price <= 0:
             raise patch_user_exc(ValueError(_(
