@@ -26,6 +26,7 @@ from rqalpha.const import SIDE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order
+from rqalpha.const import POSITION_EFFECT
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -67,6 +68,8 @@ class PriceRatioSlippage(BaseSlippage):
 
     def get_trade_price(self, order, price):
         # type: (Order, float) -> float
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            raise NotImplementedError("PriceRatioSlippage cannot handle exercise order")
         temp_price = price + price * self.rate * (1 if order.side == SIDE.BUY else -1)
         temp_bar = Environment.get_instance().get_bar(order.order_book_id)
         if temp_bar:
@@ -87,6 +90,8 @@ class TickSizeSlippage(BaseSlippage):
 
     def get_trade_price(self, order, price):
         # type: (Order, float) -> float
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            raise NotImplementedError("TickSizeSlippage cannot handle exercise order")
         tick_size = Environment.get_instance().data_proxy.instruments(order.order_book_id).tick_size()
 
         price = price + tick_size * self.rate * (1 if order.side == SIDE.BUY else -1)
