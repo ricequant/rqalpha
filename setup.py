@@ -57,6 +57,9 @@ setup(
     package_data={'': ['*.*']},
     url='https://github.com/ricequant/rqalpha',
     install_requires=requirements,
+    extra_requires={
+        'profiler': ["line_profiler"],
+    },
     zip_safe=False,
     entry_points={
         "console_scripts": [

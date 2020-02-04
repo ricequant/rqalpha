@@ -272,7 +272,11 @@ def _exception_handler(e):
 
 def enable_profiler(env, scope):
     # decorate line profiler
-    import line_profiler
+    try:
+        import line_profiler
+    except ImportError:
+        raise RuntimeError('--enable-profiler needs line_profiler')
+
     import inspect
     env.profile_deco = profile_deco = line_profiler.LineProfiler()
     for name in scope:
