@@ -163,8 +163,8 @@ def version(**kwargs):
     """
     Output Version Info
     """
-    from rqalpha import version_info
-    six.print_("Current Version: ", version_info)
+    from rqalpha import __version__
+    six.print_("Current Version: ", __version__)
 
 
 @cli.command()
