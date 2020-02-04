@@ -21,7 +21,6 @@ from pprint import pformat
 
 import logbook
 import jsonpickle.ext.numpy as jsonpickle_numpy
-import pytz
 import six
 
 from rqalpha import const
@@ -67,7 +66,6 @@ def _adjust_start_date(config, data_proxy):
                       start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
-    config.base.timezone = pytz.utc
 
 
 def create_base_scope(copy_scope=False):

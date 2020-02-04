@@ -15,9 +15,6 @@
 """
 RQAlpha - a Algorithm Trading System
 """
-
-import pkgutil
-
 from rqalpha.__main__ import cli
 from rqalpha.api.api_base import export_as_api, subscribe_event
 from . import data
@@ -25,17 +22,7 @@ from . import interface
 
 __all__ = [
     '__version__',
-    'version_info'
 ]
-
-__version__ = pkgutil.get_data(__package__, 'VERSION.txt').decode('ascii').strip()
-
-version_info = tuple(int(v) if v.isdigit() else v
-                     for v in __version__.split('.'))
-
-__main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
-
-del pkgutil
 
 
 def load_ipython_extension(ipython):
@@ -142,3 +129,8 @@ def run_func(**kwargs):
     config = parse_config(config, user_funcs=user_funcs)
     clear_all_cached_functions()
     return main.run(config, user_funcs=user_funcs)
+
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
