@@ -55,7 +55,12 @@ setup(
     author='ricequant',
     author_email='public@ricequant.com',
     license='Apache License v2',
-    package_data={'': ['*.*']},
+    include_package_date=True,
+    package_data={
+        'rqalpha': ['*.yml',
+                    'examples/*.*', 'examples/data_source/*.*', 'examples/extend_api/*.*',
+                    'resource/*.*'],
+    },
     url='https://github.com/ricequant/rqalpha',
     install_requires=requirements,
     extra_requires={
@@ -69,8 +74,7 @@ setup(
     },
     classifiers=[
         'Programming Language :: Python',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: Unix',
+        'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
