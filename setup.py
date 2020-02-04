@@ -17,6 +17,7 @@ import versioneer
 
 
 requirements = [
+    'requests',
     'numpy',
     'pandas',
     'python-dateutil',
