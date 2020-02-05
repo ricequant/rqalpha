@@ -24,12 +24,12 @@ import jsonpickle
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
+from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
-from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.interface import AbstractPosition
 
 from .account import Account
 from .base_position import PositionType, PositionProxyType
@@ -116,6 +116,7 @@ class Portfolio(object):
         return list(chain(*(a.get_positions() for a in six.itervalues(self._accounts))))
 
     def get_position(self, order_book_id, direction):
+        # type: (str, POSITION_DIRECTION) -> AbstractPosition
         account = self._accounts[self.get_account_type(order_book_id)]
         return account.get_position(order_book_id, direction)
 

@@ -52,6 +52,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.TICK, self.on_tick)
         # 该事件会触发策略的after_trading函数
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
+        self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
 
     @property
     def matcher(self):

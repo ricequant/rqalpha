@@ -183,7 +183,7 @@ class FuturePosition(BasePosition):
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
-        delta_static_total_value, virtual_trade = super(FuturePosition, self).settlement(trading_date)
+        super(FuturePosition, self).settlement(trading_date)
         if self.quantity == 0:
             return 0, None
         data_proxy = Environment.get_instance().data_proxy

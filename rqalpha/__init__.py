@@ -19,6 +19,7 @@ from rqalpha.__main__ import cli
 from rqalpha.api.api_base import export_as_api, subscribe_event
 from . import data
 from . import interface
+from . import portfolio
 
 __all__ = [
     '__version__',
