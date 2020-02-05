@@ -228,15 +228,19 @@ class BasePosition(AbstractPosition):
                 self._non_closable += trade.last_quantity
             return 0
         else:
-            if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
-                self._today_quantity -= trade.last_quantity
+            if trade.position_effect == POSITION_EFFECT.EXERCISE:
+                trade_quantity = min(self.quantity, trade.last_quantity)
             else:
-                # CLOSE, EXERCISE, MATCH, 先平昨，后平今
-                self._old_quantity -= trade.last_quantity
+                trade_quantity = trade.last_quantity
+            if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
+                self._today_quantity -= trade_quantity
+            else:
+                # CLOSE, EXERCISE, 先平昨，后平今
+                self._old_quantity -= trade_quantity
                 if self._old_quantity < 0:
                     self._today_quantity += self._old_quantity
                     self._old_quantity = 0
-            self._trade_cost -= trade.last_price * trade.last_quantity
+            self._trade_cost -= trade.last_price * trade_quantity
 
     def apply_split(self, ratio):
         self._today_quantity *= ratio
