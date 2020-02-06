@@ -395,10 +395,6 @@ class Instrument(object):
         else:
             raise NotImplementedError
 
-    def calc_exercise_price(self, right_type):
-        # type: (RIGHT_TYPE) -> float
-        raise NotImplementedError
-
 
 class SectorCodeItem(object):
     def __init__(self, cn, en, name):

@@ -63,7 +63,7 @@ class SimulationBroker(AbstractBroker, Persistable):
     @property
     def exercise_matcher(self):
         if not self._exercise_matcher:
-            self._exercise_matcher = ExerciseMatcher(self._env, self._mod_config)
+            self._exercise_matcher = ExerciseMatcher(self._env)
         return self._exercise_matcher
 
     def get_open_orders(self, order_book_id=None):
@@ -95,6 +95,8 @@ class SimulationBroker(AbstractBroker, Persistable):
             self._delayed_orders.append((account, o))
 
     def submit_order(self, order):
+        if order.position_effect == POSITION_EFFECT.MATCH:
+            raise NotImplementedError(_("unsupported position_effect {}").format(order.position_effect))
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             return self._open_exercise_orders.append(order)
         account = self._env.get_account(order.order_book_id)

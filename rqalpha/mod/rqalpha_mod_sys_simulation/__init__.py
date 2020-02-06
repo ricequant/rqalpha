@@ -31,8 +31,6 @@ __config__ = {
     "volume_percent": 0.25,
     # 滑点模型，如果使用自己的定制的滑点，需要加上完整的包名
     "slippage_model": "PriceRatioSlippage",
-    "exercise_slippage_model": None,
-    "exercise_slippage": 0,
     # 设置滑点
     "slippage": 0,
 }

@@ -23,7 +23,6 @@ from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.model.order import Order
-from rqalpha.model.instrument import Instrument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractAccount, AbstractPosition
@@ -202,43 +201,42 @@ class Matcher(object):
 
 
 class ExerciseMatcher(object):
-    def __init__(self, env, mod_config):
+    def __init__(self, env):
         self._env = env  # type: Environment
-        if mod_config.exercise_slippage:
-            self._slippage_decider = SlippageDecider(mod_config.exercise_slippage_model, mod_config.exercise_slippage)
+
+    def _match(self, account, order):
+        # type: (AbstractAccount, Order) -> Iterable[Trade]
+        if order.position_effect != POSITION_EFFECT.EXERCISE:
+            raise NotImplementedError("match_exercise is not able to handle {} order".format(order.position_effect))
+        price = self._env.data_proxy.get_last_price(order.order_book_id)
+        position = account.get_position(order.order_book_id, order.position_direction)  # type: AbstractPosition
+        quantity = min(position.closable, order.quantity)
+
+        if quantity == 0:
+            order.mark_cancelled(_(u"Order Cancelled: {} has not no exercisable quantity").format(
+                order.order_book_id
+            ))
         else:
-            self._slippage_decider = None
+            trade = Trade.__from_create__(
+                order.order_id, price, quantity, order.side, POSITION_EFFECT.EXERCISE, order.order_book_id,
+                right_type=order.right_type
+            )
+            trade._commission = self._env.get_trade_commission(trade)
+            trade._tax = self._env.get_trade_tax(trade)
+            yield trade
 
     def match(self, exercise_orders):
         # type: (Iterable[Order]) -> None
         for order in exercise_orders:
-            if order.position_effect != POSITION_EFFECT.EXERCISE:
-                raise NotImplementedError("match_exercise is not able to handle {} order".format(order.position_effect))
-            instrument = self._env.data_proxy.instruments(order.order_book_id)  # type: Instrument
-            price = instrument.calc_exercise_price(order.right_type)
-            if self._slippage_decider:
-                price = self._slippage_decider.get_trade_price(order, price)
-
             account = self._env.portfolio.get_account(order.order_book_id)  # type: AbstractAccount
-            position = account.get_position(order.order_book_id, order.position_direction)  # type: AbstractPosition
-            quantity = min(position.closable, order.quantity)
-
-            if quantity == 0:
-                order.mark_cancelled(_(u"Order Cancelled: {} has not no exercisable quantity").format(
-                    order.order_book_id
-                ))
-            else:
-                trade = Trade.__from_create__(
-                    order.order_id, price, quantity, order.side, POSITION_EFFECT.EXERCISE, order.order_book_id,
-                    right_type=order.right_type
-                )
-
+            for trade in self._match(account, order):
                 order.fill(trade)
                 self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
-                if order.unfilled_quantity != 0:
-                    order.mark_cancelled(_(
-                        u"exercisable quantity {exercisable_quantity} of {order_book_id} is less than "
-                        u"order quantity {order_quantity}"
-                    ).format(
-                        exercisable_quantity=quantity, order_book_id=order.order_book_id, order_quantity=order.quantity
-                    ))
+            if order.unfilled_quantity != 0:
+                order.mark_cancelled(_(
+                    u"exercisable quantity {exercisable_quantity} of {order_book_id} is less than "
+                    u"order quantity {order_quantity}"
+                ).format(
+                    exercisable_quantity=order.filled_quantity, order_book_id=order.order_book_id,
+                    order_quantity=order.quantity
+                ))
