@@ -29,6 +29,7 @@ from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
+from rqalpha.model.instrument import Instrument
 from rqalpha.interface import AbstractPosition
 
 from .account import Account
@@ -40,7 +41,7 @@ OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 class Portfolio(object):
     __repr__ = property_repr
 
-    _account_types = {}  # type: Dict[INSTRUMENT_TYPE, str]
+    _account_types = {}  # type: Dict[INSTRUMENT_TYPE, Union[str, Callable[[Instrument, ], str]]]
     _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
     def __init__(self, starting_cash, init_positions):
@@ -64,7 +65,7 @@ class Portfolio(object):
     def register_instrument_type(
             cls,
             instrument_type,  # type: Union[INSTRUMENT_TYPE, str]
-            upper_account_type,  # type: Union[DEFAULT_ACCOUNT_TYPE, str]
+            upper_account_type,  # type: Union[str, Callable[[Instrument, ], str]]
             position_cls,  # type: PositionType
             order_api,  # type: OrderApiType
             position_proxy_cls=None  # type: Optional[PositionProxyType]
@@ -122,13 +123,16 @@ class Portfolio(object):
 
     @classmethod
     def get_account_type(cls, order_book_id):
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+        instrument =  Environment.get_instance().data_proxy.instruments(order_book_id)
         try:
-            return cls._account_types[instrument_type]
+            account_type = cls._account_types[instrument.type]
         except KeyError:
             raise NotImplementedError("no account_type registered, order_book_id={}, instrument_type={}".format(
-                order_book_id, instrument_type
+                order_book_id, instrument.type
             ))
+        if isinstance(account_type, str):
+            return account_type
+        return account_type(instrument)
 
     def get_account(self, order_book_id):
         return self._accounts[self.get_account_type(order_book_id)]
