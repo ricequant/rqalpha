@@ -328,12 +328,16 @@ def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
         return None
+    if right_type != RIGHT_TYPE.SELL_BACK:
+        raise NotImplementedError(_("exercise only supports sell back now"))
     env = Environment.get_instance()
     if isinstance(id_or_ins, Instrument):
         order_book_id = id_or_ins.order_book_id
     else:
         order_book_id = env.data_proxy.instruments(id_or_ins).order_book_id
-    order = Order.__from_create__(order_book_id, amount, SIDE.SELL, None, POSITION_EFFECT.EXERCISE)
+    order = Order.__from_create__(
+        order_book_id, amount, SIDE.SELL, None, POSITION_EFFECT.EXERCISE, right_type=right_type
+    )
     if env.can_submit_order(order):
         env.broker.submit_order(order)
 
