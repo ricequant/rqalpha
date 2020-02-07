@@ -172,6 +172,11 @@ class AnalyserMod(AbstractMod):
             'buy_pnl', 'buy_margin', 'buy_quantity', 'buy_avg_open_price',
             'sell_pnl', 'sell_margin', 'sell_quantity', 'sell_avg_open_price'
         ],
+        DEFAULT_ACCOUNT_TYPE.OPTION: [
+            'margin', 'margin_rate', 'contract_multiplier', 'last_price',
+            'buy_pnl', 'buy_margin', 'buy_quantity', 'buy_avg_open_price',
+            'sell_pnl', 'sell_margin', 'sell_quantity', 'sell_avg_open_price'
+        ],
         DEFAULT_ACCOUNT_TYPE.BOND.name: [
             'quantity', 'last_price', 'avg_price', 'market_value'
         ],
