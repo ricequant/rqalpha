@@ -162,7 +162,9 @@ class Account(AbstractAccount):
         try:
             return self._positions[order_book_id][direction]
         except KeyError:
-            return BasePosition(order_book_id, direction)
+            instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+            position_type = self._position_types.get(instrument_type, BasePosition)
+            return position_type(order_book_id, direction)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
         return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount)
