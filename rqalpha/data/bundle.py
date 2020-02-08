@@ -91,7 +91,7 @@ def gen_splits(d):
     split = split[['split_factor']]
     split.reset_index(inplace=True)
     split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)
-    split['ex_date'] = [convert_date_to_date_int(d) for d in split['ex_date']]
+    split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]
     split.set_index(['order_book_id', 'ex_date'], inplace=True)
 
     with h5py.File(os.path.join(d, 'split_factor.h5'), 'w') as h5:
@@ -288,13 +288,13 @@ def create_bundle(path):
                 rqdatac.all_instruments('FUND').order_book_id.tolist(),
                 FundDayBarConverter)
 
-    # gen_instruments(path)
-    # gen_trading_dates(path)
-    # gen_dividends(path)
-    # gen_splits(path)
-    # gen_ex_factor(path)
-    # gen_st_days(path)
-    # gen_suspended_days(path)
-    # gen_yield_curve(path)
-    # gen_share_transformation(path)
-    # gen_future_info(path)
+    gen_instruments(path)
+    gen_trading_dates(path)
+    gen_dividends(path)
+    gen_splits(path)
+    gen_ex_factor(path)
+    gen_st_days(path)
+    gen_suspended_days(path)
+    gen_yield_curve(path)
+    gen_share_transformation(path)
+    gen_future_info(path)
