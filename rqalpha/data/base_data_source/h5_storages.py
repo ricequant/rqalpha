@@ -30,28 +30,14 @@ DEFAULT_DTYPE = np.dtype([
 
 
 class DayBarStore:
-    def __init__(self, path, converter):
+    def __init__(self, path):
         self._h5 = h5py.File(path, 'r')
-        self._converter = converter
 
     def get_bars(self, order_book_id):
         try:
-            data = self._h5[order_book_id]
+            return self._h5[order_book_id][:]
         except KeyError:
             return np.empty(0, dtype=DEFAULT_DTYPE)
-
-        dtype = np.dtype([('datetime', np.uint64)] + [
-            (f, self._converter.field_type(f, data.dtype[f])) for f in data.dtype.names if f != 'datetime'
-        ])
-        result = np.empty(shape=(len(data), ), dtype=dtype)
-        for f in data.dtype.names:
-            if f == 'datetime':
-                continue
-            result[f] = self._converter.convert(f, data[f])
-        result['datetime'] = data['datetime']
-        result['datetime'] *= 1000000
-
-        return result
 
     def get_date_range(self, order_book_id):
         try:
@@ -67,7 +53,7 @@ class DividendStore:
 
     def get_dividend(self, order_book_id):
         try:
-            return self._h5[order_book_id]
+            return self._h5[order_book_id][:]
         except KeyError:
             return None
 
@@ -107,6 +93,6 @@ class SimpleFactorStore:
 
     def get_factors(self, order_book_id):
         try:
-            return self._h5[order_book_id]
+            return self._h5[order_book_id][:]
         except KeyError:
             return None

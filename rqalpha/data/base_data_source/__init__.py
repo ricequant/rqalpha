@@ -49,10 +49,10 @@ class BaseDataSource(AbstractDataSource):
             return os.path.join(path, name)
 
         self._day_bars = [
-            DayBarStore(_p('stocks.h5'), StockBarConverter),
-            DayBarStore(_p('indexes.h5'), IndexBarConverter),
-            DayBarStore(_p('futures.h5'), FutureDayBarConverter),
-            DayBarStore(_p('funds.h5'), FundDayBarConverter),
+            DayBarStore(_p('stocks.h5')),
+            DayBarStore(_p('indexes.h5')),
+            DayBarStore(_p('futures.h5')),
+            DayBarStore(_p('funds.h5')),
         ]
 
         self._instruments = InstrumentStore(_p('instruments.pk'))
@@ -70,7 +70,8 @@ class BaseDataSource(AbstractDataSource):
 
         self.get_yield_curve = self._yield_curve.get_yield_curve
         if os.path.exists(_p('public_funds.bcolz')):
-            self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
+            # FIXME the public fund mod
+            self._day_bars.append(DayBarStore(_p('public_funds.bcolz')))
             self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
             self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
             self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))

@@ -22,9 +22,6 @@ import json
 import numpy as np
 import rqdatac
 
-from rqalpha.data.base_data_source.converter import (
-    StockBarConverter, IndexBarConverter, FutureDayBarConverter, FundDayBarConverter
-)
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
 START_DATE = 20050104
@@ -249,7 +246,7 @@ def gen_future_info(d):
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
 
-def gen_day_bar(path, order_book_ids, converter):
+def gen_day_bar(path, order_book_ids):
     with h5py.File(path, 'w') as h5:
         i, step = 0, 500
         while True:
@@ -257,16 +254,15 @@ def gen_day_bar(path, order_book_ids, converter):
                                    adjust_type='none', frequency='1d', expect_df=True)
             if 'dominant_id' in df.columns:
                 del df['dominant_id']
+            if 'num_trades' in df.columns:
+                del df['num_trades']
 
             df.fillna(0, inplace=True)
             df.reset_index(inplace=True)
-            df['datetime'] = [convert_date_to_date_int(d) for d in df['date']]
+            df['datetime'] = [convert_date_to_int(d) for d in df['date']]
             del df['date']
             df.set_index(['order_book_id', 'datetime'], inplace=True)
             df.sort_index(inplace=True)
-            for f in df.columns:
-                df[f] = converter.reverse_convert(f, df[f])
-
             for order_book_id in df.index.levels[0]:
                 h5[order_book_id] = df.loc[order_book_id].to_records()
             i += step
@@ -276,17 +272,13 @@ def gen_day_bar(path, order_book_ids, converter):
 
 def create_bundle(path):
     gen_day_bar(os.path.join(path, 'stocks.h5'),
-                rqdatac.all_instruments('CS').order_book_id.tolist(),
-                StockBarConverter)
+                rqdatac.all_instruments('CS').order_book_id.tolist())
     gen_day_bar(os.path.join(path, 'indexes.h5'),
-                rqdatac.all_instruments('INDX').order_book_id.tolist(),
-                IndexBarConverter)
+                rqdatac.all_instruments('INDX').order_book_id.tolist())
     gen_day_bar(os.path.join(path, 'futures.h5'),
-                rqdatac.all_instruments('Future').order_book_id.tolist(),
-                FutureDayBarConverter)
+                rqdatac.all_instruments('Future').order_book_id.tolist())
     gen_day_bar(os.path.join(path, 'funds.h5'),
-                rqdatac.all_instruments('FUND').order_book_id.tolist(),
-                FundDayBarConverter)
+                rqdatac.all_instruments('FUND').order_book_id.tolist())
 
     gen_instruments(path)
     gen_trading_dates(path)
