@@ -18,6 +18,7 @@
 import os
 import six
 import numpy as np
+import pandas as pd
 
 from rqalpha.interface import AbstractDataSource
 from rqalpha.utils.py2 import lru_cache
@@ -25,8 +26,10 @@ from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
 
 from .storages import (
-    DayBarStore, DividendStore, InstrumentStore, TradingDatesStore, YieldCurveStore, SimpleFactorStore,
-    ShareTransformationStore, FutureInfoStore
+    InstrumentStore, ShareTransformationStore, FutureInfoStore
+)
+from .h5_storages import (
+    DayBarStore, DividendStore, YieldCurveStore, SimpleFactorStore
 )
 from .converter import (
     StockBarConverter, IndexBarConverter, FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
@@ -46,27 +49,26 @@ class BaseDataSource(AbstractDataSource):
             return os.path.join(path, name)
 
         self._day_bars = [
-            DayBarStore(_p('stocks.bcolz'), StockBarConverter),
-            DayBarStore(_p('indexes.bcolz'), IndexBarConverter),
-            DayBarStore(_p('futures.bcolz'), FutureDayBarConverter),
-            DayBarStore(_p('funds.bcolz'), FundDayBarConverter),
+            DayBarStore(_p('stocks.h5'), StockBarConverter),
+            DayBarStore(_p('indexes.h5'), IndexBarConverter),
+            DayBarStore(_p('futures.h5'), FutureDayBarConverter),
+            DayBarStore(_p('funds.h5'), FundDayBarConverter),
         ]
 
         self._instruments = InstrumentStore(_p('instruments.pk'))
-        self._dividends = DividendStore(_p('original_dividends.bcolz'))
-        self._trading_dates = TradingDatesStore(_p('trading_dates.bcolz'))
-        self._yield_curve = YieldCurveStore(_p('yield_curve.bcolz'))
-        self._split_factor = SimpleFactorStore(_p('split_factor.bcolz'))
-        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.bcolz'))
+        self._dividends = DividendStore(_p('dividends.h5'))
+        self._trading_dates = pd.to_datetime([str(d) for d in np.load(_p('trading_dates.npy'), allow_pickle=False)])
+        self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
+        self._split_factor = SimpleFactorStore(_p('split_factor.h5'))
+        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.h5'))
         self._share_transformation = ShareTransformationStore(_p('share_transformation.json'))
 
-        self._st_stock_days = DateSet(_p('st_stock_days.bcolz'))
-        self._suspend_days = DateSet(_p('suspended_days.bcolz'))
+        self._st_stock_days = DateSet(_p('st_stock_days.h5'))
+        self._suspend_days = DateSet(_p('suspended_days.h5'))
 
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
 
         self.get_yield_curve = self._yield_curve.get_yield_curve
-        self.get_risk_free_rate = self._yield_curve.get_risk_free_rate
         if os.path.exists(_p('public_funds.bcolz')):
             self._day_bars.append(DayBarStore(_p('public_funds.bcolz'), PublicFundDayBarConverter))
             self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
@@ -82,7 +84,7 @@ class BaseDataSource(AbstractDataSource):
         raise NotImplementedError
 
     def get_trading_calendar(self):
-        return self._trading_dates.get_trading_calendar()
+        return self._trading_dates
 
     def get_all_instruments(self):
         return self._instruments.get_all_instruments()
@@ -114,7 +116,7 @@ class BaseDataSource(AbstractDataSource):
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
         i = self._index_of(instrument)
-        return self._day_bars[i].get_bars(instrument.order_book_id, fields=None)
+        return self._day_bars[i].get_bars(instrument.order_book_id)
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
@@ -126,7 +128,7 @@ class BaseDataSource(AbstractDataSource):
             raise NotImplementedError
 
         bars = self._all_day_bars_of(instrument)
-        if len(bars) <=0 :
+        if len(bars) <= 0:
             return
         dt = np.uint64(convert_date_to_int(dt))
         pos = bars['datetime'].searchsorted(dt)
@@ -185,12 +187,6 @@ class BaseDataSource(AbstractDataSource):
 
         return adjust_bars(bars, self.get_ex_cum_factor(instrument.order_book_id),
                            fields, adjust_type, adjust_orig)
-
-    def get_yield_curve(self, start_date, end_date, tenor=None):
-        return self._yield_curve.get_yield_curve(start_date, end_date, tenor)
-
-    def get_risk_free_rate(self, start_date, end_date):
-        return self._yield_curve.get_risk_free_rate(start_date, end_date)
 
     def current_snapshot(self, instrument, frequency, dt):
         raise NotImplementedError

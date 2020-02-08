@@ -74,6 +74,21 @@ def entry_point():
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
+def create_bundle(data_bundle_path):
+    try:
+        import rqdatac
+    except ImportError:
+        six.print_('rqdatac is required to create bundle')
+        return 1
+
+    rqdatac.init()
+    os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
+    from rqalpha.data.bundle import create_bundle as create_bundle_
+    create_bundle_(os.path.join(data_bundle_path, 'bundle'))
+
+
+@cli.command()
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--locale', 'locale', type=click.STRING, default="zh_Hans_CN")
 def update_bundle(data_bundle_path, locale):
     """

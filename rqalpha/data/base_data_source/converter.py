@@ -35,6 +35,15 @@ class Converter(object):
 
         return result
 
+    def reverse_convert(self, name, data):
+        try:
+            r = self._rules[name]
+        except KeyError:
+            return data
+
+        result = data * (1.0 / r.multiplier)
+        return result.astype(int)
+
     def field_type(self, name, dt):
         try:
             return self._rules[name].dtype
@@ -56,7 +65,6 @@ StockBarConverter = Converter(
         "volume": Rule(float64, 1, 0),
     }
 )
-
 
 FutureDayBarConverter = Converter(
     {
