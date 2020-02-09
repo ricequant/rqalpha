@@ -246,16 +246,18 @@ def gen_future_info(d):
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
 
-def gen_day_bar(path, order_book_ids, **kwargs):
+STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
+INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
+FUTURES_FIELDS = STOCK_FIELDS + ['basis_spread', 'settlement', 'prev_settlement']
+FUND_FIELDS = STOCK_FIELDS + ['acc_net_value', 'unit_net_value', 'discount_rate']
+
+
+def gen_day_bar(path, order_book_ids, fields, **kwargs):
     with h5py.File(path, 'w') as h5:
         i, step = 0, 300
         while True:
-            df = rqdatac.get_price(order_book_ids[i:i + step], START_DATE, datetime.date.today(),
-                                   adjust_type='none', frequency='1d', expect_df=True)
-            if 'dominant_id' in df.columns:
-                del df['dominant_id']
-            if 'num_trades' in df.columns:
-                del df['num_trades']
+            df = rqdatac.get_price(order_book_ids[i:i + step], START_DATE, datetime.date.today(), '1d',
+                                   adjust_type='none', fields=fields, expect_df=True)
 
             df.fillna(0, inplace=True)
             df.reset_index(inplace=True)
@@ -264,8 +266,7 @@ def gen_day_bar(path, order_book_ids, **kwargs):
             df.set_index(['order_book_id', 'datetime'], inplace=True)
             df.sort_index(inplace=True)
             for order_book_id in df.index.levels[0]:
-                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(),
-                                  maxshape=(None, ), **kwargs)
+                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **kwargs)
             i += step
             if i >= len(order_book_ids):
                 break
@@ -277,13 +278,82 @@ def create_bundle(path, enable_compression=False):
         kwargs['compression'] = 9
 
     gen_day_bar(os.path.join(path, 'stocks.h5'),
-                rqdatac.all_instruments('CS').order_book_id.tolist(), **kwargs)
+                rqdatac.all_instruments('CS').order_book_id.tolist(),
+                STOCK_FIELDS,
+                **kwargs)
     gen_day_bar(os.path.join(path, 'indexes.h5'),
-                rqdatac.all_instruments('INDX').order_book_id.tolist(), **kwargs)
+                rqdatac.all_instruments('INDX').order_book_id.tolist(),
+                INDEX_FIELDS,
+                **kwargs)
     gen_day_bar(os.path.join(path, 'futures.h5'),
-                rqdatac.all_instruments('Future').order_book_id.tolist(), **kwargs)
+                rqdatac.all_instruments('Future').order_book_id.tolist(),
+                FUTURES_FIELDS,
+                **kwargs)
     gen_day_bar(os.path.join(path, 'funds.h5'),
-                rqdatac.all_instruments('FUND').order_book_id.tolist(), **kwargs)
+                rqdatac.all_instruments('FUND').order_book_id.tolist(),
+                FUND_FIELDS,
+                **kwargs)
+
+    gen_instruments(path)
+    gen_trading_dates(path)
+    gen_dividends(path)
+    gen_splits(path)
+    gen_ex_factor(path)
+    gen_st_days(path)
+    gen_suspended_days(path)
+    gen_yield_curve(path)
+    gen_share_transformation(path)
+    gen_future_info(path)
+
+
+def update_day_bar(path, order_book_ids, fields, **kwargs):
+    with h5py.File(path, 'r+') as h5:
+        for order_book_id in order_book_ids:
+            if order_book_id in h5:
+                start_date = rqdatac.get_next_trading_date(h5[order_book_id]['datetime'][-1] // 1000000)
+            else:
+                start_date = START_DATE
+            df = rqdatac.get_price(order_book_id, start_date, datetime.date.today(), '1d',
+                                   adjust_type='none', fields=fields, expect_df=True)
+            if df.empty:
+                continue
+
+            df = df.loc[order_book_id]
+            df.fillna(0, inplace=True)
+            df.reset_index(inplace=True)
+            df['datetime'] = [convert_date_to_int(d) for d in df['date']]
+            del df['date']
+            df.set_index('datetime', inplace=True)
+
+            if order_book_id in h5:
+                data = np.concatenate(h5[order_book_id][:], df.to_records())
+                del h5[order_book_id]
+                h5.create_dataset(order_book_id, data=data, **kwargs)
+            else:
+                h5.create_dataset(order_book_id, data=data, **kwargs)
+
+
+def update_bundle(path, enable_compression=False):
+    kwargs = {}
+    if enable_compression:
+        kwargs['compression'] = 9
+
+    update_day_bar(os.path.join(path, 'stocks.h5'),
+                   rqdatac.all_instruments('CS').order_book_id.tolist(),
+                   STOCK_FIELDS,
+                   **kwargs)
+    update_day_bar(os.path.join(path, 'indexes.h5'),
+                   rqdatac.all_instruments('INDX').order_book_id.tolist(),
+                   INDEX_FIELDS,
+                   **kwargs)
+    update_day_bar(os.path.join(path, 'futures.h5'),
+                   rqdatac.all_instruments('Future').order_book_id.tolist(),
+                   FUTURES_FIELDS,
+                   **kwargs)
+    update_day_bar(os.path.join(path, 'funds.h5'),
+                   rqdatac.all_instruments('FUND').order_book_id.tolist(),
+                   FUND_FIELDS,
+                   **kwargs)
 
     gen_instruments(path)
     gen_trading_dates(path)

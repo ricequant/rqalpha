@@ -17,29 +17,27 @@ import tarfile
 import tempfile
 import time
 import datetime
+import dateutil
 
 import click
 import requests
 import six
 
-from rqalpha.utils.config import set_locale
 from rqalpha.utils.i18n import gettext as _
 
-CDN_URL = 'http://bundle.assets.ricequant.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2'
+CDN_URL = 'http://bundle.assets.ricequant.com/bundles_v4/rqbundle_%04d%02d.tar.bz2'
 
 
 def get_exactly_url():
     day = datetime.date.today()
     while True:  # get exactly url
-        url = CDN_URL % (day.year, day.month, day.day)
+        url = CDN_URL % (day.year, day.month)
         six.print_(_(u"try {} ...").format(url))
         r = requests.get(url, stream=True)
-        if r.status_code != 200:
-            day = day - datetime.timedelta(days=1)
-            continue
-        break
-    total_length = int(r.headers.get('content-length'))
-    return url, total_length
+        if r.status_code == 200:
+            return url, int(r.headers.get('content-length'))
+
+        day -= dateutil.relativedelta(months=1)
 
 
 def download(out, total_length, url):
@@ -64,8 +62,7 @@ def download(out, total_length, url):
                     raise
 
 
-def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
-    set_locale(locale)
+def download_bundle(data_bundle_path=None, confirm=True):
     default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
     if data_bundle_path is None:
         data_bundle_path = default_bundle_path

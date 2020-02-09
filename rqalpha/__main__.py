@@ -73,7 +73,7 @@ def entry_point():
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-@click.option('--compression', default=False, type=click.BOOL)
+@click.option('--compression', default=False, is_flag=True)
 def create_bundle(data_bundle_path, compression):
     try:
         import rqdatac
@@ -89,13 +89,31 @@ def create_bundle(data_bundle_path, compression):
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-@click.option('--locale', 'locale', type=click.STRING, default="zh_Hans_CN")
-def update_bundle(data_bundle_path, locale):
+@click.option('--compression', default=False, type=click.BOOL)
+def update_bundle(data_bundle_path, compression):
+    try:
+        import rqdatac
+    except ImportError:
+        six.print_('rqdatac is required to create bundle')
+        return 1
+
+    if not os.path.exists(os.path.join(data_bundle_path, 'bundle')):
+        six.print_('bundle not exist, use create-bundle command instead')
+        return 1
+
+    rqdatac.init()
+    from rqalpha.data.bundle import update_bundle as update_bundle_
+    update_bundle_(os.path.join(data_bundle_path, 'bundle'), enable_compression=compression)
+
+
+@cli.command()
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
+def download_bundle(data_bundle_path):
     """
     Sync Data Bundle
     """
     import rqalpha.utils.bundle_helper
-    rqalpha.utils.bundle_helper.update_bundle(data_bundle_path, locale)
+    rqalpha.utils.bundle_helper.download_bundle(data_bundle_path)
 
 
 @cli.command()
