@@ -246,9 +246,9 @@ def gen_future_info(d):
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
 
-def gen_day_bar(path, order_book_ids):
+def gen_day_bar(path, order_book_ids, **kwargs):
     with h5py.File(path, 'w') as h5:
-        i, step = 0, 500
+        i, step = 0, 300
         while True:
             df = rqdatac.get_price(order_book_ids[i:i + step], START_DATE, datetime.date.today(),
                                    adjust_type='none', frequency='1d', expect_df=True)
@@ -264,21 +264,26 @@ def gen_day_bar(path, order_book_ids):
             df.set_index(['order_book_id', 'datetime'], inplace=True)
             df.sort_index(inplace=True)
             for order_book_id in df.index.levels[0]:
-                h5[order_book_id] = df.loc[order_book_id].to_records()
+                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(),
+                                  maxshape=(None, ), **kwargs)
             i += step
             if i >= len(order_book_ids):
                 break
 
 
-def create_bundle(path):
+def create_bundle(path, enable_compression=False):
+    kwargs = {}
+    if enable_compression:
+        kwargs['compression'] = 9
+
     gen_day_bar(os.path.join(path, 'stocks.h5'),
-                rqdatac.all_instruments('CS').order_book_id.tolist())
+                rqdatac.all_instruments('CS').order_book_id.tolist(), **kwargs)
     gen_day_bar(os.path.join(path, 'indexes.h5'),
-                rqdatac.all_instruments('INDX').order_book_id.tolist())
+                rqdatac.all_instruments('INDX').order_book_id.tolist(), **kwargs)
     gen_day_bar(os.path.join(path, 'futures.h5'),
-                rqdatac.all_instruments('Future').order_book_id.tolist())
+                rqdatac.all_instruments('Future').order_book_id.tolist(), **kwargs)
     gen_day_bar(os.path.join(path, 'funds.h5'),
-                rqdatac.all_instruments('FUND').order_book_id.tolist())
+                rqdatac.all_instruments('FUND').order_book_id.tolist(), **kwargs)
 
     gen_instruments(path)
     gen_trading_dates(path)

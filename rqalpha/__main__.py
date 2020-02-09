@@ -35,11 +35,10 @@ CONTEXT_SETTINGS = {
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('-v', '--verbose', count=True)
 @click.help_option('-h', '--help')
 @click.pass_context
-def cli(ctx, verbose):
-    ctx.obj["VERBOSE"] = verbose
+def cli(ctx):
+    pass
 
 
 def inject_mod_commands():
@@ -74,7 +73,8 @@ def entry_point():
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-def create_bundle(data_bundle_path):
+@click.option('--compression', default=False, type=click.BOOL)
+def create_bundle(data_bundle_path, compression):
     try:
         import rqdatac
     except ImportError:
@@ -84,7 +84,7 @@ def create_bundle(data_bundle_path):
     rqdatac.init()
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
     from rqalpha.data.bundle import create_bundle as create_bundle_
-    create_bundle_(os.path.join(data_bundle_path, 'bundle'))
+    create_bundle_(os.path.join(data_bundle_path, 'bundle'), enable_compression=compression)
 
 
 @cli.command()
@@ -169,11 +169,11 @@ def examples(directory):
         shutil.copytree(source_dir, os.path.join(directory, "examples"))
     except OSError as e:
         if e.errno == errno.EEXIST:
-            six.print_("Folder examples is exists.")
+            six.print_("Folder examples exists.")
 
 
 @cli.command()
-@click.option('-v', '--verbose', is_flag=True)
+@click.option('-v', '--version', is_flag=True)
 def version(**kwargs):
     """
     Output Version Info
