@@ -31,9 +31,6 @@ from .storages import (
 from .h5_storages import (
     DayBarStore, DividendStore, YieldCurveStore, SimpleFactorStore
 )
-from .converter import (
-    StockBarConverter, IndexBarConverter, FutureDayBarConverter, FundDayBarConverter, PublicFundDayBarConverter
-)
 from .date_set import DateSet
 from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 from .public_fund_commission import PUBLIC_FUND_COMMISSION
