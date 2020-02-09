@@ -17,38 +17,6 @@
     *   如果安装过程中遇到了问题，先阅读该文档下面的 「FAQ」 章节来尝试着解决
     *   如果执行 :code:`pip install` 安装依赖库网络速度比较慢的话，推荐使用 :code:`pip install -i https://pypi.tuna.tsinghua.edu.cn/simple` 国内镜像来加速
 
-*   更新您的 pip 和 setuptools :
-
-.. code-block:: bash
-
-    $ pip install -U pip setuptools cython -i https://pypi.douban.com/simple
-
-*   安装 bcolz
-
-bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比较容易失败，建议先单独安装 bcolz 库，安装过程比较慢，请耐心等待。
-
-.. code-block:: bash
-
-    $ pip install bcolz==1.2.0 -i https://pypi.douban.com/simple
-
-如果在安装的过程中出现问题，请参考 :ref:`intro-faq` 章节。
-
-.. note::
-
-       Windows 环境下因为默认没有安装 `Visual C++ Compiler`, 需要自行下载并安装 `visual-cpp-build-tools`，如果觉得麻烦，也可以直接去 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载相应版本的 :code:`bcolz wheel` 包，直接安装编译后的 bcolz 版本。
-
-       除了 bcolz 库以外，line-profiler 安装时也同样需要 C++ 编译器，如果出现安装失败，也可以前往 http://www.lfd.uci.edu/~gohlke/pythonlibs/#line_profiler 下载相应的版本 :code:`line-profiler wheel` 包来进行安装。
-
-       Mac OS 环境下默认没有安装`X-code`，需要自行运行安装以添加一个轻量级的C/C++ clang编译器，可在Terminal下输入：
-
-        .. code-block:: bash
-
-            $ xcode-select --install
-
-        .. code-block:: bash
-
-            $ pip install cython
-            $ pip install bcolz
 
 安装
 ==================
@@ -68,28 +36,41 @@ bcolz 是 RQAlpha 的依赖库，因为其编译时间较长，并且中间比�
 获取回测数据
 ==================
 
-RiceQuant 免费提供日级别的股票和期货数据供回测使用，可以通过以下命令来进行每日数据的增量更新:
+RiceQuant 免费提供日级别的股票、常用指数、场内基金和期货数据供回测使用。数据每个月月初更新，可以通过以下命令来下载:
 
 .. note::
 
-    Mac OS下执行 :code:`update-bundle` 出现问题，请参考：:ref:`FAQ-update-bundle-mac`
+    Mac OS下执行 :code:`download-bundle` 出现问题，请参考：:ref:`FAQ-download-bundle-mac`
 
 .. code-block:: bash
 
-    $ rqalpha update-bundle
+    $ rqalpha download-bundle
 
 
 bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存放位置，
 
 .. code-block:: bash
 
-    $ rqalpha update-bundle -d target_bundle_path
+    $ rqalpha download-bundle -d target_bundle_path
 
 如果您使用了指定路径来存放 bundle，那么执行程序的时候也同样需要指定对应的 bundle 路径。
 
 .. code-block:: bash
 
     $ rqalpha run -d target_bundle_path .....
+
+
+回测数据的更新
+==================
+回测数据的每日更新通过`rqdatac`来完成，可以通过以下命令来进行：
+
+.. note::
+
+    您需要先安装`rqdatac`包，并通过 RiceQuant 网站获取一个有效的账号。请参考: https://www.ricequant.com/welcome/trial/rqdata-cloud
+
+.. code-block:: bash
+
+    $ rqalpha update-bundle
 
 .. _intro-config:
 
@@ -109,20 +90,15 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 FAQ
 ==================
 
-1.  Bcolz 相关问题
+1.  `line-profiler` 相关问题
 ------------------------------------------------------
-    
-请首先 `pip install cython` 来安装cython
+`RQAlpha`的性能分析功能依赖于`line-profiler`包；通过`pip`安装`rqalpha`时，默认并不会附带安装`line-profiler`；
+如果您需要使用性能分析功能，请使用`pip install rqalpha[profiler]`方式安装`rqalpha`。
 
-`bcolz` 安装大部分问题都来自于没有安装 `Visual C++ Compiler`，建议您无论如何先成功安装 `Visual C++ Compiler`， 访问 https://wiki.python.org/moin/WindowsCompilers 根据自己的机器环境和Python版本选择安装对应的编译工具。
+在windows上，建议您访问 http://www.lfd.uci.edu/~gohlke/pythonlibs/#line_profiler 下载 :code:`line_profiler` 直接进行安装。
 
-不进行编译安装，访问 http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz 下载 :code:`bcolz` 直接进行安装。
-
-如果您按照 :ref:`intro-detail-install` 进行环境搭建并安装了 `anaconda` 您可以使用如下方式进行免编译安装
-
-.. code-block:: bash
-
-    $ conda install bcolz -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+在windows上，通过`pip`安装`line-profiler`需要安装 `Visual C++ Compiler`。
+请访问 https://wiki.python.org/moin/WindowsCompilers 根据自己的机器环境和Python版本选择安装对应的编译工具。
 
 
 2.  Matplotlib 相关问题
@@ -145,7 +121,7 @@ FAQ
 
 RQAlpha 运行在 Windows(Python 2.x) 可能会遇到中文乱码的问题，这个并不是RQAlpha的问题，而是由于 Windows 的 cmd 本身是 `gbk` 编码而产生的，具体的解决方案可以参考 [Windows(Python 2.x) 命令行下输出日志中文乱码的问题](https://github.com/ricequant/rqalpha/issues/80)
 
-.. _FAQ-update-bundle-mac:
+.. _FAQ-download-bundle-mac:
 
 4.  Mac OS 获取回测数据相关问题
 ------------------------------------------------------

@@ -30,7 +30,7 @@ requirements = [
     'PyYAML',
     'tabulate',
     'rqrisk',
-    'bcolz',
+    'h5py',
     'matplotlib',
 ]
 

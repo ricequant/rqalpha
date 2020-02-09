@@ -25,10 +25,6 @@ install:
   - sudo make install
   - cd ..
 
-  # Install bcolz
-  - pip install Cython
-  - pip install bcolz==1.2.0
-
   # Install Test Deps
   - pip install TA-Lib
   - pip install coveralls

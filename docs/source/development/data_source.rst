@@ -266,16 +266,15 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
     $ cd ~/.rqalpha/bundle & tree -A -d -L 1    
 
     .
-    ├── adjusted_dividends.bcolz 
-    ├── funds.bcolz
-    ├── futures.bcolz
-    ├── indexes.bcolz
-    ├── original_dividends.bcolz
-    ├── st_stock_days.bcolz
-    ├── stocks.bcolz
-    ├── suspended_days.bcolz
-    ├── trading_dates.bcolz
-    └── yield_curve.bcolz
+    ├── funds.h5
+    ├── futures.h5
+    ├── indexes.h5
+    ├── dividends.h5
+    ├── st_stock_days.h5
+    ├── stocks.h5
+    ├── suspended_days.h5
+    ├── trading_dates.npy
+    └── yield_curve.h5
 
 目前基础数据，比如 `Instruments`, `st_stocks`, `suspended_days`, `trading_dates` 都是全量数据，并且可以通过 `$ rqalpha update-bundle` 每天更新，因此没有相应的显式接口可以对其进行替换。
 
