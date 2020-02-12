@@ -42,6 +42,7 @@ class AssetAccount(AbstractAccount):
 
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.add_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
 
         event_bus.add_listener(EVENT.BAR, self._update_last_price)
         event_bus.add_listener(EVENT.TICK, self._update_last_price)
@@ -82,6 +83,10 @@ class AssetAccount(AbstractAccount):
             self._static_total_value = state["total_cash"] + self.margin - self.daily_pnl + self.transaction_cost
 
     def _update_last_price(self, _):
+        for position in self._positions.values():
+            position.update_last_price()
+
+    def _post_settlement(self, _):
         for position in self._positions.values():
             position.update_last_price()
 

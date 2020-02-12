@@ -185,6 +185,9 @@ class AssetPosition(object):
         self._contract_multiplier = self._margin_rate = None
         self._prev_close = self.last_price
 
+    def post_settlement(self):
+        self._prev_close = None
+
     def apply_trade(self, trade):
         self._transaction_cost += trade.transaction_cost
         if trade.position_effect == POSITION_EFFECT.OPEN:
@@ -355,6 +358,10 @@ class AssetPositionProxy(AbstractPosition):
     def apply_settlement(self):
         self._long.apply_settlement()
         self._short.apply_settlement()
+
+    def post_settlement(self):
+        self._long.post_settlement()
+        self._short.post_settlement()
 
     def apply_trade(self, trade):
         if (
