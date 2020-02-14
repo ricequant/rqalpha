@@ -73,7 +73,7 @@ def gen_suspended_days(d):
 
 def gen_dividends(d):
     stocks = rqdatac.all_instruments().order_book_id.tolist()
-    dividend = rqdatac.get_dividend(stocks)=
+    dividend = rqdatac.get_dividend(stocks)
     dividend.reset_index(inplace=True)
     dividend["announcement_date"] = dividend.pop("declaration_announcement_date")
     for f in ('book_closure_date', 'ex_dividend_date', 'payable_date', 'announcement_date'):
