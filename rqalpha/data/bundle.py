@@ -14,11 +14,14 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 import re
+import math
 import pickle
 import datetime
+import itertools
 
 import h5py
 import json
+import click
 import numpy as np
 import rqdatac
 
@@ -200,7 +203,6 @@ def gen_future_info(d):
         init_future_info(d)
         return
 
-    print('update future_info...')
     with open(future_info_file, 'r') as f:
         all_futures_info = json.load(f)
 
@@ -248,11 +250,13 @@ def gen_future_info(d):
 
 STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
 INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
-FUTURES_FIELDS = STOCK_FIELDS + ['basis_spread', 'settlement', 'prev_settlement']
-FUND_FIELDS = STOCK_FIELDS + ['acc_net_value', 'unit_net_value', 'discount_rate']
+# FUTURES_FIELDS = STOCK_FIELDS + ['basis_spread', 'settlement', 'prev_settlement']
+FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement']
+# FUND_FIELDS = STOCK_FIELDS + ['acc_net_value', 'unit_net_value', 'discount_rate']
+FUND_FIELDS = STOCK_FIELDS
 
 
-def gen_day_bar(path, order_book_ids, fields, **kwargs):
+def gen_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
     with h5py.File(path, 'w') as h5:
         i, step = 0, 300
         while True:
@@ -268,6 +272,7 @@ def gen_day_bar(path, order_book_ids, fields, **kwargs):
             for order_book_id in df.index.levels[0]:
                 h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **kwargs)
             i += step
+            progressbar.update(step)
             if i >= len(order_book_ids):
                 break
 
@@ -277,33 +282,24 @@ def create_bundle(path, enable_compression=False):
     if enable_compression:
         kwargs['compression'] = 9
 
-    gen_day_bar(os.path.join(path, 'stocks.h5'),
-                rqdatac.all_instruments('CS').order_book_id.tolist(),
-                STOCK_FIELDS,
-                **kwargs)
-    gen_day_bar(os.path.join(path, 'indexes.h5'),
-                rqdatac.all_instruments('INDX').order_book_id.tolist(),
-                INDEX_FIELDS,
-                **kwargs)
-    gen_day_bar(os.path.join(path, 'futures.h5'),
-                rqdatac.all_instruments('Future').order_book_id.tolist(),
-                FUTURES_FIELDS,
-                **kwargs)
-    gen_day_bar(os.path.join(path, 'funds.h5'),
-                rqdatac.all_instruments('FUND').order_book_id.tolist(),
-                FUND_FIELDS,
-                **kwargs)
+    day_bar_args = (
+        ("stocks.h5", rqdatac.all_instruments('CS').order_book_id.tolist(), STOCK_FIELDS),
+        ("indexes.h5", rqdatac.all_instruments('INDX').order_book_id.tolist(), INDEX_FIELDS),
+        ("futures.h5", rqdatac.all_instruments('Future').order_book_id.tolist(), FUTURES_FIELDS),
+        ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
+    )
 
-    gen_instruments(path)
-    gen_trading_dates(path)
-    gen_dividends(path)
-    gen_splits(path)
-    gen_ex_factor(path)
-    gen_st_days(path)
-    gen_suspended_days(path)
-    gen_yield_curve(path)
-    gen_share_transformation(path)
-    gen_future_info(path)
+    progress_bar = click.progressbar(length=sum(len(o) for _, o, _ in day_bar_args), label="[DAY BAR]")
+    for (file, order_book_id, field) in day_bar_args:
+        gen_day_bar(os.path.join(path, file), order_book_id, field, progress_bar, **kwargs)
+    progress_bar.render_finish()
+
+    with click.progressbar((
+        gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
+        gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
+    ), label=["[OTHERS]"]) as bar:
+        for func in bar:
+            func(path)
 
 
 def update_day_bar(path, order_book_ids, fields, **kwargs):
