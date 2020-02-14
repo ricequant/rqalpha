@@ -37,7 +37,7 @@ def get_exactly_url():
         if r.status_code == 200:
             return url, int(r.headers.get('content-length'))
 
-        day -= dateutil.relativedelta(months=1)
+        day -= dateutil.relativedelta.relativedelta(months=1)
 
 
 def download(out, total_length, url):
