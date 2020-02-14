@@ -77,11 +77,6 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
                 "market": MARKET.CN
             }
         }
-        self.bcolz_data = {key: None for key in [
-            "stocks", "indexes", "futures", "funds", "original_dividends", "trading_dates",
-            "yield_curve", "split_factor", "ex_cum_factor", "st_stock_days", "suspended_days"
-        ]}
-        self.pk_data = {"instruments": None}
 
         self.base_data_source = None
 
@@ -90,34 +85,7 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
 
         super(BaseDataSourceFixture, self).init_fixture()
         default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
-
-        for key, table in six.iteritems(self.bcolz_data):
-            table_relative_path = "{}.bcolz".format(key)
-            if table is None:
-                os.symlink(
-                    os.path.join(default_bundle_path, table_relative_path),
-                    os.path.join(self.temp_dir.name, table_relative_path)
-                )
-            else:
-                table.rootdir = os.path.join(self.temp_dir.name, "{}.bcolz".format(key))
-                table.flush()
-
-        for key, obj in six.iteritems(self.pk_data):
-            pickle_raletive_path = "{}.pk".format(key)
-            if obj is None:
-                os.symlink(
-                    os.path.join(default_bundle_path, pickle_raletive_path),
-                    os.path.join(self.temp_dir.name, pickle_raletive_path)
-                )
-            else:
-                with open(os.path.join(self.temp_dir.name, "{}.pk".format(key)), "wb+") as out:
-                    pickle.dump(obj, out, protocol=2)
-
-        for file in ("share_transformation.json", "future_info.json"):
-            os.symlink(os.path.join(default_bundle_path, file), os.path.join(self.temp_dir.name, file))
-
-        # TODO: use mocked bcolz file
-        self.base_data_source = BaseDataSource(self.temp_dir.name, {})
+        self.base_data_source = BaseDataSource(default_bundle_path, {})
 
 
 class BarDictPriceBoardFixture(EnvironmentFixture):
