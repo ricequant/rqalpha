@@ -297,7 +297,7 @@ def create_bundle(path, enable_compression=False):
     with click.progressbar((
         gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
-    ), label=["[OTHERS]"]) as bar:
+    ), label="[OTHERS]") as bar:
         for func in bar:
             func(path)
 
