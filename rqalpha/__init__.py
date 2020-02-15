@@ -16,7 +16,7 @@
 RQAlpha - a Algorithm Trading System
 """
 from rqalpha.__main__ import cli
-from rqalpha.api.api_base import export_as_api, subscribe_event
+from rqalpha.api import export_as_api
 from . import data
 from . import interface
 from . import portfolio
@@ -32,11 +32,6 @@ def load_ipython_extension(ipython):
     inject_mod_commands()
 
     ipython.register_magic_function(run_ipython_cell, 'line_cell', 'rqalpha')
-
-
-def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
-    import rqalpha.utils.bundle_helper
-    rqalpha.utils.bundle_helper.update_bundle(data_bundle_path=data_bundle_path, locale=locale, confirm=confirm)
 
 
 def run(config, source_code=None):

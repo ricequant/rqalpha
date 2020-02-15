@@ -24,7 +24,6 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 import six
 
 from rqalpha import const
-from rqalpha.api import helper as api_helper
 from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
 from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_universe import StrategyUniverse
@@ -119,6 +118,11 @@ def init_strategy_loader(env, source_code, user_funcs, config):
         return FileStrategyLoader(config.base.strategy_file)
 
 
+def get_strategy_apis():
+    from rqalpha import api
+    return {n: getattr(api, n) for n in api.__all__}
+
+
 def run(config, source_code=None, user_funcs=None):
     env = Environment(config)
     persist_helper = None
@@ -167,8 +171,6 @@ def run(config, source_code=None, user_funcs=None):
         event_source = env.event_source
         assert event_source is not None
 
-
-
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
 
@@ -179,8 +181,7 @@ def run(config, source_code=None, user_funcs=None):
             "g": env.global_vars
         })
 
-        apis = api_helper.get_apis()
-        scope.update(apis)
+        scope.update(get_strategy_apis())
 
         scope = env.strategy_loader.load(scope)
 

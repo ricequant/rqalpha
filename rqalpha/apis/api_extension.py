@@ -14,35 +14,22 @@
 
 import six
 
-from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style
+from rqalpha.api import export_as_api
+from rqalpha.apis.api_base import cal_style
 from rqalpha.environment import Environment
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 
 # noinspection PyUnresolvedReferences
 from rqalpha.model.order import LimitOrder, MarketOrder, Order
 
-__all__ = ["order", "order_to"]
-
-
-def export_as_api(func):
-    __all__.append(func.__name__)
-
-    func = decorate_api_exc(func)
-
-    return func
-
 
 @export_as_api
-def symbol(order_book_id, split=", "):
+def symbol(order_book_id, sep=", "):
     if isinstance(order_book_id, six.string_types):
-        return "{}[{}]".format(order_book_id, instruments(order_book_id).symbol)
+        return "{}[{}]".format(order_book_id, Environment.get_instance().get_instrument(order_book_id).symbol)
     else:
-        s = split.join(symbol(item) for item in order_book_id)
+        s = sep.join(symbol(item) for item in order_book_id)
         return s
-
-
-def now_time_str(str_format="%H:%M:%S"):
-    return Environment.get_instance().trading_dt.strftime(str_format)
 
 
 @export_as_api

@@ -17,7 +17,8 @@ from decimal import Decimal, getcontext
 import six
 import numpy as np
 
-from rqalpha.api.api_base import decorate_api_exc, instruments, cal_style, register_api
+from rqalpha.api import export_as_api, register_api
+from rqalpha.apis.api_base import instruments, cal_style
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
@@ -37,22 +38,10 @@ from rqalpha.utils import scheduler
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
 
-__all__ = [
-    'market_open',
-    'market_close',
-    'scheduler',
-]
 
-
-register_api("scheduler", scheduler)
-
-
-def export_as_api(func):
-    __all__.append(func.__name__)
-
-    func = decorate_api_exc(func)
-
-    return func
+export_as_api(scheduler, name='scheduler')
+export_as_api(market_close)
+export_as_api(market_open)
 
 
 @export_as_api

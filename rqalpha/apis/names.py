@@ -31,24 +31,6 @@ VALID_HISTORY_FIELDS = [
     "prev_settlement",
 ]
 
-VALID_GET_PRICE_FIELDS = [
-    "OpeningPx",
-    "ClosingPx",
-    "HighPx",
-    "LowPx",
-    "TotalTurnover",
-    "TotalVolumeTraded",
-    "AccNetValue",
-    "UnitNetValue",
-    "DiscountRate",
-    "SettlPx",
-    "PrevSettlPx",
-    "OpenInterest",
-    "BasisSpread",
-    "HighLimitPx",
-    "LowLimitPx",
-]
-
 VALID_TENORS = [
     "0S",
     "1M",
@@ -126,3 +108,53 @@ VALID_TURNOVER_FIELDS = (
     "current_year",
     "total",
 )
+
+
+VALID_STOCK_CONNECT_FIELDS = [
+    'shares_holding',
+    'holding_ratio',
+]
+
+
+VALID_CURRENT_PERFORMANCE_FIELDS = [
+    'operating_revenue',
+    'gross_profit',
+    'operating_profit',
+    'total_profit',
+    'np_parent_owners',
+    'net_profit_cut',
+    'net_operate_cashflow',
+    'total_assets',
+    'se_without_minority',
+    'total_shares',
+    'basic_eps',
+    'eps_weighted',
+    'eps_cut_epscut',
+    'eps_cut_weighted',
+    'roe',
+    'roe_weighted',
+    'roe_cut',
+    'roe_cut_weighted',
+    'net_operate_cashflow_per_share',
+    'equity_per_share',
+    'operating_revenue_yoy',
+    'gross_profit_yoy',
+    'operating_profit_yoy',
+    'total_profit_yoy',
+    'np_parent_minority_pany_yoy',
+    'ne_t_minority_ty_yoy',
+    'net_operate_cash_flow_yoy',
+    'total_assets_to_opening',
+    'se_without_minority_to_opening',
+    'basic_eps_yoy',
+    'eps_weighted_yoy',
+    'eps_cut_yoy',
+    'eps_cut_weighted_yoy',
+    'roe_yoy',
+    'roe_weighted_yoy',
+    'roe_cut_yoy',
+    'roe_cut_weighted_yoy',
+    'net_operate_cash_flow_per_share_yoy',
+    'net_asset_psto_opening',
+]
+

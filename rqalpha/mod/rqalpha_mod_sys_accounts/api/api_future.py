@@ -17,7 +17,8 @@
 
 from __future__ import division
 
-from rqalpha.api.api_base import decorate_api_exc, cal_style
+from rqalpha.api import export_as_api
+from rqalpha.apis.api_base import cal_style
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
@@ -34,14 +35,6 @@ from rqalpha.utils.arg_checker import apply_rules, verify_that
 
 __all__ = [
 ]
-
-
-def export_as_api(func):
-    __all__.append(func.__name__)
-
-    func = decorate_api_exc(func)
-
-    return func
 
 
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,

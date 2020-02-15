@@ -16,139 +16,42 @@ from __future__ import division
 
 from typing import Union, Optional
 import datetime
-import inspect
-import sys
 import types
 from collections import Iterable
-from functools import wraps
-from types import FunctionType
 
 import pandas as pd
 import numpy as np
 import six
 from dateutil.parser import parse
 
-from rqalpha.api import names
+from rqalpha.apis import names
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
-from rqalpha.utils import to_industry_code, to_sector_name, unwrapper, is_valid_price
-from rqalpha.utils.exception import (
-    patch_user_exc,
-    patch_system_exc,
-    EXC_EXT_NAME,
-    RQInvalidArgument,
-)
+from rqalpha.utils import to_industry_code, to_sector_name, is_valid_price
+from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
 
-# noinspection PyUnresolvedReferences
-from rqalpha.utils.logger import user_log as logger
 from rqalpha.utils.logger import user_system_log
 
-from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem, Instrument
+from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 
-# noinspection PyUnresolvedReferences
-from rqalpha.model.instrument import (
-    Instrument,
-    SectorCode as sector_code,
-    IndustryCode as industry_code,
-)
+from rqalpha.model.instrument import Instrument
 
-# noinspection PyUnresolvedReferences
 from rqalpha.const import (
     EXECUTION_PHASE,
-    EXC_TYPE,
-    ORDER_STATUS,
     SIDE,
     POSITION_EFFECT,
     ORDER_TYPE,
-    MATCHING_TYPE,
     RUN_TYPE,
     POSITION_DIRECTION,
 )
 
-# noinspection PyUnresolvedReferences
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 
-# noinspection PyUnresolvedReferences
 from rqalpha.events import EVENT
-
-__all__ = [
-    "logger",
-    "sector_code",
-    "industry_code",
-    "LimitOrder",
-    "MarketOrder",
-    "ORDER_STATUS",
-    "SIDE",
-    "POSITION_EFFECT",
-    "POSITION_DIRECTION",
-    "ORDER_TYPE",
-    "RUN_TYPE",
-    "MATCHING_TYPE",
-    "EVENT",
-    "RQInvalidArgument",
-]
-
-
-def decorate_api_exc(func):
-    f = func
-    exception_checked = False
-    while True:
-        if getattr(f, "_rq_exception_checked", False):
-            exception_checked = True
-            break
-
-        f = getattr(f, "__wrapped__", None)
-        if f is None:
-            break
-    if not exception_checked:
-        func = api_exc_patch(func)
-
-    return func
-
-
-def api_exc_patch(func):
-    if isinstance(func, FunctionType):
-
-        @wraps(func)
-        def deco(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except RQInvalidArgument:
-                raise
-            except Exception as e:
-                if isinstance(e, TypeError):
-                    exc_info = sys.exc_info()
-                    try:
-                        ret = inspect.getcallargs(unwrapper(func), *args, **kwargs)
-                    except TypeError:
-                        t, v, tb = exc_info
-                        raise patch_user_exc(v.with_traceback(tb))
-
-                if getattr(e, EXC_EXT_NAME, EXC_TYPE.NOTSET) == EXC_TYPE.NOTSET:
-                    patch_system_exc(e)
-
-                raise
-
-        return deco
-    return func
-
-
-def register_api(name, func):
-    globals()[name] = func
-    __all__.append(name)
-
-
-def export_as_api(func):
-    __all__.append(func.__name__)
-
-    if isinstance(func, FunctionType):
-        func = decorate_api_exc(func)
-    globals()[func.__name__] = func
-
-    return func
+from rqalpha.api import export_as_api
 
 
 def assure_order_book_id(id_or_ins):
@@ -323,7 +226,7 @@ def cancel_order(order):
     verify_that("right_type", pre_check=True).is_in(RIGHT_TYPE, ignore_none=True)
 )
 def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
-    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE])
+    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> None
     amount = int(amount)
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
