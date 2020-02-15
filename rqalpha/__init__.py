@@ -15,7 +15,7 @@
 """
 RQAlpha - a Algorithm Trading System
 """
-from rqalpha.__main__ import cli
+from rqalpha.cmds import cli
 from rqalpha.api import export_as_api
 from . import data
 from . import interface
@@ -44,7 +44,7 @@ def run(config, source_code=None):
 
 
 def run_ipython_cell(line, cell=None):
-    from rqalpha.__main__ import run
+    from rqalpha.cmds.run import run
     from rqalpha.utils.py2 import clear_all_cached_functions
     clear_all_cached_functions()
     args = line.split()
