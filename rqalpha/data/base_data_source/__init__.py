@@ -16,6 +16,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
+from typing import Dict
+
 import six
 import numpy as np
 import pandas as pd
@@ -24,6 +26,7 @@ from rqalpha.interface import AbstractDataSource
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import INSTRUMENT_TYPE
 
 from .storages import (
     InstrumentStore, ShareTransformationStore, FutureInfoStore
@@ -45,12 +48,17 @@ class BaseDataSource(AbstractDataSource):
         def _p(name):
             return os.path.join(path, name)
 
-        self._day_bars = [
-            DayBarStore(_p('stocks.h5')),
-            DayBarStore(_p('indexes.h5')),
-            DayBarStore(_p('futures.h5')),
-            DayBarStore(_p('funds.h5')),
-        ]
+        self._day_bars = {
+            INSTRUMENT_TYPE.CS: DayBarStore(_p('stocks.h5')),
+            INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),
+            INSTRUMENT_TYPE.FUTURE: DayBarStore(_p('futures.h5')),
+        }  # type: Dict[INSTRUMENT_TYPE, DayBarStore]
+        funds_day_bar_store = DayBarStore(_p('funds.h5'))
+        for instrument_type in (
+            INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.FENJI_A, INSTRUMENT_TYPE.FENJI_B,
+            INSTRUMENT_TYPE.FENJI_MU,
+        ):
+            self.register_day_bar_store(instrument_type, funds_day_bar_store)
 
         self._instruments = InstrumentStore(_p('instruments.pk'))
         self._dividends = DividendStore(_p('dividends.h5'))
@@ -68,10 +76,14 @@ class BaseDataSource(AbstractDataSource):
         self.get_yield_curve = self._yield_curve.get_yield_curve
         if os.path.exists(_p('public_funds.bcolz')):
             # FIXME the public fund mod
-            self._day_bars.append(DayBarStore(_p('public_funds.bcolz')))
+            self.register_day_bar_store(INSTRUMENT_TYPE.PUBLIC_FUND, DayBarStore(_p('public_funds.bcolz')))
             self._public_fund_dividends = DividendStore(_p('public_fund_dividends.bcolz'))
             self._non_subscribable_days = DateSet(_p('non_subscribable_days.bcolz'))
             self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
+
+    def register_day_bar_store(self, instrument_type, store):
+        #  type: (INSTRUMENT_TYPE, DayBarStore) -> None
+        self._day_bars[instrument_type] = store
 
     def get_dividend(self, order_book_id, public_fund=False):
         if public_fund:
@@ -96,25 +108,9 @@ class BaseDataSource(AbstractDataSource):
     def is_st_stock(self, order_book_id, dates):
         return self._st_stock_days.contains(order_book_id, dates)
 
-    INSTRUMENT_TYPE_MAP = {
-        'CS': 0,
-        'INDX': 1,
-        'Future': 2,
-        'ETF': 3,
-        'LOF': 3,
-        'FenjiA': 3,
-        'FenjiB': 3,
-        'FenjiMu': 3,
-        'PublicFund': 4
-    }
-
-    def _index_of(self, instrument):
-        return self.INSTRUMENT_TYPE_MAP[instrument.type]
-
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
-        i = self._index_of(instrument)
-        return self._day_bars[i].get_bars(instrument.order_book_id)
+        return self._day_bars[instrument.type].get_bars(instrument.order_book_id)
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
@@ -194,7 +190,7 @@ class BaseDataSource(AbstractDataSource):
 
     def available_data_range(self, frequency):
         if frequency in ['tick', '1d']:
-            s, e = self._day_bars[self.INSTRUMENT_TYPE_MAP['INDX']].get_date_range('000001.XSHG')
+            s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
     def get_ticks(self, order_book_id, date):
