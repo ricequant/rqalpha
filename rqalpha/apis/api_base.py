@@ -37,13 +37,24 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 
-from rqalpha.model.instrument import Instrument
+
+from rqalpha.api import export_as_api
+
+from rqalpha.utils.logger import user_log as logger
+
+from rqalpha.model.instrument import (
+    Instrument,
+    SectorCode as sector_code,
+    IndustryCode as industry_code,
+)
 
 from rqalpha.const import (
     EXECUTION_PHASE,
+    ORDER_STATUS,
     SIDE,
     POSITION_EFFECT,
     ORDER_TYPE,
+    MATCHING_TYPE,
     RUN_TYPE,
     POSITION_DIRECTION,
 )
@@ -51,7 +62,20 @@ from rqalpha.const import (
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 
 from rqalpha.events import EVENT
-from rqalpha.api import export_as_api
+
+export_as_api(logger, name='logger')
+export_as_api(sector_code, name='sector_code')
+export_as_api(industry_code, name='industry_code')
+export_as_api(LimitOrder, name='LimitOrder')
+export_as_api(MarketOrder, name='MarketOrder')
+export_as_api(ORDER_STATUS, name='ORDER_STATUS')
+export_as_api(SIDE, name='SIDE')
+export_as_api(POSITION_EFFECT, name='POSITION_EFFECT')
+export_as_api(POSITION_DIRECTION, name='POSITION_DIRECTION')
+export_as_api(ORDER_TYPE, name='ORDER_TYPE')
+export_as_api(RUN_TYPE, name='RUN_TYPE')
+export_as_api(MATCHING_TYPE, name='MATCHING_TYPE')
+export_as_api(EVENT, name='EVENT')
 
 
 def assure_order_book_id(id_or_ins):

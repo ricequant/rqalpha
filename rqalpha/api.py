@@ -18,57 +18,15 @@ from types import FunctionType
 from functools import wraps
 
 from rqalpha.utils import unwrapper
-# noinspection PyUnresolvedReferences
-from rqalpha.utils.logger import user_log as logger
-
-# noinspection PyUnresolvedReferences
-from rqalpha.model.instrument import (
-    Instrument,
-    SectorCode as sector_code,
-    IndustryCode as industry_code,
-)
-
 from rqalpha.utils.exception import (
     patch_user_exc,
     patch_system_exc,
     EXC_EXT_NAME,
     RQInvalidArgument,
 )
+from rqalpha.const import EXC_TYPE
 
-# noinspection PyUnresolvedReferences
-from rqalpha.const import (
-    EXECUTION_PHASE,
-    EXC_TYPE,
-    ORDER_STATUS,
-    SIDE,
-    POSITION_EFFECT,
-    ORDER_TYPE,
-    MATCHING_TYPE,
-    RUN_TYPE,
-    POSITION_DIRECTION,
-)
-
-# noinspection PyUnresolvedReferences
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-
-# noinspection PyUnresolvedReferences
-from rqalpha.events import EVENT
-
-__all__ = [
-    "logger",
-    "sector_code",
-    "industry_code",
-    "LimitOrder",
-    "MarketOrder",
-    "ORDER_STATUS",
-    "SIDE",
-    "POSITION_EFFECT",
-    "POSITION_DIRECTION",
-    "ORDER_TYPE",
-    "RUN_TYPE",
-    "MATCHING_TYPE",
-    "EVENT",
-]
+__all__ = []
 
 
 def decorate_api_exc(func):
