@@ -73,7 +73,7 @@ def gen_dividends(d):
     stocks = rqdatac.all_instruments().order_book_id.tolist()
     dividend = rqdatac.get_dividend(stocks)
     dividend.reset_index(inplace=True)
-    dividend["announcement_date"] = dividend.pop("declaration_announcement_date")
+    dividend.rename(columns={'declaration_announcement_date': 'announcement_date'}, inplace=True)
     for f in ('book_closure_date', 'ex_dividend_date', 'payable_date', 'announcement_date'):
         dividend[f] = [convert_date_to_date_int(d) for d in dividend[f]]
     dividend.set_index(['order_book_id', 'book_closure_date'], inplace=True)
@@ -261,7 +261,6 @@ def gen_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
             df = rqdatac.get_price(order_book_ids[i:i + step], START_DATE, datetime.date.today(), '1d',
                                    adjust_type='none', fields=fields, expect_df=True)
 
-            df.fillna(0, inplace=True)
             df.reset_index(inplace=True)
             df['datetime'] = [convert_date_to_int(d) for d in df['date']]
             del df['date']
@@ -313,7 +312,6 @@ def update_day_bar(path, order_book_ids, fields, **kwargs):
                 continue
 
             df = df.loc[order_book_id]
-            df.fillna(0, inplace=True)
             df.reset_index(inplace=True)
             df['datetime'] = [convert_date_to_int(d) for d in df['date']]
             del df['date']
