@@ -28,7 +28,7 @@ __all__ = [
 
 def load_ipython_extension(ipython):
     """call by ipython"""
-    from rqalpha.__main__ import inject_mod_commands
+    from rqalpha.mod.utils import inject_mod_commands
     inject_mod_commands()
 
     ipython.register_magic_function(run_ipython_cell, 'line_cell', 'rqalpha')

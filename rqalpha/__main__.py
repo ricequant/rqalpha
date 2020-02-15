@@ -41,31 +41,8 @@ def cli(ctx):
     pass
 
 
-def inject_mod_commands():
-    from rqalpha.utils.config import get_mod_conf
-    from rqalpha.mod import SYSTEM_MOD_LIST
-    from rqalpha.utils.package_helper import import_mod
-    mod_config = get_mod_conf()
-
-    for mod_name, config in six.iteritems(mod_config['mod']):
-        if 'lib' in config:
-            lib_name = config["lib"]
-        else:
-            lib_name = "rqalpha_mod_{}".format(mod_name)
-        if not config['enabled']:
-            continue
-        try:
-            if mod_name in SYSTEM_MOD_LIST:
-                # inject system mod
-                import_mod("rqalpha.mod." + lib_name)
-            else:
-                # inject third part mod
-                import_mod(lib_name)
-        except Exception as e:
-            pass
-
-
 def entry_point():
+    from rqalpha.mod.utils import inject_mod_commands
     inject_mod_commands()
 
     cli(obj={})
