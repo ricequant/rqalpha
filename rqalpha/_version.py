@@ -40,8 +40,8 @@ def get_config():
     # _version.py
     cfg = VersioneerConfig()
     cfg.VCS = "git"
-    cfg.style = "git-describe"
-    cfg.tag_prefix = ""
+    cfg.style = "pep440"
+    cfg.tag_prefix = "release/"
     cfg.parentdir_prefix = "rqalpha"
     cfg.versionfile_source = "rqalpha/_version.py"
     cfg.verbose = False
