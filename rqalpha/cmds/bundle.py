@@ -24,6 +24,7 @@ from .entry import cli
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--compression', default=False, is_flag=True)
 def create_bundle(data_bundle_path, compression):
+    """create bundle using rqdatac"""
     try:
         import rqdatac
     except ImportError:
@@ -40,6 +41,7 @@ def create_bundle(data_bundle_path, compression):
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--compression', default=False, type=click.BOOL)
 def update_bundle(data_bundle_path, compression):
+    """update bundle using rqdatac"""
     try:
         import rqdatac
     except ImportError:
@@ -58,8 +60,6 @@ def update_bundle(data_bundle_path, compression):
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 def download_bundle(data_bundle_path):
-    """
-    Sync Data Bundle
-    """
+    """download bundle (monthly updated)"""
     import rqalpha.utils.bundle_helper
     rqalpha.utils.bundle_helper.download_bundle(data_bundle_path)
