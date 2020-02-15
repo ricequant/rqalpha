@@ -14,10 +14,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 import re
-import math
 import pickle
 import datetime
-import itertools
 
 import h5py
 import json
