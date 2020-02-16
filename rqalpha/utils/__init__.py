@@ -106,25 +106,6 @@ class Nop(object):
         return self.nop
 
 
-def to_sector_name(s):
-    from rqalpha.model.instrument import SectorCode, SectorCodeItem
-
-    for __, v in six.iteritems(SectorCode.__dict__):
-        if isinstance(v, SectorCodeItem):
-            if v.cn == s or v.en == s or v.name == s:
-                return v.name
-    # not found
-    return s
-
-
-def to_industry_code(s):
-    from rqalpha.model.instrument import IndustryCode, IndustryCodeItem
-
-    for __, v in six.iteritems(IndustryCode.__dict__):
-        if isinstance(v, IndustryCodeItem):
-            if v.name == s:
-                return v.code
-    return s
 
 
 def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):

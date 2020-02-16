@@ -27,7 +27,7 @@ from dateutil.parser import parse
 from rqalpha.apis import names
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
-from rqalpha.utils import to_industry_code, to_sector_name, is_valid_price
+from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
@@ -719,6 +719,15 @@ def instruments(id_or_symbols):
     return Environment.get_instance().data_proxy.instruments(id_or_symbols)
 
 
+def to_sector_name(s):
+    for __, v in six.iteritems(sector_code.__dict__):
+        if isinstance(v, SectorCodeItem):
+            if v.cn == s or v.en == s or v.name == s:
+                return v.name
+    # not found
+    return s
+
+
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
@@ -775,6 +784,14 @@ def sector(code):
         code = to_sector_name(code)
 
     return Environment.get_instance().data_proxy.sector(code)
+
+
+def to_industry_code(s):
+    for __, v in six.iteritems(industry_code.__dict__):
+        if isinstance(v, IndustryCodeItem):
+            if v.name == s:
+                return v.code
+    return s
 
 
 @export_as_api
