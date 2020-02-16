@@ -19,6 +19,7 @@ from __future__ import division
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style
+from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
@@ -264,3 +265,86 @@ def get_future_contracts(underlying_symbol):
     """
     env = Environment.get_instance()
     return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)
+
+
+@export_as_api
+class futures:
+    pass
+
+
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
+                                EXECUTION_PHASE.SCHEDULED)
+@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
+def _futures_get_dominant(underlying_symbol, rule=0):
+    """
+    获取T日的主力合约
+    :param underlying_symbol: 如AL
+    :param rule: 默认是0，采用最大昨仓为当日主力合约，每个合约只能做一次主力合约，不会重复出现。
+                 针对股指期货，只在当月和次月合约中选择主力合约。
+                 当rule=1时，主力合约的选取只考虑最大昨仓这个条件。
+    :return:
+    """
+    dt = Environment.get_instance().trading_dt.date()
+    ret = rqdatac.futures.get_dominant(underlying_symbol, dt, dt, rule)
+    if ret is None or ret.empty:
+        return None
+
+    return ret.item()
+
+
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
+                                EXECUTION_PHASE.SCHEDULED)
+@apply_rules(verify_that('which').is_instance_of(str),
+             verify_that('rank_by').is_in(['short', 'long']))
+def _futures_get_member_rank(which, count=1, rank_by='short'):
+    """
+    获取截止T-1日的期货或品种的会员排名情况
+    :param which: 期货合约或品种
+    :param count: 获取多少个交易日的数据，默认为1
+    :param rank_by: short/long
+    :return: DataFrame
+    """
+    env = Environment.get_instance()
+    end_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
+
+    if count == 1:
+        start_date = end_date
+    else:
+        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+
+    return rqdatac.futures.get_member_rank(which, start_date=start_date, end_date=end_date, rank_by=rank_by)
+
+
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
+                                EXECUTION_PHASE.SCHEDULED)
+def _futures_get_warehouse_stocks(underlying_symbols, count=1):
+    """
+    获取截止T-1日的期货仓单数据
+    :param underlying_symbols: 期货品种，可以为str或列表
+    :param count: 获取多少个交易日的数据，默认为1
+    :return: multi-index DataFrame
+    """
+    env = Environment.get_instance()
+    end_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
+
+    if count == 1:
+        start_date = end_date
+    else:
+        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+
+    return rqdatac.futures.get_warehouse_stocks(underlying_symbols, start_date=start_date, end_date=end_date)
+
+
+futures.get_dominant = staticmethod(_futures_get_dominant)
+futures.get_contracts = staticmethod(get_future_contracts)
+futures.get_member_rank = staticmethod(_futures_get_member_rank)
+futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
