@@ -17,7 +17,7 @@ from decimal import Decimal, getcontext
 import six
 import numpy as np
 
-from rqalpha.api import export_as_api, register_api
+from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import instruments, cal_style
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE
 from rqalpha.environment import Environment
@@ -26,13 +26,10 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.arg_checker import apply_rules, verify_that
-# noinspection PyUnresolvedReferences
-from rqalpha.utils.exception import patch_user_exc, RQInvalidArgument
+from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-# noinspection PyUnresolvedReferences
 from rqalpha.utils.scheduler import market_close, market_open
-# noinspection PyUnresolvedReferences
 from rqalpha.utils import scheduler
 
 # 使用Decimal 解决浮点数运算精度问题
