@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
-from typing import Dict
+from typing import Dict, List
 
 import six
 import numpy as np
@@ -29,7 +29,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE
 
 from .storages import (
-    InstrumentStore, ShareTransformationStore, FutureInfoStore
+    InstrumentStore, ShareTransformationStore, FutureInfoStore, AbstractDayBarStore, AbstractInstrumentStore
 )
 from .h5_storages import (
     DayBarStore, DividendStore, YieldCurveStore, SimpleFactorStore
@@ -52,7 +52,7 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.CS: DayBarStore(_p('stocks.h5')),
             INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),
             INSTRUMENT_TYPE.FUTURE: DayBarStore(_p('futures.h5')),
-        }  # type: Dict[INSTRUMENT_TYPE, DayBarStore]
+        }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
         funds_day_bar_store = DayBarStore(_p('funds.h5'))
         for instrument_type in (
             INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.FENJI_A, INSTRUMENT_TYPE.FENJI_B,
@@ -60,7 +60,7 @@ class BaseDataSource(AbstractDataSource):
         ):
             self.register_day_bar_store(instrument_type, funds_day_bar_store)
 
-        self._instruments = [InstrumentStore(_p('instruments.pk'))]
+        self._instruments = [InstrumentStore(_p('instruments.pk'))]  # type: List[AbstractInstrumentStore]
         self._dividends = DividendStore(_p('dividends.h5'))
         self._trading_dates = pd.to_datetime([str(d) for d in np.load(_p('trading_dates.npy'), allow_pickle=False)])
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
@@ -82,11 +82,11 @@ class BaseDataSource(AbstractDataSource):
             self._non_redeemable_days = DateSet(_p('non_redeemable_days.bcolz'))
 
     def register_day_bar_store(self, instrument_type, store):
-        #  type: (INSTRUMENT_TYPE, DayBarStore) -> None
+        #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
         self._day_bars[instrument_type] = store
 
     def register_instruments_store(self, instruments_store):
-        # type: (InstrumentStore) -> None
+        # type: (AbstractInstrumentStore) -> None
         self._instruments.append(instruments_store)
 
     def get_dividend(self, order_book_id, public_fund=False):

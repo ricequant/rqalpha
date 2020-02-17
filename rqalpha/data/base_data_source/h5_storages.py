@@ -18,6 +18,8 @@ import pandas as pd
 
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 
+from .storages import AbstractDayBarStore
+
 
 DEFAULT_DTYPE = np.dtype([
     ('datetime', np.uint64),
@@ -29,7 +31,7 @@ DEFAULT_DTYPE = np.dtype([
 ])
 
 
-class DayBarStore:
+class DayBarStore(AbstractDayBarStore):
     def __init__(self, path):
         self._h5 = h5py.File(path, 'r')
 

@@ -12,15 +12,32 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import abc
 import codecs
 import pickle
 from copy import copy
+from typing import Iterable
 
 import json
+import numpy as np
 
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
+
+
+class AbstractInstrumentStore:
+    @abc.abstractmethod
+    def get_all_instruments(self):
+        # type: () -> Iterable[Instrument]
+        raise NotImplementedError
+
+
+class AbstractDayBarStore:
+    @abc.abstractmethod
+    def get_bars(self, order_book_id):
+        # type: (str) -> np.ndarray
+        raise NotImplementedError
 
 
 class FutureInfoStore(object):
@@ -59,7 +76,7 @@ class FutureInfoStore(object):
             return self._future_info.setdefault(order_book_id, info)
 
 
-class InstrumentStore(object):
+class InstrumentStore(AbstractInstrumentStore):
     SUPPORTED_TYPES = (
         INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX,
         INSTRUMENT_TYPE.FENJI_A, INSTRUMENT_TYPE.FENJI_B, INSTRUMENT_TYPE.FENJI_MU, INSTRUMENT_TYPE.PUBLIC_FUND,
