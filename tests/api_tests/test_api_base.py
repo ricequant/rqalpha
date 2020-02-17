@@ -150,6 +150,8 @@ def test_get_yield_curve():
 def test_history_bars():
     import numpy
 
+    from rqalpha.utils.exception import RQInvalidArgument
+
     __config__ = {
         "base": {
             "start_date": "2005-01-04",

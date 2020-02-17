@@ -60,7 +60,7 @@ class BaseDataSource(AbstractDataSource):
         ):
             self.register_day_bar_store(instrument_type, funds_day_bar_store)
 
-        self._instruments = InstrumentStore(_p('instruments.pk'))
+        self._instruments = [InstrumentStore(_p('instruments.pk'))]
         self._dividends = DividendStore(_p('dividends.h5'))
         self._trading_dates = pd.to_datetime([str(d) for d in np.load(_p('trading_dates.npy'), allow_pickle=False)])
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
@@ -85,6 +85,10 @@ class BaseDataSource(AbstractDataSource):
         #  type: (INSTRUMENT_TYPE, DayBarStore) -> None
         self._day_bars[instrument_type] = store
 
+    def register_instruments_store(self, instruments_store):
+        # type: (InstrumentStore) -> None
+        self._instruments.append(instruments_store)
+
     def get_dividend(self, order_book_id, public_fund=False):
         if public_fund:
             return self._public_fund_dividends.get_dividend(order_book_id)
@@ -97,7 +101,8 @@ class BaseDataSource(AbstractDataSource):
         return self._trading_dates
 
     def get_all_instruments(self):
-        return self._instruments.get_all_instruments()
+        for instruments_store in self._instruments:
+            yield from instruments_store.get_all_instruments()
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)

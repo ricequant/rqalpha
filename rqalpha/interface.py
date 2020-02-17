@@ -21,6 +21,7 @@ from typing import Any, Union, Optional, Iterable
 from six import with_metaclass
 
 from rqalpha.model.order import Order
+from rqalpha.model.instrument import Instrument
 from rqalpha.const import POSITION_DIRECTION
 
 
@@ -293,6 +294,7 @@ class AbstractDataSource(object):
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
     """
     def get_all_instruments(self):
+        # type: () -> Iterable[Instrument]
         """
         获取所有Instrument。
 

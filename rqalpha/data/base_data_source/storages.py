@@ -19,7 +19,7 @@ from copy import copy
 import json
 
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import COMMISSION_TYPE
+from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 
 
@@ -60,10 +60,20 @@ class FutureInfoStore(object):
 
 
 class InstrumentStore(object):
+    SUPPORTED_TYPES = (
+        INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX,
+        INSTRUMENT_TYPE.FENJI_A, INSTRUMENT_TYPE.FENJI_B, INSTRUMENT_TYPE.FENJI_MU, INSTRUMENT_TYPE.PUBLIC_FUND,
+    )
+
     def __init__(self, f):
         with open(f, 'rb') as store:
             d = pickle.load(store)
-        self._instruments = [Instrument(i) for i in d]
+
+        self._instruments = []
+        for i in d:
+            ins = Instrument(i)
+            if ins.type in self.SUPPORTED_TYPES:
+                self._instruments.append(ins)
 
     def get_all_instruments(self):
         return self._instruments
