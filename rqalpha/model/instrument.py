@@ -387,13 +387,13 @@ class Instrument(object):
     def tick_size(self):
         return Environment.get_instance().data_proxy.get_tick_size(self.order_book_id)
 
-    def calc_cash_occupation(self, price, amount, direction):
+    def calc_cash_occupation(self, price, quantity, direction):
         # type: (float, float, POSITION_DIRECTION) -> float
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
-            return price * amount
+            return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:
             margin_multiplier = Environment.get_instance().config.base.margin_multiplier
-            return price * amount * self.contract_multiplier * self.margin_rate * margin_multiplier
+            return price * quantity * self.contract_multiplier * self.margin_rate * margin_multiplier
         else:
             raise NotImplementedError
 
