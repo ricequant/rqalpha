@@ -245,7 +245,7 @@ def cancel_order(order):
 @export_as_api
 @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR, EXECUTION_PHASE.ON_TICK, EXECUTION_PHASE.OPEN_AUCTION)
 @apply_rules(
-    verify_that("id_or_ins", pre_check=True).is_valid_instrument((INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.FUTURE)),
+    verify_that("id_or_ins", pre_check=True).is_valid_instrument((INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.OPTION)),
     verify_that("amount", pre_check=True).is_number().is_greater_or_equal_than(0),
     verify_that("right_type", pre_check=True).is_in(RIGHT_TYPE, ignore_none=True)
 )
