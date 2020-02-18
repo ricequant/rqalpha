@@ -17,12 +17,11 @@
 
 import copy
 import datetime
-from numbers import Real
 
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.const import INSTRUMENT_TYPE, RIGHT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr
 
@@ -227,6 +226,8 @@ class Instrument(object):
         """
         [float] 合约乘数，例如沪深300股指期货的乘数为300.0（期货专用）
         """
+        if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
+            return 1
         return self.__dict__.get("contract_multiplier") or 1
 
     @property
@@ -386,12 +387,13 @@ class Instrument(object):
     def tick_size(self):
         return Environment.get_instance().data_proxy.get_tick_size(self.order_book_id)
 
-    def calc_margin(self, price, amount):
-        # type: (Real, Real) -> Real
+    def calc_cash_occupation(self, price, amount, direction):
+        # type: (float, float, POSITION_DIRECTION) -> float
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * amount
         elif self.type == INSTRUMENT_TYPE.FUTURE:
-            return price * amount * self.contract_multiplier * self.margin_rate
+            margin_multiplier = Environment.get_instance().config.base.margin_multiplier
+            return price * amount * self.contract_multiplier * self.margin_rate * margin_multiplier
         else:
             raise NotImplementedError
 

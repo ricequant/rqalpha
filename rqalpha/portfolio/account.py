@@ -30,7 +30,6 @@ from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.model.order import OrderStyle, Order
 from rqalpha.model.trade import Trade
 from rqalpha.utils.logger import user_system_log
-from rqalpha.utils.i18n import gettext as _
 
 from .base_position import BasePosition, PositionProxyDict
 
@@ -68,6 +67,7 @@ class Account(AbstractAccount):
     @classmethod
     def register_position_type(cls, instrument_type, position_type):
         # type: (INSTRUMENT_TYPE, PositionType) -> None
+        # TODO: only can called before instantiated
         cls._position_types[instrument_type] = position_type
 
     def register_event(self):
@@ -83,8 +83,8 @@ class Account(AbstractAccount):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
-        event_bus.add_listener(EVENT.BAR, self._update_last_price)
-        event_bus.add_listener(EVENT.TICK, self._update_last_price)
+        event_bus.prepend_listener(EVENT.BAR, self._update_last_price)
+        event_bus.prepend_listener(EVENT.TICK, self._update_last_price)
 
     def get_state(self):
         return {
@@ -210,6 +210,10 @@ class Account(AbstractAccount):
         return sum(p.transaction_cost for p in self._iter_pos())
 
     @property
+    def cash_occupation(self):
+        return sum(p.cash_occupation for p in self._iter_pos())
+
+    @property
     def margin(self):
         """
         [float] 总保证金
@@ -253,7 +257,7 @@ class Account(AbstractAccount):
         期货账户总资金会受保证金变化的影响变化，期货账户总资金 = 总权益 - 保证金
 
         """
-        return self._static_total_value + self.daily_pnl - self.margin
+        return self._static_total_value + self.daily_pnl - self.cash_occupation
 
     @property
     def position_pnl(self):
@@ -387,7 +391,8 @@ class Account(AbstractAccount):
     def _frozen_cash_of_order(self, order):
         env = Environment.get_instance()
         if order.position_effect == POSITION_EFFECT.OPEN:
-            order_cost = env.data_proxy.instruments(order.order_book_id).calc_margin(order.frozen_price, order.quantity)
+            instrument = env.data_proxy.instruments(order.order_book_id)
+            order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
         else:
             order_cost = 0
         return order_cost + env.get_order_transaction_cost(order)

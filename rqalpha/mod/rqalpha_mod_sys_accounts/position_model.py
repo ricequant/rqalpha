@@ -69,6 +69,10 @@ class StockPosition(BasePosition):
     def position_validator_enabled(self):
         return self.enable_position_validator
 
+    @property
+    def margin(self):
+        return 0
+
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
         self._dividend_receivable = state.get("dividend_receivable")
@@ -176,6 +180,10 @@ class FuturePosition(BasePosition):
     @property
     def position_validator_enabled(self):
         return self.enable_position_validator
+
+    @property
+    def margin(self):
+        return self.cash_occupation
 
     def calc_close_today_amount(self, trade_amount):
         close_today_amount = trade_amount - self.old_quantity
@@ -379,6 +387,18 @@ class FuturePositionProxy(PositionProxy):
         [int] 空方向持仓
         """
         return self.sell_old_quantity + self.sell_today_quantity
+
+    @property
+    def margin(self):
+        """
+        [float] 保证金
+
+        保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
+
+        股票保证金 = 市值 = 持仓量 * 最新价
+
+        """
+        return self._long.margin + self._short.margin
 
     @property
     def buy_margin(self):

@@ -30,7 +30,7 @@ class CashValidator(AbstractFrontendValidator):
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return True
         instrument = self._env.data_proxy.instruments(order.order_book_id)
-        cost_money = instrument.calc_margin(order.frozen_price, order.quantity)
+        cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
         cost_money += self._env.get_order_transaction_cost(order)
         if cost_money <= account.cash:
             return True

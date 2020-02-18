@@ -24,6 +24,7 @@ from rqalpha.environment import Environment
 from rqalpha.const import POSITION_EFFECT, POSITION_DIRECTION, INSTRUMENT_TYPE
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
+from rqalpha.model.instrument import Instrument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr
 from rqalpha.utils import is_valid_price
@@ -34,6 +35,7 @@ class BasePosition(AbstractPosition):
 
     def __init__(self, order_book_id, direction, init_quantity=0):
         self._order_book_id = order_book_id
+        self._instrument = Environment.get_instance().data_proxy.instruments(order_book_id)  # type: Instrument
         self._direction = direction
 
         self._old_quantity = init_quantity
@@ -48,14 +50,11 @@ class BasePosition(AbstractPosition):
 
         self._prev_close = None
 
-        self._contract_multiplier = None
-        self._margin_rate = None
         self._market_tplus_ = None
 
         self._last_price = float("NaN")
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
-        self._margin_multiplier = Environment.get_instance().config.base.margin_multiplier
 
     @property
     def order_book_id(self):
@@ -115,25 +114,11 @@ class BasePosition(AbstractPosition):
 
     @property
     def margin(self):
-        return self.margin_rate * self.market_value
+        raise NotImplementedError
 
     @property
     def contract_multiplier(self):
-        if not self._contract_multiplier:
-            env = Environment.get_instance()
-            self._contract_multiplier = env.data_proxy.instruments(self._order_book_id).contract_multiplier
-        return self._contract_multiplier
-
-    @property
-    def margin_rate(self):
-        if not self._margin_rate:
-            env = Environment.get_instance()
-            margin_rate = env.data_proxy.instruments(self._order_book_id).margin_rate
-            if margin_rate == 1:
-                self._margin_rate = margin_rate
-            else:
-                self._margin_rate = margin_rate * self._margin_multiplier
-        return self._margin_rate
+        return self._instrument.contract_multiplier
 
     @property
     def prev_close(self):
@@ -172,6 +157,10 @@ class BasePosition(AbstractPosition):
     def position_validator_enabled(self):
         return True
 
+    @property
+    def cash_occupation(self):
+        return self._instrument.calc_cash_occupation(self.last_price, self.quantity, self.direction)
+
     def get_state(self):
         return {
             "old_quantity": self._old_quantity,
@@ -205,7 +194,6 @@ class BasePosition(AbstractPosition):
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
-        self._contract_multiplier = self._margin_rate = None
         self._prev_close = self.last_price
         return 0, None
 
