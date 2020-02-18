@@ -230,7 +230,8 @@ class ExerciseMatcher(object):
         for order in exercise_orders:
             account = self._env.portfolio.get_account(order.order_book_id)  # type: AbstractAccount
             for trade in self._match(account, order):
-                order.fill(trade)
+                if trade.position_effect == POSITION_EFFECT.EXERCISE:
+                    order.fill(trade)
                 self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
             if order.unfilled_quantity != 0:
                 order.mark_cancelled(_(
