@@ -252,8 +252,8 @@ def cancel_order(order):
 def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
     # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> None
     amount = int(amount)
-    if amount == 0:
-        user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
+    if amount <= 0:
+        user_system_log.warn(_(u"Order Creation Failed: Order amount should be positive."))
         return None
     if right_type != RIGHT_TYPE.SELL_BACK:
         raise NotImplementedError(_("exercise only supports sell back now"))
