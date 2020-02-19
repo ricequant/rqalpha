@@ -349,7 +349,7 @@ class Account(AbstractAccount):
         else:
             self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
-        if order:
+        if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:
                 self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
             else:

@@ -97,10 +97,10 @@ class SimulationBroker(AbstractBroker, Persistable):
     def submit_order(self, order):
         if order.position_effect == POSITION_EFFECT.MATCH:
             raise NotImplementedError(_("unsupported position_effect {}").format(order.position_effect))
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
-            return self._open_exercise_orders.append(order)
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            return self._open_exercise_orders.append(order)
         if order.is_final():
             return
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
