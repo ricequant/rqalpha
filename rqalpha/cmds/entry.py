@@ -15,16 +15,8 @@
 
 import click
 
-CONTEXT_SETTINGS = {
-    'default_map': {
-        'run': {
-        }
-    }
-}
 
-
-@click.group(context_settings=CONTEXT_SETTINGS)
+@click.group()
 @click.help_option('-h', '--help')
-@click.pass_context
-def cli(ctx):
+def cli():
     pass

@@ -123,6 +123,20 @@ def get_strategy_apis():
     return {n: getattr(api, n) for n in api.__all__}
 
 
+def init_rqdatac(uri):
+    try:
+        import rqdatac
+    except ImportError:
+        user_system_log.info('rqdatac is not available, some apis will not function properly')
+        return
+
+    try:
+        # FIXME it is possible that rqdatac is already inited, then we should not init it again
+        rqdatac.init(uri=uri, lazy=True)
+    except ValueError as e:
+        user_system_log.warn('rqdatac init failed, some apis will not function properly: {}'.format(str(e)))
+
+
 def run(config, source_code=None, user_funcs=None):
     env = Environment(config)
     persist_helper = None
@@ -133,6 +147,7 @@ def run(config, source_code=None, user_funcs=None):
         # avoid register handlers everytime
         # when running in ipython
         set_loggers(config)
+        init_rqdatac(getattr(config.base, 'rqdatac_uri', None))
         basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         env.set_strategy_loader(init_strategy_loader(env, source_code, user_funcs, config))

@@ -38,6 +38,7 @@ from .entry import cli
 @click.option('-rp', '--round-price', 'base__round_price', is_flag=True)
 @click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default=None)
 @click.option('--source-code', 'base__source_code')
+@click.option('--rqdatac-uri', 'base__rqdatac_uri', help='rqdatac uri, eg tcp://user:password@ip:port', default=None)
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
 @click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True,
@@ -81,4 +82,4 @@ def run(**kwargs):
         ipy.user_global_ns["report"] = RqAttrDict(report)
 
     if results is None:
-        sys.exit(1)
+        return 1

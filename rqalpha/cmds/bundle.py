@@ -31,16 +31,22 @@ from .entry import cli
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-@click.option('--compression', default=False, is_flag=True)
-def create_bundle(data_bundle_path, compression):
+@click.option('--rqdatac-uri', help='rqdatac uri, eg tcp://user:password@ip:port', default=None)
+@click.option('--compression', default=False, is_flag=True, help='enable compression to reduce file size')
+def create_bundle(data_bundle_path, rqdatac_uri, compression):
     """create bundle using rqdatac"""
     try:
         import rqdatac
     except ImportError:
-        six.print_('rqdatac is required to create bundle')
+        click.echo('rqdatac is required to create bundle')
         return 1
 
-    rqdatac.init()
+    try:
+        rqdatac.init(uri=rqdatac_uri)
+    except ValueError as e:
+        click.echo('rqdatac init failed with error: {}'.format(e))
+        return 1
+
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
     from rqalpha.data.bundle import create_bundle as create_bundle_
     create_bundle_(os.path.join(data_bundle_path, 'bundle'), enable_compression=compression)
@@ -48,20 +54,26 @@ def create_bundle(data_bundle_path, compression):
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-@click.option('--compression', default=False, type=click.BOOL)
-def update_bundle(data_bundle_path, compression):
+@click.option('--rqdatac-uri', help='rqdatac uri, eg tcp://user:password@ip:port', default=None)
+@click.option('--compression', default=False, type=click.BOOL, help='enable compression to reduce file size')
+def update_bundle(data_bundle_path, rqdatac_uri, compression):
     """update bundle using rqdatac"""
     try:
         import rqdatac
     except ImportError:
-        six.print_('rqdatac is required to create bundle')
+        click.echo('rqdatac is required to create bundle')
+        return 1
+
+    try:
+        rqdatac.init(uri=rqdatac_uri)
+    except ValueError as e:
+        click.echo('rqdatac init failed with error: {}'.format(e))
         return 1
 
     if not os.path.exists(os.path.join(data_bundle_path, 'bundle')):
-        six.print_('bundle not exist, use create-bundle command instead')
+        click.echo('bundle not exist, use create-bundle command instead')
         return 1
 
-    rqdatac.init()
     from rqalpha.data.bundle import update_bundle as update_bundle_
     update_bundle_(os.path.join(data_bundle_path, 'bundle'), enable_compression=compression)
 
