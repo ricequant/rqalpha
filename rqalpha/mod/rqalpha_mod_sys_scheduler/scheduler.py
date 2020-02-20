@@ -39,24 +39,6 @@ def market_open(hour=0, minute=0):
     return minutes_since_midnight
 
 
-_scheduler = None
-
-
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
-def run_daily(func, time_rule=None):
-    _scheduler.run_daily(func, time_rule)
-
-
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
-def run_weekly(func, weekday=None, tradingday=None, time_rule=None):
-    _scheduler.run_weekly(func, weekday=weekday, tradingday=tradingday, time_rule=time_rule)
-
-
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
-def run_monthly(func, tradingday=None, time_rule=None, **kwargs):
-    _scheduler.run_monthly(func, tradingday=tradingday, time_rule=time_rule, **kwargs)
-
-
 def _verify_function(name, func):
     if not callable(func):
         raise patch_user_exc(ValueError('scheduler.{}: func should be callable'.format(name)))
@@ -67,12 +49,6 @@ def _verify_function(name, func):
 
 
 class Scheduler(object):
-    _TRADING_DATES = None
-
-    @classmethod
-    def set_trading_dates_(cls, trading_dates):
-        cls._TRADING_DATES = trading_dates
-
     def __init__(self, frequency):
         self._registry = []
         self._today = None
@@ -81,16 +57,30 @@ class Scheduler(object):
         self._last_minute = 0
         self._current_minute = 0
         self._stage = None
-        self._ucontext = None
         self._frequency = frequency
+        self._trading_calendar = None
+        self._ucontext = None
 
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.next_day_)
         event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading_)
         event_bus.add_listener(EVENT.BAR, self.next_bar_)
 
-    def set_user_context(self, ucontext):
-        self._ucontext = ucontext
+    @property
+    def trading_calendar(self):
+        if self._trading_calendar is not None:
+            return self._trading_calendar
+
+        self._trading_calendar = Environment.get_instance().data_source.get_trading_calendar()
+        return self._trading_calendar
+
+    @property
+    def ucontext(self):
+        if self._ucontext is not None:
+            return self._ucontext
+
+        self._ucontext = Environment.get_instance().user_strategy.user_context
+        return self._ucontext
 
     @staticmethod
     def _always_true():
@@ -131,12 +121,14 @@ class Scheduler(object):
         time_rule = time_rule if time_rule else self._minutes_since_midnight(9, 31)
         return lambda: self._should_trigger(time_rule)
 
+    @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
     def run_daily(self, func, time_rule=None):
         _verify_function('run_daily', func)
         self._registry.append((self._always_true,
                                self._time_rule_for(time_rule),
                                func))
 
+    @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
     def run_weekly(self, func, weekday=None, tradingday=None, time_rule=None):
         _verify_function('run_weekly', func)
         if (weekday is not None and tradingday is not None) or (weekday is None and tradingday is None):
@@ -157,6 +149,7 @@ class Scheduler(object):
 
         self._registry.append((day_checker, time_checker, func))
 
+    @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
     def run_monthly(self, func, tradingday=None, time_rule=None, **kwargs):
         _verify_function('run_monthly', func)
         if tradingday is None and 'monthday' in kwargs:
@@ -200,11 +193,11 @@ class Scheduler(object):
     def next_bar_(self, event):
         bars = event.bar_dict
         with ExecutionContext(EXECUTION_PHASE.SCHEDULED):
-            self._current_minute = self._minutes_since_midnight(self._ucontext.now.hour, self._ucontext.now.minute)
+            self._current_minute = self._minutes_since_midnight(self.ucontext.now.hour, self.ucontext.now.minute)
             for day_rule, time_rule, func in self._registry:
                 if day_rule() and time_rule():
                     with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                        func(self._ucontext, bars)
+                        func(self.ucontext, bars)
             self._last_minute = self._current_minute
 
     def before_trading_(self, event):
@@ -213,7 +206,7 @@ class Scheduler(object):
             for day_rule, time_rule, func in self._registry:
                 if day_rule() and time_rule():
                     with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                        func(self._ucontext, None)
+                        func(self.ucontext, None)
             self._stage = None
 
     def _fill_week(self):
@@ -221,9 +214,9 @@ class Scheduler(object):
         weekend = self._today + datetime.timedelta(days=7 - weekday)
         week_start = weekend - datetime.timedelta(days=6)
 
-        left = self._TRADING_DATES.searchsorted(week_start)
-        right = self._TRADING_DATES.searchsorted(weekend, side='right')
-        self._this_week = [d.date() for d in self._TRADING_DATES[left:right]]
+        left = self.trading_calendar.searchsorted(week_start)
+        right = self.trading_calendar.searchsorted(weekend, side='right')
+        self._this_week = [d.date() for d in self.trading_calendar[left:right]]
 
     def _fill_month(self):
         try:
@@ -232,8 +225,8 @@ class Scheduler(object):
             month_end = self._today.replace(year=self._today.year + 1, month=1, day=1)
 
         month_begin = self._today.replace(day=1)
-        left, right = self._TRADING_DATES.searchsorted(month_begin), self._TRADING_DATES.searchsorted(month_end)
-        self._this_month = [d.date() for d in self._TRADING_DATES[left:right]]
+        left, right = self.trading_calendar.searchsorted(month_begin), self.trading_calendar.searchsorted(month_end)
+        self._this_month = [d.date() for d in self.trading_calendar[left:right]]
 
     def set_state(self, state):
         r = json.loads(state.decode('utf-8'))

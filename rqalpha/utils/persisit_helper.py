@@ -16,33 +16,9 @@ import six
 import hashlib
 from collections import OrderedDict
 
-import jsonpickle
-
 from rqalpha.events import EVENT
 from rqalpha.const import PERSIST_MODE
 from rqalpha.utils.logger import system_log
-
-
-class CoreObjectsPersistProxy(object):
-    def __init__(self, scheduler):
-        self._objects = {'scheduler': scheduler}
-
-    def get_state(self):
-        result = {}
-        for key, obj in six.iteritems(self._objects):
-            state = obj.get_state()
-            if state is not None:
-                result[key] = state
-
-        return jsonpickle.dumps(result).encode('utf-8')
-
-    def set_state(self, state):
-        state = jsonpickle.loads(state.decode('utf-8'))
-        for key, value in six.iteritems(state):
-            try:
-                self._objects[key].set_state(value)
-            except KeyError:
-                system_log.warn('core object state for {} ignored'.format(key))
 
 
 class PersistHelper(object):

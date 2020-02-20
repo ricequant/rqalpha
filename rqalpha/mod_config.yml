@@ -14,5 +14,7 @@ mod:
     enabled: true
   sys_analyser:
     enabled: true
+  sys_scheduler:
+    enabled: true
   sys_transaction_cost:
     enabled: true

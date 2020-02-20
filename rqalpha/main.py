@@ -38,11 +38,10 @@ from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
 from rqalpha.const import RUN_TYPE
-from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler, RqAttrDict
+from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, RqAttrDict
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
-from rqalpha.utils.scheduler import Scheduler
+from rqalpha.utils.persisit_helper import PersistHelper
 from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
 
 
@@ -84,7 +83,7 @@ def create_base_scope(copy_scope=False):
     return scope
 
 
-def init_persist_helper(env, scheduler, ucontext, executor, config):
+def init_persist_helper(env, ucontext, executor, config):
     if not config.base.persist:
         return None
     persist_provider = env.persist_provider
@@ -92,7 +91,6 @@ def init_persist_helper(env, scheduler, ucontext, executor, config):
         raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
     persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
     env.set_persist_helper(persist_helper)
-    persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
     persist_helper.register('user_context', ucontext)
     persist_helper.register('global_vars', env.global_vars)
     persist_helper.register('universe', env._universe)
@@ -164,10 +162,6 @@ def run(config, source_code=None, user_funcs=None):
 
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))
 
-        Scheduler.set_trading_dates_(env.data_source.get_trading_calendar())
-        scheduler = Scheduler(config.base.frequency)
-        mod_scheduler._scheduler = scheduler
-
         env._universe = StrategyUniverse()
 
         _adjust_start_date(env.config, env.data_proxy)
@@ -204,12 +198,11 @@ def run(config, source_code=None, user_funcs=None):
             enable_profiler(env, scope)
 
         ucontext = StrategyContext()
-        scheduler.set_user_context(ucontext)
 
         from .core.executor import Executor
         executor = Executor(env)
 
-        persist_helper = init_persist_helper(env, scheduler, ucontext, executor, config)
+        persist_helper = init_persist_helper(env, ucontext, executor, config)
 
         if persist_helper:
             should_resume = persist_helper.should_resume()
