@@ -18,6 +18,7 @@
 import os
 import pickle
 import numbers
+import datetime
 from collections import defaultdict
 from enum import Enum
 from datetime import date
@@ -28,10 +29,11 @@ import numpy as np
 import pandas as pd
 from rqrisk import Risk
 
-from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, RUN_TYPE
+from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.events import EVENT
-from rqalpha.interface import AbstractMod
+from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
 
 from .bechmark import Benchmark
@@ -108,8 +110,14 @@ class AnalyserMod(AbstractMod):
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
             self._sub_accounts[account_type].append(self._to_account_record(date, account))
-            for order_book_id, position in six.iteritems(account.positions):
-                self._positions[account_type].append(self._to_position_record(date, order_book_id, position))
+            pos_dict = {}
+            for pos in account.get_positions():
+                pos_dict.setdefault(pos.order_book_id, {})[pos.direction] = pos
+
+            for order_book_id, pos in pos_dict.items():
+                self._positions[account_type].append(self._to_position_record(
+                    date, order_book_id, pos[POSITION_DIRECTION.LONG], pos[POSITION_DIRECTION.SHORT]
+                ))
 
     def _symbol(self, order_book_id):
         return self._env.data_proxy.instruments(order_book_id).symbol
@@ -163,29 +171,27 @@ class AnalyserMod(AbstractMod):
 
         return data
 
-    POSITION_FIELDS_MAP = {
-        DEFAULT_ACCOUNT_TYPE.STOCK.name: [
-            'quantity', 'last_price', 'avg_price', 'market_value'
-        ],
-        DEFAULT_ACCOUNT_TYPE.FUTURE.name: [
-            'margin', 'contract_multiplier', 'last_price',
-            'buy_pnl', 'buy_margin', 'buy_quantity', 'buy_avg_open_price',
-            'sell_pnl', 'sell_margin', 'sell_quantity', 'sell_avg_open_price'
-        ],
-        DEFAULT_ACCOUNT_TYPE.BOND.name: [
-            'quantity', 'last_price', 'avg_price', 'market_value'
-        ],
-    }
+    LONG_ONLY_INS_TYPE = INST_TYPE_IN_STOCK_ACCOUNT + [INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.BOND]
 
-    def _to_position_record(self, date, order_book_id, position):
+    def _to_position_record(self, date, order_book_id, long, short):
+        # type: (datetime.date, str, AbstractPosition, AbstractPosition) -> Dict
+        instrument = self._env.data_proxy.instruments(order_book_id)
         data = {
             'order_book_id': order_book_id,
             'symbol': self._symbol(order_book_id),
             'date': date,
         }
-
-        for f in self.POSITION_FIELDS_MAP[position.type]:
-            data[f] = self._safe_convert(getattr(position, f))
+        if instrument.type in self.LONG_ONLY_INS_TYPE:
+            for field in ['quantity', 'last_price', 'avg_price', 'market_value']:
+                data[field] = self._safe_convert(getattr(long, field, None))
+        else:
+            for field in ['margin', 'contract_multiplier', 'last_price']:
+                data[field] = self._safe_convert(getattr(long, field))
+            for direction_prefix, pos in (("buy", long), ("sell", short)):
+                data[direction_prefix + "_pnl"] = self._safe_convert(getattr(pos, "pnl", None))
+                data[direction_prefix + "_margin"] = self._safe_convert(pos.margin)
+                data[direction_prefix + "_quantity"] = self._safe_convert(pos.quantity)
+                data[direction_prefix + "_avg_open_price"] = self._safe_convert(getattr(pos, "avg_price", None))
         return data
 
     def _to_trade_record(self, trade):
