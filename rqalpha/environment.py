@@ -24,6 +24,7 @@ import rqalpha
 from rqalpha.events import EventBus
 from rqalpha.const import FRONT_VALIDATOR_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_detail_log
+from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -33,13 +34,12 @@ class Environment(object):
     def __init__(self, config):
         Environment._env = self
         self.config = config
-        self._universe = None
         self.data_proxy = None  # type: Optional[rqalpha.data.data_proxy.DataProxy]
         self.data_source = None
         self.price_board = None
         self.event_source = None
         self.strategy_loader = None
-        self.global_vars = None
+        self.global_vars = GlobalVars()
         self.persist_provider = None
         self.persist_helper = None
         self.broker = None
@@ -56,6 +56,10 @@ class Environment(object):
         self.user_strategy = None
         self._frontend_validators = {}
         self._transaction_cost_decider_dict = {}
+
+        # Environment.event_bus used in StrategyUniverse()
+        from rqalpha.core.strategy_universe import StrategyUniverse
+        self._universe = StrategyUniverse()
 
     @classmethod
     def get_instance(cls):
@@ -81,9 +85,6 @@ class Environment(object):
 
     def set_portfolio(self, portfolio):
         self.portfolio = portfolio
-
-    def set_global_vars(self, global_vars):
-        self.global_vars = global_vars
 
     def set_hold_strategy(self):
         self.config.extra.is_hold = True

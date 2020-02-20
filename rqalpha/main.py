@@ -26,8 +26,6 @@ import six
 from rqalpha import const
 from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
 from rqalpha.core.strategy import Strategy
-from rqalpha.core.strategy_universe import StrategyUniverse
-from rqalpha.core.global_var import GlobalVars
 from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.data_proxy import DataProxy
@@ -66,21 +64,11 @@ def _adjust_start_date(config, data_proxy):
     config.base.end_date = config.base.trading_calendar[-1].date()
 
 
-def create_base_scope(copy_scope=False):
-    from rqalpha.utils.logger import user_print, user_log
+def create_base_scope():
     from . import user_module
+    from copy import copy
 
-    if copy_scope:
-        from copy import copy
-        scope = copy(user_module.__dict__)
-    else:
-        scope = user_module.__dict__
-    scope.update({
-        "logger": user_log,
-        "print": user_print,
-    })
-
-    return scope
+    return copy(user_module.__dict__)
 
 
 def init_persist_helper(env, ucontext, executor, config):
@@ -149,7 +137,6 @@ def run(config, source_code=None, user_funcs=None):
         basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         env.set_strategy_loader(init_strategy_loader(env, source_code, user_funcs, config))
-        env.set_global_vars(GlobalVars())
         mod_handler.set_env(env)
         mod_handler.start_up()
 
@@ -161,8 +148,6 @@ def run(config, source_code=None, user_funcs=None):
             env.price_board = BarDictPriceBoard()
 
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))
-
-        env._universe = StrategyUniverse()
 
         _adjust_start_date(env.config, env.data_proxy)
 
@@ -185,13 +170,9 @@ def run(config, source_code=None, user_funcs=None):
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
-        scope = create_base_scope(config.base.run_type == RUN_TYPE.BACKTEST)
-        scope.update({
-            "g": env.global_vars
-        })
-
+        scope = create_base_scope()
+        scope.update({"g": env.global_vars})
         scope.update(get_strategy_apis())
-
         scope = env.strategy_loader.load(scope)
 
         if env.config.extra.enable_profiler:

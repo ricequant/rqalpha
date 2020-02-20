@@ -31,23 +31,15 @@ from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
-
-from rqalpha.utils.logger import user_system_log
-
 from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
 from rqalpha.utils.arg_checker import apply_rules, verify_that
-
-
 from rqalpha.api import export_as_api
-
-from rqalpha.utils.logger import user_log as logger
-
+from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
 from rqalpha.model.instrument import (
     Instrument,
     SectorCode as sector_code,
     IndustryCode as industry_code,
 )
-
 from rqalpha.const import (
     EXECUTION_PHASE,
     ORDER_STATUS,
@@ -58,12 +50,11 @@ from rqalpha.const import (
     RUN_TYPE,
     POSITION_DIRECTION,
 )
-
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-
 from rqalpha.events import EVENT
 
 export_as_api(logger, name='logger')
+export_as_api(user_print, name='print')
 export_as_api(sector_code, name='sector_code')
 export_as_api(industry_code, name='industry_code')
 export_as_api(LimitOrder, name='LimitOrder')
