@@ -30,7 +30,7 @@ from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
 from rqalpha.model.instrument import Instrument
-from rqalpha.interface import AbstractPosition
+from rqalpha.interface import AbstractPosition, AbstractAccount
 
 from .account import Account
 from .base_position import PositionType, PositionProxyType
@@ -139,8 +139,9 @@ class Portfolio(object):
 
     @property
     def accounts(self):
+        # type: () -> Dict[DEFAULT_ACCOUNT_TYPE, AbstractAccount]
         """
-        [dict] 账户字典
+        账户字典
         """
         return self._accounts
 

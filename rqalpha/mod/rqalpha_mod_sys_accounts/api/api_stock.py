@@ -19,11 +19,14 @@ import numpy as np
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import instruments, cal_style
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE
+from rqalpha.const import (
+    DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE, POSITION_DIRECTION
+)
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
+from rqalpha.interface import AbstractPosition
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
@@ -278,7 +281,7 @@ def _order_value(order_book_id, cash_amount, style):
     # if the cash_amount is larger than you current security’s position,
     # then it will sell all shares of this security.
 
-    position = account.positions[order_book_id]
+    position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)
     amount = downsize_amount(amount, position)
 
     return _order_shares(order_book_id, amount, style, auto_switch_order_value=False)
@@ -364,11 +367,11 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     """
     order_book_id = assure_stock_order_book_id(id_or_ins)
     account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
-    position = account.positions[order_book_id]
+    position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)  # type: AbstractPosition
 
     style = cal_style(price, style)
     if cash_amount == 0:
-        return _sell_all_stock(order_book_id, position.sellable, style)
+        return _sell_all_stock(order_book_id, position.closable, style)
 
     try:
         market_value = position.market_value
@@ -429,10 +432,10 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     style = cal_style(price, style)
 
     account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
-    position = account.positions[order_book_id]
+    position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)  # type: AbstractPosition
 
     if percent == 0:
-        return _sell_all_stock(order_book_id, position.sellable, style)
+        return _sell_all_stock(order_book_id, position.closable, style)
 
     try:
         market_value = position.market_value
@@ -503,6 +506,7 @@ def assure_stock_order_book_id(id_or_symbols):
 
 
 def downsize_amount(amount, position):
+    # type: (float, AbstractPosition) -> float
     config = Environment.get_instance().config
     if not config.validator.close_amount:
         return amount
@@ -510,7 +514,7 @@ def downsize_amount(amount, position):
         return amount
     else:
         amount = abs(amount)
-        if amount > position.sellable:
-            return -position.sellable
+        if amount > position.closable:
+            return -position.closable
         else:
             return -amount

@@ -69,12 +69,6 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def positions(self):
-        # 返回当前账户的持仓数据
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
     def frozen_cash(self):
         # type: () -> Union[int, float]
         # 返回当前账户的冻结资金
