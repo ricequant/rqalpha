@@ -141,19 +141,6 @@ def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):
     return user_exc
 
 
-def run_when_strategy_not_hold(func):
-    from rqalpha.environment import Environment
-    from rqalpha.utils.logger import system_log
-
-    def wrapper(*args, **kwargs):
-        if not Environment.get_instance().config.extra.is_hold:
-            return func(*args, **kwargs)
-        else:
-            system_log.debug(_(u"not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
-
-    return wrapper
-
-
 def merge_dicts(*dict_args):
     result = {}
     for d in dict_args:

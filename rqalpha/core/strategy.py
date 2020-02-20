@@ -18,13 +18,24 @@
 from functools import wraps
 
 from rqalpha.events import EVENT, Event
-from rqalpha.utils import run_when_strategy_not_hold
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import ModifyExceptionFromType
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.const import EXECUTION_PHASE, EXC_TYPE
 from rqalpha.environment import Environment
+
+
+def run_when_strategy_not_hold(func):
+    from rqalpha.utils.logger import system_log
+
+    def wrapper(*args, **kwargs):
+        if not Environment.get_instance().config.extra.is_hold:
+            return func(*args, **kwargs)
+        else:
+            system_log.debug(_(u"not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
+
+    return wrapper
 
 
 class Strategy(object):
