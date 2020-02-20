@@ -161,6 +161,11 @@ class EVENT(Enum):
     # 心跳事件，用于触发定时任务
     HEARTBEAT = 'heartbeat'
 
+    # 在策略运行前
+    BEFORE_STRATEGY_RUN = 'before_strategy_run'
+    # 在策略成功运行完成后
+    POST_STRATEGY_RUN = 'post_strategy_run'
+
     # 用户事件，接受用户发送的信息
     USER = 'user'
 

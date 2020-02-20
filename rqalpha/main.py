@@ -35,7 +35,6 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
-from rqalpha.const import RUN_TYPE
 from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, RqAttrDict
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
@@ -195,6 +194,8 @@ def run(config, source_code=None, user_funcs=None):
         user_strategy = Strategy(env.event_bus, scope, ucontext, should_run_init)
         env.user_strategy = user_strategy
 
+        env.event_bus.publish_event(Event(EVENT.BEFORE_STRATEGY_RUN))
+
         if (should_resume and not should_run_init) or not should_resume:
             with run_with_user_log_disabled(disabled=should_resume):
                 user_strategy.init()
@@ -217,6 +218,7 @@ def run(config, source_code=None, user_funcs=None):
 
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
         executor.run(bar_dict)
+        env.event_bus.publish_event(Event(EVENT.POST_STRATEGY_RUN))
 
         if env.profile_deco:
             output_profile_result(env)
