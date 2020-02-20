@@ -67,12 +67,10 @@ class Strategy(object):
         return self._user_context
 
     def init(self):
-        if not self._init:
-            return
-
-        with ExecutionContext(EXECUTION_PHASE.ON_INIT):
-            with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                self._init(self._user_context)
+        if self._init:
+            with ExecutionContext(EXECUTION_PHASE.ON_INIT):
+                with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
+                    self._init(self._user_context)
 
         Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_INIT))
 
