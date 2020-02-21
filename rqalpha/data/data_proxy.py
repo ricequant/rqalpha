@@ -156,12 +156,13 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return self._data_source.get_settle_price(instrument, date)
 
     def get_bar(self, order_book_id, dt, frequency='1d'):
-        if dt is None:
-            return BarObject(NANDict, dt)
         instrument = self.instruments(order_book_id)
+        if dt is None:
+            return BarObject(instrument, NANDict, dt)
         bar = self._data_source.get_bar(instrument, dt, frequency)
         if bar:
             return BarObject(instrument, bar)
+        return BarObject(instrument, NANDict, dt)
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
         data = self.history_bars(order_book_id, bar_count, frequency,
