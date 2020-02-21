@@ -92,6 +92,5 @@ SYSTEM_MOD_LIST = [
     "sys_risk",
     "sys_simulation",
     "sys_transaction_cost",
-    "sys_benchmark",
     'sys_scheduler',
 ]
