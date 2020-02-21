@@ -21,7 +21,6 @@ import numbers
 import datetime
 from collections import defaultdict
 from enum import Enum
-from datetime import date
 from typing import Dict, Optional
 
 import six
@@ -137,13 +136,6 @@ class AnalyserMod(AbstractMod):
             'unit_net_value': self._safe_convert(portfolio.unit_net_value, 6),
             'units': portfolio.units,
             'static_unit_net_value': self._safe_convert(portfolio.static_unit_net_value),
-        }
-
-    def _to_benchmark_record(self, date, unit_net_value):
-        # type: (date, float) -> Dict
-        return {
-            "date": date,
-            "unit_net_value": unit_net_value
         }
 
     ACCOUNT_FIELDS_MAP = {
@@ -268,9 +260,7 @@ class AnalyserMod(AbstractMod):
             trades = trades.set_index('datetime')
 
         df = pd.DataFrame(self._total_portfolios)
-
         df['date'] = pd.to_datetime(df['date'])
-
         total_portfolios = df.set_index('date').sort_index()
 
         result_dict = {
@@ -280,9 +270,9 @@ class AnalyserMod(AbstractMod):
         }
 
         if self._benchmark:
-            b_df = pd.DataFrame(self._total_benchmark_portfolios)
+            df = pd.DataFrame(self._total_benchmark_portfolios)
             df['date'] = pd.to_datetime(df['date'])
-            benchmark_portfolios = b_df.set_index('date').sort_index()
+            benchmark_portfolios = df.set_index('date').sort_index()
             result_dict['benchmark_portfolio'] = benchmark_portfolios
 
         if not self._env.get_plot_store().empty:
@@ -294,7 +284,6 @@ class AnalyserMod(AbstractMod):
                     plots_items[date]["date"] = date
 
             df = pd.DataFrame([dict_data for date, dict_data in six.iteritems(plots_items)])
-
             df["date"] = pd.to_datetime(df["date"])
             df = df.set_index("date").sort_index()
             result_dict["plots"] = df
@@ -304,15 +293,15 @@ class AnalyserMod(AbstractMod):
             portfolios_list = self._sub_accounts[account_type]
             df = pd.DataFrame(portfolios_list)
             df["date"] = pd.to_datetime(df["date"])
-            account_df = df.set_index("date").sort_index()
-            result_dict["{}_account".format(account_name)] = account_df
+            df = df.set_index("date").sort_index()
+            result_dict["{}_account".format(account_name)] = df
 
             positions_list = self._positions[account_type]
-            positions_df = pd.DataFrame(positions_list)
-            if "date" in positions_df.columns:
-                positions_df["date"] = pd.to_datetime(positions_df["date"])
-                positions_df = positions_df.set_index("date").sort_index()
-            result_dict["{}_positions".format(account_name)] = positions_df
+            df = pd.DataFrame(positions_list)
+            if "date" in df.columns:
+                df["date"] = pd.to_datetime(df["date"])
+                df = df.set_index("date").sort_index()
+            result_dict["{}_positions".format(account_name)] = df
 
         if self._mod_config.output_file:
             with open(self._mod_config.output_file, 'wb') as f:
