@@ -1191,7 +1191,7 @@ def get_positions():
 @apply_rules(
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
-def get_position(order_book_id, direction):
+def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
     """
     获取某个标的的持仓信息
 
