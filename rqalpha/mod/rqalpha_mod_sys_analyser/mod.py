@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 from rqrisk import Risk
 
-from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
+from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.utils.i18n import gettext as _
@@ -259,9 +259,7 @@ class AnalyserMod(AbstractMod):
         if self._benchmark:
             benchmark_total_returns = (np.array(self._benchmark_daily_returns) + 1.0).prod() - 1.0
             summary['benchmark_total_returns'] = self._safe_convert(benchmark_total_returns)
-            date_count = float(self._env.data_proxy.count_trading_dates(
-                self._env.config.base.start_date, self._env.trading_dt.date()
-            ))
+            date_count = len(self._benchmark_daily_returns)
             benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
             summary['benchmark_annualized_returns'] = self._safe_convert(benchmark_annualized_returns)
 
