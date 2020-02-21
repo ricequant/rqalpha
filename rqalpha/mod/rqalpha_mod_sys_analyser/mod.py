@@ -35,8 +35,7 @@ from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
-
-from .bechmark import Benchmark
+from rqalpha.const import DAYS_CNT
 
 
 class AnalyserMod(AbstractMod):
@@ -55,7 +54,7 @@ class AnalyserMod(AbstractMod):
         self._benchmark_daily_returns = []
         self._portfolio_daily_returns = []
 
-        self._benchmark = None  # type: Optional[Benchmark]
+        self._benchmark = None  # type: Optional[str]
 
     def start_up(self, env, mod_config):
         self._env = env
@@ -74,12 +73,13 @@ class AnalyserMod(AbstractMod):
                     )
                     mod_config.benchmark = getattr(env.config.base, "benchmark")
             if mod_config.benchmark:
-                if env.config.base.run_type == RUN_TYPE.BACKTEST:
-                    from .bechmark import BackTestPriceSeriesBenchmark
-                    self._benchmark = BackTestPriceSeriesBenchmark(mod_config.benchmark, env)
-                else:
-                    from .bechmark import RealTimePriceSeriesBenchmark
-                    self._benchmark = RealTimePriceSeriesBenchmark(mod_config.benchmark, env)
+                self._benchmark = mod_config.benchmark
+
+    def get_benchmark_daily_returns(self):
+        if self._benchmark is None:
+            return 0.0
+        bar = self._env.data_proxy.get_bar(self._benchmark, self._env.calendar_dt, '1d')
+        return bar.close / bar.prev_close - 1.0
 
     def _subscribe_events(self, _):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
@@ -98,15 +98,11 @@ class AnalyserMod(AbstractMod):
 
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
-
-        if self._benchmark is None:
-            self._benchmark_daily_returns.append(0)
-        else:
-            self._benchmark_daily_returns.append(self._benchmark.daily_returns)
-            self._total_benchmark_portfolios.append({
-                "date": date,
-                "unit_net_value": self._benchmark.total_returns + 1
-            })
+        self._benchmark_daily_returns.append(self.get_benchmark_daily_returns())
+        self._total_benchmark_portfolios.append({
+            "date": date,
+            "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod()
+        })
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
             self._sub_accounts[account_type].append(self._to_account_record(date, account))
@@ -261,8 +257,13 @@ class AnalyserMod(AbstractMod):
         })
 
         if self._benchmark:
-            summary['benchmark_total_returns'] = self._safe_convert(self._benchmark.total_returns)
-            summary['benchmark_annualized_returns'] = self._safe_convert(self._benchmark.annualized_returns)
+            benchmark_total_returns = (np.array(self._benchmark_daily_returns) + 1.0).prod() - 1.0
+            summary['benchmark_total_returns'] = self._safe_convert(benchmark_total_returns)
+            date_count = float(self._env.data_proxy.count_trading_dates(
+                self._env.config.base.start_date, self._env.trading_dt.date()
+            ))
+            benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
+            summary['benchmark_annualized_returns'] = self._safe_convert(benchmark_annualized_returns)
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
