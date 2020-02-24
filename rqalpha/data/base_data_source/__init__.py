@@ -16,7 +16,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
-from typing import Dict, List
+from datetime import date, datetime
+from typing import Dict, List, Union, Optional
 
 import six
 import numpy as np
@@ -27,6 +28,7 @@ from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.model.instrument import Instrument
 
 from .storages import (
     InstrumentStore, ShareTransformationStore, FutureInfoStore, AbstractDayBarStore, AbstractInstrumentStore
@@ -123,6 +125,7 @@ class BaseDataSource(AbstractDataSource):
         return bars[bars['volume'] > 0]
 
     def get_bar(self, instrument, dt, frequency):
+        # type: (Instrument, Union[datetime, date], str) -> Optional[np.ndarray]
         if frequency != '1d':
             raise NotImplementedError
 
