@@ -16,6 +16,7 @@ import datetime
 
 import six
 from dateutil.parser import parse
+import pandas as pd
 
 from rqalpha.const import EXECUTION_PHASE
 from rqalpha.api import export_as_api
@@ -29,6 +30,7 @@ from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.apis.api_base import assure_order_book_id
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_log
 
 
 try:
@@ -474,7 +476,29 @@ def current_performance(order_book_id, info_date=None, quarter=None, interval='1
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
+                                EXECUTION_PHASE.SCHEDULED)
+@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
+def get_dominant_future(underlying_symbol, rule=0):
+    dt = Environment.get_instance().trading_dt.date()
+    ret = rqdatac.get_dominant_future(underlying_symbol, dt, dt, rule)
+    if isinstance(ret, pd.Series) and ret.size == 1:
+        return ret.item()
+    else:
+        user_log.warn(_("\'{0}\' future does not exist").format(underlying_symbol))
+        return None
+
+
+@export_as_api
 class econ:
+    pass
+
+
+@export_as_api
+class futures:
     pass
 
 
@@ -529,5 +553,22 @@ def _econ_get_money_supply(n=1):
     return df.head(n)
 
 
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
+                                EXECUTION_PHASE.BEFORE_TRADING,
+                                EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
+                                EXECUTION_PHASE.SCHEDULED)
+@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
+def _futures_get_dominant(underlying_symbol, rule=0):
+    dt = Environment.get_instance().trading_dt.date()
+    ret = rqdatac.futures.get_dominant(underlying_symbol, dt, dt, rule)
+    if isinstance(ret, pd.Series) and ret.size == 1:
+        return ret.item()
+    else:
+        user_log.warn(_("\'{0}\' future does not exist").format(underlying_symbol))
+        return None
+
+
 econ.get_reserve_ratio = staticmethod(_econ_get_reserve_ratio)
 econ.get_money_supply = staticmethod(_econ_get_money_supply)
+futures.get_dominant = staticmethod(_futures_get_dominant)
