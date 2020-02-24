@@ -558,6 +558,23 @@ def history_bars(
 
 
 @export_as_api
+@apply_rules(
+    verify_that("order_book_id", pre_check=True).is_listed_instrument(),
+    verify_that('count').is_instance_of(int).is_greater_than(0)
+)
+def history_ticks(order_book_id, count):
+    env = Environment.get_instance()
+    sys_frequency = env.config.base.frequency
+    if sys_frequency == "1d":
+        raise RuntimeError("history_ticks does not support day bar backtest.")
+
+    order_book_id = assure_order_book_id(order_book_id)
+    dt = env.calendar_dt
+
+    return env.data_proxy.history_ticks(order_book_id, count, dt)
+
+
+@export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
