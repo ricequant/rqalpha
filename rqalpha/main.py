@@ -38,8 +38,9 @@ from rqalpha.model.bar import BarMap
 from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, RqAttrDict
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.log_capture import LogCapture
 from rqalpha.utils.persisit_helper import PersistHelper
-from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
+from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log, user_log
 
 
 jsonpickle_numpy.register_handlers()
@@ -183,22 +184,15 @@ def run(config, source_code=None, user_funcs=None):
         executor = Executor(env)
 
         persist_helper = init_persist_helper(env, ucontext, executor, config)
-
-        if persist_helper:
-            should_resume = persist_helper.should_resume()
-            should_run_init = persist_helper.should_run_init()
-        else:
-            should_resume = False
-            should_run_init = True
-
-        user_strategy = Strategy(env.event_bus, scope, ucontext, should_run_init)
+        user_strategy = Strategy(env.event_bus, scope, ucontext)
         env.user_strategy = user_strategy
 
         env.event_bus.publish_event(Event(EVENT.BEFORE_STRATEGY_RUN))
-
-        if (should_resume and not should_run_init) or not should_resume:
-            with run_with_user_log_disabled(disabled=should_resume):
+        if persist_helper:
+            with LogCapture(user_log) as log_capture:
                 user_strategy.init()
+        else:
+            user_strategy.init()
 
         if config.extra.context_vars:
             for k, v in six.iteritems(config.extra.context_vars):
@@ -208,13 +202,13 @@ def run(config, source_code=None, user_funcs=None):
 
         if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
-            env.event_bus.publish_event(Event(EVENT.DO_RESTORE))
+            if persist_helper.restore(None):
+                user_system_log.info(_('system restored'))
+            else:
+                log_capture.replay()
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True
-
-        if should_resume and should_run_init:
-            user_strategy.init()
 
         bar_dict = BarMap(env.data_proxy, config.base.frequency)
         executor.run(bar_dict)
