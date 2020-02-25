@@ -156,8 +156,7 @@ def run(config, source_code=None, user_funcs=None):
         env.calendar_dt = start_dt
         env.trading_dt = start_dt
 
-        broker = env.broker
-        assert broker is not None
+        assert env.broker is not None
         if env.portfolio is None:
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
