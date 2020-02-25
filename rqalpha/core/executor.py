@@ -52,7 +52,7 @@ class Executor(object):
             elif event.event_type == EVENT.BEFORE_TRADING:
                 self._ensure_before_trading(event)
             elif event.event_type == EVENT.AFTER_TRADING:
-                self._split_and_publish(Event(EVENT.AFTER_TRADING))
+                self._split_and_publish(event)
             else:
                 self._env.event_bus.publish_event(event)
 
