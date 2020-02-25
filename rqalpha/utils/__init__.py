@@ -84,10 +84,6 @@ class RqAttrDict(object):
         return result_dict
 
 
-def dummy_func(*args, **kwargs):
-    return None
-
-
 def id_gen(start=1):
     i = start
     while True:

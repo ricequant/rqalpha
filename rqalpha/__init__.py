@@ -99,21 +99,17 @@ def run_code(code, config=None):
 
 
 def run_func(**kwargs):
-    from rqalpha.utils import dummy_func
     from rqalpha.utils.py2 import clear_all_cached_functions
     from rqalpha.utils.config import parse_config
     from rqalpha import main
 
     config = kwargs.get('config', kwargs.get('__config__', None))
-
     user_funcs = {
-        'init': kwargs.get('init', dummy_func),
-        'handle_bar': kwargs.get('handle_bar', dummy_func),
-        'handle_tick': kwargs.get('handle_tick', dummy_func),
-        'open_auction': kwargs.get('open_auction', dummy_func),
-        'before_trading': kwargs.get('before_trading', dummy_func),
-        'after_trading': kwargs.get('after_trading', dummy_func)
+        k: kwargs[k]
+        for k in ['init', 'handle_bar', 'handle_tick', 'open_auction', 'before_trading', 'after_trading']
+        if k in kwargs
     }
+
     if config is None:
         config = {}
     else:
