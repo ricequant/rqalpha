@@ -95,19 +95,6 @@ def id_gen(start=1):
         i += 1
 
 
-class Nop(object):
-    def __init__(self):
-        pass
-
-    def nop(*args, **kw):
-        pass
-
-    def __getattr__(self, _):
-        return self.nop
-
-
-
-
 def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):
     try:
         msg = str(exc_val)
@@ -198,19 +185,6 @@ def is_trading(dt, trading_period):
         if time_range.start <= t <= time_range.end:
             return True
     return False
-
-
-@contextmanager
-def run_with_user_log_disabled(disabled=True):
-    from rqalpha.utils.logger import user_log
-
-    if disabled:
-        user_log.disable()
-    try:
-        yield
-    finally:
-        if disabled:
-            user_log.enable()
 
 
 def unwrapper(func):
