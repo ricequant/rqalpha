@@ -74,6 +74,6 @@ class PersistHelper(object):
             return False
         try:
             obj.set_state(state)
-        except Exception as e:
-            system_log.exception('')
+        except Exception:
+            system_log.exception('restore failed: key={} state={}'.format(key, state))
         return True
