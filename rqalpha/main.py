@@ -41,7 +41,7 @@ from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.log_capture import LogCapture
 from rqalpha.utils.persisit_helper import PersistHelper
-from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log, user_log
+from rqalpha.utils.logger import system_log, user_system_log, user_detail_log, user_log
 
 
 jsonpickle_numpy.register_handlers()
@@ -135,7 +135,7 @@ def run(config, source_code=None, user_funcs=None):
         # when running in ipython
         set_loggers(config)
         init_rqdatac(getattr(config.base, 'rqdatac_uri', None))
-        basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
+        system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         env.set_strategy_loader(init_strategy_loader(env, source_code, user_funcs, config))
         mod_handler.set_env(env)
@@ -281,14 +281,14 @@ def output_profile_result(env):
 
 
 def set_loggers(config):
-    from rqalpha.utils.logger import user_log, user_system_log, user_detail_log, system_log, basic_system_log, std_log
+    from rqalpha.utils.logger import user_log, user_system_log, user_detail_log, system_log, std_log
     from rqalpha.utils.logger import user_std_handler, init_logger
     from rqalpha.utils import logger
     extra_config = config.extra
 
     init_logger()
 
-    for log in [basic_system_log, system_log, std_log, user_system_log, user_detail_log]:
+    for log in [system_log, std_log, user_system_log, user_detail_log]:
         log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
 
     user_log.level = logbook.DEBUG

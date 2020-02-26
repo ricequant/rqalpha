@@ -82,7 +82,6 @@ user_detail_log = Logger("user_detail_log")
 
 # 系统日志
 system_log = Logger("system_log")
-basic_system_log = Logger("basic_system_log")
 
 # 标准输出日志
 std_log = Logger("std_log")
@@ -90,7 +89,6 @@ std_log = Logger("std_log")
 
 def init_logger():
     system_log.handlers = [StderrHandler(bubble=True)]
-    basic_system_log.handlers = [StderrHandler(bubble=True)]
     std_log.handlers = [StderrHandler(bubble=True)]
     user_log.handlers = []
     user_system_log.handlers = []
