@@ -27,6 +27,7 @@ from rqalpha import const
 from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
 from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_context import StrategyContext
+from rqalpha.core.executor import Executor
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
@@ -142,11 +143,9 @@ def run(config, source_code=None, user_funcs=None):
 
         if not env.data_source:
             env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {})))
-
         if env.price_board is None:
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()
-
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))
 
         _adjust_start_date(env.config, env.data_proxy)
@@ -157,12 +156,10 @@ def run(config, source_code=None, user_funcs=None):
         env.trading_dt = start_dt
 
         assert env.broker is not None
+        assert env.event_source is not None
         if env.portfolio is None:
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
-
-        event_source = env.event_source
-        assert event_source is not None
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
@@ -174,12 +171,10 @@ def run(config, source_code=None, user_funcs=None):
         scope.update(get_strategy_apis())
         scope = env.strategy_loader.load(scope)
 
-        if env.config.extra.enable_profiler:
+        if config.extra.enable_profiler:
             enable_profiler(env, scope)
 
         ucontext = StrategyContext()
-
-        from .core.executor import Executor
         executor = Executor(env)
 
         persist_helper = init_persist_helper(env, ucontext, executor, config)
