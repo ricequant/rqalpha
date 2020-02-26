@@ -41,7 +41,7 @@ from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.log_capture import LogCapture
 from rqalpha.utils.persisit_helper import PersistHelper
-from rqalpha.utils.logger import system_log, user_system_log, user_detail_log, user_log
+from rqalpha.utils.logger import system_log, user_system_log, user_log
 
 
 jsonpickle_numpy.register_handlers()
@@ -234,20 +234,12 @@ def run(config, source_code=None, user_funcs=None):
 
 
 def _exception_handler(e):
-    try:
-        sys.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
-    except Exception as e:
-        system_log.exception("hook exception failed")
-
-    user_system_log.error(e.error)
+    user_system_log.error(_(u"strategy execute exception"), exc=e)
     if not is_user_exc(e.error.exc_val):
-        code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
         system_log.error(_(u"strategy execute exception"), exc=e)
-    else:
-        code = const.EXIT_CODE.EXIT_USER_ERROR
-        user_detail_log.error(_(u"strategy execute exception"), exc=e)
+        return const.EXIT_CODE.EXIT_INTERNAL_ERROR
 
-    return code
+    return const.EXIT_CODE.EXIT_USER_ERROR
 
 
 def enable_profiler(env, scope):
@@ -281,14 +273,14 @@ def output_profile_result(env):
 
 
 def set_loggers(config):
-    from rqalpha.utils.logger import user_log, user_system_log, user_detail_log, system_log, std_log
+    from rqalpha.utils.logger import user_log, user_system_log, system_log
     from rqalpha.utils.logger import user_std_handler, init_logger
     from rqalpha.utils import logger
     extra_config = config.extra
 
     init_logger()
 
-    for log in [system_log, std_log, user_system_log, user_detail_log]:
+    for log in [system_log, user_system_log]:
         log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
 
     user_log.level = logbook.DEBUG

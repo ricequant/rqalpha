@@ -50,7 +50,7 @@ class SignalBroker(AbstractBroker):
         self._match(account, order)
 
     def cancel_order(self, order):
-        user_system_log.error(_(u"cancel_order function is not supported in signal mode"))
+        user_system_log.warn(_(u"cancel_order function is not supported in signal mode"))
         return None
 
     def _match(self, account, order):

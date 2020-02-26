@@ -76,20 +76,12 @@ user_log = Logger("user_log")
 # 给用户看的系统日志
 user_system_log = Logger("user_system_log")
 
-# 用于用户异常的详细日志打印
-user_detail_log = Logger("user_detail_log")
-# user_detail_log.handlers.append(StderrHandler(bubble=True))
-
 # 系统日志
 system_log = Logger("system_log")
-
-# 标准输出日志
-std_log = Logger("std_log")
 
 
 def init_logger():
     system_log.handlers = [StderrHandler(bubble=True)]
-    std_log.handlers = [StderrHandler(bubble=True)]
     user_log.handlers = []
     user_system_log.handlers = []
 

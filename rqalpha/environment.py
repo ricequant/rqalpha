@@ -23,7 +23,7 @@ from six import iteritems
 import rqalpha
 from rqalpha.events import EventBus
 from rqalpha.const import FRONT_VALIDATOR_TYPE, INSTRUMENT_TYPE
-from rqalpha.utils.logger import system_log, user_log, user_detail_log
+from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
 
@@ -46,7 +46,7 @@ class Environment(object):
         self.profile_deco = None
         self.system_log = system_log
         self.user_log = user_log
-        self.user_detail_log = user_detail_log
+        self.user_system_log = user_system_log
         self.event_bus = EventBus()
         self.portfolio = None  # type: Optional[rqalpha.portfolio.Portfolio]
         self.calendar_dt = None  # type: Optional[datetime]
