@@ -27,6 +27,7 @@ import rqdatac
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
 START_DATE = 20050104
+END_DATE = 2999131
 
 
 def gen_instruments(d):
@@ -282,7 +283,7 @@ def update_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
                 start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
             else:
                 start_date = START_DATE
-            df = rqdatac.get_price(order_book_id, start_date, datetime.date.today(), '1d',
+            df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
                                    adjust_type='none', fields=fields, expect_df=True)
             if not(df is None or df.empty):
                 df = df.loc[order_book_id]
