@@ -192,22 +192,22 @@ class Scheduler(object):
 
     def next_bar_(self, event):
         bars = event.bar_dict
-        with ExecutionContext(EXECUTION_PHASE.SCHEDULED):
-            self._current_minute = self._minutes_since_midnight(self.ucontext.now.hour, self.ucontext.now.minute)
-            for day_rule, time_rule, func in self._registry:
-                if day_rule() and time_rule():
+        self._current_minute = self._minutes_since_midnight(self.ucontext.now.hour, self.ucontext.now.minute)
+        for day_rule, time_rule, func in self._registry:
+            if day_rule() and time_rule():
+                with ExecutionContext(EXECUTION_PHASE.SCHEDULED):
                     with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                         func(self.ucontext, bars)
-            self._last_minute = self._current_minute
+        self._last_minute = self._current_minute
 
     def before_trading_(self, event):
-        with ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING):
-            self._stage = 'before_trading'
-            for day_rule, time_rule, func in self._registry:
-                if day_rule() and time_rule():
+        self._stage = 'before_trading'
+        for day_rule, time_rule, func in self._registry:
+            if day_rule() and time_rule():
+                with ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING):
                     with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                         func(self.ucontext, None)
-            self._stage = None
+        self._stage = None
 
     def _fill_week(self):
         weekday = self._today.isoweekday()
