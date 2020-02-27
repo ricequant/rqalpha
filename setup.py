@@ -15,7 +15,6 @@ import sys
 from setuptools import find_packages, setup
 import versioneer
 
-
 requirements = [
     'requests',
     'numpy',
@@ -45,7 +44,6 @@ if sys.version_info.major == 2 and sys.version_info.minor == 7:
         "backports.tempfile",
     ])
 
-
 setup(
     name='rqalpha',
     version=versioneer.get_version(),
@@ -59,7 +57,7 @@ setup(
     package_data={
         'rqalpha': ['*.yml',
                     'examples/*.*', 'examples/data_source/*.*', 'examples/extend_api/*.*',
-                    'resource/*.*'],
+                    'resource/*.*', 'utils/translations/zh_Hans_CN/LC_MESSAGES/*'],
     },
     url='https://github.com/ricequant/rqalpha',
     install_requires=requirements,

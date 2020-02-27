@@ -4,4 +4,5 @@ include rqalpha/_version.py
 include README.rst
 include CHANGELOG.rst
 include LICENSE
+include rqalpha/utils/translations/zh_Hans_CN/LC_MESSAGES/*
 graft rqalpha/examples
