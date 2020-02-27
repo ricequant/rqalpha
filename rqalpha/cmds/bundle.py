@@ -48,8 +48,9 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression):
         return 1
 
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
-    from rqalpha.data.bundle import create_bundle as create_bundle_
-    create_bundle_(os.path.join(data_bundle_path, 'bundle'), enable_compression=compression)
+    from rqalpha.data.bundle import update_bundle as update_bundle_
+    # from rqalpha.data.bundle import create_bundle as create_bundle_
+    update_bundle_(os.path.join(data_bundle_path, 'bundle'), create=True, enable_compression=compression)
 
 
 @cli.command()
@@ -75,7 +76,7 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    update_bundle_(os.path.join(data_bundle_path, 'bundle'), enable_compression=compression)
+    update_bundle_(os.path.join(data_bundle_path, 'bundle'), create=False, enable_compression=compression)
 
 
 @cli.command()
