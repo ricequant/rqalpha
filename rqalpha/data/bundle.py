@@ -27,7 +27,7 @@ import rqdatac
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
 START_DATE = 20050104
-END_DATE = 2999131
+END_DATE = 29991231
 
 
 def gen_instruments(d):
