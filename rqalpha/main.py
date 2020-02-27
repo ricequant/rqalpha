@@ -114,14 +114,14 @@ def init_rqdatac(uri):
     try:
         import rqdatac
     except ImportError:
-        user_system_log.info('rqdatac is not available, some apis will not function properly')
+        system_log.info('rqdatac is not available, some apis will not function properly')
         return
 
     try:
         # FIXME it is possible that rqdatac is already inited, then we should not init it again
         rqdatac.init(uri=uri, lazy=True)
     except ValueError as e:
-        user_system_log.warn('rqdatac init failed, some apis will not function properly: {}'.format(str(e)))
+        system_log.warn('rqdatac init failed, some apis will not function properly: {}'.format(str(e)))
 
 
 def run(config, source_code=None, user_funcs=None):
@@ -234,9 +234,9 @@ def run(config, source_code=None, user_funcs=None):
 
 
 def _exception_handler(e):
-    user_system_log.error(_(u"strategy execute exception"), exc=e)
+    user_system_log.exception(_(u"strategy execute exception"))
     if not is_user_exc(e.error.exc_val):
-        system_log.error(_(u"strategy execute exception"), exc=e)
+        system_log.exception(_(u"strategy execute exception"))
         return const.EXIT_CODE.EXIT_INTERNAL_ERROR
 
     return const.EXIT_CODE.EXIT_USER_ERROR
@@ -274,7 +274,7 @@ def output_profile_result(env):
 
 def set_loggers(config):
     from rqalpha.utils.logger import user_log, user_system_log, system_log
-    from rqalpha.utils.logger import user_std_handler, init_logger
+    from rqalpha.utils.logger import init_logger
     from rqalpha.utils import logger
     extra_config = config.extra
 
@@ -286,10 +286,15 @@ def set_loggers(config):
     user_log.level = logbook.DEBUG
 
     if extra_config.log_level.upper() != "NONE":
-        if not extra_config.user_log_disabled:
-            user_log.handlers.append(user_std_handler)
-        if not extra_config.user_system_log_disabled:
-            user_system_log.handlers.append(user_std_handler)
+        if extra_config.user_log_disabled:
+            user_log.disable()
+        else:
+            user_log.enable()
+
+        if extra_config.user_system_log_disabled:
+            user_system_log.disable()
+        else:
+            user_system_log.enable()
 
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())

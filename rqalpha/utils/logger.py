@@ -11,12 +11,8 @@
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-
-from datetime import datetime
 import logbook
 from logbook import Logger, StderrHandler
-
-from rqalpha.utils.py2 import to_utf8
 
 logbook.set_datetime_format("local")
 
@@ -35,39 +31,12 @@ __all__ = [
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
-def user_std_handler_log_formatter(record, handler):
+def user_log_processor(record):
     from rqalpha.environment import Environment
-    try:
-        dt = Environment.get_instance().calendar_dt.strftime(DATETIME_FORMAT)
-    except Exception:
-        dt = datetime.now().strftime(DATETIME_FORMAT)
-
-    log = "{dt} {level} {msg}".format(
-        dt=dt,
-        level=record.level_name,
-        msg=to_utf8(record.message),
-    )
-    return log
+    record.time = Environment.get_instance().calendar_dt
 
 
-user_std_handler = StderrHandler(bubble=True)
-user_std_handler.formatter = user_std_handler_log_formatter
-
-
-def formatter_builder(tag):
-    def formatter(record, handler):
-
-        log = "[{formatter_tag}] [{time}] {level}: {msg}".format(
-            formatter_tag=tag,
-            level=record.level_name,
-            msg=to_utf8(record.message),
-            time=record.time,
-        )
-
-        if record.formatted_exception:
-            log += "\n" + record.formatted_exception
-        return log
-    return formatter
+user_log_group = logbook.LoggerGroup(processor=user_log_processor)
 
 
 # loggers
@@ -76,14 +45,17 @@ user_log = Logger("user_log")
 # 给用户看的系统日志
 user_system_log = Logger("user_system_log")
 
+user_log_group.add_logger(user_log)
+user_log_group.add_logger(user_system_log)
+
 # 系统日志
 system_log = Logger("system_log")
 
 
 def init_logger():
     system_log.handlers = [StderrHandler(bubble=True)]
-    user_log.handlers = []
-    user_system_log.handlers = []
+    user_log.handlers = [StderrHandler(bubble=True)]
+    user_system_log.handlers = [StderrHandler(bubble=True)]
 
 
 def user_print(*args, **kwargs):
