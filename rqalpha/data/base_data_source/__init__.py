@@ -18,6 +18,7 @@
 import os
 from datetime import date, datetime
 from typing import Dict, List, Union, Optional
+from itertools import chain
 
 import six
 import numpy as np
@@ -103,8 +104,7 @@ class BaseDataSource(AbstractDataSource):
         return self._trading_dates
 
     def get_all_instruments(self):
-        for instruments_store in self._instruments:
-            yield from instruments_store.get_all_instruments()
+        return chain(*(store.get_all_instruments() for store in self._instruments))
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
