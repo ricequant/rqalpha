@@ -264,6 +264,7 @@ def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -290,6 +291,7 @@ def update_universe(id_or_symbols):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -324,6 +326,7 @@ def subscribe(id_or_symbols):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -357,6 +360,7 @@ def unsubscribe(id_or_symbols):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -414,6 +418,7 @@ def get_yield_curve(date=None, tenor=None):
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -533,7 +538,7 @@ def history_bars(
             sys_frequency in ["1m", "tick"]
             and not include_now
             and ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
-        ) or (ExecutionContext.phase() == EXECUTION_PHASE.BEFORE_TRADING):
+        ) or (ExecutionContext.phase() in (EXECUTION_PHASE.BEFORE_TRADING, EXECUTION_PHASE.OPEN_AUCTION)):
             dt = env.data_proxy.get_previous_trading_date(env.trading_dt.date())
             # 当 EXECUTION_PHASE.BEFORE_TRADING 的时候，强制 include_now 为 False
             include_now = False
@@ -578,6 +583,7 @@ def history_ticks(order_book_id, count):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -673,6 +679,7 @@ def all_instruments(type=None, date=None):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -740,6 +747,7 @@ def to_sector_name(s):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -806,6 +814,7 @@ def to_industry_code(s):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -938,14 +947,6 @@ def industry(code):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.ON_INIT,
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
 @apply_rules(
     verify_that("start_date").is_valid_date(ignore_none=False),
     verify_that("end_date").is_valid_date(ignore_none=False),
@@ -975,14 +976,6 @@ def get_trading_dates(start_date, end_date):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.ON_INIT,
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
 @apply_rules(
     verify_that("date").is_valid_date(ignore_none=False),
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
@@ -1010,14 +1003,6 @@ def get_previous_trading_date(date, n=1):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.ON_INIT,
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
 @apply_rules(
     verify_that("date").is_valid_date(ignore_none=False),
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
@@ -1058,14 +1043,6 @@ def to_date(date):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.ON_INIT,
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
 @apply_rules(
     verify_that("order_book_id").is_valid_instrument(),
     verify_that("start_date").is_valid_date(ignore_none=False),
@@ -1231,6 +1208,9 @@ def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT
+)
 @apply_rules(
     verify_that("event_type").is_instance_of(EVENT),
     verify_that("handler").is_instance_of(types.FunctionType),

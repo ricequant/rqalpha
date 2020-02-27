@@ -59,11 +59,6 @@ def to_date(date):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('start_date').is_valid_date())
 def get_split(order_book_ids, start_date=None):
     """
@@ -88,11 +83,6 @@ def get_split(order_book_ids, start_date=None):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True))
 def index_components(order_book_id, date=None):
     """
@@ -116,11 +106,6 @@ def index_components(order_book_id, date=None):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True))
 def index_weights(order_book_id, date=None):
     """
@@ -145,12 +130,6 @@ def index_weights(order_book_id, date=None):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 def concept(*concept_names):
     """
     获取T日的概念股列表
@@ -164,10 +143,13 @@ def concept(*concept_names):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED
+)
 @apply_rules(verify_that('order_book_ids').are_valid_instruments(),
              verify_that('start_date').is_valid_date(ignore_none=False),
              verify_that('end_date').is_valid_date(ignore_none=True),
@@ -223,11 +205,6 @@ def get_price(order_book_ids, start_date, end_date=None, frequency='1d',
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_MARGIN_FIELDS, ignore_none=True))
 def get_securities_margin(order_book_ids, count=1, fields=None, expect_df=False):
@@ -256,11 +233,6 @@ def get_securities_margin(order_book_ids, count=1, fields=None, expect_df=False)
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_SHARE_FIELDS, ignore_none=True))
 def get_shares(order_book_ids, count=1, fields=None, expect_df=False):
@@ -288,11 +260,6 @@ def get_shares(order_book_ids, count=1, fields=None, expect_df=False):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_TURNOVER_FIELDS, ignore_none=True))
 def get_turnover_rate(order_book_ids, count=1, fields=None, expect_df=False):
@@ -322,11 +289,6 @@ def get_turnover_rate(order_book_ids, count=1, fields=None, expect_df=False):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0))
 def get_price_change_rate(order_book_ids, count=1, expect_df=False):
     """
@@ -355,11 +317,6 @@ def get_price_change_rate(order_book_ids, count=1, expect_df=False):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('universe').are_valid_instruments(ignore_none=True))
 def get_factor(order_book_ids, factors, count=1, universe=None, expect_df=False):
     """
@@ -391,11 +348,6 @@ def get_factor(order_book_ids, factors, count=1, universe=None, expect_df=False)
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 def get_industry(industry, source='citics'):
     """
     获取T日某个行业所包含的股票列表
@@ -408,11 +360,6 @@ def get_industry(industry, source='citics'):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 def get_instrument_industry(order_book_ids, source='citics', level=1):
     """
     获取T日时股票行业分类
@@ -430,11 +377,6 @@ def get_instrument_industry(order_book_ids, source='citics', level=1):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_STOCK_CONNECT_FIELDS, ignore_none=True))
 def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
@@ -459,11 +401,6 @@ def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument(),
              verify_that('quarter').is_valid_quarter(),
              verify_that('fields').are_valid_fields(VALID_CURRENT_PERFORMANCE_FIELDS, ignore_none=True))
@@ -476,11 +413,6 @@ def current_performance(order_book_id, info_date=None, quarter=None, interval='1
 
 
 @export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
 def get_dominant_future(underlying_symbol, rule=0):
     dt = Environment.get_instance().trading_dt.date()
@@ -502,11 +434,6 @@ class futures:
     pass
 
 
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('reserve_type').is_in(['all', 'major', 'other']),
              verify_that('n').is_instance_of(int).is_greater_than(0))
 def _econ_get_reserve_ratio(reserve_type='all', n=1):
@@ -528,11 +455,6 @@ def _econ_get_reserve_ratio(reserve_type='all', n=1):
     return df
 
 
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.AFTER_TRADING,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('n').is_instance_of(int).is_greater_than(0))
 def _econ_get_money_supply(n=1):
     """
@@ -553,11 +475,6 @@ def _econ_get_money_supply(n=1):
     return df.head(n)
 
 
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT,
-                                EXECUTION_PHASE.BEFORE_TRADING,
-                                EXECUTION_PHASE.ON_BAR,
-                                EXECUTION_PHASE.ON_TICK,
-                                EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
 def _futures_get_dominant(underlying_symbol, rule=0):
     dt = Environment.get_instance().trading_dt.date()
