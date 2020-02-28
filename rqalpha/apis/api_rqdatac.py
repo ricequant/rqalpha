@@ -429,11 +429,6 @@ class econ:
     pass
 
 
-@export_as_api
-class futures:
-    pass
-
-
 @apply_rules(verify_that('reserve_type').is_in(['all', 'major', 'other']),
              verify_that('n').is_instance_of(int).is_greater_than(0))
 def _econ_get_reserve_ratio(reserve_type='all', n=1):
@@ -475,17 +470,98 @@ def _econ_get_money_supply(n=1):
     return df.head(n)
 
 
-@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
-def _futures_get_dominant(underlying_symbol, rule=0):
-    dt = Environment.get_instance().trading_dt.date()
-    ret = rqdatac.futures.get_dominant(underlying_symbol, dt, dt, rule)
-    if isinstance(ret, pd.Series) and ret.size == 1:
-        return ret.item()
-    else:
-        user_log.warn(_("\'{0}\' future does not exist").format(underlying_symbol))
-        return None
-
-
 econ.get_reserve_ratio = staticmethod(_econ_get_reserve_ratio)
 econ.get_money_supply = staticmethod(_econ_get_money_supply)
+
+
+@export_as_api
+class futures:
+    pass
+
+
+@export_as_api
+@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
+def get_future_contracts(underlying_symbol):
+    """
+    获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
+
+    :param str underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
+
+    :return: list[`str`]
+
+    :example:
+
+    获取某一天的主力合约代码（策略当前日期是20161201）:
+
+        ..  code-block:: python
+
+            [In]
+            logger.info(get_future_contracts('IF'))
+            [Out]
+            ['IF1612', 'IF1701', 'IF1703', 'IF1706']
+    """
+    env = Environment.get_instance()
+    return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)
+
+
+@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
+def _futures_get_dominant(underlying_symbol, rule=0):
+    """
+    获取T日的主力合约
+    :param underlying_symbol: 如AL
+    :param rule: 默认是0，采用最大昨仓为当日主力合约，每个合约只能做一次主力合约，不会重复出现。
+                 针对股指期货，只在当月和次月合约中选择主力合约。
+                 当rule=1时，主力合约的选取只考虑最大昨仓这个条件。
+    :return:
+    """
+    dt = Environment.get_instance().trading_dt.date()
+    ret = rqdatac.futures.get_dominant(underlying_symbol, dt, dt, rule)
+    if ret is None or ret.empty:
+        return None
+
+    return ret.item()
+
+
+@apply_rules(verify_that('which').is_instance_of(str),
+             verify_that('rank_by').is_in(['short', 'long']))
+def _futures_get_member_rank(which, count=1, rank_by='short'):
+    """
+    获取截止T-1日的期货或品种的会员排名情况
+    :param which: 期货合约或品种
+    :param count: 获取多少个交易日的数据，默认为1
+    :param rank_by: short/long
+    :return: DataFrame
+    """
+    env = Environment.get_instance()
+    end_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
+
+    if count == 1:
+        start_date = end_date
+    else:
+        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+
+    return rqdatac.futures.get_member_rank(which, start_date=start_date, end_date=end_date, rank_by=rank_by)
+
+
+def _futures_get_warehouse_stocks(underlying_symbols, count=1):
+    """
+    获取截止T-1日的期货仓单数据
+    :param underlying_symbols: 期货品种，可以为str或列表
+    :param count: 获取多少个交易日的数据，默认为1
+    :return: multi-index DataFrame
+    """
+    env = Environment.get_instance()
+    end_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
+
+    if count == 1:
+        start_date = end_date
+    else:
+        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+
+    return rqdatac.futures.get_warehouse_stocks(underlying_symbols, start_date=start_date, end_date=end_date)
+
+
 futures.get_dominant = staticmethod(_futures_get_dominant)
+futures.get_contracts = staticmethod(get_future_contracts)
+futures.get_member_rank = staticmethod(_futures_get_member_rank)
+futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
