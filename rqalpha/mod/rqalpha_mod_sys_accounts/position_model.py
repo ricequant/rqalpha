@@ -70,8 +70,17 @@ class StockPosition(BasePosition):
         return self.enable_position_validator
 
     @property
+    def market_value(self):
+        return self.last_price * self.quantity
+
+    @property
     def margin(self):
         return 0
+
+    @property
+    def equity(self):
+        # type: () -> float
+        return self.market_value
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
@@ -87,21 +96,50 @@ class StockPosition(BasePosition):
 
     def before_trading(self, trading_date):
         # type: (date) -> float
-        delta_static_total_value = super(StockPosition, self).before_trading(trading_date)
         if self.quantity == 0:
-            return delta_static_total_value
+            return 0
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         data_proxy = Environment.get_instance().data_proxy
         self._handle_dividend_book_closure(trading_date, data_proxy)
-        delta_static_total_value += self._handle_dividend_payable(trading_date)
+        delta_cash = self._handle_dividend_payable(trading_date)
         self._handle_split(trading_date, data_proxy)
-        return delta_static_total_value
+        return delta_cash
+
+    def apply_trade(self, trade):
+        # type: (Trade) -> float
+        # 返回总资金的变化量
+        self._transaction_cost += trade.transaction_cost
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            if self.quantity < 0:
+                if trade.last_quantity <= -1 * self.quantity:
+                    self._avg_price = 0
+                else:
+                    self._avg_price = trade.last_price
+            else:
+                self._avg_price = (self.quantity * self._avg_price + trade.last_quantity * trade.last_price) / (
+                        self.quantity + trade.last_quantity
+                )
+            self._today_quantity += trade.last_quantity
+            self._trade_cost += trade.last_price * trade.last_quantity
+
+            if self._market_tplus >= 1:
+                self._non_closable += trade.last_quantity
+            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost
+        elif trade.position_effect == POSITION_EFFECT.CLOSE:
+            self._today_quantity -= max(trade.last_quantity - self._old_quantity, 0)
+            self._old_quantity -= min(trade.last_quantity, self._old_quantity)
+            return trade.last_price * trade.last_quantity - trade.transaction_cost
+        else:
+            raise RuntimeError("StockPosition dose not support position_effect: {}".format(trade.position_effect))
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
-        delta_static_total_value, _ = super(StockPosition, self).settlement(trading_date)
-        virtual_trade = None
+        self._old_quantity += self._today_quantity
+        self._logical_old_quantity = self._old_quantity
+        self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
+        self._prev_close = self.last_price
+
         if self.quantity == 0:
             return 0, None
         if self.direction != POSITION_DIRECTION.LONG:
@@ -109,6 +147,7 @@ class StockPosition(BasePosition):
         data_proxy = Environment.get_instance().data_proxy
         next_date = data_proxy.get_next_trading_date(trading_date)
         instrument = data_proxy.instruments(self._order_book_id)
+        delta_cash = 0
         if instrument.de_listed_at(next_date):
             try:
                 transform_data = data_proxy.get_share_transformation(self._order_book_id)
@@ -125,13 +164,22 @@ class StockPosition(BasePosition):
                         position_effect=POSITION_EFFECT.OPEN,
                         order_book_id=successor
                     )
+                    return 0, virtual_trade
+            if self.cash_return_by_stock_delisted:
+                delta_cash = self.market_value
+
             self._today_quantity = self._old_quantity = 0
-            if virtual_trade is None and not self.cash_return_by_stock_delisted:
-                delta_static_total_value -= self.market_value
-        return delta_static_total_value, virtual_trade
+        return delta_cash, None
 
     def calc_close_today_amount(self, trade_amount):
         return 0
+
+    @property
+    def _market_tplus(self):
+        if self._market_tplus_ is None:
+            env = Environment.get_instance()
+            self._market_tplus_ = env.data_proxy.instruments(self._order_book_id).market_tplus
+        return self._market_tplus_
 
     def _handle_dividend_book_closure(self, trading_date, data_proxy):
         # type: (date, DataProxy) -> None
@@ -142,7 +190,7 @@ class StockPosition(BasePosition):
         dividend_per_share = sum(dividend['dividend_cash_before_tax'] / dividend['round_lot'])
         if dividend_per_share != dividend_per_share:
             raise RuntimeError("Dividend per share of {} is not supposed to be nan.".format(self._order_book_id))
-        self.apply_dividend(dividend_per_share)
+        self._avg_price -= dividend_per_share
 
         try:
             payable_date = _int_to_date(dividend["payable_date"][0])
@@ -153,25 +201,29 @@ class StockPosition(BasePosition):
 
     def _handle_dividend_payable(self, trading_date):
         # type: (date) -> float
-        # 返回静态权益的变化量
+        # 返回总资金的变化量
         if not self._dividend_receivable:
             return 0
         payable_date, dividend_value = self._dividend_receivable
         if payable_date != trading_date:
             return 0
+        self._dividend_receivable = None
         if self.dividend_reinvestment:
             last_price = self.last_price
             self.apply_trade(Trade.__from_create__(
                 None, last_price, dividend_value / last_price, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id
             ))
-        self._dividend_receivable = None
-        return dividend_value
+            return 0
+        else:
+            return dividend_value
 
     def _handle_split(self, trading_date, data_proxy):
         ratio = data_proxy.get_split_by_ex_date(self._order_book_id, trading_date)
         if ratio is None:
             return
-        self.apply_split(ratio)
+        self._today_quantity *= ratio
+        self._old_quantity *= ratio
+        self._avg_price /= ratio
 
 
 class FuturePosition(BasePosition):
@@ -182,16 +234,67 @@ class FuturePosition(BasePosition):
         return self.enable_position_validator
 
     @property
+    def old_quantity(self):
+        return self._old_quantity
+
+    @property
+    def today_quantity(self):
+        return self._today_quantity
+
+    @property
+    def market_value(self):
+        return self.last_price * self.quantity * self.contract_multiplier
+
+    @property
     def margin(self):
-        return self.cash_occupation
+        return self.market_value * self._instrument.margin_rate * Environment.get_instance().config.base.margin_multiplier
+
+    @property
+    def equity(self):
+        # type: () -> float
+        return self.quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     def calc_close_today_amount(self, trade_amount):
         close_today_amount = trade_amount - self.old_quantity
         return max(close_today_amount, 0)
 
+    def before_trading(self, trading_date):
+        # type: (date) -> float
+        return 0
+
+    def apply_trade(self, trade):
+        self._transaction_cost += trade.transaction_cost
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            if self.quantity < 0:
+                if trade.last_quantity <= -1 * self.quantity:
+                    self._avg_price = 0
+                else:
+                    self._avg_price = trade.last_price
+            else:
+                self._avg_price = (self.quantity * self._avg_price + trade.last_quantity * trade.last_price) / (
+                        self.quantity + trade.last_quantity
+                )
+            self._today_quantity += trade.last_quantity
+            self._trade_cost += trade.last_price * trade.last_quantity
+            return -1 * trade.transaction_cost
+        else:
+            if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
+                self._today_quantity -= trade.last_quantity
+            elif trade.position_effect == POSITION_EFFECT.CLOSE:
+                self._today_quantity -= max(trade.last_quantity - self._old_quantity, 0)
+                self._old_quantity -= min(trade.last_quantity, self._old_quantity)
+            else:
+                raise RuntimeError("FuturePosition dose not support position_effect: {}".format(trade.position_effect))
+            self._trade_cost -= trade.last_price * trade.last_quantity
+            return -1 * trade.transaction_cost + (
+                trade.last_price - self._avg_price
+            ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
+
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
-        super(FuturePosition, self).settlement(trading_date)
+        self._old_quantity += self._today_quantity
+        self._logical_old_quantity = self._old_quantity
+        self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
         if self.quantity == 0:
             return 0, None
         data_proxy = Environment.get_instance().data_proxy
@@ -202,7 +305,12 @@ class FuturePosition(BasePosition):
                 order_book_id=self._order_book_id
             ))
             self._today_quantity = self._old_quantity = 0
-        return 0, None
+            delta_cash = self.equity + self.margin
+        else:
+            delta_cash = self.equity
+
+        self._avg_price = self._prev_close = self.last_price
+        return delta_cash, None
 
 
 class StockPositionProxy(PositionProxy):
@@ -214,12 +322,6 @@ class StockPositionProxy(PositionProxy):
     @property
     def type(self):
         return "STOCK"
-
-    def split_(self, ratio):
-        self._long.apply_split(ratio)
-
-    def dividend_(self, dividend_per_share):
-        self._long.apply_dividend(dividend_per_share)
 
     @property
     def quantity(self):

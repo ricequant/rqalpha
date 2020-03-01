@@ -300,15 +300,14 @@ def test_current_snapshot():
 
 
 def test_get_position():
-    def assert_position(pos, obid, dir, today_quantity, old_quantity, avg_price):
+    def assert_position(pos, obid, dir, today_quantity, old_quantity):
         assert pos.order_book_id == obid
         assert pos.direction == dir, "Direction of {} is expected to be {} instead of {}".format(
             pos.order_book_id, dir, pos.direction
         )
-        assert pos.today_quantity == today_quantity
-        assert pos.old_quantity == old_quantity
+        assert pos._today_quantity == today_quantity
+        assert pos._old_quantity == old_quantity
         assert pos.quantity == (today_quantity + old_quantity)
-        assert pos.avg_price == avg_price
 
     def init(context):
         context.counter = 0
@@ -319,33 +318,31 @@ def test_get_position():
 
         if context.counter == 1:
             order_shares("000001.XSHE", 300)
-            context.expected_avg_price = bar_dict["000001.XSHE"].close
         elif context.counter == 5:
             order_shares("000001.XSHE", -100)
         elif context.counter == 10:
             sell_open("RB1701", 5)
-            context.expected_avg_price = bar_dict["RB1701"].close
         elif context.counter == 15:
             buy_close("RB1701", 2)
 
         if context.counter == 1:
             pos = [p for p in get_positions() if p.direction == POSITION_DIRECTION.LONG][0]
-            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 300, 0, context.expected_avg_price)
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 300, 0)
         elif 1 < context.counter < 5:
             pos = [p for p in get_positions() if p.direction == POSITION_DIRECTION.LONG][0]
-            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 300, context.expected_avg_price)
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 300)
         elif 5 <= context.counter < 10:
             pos = get_position("000001.XSHE", POSITION_DIRECTION.LONG)
-            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 200, context.expected_avg_price)
+            assert_position(pos, "000001.XSHE", POSITION_DIRECTION.LONG, 0, 200)
         elif context.counter == 10:
             pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
-            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 5, 0, context.expected_avg_price)
+            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 5, 0)
         elif 10 < context.counter < 15:
             pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
-            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 5, context.expected_avg_price)
+            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 5)
         elif context.counter >= 15:
             pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
-            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3, context.expected_avg_price)
+            assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3)
 
     return locals()
 

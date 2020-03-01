@@ -52,7 +52,7 @@ class Account(AbstractAccount):
     def __init__(self, type, total_cash, init_positions):
         # type: (str, float, Dict[str, int]) -> None
         self._type = type
-        self._static_total_value = total_cash
+        self._total_cash = total_cash  # 包含保证金的总资金
 
         self._positions = {}
         self._backward_trade_set = set()
@@ -95,7 +95,7 @@ class Account(AbstractAccount):
                 } for order_book_id, positions in six.iteritems(self._positions)
             },
             'frozen_cash': self._frozen_cash,
-            'static_total_value': self._static_total_value,
+            "total_cash": self._total_cash,
             'backward_trade_set': list(self._backward_trade_set),
         }
 
@@ -109,20 +109,19 @@ class Account(AbstractAccount):
                 state = positions_state[direction]
                 position = self._get_or_create_pos(order_book_id, direction)
                 position.set_state(state)
-
-        if "static_total_value" in state:
-            self._static_total_value = state["static_total_value"]
+        if "total_cash" in state:
+            self._total_cash = state["total_cash"]
         else:
             # forward compatible
-            static_total_value = state["total_cash"]
+            total_cash = state["static_total_valueu"]
             for p in self._iter_pos():
+                if p._instrument.type == INSTRUMENT_TYPE.FUTURE:
+                    continue
+                # FIXME: not exactly right
                 try:
-                    static_total_value += (p.margin - (p.trading_pnl + p.position_pnl) + p.transaction_cost)
+                    total_cash -= p.equity
                 except RuntimeError:
-                    # 新老结构切换之间发生退市的
-                    static_total_value += p.margin
-                    self._positions.pop(p.order_book_id)
-            self._static_total_value = state["total_cash"] + self.margin - self.daily_pnl + self.transaction_cost
+                    total_cash -= p.prev_close * p.quantity
 
         # forward compatible
         if "dividend_receivable" in state:
@@ -193,7 +192,7 @@ class Account(AbstractAccount):
         可用资金 = 总资金 - 冻结资金
 
         """
-        return self.total_cash - self._frozen_cash
+        return self._total_cash - self.margin - self._frozen_cash
 
     @property
     def market_value(self):
@@ -208,10 +207,6 @@ class Account(AbstractAccount):
         [float] 总费用
         """
         return sum(p.transaction_cost for p in self._iter_pos())
-
-    @property
-    def cash_occupation(self):
-        return sum(p.cash_occupation for p in self._iter_pos())
 
     @property
     def margin(self):
@@ -240,6 +235,10 @@ class Account(AbstractAccount):
         return self.trading_pnl + self.position_pnl - self.transaction_cost
 
     @property
+    def equity(self):
+        return sum(p.equity for p in self._iter_pos())
+
+    @property
     def total_value(self):
         """
         [float] 账户总权益
@@ -247,7 +246,7 @@ class Account(AbstractAccount):
         期货账户总权益 = 期货昨日总权益 + 当日盈亏
 
         """
-        return self._static_total_value + self.daily_pnl + self.receivable
+        return self._total_cash + self.equity
 
     @property
     def total_cash(self):
@@ -257,7 +256,7 @@ class Account(AbstractAccount):
         期货账户总资金会受保证金变化的影响变化，期货账户总资金 = 总权益 - 保证金
 
         """
-        return self._static_total_value + self.daily_pnl - self.cash_occupation
+        return self._total_cash - self.margin
 
     @property
     def position_pnl(self):
@@ -288,24 +287,18 @@ class Account(AbstractAccount):
     def _on_before_trading(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
         for position in self._iter_pos():
-            delta_static_total_value = position.before_trading(trading_date)
-            if delta_static_total_value:
-                self._static_total_value += delta_static_total_value
+            self._total_cash += position.before_trading(trading_date)
 
     def _on_settlement(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
-        self._static_total_value += self.daily_pnl
 
         virtual_trades = []
         for order_book_id, positions in list(six.iteritems(self._positions)):
             for position in six.itervalues(positions):
-                result = position.settlement(trading_date)
-                if result:
-                    delta_static_total_value, virtual_trade = result
-                    if delta_static_total_value:
-                        self._static_total_value += delta_static_total_value
-                    if virtual_trade:
-                        virtual_trades.append(virtual_trade)
+                delta_cash, virtual_trade = position.settlement(trading_date)
+                self._total_cash += delta_cash
+                if virtual_trade:
+                    virtual_trades.append(virtual_trade)
             for virtual_trade in virtual_trades:
                 self._apply_trade(virtual_trade)
 
@@ -317,11 +310,11 @@ class Account(AbstractAccount):
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         forced_liquidation = Environment.get_instance().config.base.forced_liquidation
-        if self._static_total_value <= 0 and forced_liquidation:
+        if self.total_value <= 0 and forced_liquidation:
             if self._positions:
                 user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
             self._positions.clear()
-            self._static_total_value = 0
+            self._total_cash = 0
 
     def _on_order_pending_new(self, event):
         if event.account != self:
@@ -344,10 +337,10 @@ class Account(AbstractAccount):
             return
         order_book_id = trade.order_book_id
         if trade.position_effect == POSITION_EFFECT.MATCH:
-            self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG).apply_trade(trade)
-            self._get_or_create_pos(order_book_id, POSITION_DIRECTION.SHORT).apply_trade(trade)
+            self._total_cash += self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG).apply_trade(trade)
+            self._total_cash += self._get_or_create_pos(order_book_id, POSITION_DIRECTION.SHORT).apply_trade(trade)
         else:
-            self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
+            self._total_cash += self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
         self._backward_trade_set.add(trade.exec_id)
         if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:

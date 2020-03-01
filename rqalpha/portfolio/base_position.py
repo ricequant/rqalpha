@@ -69,22 +69,6 @@ class BasePosition(AbstractPosition):
         return self._old_quantity + self._today_quantity
 
     @property
-    def old_quantity(self):
-        return self._old_quantity
-
-    @property
-    def today_quantity(self):
-        return self._today_quantity
-
-    @property
-    def logical_old_quantity(self):
-        return self._logical_old_quantity
-
-    @property
-    def non_closable(self):
-        return self._non_closable
-
-    @property
     def avg_price(self):
         return self._avg_price
 
@@ -110,10 +94,15 @@ class BasePosition(AbstractPosition):
 
     @property
     def market_value(self):
-        return self.quantity * self.last_price * self.contract_multiplier
+        raise NotImplementedError
 
     @property
     def margin(self):
+        raise NotImplementedError
+
+    @property
+    def equity(self):
+        # type: () -> float
         raise NotImplementedError
 
     @property
@@ -145,7 +134,7 @@ class BasePosition(AbstractPosition):
 
     @property
     def today_closable(self):
-        return self.today_quantity - sum(
+        return self._today_quantity - sum(
             o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
         )
 
@@ -156,10 +145,6 @@ class BasePosition(AbstractPosition):
     @property
     def position_validator_enabled(self):
         return True
-
-    @property
-    def cash_occupation(self):
-        return self._instrument.calc_cash_occupation(self.last_price, self.quantity, self.direction)
 
     def get_state(self):
         return {
@@ -185,55 +170,18 @@ class BasePosition(AbstractPosition):
 
     def before_trading(self, trading_date):
         # type: (date) -> float
-        # 返回该阶段导致账户权益的变化量
-        return 0
+        # 返回该阶段导致总资金的变化量
+        raise NotImplementedError
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
-        # 返回该阶段导致账户权益的变化量以及反映该阶段引起其他持仓变化的虚拟交易
-        self._old_quantity += self._today_quantity
-        self._logical_old_quantity = self._old_quantity
-        self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
-        self._prev_close = self.last_price
-        return 0, None
+        # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
+        raise NotImplementedError
 
     def apply_trade(self, trade):
-        self._transaction_cost += trade.transaction_cost
-        if trade.position_effect == POSITION_EFFECT.OPEN:
-            if self.quantity < 0:
-                if trade.last_quantity <= -1 * self.quantity:
-                    self._avg_price = 0
-                else:
-                    self._avg_price = trade.last_price
-            else:
-                self._avg_price = (self.quantity * self._avg_price + trade.last_quantity * trade.last_price) / (
-                        self.quantity + trade.last_quantity
-                )
-            self._today_quantity += trade.last_quantity
-            self._trade_cost += trade.last_price * trade.last_quantity
-
-            if self._market_tplus >= 1:
-                self._non_closable += trade.last_quantity
-            return 0
-        else:
-            if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
-                self._today_quantity -= trade.last_quantity
-            else:
-                # CLOSE, EXERCISE, MATCH, 先平昨，后平今
-                self._today_quantity -= max(trade.last_quantity - self._old_quantity, 0)
-                self._old_quantity -= min(trade.last_quantity, self._old_quantity)
-            if trade.position_effect == POSITION_EFFECT.MATCH:
-                self._trade_cost -= self.last_price * trade.last_quantity
-            else:
-                self._trade_cost -= trade.last_price * trade.last_quantity
-
-    def apply_split(self, ratio):
-        self._today_quantity *= ratio
-        self._old_quantity *= ratio
-        self._avg_price /= ratio
-
-    def apply_dividend(self, dividend_per_unit):
-        self._avg_price -= dividend_per_unit
+        # type: (Trade) -> float
+        # 返回总资金的变化量
+        raise NotImplementedError
 
     def update_last_price(self, price):
         self._last_price = price
@@ -247,13 +195,6 @@ class BasePosition(AbstractPosition):
         for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
             if order.position_direction == self._direction:
                 yield order
-
-    @property
-    def _market_tplus(self):
-        if self._market_tplus_ is None:
-            env = Environment.get_instance()
-            self._market_tplus_ = env.data_proxy.instruments(self._order_book_id).market_tplus
-        return self._market_tplus_
 
 
 class PositionProxy(object):
