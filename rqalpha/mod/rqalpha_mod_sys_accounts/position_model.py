@@ -17,6 +17,7 @@
 
 from typing import Tuple, Optional
 from datetime import date
+from functools import lru_cache
 
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
@@ -45,16 +46,11 @@ class StockPosition(BasePosition):
         self._dividend_receivable = None
         self._pending_transform = None
 
-    @property
-    def dividend_receivable(self):
-        if self._dividend_receivable:
-            _, dividend_value = self._dividend_receivable
-            return dividend_value
-        return 0
-
-    @property
-    def receivable(self):
-        return self.dividend_receivable
+    dividend_receivable = property(lambda self: self._dividend_receivable[1] if self._dividend_receivable else 0)
+    receivable = property(lambda self: self.dividend_receivable)
+    market_value =  property(lambda self: self.last_price * self.quantity)
+    margin = property(lambda self: 0)
+    equity = property(lambda self: self.market_value)
 
     @property
     def closable(self):
@@ -70,17 +66,13 @@ class StockPosition(BasePosition):
         return self.enable_position_validator
 
     @property
-    def market_value(self):
-        return self.last_price * self.quantity
+    def trading_pnl(self):
+        trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
+        return trade_quantity * self.last_price - self._trade_cost
 
     @property
-    def margin(self):
-        return 0
-
-    @property
-    def equity(self):
-        # type: () -> float
-        return self.market_value
+    def position_pnl(self):
+        return self._logical_old_quantity * (self.last_price - self.prev_close)
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
@@ -229,30 +221,41 @@ class StockPosition(BasePosition):
 class FuturePosition(BasePosition):
     enable_position_validator = True
 
+    old_quantity = property(lambda self: self._old_quantity)
+    today_quantity = property(lambda self: self._today_quantity)
+    market_value = property(lambda self: self.last_price * self.quantity * self.contract_multiplier)
+    margin = property(lambda self: self.market_value * self.margin_rate)
+
     @property
     def position_validator_enabled(self):
         return self.enable_position_validator
 
     @property
-    def old_quantity(self):
-        return self._old_quantity
+    @lru_cache()
+    def contract_multiplier(self):
+        return self._instrument.contract_multiplier
 
     @property
-    def today_quantity(self):
-        return self._today_quantity
-
-    @property
-    def market_value(self):
-        return self.last_price * self.quantity * self.contract_multiplier
-
-    @property
-    def margin(self):
-        return self.market_value * self._instrument.margin_rate * Environment.get_instance().config.base.margin_multiplier
+    @lru_cache()
+    def margin_rate(self):
+        return self._instrument.margin_rate * Environment.get_instance().config.base.margin_multiplier
 
     @property
     def equity(self):
         # type: () -> float
         return self.quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
+
+    @property
+    def trading_pnl(self):
+        trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
+        return self.contract_multiplier * (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
+
+    @property
+    def position_pnl(self):
+        quantity = self._logical_old_quantity
+        if quantity == 0:
+            return 0
+        return quantity * self.contract_multiplier * (self.last_price - self.prev_close) * self._direction_factor
 
     def calc_close_today_amount(self, trade_amount):
         close_today_amount = trade_amount - self.old_quantity

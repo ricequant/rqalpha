@@ -105,6 +105,7 @@ class Environment(object):
         self.broker = broker
 
     def add_frontend_validator(self, validator, validator_type=FRONT_VALIDATOR_TYPE.OTHER):
+        # TODO: register validator with instrument_type
         self._frontend_validators.setdefault(validator_type, []).append(validator)
 
     def validate_order_submission(self, order):

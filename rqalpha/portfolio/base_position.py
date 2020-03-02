@@ -56,41 +56,19 @@ class BasePosition(AbstractPosition):
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
 
-    @property
-    def order_book_id(self):
-        return self._order_book_id
-
-    @property
-    def direction(self):
-        return self._direction
-
-    @property
-    def quantity(self):
-        return self._old_quantity + self._today_quantity
-
-    @property
-    def avg_price(self):
-        return self._avg_price
-
-    @property
-    def transaction_cost(self):
-        return self._transaction_cost
+    order_book_id = property(lambda self: self._order_book_id)
+    direction = property(lambda self: self._direction)
+    quantity = property(lambda self: self._old_quantity + self._today_quantity)
+    transaction_cost = property(lambda self: self._transaction_cost)
+    avg_price = property(lambda self: self._avg_price)
 
     @property
     def trading_pnl(self):
-        trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
-        return self.contract_multiplier * (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
+        raise NotImplementedError
 
     @property
     def position_pnl(self):
-        quantity = self._logical_old_quantity
-        if quantity == 0:
-            return 0
-        return quantity * self.contract_multiplier * (self.last_price - self.prev_close) * self._direction_factor
-
-    @property
-    def pnl(self):
-        return (self.last_price - self.avg_price) * self.quantity * self.contract_multiplier * self._direction_factor
+        raise NotImplementedError
 
     @property
     def market_value(self):
@@ -104,10 +82,6 @@ class BasePosition(AbstractPosition):
     def equity(self):
         # type: () -> float
         raise NotImplementedError
-
-    @property
-    def contract_multiplier(self):
-        return self._instrument.contract_multiplier
 
     @property
     def prev_close(self):
@@ -260,16 +234,6 @@ class PositionProxy(object):
         """
         return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl +\
                self._short.trading_pnl - self.transaction_cost
-
-    @property
-    def pnl(self):
-        """
-        [float] 累计盈亏
-
-        (最新价 - 平均开仓价格) * 持仓量 * 合约乘数
-
-        """
-        return self._long.pnl + self._short.pnl
 
     # -- Quantity 相关
     @property
