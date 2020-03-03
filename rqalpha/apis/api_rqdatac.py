@@ -565,3 +565,157 @@ futures.get_dominant = staticmethod(_futures_get_dominant)
 futures.get_contracts = staticmethod(get_future_contracts)
 futures.get_member_rank = staticmethod(_futures_get_member_rank)
 futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
+
+
+# =======================  以下 API 不建议使用  =================================
+
+_get_fundamentals_warning_fired = False
+
+
+@export_as_api
+@apply_rules(verify_that('entry_date').is_valid_date(ignore_none=True),
+             verify_that('interval').is_valid_interval(),
+             verify_that('report_quarter').is_instance_of(bool))
+def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False, expect_df=False, **kwargs):
+    global _get_fundamentals_warning_fired
+    if not _get_fundamentals_warning_fired:
+        user_log.warn('get_fundamentals is deprecated, use get_factor instead')
+        _get_fundamentals_warning_fired = True
+
+    env = Environment.get_instance()
+    dt = env.calendar_dt.date()
+    if entry_date is None and 'date' in kwargs:
+        entry_date = kwargs.pop('date')
+    if kwargs:
+        raise RQInvalidArgument('unknown arguments: {}'.format(kwargs))
+
+    latest_query_day = dt - datetime.timedelta(days=1)
+
+    if entry_date:
+        entry_date = to_date(entry_date)
+        if entry_date <= latest_query_day:
+            query_date = entry_date
+        else:
+            raise RQInvalidArgument(
+                _('in get_fundamentals entry_date {} is no earlier than test date {}').format(entry_date, dt))
+    else:
+        query_date = latest_query_day
+
+    result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
+    if result is None:
+        return pd.DataFrame()
+
+    if len(result.major_axis) == 1:
+        frame = result.major_xs(result.major_axis[0])
+        # research 与回测返回的Frame维度相反
+        return frame.T
+    return result
+
+
+@export_as_api
+@apply_rules(verify_that('interval').is_valid_interval())
+def get_financials(query, quarter=None, interval='4q'):
+    if quarter is None:
+        valid = True
+    else:
+        valid = isinstance(quarter, six.string_types) and quarter[-2] == 'q'
+        if valid:
+            try:
+                valid = 1990 <= int(quarter[:-2]) <= 2050 and 1 <= int(quarter[-1]) <= 4
+            except ValueError:
+                valid = False
+    if not valid:
+        raise RQInvalidArgument(
+            _(u"function {}: invalid {} argument, quarter should be in form of '2012q3', "
+              u"got {} (type: {})").format(
+                'get_financials', 'quarter', quarter, type(quarter)
+            ))
+    env = Environment.get_instance()
+    dt = env.calendar_dt.date() - datetime.timedelta(days=1)  # Take yesterday's data as default
+    year = dt.year
+    mon = dt.month
+    day = dt.day
+    int_date = year * 10000 + mon * 100 + day
+    q = (mon - 4) // 3 + 1
+    y = year
+    if q <= 0:
+        y -= 1
+        q = 4
+    default_quarter = str(y) + 'q' + str(q)
+    if quarter is None or quarter > default_quarter:
+        quarter = default_quarter
+
+    include_date = False
+    for d in query.column_descriptions:
+        if d['name'] == 'announce_date':
+            include_date = True
+    if not include_date:
+        query = query.add_column(rqdatac.fundamentals.announce_date)
+
+    result = rqdatac.get_financials(query, quarter, interval, expect_df=True)
+    if result is None:
+        return pd.DataFrame()
+    result = result[result['announcement_date'] <= int_date | pd.isnull(result['announcement_date'])]
+    if not include_date:
+        del result['announcement_date']
+
+    return result
+
+
+@export_as_api
+@apply_rules(verify_that('if_adjusted').is_in([0, 1, '0', '1', 'all', 'ignore'], ignore_none=True))
+def get_pit_financials(fields, quarter=None, interval=None, order_book_ids=None, if_adjusted='all'):
+    if quarter is None:
+        valid = True
+    else:
+        valid = isinstance(quarter, six.string_types) and quarter[-2] == 'q'
+        if valid:
+            try:
+                valid = 1990 <= int(quarter[:-2]) <= 2050 and 1 <= int(quarter[-1]) <= 4
+            except ValueError:
+                valid = False
+    if not valid:
+        raise RQInvalidArgument(
+            _(u"function {}: invalid {} argument, quarter should be in form of '2012q3', "
+              u"got {} (type: {})").format(
+                'get_pit_financials', 'quarter', quarter, type(quarter)
+            ))
+
+    env = Environment.get_instance()
+    dt = env.calendar_dt.date()
+    year = dt.year
+    mon = dt.month
+    day = dt.day
+    int_date = year * 10000 + mon * 100 + day
+    q = (mon - 4) // 3 + 1
+    y = year
+    if q <= 0:
+        y -= 1
+        q = 4
+    default_quarter = str(y) + 'q' + str(q)
+    if quarter is None or quarter > default_quarter:
+        quarter = default_quarter
+    result = rqdatac.get_pit_financials(fields, quarter, interval, order_book_ids, if_adjusted,
+                                        max_info_date=int_date, market='cn')
+    if result is None:
+        return pd.DataFrame()
+
+    if if_adjusted == 'ignore':
+        result = result.reset_index().sort_values('info_date')
+        result = result.groupby(['order_book_id', 'end_date'], as_index=False).fillna(method='ffill')
+        result = result.drop(['info_date', 'if_adjusted'], axis=1)
+        result = result.drop_duplicates(['order_book_id', 'end_date'], keep='last')
+        result = result.set_index(['order_book_id', 'end_date']).sort_index()
+    return result
+
+
+@export_as_api
+@apply_rules(verify_that('entities').are_valid_query_entities())
+def query(*entities):
+    return rqdatac.query(*entities)
+
+
+export_as_api(rqdatac.financials, name='financials')
+export_as_api(rqdatac.financials, name='Financials')
+export_as_api(rqdatac.fundamentals, name='fundamentals')
+export_as_api(rqdatac.Fundamentals, name='Fundamentals')
