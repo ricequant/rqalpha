@@ -203,6 +203,8 @@ def run(config, source_code=None, user_funcs=None):
             should_resume = False
             should_run_init = True
 
+        system_log.debug("persist status: should_resume={}, should_run_init={}".format(should_resume, should_run_init))
+
         user_strategy = Strategy(env.event_bus, scope, ucontext, should_run_init)
         env.user_strategy = user_strategy
 
