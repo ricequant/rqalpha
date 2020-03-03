@@ -308,10 +308,8 @@ class FuturePosition(BasePosition):
                 order_book_id=self._order_book_id
             ))
             self._today_quantity = self._old_quantity = 0
-            delta_cash = self.equity + self.margin
-        else:
-            delta_cash = self.equity
 
+        delta_cash = self.equity
         self._avg_price = self._prev_close = self.last_price
         return delta_cash, None
 
