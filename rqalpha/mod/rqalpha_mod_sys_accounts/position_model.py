@@ -303,13 +303,12 @@ class FuturePosition(BasePosition):
         data_proxy = Environment.get_instance().data_proxy
         instrument = data_proxy.instruments(self._order_book_id)
         next_date = data_proxy.get_next_trading_date(trading_date)
+        delta_cash = self.equity
         if instrument.de_listed_at(next_date):
             user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))
             self._today_quantity = self._old_quantity = 0
-
-        delta_cash = self.equity
         self._avg_price = self._prev_close = self.last_price
         return delta_cash, None
 
