@@ -16,7 +16,7 @@ import six
 
 from rqalpha.environment import Environment
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_EFFECT, SIDE
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 
@@ -145,6 +145,7 @@ class FutureAccount(AssetAccount):
         if self != event.account:
             return
         self._apply_trade(event.trade, event.order)
+        system_log.debug("future account applied trade, current state: {}".format(self.get_state()))
 
     def _on_settlement(self, event):
         self._static_total_value = self.total_value
@@ -168,6 +169,7 @@ class FutureAccount(AssetAccount):
             self._static_total_value = 0
 
         self._backward_trade_set.clear()
+        system_log.debug("future account applied settlement, current state: {}".format(self.get_state()))
 
     def _on_before_trading(self, event):
         pass
@@ -189,11 +191,9 @@ class FutureAccount(AssetAccount):
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
-        new_position = order_book_id not in self._positions
         position = self._positions.get_or_create(order_book_id)
         position.apply_trade(trade)
-        if new_position:
-            position.update_last_price()
+        position.update_last_price()
         self._backward_trade_set.add(trade.exec_id)
         if order:
             if trade.last_quantity != order.quantity:
