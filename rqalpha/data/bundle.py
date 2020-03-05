@@ -109,7 +109,7 @@ def gen_ex_factor(d):
     ex_factor = ex_factor[['ex_cum_factor']]
 
     dtype = ex_factor.loc[ex_factor.index.levels[0][0]].to_records().dtype
-    initial = np.empty((1, ), dtype=dtype)
+    initial = np.empty((1,), dtype=dtype)
     initial['start_date'] = 0
     initial['ex_cum_factor'] = 1.0
 
@@ -285,7 +285,7 @@ def update_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
                 start_date = START_DATE
             df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
                                    adjust_type='none', fields=fields, expect_df=True)
-            if not(df is None or df.empty):
+            if not (df is None or df.empty):
                 df = df.loc[order_book_id]
                 df.reset_index(inplace=True)
                 df['datetime'] = [convert_date_to_int(d) for d in df['date']]
@@ -320,14 +320,17 @@ def update_bundle(path, create, enable_compression=False):
         ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
     )
 
-    progressbar = click.progressbar(length=sum(len(o) for _, o, _ in day_bar_args) + 10)
-    for func in (
+    gen_func_list = (
         gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
-    ):
+    )
+    progressbar = click.progressbar(length=len(gen_func_list), label="Generate file")
+    for func in gen_func_list:
         func(path)
         progressbar.update(1)
+    progressbar.render_finish()
 
+    progressbar = click.progressbar(length=sum(len(o) for _, o, _ in day_bar_args), label='Update day bar')
     for (file, order_book_id, field) in day_bar_args:
         day_bar_func(os.path.join(path, file), order_book_id, field, progressbar, **kwargs)
 
