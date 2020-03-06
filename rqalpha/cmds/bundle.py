@@ -33,7 +33,8 @@ from .entry import cli
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--rqdatac-uri', help='rqdatac uri, eg tcp://user:password@ip:port', default=None)
 @click.option('--compression', default=False, is_flag=True, help='enable compression to reduce file size')
-def create_bundle(data_bundle_path, rqdatac_uri, compression):
+@click.option('-c', '--concurrency', type=click.INT, default=1)
+def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
     """create bundle using rqdatac"""
     try:
         import rqdatac
@@ -50,14 +51,17 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression):
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
     from rqalpha.data.bundle import update_bundle as update_bundle_
     # from rqalpha.data.bundle import create_bundle as create_bundle_
-    update_bundle_(os.path.join(data_bundle_path, 'bundle'), create=True, enable_compression=compression)
+    update_bundle_(
+        os.path.join(data_bundle_path, 'bundle'), create=True, enable_compression=compression, concurrency=concurrency
+    )
 
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--rqdatac-uri', help='rqdatac uri, eg tcp://user:password@ip:port', default=None)
 @click.option('--compression', default=False, type=click.BOOL, help='enable compression to reduce file size')
-def update_bundle(data_bundle_path, rqdatac_uri, compression):
+@click.option('-c', '--concurrency', type=click.INT, default=1)
+def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
     """update bundle using rqdatac"""
     try:
         import rqdatac
@@ -76,7 +80,9 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    update_bundle_(os.path.join(data_bundle_path, 'bundle'), create=False, enable_compression=compression)
+    update_bundle_(
+        os.path.join(data_bundle_path, 'bundle'), create=False, enable_compression=compression, concurrency=concurrency
+    )
 
 
 @cli.command()
