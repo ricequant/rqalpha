@@ -281,7 +281,11 @@ def update_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
     with h5py.File(path, 'a') as h5:
         for order_book_id in order_book_ids:
             if order_book_id in h5:
-                start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
+                try:
+                    start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
+                except ValueError:
+                    h5.pop(order_book_id)
+                    start_date = START_DATE
             else:
                 start_date = START_DATE
             df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
