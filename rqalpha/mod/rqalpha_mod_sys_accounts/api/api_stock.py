@@ -12,7 +12,11 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import math
+from itertools import chain
+
 from decimal import Decimal, getcontext
+from typing import Dict, List, Union
 
 import six
 import numpy as np
@@ -431,7 +435,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 
     style = cal_style(price, style)
 
-    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
+    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)  # type: AbstractPosition
 
     if percent == 0:
@@ -445,6 +449,73 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
             raise
     else:
         return order_value(order_book_id, account.total_value * percent - market_value, style=style)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR,
+                                EXECUTION_PHASE.ON_TICK,
+                                EXECUTION_PHASE.SCHEDULED,
+                                EXECUTION_PHASE.GLOBAL)
+def order_target_portfolio(target_portfolio):
+    # type: (Dict[Union[str, Instrument]: float]) -> List[Order]
+
+    total_percent = sum(six.itervalues(target_portfolio))
+    if total_percent > 1:
+        raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
+
+    env = Environment.get_instance()
+    account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
+    account_value = account.total_value
+    target_quantities = {}
+    for id_or_ins, target_percent in six.iteritems(target_portfolio):
+        order_book_id = assure_stock_order_book_id(id_or_ins)
+        if target_percent < 0:
+            raise RQInvalidArgument(_(u"target percent of should {} between 0 and 1, current: {}").format(
+                order_book_id, target_percent
+            ))
+        price = env.data_proxy.get_last_price(order_book_id)
+        if not is_valid_price(price):
+            user_system_log.warn(
+                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+            )
+            continue
+        target_quantities[order_book_id] = account_value * target_percent / price
+
+    close_orders, open_orders = [], []
+    current_quantities = {
+        p.order_book_id: p.quantity for p in account.get_positions() if p.direction == POSITION_DIRECTION.LONG
+    }
+    for order_book_id, quantity in six.iteritems(current_quantities):
+        if order_book_id not in target_portfolio:
+            close_orders.append(Order.__from_create__(
+                order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
+            ))
+
+    round_lot = 100
+    for order_book_id, target_quantity in six.iteritems(target_quantities):
+        if order_book_id in current_quantities:
+            delta_quantity = target_quantity - current_quantities[order_book_id]
+        else:
+            delta_quantity = target_quantity
+
+        if delta_quantity >= round_lot:
+            delta_quantity = math.floor(delta_quantity / round_lot) * round_lot
+            open_orders.append(Order.__from_create__(
+                order_book_id, delta_quantity, SIDE.BUY, MarketOrder(), POSITION_EFFECT.OPEN
+            ))
+        elif delta_quantity < -1:
+            delta_quantity = math.floor(delta_quantity)
+            close_orders.append(Order.__from_create__(
+                order_book_id, abs(delta_quantity), SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
+            ))
+
+    # TODO: 下一个 bar 撮合资金咋回流？实盘咋办？要求用户多次调用？
+    submit_orders = []
+    for order in chain(close_orders, open_orders):
+        if env.can_submit_order(order):
+            submit_orders.append(order)
+            env.broker.submit_order(order)
+    return submit_orders
 
 
 @export_as_api

@@ -139,3 +139,28 @@ def test_auto_switch_order_value():
         order_shares("000001.XSHE", 200)
         assert context.portfolio.positions["000001.XSHE"].quantity == 100
     return locals()
+
+
+def test_order_target_portfolio():
+    __config__ = {
+        "base": {
+            "accounts": {
+                "stock": 1000000
+            }
+        },
+    }
+
+    target_portfolio = {
+        "000001.XSHE": 0.1,
+        "000004.XSHE": 0.3,
+        "000005.XSHE": 0.2
+    }
+
+    def handle_bar(context, handle_bar):
+        order_target_portfolio(target_portfolio)
+        total_value = context.portfolio.total_value
+        for o in target_portfolio.keys():
+            p = get_position(o)
+            assert 0 < target_portfolio[o] - p.market_value / total_value < 0.05
+
+    return locals()
