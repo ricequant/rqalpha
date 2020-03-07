@@ -39,8 +39,6 @@ PositionType = Type[BasePosition]
 
 class Account(AbstractAccount):
 
-    __repr__ = property_repr
-
     __abandon_properties__ = [
         "holding_pnl",
         "realized_pnl",
@@ -63,6 +61,16 @@ class Account(AbstractAccount):
         for order_book_id, init_quantity in six.iteritems(init_positions):
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
             self._get_or_create_pos(order_book_id, position_direction, init_quantity)
+
+    def __repr__(self):
+        positions_repr = {}
+        for order_book_id, positions in six.iteritems(self._positions):
+            for direction, position in six.iteritems(positions):
+                if position.quantity != 0:
+                    positions_repr.setdefault(order_book_id, {})[direction.value] = position.quantity
+        return "Account(cash={}, total_value={}, positions={})".format(
+            self.cash, self.total_value, positions_repr
+        )
 
     @classmethod
     def register_position_type(cls, instrument_type, position_type):
