@@ -19,6 +19,8 @@ from typing import Iterable, Tuple, Optional, Dict, Type
 from datetime import date
 from collections import UserDict
 
+import six
+
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_EFFECT, POSITION_DIRECTION, INSTRUMENT_TYPE
@@ -26,12 +28,11 @@ from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.repr import property_repr
+from rqalpha.utils.repr import property_repr, PropertyReprMeta
 from rqalpha.utils import is_valid_price
 
 
-class BasePosition(AbstractPosition):
-    __repr__ = property_repr
+class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
 
     def __init__(self, order_book_id, direction, init_quantity=0):
         self._order_book_id = order_book_id

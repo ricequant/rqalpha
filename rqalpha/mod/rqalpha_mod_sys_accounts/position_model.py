@@ -36,6 +36,10 @@ def _int_to_date(d):
 
 
 class StockPosition(BasePosition):
+    __repr_properties__ = [
+        "order_book_id", "direction", "market_value"
+    ]
+
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
     t_plus_enabled = True

@@ -12,7 +12,33 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import abc
+from itertools import chain
+
+
 import six
+
+
+def _repr(cls_name, properties):
+    fmt_str = "{}({})".format(cls_name, ", ".join((str(p) + "={}") for p in properties))
+    def __repr(inst):
+        return fmt_str.format(*(getattr(inst, p) for p in properties))
+    return __repr
+
+
+class PropertyReprMeta(abc.ABCMeta):
+    # has better performance than property_repr
+    def __new__(mcs, *args, **kwargs):
+        cls = super(PropertyReprMeta, mcs).__new__(mcs, *args, **kwargs)
+
+        if hasattr(cls, "__repr_properties__"):
+            repr_properties = getattr(cls, "__repr_properties__")
+        else:
+            repr_properties = []
+            for c in cls.mro():
+                repr_properties.extend(v for v in vars(c) if isinstance(getattr(c, v), property))
+        cls.__repr__ = _repr(cls.__name__, repr_properties)
+        return cls
 
 
 def property_repr(inst):
