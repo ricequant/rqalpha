@@ -309,6 +309,7 @@ def update_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
 
 
 def _generate_file(func, path, progressbar, step):
+    func(path)
     progressbar.update(step)
 
 
