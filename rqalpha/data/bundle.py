@@ -17,7 +17,6 @@ import re
 import pickle
 import datetime
 from itertools import chain
-from concurrent.futures import ThreadPoolExecutor
 
 import h5py
 import json
@@ -25,6 +24,7 @@ import click
 import numpy as np
 import rqdatac
 
+from rqalpha.utils.executor import ProgressedProcessPoolExecutor
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
 START_DATE = 20050104
@@ -131,7 +131,6 @@ def gen_share_transformation(d):
 
 
 def init_future_info(d):
-    print('init future_info...')
     all_futures_info = []
     underlying_symbol_list = []
     fields = ['close_commission_ratio', 'close_commission_today_ratio', 'commission_type', 'open_commission_ratio']
@@ -308,7 +307,8 @@ def update_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
             progressbar.update(1)
 
 
-def _generate_file(func, path, progressbar, step):
+def _generate_file(func, path, step, progressbar):
+    # TODO rqdatac need to be initiated in each process on windows
     func(path)
     progressbar.update(step)
 
@@ -334,19 +334,13 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
+
     progressbar = click.progressbar(
         length=len(gen_file_funcs) * 5 + sum(len(o) for _, o, _ in day_bar_args), show_eta=False
     )
 
-    with ThreadPoolExecutor(max_workers=concurrency) as executor:
-        futures = [
-            executor.submit(_generate_file, func, path, progressbar, 5) for func in gen_file_funcs
-        ] + [executor.submit(
-            _day_bar_func, os.path.join(path, file), order_book_id, field, progressbar, **kwargs
-        ) for (file, order_book_id, field) in day_bar_args]
-
-    progressbar.render_finish()
-
-    for f in futures:
-        if f.exception():
-            raise f.exception()
+    with ProgressedProcessPoolExecutor(progressbar, max_workers=concurrency) as executor:
+        for func in gen_file_funcs:
+            executor.submit(_generate_file, func, path, 5)
+        for file, order_book_id, field in day_bar_args:
+            executor.submit(_day_bar_func, os.path.join(path, file), order_book_id, field, **kwargs)
