@@ -53,9 +53,6 @@ class StockPosition(BasePosition):
 
     dividend_receivable = property(lambda self: self._dividend_receivable[1] if self._dividend_receivable else 0)
     receivable = property(lambda self: self.dividend_receivable)
-    market_value =  property(lambda self: self.last_price * self.quantity)
-    margin = property(lambda self: 0)
-    equity = property(lambda self: self.market_value)
 
     @property
     def closable(self):
@@ -69,15 +66,6 @@ class StockPosition(BasePosition):
     @property
     def position_validator_enabled(self):
         return self.enable_position_validator
-
-    @property
-    def trading_pnl(self):
-        trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
-        return trade_quantity * self.last_price - self._trade_cost
-
-    @property
-    def position_pnl(self):
-        return self._logical_old_quantity * (self.last_price - self.prev_close)
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
@@ -108,36 +96,14 @@ class StockPosition(BasePosition):
     def apply_trade(self, trade):
         # type: (Trade) -> float
         # 返回总资金的变化量
-        self._transaction_cost += trade.transaction_cost
-        if trade.position_effect == POSITION_EFFECT.OPEN:
-            if self.quantity < 0:
-                if trade.last_quantity <= -1 * self.quantity:
-                    self._avg_price = 0
-                else:
-                    self._avg_price = trade.last_price
-            else:
-                self._avg_price = (self.quantity * self._avg_price + trade.last_quantity * trade.last_price) / (
-                        self.quantity + trade.last_quantity
-                )
-            self._today_quantity += trade.last_quantity
-            self._trade_cost += trade.last_price * trade.last_quantity
-
-            if self._market_tplus >= 1:
-                self._non_closable += trade.last_quantity
-            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost
-        elif trade.position_effect == POSITION_EFFECT.CLOSE:
-            self._today_quantity -= max(trade.last_quantity - self._old_quantity, 0)
-            self._old_quantity -= min(trade.last_quantity, self._old_quantity)
-            return trade.last_price * trade.last_quantity - trade.transaction_cost
-        else:
-            raise RuntimeError("StockPosition dose not support position_effect: {}".format(trade.position_effect))
+        delta_cash = super(StockPosition, self).apply_trade(trade)
+        if trade.position_effect == POSITION_EFFECT.OPEN and self._market_tplus >= 1:
+            self._non_closable += trade.last_quantity
+        return delta_cash
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
-        self._old_quantity += self._today_quantity
-        self._logical_old_quantity = self._old_quantity
-        self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
-        self._prev_close = self.last_price
+        super(StockPosition, self).settlement(trading_date)
 
         if self.quantity == 0:
             return 0, None
@@ -170,15 +136,10 @@ class StockPosition(BasePosition):
             self._today_quantity = self._old_quantity = 0
         return delta_cash, None
 
-    def calc_close_today_amount(self, trade_amount):
-        return 0
-
     @property
+    @lru_cache()
     def _market_tplus(self):
-        if self._market_tplus_ is None:
-            env = Environment.get_instance()
-            self._market_tplus_ = env.data_proxy.instruments(self._order_book_id).market_tplus
-        return self._market_tplus_
+        return self._instrument.market_tplus
 
     def _handle_dividend_book_closure(self, trading_date, data_proxy):
         # type: (date, DataProxy) -> None
@@ -234,8 +195,6 @@ class FuturePosition(BasePosition):
 
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._today_quantity)
-    market_value = property(lambda self: self.last_price * self.quantity * self.contract_multiplier)
-    margin = property(lambda self: self.market_value * self.margin_rate)
 
     @property
     def position_validator_enabled(self):
@@ -257,58 +216,43 @@ class FuturePosition(BasePosition):
         return self.quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
+    def margin(self):
+        return self.margin_rate * self.market_value
+
+    @property
+    def market_value(self):
+        return self.contract_multiplier * super(FuturePosition, self).market_value
+
+    @property
     def trading_pnl(self):
-        trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
-        return self.contract_multiplier * (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
+        return self.contract_multiplier * super(FuturePosition, self).trading_pnl
 
     @property
     def position_pnl(self):
-        quantity = self._logical_old_quantity
-        if quantity == 0:
-            return 0
-        return quantity * self.contract_multiplier * (self.last_price - self.prev_close) * self._direction_factor
+        return self.contract_multiplier * super(FuturePosition, self).position_pnl
 
     def calc_close_today_amount(self, trade_amount):
         close_today_amount = trade_amount - self.old_quantity
         return max(close_today_amount, 0)
 
-    def before_trading(self, trading_date):
-        # type: (date) -> float
-        return 0
-
     def apply_trade(self, trade):
-        self._transaction_cost += trade.transaction_cost
+        if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            self._transaction_cost += trade.transaction_cost
+            self._today_quantity -= trade.last_quantity
+            self._trade_cost -= trade.last_price * trade.last_quantity
+        else:
+            super(FuturePosition, self).apply_trade(trade)
+
         if trade.position_effect == POSITION_EFFECT.OPEN:
-            if self.quantity < 0:
-                if trade.last_quantity <= -1 * self.quantity:
-                    self._avg_price = 0
-                else:
-                    self._avg_price = trade.last_price
-            else:
-                self._avg_price = (self.quantity * self._avg_price + trade.last_quantity * trade.last_price) / (
-                        self.quantity + trade.last_quantity
-                )
-            self._today_quantity += trade.last_quantity
-            self._trade_cost += trade.last_price * trade.last_quantity
             return -1 * trade.transaction_cost
         else:
-            if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
-                self._today_quantity -= trade.last_quantity
-            elif trade.position_effect == POSITION_EFFECT.CLOSE:
-                self._today_quantity -= max(trade.last_quantity - self._old_quantity, 0)
-                self._old_quantity -= min(trade.last_quantity, self._old_quantity)
-            else:
-                raise RuntimeError("FuturePosition dose not support position_effect: {}".format(trade.position_effect))
-            self._trade_cost -= trade.last_price * trade.last_quantity
             return -1 * trade.transaction_cost + (
-                trade.last_price - self._avg_price
+                    trade.last_price - self._avg_price
             ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
-        self._old_quantity += self._today_quantity
-        self._logical_old_quantity = self._old_quantity
-        self._today_quantity = self._trade_cost = self._transaction_cost = 0
+        super(FuturePosition, self).settlement(trading_date)
         if self.quantity == 0:
             return 0, None
         data_proxy = Environment.get_instance().data_proxy
@@ -320,7 +264,7 @@ class FuturePosition(BasePosition):
                 order_book_id=self._order_book_id
             ))
             self._today_quantity = self._old_quantity = 0
-        self._avg_price = self._prev_close = self.last_price
+        self._avg_price = self._prev_close
         return delta_cash, None
 
 

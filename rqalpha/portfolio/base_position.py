@@ -48,11 +48,7 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
         self._avg_price = 0
         self._trade_cost = 0
         self._transaction_cost = 0
-
         self._prev_close = None
-
-        self._market_tplus_ = None
-
         self._last_price = float("NaN")
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
@@ -65,24 +61,25 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
 
     @property
     def trading_pnl(self):
-        raise NotImplementedError
+        trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
+        return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
     def position_pnl(self):
-        raise NotImplementedError
+        return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
     def market_value(self):
-        raise NotImplementedError
+        return self.last_price * self.quantity
 
     @property
     def margin(self):
-        raise NotImplementedError
+        return 0
 
     @property
     def equity(self):
         # type: () -> float
-        raise NotImplementedError
+        return self.last_price * self.quantity
 
     @property
     def prev_close(self):
@@ -144,23 +141,43 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
     def before_trading(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量
-        raise NotImplementedError
-
-    def settlement(self, trading_date):
-        # type: (date) -> Tuple[float, Optional[Trade]]
-        # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
-        raise NotImplementedError
+        return 0
 
     def apply_trade(self, trade):
         # type: (Trade) -> float
         # 返回总资金的变化量
-        raise NotImplementedError
+        self._transaction_cost += trade.transaction_cost
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            if self.quantity < 0:
+                self._avg_price = trade.last_price if self.quantity + trade.last_quantity > 0 else 0
+            else:
+                cost = self.quantity * self._avg_price + trade.last_quantity * trade.last_price
+                self._avg_price = cost / (self.quantity + trade.last_quantity)
+            self._today_quantity += trade.last_quantity
+            self._trade_cost += trade.last_price * trade.last_quantity
+            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost
+        elif trade.position_effect == POSITION_EFFECT.CLOSE:
+            self._today_quantity -= max(trade.last_quantity - self._old_quantity, 0)
+            self._old_quantity -= min(trade.last_quantity, self._old_quantity)
+            self._trade_cost -= trade.last_price * trade.last_quantity
+            return trade.last_price * trade.last_quantity - trade.transaction_cost
+        else:
+            raise NotImplementedError
+
+    def settlement(self, trading_date):
+        # type: (date) -> Tuple[float, Optional[Trade]]
+        # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
+        self._old_quantity += self._today_quantity
+        self._logical_old_quantity = self._old_quantity
+        self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
+        self._prev_close = self.last_price
+        return 0, None
 
     def update_last_price(self, price):
         self._last_price = price
 
     def calc_close_today_amount(self, trade_amount):
-        raise NotImplementedError
+        return 0
 
     @property
     def _open_orders(self):

@@ -67,7 +67,6 @@ def test_stock_delist():
     return locals()
 
 
-
 def test_stock_dividend():
     __config__ = {
         "base": {
@@ -90,7 +89,6 @@ def test_stock_dividend():
         elif context.now.date() == date(2012, 6, 4):
             order_shares(context.s, 1000)
         elif context.now.date() == date(2012, 6, 18):
-            print(context.portfolio.cash, context.last_cash)
             assert context.portfolio.cash == context.last_cash + 900
         elif context.now.date() == date(2017, 7, 11):
             assert context.portfolio.cash == context.last_cash + 2970
