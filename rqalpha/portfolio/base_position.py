@@ -34,6 +34,10 @@ from rqalpha.utils import is_valid_price
 
 class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
 
+    __repr_properties__ = (
+        "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
+    )
+
     def __init__(self, order_book_id, direction, init_quantity=0):
         self._order_book_id = order_book_id
         self._instrument = Environment.get_instance().data_proxy.instruments(order_book_id)  # type: Instrument
