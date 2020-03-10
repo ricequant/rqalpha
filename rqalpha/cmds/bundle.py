@@ -42,18 +42,10 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         click.echo('rqdatac is required to create bundle')
         return 1
 
-    try:
-        rqdatac.init(uri=rqdatac_uri)
-    except ValueError as e:
-        click.echo('rqdatac init failed with error: {}'.format(e))
-        return 1
-
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
     from rqalpha.data.bundle import update_bundle as update_bundle_
     # from rqalpha.data.bundle import create_bundle as create_bundle_
-    update_bundle_(
-        os.path.join(data_bundle_path, 'bundle'), create=True, enable_compression=compression, concurrency=concurrency
-    )
+    update_bundle_(rqdatac_uri, os.path.join(data_bundle_path, 'bundle'), True, compression, concurrency)
 
 
 @cli.command()
@@ -69,20 +61,12 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         click.echo('rqdatac is required to create bundle')
         return 1
 
-    try:
-        rqdatac.init(uri=rqdatac_uri)
-    except ValueError as e:
-        click.echo('rqdatac init failed with error: {}'.format(e))
-        return 1
-
     if not os.path.exists(os.path.join(data_bundle_path, 'bundle')):
         click.echo('bundle not exist, use create-bundle command instead')
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    update_bundle_(
-        os.path.join(data_bundle_path, 'bundle'), create=False, enable_compression=compression, concurrency=concurrency
-    )
+    update_bundle_(rqdatac_uri, os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
 
 
 @cli.command()

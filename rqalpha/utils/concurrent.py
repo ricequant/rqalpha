@@ -63,7 +63,7 @@ class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
     def shutdown(self, wait=True):
         if not wait:
             return super(ProgressedProcessPoolExecutor, self).shutdown(wait)
-        progress_bar = click.progressbar(length=self._total_steps)
+        progress_bar = click.progressbar(length=self._total_steps, show_eta=False)
         while True:
             try:
                 step = self._progress_queue.get(timeout=0.5)
