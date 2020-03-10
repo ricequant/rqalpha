@@ -36,9 +36,9 @@ def _int_to_date(d):
 
 
 class StockPosition(BasePosition):
-    __repr_properties__ = [
-        "order_book_id", "direction", "market_value"
-    ]
+    __repr_properties__ = (
+        "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
+    )
 
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
@@ -223,6 +223,10 @@ class StockPosition(BasePosition):
 
 
 class FuturePosition(BasePosition):
+    __repr_properties__ = (
+        "order_book_id", "direction", "old_quantity", "quantity", "margin", "market_value", "trading_pnl", "position_pnl"
+    )
+
     enable_position_validator = True
 
     old_quantity = property(lambda self: self._old_quantity)
