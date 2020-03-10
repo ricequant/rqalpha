@@ -20,11 +20,10 @@ from itertools import chain
 
 import h5py
 import json
-import click
 import numpy as np
 import rqdatac
 
-from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor
+from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
 START_DATE = 20050104
@@ -248,6 +247,21 @@ def gen_future_info(d):
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
 
+class GenerateFileTask(ProgressedTask):
+    def __init__(self, func):
+        self._func = func
+        self._step = 100
+
+    @property
+    def total_steps(self):
+        # type: () -> int
+        return self._step
+
+    def __call__(self, *args, **kwargs):
+        self._func(*args, **kwargs)
+        yield self._step
+
+
 STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
 INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
 # FUTURES_FIELDS = STOCK_FIELDS + ['basis_spread', 'settlement', 'prev_settlement']
@@ -256,68 +270,78 @@ FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement']
 FUND_FIELDS = STOCK_FIELDS
 
 
-def gen_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
-    with h5py.File(path, 'w') as h5:
-        i, step = 0, 300
-        while True:
-            df = rqdatac.get_price(order_book_ids[i:i + step], START_DATE, datetime.date.today(), '1d',
-                                   adjust_type='none', fields=fields, expect_df=True)
+class DayBarTask(ProgressedTask):
+    def __init__(self, order_book_ids):
+        self._order_book_ids = order_book_ids
 
-            df.reset_index(inplace=True)
-            df['datetime'] = [convert_date_to_int(d) for d in df['date']]
-            del df['date']
-            df.set_index(['order_book_id', 'datetime'], inplace=True)
-            df.sort_index(inplace=True)
-            for order_book_id in df.index.levels[0]:
-                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **kwargs)
-            i += step
-            progressbar.update(step)
-            if i >= len(order_book_ids):
-                break
+    @property
+    def total_steps(self):
+        # type: () -> int
+        return len(self._order_book_ids)
+
+    def __call__(self, path, fields, **kwargs):
+        raise NotImplementedError
 
 
-def update_day_bar(path, order_book_ids, fields, progressbar, **kwargs):
-    with h5py.File(path, 'a') as h5:
-        for order_book_id in order_book_ids:
-            if order_book_id in h5:
-                try:
-                    start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
-                except ValueError:
-                    h5.pop(order_book_id)
-                    start_date = START_DATE
-            else:
-                start_date = START_DATE
-            df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
-                                   adjust_type='none', fields=fields, expect_df=True)
-            if not (df is None or df.empty):
-                df = df.loc[order_book_id]
+class GenerateDayBarTask(DayBarTask):
+    def __call__(self, path, fields, **kwargs):
+        with h5py.File(path, 'w') as h5:
+            i, step = 0, 300
+            while True:
+                df = rqdatac.get_price(self._order_book_ids[i:i + step], START_DATE, datetime.date.today(), '1d',
+                                       adjust_type='none', fields=fields, expect_df=True)
+
                 df.reset_index(inplace=True)
                 df['datetime'] = [convert_date_to_int(d) for d in df['date']]
                 del df['date']
-                df.set_index('datetime', inplace=True)
+                df.set_index(['order_book_id', 'datetime'], inplace=True)
+                df.sort_index(inplace=True)
+                for order_book_id in df.index.levels[0]:
+                    h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **kwargs)
+                i += step
+                yield step
+                if i >= len(self._order_book_ids):
+                    break
 
+
+class UpdateDayBarTask(DayBarTask):
+    def __call__(self, path, fields, **kwargs):
+        with h5py.File(path, 'a') as h5:
+            for order_book_id in self._order_book_ids:
                 if order_book_id in h5:
-                    data = np.array(
-                        [tuple(i) for i in chain(h5[order_book_id][:], df.to_records())], dtype=h5[order_book_id].dtype
-                    )
-                    del h5[order_book_id]
-                    h5.create_dataset(order_book_id, data=data, **kwargs)
+                    try:
+                        start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
+                    except ValueError:
+                        h5.pop(order_book_id)
+                        start_date = START_DATE
                 else:
-                    h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
-            progressbar.update(1)
+                    start_date = START_DATE
+                df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
+                                       adjust_type='none', fields=fields, expect_df=True)
+                if not (df is None or df.empty):
+                    df = df.loc[order_book_id]
+                    df.reset_index(inplace=True)
+                    df['datetime'] = [convert_date_to_int(d) for d in df['date']]
+                    del df['date']
+                    df.set_index('datetime', inplace=True)
 
-
-def _generate_file(func, path, step, progressbar):
-    # TODO rqdatac need to be initiated in each process on windows
-    func(path)
-    progressbar.update(step)
+                    if order_book_id in h5:
+                        data = np.array(
+                            [tuple(i) for i in chain(h5[order_book_id][:], df.to_records())],
+                            dtype=h5[order_book_id].dtype
+                        )
+                        del h5[order_book_id]
+                        h5.create_dataset(order_book_id, data=data, **kwargs)
+                    else:
+                        h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
+                yield 1
 
 
 def update_bundle(path, create, enable_compression=False, concurrency=1):
     if create:
-        _day_bar_func = gen_day_bar
+        _DayBarTask = GenerateDayBarTask
     else:
-        _day_bar_func = update_day_bar
+        _DayBarTask = UpdateDayBarTask
 
     kwargs = {}
     if enable_compression:
@@ -335,12 +359,8 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
 
-    progressbar = click.progressbar(
-        length=len(gen_file_funcs) * 5 + sum(len(o) for _, o, _ in day_bar_args), show_eta=False
-    )
-
-    with ProgressedProcessPoolExecutor(progressbar, max_workers=concurrency) as executor:
+    with ProgressedProcessPoolExecutor(max_workers=concurrency) as executor:
         for func in gen_file_funcs:
-            executor.submit(_generate_file, func, path, 5)
+            executor.submit(GenerateFileTask(func), path)
         for file, order_book_id, field in day_bar_args:
-            executor.submit(_day_bar_func, os.path.join(path, file), order_book_id, field, **kwargs)
+            executor.submit(_DayBarTask(order_book_id), os.path.join(path, file), field, **kwargs)
