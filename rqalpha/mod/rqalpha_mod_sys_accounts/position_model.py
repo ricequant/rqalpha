@@ -55,6 +55,11 @@ class StockPosition(BasePosition):
     receivable = property(lambda self: self.dividend_receivable)
 
     @property
+    def equity(self):
+        # type: () -> float
+        return super(StockPosition, self).equity + (self._dividend_receivable[1] if self._dividend_receivable else 0)
+
+    @property
     def closable(self):
         order_quantity = sum(o for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
