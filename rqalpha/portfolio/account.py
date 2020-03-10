@@ -280,15 +280,6 @@ class Account(AbstractAccount):
         """
         return sum(p.trading_pnl for p in self._iter_pos())
 
-    @property
-    def receivable(self):
-        # type: () -> float
-        return sum(p.receivable for p in self._iter_pos())
-
-    @property
-    def dividend_receivable(self):
-        return sum(getattr(p, "dividend_receivable", 0) for p in self._iter_pos())
-
     def position_validator_enabled(self, order_book_id):  # type: (str) -> bool
         return self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG).position_validator_enabled
 

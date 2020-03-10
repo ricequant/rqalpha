@@ -51,13 +51,16 @@ class StockPosition(BasePosition):
         self._pending_transform = None
         self._non_closable = 0
 
-    dividend_receivable = property(lambda self: self._dividend_receivable[1] if self._dividend_receivable else 0)
-    receivable = property(lambda self: self.dividend_receivable)
+    @property
+    def dividend_receivable(self):
+        if self._dividend_receivable:
+            return self._dividend_receivable[1]
+        return 0
 
     @property
     def equity(self):
         # type: () -> float
-        return super(StockPosition, self).equity + (self._dividend_receivable[1] if self._dividend_receivable else 0)
+        return super(StockPosition, self).equity + self.dividend_receivable
 
     @property
     def closable(self):

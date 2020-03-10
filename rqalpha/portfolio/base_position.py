@@ -111,10 +111,6 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
         )
 
     @property
-    def receivable(self):
-        return 0.
-
-    @property
     def position_validator_enabled(self):
         return True
 

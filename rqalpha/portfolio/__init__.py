@@ -254,14 +254,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         return sum(account.cash for account in six.itervalues(self._accounts))
 
     @property
-    def dividend_receivable(self):
-        return sum(a.dividend_receivable for a in six.itervalues(self._accounts))
-
-    @property
-    def receivable(self):
-        return sum(a.receivable for a in six.itervalues(self._accounts))
-
-    @property
     def transaction_cost(self):
         """
         [float] 交易成本（税费）
