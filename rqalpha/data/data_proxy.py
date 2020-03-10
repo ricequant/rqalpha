@@ -15,8 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from functools import lru_cache
-from datetime import datetime
+from datetime import datetime, date
+from typing import Union
 
 import six
 import numpy as np
@@ -158,6 +158,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
 
     @lru_cache(512)
     def get_bar(self, order_book_id, dt, frequency='1d'):
+        # type: (str, Union[datetime, date], str) -> BarObject
         instrument = self.instruments(order_book_id)
         if dt is None:
             return BarObject(instrument, NANDict, dt)
