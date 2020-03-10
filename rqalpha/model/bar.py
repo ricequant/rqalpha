@@ -302,6 +302,12 @@ class BarObject(object):
     def __getitem__(self, key):
         return self.__dict__[key]
 
+    def __getattr__(self, item):
+        try:
+            return self._data[item]
+        except KeyError:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
+
 
 class BarMap(object):
     def __init__(self, data_proxy, frequency):
