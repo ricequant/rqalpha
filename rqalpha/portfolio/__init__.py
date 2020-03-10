@@ -26,7 +26,7 @@ import numpy as np
 from rqalpha.environment import Environment
 from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.utils import merge_dicts
-from rqalpha.utils.repr import property_repr, PropertyReprMeta
+from rqalpha.utils.repr import PropertyReprMeta
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
 from rqalpha.model.instrument import Instrument
