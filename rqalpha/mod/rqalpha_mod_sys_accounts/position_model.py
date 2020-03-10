@@ -49,6 +49,7 @@ class StockPosition(BasePosition):
         super(StockPosition, self).__init__(order_book_id, direction, init_quantity)
         self._dividend_receivable = None
         self._pending_transform = None
+        self._non_closable = 0
 
     dividend_receivable = property(lambda self: self._dividend_receivable[1] if self._dividend_receivable else 0)
     receivable = property(lambda self: self.dividend_receivable)
@@ -82,12 +83,14 @@ class StockPosition(BasePosition):
         super(StockPosition, self).set_state(state)
         self._dividend_receivable = state.get("dividend_receivable")
         self._pending_transform = state.get("pending_transform")
+        self._non_closable = state.get("non_closable", 0)
 
     def get_state(self):
         state = super(StockPosition, self).get_state()
         state.update({
             "dividend_receivable": self._dividend_receivable,
             "pending_transform": self._pending_transform,
+            "non_closable": self._non_closable
         })
 
     def before_trading(self, trading_date):
@@ -305,7 +308,7 @@ class FuturePosition(BasePosition):
         # type: (date) -> Tuple[float, Optional[Trade]]
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
-        self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
+        self._today_quantity = self._trade_cost = self._transaction_cost = 0
         if self.quantity == 0:
             return 0, None
         data_proxy = Environment.get_instance().data_proxy

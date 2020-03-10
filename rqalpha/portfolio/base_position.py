@@ -19,8 +19,6 @@ from typing import Iterable, Tuple, Optional, Dict, Type
 from datetime import date
 from collections import UserDict
 
-import six
-
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_EFFECT, POSITION_DIRECTION, INSTRUMENT_TYPE
@@ -50,8 +48,6 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
         self._avg_price = 0
         self._trade_cost = 0
         self._transaction_cost = 0
-
-        self._non_closable = 0
 
         self._prev_close = None
 
@@ -133,7 +129,6 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
             "avg_price": self._avg_price,
             "trade_cost": self._trade_cost,
             "transaction_cost": self._transaction_cost,
-            "non_closable": self._non_closable,
             "prev_close": self._prev_close
         }
 
@@ -144,7 +139,6 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
         self._avg_price = state.get("avg_price", 0)
         self._trade_cost = state.get("trade_cost", 0)
         self._transaction_cost = state.get("transaction_cost", 0)
-        self._non_closable = state.get("non_closable", 0)
         self._prev_close = state.get("prev_close")
 
     def before_trading(self, trading_date):
