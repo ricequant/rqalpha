@@ -26,7 +26,7 @@ import numpy as np
 from rqalpha.environment import Environment
 from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.utils import merge_dicts
-from rqalpha.utils.repr import property_repr
+from rqalpha.utils.repr import property_repr, PropertyReprMeta
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
 from rqalpha.model.instrument import Instrument
@@ -38,8 +38,10 @@ from .base_position import PositionType, PositionProxyType
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
 
-class Portfolio(object):
-    __repr__ = property_repr
+class Portfolio(object, metaclass=PropertyReprMeta):
+    __repr_properties__ = (
+        "total_value", "unit_net_value", "daily_pnl", "daily_returns", "total_returns", "annualized_returns", "accounts"
+    )
 
     _account_types = {}  # type: Dict[INSTRUMENT_TYPE, Union[str, Callable[[Instrument, ], str]]]
     _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
