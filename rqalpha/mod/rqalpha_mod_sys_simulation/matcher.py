@@ -149,21 +149,23 @@ class Matcher(object):
 
             if self._volume_limit:
                 bar = self._env.get_bar(order_book_id)
-                volume_limit = round(bar.volume * self._volume_percent) - self._turnover[order.order_book_id]
-                round_lot = instrument.round_lot
-                volume_limit = (volume_limit // round_lot) * round_lot
-                if volume_limit <= 0:
-                    if order.type == ORDER_TYPE.MARKET:
-                        reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
-                                   u" due to volume limit").format(
-                            order_book_id=order.order_book_id,
-                            order_volume=order.quantity
-                        )
-                        order.mark_cancelled(reason)
-                    continue
+                if bar.volume == bar.volume:
+                    volume_limit = round(bar.volume * self._volume_percent) - self._turnover[order.order_book_id]
+                    round_lot = instrument.round_lot
+                    volume_limit = (volume_limit // round_lot) * round_lot
+                    if volume_limit <= 0:
+                        if order.type == ORDER_TYPE.MARKET:
+                            reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
+                                       u" due to volume limit").format(
+                                order_book_id=order.order_book_id,
+                                order_volume=order.quantity
+                            )
+                            order.mark_cancelled(reason)
+                        continue
 
-                unfilled = order.unfilled_quantity
-                fill = min(unfilled, volume_limit)
+                    fill = min(order.unfilled_quantity, volume_limit)
+                else:
+                    fill = order.unfilled_quantity
             else:
                 fill = order.unfilled_quantity
 
