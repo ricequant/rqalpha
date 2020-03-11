@@ -258,7 +258,6 @@ class GenerateFileTask(ProgressedTask):
         return self._step
 
     def __call__(self, *args, **kwargs):
-        rqdatac.reset()
         self._func(*args, **kwargs)
         yield self._step
 
@@ -286,7 +285,6 @@ class DayBarTask(ProgressedTask):
 
 class GenerateDayBarTask(DayBarTask):
     def __call__(self, path, fields, **kwargs):
-        rqdatac.reset()
         with h5py.File(path, 'w') as h5:
             i, step = 0, 300
             while True:
@@ -308,7 +306,6 @@ class GenerateDayBarTask(DayBarTask):
 
 class UpdateDayBarTask(DayBarTask):
     def __call__(self, path, fields, **kwargs):
-        rqdatac.reset()
         with h5py.File(path, 'a') as h5:
             for order_book_id in self._order_book_ids:
                 if order_book_id in h5:
@@ -362,7 +359,7 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
 
-    with ProgressedProcessPoolExecutor(max_workers=concurrency) as executor:
+    with ProgressedProcessPoolExecutor(max_workers=concurrency, initializer=rqdatac.reset) as executor:
         for func in gen_file_funcs:
             executor.submit(GenerateFileTask(func), path)
         for file, order_book_id, field in day_bar_args:

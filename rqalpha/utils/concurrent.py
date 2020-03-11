@@ -31,9 +31,9 @@ def _process_worker(call_queue, result_queue, progress_queue):
 
 
 class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
-    def __init__(self, max_workers=None):
+    def __init__(self, max_workers=None, initializer=None, initargs=()):
         # type: (ProgressedTask, int) -> ProgressedProcessPoolExecutor
-        super(ProgressedProcessPoolExecutor, self).__init__(max_workers)
+        super(ProgressedProcessPoolExecutor, self).__init__(max_workers, initializer=initializer, initargs=initargs)
         self._progress_queue = multiprocessing.Queue()
         self._futures = []
         self._total_steps = 0
