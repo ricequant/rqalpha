@@ -158,7 +158,9 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
             self._trade_cost -= trade.last_price * trade.last_quantity
             return trade.last_price * trade.last_quantity - trade.transaction_cost
         else:
-            raise NotImplementedError
+            raise NotImplementedError("{} does not support position effect {}".format(
+                self.__class__.__name__, trade.position_effect
+            ))
 
     def settlement(self, trading_date):
         # type: (date) -> Tuple[float, Optional[Trade]]
