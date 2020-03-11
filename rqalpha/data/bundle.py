@@ -280,12 +280,12 @@ class DayBarTask(ProgressedTask):
         # type: () -> int
         return len(self._order_book_ids)
 
-    def __call__(self, rqdatac_uri, path, fields, **kwargs):
+    def __call__(self, path, fields, **kwargs):
         raise NotImplementedError
 
 
 class GenerateDayBarTask(DayBarTask):
-    def __call__(self, rqdatac_uri, path, fields, **kwargs):
+    def __call__(self, path, fields, **kwargs):
         rqdatac.reset()
         with h5py.File(path, 'w') as h5:
             i, step = 0, 300
