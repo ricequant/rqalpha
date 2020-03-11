@@ -247,13 +247,6 @@ def gen_future_info(d):
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
 
-def init_rqdatac_if_need(rqdatac_uri):
-    import rqdatac
-    from rqdatac.client import get_client, DummyClient
-    if isinstance(get_client(), DummyClient):
-        rqdatac.init(uri=rqdatac_uri)
-
-
 class GenerateFileTask(ProgressedTask):
     def __init__(self, func):
         self._func = func
@@ -264,8 +257,8 @@ class GenerateFileTask(ProgressedTask):
         # type: () -> int
         return self._step
 
-    def __call__(self, rqdatac_uri, *args, **kwargs):
-        init_rqdatac_if_need(rqdatac_uri)
+    def __call__(self, *args, **kwargs):
+        rqdatac.reset()
         self._func(*args, **kwargs)
         yield self._step
 
@@ -293,7 +286,7 @@ class DayBarTask(ProgressedTask):
 
 class GenerateDayBarTask(DayBarTask):
     def __call__(self, rqdatac_uri, path, fields, **kwargs):
-        init_rqdatac_if_need(rqdatac_uri)
+        rqdatac.reset()
         with h5py.File(path, 'w') as h5:
             i, step = 0, 300
             while True:
@@ -314,8 +307,8 @@ class GenerateDayBarTask(DayBarTask):
 
 
 class UpdateDayBarTask(DayBarTask):
-    def __call__(self, rqdatac_uri, path, fields, **kwargs):
-        init_rqdatac_if_need(rqdatac_uri)
+    def __call__(self, path, fields, **kwargs):
+        rqdatac.reset()
         with h5py.File(path, 'a') as h5:
             for order_book_id in self._order_book_ids:
                 if order_book_id in h5:
@@ -347,8 +340,7 @@ class UpdateDayBarTask(DayBarTask):
                 yield 1
 
 
-def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurrency=1):
-    init_rqdatac_if_need(rqdatac_uri)
+def update_bundle(path, create, enable_compression=False, concurrency=1):
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
@@ -372,6 +364,6 @@ def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurren
 
     with ProgressedProcessPoolExecutor(max_workers=concurrency) as executor:
         for func in gen_file_funcs:
-            executor.submit(GenerateFileTask(func), rqdatac_uri, path)
+            executor.submit(GenerateFileTask(func), path)
         for file, order_book_id, field in day_bar_args:
-            executor.submit(_DayBarTask(order_book_id), rqdatac_uri, os.path.join(path, file), field, **kwargs)
+            executor.submit(_DayBarTask(order_book_id), os.path.join(path, file), field, **kwargs)
