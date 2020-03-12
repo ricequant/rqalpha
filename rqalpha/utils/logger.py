@@ -4,7 +4,8 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：
+#         http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
@@ -33,7 +34,9 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 def user_log_processor(record):
     from rqalpha.environment import Environment
-    record.time = Environment.get_instance().calendar_dt
+    time = Environment.get_instance().calendar_dt
+    if time is not None:
+        record.time = time
 
 
 user_log_group = logbook.LoggerGroup(processor=user_log_processor)
