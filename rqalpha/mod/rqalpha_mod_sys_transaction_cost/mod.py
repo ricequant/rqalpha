@@ -31,9 +31,12 @@ class TransactionCostMod(AbstractMod):
 
         if env.config.base.market == MARKET.CN:
             for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
+                if instrument_type == INSTRUMENT_TYPE.PUBLIC_FUND:
+                    continue
                 env.set_transaction_cost_decider(instrument_type, CNStockTransactionCostDecider(
                     mod_config.commission_multiplier, mod_config.cn_stock_min_commission
                 ))
+
             env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(
                 mod_config.commission_multiplier
             ))

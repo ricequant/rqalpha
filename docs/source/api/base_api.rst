@@ -421,7 +421,7 @@ get_next_trading_date - 下一交易日
 
 ..  autofunction:: get_next_trading_date(date)
 
-get_dividend - 获取股票拆分数据
+get_dividend - 获取分红数据
 ------------------------------------------------------
 
 ..  autofunction:: get_dividend

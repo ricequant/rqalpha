@@ -29,7 +29,7 @@ from rqalpha.model.instrument import Instrument
 class AbstractInstrumentStore:
     @abc.abstractmethod
     def get_all_instruments(self):
-        # type: () -> Iterable[Instrument]
+        # type: () -> List[Instrument]
         raise NotImplementedError
 
 

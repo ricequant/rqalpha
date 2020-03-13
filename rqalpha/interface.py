@@ -316,20 +316,20 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_dividend(self, order_book_id):
+    def get_dividend(self, instrument):
         """
         获取股票/基金分红信息
 
-        :param str order_book_id: 合约名
+        :param str instrument: 合约对象
         :return:
         """
         raise NotImplementedError
 
-    def get_split(self, order_book_id):
+    def get_split(self, instrument):
         """
         获取拆股信息
 
-        :param str order_book_id: 合约名
+        :param str instrument: 合约对象
 
         :return: `pandas.DataFrame`
         """
