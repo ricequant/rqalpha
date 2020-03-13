@@ -19,6 +19,7 @@ from decimal import Decimal, getcontext
 from typing import Dict, List, Union
 
 import six
+import pandas as pd
 import numpy as np
 
 from rqalpha.api import export_as_api
@@ -459,7 +460,11 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 def order_target_portfolio(target_portfolio):
     # type: (Dict[Union[str, Instrument]: float]) -> List[Order]
 
-    total_percent = sum(six.itervalues(target_portfolio))
+    if isinstance(target_portfolio, pd.Series):
+        # FIXME: kind of dirty
+        total_percent = sum(target_portfolio)
+    else:
+        total_percent = sum(six.itervalues(target_portfolio))
     if total_percent > 1:
         raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
 
