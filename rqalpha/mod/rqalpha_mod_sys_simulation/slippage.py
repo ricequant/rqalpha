@@ -71,13 +71,14 @@ class PriceRatioSlippage(BaseSlippage):
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             raise NotImplementedError("PriceRatioSlippage cannot handle exercise order")
         temp_price = price + price * self.rate * (1 if order.side == SIDE.BUY else -1)
-        temp_bar = Environment.get_instance().get_bar(order.order_book_id)
-        if temp_bar:
-            limit_up, limit_down = temp_bar.limit_up, temp_bar.limit_down
-            if is_valid_price(limit_up):
-                temp_price = min(temp_price, limit_up)
-            if is_valid_price(limit_down):
-                temp_price = max(temp_price, limit_down)
+
+        env = Environment.get_instance()
+        limit_up = env.price_board.get_limit_up(order.order_book_id)
+        limit_down = env.price_board.get_limit_down(order.order_book_id)
+        if is_valid_price(limit_up):
+            temp_price = min(temp_price, limit_up)
+        if is_valid_price(limit_down):
+            temp_price = max(temp_price, limit_down)
         return temp_price
 
 
