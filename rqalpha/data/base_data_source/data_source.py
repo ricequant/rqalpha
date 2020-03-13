@@ -26,7 +26,7 @@ from rqalpha.interface import AbstractDataSource
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.exception import RQInvalidArgument
 
@@ -110,8 +110,9 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
 
-    def get_trading_calendar(self):
-        return self._trading_dates
+    def get_trading_calendars(self):
+        # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
+        return {TRADING_CALENDAR_TYPE.EXCHANGE: self._trading_dates}
 
     def get_all_instruments(self):
         return self._instruments

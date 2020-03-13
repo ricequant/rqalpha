@@ -13,9 +13,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
+from typing import Dict, List
+
 import pandas as pd
 
 from rqalpha.utils.py2 import lru_cache
+from rqalpha.const import TRADING_CALENDAR_TYPE
 
 
 def _to_timestamp(d):
@@ -23,70 +26,81 @@ def _to_timestamp(d):
 
 
 class TradingDatesMixin(object):
-    def __init__(self, dates):
-        self._dates = dates
+    def __init__(self, trading_calendars):
+        # type: (Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]) -> TradingDatesMixin
+        self.trading_calendars = trading_calendars
 
-    def get_trading_dates(self, start_date, end_date):
+    def get_trading_calendar(self, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+        try:
+            return self.trading_calendars[trading_calendar_type]
+        except KeyError:
+            raise NotImplementedError("unsupported trading_calendar_type {}".format(trading_calendar_type))
+
+    def get_trading_dates(self, start_date, end_date, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
         # 只需要date部分
+        trading_dates = self.get_trading_calendar(trading_calendar_type)
         start_date = _to_timestamp(start_date)
         end_date = _to_timestamp(end_date)
-        left = self._dates.searchsorted(start_date)
-        right = self._dates.searchsorted(end_date, side='right')
-        return self._dates[left:right]
+        left = trading_dates.searchsorted(start_date)
+        right = trading_dates.searchsorted(end_date, side='right')
+        return trading_dates[left:right]
 
-    def get_previous_trading_date(self, date, n=1):
-        date = _to_timestamp(date)
-        pos = self._dates.searchsorted(date)
+    def get_previous_trading_date(self, date, n=1, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+        trading_dates = self.get_trading_calendar(trading_calendar_type)
+        pos = trading_dates.searchsorted(_to_timestamp(date))
         if pos >= n:
-            return self._dates[pos - n]
+            return trading_dates[pos - n]
         else:
-            return self._dates[0]
+            return trading_dates[0]
 
-    def get_next_trading_date(self, date, n=1):
-        date = _to_timestamp(date)
-        pos = self._dates.searchsorted(date, side='right')
-        if pos + n > len(self._dates):
-            return self._dates[-1]
+    def get_next_trading_date(self, date, n=1, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+        trading_dates = self.get_trading_calendar(trading_calendar_type)
+        pos = trading_dates.searchsorted(_to_timestamp(date), side='right')
+        if pos + n > len(trading_dates):
+            return trading_dates[-1]
         else:
-            return self._dates[pos + n - 1]
+            return trading_dates[pos + n - 1]
 
-    def is_trading_date(self, date):
-        date = _to_timestamp(date)
-        pos = self._dates.searchsorted(date)
-        return pos < len(self._dates) and self._dates[pos] == date
+    def is_trading_date(self, date, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+        trading_dates = self.get_trading_calendar(trading_calendar_type)
+        pos = trading_dates.searchsorted(_to_timestamp(date))
+        return pos < len(trading_dates) and trading_dates[pos] == date
 
-    @lru_cache(512)
-    def _get_future_trading_date(self, dt):
-        dt1 = dt - datetime.timedelta(hours=4)
-        td = pd.Timestamp(dt1.date())
-        pos = self._dates.searchsorted(td)
-        if self._dates[pos] != td:
-            raise RuntimeError('invalid future calendar datetime: {}'.format(dt))
-        if dt1.hour >= 16:
-            return self._dates[pos + 1]
-
-        return td
-
-    def get_trading_dt(self, calendar_dt):
-        trading_date = self.get_future_trading_date(calendar_dt)
+    def get_trading_dt(self, calendar_dt, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+        if trading_calendar_type == TRADING_CALENDAR_TYPE.EXCHANGE:
+            trading_date = self.get_future_trading_date(calendar_dt)
+        else:
+            if _to_timestamp(trading_calendar_type) not in self.get_trading_calendar(trading_calendar_type):
+                raise RuntimeError('invalid {} calendar datetime: {}'.format(trading_calendar_type, calendar_dt))
+            trading_date = calendar_dt.date()
         return datetime.datetime.combine(trading_date, calendar_dt.time())
 
     def get_future_trading_date(self, dt):
         return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))
 
-    get_nth_previous_trading_date = get_previous_trading_date
-
-    def get_n_trading_dates_until(self, dt, n):
-        date = _to_timestamp(dt)
-        pos = self._dates.searchsorted(date, side='right')
+    def get_n_trading_dates_until(self, dt, n, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+        trading_dates = self.get_trading_calendar(trading_calendar_type)
+        pos = trading_dates.searchsorted(_to_timestamp(dt), side='right')
         if pos >= n:
-            return self._dates[pos - n:pos]
+            return trading_dates[pos - n:pos]
 
-        return self._dates[:pos]
+        return trading_dates[:pos]
 
-    def count_trading_dates(self, start_date, end_date):
+    def count_trading_dates(self, start_date, end_date, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
         start_date = _to_timestamp(start_date)
         end_date = _to_timestamp(end_date)
+        trading_dates = self.get_trading_calendar(trading_calendar_type)
+        return trading_dates.searchsorted(end_date, side='right') - trading_dates.searchsorted(start_date)
 
-        return self._dates.searchsorted(end_date, side='right') - self._dates.searchsorted(start_date)
+    @lru_cache(512)
+    def _get_future_trading_date(self, dt):
+        dt1 = dt - datetime.timedelta(hours=4)
+        td = pd.Timestamp(dt1.date())
+        trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.EXCHANGE)
+        pos = trading_dates.searchsorted(td)
+        if trading_dates[pos] != td:
+            raise RuntimeError('invalid future calendar datetime: {}'.format(dt))
+        if dt1.hour >= 16:
+            return trading_dates[pos + 1]
 
+        return td

@@ -16,13 +16,14 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import Any, Union, Optional, Iterable
+from typing import Any, Union, Optional, Iterable, Dict
 
 from six import with_metaclass
+import pandas
 
 from rqalpha.model.order import Order
 from rqalpha.model.instrument import Instrument
-from rqalpha.const import POSITION_DIRECTION
+from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE
 
 
 class AbstractAccount(with_metaclass(abc.ABCMeta)):
@@ -296,11 +297,10 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_trading_calendar(self):
+    def get_trading_calendars(self):
+        # type: () -> Dict[TRADING_CALENDAR_TYPE, pandas.DatetimeIndex]
         """
-        获取交易日历
-
-        :return: list[`pandas.Timestamp`]
+        获取交易日历，DataSource 应返回所有支持的交易日历种类
         """
         raise NotImplementedError
 

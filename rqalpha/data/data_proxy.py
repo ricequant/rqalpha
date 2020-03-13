@@ -42,7 +42,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         except AttributeError:
             pass
         InstrumentMixin.__init__(self, data_source.get_all_instruments())
-        TradingDatesMixin.__init__(self, data_source.get_trading_calendar())
+        TradingDatesMixin.__init__(self, data_source.get_trading_calendars())
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)

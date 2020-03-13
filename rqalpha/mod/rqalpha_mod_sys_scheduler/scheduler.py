@@ -71,7 +71,7 @@ class Scheduler(object):
         if self._trading_calendar is not None:
             return self._trading_calendar
 
-        self._trading_calendar = Environment.get_instance().data_source.get_trading_calendar()
+        self._trading_calendar = Environment.get_instance().data_proxy.get_trading_calendar()
         return self._trading_calendar
 
     @property

@@ -86,7 +86,6 @@ class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     *   ACCOUNT_TYPE 不区分交易所，比如 A 股区分上海交易所和深圳交易所，但对应的都是一个账户，因此统一为 STOCK
     *   目前暂时不添加其他 DEFAULT_ACCOUNT_TYPE 类型，如果需要增加自定义账户及类型，请参考 https://github.com/ricequant/rqalpha/issues/160
     """
-    TOTAL = "TOTAL"
     # 股票
     STOCK = "STOCK"
     # 期货
@@ -225,6 +224,12 @@ class FRONT_VALIDATOR_TYPE(CustomEnum):
     POSITION = "POSITION"
     PRICE = "PRICE"
     OTHER = "OTHER"
+
+
+# noinspection PyPep8Naming
+class TRADING_CALENDAR_TYPE(CustomEnum):
+    EXCHANGE = "EXCHANGE"
+    INTER_BANK = "INTERBANK"
 
 
 class CURRENCY(CustomEnum):

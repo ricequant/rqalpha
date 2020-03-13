@@ -74,7 +74,8 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
 
         self.env_config = {
             "base": {
-                "market": MARKET.CN
+                "market": MARKET.CN,
+                "accounts": {"STOCK": 100}
             }
         }
 

@@ -15,18 +15,23 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from itertools import chain
 from datetime import timedelta, datetime, time
 
+import pandas
+
+from rqalpha.environment import Environment
 from rqalpha.interface import AbstractEventSource
 from rqalpha.events import Event, EVENT
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.utils.i18n import gettext as _
 
 
 class SimulationEventSource(AbstractEventSource):
     def __init__(self, env):
+        # type: (Environment) -> None
         self._env = env
         self._config = env.config
         self._universe_changed = False
@@ -92,17 +97,33 @@ class SimulationEventSource(AbstractEventSource):
     def _get_trading_minutes(self, trading_date):
         trading_minutes = set()
         for account_type in self._config.base.accounts:
-            if account_type == DEFAULT_ACCOUNT_TYPE.STOCK.name:
+            if account_type == DEFAULT_ACCOUNT_TYPE.STOCK:
                 trading_minutes = trading_minutes.union(self._get_stock_trading_minutes(trading_date))
-            elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE.name:
+            elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE:
                 trading_minutes = trading_minutes.union(self._get_future_trading_minutes(trading_date))
         return sorted(list(trading_minutes))
     # [END] minute event helper
 
+    def _get_merged_trading_dates(self, start_date, end_date, trading_calendar_types):
+        if len(trading_calendar_types) == 1:
+            return self._env.data_proxy.get_trading_dates(start_date, end_date, trading_calendar_types[0])
+        trading_calendars = []
+        for calendar_type in trading_calendar_types:
+            trading_calendars.append(self._env.data_proxy.get_trading_dates(start_date, end_date, calendar_type))
+        return pandas.DatetimeIndex(chain(*trading_calendars)).unique()
+
     def events(self, start_date, end_date, frequency):
+        calendar_types = []
+        for account_type in self._config.base.accounts:
+            if account_type in (DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE, DEFAULT_ACCOUNT_TYPE.OPTION):
+                calendar_types.append(TRADING_CALENDAR_TYPE.EXCHANGE)
+            elif calendar_types == DEFAULT_ACCOUNT_TYPE.BOND:
+                calendar_types.append(TRADING_CALENDAR_TYPE.INTER_BANK)
+        trading_dates = self._get_merged_trading_dates(start_date, end_date, calendar_types)
+
         if frequency == "1d":
             # 根据起始日期和结束日期，获取所有的交易日，然后再循环获取每一个交易日
-            for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
+            for day in trading_dates:
                 date = day.to_pydatetime()
                 dt_before_trading = date.replace(hour=0, minute=0)
 
@@ -114,7 +135,7 @@ class SimulationEventSource(AbstractEventSource):
                 yield Event(EVENT.BAR, calendar_dt=dt_bar, trading_dt=dt_bar)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt_after_trading, trading_dt=dt_after_trading)
         elif frequency == '1m':
-            for day in self._env.data_proxy.get_trading_dates(start_date, end_date):
+            for day in trading_dates:
                 before_trading_flag = True
                 date = day.to_pydatetime()
                 last_dt = None
@@ -161,7 +182,7 @@ class SimulationEventSource(AbstractEventSource):
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
         elif frequency == "tick":
             data_proxy = self._env.data_proxy
-            for day in data_proxy.get_trading_dates(start_date, end_date):
+            for day in trading_dates:
                 date = day.to_pydatetime()
                 last_tick = None
                 last_dt = None
