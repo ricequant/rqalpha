@@ -43,12 +43,17 @@ __config__ = {
 def test_open_auction():
     def init(context):
         context.s = "000001.XSHE"
+        context.fired = False
         context.open_auction_prices = ()
 
     def open_auction(context, bar_dict):
         bar = bar_dict[context.s]
         assert (not hasattr(bar, "close"))
         context.open_auction_prices = (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
+        if not context.fired:
+            order_shares(context.s, 1000)
+            assert get_position(context.s).quantity == 1000
+            context.fired = True
 
     def handle_bar(context, bar_dict):
         bar = bar_dict[context.s]
