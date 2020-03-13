@@ -107,6 +107,7 @@ def cal_style(price, style):
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -119,6 +120,7 @@ def get_order(order):
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -213,6 +215,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
@@ -264,6 +267,7 @@ def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
@@ -1112,6 +1116,7 @@ def plot(series_name, value):
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.AFTER_TRADING,
