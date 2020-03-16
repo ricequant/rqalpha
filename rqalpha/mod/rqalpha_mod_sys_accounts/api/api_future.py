@@ -19,7 +19,6 @@ from __future__ import division
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style
-from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
