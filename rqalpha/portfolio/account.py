@@ -22,7 +22,6 @@ from typing import Dict, Iterable, Union, Optional, Type, Callable, List
 
 from rqalpha.const import POSITION_EFFECT
 from rqalpha.interface import AbstractAccount
-from rqalpha.utils.repr import property_repr
 from rqalpha.events import EVENT
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
@@ -81,7 +80,7 @@ class Account(AbstractAccount):
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
         event_bus.add_listener(
-            EVENT.TRADE, lambda e: self._apply_trade(e.trade, e.order) if e.account == self else None
+            EVENT.TRADE, lambda e: self.apply_trade(e.trade, e.order) if e.account == self else None
         )
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
         event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
@@ -149,12 +148,12 @@ class Account(AbstractAccount):
                 if trade.exec_id in self._backward_trade_set:
                     continue
                 if trade.position_effect == POSITION_EFFECT.OPEN:
-                    self._apply_trade(trade)
+                    self.apply_trade(trade)
                 else:
                     close_trades.append(trade)
             # 后处理平仓
             for trade in close_trades:
-                self._apply_trade(trade)
+                self.apply_trade(trade)
 
         # 计算 Frozen Cash
         if orders:
@@ -291,15 +290,10 @@ class Account(AbstractAccount):
     def _on_settlement(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
 
-        virtual_trades = []
         for order_book_id, positions in list(six.iteritems(self._positions)):
             for position in six.itervalues(positions):
-                delta_cash, virtual_trade = position.settlement(trading_date)
+                delta_cash = position.settlement(trading_date)
                 self._total_cash += delta_cash
-                if virtual_trade:
-                    virtual_trades.append(virtual_trade)
-            for virtual_trade in virtual_trades:
-                self._apply_trade(virtual_trade)
 
         for order_book_id, positions in list(six.iteritems(self._positions)):
             if all(p.quantity == 0 for p in six.itervalues(positions)):
@@ -330,7 +324,7 @@ class Account(AbstractAccount):
         else:
             self._frozen_cash -= self._frozen_cash_of_order(event.order)
 
-    def _apply_trade(self, trade, order=None):
+    def apply_trade(self, trade, order=None):
         # type: (Trade, Optional[Order]) -> None
         if trade.exec_id in self._backward_trade_set:
             return

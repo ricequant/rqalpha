@@ -110,39 +110,38 @@ class StockPosition(BasePosition):
         return delta_cash
 
     def settlement(self, trading_date):
-        # type: (date) -> Tuple[float, Optional[Trade]]
+        # type: (date) -> float
         super(StockPosition, self).settlement(trading_date)
 
         if self.quantity == 0:
-            return 0, None
+            return 0
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
-        data_proxy = Environment.get_instance().data_proxy
-        next_date = data_proxy.get_next_trading_date(trading_date)
-        instrument = data_proxy.instruments(self._order_book_id)
+        next_date = self._env.data_proxy.get_next_trading_date(trading_date)
+        instrument = self._env.data_proxy.instruments(self._order_book_id)
         delta_cash = 0
         if instrument.de_listed_at(next_date):
             try:
-                transform_data = data_proxy.get_share_transformation(self._order_book_id)
+                transform_data = self._env.data_proxy.get_share_transformation(self._order_book_id)
             except NotImplementedError:
                 pass
             else:
                 if transform_data is not None:
                     successor, conversion_ratio = transform_data
-                    virtual_trade = Trade.__from_create__(
+                    self._env.portfolio.get_account(successor).apply_trade(Trade.__from_create__(
                         order_id=None,
                         price=self.avg_price / conversion_ratio,
                         amount=self.quantity * conversion_ratio,
                         side=SIDE.BUY,
                         position_effect=POSITION_EFFECT.OPEN,
                         order_book_id=successor
-                    )
-                    return 0, virtual_trade
+                    ))
+                    # 把购买 successor 消耗的 cash 补充回来
+                    delta_cash = self.market_value
             if self.cash_return_by_stock_delisted:
                 delta_cash = self.market_value
-
             self._today_quantity = self._old_quantity = 0
-        return delta_cash, None
+        return delta_cash
 
     @property
     @lru_cache()
@@ -259,10 +258,10 @@ class FuturePosition(BasePosition):
             ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
 
     def settlement(self, trading_date):
-        # type: (date) -> Tuple[float, Optional[Trade]]
+        # type: (date) -> float
         super(FuturePosition, self).settlement(trading_date)
         if self.quantity == 0:
-            return 0, None
+            return 0
         data_proxy = Environment.get_instance().data_proxy
         instrument = data_proxy.instruments(self._order_book_id)
         next_date = data_proxy.get_next_trading_date(trading_date)
@@ -273,7 +272,7 @@ class FuturePosition(BasePosition):
             ))
             self._today_quantity = self._old_quantity = 0
         self._avg_price = self._prev_close
-        return delta_cash, None
+        return delta_cash
 
 
 class StockPositionProxy(PositionProxy):

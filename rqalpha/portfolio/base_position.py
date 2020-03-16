@@ -37,8 +37,10 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
     )
 
     def __init__(self, order_book_id, direction, init_quantity=0):
+        self._env = Environment.get_instance()
+
         self._order_book_id = order_book_id
-        self._instrument = Environment.get_instance().data_proxy.instruments(order_book_id)  # type: Instrument
+        self._instrument = self._env.data_proxy.instruments(order_book_id)  # type: Instrument
         self._direction = direction
 
         self._old_quantity = init_quantity
@@ -163,13 +165,13 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
             ))
 
     def settlement(self, trading_date):
-        # type: (date) -> Tuple[float, Optional[Trade]]
+        # type: (date) -> float
         # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
         self._prev_close = self.last_price
-        return 0, None
+        return 0
 
     def update_last_price(self, price):
         self._last_price = price
