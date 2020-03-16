@@ -5,11 +5,18 @@ import multiprocessing
 
 import click
 
+from concurrent.futures import _base
 # noinspection PyUnresolvedReferences
 from concurrent.futures.process import ProcessPoolExecutor, _ExceptionWithTraceback, _ResultItem
 
 
-def _process_worker(call_queue, result_queue, progress_queue):
+def _process_worker(call_queue, result_queue, progress_queue, initializer, initargs):
+    if initializer is not None:
+        try:
+            initializer(*initargs)
+        except BaseException:
+            _base.LOGGER.critical('Exception in initializer:', exc_info=True)
+            return
     while True:
         call_item = call_queue.get(block=True)
         if call_item is None:
@@ -33,7 +40,9 @@ def _process_worker(call_queue, result_queue, progress_queue):
 class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, max_workers=None, initializer=None, initargs=()):
         # type: (ProgressedTask, int) -> ProgressedProcessPoolExecutor
-        super(ProgressedProcessPoolExecutor, self).__init__(max_workers, initializer=initializer, initargs=initargs)
+        super(ProgressedProcessPoolExecutor, self).__init__(max_workers)
+        self._initializer = initializer
+        self._initargs = initargs
         self._progress_queue = multiprocessing.Queue()
         self._futures = []
         self._total_steps = 0
@@ -44,7 +53,7 @@ class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
             # noinspection PyUnresolvedReferences
             p = multiprocessing.Process(
                 target=_process_worker,
-                args=(self._call_queue, self._result_queue, self._progress_queue)
+                args=(self._call_queue, self._result_queue, self._progress_queue, self._initializer, self._initargs)
             )
             p.start()
             # noinspection PyUnresolvedReferences
