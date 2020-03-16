@@ -22,7 +22,7 @@ import six
 import numpy as np
 import pandas as pd
 
-from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
 from rqalpha.utils import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
@@ -42,7 +42,12 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         except AttributeError:
             pass
         InstrumentMixin.__init__(self, data_source.get_all_instruments())
-        TradingDatesMixin.__init__(self, data_source.get_trading_calendars())
+        try:
+            trading_calendars = data_source.get_trading_calendars()
+        except NotImplementedError:
+            # forward compatible
+            trading_calendars = {TRADING_CALENDAR_TYPE.EXCHANGE: data_source.get_trading_calendar()}
+        TradingDatesMixin.__init__(self, trading_calendars)
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)

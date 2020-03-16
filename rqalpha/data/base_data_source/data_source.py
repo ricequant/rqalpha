@@ -110,6 +110,10 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
 
+    def get_trading_calendar(self):
+        # forward compatible
+        return self._trading_dates
+
     def get_trading_calendars(self):
         # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
         return {TRADING_CALENDAR_TYPE.EXCHANGE: self._trading_dates}
