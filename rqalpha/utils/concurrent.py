@@ -1,5 +1,5 @@
 import os
-from typing import Generator, Any
+from typing import Generator, Any, Optional, Callable, Tuple
 import queue
 import multiprocessing
 
@@ -39,7 +39,7 @@ def _process_worker(call_queue, result_queue, progress_queue, initializer, inita
 
 class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, max_workers=None, initializer=None, initargs=()):
-        # type: (ProgressedTask, int) -> ProgressedProcessPoolExecutor
+        # type: (Optional[int], Optional[Callable], Optional[Tuple]) -> None
         super(ProgressedProcessPoolExecutor, self).__init__(max_workers)
         self._initializer = initializer
         self._initargs = initargs

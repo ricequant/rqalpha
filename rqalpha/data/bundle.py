@@ -337,7 +337,14 @@ class UpdateDayBarTask(DayBarTask):
                 yield 1
 
 
-def update_bundle(path, create, enable_compression=False, concurrency=1):
+def init_rqdatac_if_need(rqdatac_uri):
+    # rqdatac should be initialized in subprocess on windows
+    from rqdatac.client import get_client, DummyClient
+    if isinstance(get_client(), DummyClient):
+        rqdatac.init(uri=rqdatac_uri)
+
+
+def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurrency=1):
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
@@ -359,7 +366,9 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
 
-    with ProgressedProcessPoolExecutor(max_workers=concurrency, initializer=rqdatac.reset) as executor:
+    with ProgressedProcessPoolExecutor(
+            max_workers=concurrency, initializer=init_rqdatac_if_need, initargs=(rqdatac_uri, )
+    ) as executor:
         for func in gen_file_funcs:
             executor.submit(GenerateFileTask(func), path)
         for file, order_book_id, field in day_bar_args:
