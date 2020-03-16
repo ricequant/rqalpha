@@ -109,11 +109,14 @@ def test_stock_transform():
     def init(context):
         context.s1 = "601299.XSHG"
         context.s2 = "601766.XSHG"
+        context.cash_before_transform = None
 
     def handle_bar(context, _):
         if context.now.date() == date(2015, 5, 6):
             order_shares(context.s1, 200)
+            context.cash_before_transform = context.portfolio.cash
         elif context.now.date() >= date(2015, 5, 20):
             assert int(context.portfolio.positions[context.s2].quantity) == 220
+            assert context.portfolio.cash == context.cash_before_transform
 
     return locals()
