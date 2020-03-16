@@ -226,16 +226,14 @@ class Instrument(object):
         """
         [float] 合约乘数，例如沪深300股指期货的乘数为300.0（期货专用）
         """
-        if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
-            return 1
-        return self.__dict__.get("contract_multiplier") or 1
+        return self.__dict__.get('contract_multiplier', 1)
 
     @property
     def margin_rate(self):
         """
         [float] 合约最低保证金率（期货专用）
         """
-        return self.__dict__.get("margin_rate") or 1
+        return self.__dict__.get("margin_rate", 1)
 
     @property
     def underlying_order_book_id(self):
