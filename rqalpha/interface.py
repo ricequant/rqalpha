@@ -18,6 +18,7 @@
 import abc
 from typing import Any, Union, Optional, Iterable, Dict
 
+import numpy
 from six import with_metaclass
 import pandas
 
@@ -317,21 +318,16 @@ class AbstractDataSource(object):
         raise NotImplementedError
 
     def get_dividend(self, instrument):
+        # type: (Instrument) -> numpy.ndarray
         """
         获取股票/基金分红信息
-
-        :param str instrument: 合约对象
-        :return:
         """
         raise NotImplementedError
 
     def get_split(self, instrument):
+        # type: (Instrument) -> numpy.ndarray
         """
         获取拆股信息
-
-        :param str instrument: 合约对象
-
-        :return: `pandas.DataFrame`
         """
 
         raise NotImplementedError

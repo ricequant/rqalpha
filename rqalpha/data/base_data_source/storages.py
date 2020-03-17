@@ -16,9 +16,10 @@ import abc
 import codecs
 import pickle
 from copy import copy
-from typing import Iterable
+from typing import List
 
 import json
+import pandas
 import numpy as np
 
 from rqalpha.utils.i18n import gettext as _
@@ -38,6 +39,25 @@ class AbstractDayBarStore:
     def get_bars(self, order_book_id):
         # type: (str) -> np.ndarray
         raise NotImplementedError
+
+    def get_date_range(self, order_book_id):
+        raise NotImplementedError
+
+
+class AbstractCalendarStore:
+    @abc.abstractmethod
+    def get_trading_calendar(self):
+        # type: () -> pandas.DatetimeIndex
+        raise NotImplementedError
+
+
+class ExchangeTradingCalendarStore(AbstractCalendarStore):
+    def __init__(self, f):
+        self._f = f
+
+    def get_trading_calendar(self):
+        # type: () -> pandas.DatetimeIndex
+        return pandas.to_datetime([str(d) for d in np.load(self._f, allow_pickle=False)])
 
 
 class FutureInfoStore(object):

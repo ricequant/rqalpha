@@ -31,7 +31,8 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.utils.exception import RQInvalidArgument
 
 from .storages import (
-    InstrumentStore, ShareTransformationStore, FutureInfoStore, AbstractDayBarStore, AbstractInstrumentStore
+    InstrumentStore, ShareTransformationStore, FutureInfoStore, AbstractDayBarStore, AbstractInstrumentStore,
+    AbstractCalendarStore, ExchangeTradingCalendarStore
 )
 from .h5_storages import (
     DayBarStore, DividendStore, YieldCurveStore, SimpleFactorStore
@@ -67,7 +68,9 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.ETF: dividend_store,
             INSTRUMENT_TYPE.LOF: dividend_store,
         }
-        self._trading_dates = pd.to_datetime([str(d) for d in np.load(_p('trading_dates.npy'), allow_pickle=False)])
+        self._calendar_providers = {
+            TRADING_CALENDAR_TYPE.EXCHANGE: ExchangeTradingCalendarStore(_p("trading_dates.npy"))
+        }
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
 
         split_store = SimpleFactorStore(_p('split_factor.h5'))
@@ -99,6 +102,10 @@ class BaseDataSource(AbstractDataSource):
     def register_split_store(self, instrument_type, split_store):
         self._split_factors[instrument_type] = split_store
 
+    def register_calendar_store(self, calendar_type, calendar_store):
+        # type: (TRADING_CALENDAR_TYPE, AbstractCalendarStore) -> None
+        self._calendar_providers[calendar_type] = calendar_store
+
     def get_dividend(self, instrument):
         try:
             dividend_store = self._dividends[instrument.type]
@@ -110,13 +117,9 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
 
-    def get_trading_calendar(self):
-        # forward compatible
-        return self._trading_dates
-
     def get_trading_calendars(self):
         # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
-        return {TRADING_CALENDAR_TYPE.EXCHANGE: self._trading_dates}
+        return {t: store.get_trading_calendar() for t, store in six.iteritems(self._calendar_providers)}
 
     def get_all_instruments(self):
         return self._instruments
