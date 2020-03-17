@@ -26,7 +26,8 @@ import six
 
 from rqalpha.utils.i18n import gettext as _
 
-from .entry import cli
+from rqalpha.cmds.entry import cli
+from rqalpha.data.bundle import init_rqdatac_if_need
 
 
 @cli.command()
@@ -43,7 +44,7 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     try:
-        rqdatac.init(uri=rqdatac_uri)
+        init_rqdatac_if_need(rqdatac_uri)
     except ValueError as e:
         click.echo('rqdatac init failed with error: {}'.format(e))
         return 1
@@ -55,7 +56,7 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-@click.option('--rqdatac-uri', help='rqdatac uri, eg tcp://user:password@ip:port', default=None)
+@click.option('--rqdatac-uri', help='rqdatac uri, eg user:password or tcp://user:password@ip:port', default=None)
 @click.option('--compression', default=False, type=click.BOOL, help='enable compression to reduce file size')
 @click.option('-c', '--concurrency', type=click.INT, default=1)
 def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
@@ -67,7 +68,7 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     try:
-        rqdatac.init(uri=rqdatac_uri)
+        init_rqdatac_if_need(rqdatac_uri)
     except ValueError as e:
         click.echo('rqdatac init failed with error: {}'.format(e))
         return 1
@@ -148,4 +149,3 @@ def download(out, total_length, url):
                     time.sleep(retry_interval)
                 else:
                     raise
-

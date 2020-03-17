@@ -338,6 +338,9 @@ class UpdateDayBarTask(DayBarTask):
 
 
 def init_rqdatac_if_need(rqdatac_uri):
+    if "@" not in rqdatac_uri:  # user:password
+        rqdatac_uri = "tcp://{}@rqdatad-pro.ricequant.com:16011".format(rqdatac)
+
     # rqdatac should be initialized in subprocess on windows
     from rqdatac.client import get_client, DummyClient
     if isinstance(get_client(), DummyClient):
@@ -367,7 +370,7 @@ def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurren
     )
 
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=init_rqdatac_if_need, initargs=(rqdatac_uri, )
+            max_workers=concurrency, initializer=init_rqdatac_if_need, initargs=(rqdatac_uri,)
     ) as executor:
         for func in gen_file_funcs:
             executor.submit(GenerateFileTask(func), path)
