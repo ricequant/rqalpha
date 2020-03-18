@@ -29,6 +29,7 @@ from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.core.executor import Executor
 from rqalpha.data.base_data_source import BaseDataSource
+from rqalpha.data.bundle import init_rqdatac_if_need
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT, Event
@@ -42,7 +43,6 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.log_capture import LogCapture
 from rqalpha.utils.persisit_helper import PersistHelper
 from rqalpha.utils.logger import system_log, user_system_log, user_log
-
 
 jsonpickle_numpy.register_handlers()
 
@@ -110,7 +110,7 @@ def get_strategy_apis():
     return {n: getattr(api, n) for n in api.__all__}
 
 
-def init_rqdatac(uri):
+def init_rqdatac(rqdatac_uri):
     try:
         import rqdatac
     except ImportError:
@@ -118,8 +118,7 @@ def init_rqdatac(uri):
         return
 
     try:
-        # FIXME it is possible that rqdatac is already inited, then we should not init it again
-        rqdatac.init(uri=uri, lazy=True)
+        init_rqdatac_if_need(rqdatac_uri)
     except ValueError as e:
         system_log.warn('rqdatac init failed, some apis will not function properly: {}'.format(str(e)))
 

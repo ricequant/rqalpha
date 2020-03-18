@@ -12,17 +12,17 @@
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-import os
-import re
-import pickle
 import datetime
+import json
+import os
+import pickle
+import re
 from itertools import chain
 
 import h5py
-import json
 import numpy as np
 import rqdatac
-
+from rqalpha.const import RQDATAC_DEFAULT_ADDRESS
 from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
@@ -340,8 +340,16 @@ class UpdateDayBarTask(DayBarTask):
 def init_rqdatac_if_need(rqdatac_uri):
     # rqdatac should be initialized in subprocess on windows
     from rqdatac.client import get_client, DummyClient
-    if isinstance(get_client(), DummyClient):
-        rqdatac.init(uri=rqdatac_uri)
+    if not isinstance(get_client(), DummyClient):
+        return
+
+    if "@" not in rqdatac_uri:  # user:password
+        rqdatac_uri = "tcp://{}@{}".format(rqdatac_uri, RQDATAC_DEFAULT_ADDRESS)
+
+    if not re.match(r"\w*://.*:.*@.*:\d*", rqdatac_uri):
+        raise TypeError("rqdata uri error. eg user:password or tcp://user:password@ip:port")
+
+    rqdatac.init(uri=rqdatac_uri)
 
 
 def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurrency=1):
@@ -367,7 +375,7 @@ def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurren
     )
 
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=init_rqdatac_if_need, initargs=(rqdatac_uri, )
+            max_workers=concurrency, initializer=init_rqdatac_if_need, initargs=(rqdatac_uri,)
     ) as executor:
         for func in gen_file_funcs:
             executor.submit(GenerateFileTask(func), path)
