@@ -32,7 +32,8 @@ from rqalpha.data.bundle import init_rqdatac_if_need
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-@click.option('--rqdatac-uri', help='rqdatac uri, eg tcp://user:password@ip:port', default=None)
+@click.option("rqdatac_uri", '--rqdatac', '--rqdatac-uri', default=None,
+              help='rqdatac uri, eg user:password or tcp://user:password@ip:port')
 @click.option('--compression', default=False, is_flag=True, help='enable compression to reduce file size')
 @click.option('-c', '--concurrency', type=click.INT, default=1)
 def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
@@ -56,7 +57,8 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
 
 @cli.command()
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
-@click.option('--rqdatac-uri', help='rqdatac uri, eg user:password or tcp://user:password@ip:port', default=None)
+@click.option("rqdatac_uri", '--rqdatac', '--rqdatac-uri', default=None,
+              help='rqdatac uri, eg user:password or tcp://user:password@ip:port')
 @click.option('--compression', default=False, type=click.BOOL, help='enable compression to reduce file size')
 @click.option('-c', '--concurrency', type=click.INT, default=1)
 def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
