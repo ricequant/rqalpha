@@ -336,26 +336,14 @@ class UpdateDayBarTask(DayBarTask):
                 yield 1
 
 
-def init_rqdatac_if_need(rqdatac_uri):
-    # rqdatac should be initialized in subprocess on windows
-    from rqdatac.client import get_client, DummyClient
-    if not isinstance(get_client(), DummyClient):
-        return
-
-    if rqdatac_uri is None:
+def init_rqdatac_with_warnings_catch():
+    import warnings
+    with warnings.catch_warnings(record=True):
+        # catch warning: rqdatac is already inited. Settings will be changed
         rqdatac.init()
-    elif re.match(r"^\w+://.*:.*@.+:\d*$", rqdatac_uri):
-        rqdatac.init(uri=rqdatac_uri)
-    else:
-        try:
-            username, password = rqdatac_uri.split(":")
-        except ValueError:
-            raise TypeError("rqdatac uri error. eg user:password or tcp://user:password@ip:port")
-        else:
-            rqdatac_uri.init(username=username, password=password)
 
 
-def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurrency=1):
+def update_bundle(path, create, enable_compression=False, concurrency=1):
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
@@ -378,8 +366,9 @@ def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurren
     )
 
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=init_rqdatac_if_need, initargs=(rqdatac_uri,)
+            max_workers=concurrency, initializer=init_rqdatac_with_warnings_catch
     ) as executor:
+        # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
         for func in gen_file_funcs:
             executor.submit(GenerateFileTask(func), path)
         for file, order_book_id, field in day_bar_args:

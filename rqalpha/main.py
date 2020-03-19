@@ -118,7 +118,8 @@ def init_rqdatac(rqdatac_uri):
         return
 
     try:
-        init_rqdatac_if_need(rqdatac_uri)
+        init_rqdatac_env(rqdatac_uri)
+        rqdatac.init()
     except ValueError as e:
         system_log.warn('rqdatac init failed, some apis will not function properly: {}'.format(str(e)))
 
