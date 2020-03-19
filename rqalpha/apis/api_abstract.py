@@ -32,8 +32,216 @@ from rqalpha.utils.functools import instype_singledispatch
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    verify_that('amount').is_number(), verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    verify_that('amount').is_number(),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
 )
 @instype_singledispatch
 def order_shares(id_or_ins, amount, price=None, style=None):
+    """
+    指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
+
+    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object | None
+
+    :example:
+
+    .. code-block:: python
+
+        #购买Buy 2000 股的平安银行股票，并以市价单发送：
+        order_shares('000001.XSHE', 2000)
+        #卖出2000股的平安银行股票，并以市价单发送：
+        order_shares('000001.XSHE', -2000)
+        #购买1000股的平安银行股票，并以限价单发送，价格为￥10：
+        order_shares('000001.XSHG', 1000, style=LimitOrder(10))
+    """
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('cash_amount').is_number(),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def order_value(id_or_ins, cash_amount, price=None, style=None):
+    """
+    使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。如果资金不足，该API将不会创建发送订单。
+
+    需要注意：
+    当您提交一个买单时，cash_amount 代表的含义是您希望买入股票消耗的金额（包含税费），最终买入的股数不仅和发单的价格有关，还和税费相关的参数设置有关。
+    当您提交一个卖单时，cash_amount 代表的意义是您希望卖出股票的总价值。如果金额超出了您所持有股票的价值，那么您将卖出所有股票。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param float cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
+
+    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object | None
+
+    :example:
+
+    .. code-block:: python
+
+        #花费最多￥10000买入平安银行股票，并以市价单发送。具体下单的数量与您策略税费相关的配置有关。
+        order_value('000001.XSHE', 10000)
+        #卖出价值￥10000的现在持有的平安银行：
+        order_value('000001.XSHE', -10000)
+    """
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('percent').is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def order_percent(id_or_ins, percent, price=None, style=None):
+    """
+    发送一个花费价值等于目前投资组合（市场价值和目前现金的总和）一定百分比现金的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
+
+    需要注意：
+    发送买单时，percent 代表的是期望买入股票消耗的金额（包含税费）占投资组合总权益的比例。
+    发送卖单时，percent 代表的是期望卖出的股票总价值占投资组合总权益的比例。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str`
+
+    :param float percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
+
+    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object | None
+
+    :example:
+
+    .. code-block:: python
+
+       #花费等于现有投资组合50%价值的现金买入平安银行股票：
+       order_percent('000001.XSHG', 0.5)
+       """
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('cash_amount').is_number(),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def order_target_value(id_or_ins, cash_amount, price=None, style=None):
+    """
+    买入/卖出并且自动调整该证券的仓位到一个目标价值。
+    加仓时，cash_amount 代表现有持仓的价值加上即将花费（包含税费）的现金的总价值。
+    减仓时，cash_amount 代表调整仓位的目标价至。
+
+    需要注意，如果资金不足，该API将不会创建发送订单。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+
+    :param float cash_amount: 最终的该证券的仓位目标价值。
+
+    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object | None
+
+    :example:
+
+    .. code-block:: python
+
+        #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位，以下代码范例会发送花费 ￥7000 现金的平安银行买单到市场。（向下调整到最接近每手股数即100的倍数的股数）：
+        order_target_value('000001.XSHE', 10000)
+    """
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def order_target_percent(id_or_ins, percent, price=None, style=None):
+    """
+    买入/卖出证券以自动调整该证券的仓位到占有一个目标价值。
+
+    加仓时，percent 代表证券已有持仓的价值加上即将花费的现金（包含税费）的总值占当前投资组合总价值的比例。
+    减仓时，percent 代表证券将被调整到的目标价至占当前投资组合总价值的比例。
+
+    其实我们需要计算一个position_to_adjust (即应该调整的仓位)
+
+    `position_to_adjust = target_position - current_position`
+
+    投资组合价值等于所有已有仓位的价值和剩余现金的总和。买/卖单会被下舍入一手股数（A股是100的倍数）的倍数。目标百分比应该是一个小数，并且最大值应该<=1，比如0.5表示50%。
+
+    如果position_to_adjust 计算之后是正的，那么会买入该证券，否则会卖出该证券。 需要注意，如果资金不足，该API将不会创建发送订单。
+
+    :param id_or_ins: 下单标的物
+    :type id_or_ins: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
+
+    :param float percent: 仓位最终所占投资组合总价值的目标百分比。
+
+    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :type style: `OrderStyle` object
+
+    :return: :class:`~Order` object | None
+
+    :example:
+
+    .. code-block:: python
+
+        #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会消耗相当于当前投资组合价值5%的现金买入平安银行股票：
+        order_target_percent('000001.XSHE', 0.15)
+    """
     raise NotImplementedError
