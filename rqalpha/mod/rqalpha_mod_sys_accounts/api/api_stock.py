@@ -23,7 +23,6 @@ from typing import Dict, List, Union
 
 import six
 import pandas as pd
-import numpy as np
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style, assure_order_book_id, assure_instrument
@@ -35,7 +34,6 @@ from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
-from rqalpha.interface import AbstractPosition
 from rqalpha.utils import is_valid_price, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
@@ -46,58 +44,116 @@ from rqalpha.utils.logger import user_system_log
 getcontext().prec = 10
 
 
-@order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_shares(id_or_ins, amount, price=None, style=None):
-    style = cal_style(price, style)
+def _get_account_position_ins(id_or_ins):
+    ins = assure_instrument(id_or_ins)
+    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
+    position = account.get_position(ins.order_book_id, POSITION_DIRECTION.LONG)
+    return account, position, ins
+
+
+def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_value):
+    env = Environment.get_instance()
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
-    auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
-    return _order_shares(assure_instrument(id_or_ins), amount, style, auto_switch_order_value)
-
-
-def _order_shares(ins, amount, style, auto_switch_order_value):
-    env = Environment.get_instance()
     price = env.data_proxy.get_last_price(ins.order_book_id)
     if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
         return
-
-    side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
     if side == SIDE.BUY:
         round_lot = int(ins.round_lot)
         amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
         return
-
-    r_order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
-    if r_order.type == ORDER_TYPE.MARKET:
-        r_order.set_frozen_price(price)
-    reject_validator_type = env.validate_order_submission(r_order)
+    order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
+    if order.type == ORDER_TYPE.MARKET:
+        order.set_frozen_price(price)
+    reject_validator_type = env.validate_order_submission(order)
     if not reject_validator_type:
-        env.broker.submit_order(r_order)
-        return r_order
+        env.broker.submit_order(order)
+        return order
     else:
         if auto_switch_order_value and reject_validator_type == FRONT_VALIDATOR_TYPE.CASH:
             remaining_cash = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name].cash
             user_system_log.warn(_(
-                "Insufficient cash, use all remaining cash({}) to create order").format(remaining_cash)
-            )
-            return _order_value(ins, remaining_cash, style)
+                "Insufficient cash, use all remaining cash({}) to create order"
+            ).format(remaining_cash))
+            account, position, ins = _get_account_position_ins(ins)
+            return _order_value(account, position, ins, remaining_cash, style)
 
 
-def _sell_all_stock(order_book_id, amount, style):
+def _order_shares(ins, amount, style, auto_switch_order_value):
+    side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
+    return _submit_order(ins, amount, side, position_effect, style, auto_switch_order_value)
+
+
+def _order_value(account, position, ins, cash_amount, style):
     env = Environment.get_instance()
-    order = Order.__from_create__(order_book_id, amount, SIDE.SELL, style, POSITION_EFFECT.CLOSE)
-    if amount == 0:
-        user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
-        return
+    if cash_amount > 0:
+        cash_amount = min(cash_amount, account.cash)
+    if isinstance(style, LimitOrder):
+        price = style.get_limit_price()
+    else:
+        price = env.data_proxy.get_last_price(ins.order_book_id)
+    amount = int(Decimal(cash_amount) / Decimal(price))
 
-    if env.can_submit_order(order):
-        env.broker.submit_order(order)
-        return order
+    if cash_amount > 0:
+        round_lot = int(ins.round_lot)
+        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+        while amount > 0:
+            expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
+                ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
+            ))
+            if amount * price + expected_transaction_cost <= cash_amount:
+                break
+            amount -= round_lot
+        else:
+            user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+            return
+
+    if amount < 0:
+        amount = max(amount, -position.closable)
+
+    return _order_shares(ins, amount, style, auto_switch_order_value=False)
+
+
+@order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order_shares(id_or_ins, amount, price=None, style=None):
+    auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
+    return _order_shares(assure_instrument(id_or_ins), amount, cal_style(price, style), auto_switch_order_value)
+
+
+@order_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order_value(id_or_ins, cash_amount, price=None, style=None):
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    return _order_value(account, position, ins, cash_amount, cal_style(price, style))
+
+
+@order_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order_percent(id_or_ins, percent, price=None, style=None):
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    return _order_value(account, position, ins, account.total_value * percent, cal_style(price, style))
+
+
+@order_target_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    if cash_amount == 0:
+        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style), False)
+    return _order_value(account, position, ins, cash_amount - position.market_value, cal_style(price, style))
+
+
+@order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order_target_percent(id_or_ins, percent, price=None, style=None):
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    if percent == 0:
+        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style), False)
+    else:
+        return _order_value(
+            account, position, ins, account.total_value * percent - position.market_value, cal_style(price, style)
+        )
 
 
 @export_as_api
@@ -137,113 +193,9 @@ def order_lots(id_or_ins, amount, price=None, style=None):
         order_lots('000001.XSHE', 10, style=LimitOrder(10))
 
     """
-    order_book_id = assure_order_book_id(id_or_ins)
-
-    round_lot = int(Environment.get_instance().get_instrument(order_book_id).round_lot)
-
-    style = cal_style(price, style)
-
-    return order_shares(id_or_ins, amount * round_lot, style=style)
-
-
-@order_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_value(id_or_ins, cash_amount, price=None, style=None):
-    style = cal_style(price, style)
-
-    if isinstance(style, LimitOrder):
-        if style.get_limit_price() <= 0:
-            raise RQInvalidArgument(_(u"Limit order price should be positive"))
-    return _order_value(assure_instrument(id_or_ins), cash_amount, style)
-
-
-def _order_value(ins, cash_amount, style):
-    env = Environment.get_instance()
-    account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
-
-    if cash_amount > 0:
-        cash_amount = min(cash_amount, account.cash)
-
-    if isinstance(style, LimitOrder):
-        price = style.get_limit_price()
-    else:
-        price = env.data_proxy.get_last_price(ins.order_book_id)
-    amount = int(Decimal(cash_amount) / Decimal(price))
-
-    if cash_amount > 0:
-        round_lot = int(ins.round_lot)
-
-        # FIXME: logic duplicate with order_shares
-        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
-
-        while amount > 0:
-            dummy_order = Order.__from_create__(
-                ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
-            )
-            expected_transaction_cost = env.get_order_transaction_cost(dummy_order)
-            if amount * price + expected_transaction_cost <= cash_amount:
-                break
-            amount -= round_lot
-        else:
-            user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
-            return
-
-    if amount < 0:
-        position = account.get_position(ins.order_book_id, POSITION_DIRECTION.LONG)
-        amount = max(amount, -position.closable)
-
-    return _order_shares(ins, amount, style, auto_switch_order_value=False)
-
-
-@order_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_percent(id_or_ins, percent, price=None, style=None):
-    if percent < -1 or percent > 1:
-        raise RQInvalidArgument(_(u"percent should between -1 and 1"))
-
-    style = cal_style(price, style)
-    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
-    return order_value(id_or_ins, account.total_value * percent, style=style)
-
-
-@order_target_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
-    order_book_id = assure_order_book_id(id_or_ins)
-    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
-    position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)  # type: AbstractPosition
-
-    style = cal_style(price, style)
-    if cash_amount == 0:
-        return _sell_all_stock(order_book_id, position.closable, style)
-
-    try:
-        market_value = position.market_value
-    except RuntimeError:
-        order_result = order_value(order_book_id, np.nan, style=style)
-        if order_result:
-            raise
-    else:
-        return order_value(order_book_id, cash_amount - market_value, style=style)
-
-
-@order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_target_percent(id_or_ins, percent, price=None, style=None):
-    order_book_id = assure_order_book_id(id_or_ins)
-
-    style = cal_style(price, style)
-
-    account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
-    position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)  # type: AbstractPosition
-
-    if percent == 0:
-        return _sell_all_stock(order_book_id, position.closable, style)
-
-    try:
-        market_value = position.market_value
-    except RuntimeError:
-        order_result = order_value(order_book_id, np.nan, style=style)
-        if order_result:
-            raise
-    else:
-        return order_value(order_book_id, account.total_value * percent - market_value, style=style)
+    ins = assure_instrument(id_or_ins)
+    auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
+    return _order_shares(ins, amount * int(ins.round_lot), cal_style(price, style), auto_switch_order_value)
 
 
 @export_as_api
