@@ -35,17 +35,11 @@ class AbstractMatcher:
         # type: (AbstractAccount, Order) -> None
         raise NotImplementedError
 
-    def update(self, calendar_dt, trading_dt):
-        # type: (datetime, datetime) -> None
-        raise NotImplementedError
-
 
 class DefaultMatcher(AbstractMatcher):
     def __init__(self, env, mod_config):
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._turnover = defaultdict(int)
-        self._calendar_dt = None
-        self._trading_dt = None
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._liquidity_limit = mod_config.liquidity_limit
@@ -86,11 +80,6 @@ class DefaultMatcher(AbstractMatcher):
             price = self._env.price_board.get_last_price(order_book_id)
         return price
 
-    def update(self, calendar_dt, trading_dt):
-        self._turnover.clear()
-        self._calendar_dt = calendar_dt
-        self._trading_dt = trading_dt
-
     def _match(self, account, order):
         # type: (AbstractAccount, Order) -> None
         order_book_id = order.order_book_id
@@ -99,7 +88,7 @@ class DefaultMatcher(AbstractMatcher):
         deal_price = self._deal_price_decider(order_book_id, order.side)
         if not is_valid_price(deal_price):
             listed_date = instrument.listed_date.date()
-            if listed_date == self._trading_dt.date():
+            if listed_date == self._env.trading_dt.date():
                 reason = _(
                     u"Order Cancelled: current security [{order_book_id}] can not be traded"
                     u" in listed date [{listed_date}]").format(
