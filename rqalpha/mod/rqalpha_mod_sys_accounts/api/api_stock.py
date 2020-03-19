@@ -213,11 +213,8 @@ def _order_value(order_book_id, cash_amount, style):
             user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
             return
 
-    # if the cash_amount is larger than you current security’s position,
-    # then it will sell all shares of this security.
-
-    position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)
     if amount < 0:
+        position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)
         amount = max(amount, -position.closable)
 
     return _order_shares(order_book_id, amount, style, auto_switch_order_value=False)
