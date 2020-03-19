@@ -41,16 +41,9 @@ from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-from rqalpha.mod.rqalpha_mod_sys_scheduler.scheduler import market_close, market_open
-from rqalpha.mod.rqalpha_mod_sys_scheduler import scheduler
 
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
-
-
-export_as_api(scheduler, name='scheduler')
-export_as_api(market_close)
-export_as_api(market_open)
 
 
 @order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
