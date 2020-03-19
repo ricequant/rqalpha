@@ -343,13 +343,15 @@ def init_rqdatac_if_need(rqdatac_uri):
     if not isinstance(get_client(), DummyClient):
         return
 
-    if "@" not in rqdatac_uri:  # user:password
-        rqdatac_uri = "tcp://{}@{}".format(rqdatac_uri, RQDATAC_DEFAULT_ADDRESS)
+    if rqdatac_uri is None:
+        rqdatac.init()
+    else:
+        if "@" not in rqdatac_uri:  # user:password
+            rqdatac_uri = "tcp://{}@{}".format(rqdatac_uri, RQDATAC_DEFAULT_ADDRESS)
+        if not re.match(r"\w*://.*:.*@.*:\d*", rqdatac_uri):
+            raise TypeError("rqdata uri error. eg user:password or tcp://user:password@ip:port")
 
-    if not re.match(r"\w*://.*:.*@.*:\d*", rqdatac_uri):
-        raise TypeError("rqdata uri error. eg user:password or tcp://user:password@ip:port")
-
-    rqdatac.init(uri=rqdatac_uri)
+        rqdatac.init(uri=rqdatac_uri)
 
 
 def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurrency=1):
