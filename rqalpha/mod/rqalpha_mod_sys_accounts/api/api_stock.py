@@ -24,6 +24,7 @@ import numpy as np
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import instruments, cal_style
+from rqalpha.apis.api_abstract import order_shares
 from rqalpha.const import (
     DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE, POSITION_DIRECTION
 )
@@ -32,7 +33,7 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
 from rqalpha.interface import AbstractPosition
-from rqalpha.utils import is_valid_price
+from rqalpha.utils import is_valid_price, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
@@ -49,18 +50,8 @@ export_as_api(market_close)
 export_as_api(market_open)
 
 
-@export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.OPEN_AUCTION,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.SCHEDULED,
-    EXECUTION_PHASE.GLOBAL
-)
-@apply_rules(verify_that('id_or_ins').is_valid_stock(),
-             verify_that('amount').is_number(),
-             verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
-def order_shares(id_or_ins, amount, price=None, style=None):
+@order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order_shares(id_or_ins, amount, price=None, style=None):
     """
     指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 

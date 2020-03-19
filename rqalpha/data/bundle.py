@@ -21,7 +21,7 @@ from itertools import chain
 
 import h5py
 import numpy as np
-import rqdatac
+from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
