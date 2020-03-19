@@ -18,7 +18,7 @@
 from __future__ import division
 
 from rqalpha.api import export_as_api
-from rqalpha.apis.api_base import cal_style
+from rqalpha.apis.api_base import cal_style, assure_instrument
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder
@@ -229,11 +229,3 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
-
-
-def assure_instrument(id_or_symbols):
-    if isinstance(id_or_symbols, Instrument):
-        return id_or_symbols
-    else:
-        return Environment.get_instance().data_proxy.instruments(id_or_symbols)
-

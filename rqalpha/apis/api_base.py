@@ -71,17 +71,17 @@ export_as_api(MATCHING_TYPE, name='MATCHING_TYPE')
 export_as_api(EVENT, name='EVENT')
 
 
-def assure_order_book_id(id_or_ins):
+def assure_instrument(id_or_ins):
     if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
+        return id_or_ins
     elif isinstance(id_or_ins, six.string_types):
-        order_book_id = (
-            Environment.get_instance().data_proxy.instruments(id_or_ins).order_book_id
-        )
+        return Environment.get_instance().data_proxy.instruments(id_or_ins)
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
-    return order_book_id
+
+def assure_order_book_id(id_or_ins):
+    return assure_instrument(id_or_ins).order_book_id
 
 
 def cal_style(price, style):
