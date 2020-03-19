@@ -254,8 +254,6 @@ def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
 
 @order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_percent(id_or_ins, percent, price=None, style=None):
-    if percent < 0 or percent > 1:
-        raise RQInvalidArgument(_(u"percent should between 0 and 1"))
     order_book_id = assure_stock_order_book_id(id_or_ins)
 
     style = cal_style(price, style)

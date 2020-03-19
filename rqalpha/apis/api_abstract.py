@@ -206,7 +206,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
+    verify_that('percent', pre_check=True).is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
     verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
 )
 @instype_singledispatch
