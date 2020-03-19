@@ -15,17 +15,19 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from typing import List, Tuple, Dict
+from functools import lru_cache
 
 import jsonpickle
 
-from rqalpha.interface import AbstractBroker, Persistable
+from rqalpha.interface import AbstractBroker, Persistable, AbstractAccount
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
-from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT
+from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, INSTRUMENT_TYPE
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
-from .matcher import Matcher, ExerciseMatcher
+from .matcher import DefaultMatcher, AbstractMatcher
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -33,13 +35,12 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env = env  # type: Environment
         self._mod_config = mod_config
 
-        self._matcher = None
-        self._exercise_matcher = None
+        self._matchers = {}  # type: Dict[INSTRUMENT_TYPE, AbstractMatcher]
 
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
-        self._open_orders = []
-        self._open_exercise_orders = []
+        self._open_orders = []  # type: List[Tuple[AbstractAccount, Order]]
+        self._open_exercise_orders = []  # type: List[Tuple[AbstractAccount, Order]]
 
         self._delayed_orders = []
         self._frontend_validator = {}
@@ -54,17 +55,18 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
         self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
 
-    @property
-    def matcher(self):
-        if not self._matcher:
-            self._matcher = Matcher(self._env, self._mod_config)
-        return self._matcher
+    @lru_cache(1024)
+    def _get_matcher(self, order_book_id):
+        # type: (str) -> AbstractMatcher
+        instrument_type = self._env.data_proxy.instruments(order_book_id).type
+        try:
+            return self._matchers[instrument_type]
+        except KeyError:
+            return self._matchers.setdefault(instrument_type, DefaultMatcher(self._env, self._mod_config))
 
-    @property
-    def exercise_matcher(self):
-        if not self._exercise_matcher:
-            self._exercise_matcher = ExerciseMatcher(self._env)
-        return self._exercise_matcher
+    def register_matcher(self, instrument_type, matcher):
+        # type: (INSTRUMENT_TYPE, AbstractMatcher) -> None
+        self._matchers[instrument_type] = matcher
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:
@@ -100,7 +102,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
         if order.position_effect == POSITION_EFFECT.EXERCISE:
-            return self._open_exercise_orders.append(order)
+            return self._open_exercise_orders.append((account, order))
         if order.is_final():
             return
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
@@ -144,23 +146,28 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._delayed_orders = []
 
     def pre_settlement(self, __):
-        self.exercise_matcher.match(self._open_exercise_orders)
+        for account, order in self._open_exercise_orders:
+            self._get_matcher(order.order_book_id).match(account, order)
         self._open_exercise_orders.clear()
 
     def on_bar(self, _):
-        self.matcher.update(self._env.calendar_dt, self._env.trading_dt)
+        for matcher in self._matchers.values():
+            matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match()
 
     def on_tick(self, event):
         tick = event.tick
-        self.matcher.update(self._env.calendar_dt, self._env.trading_dt)
+        for matcher in self._matchers.values():
+            matcher.update(self._env.calendar_dt, self._env.trading_dt)
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
         open_orders = self._open_orders
         if order_book_id is not None:
-            open_orders = [(a, o) for (a, o) in self._open_orders if o.order_book_id == order_book_id]
-        self.matcher.match(open_orders)
+            open_orders = ((a, o) for (a, o) in self._open_orders if o.order_book_id == order_book_id)
+
+        for account, order in open_orders:
+            self._get_matcher(order.order_book_id).match(account, order)
         final_orders = [(a, o) for a, o in self._open_orders if o.is_final()]
         self._open_orders = [(a, o) for a, o in self._open_orders if not o.is_final()]
 
