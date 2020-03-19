@@ -253,5 +253,3 @@ class CURRENCY(CustomEnum):
 
 
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"
-
-RQDATAC_DEFAULT_ADDRESS = "rqdatad-pro.ricequant.com:16011"

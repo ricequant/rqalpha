@@ -22,7 +22,6 @@ from itertools import chain
 import h5py
 import numpy as np
 import rqdatac
-from rqalpha.const import RQDATAC_DEFAULT_ADDRESS
 from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
@@ -345,13 +344,15 @@ def init_rqdatac_if_need(rqdatac_uri):
 
     if rqdatac_uri is None:
         rqdatac.init()
-    else:
-        if "@" not in rqdatac_uri:  # user:password
-            rqdatac_uri = "tcp://{}@{}".format(rqdatac_uri, RQDATAC_DEFAULT_ADDRESS)
-        if not re.match(r"\w*://.*:.*@.*:\d*", rqdatac_uri):
-            raise TypeError("rqdata uri error. eg user:password or tcp://user:password@ip:port")
-
+    elif re.match(r"^\w+://.*:.*@.+:\d*$", rqdatac_uri):
         rqdatac.init(uri=rqdatac_uri)
+    else:
+        try:
+            username, password = rqdatac_uri.split(":")
+        except ValueError:
+            raise TypeError("rqdatac uri error. eg user:password or tcp://user:password@ip:port")
+        else:
+            rqdatac_uri.init(username=username, password=password)
 
 
 def update_bundle(rqdatac_uri, path, create, enable_compression=False, concurrency=1):
