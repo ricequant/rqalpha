@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 
 from rqalpha.api import export_as_api
-from rqalpha.apis.api_base import instruments, cal_style
+from rqalpha.apis.api_base import instruments, cal_style, assure_order_book_id, assure_instrument
 from rqalpha.apis.api_abstract import order_shares, order_value, order_percent, order_target_value, order_target_percent
 from rqalpha.const import (
     DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE, POSITION_DIRECTION
@@ -56,7 +56,7 @@ def stock_order_shares(id_or_ins, amount, price=None, style=None):
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
-    order_book_id = assure_stock_order_book_id(id_or_ins)
+    order_book_id = assure_order_book_id(id_or_ins)
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
     return _order_shares(order_book_id, amount, style, auto_switch_order_value)
 
@@ -158,7 +158,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
         order_lots('000001.XSHE', 10, style=LimitOrder(10))
 
     """
-    order_book_id = assure_stock_order_book_id(id_or_ins)
+    order_book_id = assure_order_book_id(id_or_ins)
 
     round_lot = int(Environment.get_instance().get_instrument(order_book_id).round_lot)
 
@@ -175,7 +175,7 @@ def stock_order_value(id_or_ins, cash_amount, price=None, style=None):
         if style.get_limit_price() <= 0:
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
-    order_book_id = assure_stock_order_book_id(id_or_ins)
+    order_book_id = assure_order_book_id(id_or_ins)
     return _order_value(order_book_id, cash_amount, style)
 
 
@@ -217,7 +217,8 @@ def _order_value(order_book_id, cash_amount, style):
     # then it will sell all shares of this security.
 
     position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)
-    amount = downsize_amount(amount, position)
+    if amount < 0:
+        amount = max(amount, -position.closable)
 
     return _order_shares(order_book_id, amount, style, auto_switch_order_value=False)
 
@@ -234,7 +235,7 @@ def stock_order_percent(id_or_ins, percent, price=None, style=None):
 
 @order_target_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
-    order_book_id = assure_stock_order_book_id(id_or_ins)
+    order_book_id = assure_order_book_id(id_or_ins)
     account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
     position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)  # type: AbstractPosition
 
@@ -254,7 +255,7 @@ def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
 
 @order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_percent(id_or_ins, percent, price=None, style=None):
-    order_book_id = assure_stock_order_book_id(id_or_ins)
+    order_book_id = assure_order_book_id(id_or_ins)
 
     style = cal_style(price, style)
 
@@ -298,7 +299,7 @@ def order_target_portfolio(target_portfolio):
     account_value = account.total_value
     target_quantities = {}
     for id_or_ins, target_percent in six.iteritems(target_portfolio):
-        order_book_id = assure_stock_order_book_id(id_or_ins)
+        order_book_id = assure_order_book_id(id_or_ins)
         if target_percent < 0:
             raise RQInvalidArgument(_(u"target percent of should {} between 0 and 1, current: {}").format(
                 order_book_id, target_percent
@@ -369,7 +370,7 @@ def is_suspended(order_book_id, count=1):
     :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
     """
     dt = Environment.get_instance().calendar_dt.date()
-    order_book_id = assure_stock_order_book_id(order_book_id)
+    order_book_id = assure_order_book_id(order_book_id)
     return Environment.get_instance().data_proxy.is_suspended(order_book_id, dt, count)
 
 
@@ -395,29 +396,5 @@ def is_st_stock(order_book_id, count=1):
     :return: count为1时 `bool`; count>1时 `pandas.DataFrame`
     """
     dt = Environment.get_instance().calendar_dt.date()
-    order_book_id = assure_stock_order_book_id(order_book_id)
+    order_book_id = assure_order_book_id(order_book_id)
     return Environment.get_instance().data_proxy.is_st_stock(order_book_id, dt, count)
-
-
-def assure_stock_order_book_id(id_or_symbols):
-    if isinstance(id_or_symbols, Instrument):
-        return id_or_symbols.order_book_id
-    elif isinstance(id_or_symbols, six.string_types):
-        return assure_stock_order_book_id(instruments(id_or_symbols))
-    else:
-        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
-
-
-def downsize_amount(amount, position):
-    # type: (float, AbstractPosition) -> float
-    config = Environment.get_instance().config
-    if not config.validator.close_amount:
-        return amount
-    if amount > 0:
-        return amount
-    else:
-        amount = abs(amount)
-        if amount > position.closable:
-            return -position.closable
-        else:
-            return -amount
