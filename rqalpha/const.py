@@ -123,8 +123,10 @@ class ORDER_STATUS(CustomEnum):
 
 # noinspection PyPep8Naming
 class SIDE(CustomEnum):
-    BUY = "BUY"
-    SELL = "SELL"
+    BUY = "BUY"              # 买
+    SELL = "SELL"            # 卖
+    FINANCING = "FINANCING"  # 正回购
+    MARGIN = "MARGIN"        # 逆回购
 
 
 # noinspection PyPep8Naming
