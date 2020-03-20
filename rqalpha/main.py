@@ -29,7 +29,6 @@ from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.core.executor import Executor
 from rqalpha.data.base_data_source import BaseDataSource
-from rqalpha.data.bundle import init_rqdatac_if_need
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT, Event
@@ -37,7 +36,7 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
-from rqalpha.utils import create_custom_exception, RqAttrDict
+from rqalpha.utils import create_custom_exception, RqAttrDict, init_rqdatac_env
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.log_capture import LogCapture
@@ -118,7 +117,8 @@ def init_rqdatac(rqdatac_uri):
         return
 
     try:
-        init_rqdatac_if_need(rqdatac_uri)
+        init_rqdatac_env(rqdatac_uri)
+        rqdatac.init()
     except ValueError as e:
         system_log.warn('rqdatac init failed, some apis will not function properly: {}'.format(str(e)))
 

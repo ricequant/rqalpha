@@ -38,7 +38,7 @@ from .entry import cli
 @click.option('-rp', '--round-price', 'base__round_price', is_flag=True)
 @click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default=None)
 @click.option('--source-code', 'base__source_code')
-@click.option("rqdatac_uri", '--rqdatac', '--rqdatac-uri', default=None,
+@click.option('--rqdatac', '--rqdatac-uri', 'base__rqdatac_uri', default=None,
               help='rqdatac uri, eg user:password or tcp://user:password@ip:port')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))

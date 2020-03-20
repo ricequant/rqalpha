@@ -14,6 +14,7 @@
 
 from __future__ import division
 import pprint
+import os
 import re
 import six
 import collections
@@ -222,6 +223,22 @@ def decimal_rounding_floor():
     getcontext().rounding = ROUND_FLOOR
     yield
     getcontext().rounding = original_rounding_option
+
+
+RQDATAC_DEFAULT_ADDRESS = "rqdatad-pro.ricequant.com:16011"
+
+
+def init_rqdatac_env(uri):
+    if uri is None:
+        return
+
+    if '@' not in uri:
+        uri = "tcp://{}@{}".format(uri, RQDATAC_DEFAULT_ADDRESS)
+
+    if not re.match(r"\w*://.+:.+@.+:\d+", uri):
+        raise ValueError('invalid rqdatac uri. use user:password or tcp://user:password@ip:port')
+
+    os.environ['RQDATAC_CONF'] = uri
 
 
 # -------------- deprecated --------------
