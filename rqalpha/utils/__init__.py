@@ -211,7 +211,7 @@ def get_position_direction(side, position_effect):
     if position_effect is None:
         return POSITION_DIRECTION.LONG
     if (side == SIDE.BUY and position_effect == POSITION_EFFECT.OPEN) or (side == SIDE.SELL and position_effect in (
-        POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
+            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
     )):
         return POSITION_DIRECTION.LONG
     return POSITION_DIRECTION.SHORT
@@ -238,7 +238,7 @@ def init_rqdatac_env(uri):
     if not re.match(r"\w*://.+:.+@.+:\d+", uri):
         raise ValueError('invalid rqdatac uri. use user:password or tcp://user:password@ip:port')
 
-    os.environ['RQDATAC_CONF'] = uri
+    os.environ['RQDATAC2_CONF'] = uri
 
 
 # -------------- deprecated --------------
