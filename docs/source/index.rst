@@ -133,7 +133,6 @@ Mod名                       说明
     intro/tutorial
     intro/examples
     intro/detail_install
-    intro/virtual_machine
 
 
 .. toctree::

@@ -564,7 +564,7 @@ FuturePosition
 
 Instrument
 ------------------------------------------------------
-..  module:: rqalpha.model
+..  module:: rqalpha.model.instrument
 
 ..  py:class:: Instrument
 
@@ -685,6 +685,7 @@ Instrument对象也支持如下方法：
 
 ORDER_STATUS - 订单状态
 ------------------------------------------------------
+..  module:: rqalpha.const
 
 ..  py:class:: ORDER_STATUS
 

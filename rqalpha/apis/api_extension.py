@@ -13,6 +13,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import six
+from typing import Union, Optional, List
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style
@@ -20,7 +21,8 @@ from rqalpha.environment import Environment
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 
 # noinspection PyUnresolvedReferences
-from rqalpha.model.order import LimitOrder, MarketOrder, Order
+from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle
+from rqalpha.model.instrument import Instrument
 
 
 @export_as_api
@@ -35,6 +37,7 @@ def symbol(order_book_id, sep=", "):
 @export_as_api
 @apply_rules(verify_that("quantity").is_number())
 def order(order_book_id, quantity, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
     """
     全品种通用智能调仓函数
 
@@ -49,16 +52,9 @@ def order(order_book_id, quantity, price=None, style=None):
         *   如果 quantity 为负数，则先平 Buy 反向仓位，再开 Sell 方向仓位
 
     :param order_book_id: 下单标的物
-    :type order_book_id: :class:`~Instrument` object | `str`
-
-    :param int quantity: 调仓量
-
-    :param float price: 下单价格
-
+    :param quantity: 调仓量
+    :param price: 下单价格
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: list[:class:`~Order`]
 
     :example:
 
