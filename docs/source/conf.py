@@ -71,6 +71,7 @@ author = 'RiceQuant'
 
 try:
     import rqalpha
+    from rqalpha.mod.rqalpha_mod_sys_accounts.api import api_stock, api_future
     version = rqalpha.__main_version__
     release = version
 except ImportError:

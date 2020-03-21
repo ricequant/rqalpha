@@ -80,6 +80,7 @@ def order(order_book_id, quantity, price=None, style=None):
 @export_as_api
 @apply_rules(verify_that("quantity").is_number())
 def order_to(order_book_id, quantity, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
     """
     全品种通用智能调仓函数
 
@@ -94,17 +95,9 @@ def order_to(order_book_id, quantity, price=None, style=None):
         *   quantity 如果为负数，则先平 BUY 方向仓位，再 SELL 方向开仓 -quantity 手
 
     :param order_book_id: 下单标的物
-    :type order_book_id: :class:`~Instrument` object | `str`
-
     :param int quantity: 调仓量
-
     :param float price: 下单价格
-
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: list[:class:`~Order`]
-
     :example:
 
     ..  code-block:: python3

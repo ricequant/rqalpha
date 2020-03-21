@@ -16,7 +16,7 @@ import math
 from itertools import chain
 
 from decimal import Decimal, getcontext
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import six
 import pandas as pd
@@ -30,7 +30,7 @@ from rqalpha.const import (
 from rqalpha.environment import Environment
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.model.instrument import Instrument
-from rqalpha.model.order import Order, MarketOrder, LimitOrder
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.interface import AbstractPosition
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.arg_checker import apply_rules, verify_that
@@ -61,20 +61,14 @@ export_as_api(market_open)
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_shares(id_or_ins, amount, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Optional[Order]
     """
     指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
     :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
-
     :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object | None
 
     :example:
 
@@ -172,20 +166,14 @@ def _sell_all_stock(order_book_id, amount, style):
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
 def order_lots(id_or_ins, amount, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Optional[Order]
     """
     指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
     :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
-
     :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object | None
 
     :example:
 
