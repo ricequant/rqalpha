@@ -126,3 +126,6 @@ def run_func(**kwargs):
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
+
+version_info = tuple(int(v) if v.isdigit() else v for v in __version__.split('.'))
+__main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
