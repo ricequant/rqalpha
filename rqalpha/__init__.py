@@ -20,6 +20,7 @@ from rqalpha.api import export_as_api
 from . import data
 from . import interface
 from . import portfolio
+from . import apis
 
 __all__ = [
     '__version__',
