@@ -3,3 +3,4 @@ watchdog
 sphinx_rtd_theme
 nbsphinx ==0.3.5
 jupyter_client
+sphinx-autodoc-typehints
