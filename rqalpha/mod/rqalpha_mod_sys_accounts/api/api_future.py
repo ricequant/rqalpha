@@ -16,12 +16,13 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from __future__ import division
+from typing import Union, Optional, List
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style, assure_instrument
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
-from rqalpha.model.order import Order, MarketOrder, LimitOrder
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.const import (
     EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 )
@@ -133,20 +134,14 @@ def order(id_or_ins, amount, side, position_effect, style):
 
 @export_as_api
 def buy_open(id_or_ins, amount, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
     """
     买入开仓。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param int amount: 下单手数
-
-    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object | list[:class:`~Order`] | None
 
     :example:
 
@@ -160,22 +155,15 @@ def buy_open(id_or_ins, amount, price=None, style=None):
 
 @export_as_api
 def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
     """
     平卖仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param int amount: 下单手数
-
-    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :param bool close_today: 是否指定发平今仓单，默认为False，发送平仓单
-
-    :return: :class:`~Order` object | list[:class:`~Order`] | None
+    :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
 
     :example:
 
@@ -190,42 +178,29 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
 
 @export_as_api
 def sell_open(id_or_ins, amount, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
     """
     卖出开仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param int amount: 下单手数
-
-    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :return: :class:`~Order` object | list[:class:`~Order`] | None
     """
     return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
 
 
 @export_as_api
 def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
+    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
     """
     平买仓
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param int amount: 下单手数
-
-    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :type style: `OrderStyle` object
-
-    :param bool close_today: 是否指定发平今仓单，默认为False，发送平仓单
-
-    :return: :class:`~Order` object | list[:class:`~Order`] | None
+    :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))

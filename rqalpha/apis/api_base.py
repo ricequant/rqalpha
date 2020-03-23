@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from __future__ import division
 
-from typing import Union, Optional
+from typing import Union, Optional, List
 import datetime
 import types
 from collections import Iterable
@@ -24,7 +24,6 @@ from collections import Iterable
 import pandas as pd
 import numpy as np
 import six
-from dateutil.parser import parse
 
 from rqalpha.apis import names
 from rqalpha.environment import Environment
@@ -33,14 +32,11 @@ from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
-from rqalpha.model.instrument import SectorCodeItem, IndustryCodeItem
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.api import export_as_api
 from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
 from rqalpha.model.instrument import (
     Instrument,
-    SectorCode as sector_code,
-    IndustryCode as industry_code,
 )
 from rqalpha.const import (
     EXECUTION_PHASE,
@@ -57,8 +53,6 @@ from rqalpha.events import EVENT
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
-export_as_api(sector_code, name='sector_code')
-export_as_api(industry_code, name='industry_code')
 export_as_api(LimitOrder, name='LimitOrder')
 export_as_api(MarketOrder, name='MarketOrder')
 export_as_api(ORDER_STATUS, name='ORDER_STATUS')
@@ -129,10 +123,9 @@ def get_order(order):
     EXECUTION_PHASE.SCHEDULED,
 )
 def get_open_orders():
+    # type: () -> List[Order]
     """
     获取当日未成交订单数据
-
-    :return: List[:class:`~Order` object]
     """
     broker = Environment.get_instance().broker
     return [o for o in broker.get_open_orders() if o.position_effect != POSITION_EFFECT.EXERCISE]
@@ -145,24 +138,15 @@ def get_open_orders():
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
 def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
+    # type: (Union[str, Instrument], float, SIDE, Optional[float], Optional[POSITION_EFFECT]) -> Optional[Order]
     """
     通用下单函数，策略可以通过该函数自由选择参数下单。
 
     :param id_or_ins: 下单标的物
-    :type id_or_ins: :class:`~Instrument` object | `str`
-
-    :param float amount: 下单量，需为正数
-
-    :param side: 多空方向，多（SIDE.BUY）或空（SIDE.SELL）
-    :type side: :class:`~SIDE` enum
-
-    :param float price: 下单价格，默认为None，表示市价单
-
-    :param position_effect: 开平方向，开仓（POSITION_EFFECT.OPEN），平仓（POSITION.CLOSE）或平今（POSITION_EFFECT.CLOSE_TODAY），交易股票不需要该参数
-    :type position_effect: :class:`~POSITION_EFFECT` enum
-
-    :return: :class:`~Order` object | None
-
+    :param amount: 下单量，需为正数
+    :param side: 多空方向
+    :param price: 下单价格，默认为None，表示市价单
+    :param position_effect: 开平方向，交易股票不需要该参数
     :example:
 
     .. code-block:: python
@@ -226,11 +210,11 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
 )
 @apply_rules(verify_that("order").is_instance_of(Order))
 def cancel_order(order):
+    # type: (Order) -> Order
     """
     撤单
 
     :param order: 需要撤销的order对象
-    :type order: :class:`~Order` object
     """
     env = Environment.get_instance()
     if env.can_cancel_order(order):
@@ -278,11 +262,11 @@ def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
 )
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def update_universe(id_or_symbols):
+    # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
     """
     该方法用于更新现在关注的证券的集合（e.g.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为['000001.XSHE', '000024.XSHE']然后调用了update_universe(['000030.XSHE'])之后，股票池就会变成000030.XSHE一个股票了，随后的数据更新也只会跟踪000030.XSHE这一个股票了。
 
     :param id_or_symbols: 标的物
-    :type id_or_symbols: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
     if isinstance(id_or_symbols, (six.string_types, Instrument)):
         id_or_symbols = [id_or_symbols]
@@ -305,13 +289,13 @@ def update_universe(id_or_symbols):
 )
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def subscribe(id_or_symbols):
+    # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
     """
     订阅合约行情。该操作会导致合约池内合约的增加，从而影响handle_bar中处理bar数据的数量。
 
     需要注意，用户在初次编写策略时候需要首先订阅合约行情，否则handle_bar不会被触发。
 
     :param id_or_symbols: 标的物
-    :type id_or_symbols: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -340,11 +324,11 @@ def subscribe(id_or_symbols):
 )
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def unsubscribe(id_or_symbols):
+    # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
     """
     取消订阅合约行情。取消订阅会导致合约池内合约的减少，如果当前合约池中没有任何合约，则策略直接退出。
 
     :param id_or_symbols: 标的物
-    :type id_or_symbols: :class:`~Instrument` object | `str` | List[:class:`~Instrument`] | List[`str`]
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -740,218 +724,6 @@ def instruments(id_or_symbols):
     return Environment.get_instance().data_proxy.instruments(id_or_symbols)
 
 
-def to_sector_name(s):
-    for __, v in six.iteritems(sector_code.__dict__):
-        if isinstance(v, SectorCodeItem):
-            if v.cn == s or v.en == s or v.name == s:
-                return v.name
-    # not found
-    return s
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.ON_INIT,
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.OPEN_AUCTION,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
-@apply_rules(verify_that("code").is_instance_of((str, SectorCodeItem)))
-def sector(code):
-    """
-    获得属于某一板块的所有股票列表。
-
-    :param code: 板块名称或板块代码。例如，能源板块可填写'Energy'、'能源'或sector_code.Energy
-        :type code: `str` | `sector_code`
-
-    :return: list of order_book_id 属于该板块的股票列表
-
-    目前支持的板块分类如下，其取值参考自MSCI发布的全球行业标准分类:
-
-    =========================   =========================   ==============================================================================
-    板块代码                      中文板块名称                  英文板块名称
-    =========================   =========================   ==============================================================================
-    Energy                      能源                         energy
-    Materials                   原材料                        materials
-    ConsumerDiscretionary       非必需消费品                   consumer discretionary
-    ConsumerStaples             必需消费品                    consumer staples
-    HealthCare                  医疗保健                      health care
-    Financials                  金融                         financials
-    InformationTechnology       信息技术                      information technology
-    TelecommunicationServices   电信服务                      telecommunication services
-    Utilities                   公共服务                      utilities
-    Industrials                 工业                         industrials
-    =========================   =========================   ==============================================================================
-
-    :example:
-
-    ..  code-block:: python3
-        :linenos:
-
-        def init(context):
-            ids1 = sector("consumer discretionary")
-            ids2 = sector("非必需消费品")
-            ids3 = sector("ConsumerDiscretionary")
-            assert ids1 == ids2 and ids1 == ids3
-            logger.info(ids1)
-        #INIT INFO
-        #['002045.XSHE', '603099.XSHG', '002486.XSHE', '002536.XSHE', '300100.XSHE', '600633.XSHG', '002291.XSHE', ..., '600233.XSHG']
-    """
-    if not isinstance(code, six.string_types):
-        code = code.name
-    else:
-        code = to_sector_name(code)
-
-    return Environment.get_instance().data_proxy.sector(code)
-
-
-def to_industry_code(s):
-    for __, v in six.iteritems(industry_code.__dict__):
-        if isinstance(v, IndustryCodeItem):
-            if v.name == s:
-                return v.code
-    return s
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.ON_INIT,
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.OPEN_AUCTION,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
-@apply_rules(verify_that("code").is_instance_of((str, IndustryCodeItem)))
-def industry(code):
-    """
-    获得属于某一行业的所有股票列表。
-
-    :param str code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
-
-    :return: list of order_book_id 获得属于某一行业的所有股票
-
-    我们目前使用的行业分类来自于中国国家统计局的 `国民经济行业分类 <http://www.stats.gov.cn/tjsj/tjbz/hyflbz/>`_ ，可以使用这里的任何一个行业代码来调用行业的股票列表：
-
-    =========================   ===================================================
-    行业代码                      行业名称
-    =========================   ===================================================
-    A01                         农业
-    A02                         林业
-    A03                         畜牧业
-    A04                         渔业
-    A05                         农、林、牧、渔服务业
-    B06                         煤炭开采和洗选业
-    B07                         石油和天然气开采业
-    B08                         黑色金属矿采选业
-    B09                         有色金属矿采选业
-    B10                         非金属矿采选业
-    B11                         开采辅助活动
-    B12                         其他采矿业
-    C13                         农副食品加工业
-    C14                         食品制造业
-    C15                         酒、饮料和精制茶制造业
-    C16                         烟草制品业
-    C17                         纺织业
-    C18                         纺织服装、服饰业
-    C19                         皮革、毛皮、羽毛及其制品和制鞋业
-    C20                         木材加工及木、竹、藤、棕、草制品业
-    C21                         家具制造业
-    C22                         造纸及纸制品业
-    C23                         印刷和记录媒介复制业
-    C24                         文教、工美、体育和娱乐用品制造业
-    C25                         石油加工、炼焦及核燃料加工业
-    C26                         化学原料及化学制品制造业
-    C27                         医药制造业
-    C28                         化学纤维制造业
-    C29                         橡胶和塑料制品业
-    C30                         非金属矿物制品业
-    C31                         黑色金属冶炼及压延加工业
-    C32                         有色金属冶炼和压延加工业
-    C33                         金属制品业
-    C34                         通用设备制造业
-    C35                         专用设备制造业
-    C36                         汽车制造业
-    C37                         铁路、船舶、航空航天和其它运输设备制造业
-    C38                         电气机械及器材制造业
-    C39                         计算机、通信和其他电子设备制造业
-    C40                         仪器仪表制造业
-    C41                         其他制造业
-    C42                         废弃资源综合利用业
-    C43                         金属制品、机械和设备修理业
-    D44                         电力、热力生产和供应业
-    D45                         燃气生产和供应业
-    D46                         水的生产和供应业
-    E47                         房屋建筑业
-    E48                         土木工程建筑业
-    E49                         建筑安装业
-    E50                         建筑装饰和其他建筑业
-    F51                         批发业
-    F52                         零售业
-    G53                         铁路运输业
-    G54                         道路运输业
-    G55                         水上运输业
-    G56                         航空运输业
-    G57                         管道运输业
-    G58                         装卸搬运和运输代理业
-    G59                         仓储业
-    G60                         邮政业
-    H61                         住宿业
-    H62                         餐饮业
-    I63                         电信、广播电视和卫星传输服务
-    I64                         互联网和相关服务
-    I65                         软件和信息技术服务业
-    J66                         货币金融服务
-    J67                         资本市场服务
-    J68                         保险业
-    J69                         其他金融业
-    K70                         房地产业
-    L71                         租赁业
-    L72                         商务服务业
-    M73                         研究和试验发展
-    M74                         专业技术服务业
-    M75                         科技推广和应用服务业
-    N76                         水利管理业
-    N77                         生态保护和环境治理业
-    N78                         公共设施管理业
-    O79                         居民服务业
-    O80                         机动车、电子产品和日用产品修理业
-    O81                         其他服务业
-    P82                         教育
-    Q83                         卫生
-    Q84                         社会工作
-    R85                         新闻和出版业
-    R86                         广播、电视、电影和影视录音制作业
-    R87                         文化艺术业
-    R88                         体育
-    R89                         娱乐业
-    S90                         综合
-    =========================   ===================================================
-
-    :example:
-
-    ..  code-block:: python3
-        :linenos:
-
-        def init(context):
-            stock_list = industry('A01')
-            logger.info("农业股票列表：" + str(stock_list))
-
-        #INITINFO 农业股票列表：['600354.XSHG', '601118.XSHG', '002772.XSHE', '600371.XSHG', '600313.XSHG', '600672.XSHG', '600359.XSHG', '300143.XSHE', '002041.XSHE', '600762.XSHG', '600540.XSHG', '300189.XSHE', '600108.XSHG', '300087.XSHE', '600598.XSHG', '000998.XSHE', '600506.XSHG']
-
-    """
-    if not isinstance(code, six.string_types):
-        code = code.code
-    else:
-        code = to_industry_code(code)
-
-    return Environment.get_instance().data_proxy.industry(code)
-
-
 @export_as_api
 @apply_rules(
     verify_that("start_date").is_valid_date(ignore_none=False),
@@ -1033,68 +805,6 @@ def get_next_trading_date(date, n=1):
         [datetime.date(2016, 5, 3)]
     """
     return Environment.get_instance().data_proxy.get_next_trading_date(date, n)
-
-
-def to_date(date):
-    if isinstance(date, six.string_types):
-        return parse(date).date()
-
-    if isinstance(date, datetime.datetime):
-        try:
-            return date.date()
-        except AttributeError:
-            return date
-
-    raise RQInvalidArgument("unknown date value: {}".format(date))
-
-
-@export_as_api
-@apply_rules(
-    verify_that("order_book_id").is_valid_instrument(),
-    verify_that("start_date").is_valid_date(ignore_none=False),
-)
-def get_dividend(order_book_id, start_date):
-    """
-    获取某只股票到策略当前日期前一天的分红情况（包含起止日期）。
-
-    :param order_book_id: 股票代码
-    :type order_book_id: str
-    :param start_date: 开始日期，需要早于策略当前日期
-    :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
-    :return: ndarray
-
-    =========================   ===================================================
-    fields                      字段名
-    =========================   ===================================================
-    announcement_date           分红宣布日
-    book_closure_date           股权登记日
-    dividend_cash_before_tax    税前分红
-    ex_dividend_date            除权除息日
-    payable_date                分红到帐日
-    round_lot                   分红最小单位
-    =========================   ===================================================
-    """
-    # adjusted 参数在不复权数据回测时不再提供
-    env = Environment.get_instance()
-    dt = env.trading_dt.date() - datetime.timedelta(days=1)
-    start_date = to_date(start_date)
-    if start_date > dt:
-        raise RQInvalidArgument(
-            _(
-                u"in get_dividend, start_date {} is later than the previous test day {}"
-            ).format(start_date, dt)
-        )
-    order_book_id = assure_order_book_id(order_book_id)
-    array = env.data_proxy.get_dividend(order_book_id)
-    if array is None:
-        return None
-
-    sd = start_date.year * 10000 + start_date.month * 100 + start_date.day
-    ed = dt.year * 10000 + dt.month * 100 + dt.day
-    return array[
-        (array["announcement_date"] >= sd) & (array["announcement_date"] <= ed)
-    ]
 
 
 @export_as_api

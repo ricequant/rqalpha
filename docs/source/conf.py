@@ -39,6 +39,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'nbsphinx',
+    'sphinx_autodoc_typehints'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -70,6 +71,7 @@ author = 'RiceQuant'
 
 try:
     import rqalpha
+    from rqalpha.mod.rqalpha_mod_sys_accounts.api import api_stock, api_future
     version = rqalpha.__main_version__
     release = version
 except ImportError:
