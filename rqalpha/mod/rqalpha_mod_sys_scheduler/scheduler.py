@@ -214,8 +214,8 @@ class Scheduler(object):
         weekend = self._today + datetime.timedelta(days=7 - weekday)
         week_start = weekend - datetime.timedelta(days=6)
 
-        left = self.trading_calendar.searchsorted(week_start)
-        right = self.trading_calendar.searchsorted(weekend, side='right')
+        left = self.trading_calendar.searchsorted(datetime.datetime.combine(week_start, datetime.time.min))
+        right = self.trading_calendar.searchsorted(datetime.datetime.combine(weekend, datetime.time.min), side='right')
         self._this_week = [d.date() for d in self.trading_calendar[left:right]]
 
     def _fill_month(self):
@@ -225,7 +225,8 @@ class Scheduler(object):
             month_end = self._today.replace(year=self._today.year + 1, month=1, day=1)
 
         month_begin = self._today.replace(day=1)
-        left, right = self.trading_calendar.searchsorted(month_begin), self.trading_calendar.searchsorted(month_end)
+        left = self.trading_calendar.searchsorted(datetime.datetime.combine(month_begin, datetime.time.min))
+        right = self.trading_calendar.searchsorted(datetime.datetime.combine(month_end, datetime.time.min))
         self._this_month = [d.date() for d in self.trading_calendar[left:right]]
 
     def set_state(self, state):
