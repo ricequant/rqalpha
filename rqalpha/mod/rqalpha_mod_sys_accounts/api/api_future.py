@@ -18,39 +18,22 @@
 from __future__ import division
 from typing import Union, Optional, List
 
-from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style, assure_instrument
-from rqalpha.apis.api_abstract import order, order_to
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.apis.api_abstract import order, order_to, buy_open, buy_close, sell_open, sell_close
 from rqalpha.environment import Environment
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.const import (
-    EXECUTION_PHASE, SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
-)
+from rqalpha.model.order import Order, LimitOrder, OrderStyle
+from rqalpha.const import SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.model.instrument import Instrument
 from rqalpha.portfolio.base_position import BasePosition
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.arg_checker import apply_rules, verify_that
 
 __all__ = [
 ]
 
 
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.OPEN_AUCTION,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.SCHEDULED,
-    EXECUTION_PHASE.GLOBAL
-)
-@apply_rules(verify_that('id_or_ins', pre_check=True).is_valid_future(),
-             verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
-             verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
-             verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
-             verify_that('style', pre_check=True).is_instance_of((LimitOrder, MarketOrder, type(None))))
 def _submit_order(id_or_ins, amount, side, position_effect, style):
     amount = int(amount)
     if amount == 0:
@@ -185,75 +168,23 @@ def future_order_to(order_book_id, quantity, price=None, style=None):
     return _order(order_book_id, quantity, cal_style(price, style), True)
 
 
-@export_as_api
-def buy_open(id_or_ins, amount, price=None, style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
-    """
-    买入开仓。
-
-    :param id_or_ins: 下单标的物
-    :param amount: 下单手数
-    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-
-    :example:
-
-    .. code-block:: python
-
-        #以价格为3500的限价单开仓买入2张上期所AG1607合约：
-        buy_open('AG1607', amount=2, price=3500))
-    """
+@buy_open.register(INSTRUMENT_TYPE.FUTURE)
+def future_buy_open(id_or_ins, amount, price=None, style=None):
     return _submit_order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style))
 
 
-@export_as_api
-def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
-    """
-    平卖仓
-
-    :param id_or_ins: 下单标的物
-    :param amount: 下单手数
-    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
-
-    :example:
-
-    .. code-block:: python
-
-        #市价单将现有IF1603空仓买入平仓2张：
-        buy_close('IF1603', 2)
-    """
+@buy_close.register(INSTRUMENT_TYPE.FUTURE)
+def future_buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style))
 
 
-@export_as_api
-def sell_open(id_or_ins, amount, price=None, style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
-    """
-    卖出开仓
-
-    :param id_or_ins: 下单标的物
-    :param amount: 下单手数
-    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    """
+@sell_open.register(INSTRUMENT_TYPE.FUTURE)
+def future_sell_open(id_or_ins, amount, price=None, style=None):
     return _submit_order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
 
 
-@export_as_api
-def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
-    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
-    """
-    平买仓
-
-    :param id_or_ins: 下单标的物
-    :param amount: 下单手数
-    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
-    """
+@sell_close.register(INSTRUMENT_TYPE.FUTURE)
+def future_sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))

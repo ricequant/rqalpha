@@ -217,6 +217,126 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def buy_open(id_or_ins, amount, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
+    """
+    买入开仓。
+
+    :param id_or_ins: 下单标的物
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+
+    :example:
+
+    .. code-block:: python
+
+        #以价格为3500的限价单开仓买入2张上期所AG1607合约：
+        buy_open('AG1607', amount=2, price=3500))
+    """
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
+    """
+    平卖仓
+
+    :param id_or_ins: 下单标的物
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
+
+    :example:
+
+    .. code-block:: python
+
+        #市价单将现有IF1603空仓买入平仓2张：
+        buy_close('IF1603', 2)
+    """
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def sell_open(id_or_ins, amount, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
+    """
+    卖出开仓
+
+    :param id_or_ins: 下单标的物
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    """
+    raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
+    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+)
+@instype_singledispatch
+def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
+    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
+    """
+    平买仓
+
+    :param id_or_ins: 下单标的物
+    :param amount: 下单手数
+    :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
+    """
+    raise NotImplementedError
+
+
+@export_as_api
 @apply_rules(verify_that("quantity").is_number())
 @instype_singledispatch
 def order(order_book_id, quantity, price=None, style=None):
