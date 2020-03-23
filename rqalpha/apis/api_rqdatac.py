@@ -37,6 +37,8 @@ try:
     import rqdatac
 except ImportError:
     class DummyRQDatac:
+        __name__ = "rqdatac"
+
         def __getattr__(self, item):
             return self
 
