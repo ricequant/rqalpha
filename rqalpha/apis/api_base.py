@@ -954,3 +954,12 @@ def subscribe_event(event_type, handler):
     env.event_bus.add_listener(
         event_type, user_strategy.wrap_user_event_handler(handler), user=True
     )
+
+
+@export_as_api
+def symbol(order_book_id, sep=", "):
+    if isinstance(order_book_id, six.string_types):
+        return "{}[{}]".format(order_book_id, Environment.get_instance().get_instrument(order_book_id).symbol)
+    else:
+        s = sep.join(symbol(item) for item in order_book_id)
+        return s
