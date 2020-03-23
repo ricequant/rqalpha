@@ -20,6 +20,7 @@ from typing import Union, Optional, List
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style, assure_instrument
+from rqalpha.apis.api_abstract import order, order_to
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
@@ -50,7 +51,7 @@ __all__ = [
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
              verify_that('style', pre_check=True).is_instance_of((LimitOrder, MarketOrder, type(None))))
-def order(id_or_ins, amount, side, position_effect, style):
+def _submit_order(id_or_ins, amount, side, position_effect, style):
     amount = int(amount)
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
@@ -132,6 +133,51 @@ def order(id_or_ins, amount, side, position_effect, style):
         return orders
 
 
+def _order(order_book_id, quantity, style, target):
+    # type: (str, Union[int, float], OrderStyle, bool) -> List[Order]
+    portfolio = Environment.get_instance().portfolio
+    long_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
+    short_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.SHORT)
+    if target:
+        # For order_to
+        quantity -= (long_position.quantity - short_position.quantity)
+    orders = []
+
+    if quantity > 0:
+        old_to_be_close, today_to_be_close = short_position.old_quantity, short_position.today_quantity
+        side = SIDE.BUY
+    else:
+        old_to_be_close, today_to_be_close = long_position.old_quantity, long_position.today_quantity
+        side = SIDE.SELL
+
+    if old_to_be_close > 0:
+        orders.append(_submit_order(order_book_id, min(quantity, old_to_be_close), side, POSITION_EFFECT.CLOSE, style))
+        quantity -= old_to_be_close
+    if quantity <= 0:
+        return orders
+    if today_to_be_close > 0:
+        orders.append(_submit_order(
+            order_book_id, min(quantity, today_to_be_close), side, POSITION_EFFECT.CLOSE_TODAY, style
+        ))
+        quantity -= today_to_be_close
+    if quantity <= 0:
+        return orders
+    orders.append(_submit_order(order_book_id, quantity, side, POSITION_EFFECT.OPEN, style))
+    return orders
+
+
+@order.register(INSTRUMENT_TYPE.FUTURE)
+def future_order(order_book_id, quantity, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
+    return _order(order_book_id, quantity, cal_style(price, style), False)
+
+
+@order_to.register(INSTRUMENT_TYPE.FUTURE)
+def future_order_to(order_book_id, quantity, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
+    return _order(order_book_id, quantity, cal_style(price, style), True)
+
+
 @export_as_api
 def buy_open(id_or_ins, amount, price=None, style=None):
     # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
@@ -150,7 +196,7 @@ def buy_open(id_or_ins, amount, price=None, style=None):
         #以价格为3500的限价单开仓买入2张上期所AG1607合约：
         buy_open('AG1607', amount=2, price=3500))
     """
-    return order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style))
+    return _submit_order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style))
 
 
 @export_as_api
@@ -173,7 +219,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
         buy_close('IF1603', 2)
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
-    return order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style))
+    return _submit_order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style))
 
 
 @export_as_api
@@ -187,7 +233,7 @@ def sell_open(id_or_ins, amount, price=None, style=None):
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     """
-    return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
+    return _submit_order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
 
 
 @export_as_api
@@ -203,4 +249,4 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
-    return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
+    return _submit_order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))

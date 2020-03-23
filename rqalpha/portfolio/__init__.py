@@ -44,7 +44,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
     )
 
     _account_types = {}  # type: Dict[INSTRUMENT_TYPE, Union[str, Callable[[Instrument, ], str]]]
-    _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
     def __init__(self, starting_cash, init_positions):
         # type: (Dict[str, float], List[Tuple[str, int]]) -> Portfolio
@@ -69,7 +68,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             instrument_type,  # type: Union[INSTRUMENT_TYPE, str]
             upper_account_type,  # type: Union[str, Callable[[Instrument, ], str]]
             position_cls,  # type: PositionType
-            order_api,  # type: OrderApiType
             position_proxy_cls=None  # type: Optional[PositionProxyType]
     ):
         """
@@ -81,20 +79,10 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         position_proxy_cls: 该合约持仓的 Proxy 类，服务于 portfolio.positions 和 account.positions, 非必须
         """
         cls._account_types[instrument_type] = upper_account_type
-        cls._order_apis[instrument_type] = order_api
         Account.register_position_type(instrument_type, position_cls)
         if position_proxy_cls:
             from .base_position import PositionProxyDict
             PositionProxyDict.register_position_proxy_dict(instrument_type, position_proxy_cls)
-
-    def order(self, order_book_id, quantity, style, target=False):
-        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> List[Order]
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-        try:
-            order_func = self._order_apis[instrument_type]  # type: OrderApiType
-        except KeyError:
-            raise NotImplementedError("no implementation for API order, order_book_id={}".format(order_book_id))
-        return order_func(order_book_id, quantity, style, target)
 
     def get_state(self):
         return jsonpickle.encode({

@@ -27,7 +27,10 @@ import pandas as pd
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style, assure_order_book_id, assure_instrument
-from rqalpha.apis.api_abstract import order_shares, order_value, order_percent, order_target_value, order_target_percent
+from rqalpha.apis.api_abstract import (
+    order_shares, order_value, order_percent, order_target_value, order_target_percent, order, order_to
+)
+
 from rqalpha.const import (
     DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, FRONT_VALIDATOR_TYPE, POSITION_DIRECTION,
     INSTRUMENT_TYPE
@@ -162,6 +165,24 @@ def stock_order_target_percent(id_or_ins, percent, price=None, style=None):
         return _order_value(
             account, position, ins, account.total_value * percent - position.market_value, cal_style(price, style)
         )
+
+
+@order.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order(order_book_id, quantity, price=None, style=None):
+    result_order = stock_order_shares(order_book_id, quantity, price, style)
+    if result_order:
+        return [result_order]
+    return []
+
+
+@order_to.register(INST_TYPE_IN_STOCK_ACCOUNT)
+def stock_order_to(order_book_id, quantity, price=None, style=None):
+    position = Environment.get_instance().portfolio.get_position(order_book_id)
+    quantity = quantity - position.quantity
+    result_order = stock_order_shares(order_book_id, quantity, price, style)
+    if result_order:
+        return [result_order]
+    return []
 
 
 @export_as_api

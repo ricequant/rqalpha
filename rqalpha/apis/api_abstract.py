@@ -15,7 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 from rqalpha.api import export_as_api
 from rqalpha.execution_context import ExecutionContext
@@ -214,3 +214,79 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
         order_target_percent('000001.XSHE', 0.15)
     """
     raise NotImplementedError
+
+
+@export_as_api
+@apply_rules(verify_that("quantity").is_number())
+@instype_singledispatch
+def order(order_book_id, quantity, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
+    """
+      全品种通用智能调仓函数
+
+      如果不指定 price, 则相当于下 MarketOrder
+
+      如果 order_book_id 是股票，等同于调用 order_shares
+
+      如果 order_book_id 是期货，则进行智能下单:
+
+          *   quantity 表示调仓量
+          *   如果 quantity 为正数，则先平 Sell 方向仓位，再开 Buy 方向仓位
+          *   如果 quantity 为负数，则先平 Buy 反向仓位，再开 Sell 方向仓位
+
+      :param order_book_id: 下单标的物
+      :param quantity: 调仓量
+      :param price: 下单价格
+      :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+
+      :example:
+
+      ..  code-block:: python3
+          :linenos:
+
+          # 当前仓位为0
+          # RB1710 多方向调仓2手：调整后变为 BUY 2手
+          order('RB1710', 2)
+
+          # RB1710 空方向调仓3手：先平多方向2手 在开空方向1手，调整后变为 SELL 1手
+          order('RB1710', -3)
+
+    """
+    raise NotImplementedError
+
+
+@export_as_api
+@apply_rules(verify_that("quantity").is_number())
+@instype_singledispatch
+def order_to(order_book_id, quantity, price=None, style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
+    """
+    全品种通用智能调仓函数
+
+    如果不指定 price, 则相当于 MarketOrder
+
+    如果 order_book_id 是股票，则表示仓位调整到多少股
+
+    如果 order_book_id 是期货，则进行智能调仓:
+
+        *   quantity 表示调整至某个仓位
+        *   quantity 如果为正数，则先平 SELL 方向仓位，再 BUY 方向开仓 quantity 手
+        *   quantity 如果为负数，则先平 BUY 方向仓位，再 SELL 方向开仓 -quantity 手
+
+    :param order_book_id: 下单标的物
+    :param int quantity: 调仓量
+    :param float price: 下单价格
+    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :example:
+
+    ..  code-block:: python3
+        :linenos:
+
+        # 当前仓位为0
+        # RB1710 调仓至 BUY 2手
+        order_to('RB1710', 2)
+
+        # RB1710 调仓至 SELL 1手
+        order_to('RB1710', -1)
+
+    """

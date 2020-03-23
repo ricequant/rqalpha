@@ -20,7 +20,6 @@ from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.environment import Environment
 from rqalpha.portfolio import Portfolio
 
-from .api.order import order_stock, order_future
 from .position_model import StockPosition, FuturePosition, StockPositionProxy, FuturePositionProxy
 
 
@@ -47,10 +46,10 @@ class AccountMod(AbstractMod):
 
         for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
             Portfolio.register_instrument_type(
-                instrument_type, DEFAULT_ACCOUNT_TYPE.STOCK, StockPosition, order_stock, StockPositionProxy
+                instrument_type, DEFAULT_ACCOUNT_TYPE.STOCK, StockPosition, StockPositionProxy
             )
         Portfolio.register_instrument_type(
-            INSTRUMENT_TYPE.FUTURE, DEFAULT_ACCOUNT_TYPE.FUTURE, FuturePosition, order_future, FuturePositionProxy
+            INSTRUMENT_TYPE.FUTURE, DEFAULT_ACCOUNT_TYPE.FUTURE, FuturePosition, FuturePositionProxy
         )
 
     def tear_down(self, code, exception=None):
