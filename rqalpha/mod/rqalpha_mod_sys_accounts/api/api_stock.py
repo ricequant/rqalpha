@@ -177,7 +177,7 @@ def stock_order(order_book_id, quantity, price=None, style=None):
 
 @order_to.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_to(order_book_id, quantity, price=None, style=None):
-    position = Environment.get_instance().portfolio.get_position(order_book_id)
+    position = Environment.get_instance().portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
     quantity = quantity - position.quantity
     result_order = stock_order_shares(order_book_id, quantity, price, style)
     if result_order:

@@ -144,24 +144,31 @@ def _order(order_book_id, quantity, style, target):
     orders = []
 
     if quantity > 0:
-        old_to_be_close, today_to_be_close = short_position.old_quantity, short_position.today_quantity
+        # 平空头，开多头
+        position_to_be_closed = short_position
         side = SIDE.BUY
     else:
-        old_to_be_close, today_to_be_close = long_position.old_quantity, long_position.today_quantity
+        # 平多头，开空头
+        position_to_be_closed = long_position
         side = SIDE.SELL
+        quantity *= -1
 
-    if old_to_be_close > 0:
-        orders.append(_submit_order(order_book_id, min(quantity, old_to_be_close), side, POSITION_EFFECT.CLOSE, style))
-        quantity -= old_to_be_close
+    old_to_be_closed, today_to_be_closed = position_to_be_closed.old_quantity, position_to_be_closed.today_quantity
+    if old_to_be_closed > 0:
+        # 平昨仓
+        orders.append(_submit_order(order_book_id, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
+        quantity -= old_to_be_closed
     if quantity <= 0:
         return orders
-    if today_to_be_close > 0:
+    if today_to_be_closed > 0:
+        # 平今仓
         orders.append(_submit_order(
-            order_book_id, min(quantity, today_to_be_close), side, POSITION_EFFECT.CLOSE_TODAY, style
+            order_book_id, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
         ))
-        quantity -= today_to_be_close
+        quantity -= today_to_be_closed
     if quantity <= 0:
         return orders
+    # 开仓
     orders.append(_submit_order(order_book_id, quantity, side, POSITION_EFFECT.OPEN, style))
     return orders
 

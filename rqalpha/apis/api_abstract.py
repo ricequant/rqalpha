@@ -288,5 +288,5 @@ def order_to(order_book_id, quantity, price=None, style=None):
 
         # RB1710 调仓至 SELL 1手
         order_to('RB1710', -1)
-
     """
+    raise NotImplementedError
