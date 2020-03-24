@@ -119,6 +119,7 @@ def gen_ex_factor(d):
 
 def gen_share_transformation(d):
     df = rqdatac.get_share_transformation()
+    df.drop_duplicates("predecessor", inplace=True)
     df.set_index('predecessor', inplace=True)
     df.effective_date = df.effective_date.astype(str)
     df.predecessor_delisted_date = df.predecessor_delisted_date.astype(str)
