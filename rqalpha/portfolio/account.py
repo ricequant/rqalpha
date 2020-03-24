@@ -296,7 +296,7 @@ class Account(AbstractAccount):
                 self._total_cash += delta_cash
 
         for order_book_id, positions in list(six.iteritems(self._positions)):
-            if all(p.quantity == 0 for p in six.itervalues(positions)):
+            if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
                 del self._positions[order_book_id]
 
         self._backward_trade_set.clear()
