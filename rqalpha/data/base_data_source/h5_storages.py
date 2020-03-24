@@ -12,6 +12,8 @@
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+import os
+
 import h5py
 import numpy as np
 import pandas as pd
@@ -19,7 +21,6 @@ import pandas as pd
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 
 from .storages import AbstractDayBarStore
-
 
 DEFAULT_DTYPE = np.dtype([
     ('datetime', np.uint64),
@@ -33,6 +34,8 @@ DEFAULT_DTYPE = np.dtype([
 
 class DayBarStore(AbstractDayBarStore):
     def __init__(self, path):
+        if not os.path.exists(path):
+            raise FileExistsError("File {} not exist，please update bundle.".format(path))
         self._h5 = h5py.File(path, 'r')
 
     def get_bars(self, order_book_id):
