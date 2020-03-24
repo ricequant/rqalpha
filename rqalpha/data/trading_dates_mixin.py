@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
-from typing import Dict, List
+from typing import Dict
 
 import pandas as pd
 
