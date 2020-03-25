@@ -30,10 +30,10 @@ from rqalpha.model.order import OrderStyle, Order
 from rqalpha.model.trade import Trade
 from rqalpha.utils.logger import user_system_log
 
-from .base_position import BasePosition, PositionProxyDict
+from .position import Position, PositionProxyDict
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
-PositionType = Type[BasePosition]
+PositionType = Type[Position]
 
 
 class Account(AbstractAccount):
@@ -43,8 +43,6 @@ class Account(AbstractAccount):
         "realized_pnl",
         "dividend_receivable",
     ]
-
-    _position_types = {}  # type: Dict[INSTRUMENT_TYPE, PositionType]
 
     def __init__(self, type, total_cash, init_positions):
         # type: (str, float, Dict[str, int]) -> None
@@ -70,12 +68,6 @@ class Account(AbstractAccount):
         return "Account(cash={}, total_value={}, positions={})".format(
             self.cash, self.total_value, positions_repr
         )
-
-    @classmethod
-    def register_position_type(cls, instrument_type, position_type):
-        # type: (INSTRUMENT_TYPE, PositionType) -> None
-        # TODO: only can called before instantiated
-        cls._position_types[instrument_type] = position_type
 
     def register_event(self):
         event_bus = Environment.get_instance().event_bus
@@ -160,17 +152,15 @@ class Account(AbstractAccount):
             self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
 
     def get_positions(self):
-        # type: () -> Iterable[BasePosition]
+        # type: () -> Iterable[Position]
         return self._iter_pos()
 
     def get_position(self, order_book_id, direction):
-        # type: (str, POSITION_DIRECTION) -> BasePosition
+        # type: (str, POSITION_DIRECTION) -> Position
         try:
             return self._positions[order_book_id][direction]
         except KeyError:
-            instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-            position_type = self._position_types.get(instrument_type, BasePosition)
-            return position_type(order_book_id, direction)
+            return Position(order_book_id, direction)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
         return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount)
@@ -182,7 +172,7 @@ class Account(AbstractAccount):
     @property
     @lru_cache(None)
     def positions(self):
-        return PositionProxyDict(self._positions, self._position_types)
+        return PositionProxyDict(self._positions)
 
     @property
     def frozen_cash(self):
@@ -342,25 +332,23 @@ class Account(AbstractAccount):
                 self._frozen_cash -= self._frozen_cash_of_order(order)
 
     def _iter_pos(self, direction=None):
-        # type: (Optional[POSITION_DIRECTION]) -> Iterable[BasePosition]
+        # type: (Optional[POSITION_DIRECTION]) -> Iterable[Position]
         if direction:
             return (p[direction] for p in six.itervalues(self._positions))
         else:
             return chain(*[six.itervalues(p) for p in six.itervalues(self._positions)])
 
     def _get_or_create_pos(self, order_book_id, direction, init_quantity=0):
-        # type: (str, Union[str, POSITION_DIRECTION], Optional[int]) -> BasePosition
+        # type: (str, Union[str, POSITION_DIRECTION], Optional[int]) -> Position
         if order_book_id not in self._positions:
-            instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-            position_type = self._position_types.get(instrument_type, BasePosition)
             if direction == POSITION_DIRECTION.LONG:
                 long_init_position, short_init_position = init_quantity, 0
             else:
                 long_init_position, short_init_position = 0, init_quantity
 
             positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: position_type(order_book_id, POSITION_DIRECTION.LONG, long_init_position),
-                POSITION_DIRECTION.SHORT: position_type(order_book_id, POSITION_DIRECTION.SHORT, short_init_position)
+                POSITION_DIRECTION.LONG: Position(order_book_id, POSITION_DIRECTION.LONG, long_init_position),
+                POSITION_DIRECTION.SHORT: Position(order_book_id, POSITION_DIRECTION.SHORT, short_init_position)
             })
         else:
             positions = self._positions[order_book_id]

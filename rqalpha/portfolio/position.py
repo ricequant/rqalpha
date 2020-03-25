@@ -15,13 +15,13 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Iterable, Tuple, Optional, Dict, Type
+from typing import Iterable, Tuple, Dict, Type
 from datetime import date
 from collections import UserDict
 
 from rqalpha.interface import AbstractPosition
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_EFFECT, POSITION_DIRECTION, INSTRUMENT_TYPE
+from rqalpha.const import POSITION_EFFECT, POSITION_DIRECTION
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
 from rqalpha.model.instrument import Instrument
@@ -30,11 +30,48 @@ from rqalpha.utils.repr import property_repr, PropertyReprMeta
 from rqalpha.utils import is_valid_price
 
 
-class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
+def new_position_meta():
+
+    type_map = {}
+
+    class Meta(PropertyReprMeta):
+        def __new__(mcs, *args, **kwargs):
+            cls = super(Meta, mcs).__new__(mcs, *args, **kwargs)
+            try:
+                instrument_types = cls.__instrument_types__
+            except AttributeError:
+                pass
+            else:
+                for instrument_type in instrument_types:
+                    type_map[instrument_type] = cls
+            return cls
+
+    return type_map, Meta
+
+
+POSITION_TYPE_MAP, PositionMeta = new_position_meta()
+POSITION_PROXY_TYPE_MAP, PositionProxyMeta = new_position_meta()
+
+
+class Position(AbstractPosition, metaclass=PositionMeta):
 
     __repr_properties__ = (
         "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
     )
+
+    # 用于注册该 Position 类型适用的 instrument_type
+    __instrument_types__ = []
+
+    def __new__(cls, order_book_id, direction, init_quantity=0):
+        if cls == Position:
+            ins_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+            try:
+                position_cls = POSITION_TYPE_MAP[ins_type]
+            except KeyError:
+                raise NotImplementedError("")
+            return position_cls.__new__(position_cls, order_book_id, direction, init_quantity)
+        else:
+            return object.__new__(cls)
 
     def __init__(self, order_book_id, direction, init_quantity=0):
         self._env = Environment.get_instance()
@@ -187,15 +224,15 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
                 yield order
 
 
-class PositionProxy(object):
-    __abandon_properties__ = [
-        "positions",
-        "long",
-        "short"
-    ]
+class PositionProxy(metaclass=PositionProxyMeta):
+    __repr_properties__ = (
+        "order_book_id", "positions"
+    )
+    # 用于注册该 Position 类型适用的 instrument_type
+    __instrument_types__ = []
 
     def __init__(self, long, short):
-        # type: (BasePosition, BasePosition) -> PositionProxy
+        # type: (Position, Position) -> PositionProxy
         self._long = long
         self._short = short
 
@@ -289,23 +326,15 @@ class PositionProxy(object):
         return self._short
 
 
-PositionType = Type[BasePosition]
+PositionType = Type[Position]
 PositionProxyType = Type[PositionProxy]
-PositionDictType = Dict[str, Dict[POSITION_DIRECTION, BasePosition]]
+PositionDictType = Dict[str, Dict[POSITION_DIRECTION, Position]]
 
 
 class PositionProxyDict(UserDict):
-    _position_proxy_types = {}  # type: Dict[INSTRUMENT_TYPE, PositionProxyType]
-
-    def __init__(self, positions, position_types):
+    def __init__(self, positions):
         super(PositionProxyDict, self).__init__()
         self._positions = positions  # type: PositionDictType
-        self._position_types = position_types  # type: Dict[INSTRUMENT_TYPE, PositionType]
-
-    @classmethod
-    def register_position_proxy_dict(cls, instrument_type, position_proxy_type):
-        # type: (INSTRUMENT_TYPE, Type[PositionProxy]) -> None
-        cls._position_proxy_types[instrument_type] = position_proxy_type
 
     def keys(self):
         return self._positions.keys()
@@ -340,8 +369,8 @@ class PositionProxyDict(UserDict):
         return repr({k: self[k] for k in self._positions.keys()})
 
     def _get_position_types(self, order_book_id):
-        # type: (str) -> Tuple[Type[BasePosition], Type[PositionProxy]]
+        # type: (str) -> Tuple[Type[Position], Type[PositionProxy]]
         instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-        position_type = self._position_types.get(instrument_type, BasePosition)
-        position_proxy_type = self._position_proxy_types.get(instrument_type, PositionProxy)
+        position_type = POSITION_TYPE_MAP.get(instrument_type, Position)
+        position_proxy_type = POSITION_PROXY_TYPE_MAP.get(instrument_type, PositionProxy)
         return position_type, position_proxy_type

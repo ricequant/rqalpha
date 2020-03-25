@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from functools import lru_cache
-from typing import Dict, Union, Callable, List, Optional, Tuple
+from typing import Dict, Union, Callable, List, Tuple
 from itertools import chain
 
 import six
@@ -33,7 +33,7 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.interface import AbstractPosition, AbstractAccount
 
 from .account import Account
-from .base_position import PositionType, PositionProxyType
+from .position import PositionType, PositionProxyType
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
@@ -63,13 +63,8 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._register_event()
 
     @classmethod
-    def register_instrument_type(
-            cls,
-            instrument_type,  # type: Union[INSTRUMENT_TYPE, str]
-            upper_account_type,  # type: Union[str, Callable[[Instrument, ], str]]
-            position_cls,  # type: PositionType
-            position_proxy_cls=None  # type: Optional[PositionProxyType]
-    ):
+    def register_instrument_type(cls, instrument_type, upper_account_type):
+        # type: (INSTRUMENT_TYPE, Union[str, Callable[[Instrument, ], str]]) -> None
         """
         注册新的合约类型，需在 Portfolio 被实例化前调用
         instrument_type: 合约类型
@@ -79,10 +74,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         position_proxy_cls: 该合约持仓的 Proxy 类，服务于 portfolio.positions 和 account.positions, 非必须
         """
         cls._account_types[instrument_type] = upper_account_type
-        Account.register_position_type(instrument_type, position_cls)
-        if position_proxy_cls:
-            from .base_position import PositionProxyDict
-            PositionProxyDict.register_position_proxy_dict(instrument_type, position_proxy_cls)
 
     def get_state(self):
         return jsonpickle.encode({

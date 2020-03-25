@@ -20,10 +20,11 @@ from datetime import date
 from functools import lru_cache
 
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
-from rqalpha.portfolio.base_position import BasePosition, PositionProxy
+from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
@@ -35,10 +36,11 @@ def _int_to_date(d):
     return date(year=y, month=m, day=d)
 
 
-class StockPosition(BasePosition):
+class StockPosition(Position):
     __repr_properties__ = (
         "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
     )
+    __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
@@ -193,10 +195,11 @@ class StockPosition(BasePosition):
         self._avg_price /= ratio
 
 
-class FuturePosition(BasePosition):
+class FuturePosition(Position):
     __repr_properties__ = (
         "order_book_id", "direction", "old_quantity", "quantity", "margin", "market_value", "trading_pnl", "position_pnl"
     )
+    __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
     enable_position_validator = True
 
@@ -276,10 +279,10 @@ class FuturePosition(BasePosition):
 
 
 class StockPositionProxy(PositionProxy):
-
-    __abandon_properties__ = PositionProxy.__abandon_properties__ + [
-        "margin"
-    ]
+    __repr_properties__ = (
+        "order_book_id", "quantity", "avg_price", "market_value"
+    )
+    __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     @property
     def type(self):
@@ -316,17 +319,11 @@ class StockPositionProxy(PositionProxy):
 
 
 class FuturePositionProxy(PositionProxy):
-
-    __abandon_properties__ = PositionProxy.__abandon_properties__ +[
-        "holding_pnl",
-        "buy_holding_pnl",
-        "sell_holding_pnl",
-        "realized_pnl",
-        "buy_realized_pnl",
-        "sell_realized_pnl",
-        "buy_avg_holding_price",
-        "sell_avg_holding_price"
-    ]
+    __repr_properties__ = (
+        "order_book_id", "buy_quantity", "sell_quantity", "buy_market_value", "sell_market_value",
+        "buy_margin", "sell_margin"
+    )
+    __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
     @property
     def type(self):

@@ -24,7 +24,7 @@ from rqalpha.environment import Environment
 from rqalpha.model.order import Order, LimitOrder, OrderStyle
 from rqalpha.const import SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.model.instrument import Instrument
-from rqalpha.portfolio.base_position import BasePosition
+from rqalpha.portfolio.position import Position
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
@@ -64,7 +64,7 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
 
     if position_effect == POSITION_EFFECT.CLOSE:
         direction = POSITION_DIRECTION.LONG if side == SIDE.SELL else POSITION_DIRECTION.SHORT
-        position = env.portfolio.get_position(order_book_id, direction)  # type: BasePosition
+        position = env.portfolio.get_position(order_book_id, direction)  # type: Position
         quantity, old_quantity = position.quantity, position.old_quantity
         if amount > quantity:
             user_system_log.warn(_(
