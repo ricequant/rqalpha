@@ -24,7 +24,7 @@ import jsonpickle
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
+from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
 from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import PropertyReprMeta
 from rqalpha.events import EVENT
@@ -43,8 +43,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         "total_value", "unit_net_value", "daily_pnl", "daily_returns", "total_returns", "annualized_returns", "accounts"
     )
 
-    _account_types = {}  # type: Dict[INSTRUMENT_TYPE, Union[str, Callable[[Instrument, ], str]]]
-
     def __init__(self, starting_cash, init_positions):
         # type: (Dict[str, float], List[Tuple[str, int]]) -> Portfolio
         self._static_unit_net_value = 1
@@ -61,16 +59,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
 
         self._register_event()
-
-    @classmethod
-    def register_instrument_type(cls, instrument_type, upper_account_type):
-        # type: (INSTRUMENT_TYPE, Union[str, Callable[[Instrument, ], str]]) -> None
-        """
-        注册新的合约类型，需在 Portfolio 被实例化前调用
-        instrument_type: 合约类型
-        upper_account_type: 该合约所属的持仓归属的账户类型
-        """
-        cls._account_types[instrument_type] = upper_account_type
 
     def get_state(self):
         return jsonpickle.encode({
@@ -101,16 +89,8 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     @classmethod
     def get_account_type(cls, order_book_id):
-        instrument =  Environment.get_instance().data_proxy.instruments(order_book_id)
-        try:
-            account_type = cls._account_types[instrument.type]
-        except KeyError:
-            raise NotImplementedError("no account_type registered, order_book_id={}, instrument_type={}".format(
-                order_book_id, instrument.type
-            ))
-        if isinstance(account_type, str):
-            return account_type
-        return account_type(instrument)
+        instrument = Environment.get_instance().data_proxy.instruments(order_book_id)
+        return instrument.account_type
 
     def get_account(self, order_book_id):
         return self._accounts[self.get_account_type(order_book_id)]

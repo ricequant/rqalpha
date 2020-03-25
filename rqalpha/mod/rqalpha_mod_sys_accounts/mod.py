@@ -44,9 +44,5 @@ class AccountMod(AbstractMod):
             # noinspection PyUnresolvedReferences
             from .api import api_stock
 
-        for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
-            Portfolio.register_instrument_type(instrument_type, DEFAULT_ACCOUNT_TYPE.STOCK)
-        Portfolio.register_instrument_type(INSTRUMENT_TYPE.FUTURE, DEFAULT_ACCOUNT_TYPE.FUTURE)
-
     def tear_down(self, code, exception=None):
         pass
