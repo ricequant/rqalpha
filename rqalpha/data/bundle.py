@@ -288,9 +288,9 @@ class GenerateDayBarTask(DayBarTask):
         with h5py.File(path, 'w') as h5:
             i, step = 0, 300
             while True:
-                df = rqdatac.get_price(self._order_book_ids[i:i + step], START_DATE, datetime.date.today(), '1d',
+                order_book_ids = self._order_book_ids[i:i + step]
+                df = rqdatac.get_price(order_book_ids, START_DATE, datetime.date.today(), '1d',
                                        adjust_type='none', fields=fields, expect_df=True)
-
                 df.reset_index(inplace=True)
                 df['datetime'] = [convert_date_to_int(d) for d in df['date']]
                 del df['date']
@@ -299,7 +299,7 @@ class GenerateDayBarTask(DayBarTask):
                 for order_book_id in df.index.levels[0]:
                     h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **kwargs)
                 i += step
-                yield step
+                yield len(order_book_ids)
                 if i >= len(self._order_book_ids):
                     break
 
