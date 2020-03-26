@@ -24,16 +24,19 @@ class BarDictPriceBoard(AbstractPriceBoard):
     def __init__(self):
         self._env = Environment.get_instance()
 
-    def get_last_price(self, order_book_id):
+    def _get_bar(self, order_book_id):
         if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
-            return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).last
-        return self._env.get_bar(order_book_id).last
+            return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt)
+        return self._env.get_bar(order_book_id)
+
+    def get_last_price(self, order_book_id):
+        return self._get_bar(order_book_id).last
 
     def get_limit_up(self, order_book_id):
-        return self._env.get_bar(order_book_id).limit_up
+        return self._get_bar(order_book_id).limit_up
 
     def get_limit_down(self, order_book_id):
-        return self._env.get_bar(order_book_id).limit_down
+        return self._get_bar(order_book_id).limit_down
 
     def get_a1(self, order_book_id):
         return np.nan

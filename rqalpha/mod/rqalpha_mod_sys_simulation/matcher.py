@@ -154,9 +154,12 @@ class Matcher(object):
                         continue
 
             if self._volume_limit:
-                bar = self._env.get_bar(order_book_id)
-                if bar.volume == bar.volume:
-                    volume_limit = round(bar.volume * self._volume_percent) - self._turnover[order.order_book_id]
+                if open_auction:
+                    volume = self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).volume
+                else:
+                    volume = self._env.get_bar(order_book_id).volume
+                if volume == volume:
+                    volume_limit = round(volume * self._volume_percent) - self._turnover[order.order_book_id]
                     round_lot = instrument.round_lot
                     volume_limit = (volume_limit // round_lot) * round_lot
                     if volume_limit <= 0:
