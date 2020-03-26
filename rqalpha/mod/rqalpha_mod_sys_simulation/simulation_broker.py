@@ -17,13 +17,15 @@
 
 from typing import List, Tuple, Dict
 from functools import lru_cache
+from itertools import chain
 
 import jsonpickle
 
+from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import AbstractBroker, Persistable, AbstractAccount
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
-from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, INSTRUMENT_TYPE
+from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTION_PHASE, INSTRUMENT_TYPE
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
@@ -40,6 +42,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []  # type: List[Tuple[AbstractAccount, Order]]
+        self._open_auction_orders = []   # type: List[Tuple[AbstractAccount, Order]]
         self._open_exercise_orders = []  # type: List[Tuple[AbstractAccount, Order]]
 
         self._delayed_orders = []
@@ -108,7 +111,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
-        self._open_orders.append((account, order))
+        if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
+            self._open_auction_orders.append((account, order))
+        else:
+            self._open_orders.append((account, order))
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         if self._match_immediately:
@@ -147,7 +153,7 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def pre_settlement(self, __):
         for account, order in self._open_exercise_orders:
-            self._get_matcher(order.order_book_id).match(account, order)
+            self._get_matcher(order.order_book_id).match(account, order, False)
         self._open_exercise_orders.clear()
 
     def on_bar(self, _):
@@ -158,14 +164,15 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
-        open_orders = self._open_orders
-        if order_book_id is not None:
-            open_orders = ((a, o) for (a, o) in self._open_orders if o.order_book_id == order_book_id)
 
-        for account, order in open_orders:
-            self._get_matcher(order.order_book_id).match(account, order)
-        final_orders = [(a, o) for a, o in self._open_orders if o.is_final()]
-        self._open_orders = [(a, o) for a, o in self._open_orders if not o.is_final()]
+        order_filter = None if order_book_id is None else lambda a, o: o.order_book_id == order_book_id
+        for account, order in filter(order_filter, self._open_orders):
+            self._get_matcher(order.order_book_id).match(account, order, open_auction=False)
+        for account, order in filter(order_filter, self._open_auction_orders):
+            self._get_matcher(order.order_book_id).match(account, order, open_auction=True)
+        final_orders = [(a, o) for a, o in chain(self._open_orders, self._open_auction_orders) if o.is_final()]
+        self._open_orders = [(a, o) for a, o in chain(self._open_orders, self._open_auction_orders) if not o.is_final()]
+        self._open_auction_orders.clear()
 
         for account, order in final_orders:
             if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:

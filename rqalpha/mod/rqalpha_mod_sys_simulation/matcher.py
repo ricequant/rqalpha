@@ -31,8 +31,8 @@ from .slippage import SlippageDecider
 
 
 class AbstractMatcher:
-    def match(self, account, order):
-        # type: (AbstractAccount, Order) -> None
+    def match(self, account, order, open_auction):
+        # type: (AbstractAccount, Order, bool) -> None
         raise NotImplementedError
 
 
@@ -80,12 +80,19 @@ class DefaultMatcher(AbstractMatcher):
             price = self._env.price_board.get_last_price(order_book_id)
         return price
 
-    def _match(self, account, order):
-        # type: (AbstractAccount, Order) -> None
+    def _open_auction_deal_price_decider(self, order_book_id, _):
+        return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).open
+
+    def _match(self, account, order, open_auction):
+        # type: (AbstractAccount, Order, bool) -> None
         order_book_id = order.order_book_id
         instrument = self._env.get_instrument(order_book_id)
 
-        deal_price = self._deal_price_decider(order_book_id, order.side)
+        if open_auction:
+            deal_price = self._open_auction_deal_price_decider(order_book_id, order.side)
+        else:
+            deal_price = self._deal_price_decider(order_book_id, order.side)
+
         if not is_valid_price(deal_price):
             listed_date = instrument.listed_date.date()
             if listed_date == self._env.trading_dt.date():
@@ -147,9 +154,13 @@ class DefaultMatcher(AbstractMatcher):
                     return
 
         if self._volume_limit:
-            bar = self._env.get_bar(order_book_id)
-            if bar.volume == bar.volume:
-                volume_limit = round(bar.volume * self._volume_percent) - self._turnover[order.order_book_id]
+            if open_auction:
+                volume = self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).volume
+            else:
+                volume = self._env.get_bar(order_book_id).volume
+            if volume == volume:
+                volume_limit = round(volume * self._volume_percent) - self._turnover[order.order_book_id]
+
                 round_lot = instrument.round_lot
                 volume_limit = (volume_limit // round_lot) * round_lot
                 if volume_limit <= 0:
@@ -230,8 +241,8 @@ class DefaultMatcher(AbstractMatcher):
                 order_quantity=order.quantity
             ))
 
-    def match(self, account, order):
+    def match(self, account, order, open_auction):
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             return self._match_exercise(account, order)
         else:
-            return self._match(account, order)
+            return self._match(account, order, open_auction)
