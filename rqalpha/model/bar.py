@@ -27,6 +27,7 @@ from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.exception import patch_user_exc
+from rqalpha.utils.repr import PropertyReprMeta
 from rqalpha.const import EXECUTION_PHASE
 
 from .tick import TickObject
@@ -37,7 +38,13 @@ NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down',
 NANDict = {i: np.nan for i in NAMES}
 
 
-class PartialBarObject(object):
+class PartialBarObject(metaclass=PropertyReprMeta):
+    __repr_properties__ = (
+        "order_book_id", "datetime", "open", "limit_up", "limit_down"
+    )
+
+    order_book_id = property(lambda self: self._tick.order_book_id)
+    datetime = property(lambda self: self._tick.datetime)
     open = property(fget=lambda self: self._tick.open)
     limit_up = property(lambda self: self._tick.limit_up)
     limit_down = property(lambda self: self._tick.limit_down)
@@ -351,7 +358,7 @@ class BarMap(object):
                 if not self._dt:
                     return BarObject(instrument, NANDict, self._dt)
                 if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
-                    bar = PartialBarObject(self._data_proxy.current_snapshot(order_book_id, "1d", self._dt))
+                    bar = self._data_proxy.get_open_auction_bar(order_book_id, self._dt)
                 else:
                     bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
             except Exception as e:

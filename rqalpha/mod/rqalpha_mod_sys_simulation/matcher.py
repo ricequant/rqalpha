@@ -18,6 +18,7 @@
 from typing import Iterable
 from collections import defaultdict
 
+
 from rqalpha.utils import is_valid_price
 from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT
 from rqalpha.events import EVENT, Event
@@ -76,18 +77,23 @@ class Matcher(object):
             price = self._env.price_board.get_last_price(order_book_id)
         return price
 
+    def _open_auction_deal_price_decider(self, order_book_id, _):
+        return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).open
+
     def update(self, calendar_dt, trading_dt):
         self._turnover.clear()
         self._calendar_dt = calendar_dt
         self._trading_dt = trading_dt
 
-    def match(self, open_orders):
+    def match(self, open_orders, open_auction):
         price_board = self._env.price_board
         for account, order in open_orders:
             order_book_id = order.order_book_id
             instrument = self._env.get_instrument(order_book_id)
-
-            deal_price = self._deal_price_decider(order_book_id, order.side)
+            if open_auction:
+                deal_price = self._open_auction_deal_price_decider(order_book_id, order.side)
+            else:
+                deal_price = self._deal_price_decider(order_book_id, order.side)
             if not is_valid_price(deal_price):
                 listed_date = instrument.listed_date.date()
                 if listed_date == self._trading_dt.date():

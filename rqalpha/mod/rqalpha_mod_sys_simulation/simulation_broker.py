@@ -17,11 +17,13 @@
 
 
 import jsonpickle
+from itertools import chain
 
+from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
-from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT
+from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTION_PHASE
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
@@ -39,6 +41,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
         self._open_orders = []
+        self._open_auction_orders = []
         self._open_exercise_orders = []
 
         self._delayed_orders = []
@@ -106,7 +109,10 @@ class SimulationBroker(AbstractBroker, Persistable):
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
             self._delayed_orders.append((account, order))
             return
-        self._open_orders.append((account, order))
+        if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
+            self._open_auction_orders.append((account, order))
+        else:
+            self._open_orders.append((account, order))
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         if self._match_immediately:
@@ -157,13 +163,12 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
-        open_orders = self._open_orders
-        if order_book_id is not None:
-            open_orders = [(a, o) for (a, o) in self._open_orders if o.order_book_id == order_book_id]
-        self.matcher.match(open_orders)
-        final_orders = [(a, o) for a, o in self._open_orders if o.is_final()]
-        self._open_orders = [(a, o) for a, o in self._open_orders if not o.is_final()]
-
+        order_filter = None if order_book_id is None else lambda a, o: o.order_book_id == order_book_id
+        self.matcher.match(filter(order_filter, self._open_orders), open_auction=False)
+        self.matcher.match(filter(order_filter, self._open_auction_orders), open_auction=True)
+        final_orders = [(a, o) for a, o in chain(self._open_orders, self._open_auction_orders) if o.is_final()]
+        self._open_orders = [(a, o) for a, o in chain(self._open_orders, self._open_auction_orders) if not o.is_final()]
+        self._open_auction_orders.clear()
         for account, order in final_orders:
             if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:
                 self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))

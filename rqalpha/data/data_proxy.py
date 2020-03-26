@@ -26,7 +26,7 @@ from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
 from rqalpha.utils import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
-from rqalpha.model.bar import BarObject, NANDict
+from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.py2 import lru_cache
@@ -168,6 +168,9 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         if bar:
             return BarObject(instrument, bar)
         return BarObject(instrument, NANDict, dt)
+
+    def get_open_auction_bar(self, order_book_id, dt):
+        return PartialBarObject(self.current_snapshot(order_book_id, "1d", dt))
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
         data = self.history_bars(order_book_id, bar_count, frequency,
