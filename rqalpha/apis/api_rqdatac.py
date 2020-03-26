@@ -657,9 +657,9 @@ def get_financials(query, quarter=None, interval='4q'):
     result = rqdatac.get_financials(query, quarter, interval, expect_df=True)
     if result is None:
         return pd.DataFrame()
-    result = result[result['announcement_date'] <= int_date | pd.isnull(result['announcement_date'])]
+    result = result[(result['announce_date'] <= int_date) | pd.isnull(result['announce_date'])]
     if not include_date:
-        del result['announcement_date']
+        del result['announce_date']
 
     return result
 
