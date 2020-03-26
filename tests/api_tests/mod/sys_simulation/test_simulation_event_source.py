@@ -33,9 +33,6 @@ __config__ = {
             "enabled": True,
             "show": True,
         },
-        "sys_simulation": {
-            "signal": True,
-        }
     },
 }
 
@@ -53,6 +50,7 @@ def test_open_auction():
         if not context.fired:
             order_shares(context.s, 1000)
             assert get_position(context.s).quantity == 1000
+            assert get_position(context.s).avg_price == bar.open
             context.fired = True
 
     def handle_bar(context, bar_dict):

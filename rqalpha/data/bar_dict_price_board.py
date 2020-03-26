@@ -16,6 +16,8 @@ import numpy as np
 
 from rqalpha.interface import AbstractPriceBoard
 from rqalpha.environment import Environment
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.const import EXECUTION_PHASE
 
 
 class BarDictPriceBoard(AbstractPriceBoard):
@@ -23,6 +25,8 @@ class BarDictPriceBoard(AbstractPriceBoard):
         self._env = Environment.get_instance()
 
     def get_last_price(self, order_book_id):
+        if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
+            return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).last
         return self._env.get_bar(order_book_id).last
 
     def get_limit_up(self, order_book_id):

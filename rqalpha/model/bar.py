@@ -48,6 +48,8 @@ class PartialBarObject(metaclass=PropertyReprMeta):
     open = property(fget=lambda self: self._tick.open)
     limit_up = property(lambda self: self._tick.limit_up)
     limit_down = property(lambda self: self._tick.limit_down)
+    last = property(lambda self: self.open)
+    volume = property(lambda self: self._tick.volume)
     prev_close = property(lambda self: self._tick.prev_close)
     prev_settlement = property(lambda self: self._tick.prev_settlement)
     isnan = property(lambda self: self._tick.isnan)
