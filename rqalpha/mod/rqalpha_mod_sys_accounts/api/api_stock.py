@@ -51,7 +51,6 @@ from rqalpha.mod.rqalpha_mod_sys_scheduler import scheduler
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
 
-export_as_api(scheduler, name='scheduler')
 export_as_api(market_close)
 export_as_api(market_open)
 export_as_api(industry_code, name='industry_code')
