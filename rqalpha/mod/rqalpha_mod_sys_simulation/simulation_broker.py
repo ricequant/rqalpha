@@ -109,7 +109,11 @@ class SimulationBroker(AbstractBroker, Persistable):
         if order.is_final():
             return
         if self._env.config.base.frequency == '1d' and not self._match_immediately:
-            self._delayed_orders.append((account, order))
+            if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
+                self._open_orders.append((account, order))
+                order.active()
+            else:
+                self._delayed_orders.append((account, order))
             return
         if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
             self._open_auction_orders.append((account, order))

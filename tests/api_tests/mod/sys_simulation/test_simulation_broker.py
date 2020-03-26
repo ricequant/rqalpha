@@ -42,6 +42,15 @@ __config__ = {
 
 
 def test_open_auction_match():
+    __config__ = {
+        "mod": {
+            "sys_simulation": {
+                "volume_limit": True,
+                "volume_percent": 0.000002
+            }
+        },
+    }
+
     def init(context):
         context.s = "000001.XSHE"
         context.bar = None
@@ -54,7 +63,6 @@ def test_open_auction_match():
             # 部分成交，仅能成交 900 股
             assert get_position(context.s).quantity == 900
             assert get_position(context.s).avg_price == bar.open
-            context.fired = True
 
     def handle_bar(context, bar_dict):
         if context.first_day:
@@ -64,3 +72,36 @@ def test_open_auction_match():
             context.first_day = False
 
     return locals()
+
+
+def test_open_auction_next_bar_match():
+    __config__ = {
+        "mod": {
+            "sys_simulation": {
+                "volume_limit": False,
+                "matching_type": "next_bar",
+            }
+        }
+    }
+
+    def init(context):
+        context.s = "000001.XSHE"
+        context.bar = None
+        context.first_day = True
+
+    def open_auction(context, bar_dict):
+        bar = bar_dict[context.s]
+        if context.first_day:
+            order_shares(context.s, 1000, bar.limit_up * 0.99)
+            # 部分成交，仅能成交 900 股
+            assert get_position(context.s).quantity == 0
+
+    def handle_bar(context, bar_dict):
+        if context.first_day:
+            bar = bar_dict[context.s]
+            assert get_position(context.s).quantity == 1000
+            assert get_position(context.s).avg_price == bar.open
+            context.first_day = False
+
+    return locals()
+
