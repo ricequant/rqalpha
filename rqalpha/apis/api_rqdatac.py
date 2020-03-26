@@ -616,7 +616,7 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
 
 @export_as_api
 @apply_rules(verify_that('interval').is_valid_interval())
-def get_financials(query, quarter=None, interval='4q'):
+def get_financials(query, quarter=None, interval='4q', expect_df=False):
     if quarter is None:
         valid = True
     else:
@@ -654,12 +654,27 @@ def get_financials(query, quarter=None, interval='4q'):
     if not include_date:
         query = query.add_column(rqdatac.fundamentals.announce_date)
 
-    result = rqdatac.get_financials(query, quarter, interval, expect_df=True)
+    result = rqdatac.get_financials(query, quarter, interval, expect_df=expect_df)
     if result is None:
         return pd.DataFrame()
-    result = result[result['announcement_date'] <= int_date | pd.isnull(result['announcement_date'])]
-    if not include_date:
-        del result['announcement_date']
+    if isinstance(result, pd.Series):
+        return result
+    elif isinstance(result, pd.DataFrame):
+        result = result[(result['announce_date'] <= int_date) | pd.isnull(result['announce_date'])]
+        if not include_date:
+            del result['announce_date']
+    else:
+        d = dict()
+        for order_book_id in result.minor_axis:
+            df = result.minor_xs(order_book_id)
+            df = df[(df.announce_date < int_date) | (pd.isnull(df.announce_date))]
+            d[order_book_id] = df
+        pl = pd.Panel.from_dict(d, orient='minor')
+        if not include_date:
+            pl.drop('announce_date', axis=0, inplace=True)
+            if len(pl.items) == 1:
+                pl = pl[pl.items[0]]
+        return pl
 
     return result
 

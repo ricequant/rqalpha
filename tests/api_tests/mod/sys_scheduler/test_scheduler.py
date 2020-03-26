@@ -18,8 +18,8 @@
 
 __config__ = {
     "base": {
-        "start_date": "2015-04-10",
-        "end_date": "2015-04-20",
+        "start_date": "2015-01-01",
+        "end_date": "2015-12-31",
         "frequency": "1d",
         "accounts": {
             "stock": 1000000,
@@ -29,33 +29,23 @@ __config__ = {
         "log_level": "error",
     },
     "mod": {
-        "sys_progress": {
-            "enabled": True,
-            "show": True,
-        },
+        "sys_simulation": {
+            "volume_limit": True,
+            "volume_percent": 0.000002
+        }
     },
 }
 
 
-def test_open_auction():
-    def init(context):
-        context.s = "000001.XSHE"
-        context.fired = False
-        context.open_auction_prices = ()
+def test_run_monthly():
+    def _monthly(context, bar_dict):
+        context.counter += 1
 
-    def open_auction(context, bar_dict):
-        bar = bar_dict[context.s]
-        assert (not hasattr(bar, "close"))
-        context.open_auction_prices = (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
-        if not context.fired:
-            order_shares(context.s, 1000)
-            assert get_position(context.s).quantity == 1000
-            assert get_position(context.s).avg_price == bar.open
-            context.fired = True
+    def init(context):
+        context.counter = 0
+        scheduler.run_monthly(_monthly, tradingday=1)
 
     def handle_bar(context, bar_dict):
-        bar = bar_dict[context.s]
-        assert hasattr(bar, "close")
-        assert context.open_auction_prices == (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
+        assert context.counter == context.now.month
 
     return locals()

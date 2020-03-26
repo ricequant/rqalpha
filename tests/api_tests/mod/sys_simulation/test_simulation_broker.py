@@ -18,7 +18,7 @@
 
 __config__ = {
     "base": {
-        "start_date": "2015-04-10",
+        "start_date": "2015-04-11",
         "end_date": "2015-04-20",
         "frequency": "1d",
         "accounts": {
@@ -33,29 +33,34 @@ __config__ = {
             "enabled": True,
             "show": True,
         },
+        "sys_simulation": {
+            "volume_limit": True,
+            "volume_percent": 0.000002
+        }
     },
 }
 
 
-def test_open_auction():
+def test_open_auction_match():
     def init(context):
         context.s = "000001.XSHE"
-        context.fired = False
-        context.open_auction_prices = ()
+        context.bar = None
+        context.first_day = True
 
     def open_auction(context, bar_dict):
         bar = bar_dict[context.s]
-        assert (not hasattr(bar, "close"))
-        context.open_auction_prices = (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
-        if not context.fired:
-            order_shares(context.s, 1000)
-            assert get_position(context.s).quantity == 1000
+        if context.first_day:
+            order_shares(context.s, 1000, bar.limit_up * 0.99)
+            # 部分成交，仅能成交 900 股
+            assert get_position(context.s).quantity == 900
             assert get_position(context.s).avg_price == bar.open
             context.fired = True
 
     def handle_bar(context, bar_dict):
-        bar = bar_dict[context.s]
-        assert hasattr(bar, "close")
-        assert context.open_auction_prices == (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
+        if context.first_day:
+            bar = bar_dict[context.s]
+            assert get_position(context.s).quantity == 1000
+            assert get_position(context.s).avg_price == (bar.open * 900 + bar.close * 100) / 1000
+            context.first_day = False
 
     return locals()
