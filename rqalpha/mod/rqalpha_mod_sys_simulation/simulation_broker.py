@@ -161,10 +161,13 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_exercise_orders.clear()
 
     def on_bar(self, _):
+        for matcher in self._matchers.values():
+            matcher.update()
         self._match()
 
     def on_tick(self, event):
         tick = event.tick
+        self._get_matcher(tick.order_book_id).update()
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):

@@ -35,6 +35,9 @@ class AbstractMatcher:
         # type: (AbstractAccount, Order, bool) -> None
         raise NotImplementedError
 
+    def update(self):
+        raise NotImplementedError
+
 
 class DefaultMatcher(AbstractMatcher):
     def __init__(self, env, mod_config):
@@ -246,3 +249,6 @@ class DefaultMatcher(AbstractMatcher):
             return self._match_exercise(account, order)
         else:
             return self._match(account, order, open_auction)
+
+    def update(self):
+        self._turnover.clear()
