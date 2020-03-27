@@ -31,6 +31,7 @@ requirements = [
     'rqrisk',
     'h5py',
     'matplotlib',
+    'xlwt',
 ]
 
 if sys.version_info < (3, 5):
