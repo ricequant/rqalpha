@@ -80,44 +80,37 @@ class SimulationBroker(AbstractBroker, Persistable):
     def get_state(self):
         return jsonpickle.dumps({
             'open_orders': [o.get_state() for account, o in self._open_orders],
-            'delayed_orders': [o.get_state() for account, o in self._delayed_orders]
+            'delayed_orders': [o.get_state() for account, o in self._delayed_orders],
+            "open_auction_orders": [o.get_state() for account, o in self._open_auction_orders],
         }).encode('utf-8')
 
     def set_state(self, state):
-        self._open_orders = []
-        self._delayed_orders = []
+        def _account_order_from_state(order_state):
+            o = Order()
+            o.set_state(order_state)
+            account = self._env.get_account(o.order_book_id)
+            return account, o
 
         value = jsonpickle.loads(state.decode('utf-8'))
-        for v in value['open_orders']:
-            o = Order()
-            o.set_state(v)
-            account = self._env.get_account(o.order_book_id)
-            self._open_orders.append((account, o))
-        for v in value['delayed_orders']:
-            o = Order()
-            o.set_state(v)
-            account = self._env.get_account(o.order_book_id)
-            self._delayed_orders.append((account, o))
+        self._open_orders = [_account_order_from_state(v) for v in value["open_orders"]]
+        self._delayed_orders = [_account_order_from_state(v) for v in value["delayed_orders"]]
+        self._open_auction_orders = [_account_order_from_state(v) for v in value.get("open_auction_orders", [])]
 
     def submit_order(self, order):
         if order.position_effect == POSITION_EFFECT.MATCH:
-            raise NotImplementedError(_("unsupported position_effect {}").format(order.position_effect))
+            raise TypeError(_("unsupported position_effect {}").format(order.position_effect))
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
-            return self._open_exercise_orders.append((account, order))
         if order.is_final():
             return
-        if self._env.config.base.frequency == '1d' and not self._match_immediately:
-            if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
-                self._open_orders.append((account, order))
-                order.active()
-            else:
-                self._delayed_orders.append((account, order))
-            return
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            return self._open_exercise_orders.append((account, order))
         if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
             self._open_auction_orders.append((account, order))
         else:
+            if self._env.config.base.frequency == '1d' and not self._match_immediately:
+                self._delayed_orders.append((account, order))
+                return
             self._open_orders.append((account, order))
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
@@ -171,7 +164,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
-
         order_filter = None if order_book_id is None else lambda a, o: o.order_book_id == order_book_id
         for account, order in filter(order_filter, self._open_orders):
             self._get_matcher(order.order_book_id).match(account, order, open_auction=False)
