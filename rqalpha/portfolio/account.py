@@ -37,6 +37,11 @@ PositionType = Type[BasePosition]
 
 
 class Account(AbstractAccount):
+    """
+    账户，多种持仓和现金的集合。
+
+    不同品种的合约持仓可能归属于不同的账户，如股票、转债、场内基金、ETF 期权归属于股票账户，期货、期货期权归属于期货账户
+    """
 
     __abandon_properties__ = [
         "holding_pnl",
@@ -170,8 +175,11 @@ class Account(AbstractAccount):
     def get_position(self, order_book_id, direction):
         # type: (str, POSITION_DIRECTION) -> BasePosition
         """
-        获取某个标的的持仓对象，
-        返回 Position 对象，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
+        获取某个标的的持仓对象
+
+        返回 Position 对象，具体对象的类型由合约品种决定，
+        如 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.StockPosition`
+        或 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.FuturePosition` 等
 
         :param order_book_id: 标的编号
         :param direction: 持仓方向
