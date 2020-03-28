@@ -18,8 +18,11 @@
 from __future__ import division
 from typing import Union, Optional, List
 
-from rqalpha.apis.api_base import cal_style, assure_instrument
+from rqalpha.api import export_as_api
+from rqalpha.apis.api_base import assure_instrument
 from rqalpha.apis.api_abstract import order, order_to, buy_open, buy_close, sell_open, sell_close
+from rqalpha.apis.api_base import cal_style
+from rqalpha.apis.api_rqdatac import futures
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, LimitOrder, OrderStyle
 from rqalpha.const import SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
@@ -29,6 +32,8 @@ from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.arg_checker import apply_rules, verify_that
+
 
 __all__ = [
 ]
@@ -188,3 +193,30 @@ def future_sell_open(id_or_ins, amount, price=None, style=None):
 def future_sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
+
+
+@export_as_api
+@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
+def get_future_contracts(underlying_symbol):
+    # type: (str) -> List[str]
+    """
+    获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
+
+    :param underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
+
+    :example:
+
+    获取某一天的主力合约代码（策略当前日期是20161201）:
+
+        ..  code-block:: python
+
+            [In]
+            logger.info(get_future_contracts('IF'))
+            [Out]
+            ['IF1612', 'IF1701', 'IF1703', 'IF1706']
+    """
+    env = Environment.get_instance()
+    return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)
+
+
+futures.get_contracts = staticmethod(get_future_contracts)

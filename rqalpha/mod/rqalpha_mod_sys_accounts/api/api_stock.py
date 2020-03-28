@@ -285,7 +285,6 @@ def order_target_portfolio(target_portfolio):
                 order_book_id, abs(delta_quantity), SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             ))
 
-    # TODO: 下一个 bar 撮合资金咋回流？实盘咋办？要求用户多次调用？
     submit_orders = []
     for order in chain(close_orders, open_orders):
         if env.can_submit_order(order):
@@ -331,11 +330,11 @@ def is_st_stock(order_book_id, count=1):
     # type: (str, Optional[int]) -> Union[bool, pd.DataFrame]
     """
     判断股票在一段时间内是否为ST股（包括ST与*ST）。
+
     ST股是有退市风险因此风险比较大的股票，很多时候您也会希望判断自己使用的股票是否是'ST'股来避开这些风险大的股票。另外，我们目前的策略比赛也禁止了使用'ST'股。
 
     :param order_book_id: 某只股票的代码，可传入单只股票的order_book_id, symbol
     :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
-
     """
     dt = Environment.get_instance().calendar_dt.date()
     order_book_id = assure_order_book_id(order_book_id)
@@ -358,11 +357,10 @@ def industry(code):
     """
     获得属于某一行业的所有股票列表。
 
-    :param str code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
-
-    :return: list of order_book_id 获得属于某一行业的所有股票
+    :param code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
 
     我们目前使用的行业分类来自于中国国家统计局的 `国民经济行业分类 <http://www.stats.gov.cn/tjsj/tjbz/hyflbz/>`_ ，可以使用这里的任何一个行业代码来调用行业的股票列表：
+
     =========================   ===================================================
     行业代码                      行业名称
     =========================   ===================================================
@@ -462,9 +460,11 @@ def industry(code):
 
     ..  code-block:: python3
         :linenos:
+
         def init(context):
             stock_list = industry('A01')
             logger.info("农业股票列表：" + str(stock_list))
+
         #INITINFO 农业股票列表：['600354.XSHG', '601118.XSHG', '002772.XSHE', '600371.XSHG', '600313.XSHG', '600672.XSHG', '600359.XSHG', '300143.XSHE', '002041.XSHE', '600762.XSHG', '600540.XSHG', '300189.XSHE', '600108.XSHG', '300087.XSHE', '600598.XSHG', '000998.XSHE', '600506.XSHG']
 
     """
@@ -493,11 +493,9 @@ def sector(code):
     获得属于某一板块的所有股票列表。
 
     :param code: 板块名称或板块代码。例如，能源板块可填写'Energy'、'能源'或sector_code.Energy
-    :type code: `str` | `sector_code`
-
-    :return: list of order_book_id 属于该板块的股票列表
 
     目前支持的板块分类如下，其取值参考自MSCI发布的全球行业标准分类:
+
     =========================   =========================   ==============================================================================
     板块代码                      中文板块名称                  英文板块名称
     =========================   =========================   ==============================================================================
@@ -517,6 +515,7 @@ def sector(code):
 
     ..  code-block:: python3
         :linenos:
+
         def init(context):
             ids1 = sector("consumer discretionary")
             ids2 = sector("非必需消费品")
@@ -525,7 +524,6 @@ def sector(code):
             logger.info(ids1)
         #INIT INFO
         #['002045.XSHE', '603099.XSHG', '002486.XSHE', '002536.XSHE', '300100.XSHE', '600633.XSHG', '002291.XSHE', ..., '600233.XSHG']
-
     """
     if isinstance(code, SectorCodeItem):
         code = code.name
@@ -542,15 +540,12 @@ def sector(code):
     verify_that("start_date").is_valid_date(ignore_none=False),
 )
 def get_dividend(order_book_id, start_date):
+    # type: (str, Union[str, datetime.date, datetime.datetime, pd.Timestamp]) -> Optional[np.ndarray]
     """
     获取某只股票到策略当前日期前一天的分红情况（包含起止日期）。
 
     :param order_book_id: 股票代码
-    :type order_book_id: str
     :param start_date: 开始日期，需要早于策略当前日期
-    :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
-    :return: ndarray
 
     =========================   ===================================================
     fields                      字段名

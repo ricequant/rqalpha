@@ -37,20 +37,6 @@ __config__ = {
 }
 
 
-def test_get_order():
-    def init(context):
-        context.s1 = '000001.XSHE'
-        context.amount = 100
-
-    def handle_bar(context, _):
-        order_id = order_shares(context.s1, context.amount, style=LimitOrder(9.5))
-        order = get_order(order_id)
-        assert order.order_book_id == context.s1
-        assert order.quantity == context.amount
-        assert order.unfilled_quantity + order.filled_quantity == order.quantity
-    return locals()
-
-
 def test_get_open_order():
     def init(context):
         context.s1 = '000001.XSHE'

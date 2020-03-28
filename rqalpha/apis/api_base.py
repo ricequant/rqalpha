@@ -16,8 +16,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from __future__ import division
 
-from typing import Union, Optional, List
-import datetime
+from typing import Union, Optional, List, Callable
+from datetime import date, datetime
 import types
 from collections import Iterable
 
@@ -35,21 +35,15 @@ from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.api import export_as_api
 from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
-from rqalpha.model.instrument import (
-    Instrument,
-)
+from rqalpha.model.instrument import Instrument
+from rqalpha.model.tick import TickObject
 from rqalpha.const import (
-    EXECUTION_PHASE,
-    ORDER_STATUS,
-    SIDE,
-    POSITION_EFFECT,
-    ORDER_TYPE,
-    MATCHING_TYPE,
-    RUN_TYPE,
-    POSITION_DIRECTION,
+    EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
 )
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.events import EVENT
+from rqalpha.events import EVENT, Event
+from rqalpha.interface import AbstractPosition
+from rqalpha.core.strategy_context import StrategyContext
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
@@ -98,19 +92,6 @@ def cal_style(price, style):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
 
     return LimitOrder(price)
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.OPEN_AUCTION,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
-def get_order(order):
-    return order
 
 
 @export_as_api
@@ -230,7 +211,23 @@ def cancel_order(order):
     verify_that("right_type", pre_check=True).is_in(RIGHT_TYPE, ignore_none=True)
 )
 def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
-    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> None
+    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> Optional[Order]
+    """
+    行权。针对期权、可转债等含权合约，行使合约权利方被赋予的权利。
+
+    :param id_or_ins: 行权合约，order_book_id 或 Instrument 对象
+    :param amount: 参与行权的合约数量
+    :param right_type: 权利类型，对于含有多种权利的合约（如可转债），选择行使何种权利
+
+    :example:
+
+    .. code-block:: python
+
+        # 行使一张豆粕1905购2350的权力
+        exercise("M1905C2350", 1)
+
+    """
+
     amount = int(amount)
     if amount <= 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount should be positive."))
@@ -247,6 +244,7 @@ def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
     )
     if env.can_submit_order(order):
         env.broker.submit_order(order)
+        return order
 
 
 @export_as_api
@@ -267,6 +265,7 @@ def update_universe(id_or_symbols):
     该方法用于更新现在关注的证券的集合（e.g.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为['000001.XSHE', '000024.XSHE']然后调用了update_universe(['000030.XSHE'])之后，股票池就会变成000030.XSHE一个股票了，随后的数据更新也只会跟踪000030.XSHE这一个股票了。
 
     :param id_or_symbols: 标的物
+
     """
     if isinstance(id_or_symbols, (six.string_types, Instrument)):
         id_or_symbols = [id_or_symbols]
@@ -290,12 +289,14 @@ def update_universe(id_or_symbols):
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def subscribe(id_or_symbols):
     # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
+
     """
     订阅合约行情。该操作会导致合约池内合约的增加，从而影响handle_bar中处理bar数据的数量。
 
     需要注意，用户在初次编写策略时候需要首先订阅合约行情，否则handle_bar不会被触发。
 
     :param id_or_symbols: 标的物
+
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -325,10 +326,12 @@ def subscribe(id_or_symbols):
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def unsubscribe(id_or_symbols):
     # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
+
     """
     取消订阅合约行情。取消订阅会导致合约池内合约的减少，如果当前合约池中没有任何合约，则策略直接退出。
 
     :param id_or_symbols: 标的物
+
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -361,17 +364,14 @@ def unsubscribe(id_or_symbols):
     verify_that("tenor").is_in(names.VALID_TENORS, ignore_none=True),
 )
 def get_yield_curve(date=None, tenor=None):
+    # type: (Optional[Union[str, date, datetime, pd.Timestamp]], str) -> pd.DataFrame
     """
     获取某个国家市场指定日期的收益率曲线水平。
 
     数据为2002年至今的中债国债收益率曲线，来源于中央国债登记结算有限责任公司。
 
     :param date: 查询日期，默认为策略当前日期前一天
-    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
-    :param str tenor: 标准期限，'0S' - 隔夜，'1M' - 1个月，'1Y' - 1年，默认为全部期限
-
-    :return: `pandas.DataFrame` - 查询时间段内无风险收益率曲线
+    :param tenor: 标准期限，'0S' - 隔夜，'1M' - 1个月，'1Y' - 1年，默认为全部期限
 
     :example:
 
@@ -434,8 +434,9 @@ def history_bars(
     include_now=False,
     adjust_type="pre",
 ):
+    # type: (str, int, str, Optional[str], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
     """
-    获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。
+    获取指定合约的历史 k 线行情，同时支持日以及分钟历史数据。不能在init中调用。
 
     日回测获取分钟历史数据：不支持
 
@@ -467,14 +468,12 @@ def history_bars(
     =========================   ===================================================
 
     :param order_book_id: 合约代码
-    :type order_book_id: `str`
-
-    :param int bar_count: 获取的历史数据数量，必填项
-    :param str frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
-    :param str fields: 返回数据字段。必填项。见下方列表。
-    :param bool skip_suspended: 是否跳过停牌数据
-    :param bool include_now: 是否包含当前数据
-    :param str adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
+    :param bar_count: 获取的历史数据数量，必填项
+    :param frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
+    :param fields: 返回数据字段。必填项。见下方列表。
+    :param skip_suspended: 是否跳过停牌数据
+    :param include_now: 是否包含当前数据
+    :param adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
 
     =========================   ===================================================
     fields                      字段名
@@ -491,8 +490,6 @@ def history_bars(
     settlement                  结算价（期货日线专用）
     prev_settlement             结算价（期货日线专用）
     =========================   ===================================================
-
-    :return: `ndarray`
 
     :example:
 
@@ -558,6 +555,14 @@ def history_bars(
     verify_that('count').is_instance_of(int).is_greater_than(0)
 )
 def history_ticks(order_book_id, count):
+    # type: (str, int) -> List[TickObject]
+    """
+    获取指定合约历史 tick 对象，仅支持在 tick 级别的策略（回测、模拟交易、实盘）中调用
+
+    :param order_book_id: 合约代码
+    :param count: 获取的 tick 数量
+
+    """
     env = Environment.get_instance()
     sys_frequency = env.config.base.frequency
     if sys_frequency == "1d":
@@ -586,16 +591,12 @@ def history_ticks(order_book_id, count):
     verify_that("date").is_valid_date(ignore_none=True),
 )
 def all_instruments(type=None, date=None):
+    # type: (str, Union[str, datetime, date]) -> pd.DataFrame
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
-    :param str type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
-
+    :param type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
     :param date: 查询时间点
-    :type date: `str` | `datetime` | `date`
-
-
-    :return: `pandas DataFrame` 所有合约的基本信息。
 
     其中type参数传入的合约类型和对应的解释如下：
 
@@ -677,15 +678,11 @@ def all_instruments(type=None, date=None):
 )
 @apply_rules(verify_that("id_or_symbols").is_instance_of((str, Iterable)))
 def instruments(id_or_symbols):
+    # type: (Union[str, List[str]]) -> Union[Instrument, List[Instrument]]
     """
     获取某个国家市场内一个或多个合约的详细信息。目前仅支持中国市场。
 
     :param id_or_symbols: 合约代码或者合约代码列表
-    :type id_or_symbols: `str` | List[`str`]
-
-    :return: :class:`~Instrument`
-
-    目前系统并不支持跨国家市场的同时调用。传入 order_book_id list必须属于同一国家市场，不能混合着中美两个国家市场的order_book_id。
 
     :example:
 
@@ -730,25 +727,13 @@ def instruments(id_or_symbols):
     verify_that("end_date").is_valid_date(ignore_none=False),
 )
 def get_trading_dates(start_date, end_date):
+    # type: (Union[str, date, datetime, pd.Timestamp], Union[str, date, datetime, pd.Timestamp]) -> pd.DatetimeIndex
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
 
     :param start_date: 开始日期
-    :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
     :param end_date: 结束如期
-    :type end_date: `str` | `date` | `datetime` | `pandas.Timestamp`
 
-    :return: list[`datetime.date`]
-
-    :example:
-
-    ..  code-block:: python3
-        :linenos:
-
-        [In]get_trading_dates(start_date='2016-05-05', end_date='20160505')
-        [Out]
-        [datetime.date(2016, 5, 5)]
     """
     return Environment.get_instance().data_proxy.get_trading_dates(start_date, end_date)
 
@@ -759,14 +744,12 @@ def get_trading_dates(start_date, end_date):
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
 )
 def get_previous_trading_date(date, n=1):
+    # type: (Union[str, date, datetime, pd.Timestamp], Optional[int]) -> date
     """
     获取指定日期的之前的第 n 个交易日。
 
     :param date: 指定日期
-    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
     :param n:
-
-    :return: `datetime.date`
 
     :example:
 
@@ -786,14 +769,12 @@ def get_previous_trading_date(date, n=1):
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
 )
 def get_next_trading_date(date, n=1):
+    # type: (Union[str, date, datetime, pd.Timestamp], Optional[int]) -> date
     """
     获取指定日期之后的第 n 个交易日
 
     :param date: 指定日期
-    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
     :param n:
-
-    :return: `datetime.date`
 
     :example:
 
@@ -816,11 +797,12 @@ def get_next_trading_date(date, n=1):
     verify_that("value", pre_check=True).is_number(),
 )
 def plot(series_name, value):
+    # type: (str, float) -> None
     """
     在生成的图标结果中，某一个根线上增加一个点。
 
-    :param str series_name: 序列名称
-    :param float value: 值
+    :param series_name: 序列名称
+    :param value: 值
     """
     Environment.get_instance().add_plot(series_name, value)
 
@@ -836,6 +818,7 @@ def plot(series_name, value):
 )
 @apply_rules(verify_that("id_or_symbol").is_valid_instrument())
 def current_snapshot(id_or_symbol):
+    # type: (Union[str, Instrument]) -> Optional[TickObject]
     """
     获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。
     市场快照数据记录了每日从开盘到当前的数据信息，可以理解为一个动态的day bar数据。
@@ -843,9 +826,7 @@ def current_snapshot(id_or_symbol):
     需要注意，在实盘模拟中，该函数返回的是调用当时的市场快照情况，所以在同一个handle_bar中不同时点调用可能返回的数据不同。
     如果当日截止到调用时候对应股票没有任何成交，那么snapshot中的close, high, low, last几个价格水平都将以0表示。
 
-    :param str id_or_symbol: 合约代码或简称
-
-    :return: :class:`~Tick`
+    :param d_or_symbol: 合约代码或简称
 
     :example:
 
@@ -879,10 +860,10 @@ def current_snapshot(id_or_symbol):
 
 @export_as_api
 def get_positions():
+    # type: () -> List[AbstractPosition]
     """
-    获取所有持仓信息
-
-    :return: list BookingPosition
+    获取所有持仓对象列表，
+    返回 Position 对象的列表，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
 
     :example:
 
@@ -903,13 +884,13 @@ def get_positions():
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
 def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
+    # type: (str, Optional[POSITION_DIRECTION]) -> AbstractPosition
     """
-    获取某个标的的持仓信息
+    获取某个标的的持仓对象，
+    返回 Position 对象，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
 
     :param order_book_id: 标的编号
-    :param direction: 持仓类型 “long_positions” | “short_positions” | “backward_trade_set”
-
-    :return: list BookingPosition
+    :param direction: 持仓方向
 
     :example:
 
@@ -933,20 +914,12 @@ def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
     verify_that("handler").is_instance_of(types.FunctionType),
 )
 def subscribe_event(event_type, handler):
+    # type: (EVENT, Callable[[StrategyContext, Event], None]) -> None
     """
     订阅框架内部事件，注册事件处理函数
 
     :param event_type: 事件类型
     :param handler: 处理函数
-
-    :return: None
-
-    :example:
-
-    ..  code-block:: python3
-
-        from rqalpha.events import EVENT
-        subscribe_event(EVENT.POST_BAR, print)
 
     """
     env = Environment.get_instance()
