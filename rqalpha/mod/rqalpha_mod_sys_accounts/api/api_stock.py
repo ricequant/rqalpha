@@ -18,11 +18,11 @@
 import math
 import datetime
 from itertools import chain
-
 from decimal import Decimal, getcontext
 from typing import Dict, List, Union, Optional
 
 import six
+import numpy as np
 import pandas as pd
 
 from rqalpha.api import export_as_api
