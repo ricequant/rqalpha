@@ -44,6 +44,7 @@ from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.events import EVENT, Event
 from rqalpha.interface import AbstractPosition
 from rqalpha.core.strategy_context import StrategyContext
+from rqalpha.portfolio.base_position import BasePosition
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
@@ -860,13 +861,9 @@ def current_snapshot(id_or_symbol):
 
 @export_as_api
 def get_positions():
-    # type: () -> List[AbstractPosition]
+    # type: () -> List[BasePosition]
     """
     获取所有持仓对象列表，
-
-    返回 Position 对象，具体对象的类型由合约品种决定，
-    如 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.StockPosition`
-    或 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.FuturePosition` 等
 
     :example:
 
@@ -887,13 +884,9 @@ def get_positions():
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
 def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
-    # type: (str, Optional[POSITION_DIRECTION]) -> AbstractPosition
+    # type: (str, Optional[POSITION_DIRECTION]) -> BasePosition
     """
     获取某个标的的持仓对象，
-
-    返回 Position 对象，具体对象的类型由合约品种决定，
-    如 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.StockPosition`
-    或 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.FuturePosition` 等
 
     :param order_book_id: 标的编号
     :param direction: 持仓方向

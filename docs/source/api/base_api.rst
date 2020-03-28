@@ -577,26 +577,16 @@ Account - 账户
     :inherited-members:
 
 
-StockPosition - 股票持仓
+Position - 持仓
 ------------------------------------------------------
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model
+.. module:: rqalpha.portfolio.base_position
 
-..  autoclass:: StockPosition
+..  autoclass:: BasePosition
     :members:
     :inherited-members:
 
 
-FuturePosition - 期货持仓
-------------------------------------------------------
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model
-
-..  autoclass:: FuturePosition
-    :members:
-    :inherited-members:
-
-
-
-Instrument
+Instrument - 交易标的
 ------------------------------------------------------
 ..  module:: rqalpha.model.instrument
 

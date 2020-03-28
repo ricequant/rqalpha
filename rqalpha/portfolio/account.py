@@ -168,7 +168,6 @@ class Account(AbstractAccount):
         # type: () -> Iterable[BasePosition]
         """
         获取所有持仓对象列表，
-        返回 Position 对象的列表，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
         """
         return self._iter_pos()
 
@@ -176,10 +175,6 @@ class Account(AbstractAccount):
         # type: (str, POSITION_DIRECTION) -> BasePosition
         """
         获取某个标的的持仓对象
-
-        返回 Position 对象，具体对象的类型由合约品种决定，
-        如 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.StockPosition`
-        或 :class:`~rqalpha.mod.rqalpha_mod_sys_accounts.position_model.FuturePosition` 等
 
         :param order_book_id: 标的编号
         :param direction: 持仓方向
