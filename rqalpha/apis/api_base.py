@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from __future__ import division
 
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Callable
 from datetime import date, datetime
 import types
 from collections import Iterable
@@ -41,8 +41,9 @@ from rqalpha.const import (
     EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
 )
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.events import EVENT
+from rqalpha.events import EVENT, Event
 from rqalpha.interface import AbstractPosition
+from rqalpha.core.strategy_context import StrategyContext
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
@@ -91,19 +92,6 @@ def cal_style(price, style):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
 
     return LimitOrder(price)
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.BEFORE_TRADING,
-    EXECUTION_PHASE.OPEN_AUCTION,
-    EXECUTION_PHASE.ON_BAR,
-    EXECUTION_PHASE.ON_TICK,
-    EXECUTION_PHASE.AFTER_TRADING,
-    EXECUTION_PHASE.SCHEDULED,
-)
-def get_order(order):
-    return order
 
 
 @export_as_api
@@ -260,6 +248,7 @@ def update_universe(id_or_symbols):
     该方法用于更新现在关注的证券的集合（e.g.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为['000001.XSHE', '000024.XSHE']然后调用了update_universe(['000030.XSHE'])之后，股票池就会变成000030.XSHE一个股票了，随后的数据更新也只会跟踪000030.XSHE这一个股票了。
 
     :param id_or_symbols: 标的物
+
     """
     if isinstance(id_or_symbols, (six.string_types, Instrument)):
         id_or_symbols = [id_or_symbols]
@@ -283,12 +272,14 @@ def update_universe(id_or_symbols):
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def subscribe(id_or_symbols):
     # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
+
     """
     订阅合约行情。该操作会导致合约池内合约的增加，从而影响handle_bar中处理bar数据的数量。
 
     需要注意，用户在初次编写策略时候需要首先订阅合约行情，否则handle_bar不会被触发。
 
     :param id_or_symbols: 标的物
+
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -318,10 +309,12 @@ def subscribe(id_or_symbols):
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
 def unsubscribe(id_or_symbols):
     # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
+
     """
     取消订阅合约行情。取消订阅会导致合约池内合约的减少，如果当前合约池中没有任何合约，则策略直接退出。
 
     :param id_or_symbols: 标的物
+
     """
     current_universe = Environment.get_instance().get_universe()
     if isinstance(id_or_symbols, six.string_types):
@@ -896,20 +889,12 @@ def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
     verify_that("handler").is_instance_of(types.FunctionType),
 )
 def subscribe_event(event_type, handler):
+    # type: (EVENT, Callable[[StrategyContext, Event], None]) -> None
     """
     订阅框架内部事件，注册事件处理函数
 
     :param event_type: 事件类型
     :param handler: 处理函数
-
-    :return: None
-
-    :example:
-
-    ..  code-block:: python3
-
-        from rqalpha.events import EVENT
-        subscribe_event(EVENT.POST_BAR, print)
 
     """
     env = Environment.get_instance()
