@@ -17,7 +17,7 @@
 from __future__ import division
 
 from typing import Union, Optional, List
-import datetime
+from datetime import date, datetime
 import types
 from collections import Iterable
 
@@ -35,9 +35,8 @@ from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.api import export_as_api
 from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
-from rqalpha.model.instrument import (
-    Instrument,
-)
+from rqalpha.model.instrument import Instrument
+from rqalpha.model.tick import TickObject
 from rqalpha.const import (
     EXECUTION_PHASE,
     ORDER_STATUS,
@@ -361,17 +360,14 @@ def unsubscribe(id_or_symbols):
     verify_that("tenor").is_in(names.VALID_TENORS, ignore_none=True),
 )
 def get_yield_curve(date=None, tenor=None):
+    # type: (Optional[Union[str, date, datetime, pd.Timestamp]], str) -> pd.DataFrame
     """
     获取某个国家市场指定日期的收益率曲线水平。
 
     数据为2002年至今的中债国债收益率曲线，来源于中央国债登记结算有限责任公司。
 
     :param date: 查询日期，默认为策略当前日期前一天
-    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
-    :param str tenor: 标准期限，'0S' - 隔夜，'1M' - 1个月，'1Y' - 1年，默认为全部期限
-
-    :return: `pandas.DataFrame` - 查询时间段内无风险收益率曲线
+    :param tenor: 标准期限，'0S' - 隔夜，'1M' - 1个月，'1Y' - 1年，默认为全部期限
 
     :example:
 
@@ -434,6 +430,7 @@ def history_bars(
     include_now=False,
     adjust_type="pre",
 ):
+    # type: (str, int, str, Optional[str], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
     """
     获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。
 
@@ -467,14 +464,12 @@ def history_bars(
     =========================   ===================================================
 
     :param order_book_id: 合约代码
-    :type order_book_id: `str`
-
-    :param int bar_count: 获取的历史数据数量，必填项
-    :param str frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
-    :param str fields: 返回数据字段。必填项。见下方列表。
-    :param bool skip_suspended: 是否跳过停牌数据
-    :param bool include_now: 是否包含当前数据
-    :param str adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
+    :param bar_count: 获取的历史数据数量，必填项
+    :param frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
+    :param fields: 返回数据字段。必填项。见下方列表。
+    :param skip_suspended: 是否跳过停牌数据
+    :param include_now: 是否包含当前数据
+    :param adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
 
     =========================   ===================================================
     fields                      字段名
@@ -491,8 +486,6 @@ def history_bars(
     settlement                  结算价（期货日线专用）
     prev_settlement             结算价（期货日线专用）
     =========================   ===================================================
-
-    :return: `ndarray`
 
     :example:
 
@@ -586,16 +579,12 @@ def history_ticks(order_book_id, count):
     verify_that("date").is_valid_date(ignore_none=True),
 )
 def all_instruments(type=None, date=None):
+    # type: (str, Union[str, datetime, date]) -> pd.DataFrame
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
-    :param str type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
-
+    :param type: 需要查询合约类型，例如：type='CS'代表股票。默认是所有类型
     :param date: 查询时间点
-    :type date: `str` | `datetime` | `date`
-
-
-    :return: `pandas DataFrame` 所有合约的基本信息。
 
     其中type参数传入的合约类型和对应的解释如下：
 
@@ -677,15 +666,11 @@ def all_instruments(type=None, date=None):
 )
 @apply_rules(verify_that("id_or_symbols").is_instance_of((str, Iterable)))
 def instruments(id_or_symbols):
+    # type: (Union[str, List[str]]) -> Union[Instrument, List[Instrument]]
     """
     获取某个国家市场内一个或多个合约的详细信息。目前仅支持中国市场。
 
     :param id_or_symbols: 合约代码或者合约代码列表
-    :type id_or_symbols: `str` | List[`str`]
-
-    :return: :class:`~Instrument`
-
-    目前系统并不支持跨国家市场的同时调用。传入 order_book_id list必须属于同一国家市场，不能混合着中美两个国家市场的order_book_id。
 
     :example:
 
@@ -730,25 +715,13 @@ def instruments(id_or_symbols):
     verify_that("end_date").is_valid_date(ignore_none=False),
 )
 def get_trading_dates(start_date, end_date):
+    # type: (Union[str, date, datetime, pd.Timestamp], Union[str, date, datetime, pd.Timestamp]) -> pd.DatetimeIndex
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
 
     :param start_date: 开始日期
-    :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
     :param end_date: 结束如期
-    :type end_date: `str` | `date` | `datetime` | `pandas.Timestamp`
 
-    :return: list[`datetime.date`]
-
-    :example:
-
-    ..  code-block:: python3
-        :linenos:
-
-        [In]get_trading_dates(start_date='2016-05-05', end_date='20160505')
-        [Out]
-        [datetime.date(2016, 5, 5)]
     """
     return Environment.get_instance().data_proxy.get_trading_dates(start_date, end_date)
 
@@ -759,14 +732,12 @@ def get_trading_dates(start_date, end_date):
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
 )
 def get_previous_trading_date(date, n=1):
+    # type: (Union[str, date, datetime, pd.Timestamp], Optional[int]) -> date
     """
     获取指定日期的之前的第 n 个交易日。
 
     :param date: 指定日期
-    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
     :param n:
-
-    :return: `datetime.date`
 
     :example:
 
@@ -786,14 +757,12 @@ def get_previous_trading_date(date, n=1):
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
 )
 def get_next_trading_date(date, n=1):
+    # type: (Union[str, date, datetime, pd.Timestamp], Optional[int]) -> date
     """
     获取指定日期之后的第 n 个交易日
 
     :param date: 指定日期
-    :type date: `str` | `date` | `datetime` | `pandas.Timestamp`
     :param n:
-
-    :return: `datetime.date`
 
     :example:
 
@@ -816,11 +785,12 @@ def get_next_trading_date(date, n=1):
     verify_that("value", pre_check=True).is_number(),
 )
 def plot(series_name, value):
+    # type: (str, float) -> None
     """
     在生成的图标结果中，某一个根线上增加一个点。
 
-    :param str series_name: 序列名称
-    :param float value: 值
+    :param series_name: 序列名称
+    :param value: 值
     """
     Environment.get_instance().add_plot(series_name, value)
 
@@ -836,6 +806,7 @@ def plot(series_name, value):
 )
 @apply_rules(verify_that("id_or_symbol").is_valid_instrument())
 def current_snapshot(id_or_symbol):
+    # type: (Union[str, Instrument]) -> Optional[TickObject]
     """
     获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。
     市场快照数据记录了每日从开盘到当前的数据信息，可以理解为一个动态的day bar数据。
@@ -843,9 +814,7 @@ def current_snapshot(id_or_symbol):
     需要注意，在实盘模拟中，该函数返回的是调用当时的市场快照情况，所以在同一个handle_bar中不同时点调用可能返回的数据不同。
     如果当日截止到调用时候对应股票没有任何成交，那么snapshot中的close, high, low, last几个价格水平都将以0表示。
 
-    :param str id_or_symbol: 合约代码或简称
-
-    :return: :class:`~Tick`
+    :param d_or_symbol: 合约代码或简称
 
     :example:
 

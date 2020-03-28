@@ -481,31 +481,6 @@ class futures:
     pass
 
 
-@export_as_api
-@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
-def get_future_contracts(underlying_symbol):
-    """
-    获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
-
-    :param str underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
-
-    :return: list[`str`]
-
-    :example:
-
-    获取某一天的主力合约代码（策略当前日期是20161201）:
-
-        ..  code-block:: python
-
-            [In]
-            logger.info(get_future_contracts('IF'))
-            [Out]
-            ['IF1612', 'IF1701', 'IF1703', 'IF1706']
-    """
-    env = Environment.get_instance()
-    return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)
-
-
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
 def _futures_get_dominant(underlying_symbol, rule=0):
     """
@@ -564,7 +539,6 @@ def _futures_get_warehouse_stocks(underlying_symbols, count=1):
 
 
 futures.get_dominant = staticmethod(_futures_get_dominant)
-futures.get_contracts = staticmethod(get_future_contracts)
 futures.get_member_rank = staticmethod(_futures_get_member_rank)
 futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
 

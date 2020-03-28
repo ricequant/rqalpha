@@ -20,6 +20,7 @@ from typing import Union, Optional, List
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import cal_style
+from rqalpha.apis.api_rqdatac import futures
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
@@ -204,6 +205,33 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
+
+
+@export_as_api
+@apply_rules(verify_that('underlying_symbol').is_instance_of(str))
+def get_future_contracts(underlying_symbol):
+    # type: (str) -> List[str]
+    """
+    获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
+
+    :param underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
+
+    :example:
+
+    获取某一天的主力合约代码（策略当前日期是20161201）:
+
+        ..  code-block:: python
+
+            [In]
+            logger.info(get_future_contracts('IF'))
+            [Out]
+            ['IF1612', 'IF1701', 'IF1703', 'IF1706']
+    """
+    env = Environment.get_instance()
+    return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)
+
+
+futures.get_contracts = staticmethod(get_future_contracts)
 
 
 def assure_instrument(id_or_symbols):

@@ -18,7 +18,6 @@
 import math
 import datetime
 from itertools import chain
-
 from dateutil.parser import parse
 from decimal import Decimal, getcontext
 from typing import Dict, List, Union, Optional
@@ -578,9 +577,7 @@ def industry(code):
     """
     获得属于某一行业的所有股票列表。
 
-    :param str code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
-
-    :return: list of order_book_id 获得属于某一行业的所有股票
+    :param code: 行业名称或行业代码。例如，农业可填写industry_code.A01 或 'A01'
 
     我们目前使用的行业分类来自于中国国家统计局的 `国民经济行业分类 <http://www.stats.gov.cn/tjsj/tjbz/hyflbz/>`_ ，可以使用这里的任何一个行业代码来调用行业的股票列表：
 
@@ -716,9 +713,6 @@ def sector(code):
     获得属于某一板块的所有股票列表。
 
     :param code: 板块名称或板块代码。例如，能源板块可填写'Energy'、'能源'或sector_code.Energy
-        :type code: `str` | `sector_code`
-
-    :return: list of order_book_id 属于该板块的股票列表
 
     目前支持的板块分类如下，其取值参考自MSCI发布的全球行业标准分类:
 
@@ -767,15 +761,12 @@ def sector(code):
     verify_that("start_date").is_valid_date(ignore_none=False),
 )
 def get_dividend(order_book_id, start_date):
+    # type: (str, Union[str, datetime.date, datetime.datetime, pd.Timestamp]) -> Optional[np.ndarray]
     """
     获取某只股票到策略当前日期前一天的分红情况（包含起止日期）。
 
     :param order_book_id: 股票代码
-    :type order_book_id: str
     :param start_date: 开始日期，需要早于策略当前日期
-    :type start_date: `str` | `date` | `datetime` | `pandas.Timestamp`
-
-    :return: ndarray
 
     =========================   ===================================================
     fields                      字段名
