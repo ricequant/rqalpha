@@ -707,32 +707,22 @@ Instrument对象也支持如下方法：
 枚举常量
 ======================================================
 
-ORDER_STATUS - 订单状态
-------------------------------------------------------
 ..  module:: rqalpha.const
 
-..  py:class:: ORDER_STATUS
 
-    ..  py:attribute:: PENDING_NEW
+POSITION_DIRECTION - 持仓方向
+------------------------------------------------------
 
-        待报
+..  py:class::  POSITION_DIRECTION
 
+    .. py:attribute::  LONG
 
-    ..  py:attribute:: ACTIVE
+        多方向
 
-        可撤
+    .. py:attribute::  SHORT
 
-    ..  py:attribute:: FILLED
+        空方向
 
-        全成
-
-    ..  py:attribute:: CANCELLED
-
-        已撤
-
-    ..  py:attribute:: REJECTED
-
-        拒单
 
 SIDE - 买卖方向
 ------------------------------------------------------
@@ -747,6 +737,7 @@ SIDE - 买卖方向
 
         卖
 
+
 POSITION_EFFECT - 开平
 ------------------------------------------------------
 
@@ -759,6 +750,33 @@ POSITION_EFFECT - 开平
     ..  py:attribute:: CLOSE
 
         平仓
+
+    ..  py:attribute:: CLOSE_TODAY
+
+        平今
+
+    ..  py:attribute:: EXERCISE
+
+        行权
+
+    ..  py:attribute:: MATCH
+
+        轧差
+
+
+RIGHT_TYPE - 权利类型
+------------------------------------------------------
+
+.. py:class:: RIGHT_TYPE
+
+    ..  py:attribute:: CONVERT
+
+        转股
+
+    ..  py:attribute:: SELL_BACK
+
+        回售
+
 
 ORDER_TYPE - 订单类型
 ------------------------------------------------------
@@ -773,6 +791,33 @@ ORDER_TYPE - 订单类型
 
         限价单
 
+
+ORDER_STATUS - 订单状态
+------------------------------------------------------
+
+..  py:class:: ORDER_STATUS
+
+    ..  py:attribute:: PENDING_NEW
+
+        待报
+
+    ..  py:attribute:: ACTIVE
+
+        已报
+
+    ..  py:attribute:: FILLED
+
+        全成
+
+    ..  py:attribute:: CANCELLED
+
+        已撤
+
+    ..  py:attribute:: REJECTED
+
+        拒单
+
+
 RUN_TYPE - 策略运行类型
 ------------------------------------------------------
 
@@ -786,15 +831,42 @@ RUN_TYPE - 策略运行类型
 
         实盘模拟
 
-MATCHING_TYPE - 撮合方式
+
+EVENT - 事件类型
 ------------------------------------------------------
 
-..  py:class:: MATCHING_TYPE
+..  module::  rqalpha.events
 
-    ..  py:attribute:: CURRENT_BAR_CLOSE
+.. py:class::  EVENT
 
-        以当前bar收盘价撮合
+    ..  py:attribute:: ORDER_PENDING_NEW
 
-    ..  py:attribute:: NEXT_BAR_OPEN
+        订单创建成功
 
-        以下一bar数据开盘价撮合
+    ..  py:attribute:: ORDER_CREATION_PASS
+
+        订单已报
+
+    ..  py:attribute:: ORDER_CREATION_REJECT
+
+        订单创建被拒
+
+    ..  py:attribute:: ORDER_PENDING_CANCEL
+
+        订单待撤
+
+    ..  py:attribute:: ORDER_CANCELLATION_PASS
+
+        订单撤单成功
+
+    ..  py:attribute:: ORDER_CANCELLATION_REJECT
+
+        订单撤单被拒
+
+    ..  py:attribute:: ORDER_UNSOLICITED_UPDATE
+
+        订单已报被拒
+
+    ..  py:attribute:: TRADE
+
+        成交
