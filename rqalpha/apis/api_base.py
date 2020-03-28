@@ -211,7 +211,7 @@ def cancel_order(order):
     verify_that("right_type", pre_check=True).is_in(RIGHT_TYPE, ignore_none=True)
 )
 def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
-    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> None
+    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> Optional[Order]
     """
     行权。针对期权、可转债等含权合约，行使合约权利方被赋予的权利。
 
@@ -244,6 +244,7 @@ def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
     )
     if env.can_submit_order(order):
         env.broker.submit_order(order)
+        return order
 
 
 @export_as_api
