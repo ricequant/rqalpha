@@ -8,7 +8,7 @@
 ==================
 
 
-init
+init - 策略初始化
 ------------------
 
 ..  py:function:: init(context)
@@ -28,7 +28,7 @@ init
             # cash_limit的属性是根据用户需求自己定义的，你可以定义无限多种自己随后需要的属性，ricequant的系统默认只是会占用context.portfolio的关键字来调用策略的投资组合信息
             context.cash_limit = 5000
 
-handle_bar
+handle_bar - k 线数据更新
 ------------------
 
 ..  py:function:: handle_bar(context, bar_dict)
@@ -53,7 +53,7 @@ handle_bar
             order_shares('000001.XSHE', 500)
             # ...
 
-before_trading
+before_trading - 盘前
 ------------------
 
 ..  py:function:: before_trading(context)
@@ -74,7 +74,7 @@ before_trading
         def before_trading(context, bar_dict):
             logger.info("This is before trading")
 
-after_trading
+after_trading - 盘后
 ------------------
 
 ..  py:function:: after_trading(context)
@@ -87,6 +87,7 @@ after_trading
 
     :param context: 策略上下文
     :type context: :class:`~StrategyContext` object
+
 
 交易相关函数
 =================
@@ -298,25 +299,25 @@ get_future_contracts - 期货可交易合约列表
 其他方法
 ======================================================
 
-update_universe
+update_universe - 更新合约池
 ------------------------------------------------------
 
 ..  autofunction:: update_universe
 
 
-subscribe
+subscribe - 订阅合约
 ------------------------------------------------------
 
 ..  autofunction:: subscribe
 
 
-unsubscribe
+unsubscribe - 取消订阅合约
 ------------------------------------------------------
 
 ..  autofunction:: unsubscribe
 
 
-subscribe_event
+subscribe_event - 订阅事件
 ------------------------------------------------------
 
 ..  autofunction:: subscribe_event
@@ -724,7 +725,7 @@ POSITION_DIRECTION - 持仓方向
         空方向
 
 
-SIDE - 买卖方向
+SIDE - 交易方向
 ------------------------------------------------------
 
 ..  py:class:: SIDE
@@ -738,7 +739,7 @@ SIDE - 买卖方向
         卖
 
 
-POSITION_EFFECT - 开平
+POSITION_EFFECT - 交易动作
 ------------------------------------------------------
 
 ..  py:class:: POSITION_EFFECT
