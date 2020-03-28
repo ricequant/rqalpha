@@ -72,14 +72,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             order_api,  # type: OrderApiType
             position_proxy_cls=None  # type: Optional[PositionProxyType]
     ):
-        """
-        注册新的合约类型，需在 Portfolio 被实例化前调用
-        instrument_type: 合约类型
-        upper_account_type: 该合约所属的持仓归属的账户类型
-        position_cls: 该合约的持仓类
-        order_api: 该合约使用的智能下单函数
-        position_proxy_cls: 该合约持仓的 Proxy 类，服务于 portfolio.positions 和 account.positions, 非必须
-        """
         cls._account_types[instrument_type] = upper_account_type
         cls._order_apis[instrument_type] = order_api
         Account.register_position_type(instrument_type, position_cls)

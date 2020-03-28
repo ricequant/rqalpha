@@ -526,7 +526,7 @@ RunInfo - 策略运行信息
     :members:
 
 
-Bar
+Bar - k 线行情
 ------------------------------------------------------
 ..  module:: rqalpha.model.bar
 
@@ -535,7 +535,8 @@ Bar
     :show-inheritance:
     :inherited-members:
 
-Tick
+
+Tick - 快照行情
 ------------------------------------------------------
 ..  module:: rqalpha.model.tick
 
@@ -544,7 +545,8 @@ Tick
     :show-inheritance:
     :inherited-members:
 
-Order
+
+Order - 订单
 ------------------------------------------------------
 ..  module:: rqalpha.model.order
 
@@ -553,33 +555,27 @@ Order
     :show-inheritance:
     :inherited-members:
 
-Portfolio
+
+Portfolio - 投资组合
 ------------------------------------------------------
 
-.. module:: rqalpha.model.portfolio
+.. module:: rqalpha.portfolio
 
 .. autoclass:: Portfolio
     :members:
     :show-inheritance:
     :inherited-members:
 
-StockAccount
+
+Account - 账户
 ------------------------------------------------------
 
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.account_model.stock_account
+.. module:: rqalpha.portfolio.account
 
-.. autoclass:: StockAccount
+.. autoclass:: Account
     :members:
     :inherited-members:
 
-FutureAccount
-------------------------------------------------------
-
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.account_model.future_account
-
-.. autoclass:: FutureAccount
-    :members:
-    :inherited-members:
 
 StockPosition
 ------------------------------------------------------

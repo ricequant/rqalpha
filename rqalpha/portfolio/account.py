@@ -161,10 +161,22 @@ class Account(AbstractAccount):
 
     def get_positions(self):
         # type: () -> Iterable[BasePosition]
+        """
+        获取所有持仓对象列表，
+        返回 Position 对象的列表，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
+        """
         return self._iter_pos()
 
     def get_position(self, order_book_id, direction):
         # type: (str, POSITION_DIRECTION) -> BasePosition
+        """
+        获取某个标的的持仓对象，
+        返回 Position 对象，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
+
+        :param order_book_id: 标的编号
+        :param direction: 持仓方向
+
+        """
         try:
             return self._positions[order_book_id][direction]
         except KeyError:
@@ -186,23 +198,23 @@ class Account(AbstractAccount):
 
     @property
     def frozen_cash(self):
+        # type: () -> float
         """
-        [float] 冻结资金
+        冻结资金
         """
         return self._frozen_cash
 
     @property
     def cash(self):
+        # type: () -> float
         """
-        [float] 可用资金
-
-        可用资金 = 总资金 - 冻结资金
-
+        可用资金
         """
         return self._total_cash - self.margin - self._frozen_cash
 
     @property
     def market_value(self):
+        # type: () -> float
         """
         [float] 市值
         """
@@ -210,72 +222,81 @@ class Account(AbstractAccount):
 
     @property
     def transaction_cost(self):
+        # type: () -> float
         """
-        [float] 总费用
+        总费用
         """
         return sum(p.transaction_cost for p in self._iter_pos())
 
     @property
     def margin(self):
+        # type: () -> float
         """
-        [float] 总保证金
+        总保证金
         """
         return sum(p.margin for p in self._iter_pos())
 
     @property
     def buy_margin(self):
         # type: () -> float
-        # 多方向保证金
+        """
+        多方向保证金
+        """
         return sum(p.margin for p in self._iter_pos(POSITION_DIRECTION.LONG))
 
     @property
     def sell_margin(self):
         # type: () -> float
-        # [float] 空方向保证金
+        """
+        空方向保证金
+        """
         return sum(p.margin for p in self._iter_pos(POSITION_DIRECTION.SHORT))
 
     @property
     def daily_pnl(self):
+        # type: () -> float
         """
-        [float] 当日盈亏
+        当日盈亏
         """
         return self.trading_pnl + self.position_pnl - self.transaction_cost
 
     @property
     def equity(self):
+        # type: () -> float
+        """
+        总权益
+        """
         return sum(p.equity for p in self._iter_pos())
 
     @property
     def total_value(self):
+        # type: () -> float
         """
-        [float] 账户总权益
-
-        期货账户总权益 = 期货昨日总权益 + 当日盈亏
-
+        账户总权益
         """
         return self._total_cash + self.equity
 
     @property
     def total_cash(self):
+        # type: () -> float
         """
-        [float] 账户总资金
-
-        期货账户总资金会受保证金变化的影响变化，期货账户总资金 = 总权益 - 保证金
-
+        账户总资金
         """
         return self._total_cash - self.margin
 
     @property
     def position_pnl(self):
+        # type: () -> float
         """
-        [float] 昨仓盈亏
+        昨仓盈亏
         """
         return sum(p.position_pnl for p in self._iter_pos())
 
     @property
     def trading_pnl(self):
+        # type: () -> float
         """
-        [float] 交易盈亏
+        交易盈亏
         """
         return sum(p.trading_pnl for p in self._iter_pos())
 
