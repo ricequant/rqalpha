@@ -212,6 +212,22 @@ def cancel_order(order):
 )
 def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
     # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> None
+    """
+    行权。针对期权、可转债等含权合约，行使合约权利方被赋予的权利。
+
+    :param id_or_ins: 行权合约，order_book_id 或 Instrument 对象
+    :param amount: 参与行权的合约数量
+    :param right_type: 权利类型，对于含有多种权利的合约（如可转债），选择行使何种权利
+
+    :example:
+
+    .. code-block:: python
+
+        # 行使一张豆粕1905购2350的权力
+        exercise("M1905C2350", 1)
+
+    """
+
     amount = int(amount)
     if amount <= 0:
         user_system_log.warn(_(u"Order Creation Failed: Order amount should be positive."))
