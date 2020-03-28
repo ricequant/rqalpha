@@ -4,7 +4,7 @@
 基础 API
 ==================
 
-基本方法
+策略实现的函数
 ==================
 
 
@@ -92,7 +92,6 @@ after_trading
 =================
 
 ..  module:: rqalpha.api
-    :synopsis: API
 
 submit_order - 自由参数下单「通用」
 ------------------------------------------------------
@@ -180,6 +179,141 @@ get_open_orders - 获取未成交订单数据
 
 ..  autofunction:: get_open_orders
 
+
+持仓查询函数
+======================================================
+
+get_position - 获取持仓对象
+------------------------------------------------------
+
+.. autofunction:: get_position
+
+
+get_positions - 获取全部持仓对象
+------------------------------------------------------
+
+.. autofunction:: get_positions
+
+
+数据查询相关函数
+======================================================
+
+
+all_instruments - 所有合约基础信息
+------------------------------------------------------
+
+..  autofunction:: all_instruments
+
+
+instruments - 合约详细信息
+------------------------------------------------------
+
+..  autofunction:: instruments
+
+
+history_bars - 某一合约历史数据
+------------------------------------------------------
+
+..  autofunction:: history_bars
+
+
+current_snapshot - 当前快照数据
+------------------------------------------------------
+
+..  autofunction:: current_snapshot(order_book_id)
+
+
+get_trading_dates - 交易日列表
+------------------------------------------------------
+
+..  autofunction:: get_trading_dates(start_date, end_date)
+
+
+get_previous_trading_date - 上一交易日
+------------------------------------------------------
+
+..  autofunction:: get_previous_trading_date(date)
+
+
+get_next_trading_date - 下一交易日
+------------------------------------------------------
+
+..  autofunction:: get_next_trading_date(date)
+
+
+get_yield_curve - 收益率曲线
+------------------------------------------------------
+
+..  autofunction:: get_yield_curve(date=None, tenor=None)
+
+
+industry - 行业股票列表
+------------------------------------------------------
+
+.. autofunction:: industry
+
+
+sector - 板块股票列表
+------------------------------------------------------
+
+.. autofunction:: sector
+
+
+get_dividend - 获取分红数据
+------------------------------------------------------
+
+..  autofunction:: get_dividend
+
+
+is_suspended - 全天停牌判断
+------------------------------------------------------
+
+.. autofunction:: is_suspended(order_book_id)
+
+
+is_st_stock - ST股判断
+------------------------------------------------------
+
+.. autofunction:: is_st_stock(order_book_id)
+
+
+get_future_contracts - 期货可交易合约列表
+------------------------------------------------------
+
+..  autofunction:: get_future_contracts(underlying_symbol)
+
+
+其他方法
+======================================================
+
+update_universe
+------------------------------------------------------
+
+..  autofunction:: update_universe(id_or_ins)
+
+
+subscribe
+------------------------------------------------------
+
+..  autofunction:: subscribe(id_or_ins)
+
+
+unsubscribe
+------------------------------------------------------
+
+..  autofunction:: unsubscribe(id_or_ins)
+
+
+subscribe_event
+------------------------------------------------------
+
+..  autofunction:: subscribe_event(event_type, handler)
+
+
+plot - 画图
+------------------------------------------------------
+
+..  autofunction:: plot(series_name, value)
 
 
 scheduler定时器
@@ -301,6 +435,7 @@ scheduler.run_monthly - 每月运行
             # 每月的第一个交易日查询以下财务数据，以确保可以拿到最新更新的财务数据信息用来调整仓位
             scheduler.run_monthly(query_fundamental, tradingday=1)
 
+
 time_rule - 定时间运行
 ------------------------------------------------------
 
@@ -358,121 +493,6 @@ time_rule - 定时间运行
             :linenos:
 
             scheduler.run_daily(function, time_rule='before_trading')
-
-数据查询相关函数
-======================================================
-
-
-all_instruments - 所有合约基础信息
-------------------------------------------------------
-
-..  autofunction:: all_instruments
-
-
-instruments - 合约详细信息
-------------------------------------------------------
-
-..  autofunction:: instruments
-
-
-industry - 行业股票列表
-------------------------------------------------------
-
-.. autofunction:: industry
-
-sector - 板块股票列表
-------------------------------------------------------
-
-.. autofunction:: sector
-
-
-history_bars - 某一合约历史数据
-------------------------------------------------------
-
-..  autofunction:: history_bars
-
-
-current_snapshot - 当前快照数据
-------------------------------------------------------
-
-..  autofunction:: current_snapshot(order_book_id)
-
-
-get_future_contracts - 期货可交易合约列表
-------------------------------------------------------
-
-..  autofunction:: get_future_contracts(underlying_symbol)
-
-
-get_trading_dates - 交易日列表
-------------------------------------------------------
-
-..  autofunction:: get_trading_dates(start_date, end_date)
-
-
-get_previous_trading_date - 上一交易日
-------------------------------------------------------
-
-..  autofunction:: get_previous_trading_date(date)
-
-
-get_next_trading_date - 下一交易日
-------------------------------------------------------
-
-..  autofunction:: get_next_trading_date(date)
-
-get_dividend - 获取分红数据
-------------------------------------------------------
-
-..  autofunction:: get_dividend
-
-plot - 画图
-------------------------------------------------------
-
-..  autofunction:: plot(series_name, value)
-
-
-get_yield_curve - 收益率曲线
-------------------------------------------------------
-
-..  autofunction:: get_yield_curve(date=None, tenor=None)
-
-
-is_suspended - 全天停牌判断
-------------------------------------------------------
-
-.. autofunction:: is_suspended(order_book_id)
-
-is_st_stock - ST股判断
-------------------------------------------------------
-
-.. autofunction:: is_st_stock(order_book_id)
-
-其他方法
-======================================================
-
-update_universe
-------------------------------------------------------
-
-..  autofunction:: update_universe(id_or_ins)
-
-
-subscribe
-------------------------------------------------------
-
-..  autofunction:: subscribe(id_or_ins)
-
-
-unsubscribe
-------------------------------------------------------
-
-..  autofunction:: unsubscribe(id_or_ins)
-
-
-subscribe_event
-------------------------------------------------------
-
-..  autofunction:: subscribe_event(event_type, handler)
 
 
 Context属性

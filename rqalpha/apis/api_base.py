@@ -38,17 +38,11 @@ from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.tick import TickObject
 from rqalpha.const import (
-    EXECUTION_PHASE,
-    ORDER_STATUS,
-    SIDE,
-    POSITION_EFFECT,
-    ORDER_TYPE,
-    MATCHING_TYPE,
-    RUN_TYPE,
-    POSITION_DIRECTION,
+    EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
 )
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.events import EVENT
+from rqalpha.interface import AbstractPosition
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
@@ -848,10 +842,10 @@ def current_snapshot(id_or_symbol):
 
 @export_as_api
 def get_positions():
+    # type: () -> List[AbstractPosition]
     """
-    获取所有持仓信息
-
-    :return: list BookingPosition
+    获取所有持仓对象列表，
+    返回 Position 对象的列表，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
 
     :example:
 
@@ -872,13 +866,13 @@ def get_positions():
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
 def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
+    # type: (str, Optional[POSITION_DIRECTION]) -> AbstractPosition
     """
-    获取某个标的的持仓信息
+    获取某个标的的持仓对象，
+    返回 Position 对象，具体对象的类型由合约品种决定，如 :class:`~StockPosition` 或 :class:`~FuturePosition` 等
 
     :param order_book_id: 标的编号
-    :param direction: 持仓类型 “long_positions” | “short_positions” | “backward_trade_set”
-
-    :return: list BookingPosition
+    :param direction: 持仓方向
 
     :example:
 
