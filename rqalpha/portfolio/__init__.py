@@ -141,7 +141,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     @property
     def accounts(self):
-        # type: () -> Dict[DEFAULT_ACCOUNT_TYPE, AbstractAccount]
+        # type: () -> Dict[DEFAULT_ACCOUNT_TYPE, Account]
         """
         账户字典
         """

@@ -217,7 +217,7 @@ instruments - 合约详细信息
 ..  autofunction:: instruments
 
 
-history_bars - 某一合约历史数据
+history_bars - 某一合约历史 bar 数据
 ------------------------------------------------------
 
 ..  autofunction:: history_bars
@@ -245,6 +245,12 @@ get_next_trading_date - 下一交易日
 ------------------------------------------------------
 
 ..  autofunction:: get_next_trading_date(date)
+
+
+history_ticks - 指定合约的历史 tick 数据
+------------------------------------------------------
+
+.. autofunction:: history_ticks
 
 
 get_yield_curve - 收益率曲线
@@ -501,19 +507,24 @@ time_rule - 定时间运行
             scheduler.run_daily(function, time_rule='before_trading')
 
 
-Context属性
-=================
+类
+======================================================
+
+Context - 策略上下文
+------------------------------------------------------
 
 ..  module:: rqalpha.core.strategy_context
-
-..  autoclass:: RunInfo
-    :members:
 
 ..  autoclass:: StrategyContext
     :members:
 
-类
-======================================================
+
+RunInfo - 策略运行信息
+------------------------------------------------------
+
+..  autoclass:: RunInfo
+    :members:
+
 
 Bar
 ------------------------------------------------------

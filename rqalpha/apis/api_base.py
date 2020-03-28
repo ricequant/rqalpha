@@ -436,7 +436,7 @@ def history_bars(
 ):
     # type: (str, int, str, Optional[str], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
     """
-    获取指定合约的历史行情，同时支持日以及分钟历史数据。不能在init中调用。
+    获取指定合约的历史 k 线行情，同时支持日以及分钟历史数据。不能在init中调用。
 
     日回测获取分钟历史数据：不支持
 
@@ -555,6 +555,14 @@ def history_bars(
     verify_that('count').is_instance_of(int).is_greater_than(0)
 )
 def history_ticks(order_book_id, count):
+    # type: (str, int) -> List[TickObject]
+    """
+    获取指定合约历史 tick 对象，仅支持在 tick 级别的策略（回测、模拟交易、实盘）中调用
+
+    :param order_book_id: 合约代码
+    :param count: 获取的 tick 数量
+
+    """
     env = Environment.get_instance()
     sys_frequency = env.config.base.frequency
     if sys_frequency == "1d":

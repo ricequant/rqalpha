@@ -16,12 +16,14 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import Any, Union, Optional, Iterable, Dict
+from datetime import datetime
+from typing import Any, Union, Optional, Iterable, Dict, List
 
 import numpy
 from six import with_metaclass
 import pandas
 
+from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
 from rqalpha.model.instrument import Instrument
 from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE
@@ -401,17 +403,13 @@ class AbstractDataSource(object):
         raise NotImplementedError
 
     def history_ticks(self, instrument, count, dt):
+        # type: (Instrument, int, datetime) -> List[TickObject]
         """
-        获取历史tick数据
+        获取指定合约历史 tick 对象
 
         :param instrument: 合约对象
-        :type instrument: :class:`~Instrument`
-
-        :param int count: 获取的历史数据数量
-
-        :param datetime.datetime dt: 时间
-
-        :return: list of `Tick`
+        :param int count: 获取的 tick 数量
+        :param dt: 时间
 
         """
         raise NotImplementedError
