@@ -289,31 +289,31 @@ get_future_contracts - 期货可交易合约列表
 update_universe
 ------------------------------------------------------
 
-..  autofunction:: update_universe(id_or_ins)
+..  autofunction:: update_universe
 
 
 subscribe
 ------------------------------------------------------
 
-..  autofunction:: subscribe(id_or_ins)
+..  autofunction:: subscribe
 
 
 unsubscribe
 ------------------------------------------------------
 
-..  autofunction:: unsubscribe(id_or_ins)
+..  autofunction:: unsubscribe
 
 
 subscribe_event
 ------------------------------------------------------
 
-..  autofunction:: subscribe_event(event_type, handler)
+..  autofunction:: subscribe_event
 
 
 plot - 画图
 ------------------------------------------------------
 
-..  autofunction:: plot(series_name, value)
+..  autofunction:: plot
 
 
 scheduler定时器
