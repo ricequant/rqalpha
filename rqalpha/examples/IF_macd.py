@@ -30,7 +30,7 @@ def handle_bar(context, bar_dict):
 
     # macd 是长短均线的差值，signal是macd的均线，如果短均线从下往上突破长均线，为入场信号，进行买入开仓操作
     if macd[-1] - signal[-1] > 0 and macd[-2] - signal[-2] < 0:
-        sell_qty = context.portfolio.positions[context.s1].sell_quantity
+        sell_qty = get_position(context.s1, POSITION_DIRECTION.SHORT).quantity
         # 先判断当前卖方仓位，如果有，则进行平仓操作
         if sell_qty > 0:
             buy_close(context.s1, 1)
@@ -38,7 +38,7 @@ def handle_bar(context, bar_dict):
         buy_open(context.s1, 1)
 
     if macd[-1] - signal[-1] < 0 and macd[-2] - signal[-2] > 0:
-        buy_qty = context.portfolio.positions[context.s1].buy_quantity
+        buy_qty = get_position(context.s1, POSITION_DIRECTION.LONG).quantity
         # 先判断当前买方仓位，如果有，则进行平仓操作
         if buy_qty > 0:
             sell_close(context.s1, 1)
