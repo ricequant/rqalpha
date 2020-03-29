@@ -4,7 +4,7 @@
 基础 API
 ==================
 
-策略需实现的函数
+约定函数
 ==================
 
 
@@ -135,7 +135,7 @@ after_trading - 盘后
     :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
 
 
-交易相关函数
+交易接口
 =================
 
 ..  module:: rqalpha.api
@@ -233,7 +233,7 @@ exercise - 行权
 ..  autofunction:: exercise
 
 
-持仓查询函数
+持仓查询接口
 ======================================================
 
 get_position - 获取持仓对象
@@ -248,7 +248,7 @@ get_positions - 获取全部持仓对象
 .. autofunction:: get_positions
 
 
-数据查询相关函数
+数据查询接口
 ======================================================
 
 
@@ -342,7 +342,7 @@ get_future_contracts - 期货可交易合约列表
 ..  autofunction:: get_future_contracts(underlying_symbol)
 
 
-其他方法
+其他接口
 ======================================================
 
 update_universe - 更新合约池
