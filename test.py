@@ -57,6 +57,7 @@ def run_tests(file_path=None):
             # print(old_df.drop(result.columns[result.all()], axis=1))
             # print("+" * 10, "new test Dataframe: ", "+" * 10)
             # print(df.drop(result.columns[result.all()], axis=1))
+            print('max diff:\n', (df - old_df).abs().max())
             print(result.all())
     print(u"=" * 40)
     print(
@@ -150,10 +151,11 @@ def test_api(specific_test=None):
     # FIXME: Error msg is hard to understand @zjuguxi
     print(u"Testing API......")
 
-    from tests.api import test_strategies as test_api_strategies
-    from tests.mod import test_strategies as test_mod_strategies
+    # from tests.api import test_strategies as test_api_strategies
+    # from tests.mod import test_strategies as test_mod_strategies
+    from tests.api_tests import strategies
 
-    for strategy in test_api_strategies + test_mod_strategies:
+    for strategy in strategies:
         if specific_test and strategy["name"] != specific_test:
             continue
         print("running", strategy["name"])

@@ -1,0 +1,38 @@
+requests
+numpy >=1.11.1; python_version >= '3.4'
+numpy >=1.11.1,<=1.16.4; python_version == '2.7'
+python-dateutil >=2.5.3
+six >=1.10.0
+pytest >=2.9.2,<=4.6; python_version == '2.7'
+pytest >=2.9.2; python_version >= '3.4'
+logbook >=1.0.0
+click >=7.0
+jsonpickle ==0.9.4
+simplejson >=3.10.0
+dill ==0.2.5
+XlsxWriter >=0.9.6
+PyYAML >=3.12
+tabulate
+
+rqrisk >=0.0.9
+
+pandas >=0.18.1 ; python_version != '3.4'
+pandas >=0.18.1,<=0.22.0 ; python_version == '3.4'
+
+h5py
+
+matplotlib >=1.5.1 ; python_version >= '3.6'
+matplotlib >=1.5.1,<=3.0.3 ; python_version == '3.5'
+matplotlib >=1.5.1,<=2.2.3 ; python_version <= '3.4'
+
+ipython ==6.5.0 ; python_version == '3.4'
+ipython ==5.3.0 ; python_version == '2.7'
+
+line-profiler >=2.0
+
+enum34 >=1.1.6 ; python_version == '2.7'
+fastcache >=1.0.2 ; python_version == '2.7'
+funcsigs ; python_version == '2.7'
+backports.tempfile ; python_version == '2.7'
+mock ; python_version == '2.7'
+typing; python_version <= '3.4'

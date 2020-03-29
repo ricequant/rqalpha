@@ -27,10 +27,6 @@ FIELDS_REQUIRE_ADJUSTMENT = set(list(PRICE_FIELDS) + ['volume'])
 
 
 def _factor_for_date(dates, factors, d):
-    if d < dates[0]:
-        return 1
-    if d > dates[-1]:
-        return factors[-1]
     pos = bisect_right(dates, d)
     return factors[pos-1]
 

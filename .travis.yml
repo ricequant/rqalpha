@@ -7,10 +7,9 @@ branches:
     - master
 matrix:
   include:
-    - python: 2.7
-    - python: 3.5
     - python: 3.6
     - python: 3.7
+    - python: 3.8
       dist: xenial
       sudo: true
 
@@ -24,22 +23,17 @@ install:
   - sudo make install
   - cd ..
 
-  # Install bcolz
-  - pip install Cython
-  - pip install bcolz==1.2.0
-
   # Install Test Deps
   - pip install TA-Lib
   - pip install coveralls
   - pip install -U setuptools
-  - pip install git+https://github.com/ricequant/funcat.git
   - pip install git+https://github.com/rkern/line_profiler.git
   - pip install ipython==5.3.0
   - pip install .
 script:
   - ls -al $HOME/.rqalpha/
   - ls -al $HOME/.rqalpha/bundle/
-  - rqalpha update-bundle
+  - rqalpha download-bundle
   - coverage run --source=rqalpha test.py
 cache:
   directories:

@@ -27,7 +27,7 @@ def generate_report(result_dict, target_report_csv_path):
     except:
         pass
 
-    xlsx_writer = pd.ExcelWriter(os.path.join(output_path, "report.xlsx"), engine='xlsxwriter')
+    xlsx_writer = pd.ExcelWriter(os.path.join(output_path, "report.xls"))
 
     # summary.csv
     csv_txt = StringIO()

@@ -72,6 +72,11 @@ class EVENT(Enum):
     # post_before_trading()
     POST_BEFORE_TRADING = 'post_before_trading'
 
+    # 集合竞价事件
+    PRE_OPEN_AUCTION = "pre_open_oction"
+    OPEN_AUCTION = "auction"
+    POST_OPEN_AUCTION = "post_open_auction"
+
     # 执行handle_bar函数前触发
     # pre_bar()
     PRE_BAR = 'pre_bar'
@@ -155,6 +160,11 @@ class EVENT(Enum):
 
     # 心跳事件，用于触发定时任务
     HEARTBEAT = 'heartbeat'
+
+    # 在策略运行前
+    BEFORE_STRATEGY_RUN = 'before_strategy_run'
+    # 在策略成功运行完成后
+    POST_STRATEGY_RUN = 'post_strategy_run'
 
     # 用户事件，接受用户发送的信息
     USER = 'user'

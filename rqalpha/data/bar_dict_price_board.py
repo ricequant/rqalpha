@@ -16,24 +16,27 @@ import numpy as np
 
 from rqalpha.interface import AbstractPriceBoard
 from rqalpha.environment import Environment
+from rqalpha.execution_context import ExecutionContext
+from rqalpha.const import EXECUTION_PHASE
 
 
 class BarDictPriceBoard(AbstractPriceBoard):
     def __init__(self):
         self._env = Environment.get_instance()
 
-    @property
-    def _bar_dict(self):
-        return self._env.bar_dict
+    def _get_bar(self, order_book_id):
+        if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
+            return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt)
+        return self._env.get_bar(order_book_id)
 
     def get_last_price(self, order_book_id):
-        return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].last
+        return self._get_bar(order_book_id).last
 
     def get_limit_up(self, order_book_id):
-        return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].limit_up
+        return self._get_bar(order_book_id).limit_up
 
     def get_limit_down(self, order_book_id):
-        return np.nan if self._bar_dict.dt is None else self._bar_dict[order_book_id].limit_down
+        return self._get_bar(order_book_id).limit_down
 
     def get_a1(self, order_book_id):
         return np.nan

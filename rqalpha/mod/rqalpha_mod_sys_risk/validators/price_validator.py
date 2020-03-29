@@ -14,7 +14,7 @@
 
 
 from rqalpha.interface import AbstractFrontendValidator
-from rqalpha.const import ORDER_TYPE
+from rqalpha.const import ORDER_TYPE, POSITION_EFFECT
 from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
@@ -25,7 +25,7 @@ class PriceValidator(AbstractFrontendValidator):
         self._env = env
 
     def can_submit_order(self, order, account=None):
-        if order.type != ORDER_TYPE.LIMIT:
+        if (order.type != ORDER_TYPE.LIMIT) or (order.position_effect == POSITION_EFFECT.EXERCISE):
             return True
 
         # FIXME: it may be better to round price in data source

@@ -39,6 +39,8 @@ base:
   round_price: false
   # 用户自定义的期货合约数据，用于设置期货手续菲费率
   future_info: {}
+  # 强平
+  forced_liquidation: true
 
 
 extra:

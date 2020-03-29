@@ -14,17 +14,22 @@
 
 from __future__ import division
 import pprint
+import os
 import re
 import six
 import collections
 from decimal import getcontext, ROUND_FLOOR
 from datetime import time
+from typing import Optional
 
 from contextlib import contextmanager
 import numpy as np
 
 from rqalpha.utils.exception import CustomError, CustomException
-from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN
+from rqalpha.const import (
+    EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, SIDE, POSITION_EFFECT,
+    POSITION_DIRECTION
+)
 from rqalpha.utils.datetime_func import TimeRange
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.py2 import lru_cache
@@ -80,47 +85,11 @@ class RqAttrDict(object):
         return result_dict
 
 
-def dummy_func(*args, **kwargs):
-    return None
-
-
 def id_gen(start=1):
     i = start
     while True:
         yield i
         i += 1
-
-
-class Nop(object):
-    def __init__(self):
-        pass
-
-    def nop(*args, **kw):
-        pass
-
-    def __getattr__(self, _):
-        return self.nop
-
-
-def to_sector_name(s):
-    from rqalpha.model.instrument import SectorCode, SectorCodeItem
-
-    for __, v in six.iteritems(SectorCode.__dict__):
-        if isinstance(v, SectorCodeItem):
-            if v.cn == s or v.en == s or v.name == s:
-                return v.name
-    # not found
-    return s
-
-
-def to_industry_code(s):
-    from rqalpha.model.instrument import IndustryCode, IndustryCodeItem
-
-    for __, v in six.iteritems(IndustryCode.__dict__):
-        if isinstance(v, IndustryCodeItem):
-            if v.name == s:
-                return v.code
-    return s
 
 
 def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):
@@ -154,19 +123,6 @@ def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):
 
     user_exc = CustomException(error)
     return user_exc
-
-
-def run_when_strategy_not_hold(func):
-    from rqalpha.environment import Environment
-    from rqalpha.utils.logger import system_log
-
-    def wrapper(*args, **kwargs):
-        if not Environment.get_instance().config.extra.is_hold:
-            return func(*args, **kwargs)
-        else:
-            system_log.debug(_(u"not run {}({}, {}) because strategy is hold").format(func, args, kwargs))
-
-    return wrapper
 
 
 def merge_dicts(*dict_args):
@@ -228,19 +184,6 @@ def is_trading(dt, trading_period):
     return False
 
 
-@contextmanager
-def run_with_user_log_disabled(disabled=True):
-    from rqalpha.utils.logger import user_log
-
-    if disabled:
-        user_log.disable()
-    try:
-        yield
-    finally:
-        if disabled:
-            user_log.enable()
-
-
 def unwrapper(func):
     f2 = func
     while True:
@@ -263,12 +206,39 @@ def is_valid_price(price):
     return not (price is None or np.isnan(price) or price <= 0)
 
 
+def get_position_direction(side, position_effect):
+    # type: (SIDE, Optional[POSITION_EFFECT]) -> Optional[POSITION_DIRECTION]
+    if position_effect is None:
+        return POSITION_DIRECTION.LONG
+    if (side == SIDE.BUY and position_effect == POSITION_EFFECT.OPEN) or (side == SIDE.SELL and position_effect in (
+            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
+    )):
+        return POSITION_DIRECTION.LONG
+    return POSITION_DIRECTION.SHORT
+
+
 @contextmanager
 def decimal_rounding_floor():
     original_rounding_option = getcontext().rounding
     getcontext().rounding = ROUND_FLOOR
     yield
     getcontext().rounding = original_rounding_option
+
+
+RQDATAC_DEFAULT_ADDRESS = "rqdatad-pro.ricequant.com:16011"
+
+
+def init_rqdatac_env(uri):
+    if uri is None:
+        return
+
+    if '@' not in uri:
+        uri = "tcp://{}@{}".format(uri, RQDATAC_DEFAULT_ADDRESS)
+
+    if not re.match(r"\w*://.+:.+@.+:\d+", uri):
+        raise ValueError('invalid rqdatac uri. use user:password or tcp://user:password@ip:port')
+
+    os.environ['RQDATAC2_CONF'] = uri
 
 
 # -------------- deprecated --------------
@@ -278,18 +248,3 @@ def get_trading_period(universe, accounts):
     from rqalpha.environment import Environment
     trading_period = STOCK_TRADING_PERIOD if DEFAULT_ACCOUNT_TYPE.STOCK in accounts else []
     return Environment.get_instance().data_proxy.get_trading_period(universe, trading_period)
-
-
-def get_account_type_enum(order_book_id):
-    from rqalpha.environment import Environment
-    return Environment.get_instance().get_account_type(order_book_id)
-
-
-get_account_type = get_account_type_enum
-
-
-def instrument_type_str2enum(type_str):
-    try:
-        return INSTRUMENT_TYPE[type_str]
-    except KeyError:
-        raise NotImplementedError

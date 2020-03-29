@@ -28,17 +28,7 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
 
         self.env = Environment.get_instance()
 
-    def _get_public_fund_commission(self, order_book_id, side, cost_money):
-        if side == SIDE.BUY:
-            rate = self.env.data_proxy.public_fund_commission(order_book_id, True)
-            rate = rate / (1 + rate)
-        else:
-            rate = self.env.data_proxy.public_fund_commission(order_book_id, False)
-        return cost_money * rate * self.commission_multiplier
-
     def _get_order_commission(self, order_book_id, side, price, quantity):
-        if self.env.data_proxy.instruments(order_book_id).type == 'PublicFund':
-            return self._get_public_fund_commission(order_book_id, side, price * quantity)
         commission = price * quantity * self.commission_rate * self.commission_multiplier
         return max(commission, self.min_commission)
 
@@ -58,8 +48,6 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
             4.2 如果commission 不等于 min_commission， 说明不是第一笔trade, 之前的trade中min_commission已经收过了，所以返回0.
         """
         order_id = trade.order_id
-        if self.env.data_proxy.instruments(trade.order_book_id).type == 'PublicFund':
-            return self._get_public_fund_commission(trade.order_book_id, trade.side, trade.last_price * trade.last_quantity)
         commission = self.commission_map[order_id]
         cost_commission = trade.last_price * trade.last_quantity * self.commission_rate * self.commission_multiplier
         if cost_commission > commission:

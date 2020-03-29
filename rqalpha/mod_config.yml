@@ -14,10 +14,7 @@ mod:
     enabled: true
   sys_analyser:
     enabled: true
-  # 技术分析API
-  sys_funcat:
-    enabled: false
-  sys_transaction_cost:
+  sys_scheduler:
     enabled: true
-  sys_benchmark:
+  sys_transaction_cost:
     enabled: true

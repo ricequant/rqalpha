@@ -61,7 +61,7 @@ def handle_bar(context, bar_dict):
     else:
         context.max_add = bar_dict[context.s].last
 
-    cur_position = context.portfolio.positions[context.s].quantity
+    cur_position = get_position(context.s).quantity
     available_cash = context.portfolio.cash
     market_value = context.portfolio.market_value
 

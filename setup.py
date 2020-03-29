@@ -11,31 +11,60 @@
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from os.path import dirname, join
-
+import sys
 from setuptools import find_packages, setup
+import versioneer
 
+requirements = [
+    'requests',
+    'numpy',
+    'pandas',
+    'python-dateutil',
+    'six',
+    'logbook',
+    'click',
+    'jsonpickle',
+    'simplejson',
+    'XlsxWriter',
+    'PyYAML',
+    'tabulate',
+    'rqrisk',
+    'h5py',
+    'matplotlib',
+    'xlwt',
+]
 
-def read_file(file):
-    with open(file, "rt") as f:
-        return f.read()
+if sys.version_info < (3, 5):
+    requirements.append('typing')
 
-
-with open(join(dirname(__file__), 'rqalpha/VERSION.txt'), 'rb') as f:
-    version = f.read().decode('ascii').strip()
-
+if sys.version_info.major == 2 and sys.version_info.minor == 7:
+    requirements.extend([
+        "enum34",
+        "fastcache",
+        "funcsigs",
+        "backports.tempfile",
+    ])
 
 setup(
     name='rqalpha',
-    version=version,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description='Ricequant Algorithm Trading System',
     packages=find_packages(exclude=[]),
     author='ricequant',
     author_email='public@ricequant.com',
     license='Apache License v2',
-    package_data={'': ['*.*']},
+    include_package_date=True,
+    package_data={
+        'rqalpha': ['*.yml',
+                    'examples/*.*', 'examples/data_source/*.*', 'examples/extend_api/*.*',
+                    'resource/*.*', 'utils/translations/zh_Hans_CN/LC_MESSAGES/*'],
+    },
     url='https://github.com/ricequant/rqalpha',
-    install_requires=read_file("requirements.txt").strip(),
+    install_requires=requirements,
+    extra_requires={
+        'profiler': ["line_profiler"],
+    },
     zip_safe=False,
     entry_points={
         "console_scripts": [
@@ -44,11 +73,9 @@ setup(
     },
     classifiers=[
         'Programming Language :: Python',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: Unix',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
+        'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 )

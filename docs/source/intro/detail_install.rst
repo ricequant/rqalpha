@@ -1,11 +1,8 @@
 .. _intro-detail-install:
 
 ==================
-环境搭建
+Anaconda 虚拟环境搭建
 ==================
-
-Anaconda
-====================================
 
 Anaconda 是一个用于科学计算的 Python 发行版，支持 Linux, Mac, Windows, 包含了众多流行的科学计算、数据分析的 Python 包。
 
@@ -29,13 +26,14 @@ For GNU/Linux
 .. code-block:: bash
 
     # 首先从 Anaconda 官网下载 anaconda Linux 64Bit 版本命令行安装包
-    $ wget https://repo.continuum.io/archive/Anaconda3-4.2.0-Linux-x86_64.sh
+
+    $ wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
 
     # 修改权限让脚本可以运行
-    $ chmod +x Anaconda3-4.2.0-Linux-x86_64.sh
+    $ chmod +x Anaconda3-2020.02-Linux-x86_64.sh
 
     # 运行该安装脚本
-    $ ./Anaconda3-4.2.0-Linux-x86_64.sh
+    $ ./Anaconda3-2020.02-Linux-x86_64.sh
 
     # 剩下就是一路Yes或者Enter好了...
 
@@ -94,10 +92,10 @@ conda 虚拟环境
 .. code-block:: bash
 
     # 创建 conda 虚拟环境（ :code:`env_name` 是您希望创建的虚拟环境名）
-    $ conda create --name env_name python=3.5
+    $ conda create --name env_name python=3.6
 
     # 如您想创建一个名为rqalpha的虚拟环境
-    $ conda create --name rqalpha python=3.5
+    $ conda create --name rqalpha python=3.6
 
     # 使用 conda 虚拟环境
     $ source activate env_name
@@ -112,17 +110,3 @@ conda 虚拟环境
     # 删除 conda 虚拟环境
     $ conda-env remove --name env_name
 
-.. _intro-detail-install-talib:
-
-安装 TA-Lib
-====================================
-
-您可以使用PyPI安装:
-
-.. code-block:: bash
-
-    $ pip install TA-Lib
-
-如果发现无法通过 pip 安装，请访问 https://mrjbq7.github.io/ta-lib/install.html 解决。
-
-对于 Windows 用户，如果编译困难，可以根据您本地的Python版本下载指定的whl包，然后 :code:`pip install TA_Lib-0.4.9-cp27-none-win_amd64.whl` 来完成安装。

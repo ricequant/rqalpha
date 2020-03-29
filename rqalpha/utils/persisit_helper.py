@@ -16,33 +16,9 @@ import six
 import hashlib
 from collections import OrderedDict
 
-import jsonpickle
-
 from rqalpha.events import EVENT
 from rqalpha.const import PERSIST_MODE
 from rqalpha.utils.logger import system_log
-
-
-class CoreObjectsPersistProxy(object):
-    def __init__(self, scheduler):
-        self._objects = {'scheduler': scheduler}
-
-    def get_state(self):
-        result = {}
-        for key, obj in six.iteritems(self._objects):
-            state = obj.get_state()
-            if state is not None:
-                result[key] = state
-
-        return jsonpickle.dumps(result).encode('utf-8')
-
-    def set_state(self, state):
-        state = jsonpickle.loads(state.decode('utf-8'))
-        for key, value in six.iteritems(state):
-            try:
-                self._objects[key].set_state(value)
-            except KeyError:
-                system_log.warn('core object state for {} ignored'.format(key))
 
 
 class PersistHelper(object):
@@ -73,23 +49,6 @@ class PersistHelper(object):
             else:
                 self._last_state[key] = md5
 
-    def should_resume(self):
-        try:
-            return self._persist_provider.should_resume()
-        except NotImplementedError:
-            # for compatible
-            for key in six.iterkeys(self._objects):
-                if self._persist_provider.load(key):
-                    return True
-            return False
-
-    def should_run_init(self):
-        try:
-            return self._persist_provider.should_run_init()
-        except NotImplementedError:
-            # for compatible
-            return not self.should_resume()
-
     def register(self, key, obj):
         if key in self._objects:
             raise RuntimeError('duplicated persist key found: {}'.format(key))
@@ -104,14 +63,17 @@ class PersistHelper(object):
     def restore(self, event):
         key = getattr(event, "key", None)
         if key:
-            self._restore_obj(key, self._objects[key])
-        else:
-            for key, obj in six.iteritems(self._objects):
-                self._restore_obj(key, obj)
+            return self._restore_obj(key, self._objects[key])
+
+        return any(self._restore_obj(key, obj) for key, obj in six.iteritems(self._objects))
 
     def _restore_obj(self, key, obj):
         state = self._persist_provider.load(key)
         system_log.debug('restore {} with state = {}', key, state)
         if not state:
-            return
-        obj.set_state(state)
+            return False
+        try:
+            obj.set_state(state)
+        except Exception:
+            system_log.exception('restore failed: key={} state={}'.format(key, state))
+        return True

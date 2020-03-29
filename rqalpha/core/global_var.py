@@ -14,7 +14,7 @@
 
 import six
 import pickle
-from rqalpha.utils.logger import user_system_log, system_log, user_detail_log
+from rqalpha.utils.logger import user_system_log, system_log
 
 
 class GlobalVars(object):
@@ -24,7 +24,6 @@ class GlobalVars(object):
             try:
                 dict_data[key] = pickle.dumps(value)
             except Exception:
-                user_detail_log.exception("g.{} can not pickle", key)
                 user_system_log.warn("g.{} can not pickle", key)
         return pickle.dumps(dict_data)
 
@@ -35,5 +34,4 @@ class GlobalVars(object):
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore g.{} {}", key, type(self.__dict__[key]))
             except Exception:
-                user_detail_log.exception("g.{} can not restore", key)
-                user_system_log.warn("g.{} can not restore", key)
+                user_system_log.warn("g.{} restore failed", key)

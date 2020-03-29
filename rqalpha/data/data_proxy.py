@@ -4,23 +4,31 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
-#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+
+from datetime import datetime, date
+from typing import Union
 
 import six
 import numpy as np
 import pandas as pd
 
+from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
 from rqalpha.utils import risk_free_helper
 from rqalpha.data.instrument_mixin import InstrumentMixin
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
-from rqalpha.model.bar import BarObject
+from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
+from rqalpha.model.instrument import Instrument
 from rqalpha.utils.py2 import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 
@@ -34,7 +42,12 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         except AttributeError:
             pass
         InstrumentMixin.__init__(self, data_source.get_all_instruments())
-        TradingDatesMixin.__init__(self, data_source.get_trading_calendar())
+        try:
+            trading_calendars = data_source.get_trading_calendars()
+        except NotImplementedError:
+            # forward compatible
+            trading_calendars = {TRADING_CALENDAR_TYPE.EXCHANGE: data_source.get_trading_calendar()}
+        TradingDatesMixin.__init__(self, trading_calendars)
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)
@@ -58,18 +71,15 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return 0 if np.isnan(rate) else rate
 
     def get_dividend(self, order_book_id):
-        if self.instruments(order_book_id).type == 'PublicFund':
-            return self._data_source.get_dividend(order_book_id, public_fund=True)
-        return self._data_source.get_dividend(order_book_id)
+        instrument = self.instruments(order_book_id)
+        return self._data_source.get_dividend(instrument)
 
     def get_split(self, order_book_id):
-        return self._data_source.get_split(order_book_id)
+        instrument = self.instruments(order_book_id)
+        return self._data_source.get_split(instrument)
 
     def get_dividend_by_book_date(self, order_book_id, date):
-        if self.instruments(order_book_id).type == 'PublicFund':
-            table = self._data_source.get_dividend(order_book_id, public_fund=True)
-        else:
-            table = self._data_source.get_dividend(order_book_id)
+        table = self._data_source.get_dividend(self.instruments(order_book_id))
         if table is None or len(table) == 0:
             return
 
@@ -123,11 +133,24 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
             return np.nan
         return bar[0]
 
+    @lru_cache(10240)
+    def _get_settlement(self, instrument, dt):
+        bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', dt, skip_suspended=False)
+        if bar is None or len(bar) == 0:
+            raise LookupError("'{}', dt={}".format(instrument.order_book_id, dt))
+        return bar[0]
+
     def get_prev_settlement(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
-        if instrument.type != 'Future':
+        if instrument.type not in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
             return np.nan
         return self._get_prev_settlement(instrument, dt)
+
+    def get_settlement(self, instrument, dt):
+        # type: (Instrument, datetime) -> float
+        if instrument.type != INSTRUMENT_TYPE.FUTURE:
+            raise LookupError("'{}', instrument_type={}".format(instrument.order_book_id, instrument.type))
+        return self._get_settlement(instrument, dt)
 
     def get_settle_price(self, order_book_id, date):
         instrument = self.instruments(order_book_id)
@@ -135,11 +158,19 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
             return np.nan
         return self._data_source.get_settle_price(instrument, date)
 
+    @lru_cache(512)
     def get_bar(self, order_book_id, dt, frequency='1d'):
+        # type: (str, Union[datetime, date], str) -> BarObject
         instrument = self.instruments(order_book_id)
+        if dt is None:
+            return BarObject(instrument, NANDict, dt)
         bar = self._data_source.get_bar(instrument, dt, frequency)
         if bar:
             return BarObject(instrument, bar)
+        return BarObject(instrument, NANDict, dt)
+
+    def get_open_auction_bar(self, order_book_id, dt):
+        return PartialBarObject(self.current_snapshot(order_book_id, "1d", dt))
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
         data = self.history_bars(order_book_id, bar_count, frequency,
@@ -220,27 +251,10 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_st_stock(order_book_id, trading_dates)
 
-    def non_subscribable(self, order_book_id, dt, count=1):
-        if count == 1:
-            return self._data_source.non_subscribable(order_book_id, [dt])[0]
-
-        trading_dates = self.get_n_trading_dates_until(dt, count)
-        return self._data_source.non_subscribable(order_book_id, trading_dates)
-
-    def non_redeemable(self, order_book_id, dt, count=1):
-        if count == 1:
-            return self._data_source.non_redeemable(order_book_id, [dt])[0]
-
-        trading_dates = self.get_n_trading_dates_until(dt, count)
-        return self._data_source.non_redeemable(order_book_id, trading_dates)
-
-    def public_fund_commission(self, order_book_id, buy):
-        instrument = self.instruments(order_book_id)
-        return self._data_source.public_fund_commission(instrument, buy)
-
     def get_tick_size(self, order_book_id):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_tick_size(instrument)
 
     def get_last_price(self, order_book_id):
+        # type: (str) -> float
         return float(self._price_board.get_last_price(order_book_id))

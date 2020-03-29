@@ -15,38 +15,24 @@
 """
 RQAlpha - a Algorithm Trading System
 """
-
-import pkgutil
-
-from rqalpha.__main__ import cli
-from rqalpha.api.api_base import export_as_api, subscribe_event
+from rqalpha.cmds import cli
+from rqalpha.api import export_as_api
+from . import data
+from . import interface
+from . import portfolio
+from . import apis
 
 __all__ = [
     '__version__',
-    'version_info'
 ]
-
-__version__ = pkgutil.get_data(__package__, 'VERSION.txt').decode('ascii').strip()
-
-version_info = tuple(int(v) if v.isdigit() else v
-                     for v in __version__.split('.'))
-
-__main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
-
-del pkgutil
 
 
 def load_ipython_extension(ipython):
     """call by ipython"""
-    from rqalpha.__main__ import inject_mod_commands
+    from rqalpha.mod.utils import inject_mod_commands
     inject_mod_commands()
 
     ipython.register_magic_function(run_ipython_cell, 'line_cell', 'rqalpha')
-
-
-def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
-    import rqalpha.utils.bundle_helper
-    rqalpha.utils.bundle_helper.update_bundle(data_bundle_path=data_bundle_path, locale=locale, confirm=confirm)
 
 
 def run(config, source_code=None):
@@ -59,7 +45,7 @@ def run(config, source_code=None):
 
 
 def run_ipython_cell(line, cell=None):
-    from rqalpha.__main__ import run
+    from rqalpha.cmds.run import run
     from rqalpha.utils.py2 import clear_all_cached_functions
     clear_all_cached_functions()
     args = line.split()
@@ -114,20 +100,17 @@ def run_code(code, config=None):
 
 
 def run_func(**kwargs):
-    from rqalpha.utils import dummy_func
     from rqalpha.utils.py2 import clear_all_cached_functions
     from rqalpha.utils.config import parse_config
     from rqalpha import main
 
     config = kwargs.get('config', kwargs.get('__config__', None))
-
     user_funcs = {
-        'init': kwargs.get('init', dummy_func),
-        'handle_bar': kwargs.get('handle_bar', dummy_func),
-        'handle_tick': kwargs.get('handle_tick', dummy_func),
-        'before_trading': kwargs.get('before_trading', dummy_func),
-        'after_trading': kwargs.get('after_trading', dummy_func)
+        k: kwargs[k]
+        for k in ['init', 'handle_bar', 'handle_tick', 'open_auction', 'before_trading', 'after_trading']
+        if k in kwargs
     }
+
     if config is None:
         config = {}
     else:
@@ -139,3 +122,11 @@ def run_func(**kwargs):
     config = parse_config(config, user_funcs=user_funcs)
     clear_all_cached_functions()
     return main.run(config, user_funcs=user_funcs)
+
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
+
+version_info = tuple(int(v) if v.isdigit() else v for v in __version__.split('.'))
+__main_version__ = "%s.%s.x" % (version_info[0], version_info[1])

@@ -23,10 +23,6 @@ __config__ = {
     "validate_is_trading": True,
     # 检查可用资金是否充足
     "validate_cash": True,
-    # 检查股票可平仓位是否充足
-    "validate_stock_position": True,
-    # 检查期货可平仓位是否充足
-    "validate_future_position": True,
     # 检查是否存在自成交的风险
     "validate_self_trade": False,
 }
@@ -43,18 +39,10 @@ def load_mod():
 """
 cli_prefix = "mod__sys_risk__"
 
-cli.commands['run'].params.append(
-    click.Option(
-        ("--no-short-stock/--short-stock", "mod__sys_risk__validate_stock_position"),
-        is_flag=True, default=True,
-        help="[sys_risk] enable stock shorting"
-    )
-)
-
 
 cli.commands["run"].params.append(
     click.Option(
-        ("--cash-validation/--no-cash-validation", "mod__sys_risk__validate_cash"),
+        ("--cash-validation/--no-cash-validation", cli_prefix + "validate_cash"),
         is_flag=True, default=True,
         help="[sys_risk] enable cash validation"
     )

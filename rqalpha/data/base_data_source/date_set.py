@@ -12,7 +12,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import bcolz
+import h5py
 import numpy as np
 
 from rqalpha.utils.py2 import lru_cache
@@ -20,26 +20,19 @@ from rqalpha.utils.py2 import lru_cache
 
 class DateSet(object):
     def __init__(self, f):
-        dates = bcolz.open(f, 'r')
-        self._index = dates.attrs['line_map']
-        self._dates = dates[:]
+        self._h5 = h5py.File(f, 'r')
 
     @lru_cache(None)
-    def _get_set(self, s, e):
-        return set(self._dates[s:e].tolist())
-
     def get_days(self, order_book_id):
         try:
-            s, e = self._index[order_book_id]
+            days = self._h5[order_book_id][:]
+            return set(days.tolist())
         except KeyError:
-            return []
-
-        return self._get_set(s, e)
+            return set()
 
     def contains(self, order_book_id, dates):
-        try:
-            s, e = self._index[order_book_id]
-        except KeyError:
+        date_set = self.get_days(order_book_id)
+        if not date_set:
             return [False] * len(dates)
 
         def _to_dt_int(d):
@@ -47,7 +40,5 @@ class DateSet(object):
                 return int(d // 1000000) if d > 100000000 else int(d)
             else:
                 return d.year*10000 + d.month*100 + d.day
-
-        date_set = self._get_set(s, e)
 
         return [(_to_dt_int(d) in date_set) for d in dates]

@@ -12,90 +12,52 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import abc
 import codecs
 import pickle
 from copy import copy
+from typing import List
 
-import six
 import json
-import bcolz
+import pandas
 import numpy as np
-import pandas as pd
 
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import COMMISSION_TYPE
+from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
-from rqalpha.utils import risk_free_helper
 
 
-class DayBarStore(object):
-    def __init__(self, main, converter):
-        self._table = bcolz.open(main, 'r')
-        self._index = self._table.attrs['line_map']
-        self._converter = converter
+class AbstractInstrumentStore:
+    @abc.abstractmethod
+    def get_all_instruments(self):
+        # type: () -> List[Instrument]
+        raise NotImplementedError
 
-    @staticmethod
-    def _remove_(l, v):
-        try:
-            l.remove(v)
-        except ValueError:
-            pass
 
-    def get_bars(self, order_book_id, fields=None):
-        if fields is None:
-            # the first is date
-            fields = self._table.names[1:]
-
-        self._remove_(fields, 'datetime')
-        dtype = np.dtype([('datetime', np.uint64)] + [
-            (f, self._converter.field_type(f, self._table.cols[f].dtype)) for f in fields
-        ])
-
-        try:
-            s, e = self._index[order_book_id]
-        except KeyError:
-            six.print_(_(u"No data for {}").format(order_book_id))
-            return np.empty(0, dtype=dtype)
-
-        if len(fields) == 1:
-            return self._converter.convert(fields[0], self._table.cols[fields[0]][s:e])
-
-        result = np.empty(shape=(e - s, ), dtype=dtype)
-        for f in fields:
-            result[f] = self._converter.convert(f, self._table.cols[f][s:e])
-        result['datetime'] = self._table.cols['date'][s:e]
-        result['datetime'] *= 1000000
-
-        return result
+class AbstractDayBarStore:
+    @abc.abstractmethod
+    def get_bars(self, order_book_id):
+        # type: (str) -> np.ndarray
+        raise NotImplementedError
 
     def get_date_range(self, order_book_id):
-        s, e = self._index[order_book_id]
-        return self._table.cols['date'][s], self._table.cols['date'][e - 1]
+        raise NotImplementedError
 
 
-class DividendStore(object):
+class AbstractCalendarStore:
+    @abc.abstractmethod
+    def get_trading_calendar(self):
+        # type: () -> pandas.DatetimeIndex
+        raise NotImplementedError
+
+
+class ExchangeTradingCalendarStore(AbstractCalendarStore):
     def __init__(self, f):
-        ct = bcolz.open(f, 'r')
-        self._index = ct.attrs['line_map']
-        self._table = np.empty((len(ct), ), dtype=np.dtype([
-            ('announcement_date', '<u4'), ('book_closure_date', '<u4'),
-            ('ex_dividend_date', '<u4'), ('payable_date', '<u4'),
-            ('dividend_cash_before_tax', np.float), ('round_lot', '<u4')
-        ]))
-        self._table['announcement_date'][:] = ct['announcement_date']
-        self._table['book_closure_date'][:] = ct['closure_date']
-        self._table['ex_dividend_date'][:] = ct['ex_date']
-        self._table['payable_date'][:] = ct['payable_date']
-        self._table['dividend_cash_before_tax'] = ct['cash_before_tax'][:] / 10000.0
-        self._table['round_lot'][:] = ct['round_lot']
+        self._f = f
 
-    def get_dividend(self, order_book_id):
-        try:
-            s, e = self._index[order_book_id]
-        except KeyError:
-            return None
-
-        return self._table[s:e]
+    def get_trading_calendar(self):
+        # type: () -> pandas.DatetimeIndex
+        return pandas.to_datetime([str(d) for d in np.load(self._f, allow_pickle=False)])
 
 
 class FutureInfoStore(object):
@@ -134,11 +96,21 @@ class FutureInfoStore(object):
             return self._future_info.setdefault(order_book_id, info)
 
 
-class InstrumentStore(object):
+class InstrumentStore(AbstractInstrumentStore):
+    SUPPORTED_TYPES = (
+        INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX,
+        INSTRUMENT_TYPE.FENJI_A, INSTRUMENT_TYPE.FENJI_B, INSTRUMENT_TYPE.FENJI_MU, INSTRUMENT_TYPE.PUBLIC_FUND,
+    )
+
     def __init__(self, f):
         with open(f, 'rb') as store:
             d = pickle.load(store)
-        self._instruments = [Instrument(i) for i in d]
+
+        self._instruments = []
+        for i in d:
+            ins = Instrument(i)
+            if ins.type in self.SUPPORTED_TYPES:
+                self._instruments.append(ins)
 
     def get_all_instruments(self):
         return self._instruments
@@ -155,71 +127,3 @@ class ShareTransformationStore(object):
         except KeyError:
             return
         return transformation_data["successor"], transformation_data["share_conversion_ratio"]
-
-
-class SimpleFactorStore(object):
-    def __init__(self, f):
-        table = bcolz.open(f, 'r')
-        self._index = table.attrs['line_map']
-        self._table = table[:]
-
-    def get_factors(self, order_book_id):
-        try:
-            s, e = self._index[order_book_id]
-            return self._table[s:e]
-        except KeyError:
-            return None
-
-
-class TradingDatesStore(object):
-    def __init__(self, f):
-        self._dates = pd.Index(pd.Timestamp(str(d)) for d in bcolz.open(f, 'r'))
-
-    def get_trading_calendar(self):
-        return self._dates
-
-
-class YieldCurveStore(object):
-    def __init__(self, f):
-        self._table = bcolz.open(f, 'r')
-        self._dates = self._table.cols['date'][:]
-
-    def get_yield_curve(self, start_date, end_date, tenor):
-        d1 = start_date.year * 10000 + start_date.month * 100 + start_date.day
-        d2 = end_date.year * 10000 + end_date.month * 100 + end_date.day
-
-        s = self._dates.searchsorted(d1)
-        e = self._dates.searchsorted(d2, side='right')
-
-        if e == len(self._dates):
-            e -= 1
-        if self._dates[e] == d2:
-            # 包含 end_date
-            e += 1
-
-        if e < s:
-            return None
-
-        df = pd.DataFrame(self._table[s:e])
-        df.index = pd.Index(pd.Timestamp(str(d)) for d in df['date'])
-        del df['date']
-
-        df.rename(columns=lambda n: n[1:]+n[0], inplace=True)
-        if tenor is not None:
-            return df[tenor]
-        return df
-
-    def get_risk_free_rate(self, start_date, end_date):
-        tenor = risk_free_helper.get_tenor_for(start_date, end_date)
-        tenor = tenor[-1] + tenor[:-1]
-        d = start_date.year * 10000 + start_date.month * 100 + start_date.day
-        pos = self._dates.searchsorted(d)
-        if pos > 0 and (pos == len(self._dates) or self._dates[pos] != d):
-            pos -= 1
-
-        col = self._table.cols[tenor]
-        while pos >= 0 and np.isnan(col[pos]):
-            # data is missing ...
-            pos -= 1
-
-        return self._table.cols[tenor][pos]
