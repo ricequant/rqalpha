@@ -25,6 +25,7 @@ import pandas
 
 from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
+from rqalpha.model.trade import Trade
 from rqalpha.model.instrument import Instrument
 from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE
 
@@ -32,57 +33,72 @@ from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE
 class AbstractAccount(with_metaclass(abc.ABCMeta)):
     """
     账户接口，主要用于构建账户信息
-
-    您可以在 Mod 的 start_up 阶段通过 env.set_account_model(account_type, AccountModel) 来注入和修改 AccountModel
-    您也可以通过 env.get_account_model(account_type) 来获取指定类型的 AccountModel
     """
 
     @abc.abstractmethod
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
         # type: (str, Union[int, float], POSITION_DIRECTION) -> Union[int, float]
-        # 根据计算当前不超过 trade_amount 的最大可平仓量
+        """
+        根据计算当前不超过 trade_amount 的最大可平仓量
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_state(self):
         # type: () -> Any
-        # 主要用于进行持久化时候，提供对应需要持久化的数据
+        """
+        主要用于进行持久化时候，提供对应需要持久化的数据
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def set_state(self, state):
         # type: (Any) -> None
-        # 主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
+        """
+        主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_positions(self):
         # type: () -> Iterable[AbstractPosition]
+        """
+        获取当前账户下的全部持仓对象
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_position(self, order_book_id, direction):
         # type: (str, POSITION_DIRECTION) -> AbstractPosition
+        """
+        根据指定的 order_book_id 和方向获取持仓对象
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def position_validator_enabled(self, order_book_id):
         # type: (str) -> bool
-        # 返回当前账户是否开启验券风控
+        """
+        返回当前账户是否开启验券风控
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def frozen_cash(self):
         # type: () -> Union[int, float]
-        # 返回当前账户的冻结资金
+        """
+        返回当前账户的冻结资金
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def cash(self):
         # type: () -> Union[int, float]
-        # 返回当前账户的可用资金
+        """
+        返回当前账户的可用资金
+        """
         raise NotImplementedError
 
     @property
@@ -96,21 +112,27 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def total_value(self):
         # type: () -> Union[int, float]
-        # 返回当前账户的总权益
+        """
+        返回当前账户的总权益
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def transaction_cost(self):
         # type: () -> Union[int, float]
-        # 返回当前账户的当日交易费用
+        """
+        返回当前账户的当日交易费用
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def daily_pnl(self):
         # type: () -> Union[int, float]
-        # 返回当前账户的当日盈亏费用
+        """
+        返回当前账户的当日盈亏
+        """
         raise NotImplementedError
 
 
@@ -118,47 +140,58 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
     仓位接口，主要用于构建仓位信息
 
-    您可以在 Mod 的 start_up 阶段通过 env.set_position_model(account_type, PositionModel) 来注入和修改 PositionModel
-    您也可以通过 env.get_position_model(account_type) 来获取制定类型的 PositionModel
+    您可以在 Mod 的 start_up 阶段通过 Portfolio.register_instrument_type 来注册 Position 类型
     """
 
     @abc.abstractmethod
     def get_state(self):
         # type: () -> Any
-        # 主要用于进行持久化时候，提供对应需要持久化的数据
+        """
+        主要用于进行持久化时候，提供对应需要持久化的数据
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def set_state(self, state):
         # type: (Any) -> None
-        # 主要用于持久化恢复时，根据提供的持久化数据进行恢复 Position 的实现
+        """
+        主要用于持久化恢复时，根据提供的持久化数据进行恢复 Position 的实现
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def order_book_id(self):
         # type: () -> str
-        # 返回当前持仓的 order_book_id
+        """
+        返回当前持仓的 order_book_id
+        """
         raise NotImplementedError
 
     @property
     def direction(self):
         # type: () -> POSITION_DIRECTION
-        # 返回当前持仓的方向
+        """
+        返回当前持仓的方向
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def market_value(self):
         # type: () -> Union[int, float]
-        # 返回当前持仓的市值
+        """
+        返回当前持仓的市值
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def margin(self):
         # type: () -> Union[int, float]
-        # 衍生品返回当前持仓所占保证金，权益类返回当前持仓市值
+        """
+        返回当前持仓所占的保证金
+        """
         raise NotImplementedError
 
     @property
@@ -172,35 +205,45 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def position_pnl(self):
         # type: () -> Union[int, float]
-        # 返回当前持仓当日的昨仓盈亏
+        """
+        返回当前持仓当日的持仓盈亏
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def trading_pnl(self):
         # type: () -> Union[int, float]
-        # 返回当前持仓当日的交易盈亏
+        """
+        返回当前持仓当日的交易盈亏
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def closable(self):
         # type: () -> Union[int, float]
-        # 返回可平仓位
+        """
+        返回可平仓位
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def today_closable(self):
         # type: () -> Union[int, float]
-        # 返回今仓中的可平仓位
+        """
+        返回今仓中的可平仓位
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def quantity(self):
         # type: () -> Union[int, float]
-        # 返回当前持仓量
+        """
+        返回当前持仓量
+        """
         raise NotImplementedError
 
 
@@ -265,23 +308,40 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
     """
     @abc.abstractmethod
     def get_last_price(self, order_book_id):
+        # type: (str) -> float
         """
-        获取证券的最新价格
+        获取合约的最新价
         """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_limit_up(self, order_book_id):
+        # type: (str) -> float
+        """
+        获取合约的涨停价
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_limit_down(self, order_book_id):
+        # type: (str) -> float
+        """
+        获取合约的跌停价
+        """
         raise NotImplementedError
 
     def get_a1(self, order_book_id):
+        # type: (str) -> Union[float, numpy.nan]
+        """
+        获取合约的卖一价
+        """
         raise NotImplementedError
 
     def get_b1(self, order_book_id):
+        # type: (str) -> Union[float, numpy.nan]
+        """
+        获取合约的买一价
+        """
         raise NotImplementedError
 
 
@@ -628,15 +688,23 @@ class Persistable(with_metaclass(abc.ABCMeta)):
 class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     """
     前端风控接口，下撤单请求在到达券商代理模块前会经过前端风控。
+
+    扩展模块可以通过 env.add_frontend_validator 添加自定义的前端风控逻辑
     """
     @abc.abstractmethod
     def can_submit_order(self, order, account=None):
         # type: (Order, Optional[AbstractAccount]) -> bool
+        """
+        判断是否可以下单
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def can_cancel_order(self, order, account=None):
         # type: (Order, Optional[AbstractAccount]) -> bool
+        """
+        判读是否可以撤单
+        """
         raise NotImplementedError
 
 
@@ -646,12 +714,24 @@ class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
     """
     @abc.abstractmethod
     def get_trade_tax(self, trade):
+        # type: (Trade) -> float
+        """
+        计算指定交易应付的印花税
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_trade_commission(self, trade):
+        # type: (Trade) -> float
+        """
+        计算指定交易应付的佣金
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
     def get_order_transaction_cost(self, order):
+        # type: (Order) -> float
+        """
+        计算指定订单应付的交易成本（税 + 费）
+        """
         raise NotImplementedError

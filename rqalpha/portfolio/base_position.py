@@ -58,82 +58,52 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
     @property
     def order_book_id(self):
         # type: () -> str
-        """
-        合约代码
-        """
         return self._order_book_id
 
     @property
     def direction(self):
         # type: () -> POSITION_DIRECTION
-        """
-        持仓方向
-        """
         return self._direction
 
     @property
     def quantity(self):
         # type: () -> Union[int, float]
-        """
-        持仓量
-        """
         return self._old_quantity + self._today_quantity
 
     @property
     def transaction_cost(self):
         # type: () -> Union[int, float]
-        """
-        交易成本
-        """
         return self._transaction_cost
 
     @property
     def avg_price(self):
         # type: () -> float
-        """
-        平均开仓成本
-        """
         return self._avg_price
 
     @property
     def trading_pnl(self):
         # type: () -> float
-        """
-        当日交易收益
-        """
         trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
         return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
     def position_pnl(self):
         # type: () -> float
-        """
-        当日持仓收益
-        """
         return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
     def market_value(self):
         # type: () -> float
-        """
-        市值
-        """
         return self.last_price * self.quantity
 
     @property
     def margin(self):
         # type: () -> float
-        """
-        保证金，非保证金交易的品种（如股票、债券）为 0
-        """
         return 0
 
     @property
     def equity(self):
         # type: () -> float
-        """
-        权益，股票等于市值，期货等于当日浮动盈亏
-        """
         return self.last_price * self.quantity
 
     @property
