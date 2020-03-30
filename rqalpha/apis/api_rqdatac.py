@@ -582,21 +582,14 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
     else:
         query_date = latest_query_day
 
-    try:
-        result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
+    result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
 
-        if result is None:
-            return pd.DataFrame()
-        if len(result.major_axis) == 1:
-            frame = result.major_xs(result.major_axis[0])
-            # research 与回测返回的Frame维度相反
-            return frame.T
-
-    except RuntimeError as e:
+    if result is None:
         return pd.DataFrame()
-
-    except AttributeError as e:
-        return pd.DataFrame()
+    if len(result.major_axis) == 1:
+        frame = result.major_xs(result.major_axis[0])
+        # research 与回测返回的Frame维度相反
+        return frame.T
 
     return result
 
