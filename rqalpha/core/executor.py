@@ -20,6 +20,7 @@ from datetime import datetime
 
 from rqalpha.events import EVENT, Event
 from rqalpha.utils.rq_json import convert_dict_to_json, convert_json_to_dict
+from rqalpha.utils.logger import system_log
 
 
 class Executor(object):
@@ -71,6 +72,9 @@ class Executor(object):
                     datetime.combine(previous_trading_date, self._env.calendar_dt.time()),
                     datetime.combine(previous_trading_date, self._env.trading_dt.time())
                 )
+            system_log.debug("publish settlement events with calendar_dt={}, trading_dt={}".format(
+                self._env.calendar_dt, self._env.trading_dt
+            ))
             self._split_and_publish(Event(EVENT.SETTLEMENT))
         self._last_before_trading = event.trading_dt.date()
         self._split_and_publish(Event(EVENT.BEFORE_TRADING, calendar_dt=event.calendar_dt, trading_dt=event.trading_dt))

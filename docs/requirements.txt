@@ -1,6 +1,7 @@
-Sphinx
+Sphinx ==2.4.4
 watchdog
 sphinx_rtd_theme
 nbsphinx ==0.3.5
 jupyter_client
 sphinx-autodoc-typehints
+astroid ==2.2.5

@@ -53,7 +53,7 @@ def generate_config(directory):
     """
     Generate default config file
     """
-    default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.yml")
+    default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config.yml")
     target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
     shutil.copy(default_config, target_config_path)
     six.print_("Config file has been generated in", target_config_path)

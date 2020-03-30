@@ -34,7 +34,7 @@ def handle_bar(context, bar_dict):
     order_shares("000001.XSHE", 100)
     order_shares("000001.XSHE", -100)
     print(context.portfolio)
-    print(context.portfolio.positions)
+    print(get_positions())
 
 
 def after_trading(context):

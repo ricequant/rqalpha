@@ -39,23 +39,19 @@ RQAlpha 安装
 
 .. note::
 
-    RQAlpha 依赖一些需要 GCC 编译的库，如果您安装遇到问题请访问 :ref:`intro-install` 来寻找详细的安装文档信息。
+    我们强烈建议您在虚拟环境下安装RQAlpha
 
-    .. warning::
-
-        我们强烈建议您在虚拟环境下安装RQAlpha
-
-        虚拟环境的安装，请参考 :ref:`intro-detail-install`
+    虚拟环境的安装，请参考 :ref:`intro-detail-install`
 
 
 数据获取
 ==================
 
-当 RQAlpha 安装完成后，可以通过如下命令获取我们提供的免费A股日线数据。获取数据的详细内容请参考 :ref:`intro-install-get-data`
+当 RQAlpha 安装完成后，可以通过如下命令获取我们提供的免费A股日线数据。获取及更新数据的详细内容请参考 :ref:`intro-install-get-data`
 
 .. code-block:: bash
 
-    $ rqalpha update-bundle
+    $ rqalpha download-bundle
 
 生成样例策略
 ==================

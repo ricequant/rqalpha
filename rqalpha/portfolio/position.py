@@ -15,7 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Iterable, Tuple, Dict, Type
+from typing import Iterable, Tuple, Dict, Type, Union
 from datetime import date
 from collections import UserDict
 
@@ -92,27 +92,50 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
 
-    order_book_id = property(lambda self: self._order_book_id)
-    direction = property(lambda self: self._direction)
-    quantity = property(lambda self: self._old_quantity + self._today_quantity)
-    transaction_cost = property(lambda self: self._transaction_cost)
-    avg_price = property(lambda self: self._avg_price)
+    @property
+    def order_book_id(self):
+        # type: () -> str
+        return self._order_book_id
+
+    @property
+    def direction(self):
+        # type: () -> POSITION_DIRECTION
+        return self._direction
+
+    @property
+    def quantity(self):
+        # type: () -> Union[int, float]
+        return self._old_quantity + self._today_quantity
+
+    @property
+    def transaction_cost(self):
+        # type: () -> Union[int, float]
+        return self._transaction_cost
+
+    @property
+    def avg_price(self):
+        # type: () -> float
+        return self._avg_price
 
     @property
     def trading_pnl(self):
+        # type: () -> float
         trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
         return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
     def position_pnl(self):
+        # type: () -> float
         return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
     def market_value(self):
+        # type: () -> float
         return self.last_price * self.quantity
 
     @property
     def margin(self):
+        # type: () -> float
         return 0
 
     @property
@@ -138,6 +161,10 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def closable(self):
+        # type: () -> int
+        """
+        可平仓位
+        """
         order_quantity = sum(o for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))

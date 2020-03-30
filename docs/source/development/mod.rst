@@ -118,13 +118,13 @@ PyPI方式安装Mod
 
 .. code-block:: bash
 
-    $ rqalpha mod install -e .
+    $ pip install -e .
 
 .. note::
 
     .. code-block:: bash
 
-        $ rqalpha mod install -e .
+        $ pip install -e .
 
     会扫描当前目录下的 :code:`setup.py` 文件执行安装，同时直接修改项目内文件就可以实现修改对应Mod。
 
@@ -199,12 +199,6 @@ RQAlpha 支持安装、卸载、启用、停止第三方Mod。
 
     # 以名为 "xxx" 的 Mod 为例，介绍RQAlpha 第三方Mod的使用
 
-    # 安装
-    $ rqalpha mod install xxx
-
-    # 卸载
-    $ rqalpha mod uninstall xxx
-
     # 启用
     $ rqalpha mod enable xxx
 
@@ -271,7 +265,6 @@ RQAlpha 支持安装、卸载、启用、停止第三方Mod。
             'Programming Language :: Python',
             'Operating System :: Microsoft :: Windows',
             'Operating System :: Unix',
-            'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
         ],
     )

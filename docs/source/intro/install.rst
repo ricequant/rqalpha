@@ -13,9 +13,9 @@
 
 .. note::
 
-    *   我们强烈建议您使用虚拟环境安装RQAlpha，以避免因为环境问题出现安装失败。虚拟环境的使用请参考：:ref:`intro-detail-create-env`
+    *   我们强烈建议您使用虚拟环境安装RQAlpha，以避免因为环境问题出现安装失败。虚拟环境的使用请参考：:ref:`intro-detail-install`
     *   如果安装过程中遇到了问题，先阅读该文档下面的 「FAQ」 章节来尝试着解决
-    *   如果执行 :code:`pip install` 安装依赖库网络速度比较慢的话，推荐使用 :code:`pip install -i https://pypi.tuna.tsinghua.edu.cn/simple` 国内镜像来加速
+    *   如果执行 :code:`pip install` 安装依赖库网络速度比较慢的话，推荐使用 :code:`pip install -i https://pypi.douban.com/simple` 国内镜像来加速
 
 
 安装
@@ -38,14 +38,13 @@
 
 RiceQuant 免费提供日级别的股票、常用指数、场内基金和期货数据供回测使用。数据每个月月初更新，可以通过以下命令来下载:
 
-.. note::
-
-    Mac OS下执行 :code:`download-bundle` 出现问题，请参考：:ref:`FAQ-download-bundle-mac`
-
 .. code-block:: bash
 
     $ rqalpha download-bundle
 
+.. note::
+
+    Mac OS下执行 :code:`download-bundle` 出现问题，请参考：:ref:`FAQ-download-bundle-mac`
 
 bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存放位置，
 
@@ -62,15 +61,16 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 
 回测数据的更新
 ==================
-回测数据的每日更新通过`rqdatac`来完成，可以通过以下命令来进行：
-
-.. note::
-
-    您需要先安装`rqdatac`包，并通过 RiceQuant 网站获取一个有效的账号。请参考: https://www.ricequant.com/welcome/trial/rqdata-cloud
+您也可以使用 `RQData`_ 在每日盘后即时更新回测数据，更新命令如下：
 
 .. code-block:: bash
 
     $ rqalpha update-bundle
+
+.. note::
+
+    您需要先安装 `RQData`_ 包，并通过 RiceQuant 网站获取一个有效的账号。请参考: https://www.ricequant.com/welcome/trial/rqdata-cloud
+
 
 .. _intro-config:
 
@@ -90,14 +90,14 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 FAQ
 ==================
 
-1.  `line-profiler` 相关问题
+1.  line-profiler 相关问题
 ------------------------------------------------------
-`RQAlpha`的性能分析功能依赖于`line-profiler`包；通过`pip`安装`rqalpha`时，默认并不会附带安装`line-profiler`；
-如果您需要使用性能分析功能，请使用`pip install rqalpha[profiler]`方式安装`rqalpha`。
+RQAlpha 的性能分析功能依赖于 :code:`line_profiler` 包；通过 :code:`pip` 安装 RQAlpha 时，默认并不会附带安装 :code:`line_profiler`；
+如果您需要使用性能分析功能，请使用 :code:`pip install rqalpha[profiler]` 方式安装 RQAlpha。
 
 在windows上，建议您访问 http://www.lfd.uci.edu/~gohlke/pythonlibs/#line_profiler 下载 :code:`line_profiler` 直接进行安装。
 
-在windows上，通过`pip`安装`line-profiler`需要安装 `Visual C++ Compiler`。
+在windows上，通过 :code:`pip` 安装 :code:`line-profiler` 需要安装 :code:`Visual C++ Compiler`。
 请访问 https://wiki.python.org/moin/WindowsCompilers 根据自己的机器环境和Python版本选择安装对应的编译工具。
 
 
@@ -116,14 +116,10 @@ FAQ
 
 解决方案: 请访问 `Error on import matplotlib.pyplot (on Anaconda3 for Windows 10 Home 64-bit PC) <http://stackoverflow.com/questions/34004063/error-on-import-matplotlib-pyplot-on-anaconda3-for-windows-10-home-64-bit-pc>`_ 解决。
 
-3.  Python 2.7 在 Windows 下产生中文乱码的问题
-------------------------------------------------------
-
-RQAlpha 运行在 Windows(Python 2.x) 可能会遇到中文乱码的问题，这个并不是RQAlpha的问题，而是由于 Windows 的 cmd 本身是 `gbk` 编码而产生的，具体的解决方案可以参考 [Windows(Python 2.x) 命令行下输出日志中文乱码的问题](https://github.com/ricequant/rqalpha/issues/80)
 
 .. _FAQ-download-bundle-mac:
 
-4.  Mac OS 获取回测数据相关问题
+3.  Mac OS 获取回测数据相关问题
 ------------------------------------------------------
 
 1.  Finder中查看数据存放位置：
@@ -136,7 +132,7 @@ Mac OS下默认关闭显示隐藏文件，如想在Finder中查看bundle，您�
 
 .. _FAQ-chinese-fonts-mac:
 
-5.  Mac 下安装中文字体相关问题：
+4.  Mac 下安装中文字体相关问题：
 ------------------------------------------------------
 
 1.  出现 :code:`Operation not permitted`:
@@ -177,13 +173,10 @@ Mac 下默认并没有安装很多命令，我们可以通过homebrew安装，�
 
 .. _FAQ-examples-path:
 
-6.  策略样例以及数据路径相关问题：
+5.  策略样例路径相关问题：
 ------------------------------------------------------
-
-1.策略样例存储路径：
 
 执行 :code:`pip install rqalpha` 后虽然会默认保存examples到python环境中，但路径相对复杂，我们建议您将examples目录重新保存到您认为方便的地方。
 
-2.数据存储的路径：
 
-如您没有指定路径，则会在您执行 :code:`rqalpha update-bundle` 的当前目录创建 :code:`/.rqalpha/bundle` 的文件夹.您可以在命令行内查看路径。
+.. _RQData: https://www.ricequant.com/welcome/rqdata

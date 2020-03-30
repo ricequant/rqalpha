@@ -4,21 +4,19 @@
 基础 API
 ==================
 
-策略实现的函数
+约定函数
 ==================
 
 
-init
-------------------
+init - 策略初始化
+---------------------------
 
 ..  py:function:: init(context)
-
-    【必须实现】
 
     初始化方法 - 在回测和实时模拟交易只会在启动的时候触发一次。你的算法会使用这个方法来设置你需要的各种初始化配置。 context 对象将会在你的算法的所有其他的方法之间进行传递以方便你可以拿取到。
 
     :param context: 策略上下文
-    :type context: :class:`~StrategyContext` object
+    :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
 
     :example:
 
@@ -28,20 +26,20 @@ init
             # cash_limit的属性是根据用户需求自己定义的，你可以定义无限多种自己随后需要的属性，ricequant的系统默认只是会占用context.portfolio的关键字来调用策略的投资组合信息
             context.cash_limit = 5000
 
-handle_bar
-------------------
+
+handle_bar - k 线数据更新
+---------------------------
 
 ..  py:function:: handle_bar(context, bar_dict)
 
-    【必须实现】
-
-    bar数据的更新会自动触发该方法的调用。策略具体逻辑可在该方法内实现，包括交易信号的产生、订单的创建等。在实时模拟交易中，该函数在交易时间内会每分钟被触发一次。
+    bar数据的更新会自动触发该方法的调用。策略具体逻辑可在该方法内实现，包括交易信号的产生、订单的创建等。
+    在实时模拟交易中，该函数在交易时间内会每分钟被触发一次。
 
     :param context: 策略上下文
-    :type context: :class:`~StrategyContext` object
+    :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
 
-    :param bar_dict: key为order_book_id，value为bar数据。当前合约池内所有合约的bar数据信息都会更新在bar_dict里面
-    :type bar_dict: :class:`~BarDict` object
+    :param bar_dict: key 为 order_book_id，value 为 bar 对象
+    :type bar_dict: Dict[:class:`~rqalpha.model.bar.BarObject`]
 
     :example:
 
@@ -53,19 +51,68 @@ handle_bar
             order_shares('000001.XSHE', 500)
             # ...
 
-before_trading
-------------------
+
+handle_tick - 快照数据更新
+---------------------------
+
+..  py:function:: handle_tick(context, tick)
+
+    在 tick 级别的策略中，已订阅快照数据的更新会自动触发该方法的调用。策略具体逻辑可在该方法内实现，包括交易信号的产生、订单的创建等。
+    若订阅了多个合约，不同合约快照数据的更新会分别触发该方法。
+
+    :param context: 策略上下文
+    :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
+
+    :param tick: key为order_book_id，value为bar数据。当前合约池内所有合约的bar数据信息都会更新在bar_dict里面
+    :type tick: :class:`~rqalpha.model.tick.TickObject` object
+
+    :example:
+
+    ..  code-block:: python
+
+        def handle_bar(context, tick):
+            # put all your algorithm main logic here.
+            # ...
+            order_shares(tick.order_book_id, tick.last)
+            # ...
+
+
+open_auction - 集合竞价
+---------------------------
+
+..  py:function:: open_auction(context, bar_dict)
+
+    盘前集合竞价发生时会触发该函数的调用，在该函数内发出的订单会以当日开盘价被撮合。
+
+    :param context: 策略上下文
+    :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
+
+    :param bar_dict: key 为 order_book_id，value 为 **不完整的** bar 对象，该对象仅有 open, limit_up, limit_down 等字段，没有 close 等字段
+    :type bar_dict: Dict[:class:`~rqalpha.model.bar.BarObject`]
+
+    :example:
+
+    ..  code-block:: python
+
+        def open_auction(context, bar_dict):
+            # put all your algorithm main logic here.
+            # ...
+            order_book_id = "000001.XSHE"
+            order_shares(order_book_id, bar_dict[order_book_id].open)
+            # ...
+
+
+before_trading - 盘前
+---------------------------
 
 ..  py:function:: before_trading(context)
-
-    【选择实现】
 
     每天在策略开始交易前会被调用。不能在这个函数中发送订单。需要注意，该函数的触发时间取决于用户当前所订阅合约的交易时间。
 
     举例来说，如果用户订阅的合约中存在有夜盘交易的期货合约，则该函数可能会在前一日的20:00触发，而不是早晨08:00.
 
     :param context: 策略上下文
-    :type context: :class:`~StrategyContext` object
+    :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
 
     :example:
 
@@ -74,21 +121,21 @@ before_trading
         def before_trading(context, bar_dict):
             logger.info("This is before trading")
 
-after_trading
-------------------
+
+after_trading - 盘后
+---------------------------
 
 ..  py:function:: after_trading(context)
-
-    【选择实现】
 
     每天在收盘后被调用。不能在这个函数中发送订单。您可以在该函数中进行当日收盘后的一些计算。
 
     在实时模拟交易中，该函数会在每天15:30触发。
 
     :param context: 策略上下文
-    :type context: :class:`~StrategyContext` object
+    :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
 
-交易相关函数
+
+交易接口
 =================
 
 ..  module:: rqalpha.api
@@ -186,7 +233,7 @@ exercise - 行权
 ..  autofunction:: exercise
 
 
-持仓查询函数
+持仓查询接口
 ======================================================
 
 get_position - 获取持仓对象
@@ -201,7 +248,7 @@ get_positions - 获取全部持仓对象
 .. autofunction:: get_positions
 
 
-数据查询相关函数
+数据查询接口
 ======================================================
 
 
@@ -295,28 +342,28 @@ get_future_contracts - 期货可交易合约列表
 ..  autofunction:: get_future_contracts(underlying_symbol)
 
 
-其他方法
+其他接口
 ======================================================
 
-update_universe
+update_universe - 更新合约池
 ------------------------------------------------------
 
 ..  autofunction:: update_universe
 
 
-subscribe
+subscribe - 订阅合约
 ------------------------------------------------------
 
 ..  autofunction:: subscribe
 
 
-unsubscribe
+unsubscribe - 取消订阅合约
 ------------------------------------------------------
 
 ..  autofunction:: unsubscribe
 
 
-subscribe_event
+subscribe_event - 订阅事件
 ------------------------------------------------------
 
 ..  autofunction:: subscribe_event
@@ -526,7 +573,7 @@ RunInfo - 策略运行信息
     :members:
 
 
-Bar
+Bar - k 线行情
 ------------------------------------------------------
 ..  module:: rqalpha.model.bar
 
@@ -535,7 +582,8 @@ Bar
     :show-inheritance:
     :inherited-members:
 
-Tick
+
+Tick - 快照行情
 ------------------------------------------------------
 ..  module:: rqalpha.model.tick
 
@@ -544,7 +592,8 @@ Tick
     :show-inheritance:
     :inherited-members:
 
-Order
+
+Order - 订单
 ------------------------------------------------------
 ..  module:: rqalpha.model.order
 
@@ -553,53 +602,38 @@ Order
     :show-inheritance:
     :inherited-members:
 
-Portfolio
+
+Portfolio - 投资组合
 ------------------------------------------------------
 
-.. module:: rqalpha.model.portfolio
+.. module:: rqalpha.portfolio
 
 .. autoclass:: Portfolio
     :members:
     :show-inheritance:
     :inherited-members:
 
-StockAccount
+
+Account - 账户
 ------------------------------------------------------
 
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.account_model.stock_account
+.. module:: rqalpha.portfolio.account
 
-.. autoclass:: StockAccount
-    :members:
-    :inherited-members:
-
-FutureAccount
-------------------------------------------------------
-
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.account_model.future_account
-
-.. autoclass:: FutureAccount
-    :members:
-    :inherited-members:
-
-StockPosition
-------------------------------------------------------
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model.stock_position
-
-..  autoclass:: StockPositionProxy
-    :members:
-    :inherited-members:
-
-FuturePosition
-------------------------------------------------------
-.. module:: rqalpha.mod.rqalpha_mod_sys_accounts.position_model.future_position
-
-..  autoclass:: FuturePositionProxy
+.. autoclass:: Account
     :members:
     :inherited-members:
 
 
+Position - 持仓
+------------------------------------------------------
+.. module:: rqalpha.portfolio.base_position
 
-Instrument
+..  autoclass:: BasePosition
+    :members:
+    :inherited-members:
+
+
+Instrument - 交易标的
 ------------------------------------------------------
 ..  module:: rqalpha.model.instrument
 
@@ -720,34 +754,24 @@ Instrument对象也支持如下方法：
 枚举常量
 ======================================================
 
-ORDER_STATUS - 订单状态
-------------------------------------------------------
 ..  module:: rqalpha.const
 
-..  py:class:: ORDER_STATUS
 
-    ..  py:attribute:: PENDING_NEW
+POSITION_DIRECTION - 持仓方向
+------------------------------------------------------
 
-        待报
+..  py:class::  POSITION_DIRECTION
+
+    .. py:attribute::  LONG
+
+        多方向
+
+    .. py:attribute::  SHORT
+
+        空方向
 
 
-    ..  py:attribute:: ACTIVE
-
-        可撤
-
-    ..  py:attribute:: FILLED
-
-        全成
-
-    ..  py:attribute:: CANCELLED
-
-        已撤
-
-    ..  py:attribute:: REJECTED
-
-        拒单
-
-SIDE - 买卖方向
+SIDE - 交易方向
 ------------------------------------------------------
 
 ..  py:class:: SIDE
@@ -760,7 +784,8 @@ SIDE - 买卖方向
 
         卖
 
-POSITION_EFFECT - 开平
+
+POSITION_EFFECT - 交易动作
 ------------------------------------------------------
 
 ..  py:class:: POSITION_EFFECT
@@ -772,6 +797,33 @@ POSITION_EFFECT - 开平
     ..  py:attribute:: CLOSE
 
         平仓
+
+    ..  py:attribute:: CLOSE_TODAY
+
+        平今
+
+    ..  py:attribute:: EXERCISE
+
+        行权
+
+    ..  py:attribute:: MATCH
+
+        轧差
+
+
+RIGHT_TYPE - 权利类型
+------------------------------------------------------
+
+.. py:class:: RIGHT_TYPE
+
+    ..  py:attribute:: CONVERT
+
+        转股
+
+    ..  py:attribute:: SELL_BACK
+
+        回售
+
 
 ORDER_TYPE - 订单类型
 ------------------------------------------------------
@@ -786,6 +838,33 @@ ORDER_TYPE - 订单类型
 
         限价单
 
+
+ORDER_STATUS - 订单状态
+------------------------------------------------------
+
+..  py:class:: ORDER_STATUS
+
+    ..  py:attribute:: PENDING_NEW
+
+        待报
+
+    ..  py:attribute:: ACTIVE
+
+        已报
+
+    ..  py:attribute:: FILLED
+
+        全成
+
+    ..  py:attribute:: CANCELLED
+
+        已撤
+
+    ..  py:attribute:: REJECTED
+
+        拒单
+
+
 RUN_TYPE - 策略运行类型
 ------------------------------------------------------
 
@@ -799,15 +878,42 @@ RUN_TYPE - 策略运行类型
 
         实盘模拟
 
-MATCHING_TYPE - 撮合方式
+
+EVENT - 事件类型
 ------------------------------------------------------
 
-..  py:class:: MATCHING_TYPE
+..  module::  rqalpha.events
 
-    ..  py:attribute:: CURRENT_BAR_CLOSE
+.. py:class::  EVENT
 
-        以当前bar收盘价撮合
+    ..  py:attribute:: ORDER_PENDING_NEW
 
-    ..  py:attribute:: NEXT_BAR_OPEN
+        订单创建成功
 
-        以下一bar数据开盘价撮合
+    ..  py:attribute:: ORDER_CREATION_PASS
+
+        订单已报
+
+    ..  py:attribute:: ORDER_CREATION_REJECT
+
+        订单创建被拒
+
+    ..  py:attribute:: ORDER_PENDING_CANCEL
+
+        订单待撤
+
+    ..  py:attribute:: ORDER_CANCELLATION_PASS
+
+        订单撤单成功
+
+    ..  py:attribute:: ORDER_CANCELLATION_REJECT
+
+        订单撤单被拒
+
+    ..  py:attribute:: ORDER_UNSOLICITED_UPDATE
+
+        订单已报被拒
+
+    ..  py:attribute:: TRADE
+
+        成交

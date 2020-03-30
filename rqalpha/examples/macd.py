@@ -41,7 +41,7 @@ def handle_bar(context, bar_dict):
 
     if macd[-1] - signal[-1] < 0 and macd[-2] - signal[-2] > 0:
         # 计算现在portfolio中股票的仓位
-        curPosition = context.portfolio.positions[context.s1].quantity
+        curPosition = get_position(context.s1).quantity
         # 进行清仓
         if curPosition > 0:
             order_target_value(context.s1, 0)

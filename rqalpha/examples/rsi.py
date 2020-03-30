@@ -37,7 +37,7 @@ def handle_bar(context, bar_dict):
         # 用Talib计算RSI值
         rsi_data = talib.RSI(prices, timeperiod=context.TIME_PERIOD)[-1]
 
-        cur_position = context.portfolio.positions[stock].quantity
+        cur_position = get_position(stock).quantity
         # 用剩余现金的30%来购买新的股票
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 

@@ -39,6 +39,9 @@ OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
 
 class Portfolio(object, metaclass=PropertyReprMeta):
+    """
+    投资组合，策略所有账户的集合
+    """
     __repr_properties__ = (
         "total_value", "unit_net_value", "daily_pnl", "daily_returns", "total_returns", "annualized_returns", "accounts"
     )
