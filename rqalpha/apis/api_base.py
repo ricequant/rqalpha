@@ -42,9 +42,8 @@ from rqalpha.const import (
 )
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.events import EVENT, Event
-from rqalpha.interface import AbstractPosition
 from rqalpha.core.strategy_context import StrategyContext
-from rqalpha.portfolio.base_position import BasePosition
+from rqalpha.portfolio.position import Position
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
@@ -861,7 +860,7 @@ def current_snapshot(id_or_symbol):
 
 @export_as_api
 def get_positions():
-    # type: () -> List[BasePosition]
+    # type: () -> List[Position]
     """
     获取所有持仓对象列表，
 
@@ -884,7 +883,7 @@ def get_positions():
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
 def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
-    # type: (str, Optional[POSITION_DIRECTION]) -> BasePosition
+    # type: (str, Optional[POSITION_DIRECTION]) -> Position
     """
     获取某个标的的持仓对象，
 
