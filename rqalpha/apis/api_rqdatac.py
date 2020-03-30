@@ -398,8 +398,13 @@ def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
     else:
         start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
 
-    return rqdatac.get_stock_connect(order_book_ids, start_date, end_date,
+    result = rqdatac.get_stock_connect(order_book_ids, start_date, end_date,
                                      fields=fields, expect_df=expect_df)
+
+    if result is None:
+        return pd.DataFrame()
+
+    return result
 
 
 @export_as_api
