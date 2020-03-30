@@ -398,8 +398,13 @@ def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
     else:
         start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
 
-    return rqdatac.get_stock_connect(order_book_ids, start_date, end_date,
+    result = rqdatac.get_stock_connect(order_book_ids, start_date, end_date,
                                      fields=fields, expect_df=expect_df)
+
+    if result is None:
+        return pd.DataFrame()
+
+    return result
 
 
 @export_as_api
@@ -577,14 +582,22 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
     else:
         query_date = latest_query_day
 
-    result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
-    if result is None:
+    try:
+        result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
+
+        if result is None:
+            return pd.DataFrame()
+        if len(result.major_axis) == 1:
+            frame = result.major_xs(result.major_axis[0])
+            # research 与回测返回的Frame维度相反
+            return frame.T
+
+    except RuntimeError as e:
         return pd.DataFrame()
 
-    if len(result.major_axis) == 1:
-        frame = result.major_xs(result.major_axis[0])
-        # research 与回测返回的Frame维度相反
-        return frame.T
+    except AttributeError as e:
+        return pd.DataFrame()
+
     return result
 
 
