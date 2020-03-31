@@ -221,14 +221,6 @@ class MARKET(CustomEnum):
 
 
 # noinspection PyPep8Naming
-class FRONT_VALIDATOR_TYPE(CustomEnum):
-    CASH = "CASH"
-    POSITION = "POSITION"
-    PRICE = "PRICE"
-    OTHER = "OTHER"
-
-
-# noinspection PyPep8Naming
 class TRADING_CALENDAR_TYPE(CustomEnum):
     EXCHANGE = "EXCHANGE"
     INTER_BANK = "INTERBANK"
