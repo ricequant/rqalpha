@@ -581,6 +581,9 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
     if result is None:
         return pd.DataFrame()
 
+    if expect_df:
+        return result
+
     if len(result.major_axis) == 1:
         frame = result.major_xs(result.major_axis[0])
         # research 与回测返回的Frame维度相反
