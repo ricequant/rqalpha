@@ -83,9 +83,12 @@ def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_v
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if order.type == ORDER_TYPE.MARKET:
         order.set_frozen_price(price)
-    if side == SIDE.BUY:
+    if side == SIDE.BUY and auto_switch_order_value:
         account, position, ins = _get_account_position_ins(ins)
         if not is_cash_enough(env, order, account):
+            user_system_log.warn(_(
+                "insufficient cash, use all remaining cash({}) to create order"
+            ).format(account.cash))
             return _order_value(account, position, ins, account.cash, style)
     if env.can_submit_order(order):
         env.broker.submit_order(order)
