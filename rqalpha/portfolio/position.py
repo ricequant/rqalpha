@@ -176,10 +176,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
             o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
         )
 
-    @property
-    def position_validator_enabled(self):
-        return True
-
     def get_state(self):
         return {
             "old_quantity": self._old_quantity,

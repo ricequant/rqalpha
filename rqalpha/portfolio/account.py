@@ -293,9 +293,6 @@ class Account(AbstractAccount):
         """
         return sum(p.trading_pnl for p in self._iter_pos())
 
-    def position_validator_enabled(self, order_book_id):  # type: (str) -> bool
-        return self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG).position_validator_enabled
-
     def _on_before_trading(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
         for position in self._iter_pos():

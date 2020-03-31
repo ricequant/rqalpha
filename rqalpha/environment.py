@@ -20,8 +20,6 @@ from typing import Optional, Dict, List
 from itertools import chain
 
 
-from six import iteritems
-
 import rqalpha
 from rqalpha.events import EventBus
 from rqalpha.const import INSTRUMENT_TYPE

@@ -75,14 +75,6 @@ class AbstractAccount(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def position_validator_enabled(self, order_book_id):
-        # type: (str) -> bool
-        """
-        返回当前账户是否开启验券风控
-        """
-        raise NotImplementedError
-
     @property
     @abc.abstractmethod
     def frozen_cash(self):

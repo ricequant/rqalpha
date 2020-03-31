@@ -17,9 +17,8 @@
 
 
 from rqalpha.interface import AbstractMod
-from rqalpha.const import FRONT_VALIDATOR_TYPE
 
-from .validators import CashValidator, PriceValidator, IsTradingValidator, SelfTradeValidator, PositionValidator
+from .validators import CashValidator, PriceValidator, IsTradingValidator, SelfTradeValidator
 
 
 class RiskManagerMod(AbstractMod):
@@ -32,7 +31,6 @@ class RiskManagerMod(AbstractMod):
             env.add_frontend_validator(CashValidator(env))
         if mod_config.validate_self_trade:
             env.add_frontend_validator(SelfTradeValidator(env))
-        env.add_frontend_validator(PositionValidator())
 
     def tear_down(self, code, exception=None):
         pass

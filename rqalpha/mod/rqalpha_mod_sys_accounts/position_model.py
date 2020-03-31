@@ -45,7 +45,6 @@ class StockPosition(Position):
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
-    enable_position_validator = True
 
     def __init__(self, order_book_id, direction, init_quantity=0):
         super(StockPosition, self).__init__(order_book_id, direction, init_quantity)
@@ -72,10 +71,6 @@ class StockPosition(Position):
         if self.t_plus_enabled:
             return self.quantity - order_quantity - self._non_closable
         return self.quantity - order_quantity
-
-    @property
-    def position_validator_enabled(self):
-        return self.enable_position_validator
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
@@ -201,14 +196,8 @@ class FuturePosition(Position):
     )
     __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
-    enable_position_validator = True
-
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._today_quantity)
-
-    @property
-    def position_validator_enabled(self):
-        return self.enable_position_validator
 
     @property
     @lru_cache()
