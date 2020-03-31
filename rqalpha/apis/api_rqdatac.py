@@ -581,7 +581,7 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
     if result is None:
         return pd.DataFrame()
 
-    if expect_df is True:
+    if expect_df:
         return result
 
     if len(result.major_axis) == 1:
