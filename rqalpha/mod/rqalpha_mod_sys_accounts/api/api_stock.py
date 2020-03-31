@@ -48,6 +48,8 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.datetime_func import to_date
 
+from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import is_cash_enough
+
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
 
@@ -81,18 +83,13 @@ def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_v
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if order.type == ORDER_TYPE.MARKET:
         order.set_frozen_price(price)
-    reject_validator_type = env.validate_order_submission(order)
-    if not reject_validator_type:
+    if side == SIDE.BUY:
+        account, position, ins = _get_account_position_ins(ins)
+        if not is_cash_enough(env, order, account):
+            return _order_value(account, position, ins, account.cash, style)
+    if env.can_submit_order(order):
         env.broker.submit_order(order)
         return order
-    else:
-        if auto_switch_order_value and reject_validator_type == FRONT_VALIDATOR_TYPE.CASH:
-            remaining_cash = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name].cash
-            user_system_log.warn(_(
-                "Insufficient cash, use all remaining cash({}) to create order"
-            ).format(remaining_cash))
-            account, position, ins = _get_account_position_ins(ins)
-            return _order_value(account, position, ins, remaining_cash, style)
 
 
 def _order_shares(ins, amount, style, auto_switch_order_value):
