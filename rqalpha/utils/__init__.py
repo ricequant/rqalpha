@@ -65,15 +65,16 @@ class RqAttrDict(object):
     def _update_dict_recursive(target, other):
         if isinstance(other, RqAttrDict):
             other = other.__dict__
-        if isinstance(target, RqAttrDict):
-            target = target.__dict__
+        target_dict = target.__dict__ if isinstance(target, RqAttrDict) else target
 
         for k, v in six.iteritems(other):
+            if isinstance(v, RqAttrDict):
+                v = v.__dict__
             if isinstance(v, collections.Mapping):
-                r = RqAttrDict._update_dict_recursive(target.get(k, {}), v)
-                target[k] = r
+                r = RqAttrDict._update_dict_recursive(target_dict.get(k, {}), v)
+                target_dict[k] = r
             else:
-                target[k] = other[k]
+                target_dict[k] = other[k]
         return target
 
     def convert_to_dict(self):
