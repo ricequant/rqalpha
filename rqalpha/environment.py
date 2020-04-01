@@ -169,7 +169,7 @@ class Environment(object):
         try:
             return self._transaction_cost_decider_dict[instrument_type]
         except KeyError:
-            raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}.".format(
+            raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}".format(
                 order_book_id
             )))
 
