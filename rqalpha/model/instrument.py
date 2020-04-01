@@ -23,10 +23,10 @@ import numpy as np
 from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
-from rqalpha.utils.repr import property_repr
+from rqalpha.utils.repr import property_repr, PropertyReprMeta
 
 
-class Instrument(object):
+class Instrument(metaclass=PropertyReprMeta):
     DEFAULT_LISTED_DATE = datetime.datetime(1990, 1, 1)
     DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
 
