@@ -42,8 +42,9 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         import rqdatac
     except ImportError:
         click.echo(_(
-            'rqdatac is required to create bundle, '
-            'you also can use "rqalpha download-bundle" to download to download monthly updated bundle'
+            'rqdatac is required to create bundle. '
+            'you can visit https://www.ricequant.com/welcome/rqdata to get rqdatac, '
+            'or use "rqalpha download-bundle" to download monthly updated bundle.'
         ))
         return 1
 
@@ -71,8 +72,9 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         import rqdatac
     except ImportError:
         click.echo(_(
-            'rqdatac is required to update bundle, '
-            'you also can use "rqalpha download-bundle" to download to download monthly updated bundle'
+            'rqdatac is required to update bundle. '
+            'you can visit https://www.ricequant.com/welcome/rqdata to get rqdatac, '
+            'or use "rqalpha download-bundle" to download monthly updated bundle.'
         ))
         return 1
 
@@ -84,7 +86,7 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     if not os.path.exists(os.path.join(data_bundle_path, 'bundle')):
-        click.echo(_('bundle not exist, use create-bundle command instead'))
+        click.echo(_('bundle not exist, use "rqalpha create-bundle" command instead'))
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_

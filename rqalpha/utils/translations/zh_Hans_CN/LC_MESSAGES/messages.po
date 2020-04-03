@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-04-03 10:25+0800\n"
+"POT-Creation-Date: 2020-04-03 20:11+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -146,29 +146,31 @@ msgstr ""
 
 #: rqalpha/cmds/bundle.py:44
 msgid ""
-"rqdatac is required to create bundle, you also can use \"rqalpha "
-"download-bundle\" to download to download monthly updated bundle"
+"rqdatac is required to create bundle. you can visit "
+"https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
+" download-bundle\" to download monthly updated bundle."
 msgstr ""
-"创建 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 获取 rqdatac，"
-"或执行 \"rqalpha download-bundle\" 下载月度更新的 bundle 数据。"
+"创建 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
+"rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:54 rqalpha/cmds/bundle.py:83
+#: rqalpha/cmds/bundle.py:55 rqalpha/cmds/bundle.py:85
 msgid "rqdatac init failed with error: {}"
 msgstr "rqdatac 初始化失败：{}"
 
-#: rqalpha/cmds/bundle.py:73
+#: rqalpha/cmds/bundle.py:74
 msgid ""
-"rqdatac is required to update bundle, you also can use \"rqalpha "
-"download-bundle\" to download to download monthly updated bundle"
+"rqdatac is required to update bundle. you can visit "
+"https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
+" download-bundle\" to download monthly updated bundle."
 msgstr ""
-"更新 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 获取 rqdatac，"
-"或执行 \"rqalpha download-bundle\" 下载月度更新的 bundle 数据。"
+"更新 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
+"rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:87
-msgid "bundle not exist, use create-bundle command instead"
-msgstr "bundle 不存在，您需要先执行 \"rqalpha create-bundle\" 以创建 bundle"
+#: rqalpha/cmds/bundle.py:89
+msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
+msgstr "bundle 不存在，执行 \"rqalpha create-bundle\" 以创建 bundle"
 
-#: rqalpha/cmds/bundle.py:106
+#: rqalpha/cmds/bundle.py:108
 msgid ""
 "\n"
 "    [WARNING]\n"
@@ -182,19 +184,19 @@ msgstr ""
 "    该路径下的内容将会被移除.\n"
 "    确定继续吗?"
 
-#: rqalpha/cmds/bundle.py:124
+#: rqalpha/cmds/bundle.py:126
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr "数据下载成功: {bundle_path}"
 
-#: rqalpha/cmds/bundle.py:134
+#: rqalpha/cmds/bundle.py:136
 msgid "try {} ..."
 msgstr "尝试 {} ..."
 
-#: rqalpha/cmds/bundle.py:145
+#: rqalpha/cmds/bundle.py:147
 msgid "downloading ..."
 msgstr "下载中 ..."
 
-#: rqalpha/cmds/bundle.py:158
+#: rqalpha/cmds/bundle.py:160
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
@@ -999,4 +1001,29 @@ msgstr "未知的市场类型：{}"
 
 #~ msgid "target percent of should {} between 0 and 1, current: {}"
 #~ msgstr ""
+
+#~ msgid ""
+#~ "rqdatac is required to create bundle,"
+#~ " you also can use \"rqalpha "
+#~ "download-bundle\" to download to download"
+#~ " monthly updated bundle"
+#~ msgstr ""
+#~ "创建 bundle 依赖 rqdatac。您可以访问 "
+#~ "https://www.ricequant.com/welcome/rqdata 获取 rqdatac，或执行"
+#~ " \"rqalpha download-bundle\" 下载月度更新的 bundle"
+#~ " 数据。"
+
+#~ msgid ""
+#~ "rqdatac is required to update bundle,"
+#~ " you also can use \"rqalpha "
+#~ "download-bundle\" to download to download"
+#~ " monthly updated bundle"
+#~ msgstr ""
+#~ "更新 bundle 依赖 rqdatac。您可以访问 "
+#~ "https://www.ricequant.com/welcome/rqdata 获取 rqdatac，或执行"
+#~ " \"rqalpha download-bundle\" 下载月度更新的 bundle"
+#~ " 数据。"
+
+#~ msgid "bundle not exist, use create-bundle command instead"
+#~ msgstr "bundle 不存在，您需要先执行 \"rqalpha create-bundle\" 以创建 bundle"
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-04-03 10:25+0800\n"
+"POT-Creation-Date: 2020-04-03 20:11+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -141,25 +141,27 @@ msgstr ""
 
 #: rqalpha/cmds/bundle.py:44
 msgid ""
-"rqdatac is required to create bundle, you also can use \"rqalpha "
-"download-bundle\" to download to download monthly updated bundle"
+"rqdatac is required to create bundle. you can visit "
+"https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
+" download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:54 rqalpha/cmds/bundle.py:83
+#: rqalpha/cmds/bundle.py:55 rqalpha/cmds/bundle.py:85
 msgid "rqdatac init failed with error: {}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:73
+#: rqalpha/cmds/bundle.py:74
 msgid ""
-"rqdatac is required to update bundle, you also can use \"rqalpha "
-"download-bundle\" to download to download monthly updated bundle"
+"rqdatac is required to update bundle. you can visit "
+"https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
+" download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:87
-msgid "bundle not exist, use create-bundle command instead"
+#: rqalpha/cmds/bundle.py:89
+msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:106
+#: rqalpha/cmds/bundle.py:108
 msgid ""
 "\n"
 "    [WARNING]\n"
@@ -168,19 +170,19 @@ msgid ""
 "    Are you sure to continue?"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:124
+#: rqalpha/cmds/bundle.py:126
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:134
+#: rqalpha/cmds/bundle.py:136
 msgid "try {} ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:145
+#: rqalpha/cmds/bundle.py:147
 msgid "downloading ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:158
+#: rqalpha/cmds/bundle.py:160
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
