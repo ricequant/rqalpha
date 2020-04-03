@@ -467,7 +467,7 @@ def order_target_portfolio(target_portfolio):
     for id_or_ins, target_percent in six.iteritems(target_portfolio):
         order_book_id = assure_stock_order_book_id(id_or_ins)
         if target_percent < 0:
-            raise RQInvalidArgument(_(u"target percent of should {} between 0 and 1, current: {}").format(
+            raise RQInvalidArgument(_(u"target percent of {} should between 0 and 1, current: {}").format(
                 order_book_id, target_percent
             ))
         price = env.data_proxy.get_last_price(order_book_id)

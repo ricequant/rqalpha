@@ -41,14 +41,17 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
     try:
         import rqdatac
     except ImportError:
-        click.echo('rqdatac is required to create bundle')
+        click.echo(_(
+            'rqdatac is required to create bundle, '
+            'you also can use "rqalpha download-bundle" to download to download monthly updated bundle'
+        ))
         return 1
 
     try:
         init_rqdatac_env(rqdatac_uri)
         rqdatac.init()
     except ValueError as e:
-        click.echo('rqdatac init failed with error: {}'.format(e))
+        click.echo(_('rqdatac init failed with error: {}').format(e))
         return 1
 
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
@@ -69,7 +72,7 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
     except ImportError:
         click.echo(_(
             'rqdatac is required to update bundle, '
-            'you can user "rqalpha download-bundle" to download to download monthly updated bundle'
+            'you also can use "rqalpha download-bundle" to download to download monthly updated bundle'
         ))
         return 1
 
