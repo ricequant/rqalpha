@@ -164,7 +164,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
-        order_filter = None if order_book_id is None else lambda a, o: o.order_book_id == order_book_id
+        order_filter = None if order_book_id is None else lambda a_and_o: a_and_o[1].order_book_id == order_book_id
         for account, order in filter(order_filter, self._open_orders):
             self._get_matcher(order.order_book_id).match(account, order, open_auction=False)
         for account, order in filter(order_filter, self._open_auction_orders):

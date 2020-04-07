@@ -124,7 +124,7 @@ def index_weights(order_book_id, date=None):
     else:
         date = to_date(date)
         if date > dt:
-            raise RQInvalidArgument(_('in index_components, date {} is no earlier than previous test date {}').format(
+            raise RQInvalidArgument(_('in index_weights, date {} is no earlier than previous test date {}').format(
                 date, dt
             ))
     order_book_id = assure_order_book_id(order_book_id)
@@ -580,6 +580,9 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
     result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
     if result is None:
         return pd.DataFrame()
+
+    if expect_df:
+        return result
 
     if len(result.major_axis) == 1:
         frame = result.major_xs(result.major_axis[0])

@@ -14,13 +14,13 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 
-import h5py
 import numpy as np
 import pandas as pd
 
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 
 from .storages import AbstractDayBarStore
+from .date_set import open_h5
 
 DEFAULT_DTYPE = np.dtype([
     ('datetime', np.uint64),
@@ -36,7 +36,7 @@ class DayBarStore(AbstractDayBarStore):
     def __init__(self, path):
         if not os.path.exists(path):
             raise FileExistsError("File {} not exist，please update bundle.".format(path))
-        self._h5 = h5py.File(path, 'r')
+        self._h5 = open_h5(path, mode="r")
 
     def get_bars(self, order_book_id):
         try:
@@ -54,7 +54,7 @@ class DayBarStore(AbstractDayBarStore):
 
 class DividendStore:
     def __init__(self, path):
-        self._h5 = h5py.File(path, 'r')
+        self._h5 = open_h5(path, mode="r")
 
     def get_dividend(self, order_book_id):
         try:
@@ -65,8 +65,7 @@ class DividendStore:
 
 class YieldCurveStore:
     def __init__(self, path):
-        with h5py.File(path, 'r') as h5:
-            self._data = h5['data'][:]
+        self._data = open_h5(path, mode="r")["data"][:]
 
     def get_yield_curve(self, start_date, end_date, tenor):
         d1 = convert_date_to_date_int(start_date)
@@ -94,7 +93,7 @@ class YieldCurveStore:
 
 class SimpleFactorStore:
     def __init__(self, path):
-        self._h5 = h5py.File(path, 'r')
+        self._h5 = open_h5(path, mode="r")
 
     def get_factors(self, order_book_id):
         try:
