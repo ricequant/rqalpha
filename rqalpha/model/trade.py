@@ -22,7 +22,7 @@ from rqalpha.utils import id_gen, get_position_direction
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_EFFECT, SIDE, RIGHT_TYPE
+from rqalpha.const import POSITION_EFFECT, SIDE
 
 
 class Trade(object):
@@ -43,14 +43,13 @@ class Trade(object):
         self._close_today_amount = None
         self._side = None
         self._position_effect = None
-        self._right_type = None  # type: Optional[RIGHT_TYPE]
         self._order_book_id = None
         self._frozen_price = None
 
     @classmethod
     def __from_create__(
             cls, order_id, price, amount, side, position_effect, order_book_id, commission=0., tax=0.,
-            trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None, right_type=None
+            trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None
     ):
 
         trade = cls()
@@ -78,7 +77,6 @@ class Trade(object):
         trade._close_today_amount = close_today_amount
         trade._side = side
         trade._position_effect = position_effect
-        trade._right_type = right_type
         trade._order_book_id = order_book_id
         trade._frozen_price = frozen_price
         return trade
@@ -97,7 +95,6 @@ class Trade(object):
         POSITION_EFFECT.OPEN if self._side == SIDE.BUY else POSITION_EFFECT.CLOSE
     ))
     position_direction = property(lambda self: get_position_direction(self._side, self._position_effect))
-    right_type = property(lambda self: self._right_type)
     exec_id = property(lambda self: self._trade_id)
     frozen_price = property(lambda self: self._frozen_price)
     close_today_amount = property(lambda self: self._close_today_amount)
