@@ -18,10 +18,9 @@ import six
 import pandas as pd
 
 
-def generate_report(result_dict, target_report_csv_path):
+def generate_report(result_dict, output_path):
     from six import StringIO
 
-    output_path = os.path.join(target_report_csv_path, result_dict["summary"]["strategy_name"])
     try:
         os.mkdir(output_path)
     except:
