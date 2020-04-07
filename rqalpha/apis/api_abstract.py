@@ -410,3 +410,33 @@ def order_to(order_book_id, quantity, price=None, style=None):
         order_to('RB1710', -1)
     """
     raise NotImplementedError
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(verify_that("amount", pre_check=True).is_number().is_greater_than(0))
+@instype_singledispatch
+def exercise(id_or_ins, amount, convert=False):
+    # type: (Union[str, Instrument], int, Optional[bool]) -> Optional[Order]
+    """
+        行权。针对期权、可转债等含权合约，行使合约权利方被赋予的权利。
+
+        :param id_or_ins: 行权合约，order_book_id 或 Instrument 对象
+        :param amount: 参与行权的合约数量
+        :param convert: 是否为转股（转债行权时可用）
+
+        :example:
+
+        .. code-block:: python
+
+            # 行使一张豆粕1905购2350的权力
+            exercise("M1905C2350", 1)
+
+        """
+    raise NotImplementedError

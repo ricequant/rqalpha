@@ -31,7 +31,6 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.api import export_as_api
 from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
@@ -201,50 +200,6 @@ def cancel_order(order):
     if env.can_cancel_order(order):
         env.broker.cancel_order(order)
     return order
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR, EXECUTION_PHASE.ON_TICK, EXECUTION_PHASE.OPEN_AUCTION)
-@apply_rules(
-    verify_that("id_or_ins", pre_check=True).is_valid_instrument((INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.OPTION)),
-    verify_that("amount", pre_check=True).is_number().is_greater_or_equal_than(0),
-    verify_that("right_type", pre_check=True).is_in(RIGHT_TYPE, ignore_none=True)
-)
-def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
-    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> Optional[Order]
-    """
-    行权。针对期权、可转债等含权合约，行使合约权利方被赋予的权利。
-
-    :param id_or_ins: 行权合约，order_book_id 或 Instrument 对象
-    :param amount: 参与行权的合约数量
-    :param right_type: 权利类型，对于含有多种权利的合约（如可转债），选择行使何种权利
-
-    :example:
-
-    .. code-block:: python
-
-        # 行使一张豆粕1905购2350的权力
-        exercise("M1905C2350", 1)
-
-    """
-
-    amount = int(amount)
-    if amount <= 0:
-        user_system_log.warn(_(u"Order Creation Failed: Order amount should be positive."))
-        return None
-    if right_type != RIGHT_TYPE.SELL_BACK:
-        raise NotImplementedError(_("exercise only supports sell back now"))
-    env = Environment.get_instance()
-    if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
-    else:
-        order_book_id = env.data_proxy.instruments(id_or_ins).order_book_id
-    order = Order.__from_create__(
-        order_book_id, amount, SIDE.SELL, None, POSITION_EFFECT.EXERCISE, right_type=right_type
-    )
-    if env.can_submit_order(order):
-        env.broker.submit_order(order)
-        return order
 
 
 @export_as_api
