@@ -420,7 +420,7 @@ def order_to(order_book_id, quantity, price=None, style=None):
     EXECUTION_PHASE.SCHEDULED,
     EXECUTION_PHASE.GLOBAL
 )
-@apply_rules(verify_that("amount", pre_check=True).is_number().is_greater_than(0))
+@apply_rules(verify_that("amount", pre_check=True).is_number().is_greater_or_equal_than(1))
 @instype_singledispatch
 def exercise(id_or_ins, amount, convert=False):
     # type: (Union[str, Instrument], int, Optional[bool]) -> Optional[Order]
