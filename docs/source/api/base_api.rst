@@ -233,6 +233,8 @@ exercise - 行权
 ..  autofunction:: exercise
 
 
+.. _api-position-api:
+
 持仓查询接口
 ======================================================
 
@@ -553,6 +555,8 @@ time_rule - 定时间运行
 
             scheduler.run_daily(function, time_rule='before_trading')
 
+
+.. _api-base-types:
 
 类
 ======================================================

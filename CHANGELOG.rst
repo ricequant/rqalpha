@@ -3,6 +3,56 @@ CHANGELOG
 ==================
 
 
+4.0.0
+==================
+
+
+**[For 开发/运行策略的用户]**
+
+对于开发/运行策略的用户，RQAlpha 4.x 版本改动的核心是加强与 `RQDatac`_ 之间的联动，拥有 RQDatac license 的用户可以更及时地更新 bundle，
+亦可以在开源的 RQAlpha 框架下直接调用从前在 Ricequant 网站或终端产品中才能使用的扩展 API。
+
+4.x 版本的改动如下
+
+- 新增
+
+  - 新增集合竞价函数 :code:`open_auction` ，您可以在该函数内发单以实现开盘成交，详见 :ref:`api-base-api`
+  - 新增扩展 API 的实现，使用扩展 API 依赖 `RQDatac`_ ，详见 :ref:`api-extend-api`
+  - 新增股票下单 API，``order_target_portfolio``_，使用该 API 可以根据给定的目标组合仓位批量下单，详见 :ref:`api-base-api`
+
+- 变更
+
+  - ``rqalpha update-bundle`` 命令的功能改为使用 RQDatac 更新已存在的数据 bundle，新增 ``rqalpha download-bundle`` 和 ``rqalpha create-bundle`` 命令用于下载和创建 bundle，详见 :ref:`intro-install-get-data`
+  - ``line-profiler`` 库不再是 RQAlpha 的硬性依赖，如果您需要性能分析功能，则需要手动安装 ``line-profiler``，详见 :ref:`intro-faq`
+  - 配置项中股票和期货验券风控的开关 ``validate_stock_position`` 和 ``validate_future_position`` 移动到了 :code:`rqalpha_mod_sys_accounts`，详见 `rqalpha_mod_sys_accounts`_
+  - 传入 ``--report`` 参数后输出的策略报告文件将直接生成于 ``--report`` 参数值给定的目录下，不再在该目录下新建以策略名为名称的文件夹
+
+- 废弃
+
+  - 不再支持 Python2.7
+  - ``context.portfolio.positions`` 可能会在未来版本中废弃，推荐使用 ``get_position`` 和 ``get_positions`` API 获取仓位信息，详见 :ref:`api-position-api`
+  - ``context`` 对象的部分老旧属性已移除，如 ``stock_portfolio``、``future_portfolio``、``slippage``、``benchmark``、``margin_rate``、``commission`` 等，详见 :ref:`api-base-types`
+
+
+**[For Mod 开发者]**
+
+RQAlpha 4.x 相对于 3.x 版本进行了部分重构，重构的核心目标是 Mod 开发者可以更方便地对接不同品种的金融工具。
+
+- :code:`BaseDataSource` 新增 ``register_day_bar_store``、``register_instruments_store``、``register_dividend_store``、``register_split_store``、``register_calendar_store`` 方法，用于在不重载 :code:`DataSource` 的情况下对接更丰富的行情及基础数据
+- 移除 ``rqalpha mod install/uninstall`` 命令，您可以使用 ``pip install/uninstall`` 命令替代，详见 :ref:`development-mod`
+- :code:`Environment` 移除 ``set_account_model``、``get_account_model`` 方法，默认的 :code:`Account` 类现在可以支持挂载不同类型的金融工具持仓，大多数情况下无需重载 :code:`Account` 对象
+- :code:`Environment` 移除 ``set_position_model``、``get_position_model`` 方法，重载的 :code:`Position` 类型可以调用 :code:`Portfolio.register_instrument_type` 注册
+- 重构了 :code:`AbstractPosition` 接口，现在的 :code:`Position` 对象仅表征单个方向的持仓，而非包含多空两方向的持仓，详见 :ref:`development-basic-concept`
+- 移除了 :code:`BenchmarkProvider` 接口，基准相关的逻辑转移到 :code:`rqalpha_mod_sys_analyser` 内部
+- :code:`BaseDataSource` 使用的 bundle 格式由 bcolz 替换为 hdf5
+- 移除 Mod: ``rqalpha_mod_sys_funcat``、``rqalpha_mod_sys_benchmark``
+- :code:`Instrument` 新增 ``calc_cash_occupation`` 方法，该方法被风控等模块用于计算订单需要占用的资金量，对接新品种的金融工具应重载该方法
+- 移除了一下冗余的 logger 对象：``user_detail_log``、``basic_system_log``、``std_log``
+
+.. _RQDatac: https://www.ricequant.com/welcome/rqdata
+.. _rqalpha_mod_sys_accounts: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_accounts/README.rst
+
+
 3.4.4
 ==================
 
