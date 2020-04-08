@@ -414,7 +414,6 @@ def order_to(order_book_id, quantity, price=None, style=None):
 
 @export_as_api
 @ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.SCHEDULED,

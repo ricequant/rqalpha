@@ -15,24 +15,23 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from datetime import datetime
 from collections import defaultdict
 
 from rqalpha.utils import is_valid_price
+from rqalpha.portfolio.account import Account
 from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.model.order import Order
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.environment import Environment
-from rqalpha.interface import AbstractAccount, AbstractPosition
 
 from .slippage import SlippageDecider
 
 
 class AbstractMatcher:
     def match(self, account, order, open_auction):
-        # type: (AbstractAccount, Order, bool) -> None
+        # type: (Account, Order, bool) -> None
         raise NotImplementedError
 
     def update(self):
@@ -86,8 +85,10 @@ class DefaultMatcher(AbstractMatcher):
     def _open_auction_deal_price_decider(self, order_book_id, _):
         return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).open
 
-    def _match(self, account, order, open_auction):
-        # type: (AbstractAccount, Order, bool) -> None
+    def match(self, account, order, open_auction):
+        # type: (Account, Order, bool) -> None
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            raise NotImplementedError
         order_book_id = order.order_book_id
         instrument = self._env.get_instrument(order_book_id)
 
@@ -213,42 +214,6 @@ class DefaultMatcher(AbstractMatcher):
                 volume_percent_limit=self._volume_percent * 100.0
             )
             order.mark_cancelled(reason)
-
-    def _match_exercise(self, account, order):
-        # type: (AbstractAccount, Order) -> None
-        price = self._env.data_proxy.get_last_price(order.order_book_id)
-        position = account.get_position(order.order_book_id, order.position_direction)  # type: AbstractPosition
-        quantity = min(position.closable, order.quantity)
-
-        if quantity == 0:
-            order.mark_cancelled(_(u"Order Cancelled: {} has not no exercisable quantity").format(
-                order.order_book_id
-            ))
-            return
-        trade = Trade.__from_create__(
-            order.order_id, price, quantity, order.side, POSITION_EFFECT.EXERCISE, order.order_book_id,
-            right_type=order.right_type
-        )
-        trade._commission = self._env.get_trade_commission(trade)
-        trade._tax = self._env.get_trade_tax(trade)
-        if trade.position_effect == POSITION_EFFECT.EXERCISE:
-            order.fill(trade)
-        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
-
-        if order.unfilled_quantity != 0:
-            order.mark_cancelled(_(
-                u"exercisable quantity {exercisable_quantity} of {order_book_id} is less than "
-                u"order quantity {order_quantity}"
-            ).format(
-                exercisable_quantity=order.filled_quantity, order_book_id=order.order_book_id,
-                order_quantity=order.quantity
-            ))
-
-    def match(self, account, order, open_auction):
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
-            return self._match_exercise(account, order)
-        else:
-            return self._match(account, order, open_auction)
 
     def update(self):
         self._turnover.clear()
