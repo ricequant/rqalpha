@@ -341,10 +341,15 @@ class Account(AbstractAccount):
             return
         order_book_id = trade.order_book_id
         if trade.position_effect == POSITION_EFFECT.MATCH:
-            self._total_cash += self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG).apply_trade(trade)
-            self._total_cash += self._get_or_create_pos(order_book_id, POSITION_DIRECTION.SHORT).apply_trade(trade)
+            delta_cash = self._get_or_create_pos(
+                order_book_id, POSITION_DIRECTION.LONG
+            ).apply_trade(trade) + self._get_or_create_pos(
+                order_book_id, POSITION_DIRECTION.SHORT
+            ).apply_trade(trade)
+            self._total_cash += delta_cash
         else:
-            self._total_cash += self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
+            delta_cash = self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
+            self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
         if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:
