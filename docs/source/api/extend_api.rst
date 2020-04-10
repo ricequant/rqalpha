@@ -4,12 +4,14 @@
 扩展 API
 ==================
 
-扩展API 是Ricequant从众多的数据源中整理、归纳和维护的众多数据类型的API，RQAlpha中不支持相应数据的获取和查询，如果想要使用扩展API 可以在 `Ricequant <https://www.ricequant.com>`_ 中免费使用。或者联系我们获取全功能支持的机构版。
-
-未来我们可能会考虑以接口和授权的方式来开放数据源的获取，届时Extend API 将可以在RQAlpha中被调用。
+扩展 API 是 Ricequant 从众多的数据源中整理、归纳和维护的众多数据类型的API。
+这些 API 中的数据大多由 `RQDatac`_ 提供，所以调用扩展 API 需要您在环境安装有 `RQDatac`_ 且获得了 `RQDatac`_ 的使用权限，
+您可以访问 `Ricequant 官网 <https://www.ricequant.com/welcome/rqdata>`_ 免费申请试用 `RQDatac`_ 及获取 `RQDatac`_ 的文档。
+您亦可以在 `Ricequant 在线量化平台 <https://www.ricequant.com/welcome/quant>`_ 中运行策略并免费调用扩展 API。
 
 您也可以通过按照接口规范来进行 API 的扩展。
 
+.. _RQDatac: https://www.ricequant.com/welcome/rqdata
 
 get_price - 合约历史数据
 ------------------------------------------------------
