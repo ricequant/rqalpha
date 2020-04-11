@@ -13,7 +13,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import datetime
-from typing import  Union, Optional, Iterable, List
+from typing import Union, Optional, Iterable, List
 
 import six
 from dateutil.parser import parse
@@ -33,7 +33,6 @@ from rqalpha.apis.api_base import assure_order_book_id
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_log
 
-
 try:
     import rqdatac
 except ImportError:
@@ -45,6 +44,7 @@ except ImportError:
 
         def __call__(self, *args, **kwargs):
             raise RuntimeError('rqdatac is required')
+
 
     rqdatac = DummyRQDatac()
 
@@ -193,7 +193,6 @@ def index_weights(order_book_id, date=None):
 
 @export_as_api
 def concept(*concept_names):
-
     # type: (*str) -> List[str]
     """
     获取T日的概念股列表
@@ -308,15 +307,15 @@ def concept(*concept_names):
              verify_that('adjust_type').is_in(['pre', 'post', 'none', 'internal']),
              verify_that('skip_suspended').is_instance_of(bool))
 def get_price(
-    order_book_ids,        # type: Union[str, Iterable[str]]
-    start_date,            # type: Union[datetime.date, str]
-    end_date=None,         # type: Optional[Union[datetime.date, datetime.datetime, str]]
-    frequency='1d',        # type: Optional[str]
-    fields=None,           # type: Optional[Iterable[str]]
-    adjust_type='pre',     # type: Optional[str]
-    skip_suspended=False,  # type: Optional[bool]
-    expect_df=False        # type: Optional[bool]
-):                         # type: (...) -> Union[pd.DataFrame, pd.Panel, pd.Series]
+        order_book_ids,  # type: Union[str, Iterable[str]]
+        start_date,  # type: Union[datetime.date, str]
+        end_date=None,  # type: Optional[Union[datetime.date, datetime.datetime, str]]
+        frequency='1d',  # type: Optional[str]
+        fields=None,  # type: Optional[Iterable[str]]
+        adjust_type='pre',  # type: Optional[str]
+        skip_suspended=False,  # type: Optional[bool]
+        expect_df=False  # type: Optional[bool]
+):  # type: (...) -> Union[pd.DataFrame, pd.Panel, pd.Series]
     """
     获取指定合约或合约列表的历史行情（包含起止日期，日线或分钟线），不能在'handle_bar'函数中进行调用。
 
@@ -416,11 +415,11 @@ def get_price(
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_MARGIN_FIELDS, ignore_none=True))
 def get_securities_margin(
-    order_book_ids,  # type: Union[str, Iterable[str]]
-    count=1,         # type: Optional[int]
-    fields=None,     # type: Optional[str]
-    expect_df=False  # type: Optional[bool]
-):                   # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
+        order_book_ids,  # type: Union[str, Iterable[str]]
+        count=1,  # type: Optional[int]
+        fields=None,  # type: Optional[str]
+        expect_df=False  # type: Optional[bool]
+):  # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
     """
     获取融资融券信息。包括 `深证融资融券数据 <http://www.szse.cn/main/disclosure/rzrqxx/rzrqjy/>`_ 以及 `上证融资融券数据 <http://www.sse.com.cn/market/othersdata/margin/detail/>`_ 情况。既包括个股数据，也包括市场整体数据。需要注意，融资融券的开始日期为2010年3月31日。
 
@@ -527,13 +526,13 @@ def get_securities_margin(
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_SHARE_FIELDS, ignore_none=True))
 def get_shares(
-    order_book_ids,  # type: str
-    count=1,         # type: Optional[int]
-    fields=None,     # type: Optional[str]
-    expect_df=False  # type: Optional[bool]
-):                   # type: (...) -> Union[pd.DataFrame, pd.Series]
+        order_book_ids,  # type: Union[str, List[str]]
+        count=1,  # type: Optional[int]
+        fields=None,  # type: Optional[str]
+        expect_df=False  # type: Optional[bool]
+):  # type: (...) -> Union[pd.DataFrame, pd.Series]
     """
-    :param order_book_ids: 可输入order_book_id或symbol
+    :param order_book_ids: 可输入 order_book_id, order_book_id list, symbol, symbol list
     :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
     :param fields: 期望返回的字段，默认为所有字段。见下方列表
     :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
@@ -585,11 +584,11 @@ def get_shares(
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_TURNOVER_FIELDS, ignore_none=True))
 def get_turnover_rate(
-    order_book_ids,  # type: str
-    count=1,         # type: Optional[int]
-    fields=None,     # type: Optional[set]
-    expect_df=False  # type: Optional[bool]
-):                   # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
+        order_book_ids,  # type: Union[str, List[str]]
+        count=1,  # type: Optional[int]
+        fields=None,  # type: Optional[set]
+        expect_df=False  # type: Optional[bool]
+):  # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
     """
     获取截止T-1交易日的换手率数据
 
@@ -658,13 +657,39 @@ def get_turnover_rate(
 
 @export_as_api
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0))
-def get_price_change_rate(order_book_ids, count=1, expect_df=False):
+def get_price_change_rate(
+        order_book_ids,  # type: Union[str, List[str]]
+        count=1,  # type: Optional[int]
+        expect_df=False  # type: Optional[bool]
+):  # type: (...) -> Union[pd.DataFrame, pd.Series]
     """
     获取股票/指数截止T-1日的日涨幅
-    :param order_book_ids:
-    :param count: 获取多少个交易日的数据
-    :param expect_df: 默认为False。当设置为True时，总是返回 multi-index DataFrame
-    :return: Series/DataFrame，参见rqdatac的文档
+
+    :param order_book_ids: 可输入 order_book_id, order_book_id list, symbol, symbol list
+    :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+
+    当 expect_df 为 False 时，返回值的类型如下：
+
+        *  传入多个order_book_id，函数会返回pandas DataFrame
+        *  传入一个order_book_id，函数会返回pandas Series
+
+    :example:
+
+    获取平安银行以及沪深300指数一段时间的涨跌幅情况:
+
+    ..  code-block:: python3
+        :linenos:
+
+        get_price_change_rate(['000001.XSHE', '510050.XSHG'], 1)
+        # [Out]
+        # 2016-06-01 15:30:00.00  INFO   order_book_id  000001.XSHE  510050.XSHG
+        #                                date
+        #                                2016-05-31        0.026265     0.033964
+        # 2016-06-02 15:30:00.00  INFO   order_book_id  000001.XSHE  510050.XSHG
+        #                                date
+        #                                2016-06-01       -0.006635    -0.008308
+
     """
     env = Environment.get_instance()
     data_proxy = env.data_proxy
@@ -686,7 +711,13 @@ def get_price_change_rate(order_book_ids, count=1, expect_df=False):
 
 @export_as_api
 @apply_rules(verify_that('universe').are_valid_instruments(ignore_none=True))
-def get_factor(order_book_ids, factors, count=1, universe=None, expect_df=False):
+def get_factor(
+        order_book_ids,
+        factors,
+        count=1,
+        universe=None,
+        expect_df=False
+):
     """
     获取股票截止T-1日的因子数据
     :param order_book_ids:
@@ -925,7 +956,6 @@ def _futures_get_warehouse_stocks(underlying_symbols, count=1):
 futures.get_dominant = staticmethod(_futures_get_dominant)
 futures.get_member_rank = staticmethod(_futures_get_member_rank)
 futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
-
 
 # =======================  以下 API 不建议使用  =================================
 
