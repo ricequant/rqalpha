@@ -193,10 +193,98 @@ def index_weights(order_book_id, date=None):
 
 @export_as_api
 def concept(*concept_names):
+
+    # type: (*str) -> List[str]
     """
     获取T日的概念股列表
-    :param concept_names: 概念列表
-    :return: list of order_book_id
+
+    :param concept_names: 概念名称。可以从概念列表中选择一个或多个概念填写
+    :return: 属于该概念的股票 order_book_id
+
+    :example:
+
+    得到一个概念的股票列表：
+
+    .. code-block:: python3
+        :linenos:
+
+        concept('民营医院')
+        # [Out]
+        # ['600105.XSHG',
+        # '002550.XSHE',
+        # '002004.XSHE',
+        # '002424.XSHE',
+        # ...]
+
+    得到某几个概念的股票列表:
+
+    .. code-block::
+        :linenos:
+
+        concept('民营医院', '国企改革')
+        # [Out]
+        # ['601607.XSHG',
+        # '600748.XSHG',
+        # '600630.XSHG',
+        # ...]
+
+
+    .. note::
+
+        概念列表：
+
+        3D打印  3D玻璃  4G概念  5G概念  360私有化  AB股  AH股  BDI指数  IPV6  ITO导电玻璃
+        LED  MLCC  MSCI概念  O2O概念  OLED  P2P概念  PET薄膜  PM2.5  PPP模式  QFII重仓
+        ST概念  S股  VA  VB1  VC  VD3  VE  一带一路  万达私有化  三七概念
+        三沙概念  三网融合  三聚氰胺  上海国资改革  上海房价上涨  上海自贸区  不锈钢概念  丙烯类  东盟自贸区  东莞房价上涨
+        丝绸之路  两桶油改革  中厚板  中央政务区  中字头  中山房价上涨  中成药  中药饮片  中超概念  中韩自贸区
+        临沂房价上涨  丹参概念  举牌概念  乙二醇概念  乳业  二胎概念  云计算  互联网+  互联网金融  京津冀一体化
+        人免疫球蛋白概念  人凝血因子概念  人参概念  人工智能  人工牛黄概念  人民币贬值概念  人脑工程  人脸识别  人血白蛋白概念  休闲食品
+        低碳经济  体检与健康管理  体育产业  何首乌概念  佛山房价上涨  供应链金融  供热  保健酒  债转股  健康中国
+        充电桩  光伏概念  光伏电池  光学膜  光学镜头  免疫治疗  党参概念  兜底增持概念  全息技术  六味地黄
+        六氟磷酸锂  兰州房价上涨  共享单车  养老概念  养老金持股  军工  军民融合  农业现代化  农机  农村电商
+        冬虫夏草概念  冷轧  冷链物流  切片  创投  制冷剂  券商  前海概念  动力煤  化学制剂
+        化学原料药  北京冬奥会  北京房价上涨  北斗导航  区块链  医用医疗器械  医用耗材  医疗器械  医疗机构配套服务  医药中间体
+        医药工业配套服务  医药电商  医药设备和实验室工程  医院  单抗概念  单晶硅  南京房价上涨  南宁房价上涨  南昌房价上涨  南通房价上涨
+        印刷电路板（PCB）  厦门房价上涨  参股券商  参股新股  可燃冰  合同能源  合肥房价上涨  吉林房价上涨  含氟精细化工  含氟聚合物材料
+        呼和浩特房价上涨  咖啡因概念  哈尔滨房价上涨  唐山房价上涨  徐州房价上涨  微信小程序  快递  恒大概念  惠州房价上涨  成渝特区
+        啤酒  固废处理  国产软件  国企改革  土地流转  在线教育  地下管网  地热能  地黄概念  型材
+        型材（钢材）  基因工程药物  基因测序  塑料钞票  增强现实  壳资源  复合肥  大数据  大理房价上涨  大输液
+        大连房价上涨  大金融  大飞机  天津房价上涨  家用电器  宽带中国  尼龙66切片  尼龙薄膜  尾气治理  尿素
+        天津自贸区  天然气  天然气供应  太阳能  头孢  宁波房价上涨  安防  宜兴房价上涨  实体药店  家用医疗器械
+        川贝概念  工业4.0  工业导爆索  工业雷管  己二酸概念  布洛芬概念  常州房价上涨  广州房价上涨  廊坊房价上涨  建筑节能
+        彩票概念  成都房价上涨  房地产开发  房屋租赁  手游概念  振兴东北  摘帽  新零售  无人机  无人零售
+        数字电视  文化传媒  新三板  新型城镇化  新材料  新疆基建  新疆振兴  新股与次新股  新能源  新能源车
+        无人驾驶  无汞电解二氧化锰  无烟煤  棒材（钢材）  武汉房价上涨  民营医院  民营银行  氟化工  氧化铁  氧化锆
+        无线充电  无锡房价上涨  昆山房价上涨  普通电解二氧化锰  景点旅游  智慧停车  智慧城市  智能交通  智能医疗  智能家居
+        智能电网  智能电视  智能穿戴  智能音箱  有机硅类  期货概念  机器人概念  杀菌剂  杀虫剂  杭州亚运会
+        杭州房价上涨  杭州湾大湾区  板材  板材（钢材）  板蓝根概念  染料类  柴油  柴胡概念  核电  棉花
+        氨纶  水利建设  水泥  水电  汕头房价上涨  江苏国资改革  污水处理  汽油  汽车电子概念  沈阳房价上涨
+        沥青类  沪港通  油品升级  油改概念  油气设备服务  泉州房价上涨  济南房价上涨  海参  海口房价上涨  海峡西岸
+        海工装备  海洋经济  海绵城市  涤纶类  液晶面板  液氨  液碱  深圳国资改革  深圳房价上涨  深港通
+        湖州房价上涨  滨海新区  火电  炭黑概念  炸药  烟台房价上涨  烧碱  热轧  焦炭概念  焦煤
+        煤化工  煤改气  燃料乙醇  燃料电池  牛黄概念  物流电商平台  物联网  特斯拉  特色小镇  特钢概念
+        特高压  独家药品  猪  王者荣耀概念  环戊烷  环氧丙烷  玻璃基板  玻璃概念  玻璃纤维  玻纤类
+        珠海房价上涨  生态农业  生物医药  生物疫苗  生物质能  甲醇概念  电力改革  电商概念  电子信息  电子发票
+        电子竞技  疫苗  病毒防治  白炭黑  白酒  白银  白马股  盖板玻璃  石墨烯  石油
+        磁性材料  磷矿石  磷酸  磷酸盐  磷酸铁  磷铵  票交所  福州房价上涨  福建自贸区  禽流感
+        移动互联网  移动支付  稀土  稀土永磁  稀缺资源  管材  管材（钢材）  粘胶短纤  粘胶长丝  粤港澳自贸区
+        精对苯二甲酸（PTA）  糖  红参概念  红花概念  纯碱概念  线材（钢材）  绍兴房价上涨  维生素  网上药店  网红直播
+        网约车  网络安全  网络游戏  美丽中国  耐火材料  职业教育  联碱  联通混改  聚丙烯  聚氨酯
+        聚氨酯胶  聚氯乙烯  聚氯乙烯树脂  聚氯乙烯糊树脂  聚酯切片  聚酯薄膜  聚醚类  肉制品  股权冻结  股权转让
+        胶印油墨  能源互联网  腾讯概念  自来水  自由贸易港  航母概念  航空煤油  节能照明  节能环保  芜湖房价上涨
+        芯片概念  苏州房价上涨  苹果概念  茯苓概念  草甘膦  药品分销  葡萄酒  蓝宝石  虚拟现实  蚂蚁金服概念
+        蚌埠房价上涨  蛋氨酸  融资融券  螺纹钢  血塞（栓）通  血液制品  装配式建筑  西安房价上涨  西安自贸区  西洋参概念
+        覆铜板  触摸屏概念  证金持股  诊断试剂  语音技术  调味品  贵阳房价上涨  赛马概念  超导概念  超级品牌
+        超级电容  超细纤维类  足球概念  跨境电商  车联网  转融券标的  轮胎  连翘概念  迪士尼  送转预期
+        通用航空  郑州房价上涨  醋酸丁酯  重庆房价上涨  量子通信  金华房价上涨  金融IC  金融改革  金融机具  金银花概念
+        钒电池  钛白粉  钢坯  钨  钴  钼  铁精粉  铁路基建  铅  铜
+        铝  铝电解电容器  银川房价上涨  银杏叶概念  锂  锂电池概念  锂离子电解液  锂锰电解二氧化锰  锌  锡盐
+        锦纶丝类  锦纶切片  镇江房价上涨  镍  长春房价上涨  长沙房价上涨  阻燃树脂  阿胶概念  阿里概念  除草剂
+        雄安新区  集成电路  青岛房价上涨  青霉素类概念  靶材  页岩气  顺酐类  风电  风能  食品安全
+        饲料概念  驴皮概念  高校  高端装备  高送转  高铁  鸡  鸡尾酒  黄磷  黄芩概念
+        黄芪概念  黄连概念  黄酒  黄金  黄金水道  黑磷
+
     """
     env = Environment.get_instance()
     dt = env.trading_dt.date()
@@ -220,15 +308,15 @@ def concept(*concept_names):
              verify_that('adjust_type').is_in(['pre', 'post', 'none', 'internal']),
              verify_that('skip_suspended').is_instance_of(bool))
 def get_price(
-        order_book_ids,        # type: Union[str, Iterable[str]]
-        start_date,            # type: Union[datetime.date, str]
-        end_date=None,         # type: Optional[Union[datetime.date, datetime.datetime, str]]
-        frequency='1d',        # type: Optional[str]
-        fields=None,           # type: Optional[Iterable[str]]
-        adjust_type='pre',     # type: Optional[str]
-        skip_suspended=False,  # type: Optional[bool]
-        expect_df=False        # type: Optional[bool]
-):                             # type: (...) -> Union[pd.DataFrame, pd.Panel, pd.Series]
+    order_book_ids,        # type: Union[str, Iterable[str]]
+    start_date,            # type: Union[datetime.date, str]
+    end_date=None,         # type: Optional[Union[datetime.date, datetime.datetime, str]]
+    frequency='1d',        # type: Optional[str]
+    fields=None,           # type: Optional[Iterable[str]]
+    adjust_type='pre',     # type: Optional[str]
+    skip_suspended=False,  # type: Optional[bool]
+    expect_df=False        # type: Optional[bool]
+):                         # type: (...) -> Union[pd.DataFrame, pd.Panel, pd.Series]
     """
     获取指定合约或合约列表的历史行情（包含起止日期，日线或分钟线），不能在'handle_bar'函数中进行调用。
 
@@ -241,7 +329,7 @@ def get_price(
     :param fields: 期望返回的字段名称，如 open，close 等
     :param adjust_type: 权息修复方案。前复权 - pre，后复权 - post，不复权 - none
     :param skip_suspended: 是否跳过停牌数据。默认为False，不跳过，用停牌前数据进行补齐。True则为跳过停牌期。注意，当设置为True时，函数order_book_id只支持单个合约传入
-    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免试图构建 Panel 而产生异常
+    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
 
     当 expect_df 为 False 时，返回值的类型如下
 
@@ -327,14 +415,97 @@ def get_price(
 @export_as_api
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_MARGIN_FIELDS, ignore_none=True))
-def get_securities_margin(order_book_ids, count=1, fields=None, expect_df=False):
+def get_securities_margin(
+    order_book_ids,  # type: Union[str, Iterable[str]]
+    count=1,         # type: Optional[int]
+    fields=None,     # type: Optional[str]
+    expect_df=False  # type: Optional[bool]
+):                   # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
     """
-    获取截止T-1日的融资融券信息
-    :param order_book_ids:
-    :param count: 获取多少个交易日的数据
-    :param fields:
-    :param expect_df:
-    :return: Series/DataFrame/Panel，请参考rqdatac的文档
+    获取融资融券信息。包括 `深证融资融券数据 <http://www.szse.cn/main/disclosure/rzrqxx/rzrqjy/>`_ 以及 `上证融资融券数据 <http://www.sse.com.cn/market/othersdata/margin/detail/>`_ 情况。既包括个股数据，也包括市场整体数据。需要注意，融资融券的开始日期为2010年3月31日。
+
+    :param order_book_ids: 可输入order_book_id, order_book_id list, symbol, symbol list。另外，输入'XSHG'或'sh'代表整个上证整体情况；'XSHE'或'sz'代表深证整体情况
+    :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+    :param fields: 期望返回的字段，默认为所有字段。见下方列表
+    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+
+    =========================   ===================================================
+    fields                      字段名
+    =========================   ===================================================
+    margin_balance              融资余额
+    buy_on_margin_value         融资买入额
+    margin_repayment            融资偿还额
+    short_balance               融券余额
+    short_balance_quantity      融券余量
+    short_sell_value            融券卖出额
+    short_sell_quantity         融券卖出量
+    short_repayment_quantity    融券偿还量
+    total_balance               融资融券余额
+    =========================   ===================================================
+
+    当 expect_df 为 False 时，返回值的类型如下：
+
+        *   多个order_book_id，单个field的时候返回DataFrame，index为date，column为order_book_id
+        *   单个order_book_id，多个fields的时候返回DataFrame，index为date，column为fields
+        *   单个order_book_id，单个field返回Series
+        *   多个order_book_id，多个fields的时候返回DataPanel Items axis为fields Major_axis axis为时间戳 Minor_axis axis为order_book_id
+
+    :example:
+
+    *   获取沪深两个市场一段时间内的融资余额:
+
+    ..  code-block:: python3
+        :linenos:
+
+        logger.info(get_securities_margin('510050.XSHG', count=5))
+        #[Out]
+        #margin_balance    buy_on_margin_value    short_sell_quantity    margin_repayment    short_balance_quantity    short_repayment_quantity    short_balance    total_balance
+        #2016-08-01    7.811396e+09    50012306.0    3597600.0    41652042.0    15020600.0    1645576.0    NaN    NaN
+        #2016-08-02    7.826381e+09    34518238.0    2375700.0    19532586.0    14154000.0    3242300.0    NaN    NaN
+        #2016-08-03    7.733306e+09    17967333.0    4719700.0    111043009.0    16235600.0    2638100.0    NaN    NaN
+        #2016-08-04    7.741497e+09    30259359.0    6488600.0    22068637.0    17499000.0    5225200.0    NaN    NaN
+        #2016-08-05    7.726343e+09    25270756.0    2865863.0    40423859.0    14252363.0    6112500.0    NaN    NaN
+
+    *   获取沪深两个市场一段时间内的融资余额:
+
+    ..  code-block:: python3
+        :linenos:
+
+        logger.info(get_securities_margin(['XSHE', 'XSHG'], count=5, fields='margin_balance'))
+        #[Out]
+        #        XSHE        XSHG
+        #2016-08-01    3.837627e+11    4.763557e+11
+        #2016-08-02    3.828923e+11    4.763931e+11
+        #2016-08-03    3.823545e+11    4.769321e+11
+        #2016-08-04    3.833260e+11    4.776380e+11
+        #2016-08-05    3.812751e+11    4.766928e+11
+
+    *   获取上证个股以及整个上证市场融资融券情况:
+
+    ..  code-block:: python3
+        :linenos:
+
+        logger.info(get_securities_margin(['XSHG', '601988.XSHG', '510050.XSHG'], count=5))
+        #[Out]
+        #<class 'pandas.core.panel.Panel'>
+        #Dimensions: 8 (items) x 5 (major_axis) x 3 (minor_axis)
+        #Items axis: margin_balance to total_balance
+        #Major_axis axis: 2016-08-01 00:00:00 to 2016-08-05 00:00:00
+        #Minor_axis axis: XSHG to 510050.XSHG
+
+    *   获取50ETF融资偿还额情况
+
+    ..  code-block:: python3
+        :linenos:
+
+        logger.info(get_securities_margin('510050.XSHG', count=5, fields='margin_repayment'))
+        #[Out]
+        #2016-08-01     41652042.0
+        #2016-08-02     19532586.0
+        #2016-08-03    111043009.0
+        #2016-08-04     22068637.0
+        #2016-08-05     40423859.0
+        #Name: margin_repayment, dtype: float64
     """
     env = Environment.get_instance()
     data_proxy = env.data_proxy
@@ -355,14 +526,45 @@ def get_securities_margin(order_book_ids, count=1, fields=None, expect_df=False)
 @export_as_api
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_SHARE_FIELDS, ignore_none=True))
-def get_shares(order_book_ids, count=1, fields=None, expect_df=False):
+def get_shares(
+    order_book_ids,  # type: str
+    count=1,         # type: Optional[int]
+    fields=None,     # type: Optional[str]
+    expect_df=False  # type: Optional[bool]
+):                   # type: (...) -> Union[pd.DataFrame, pd.Series]
     """
-    获取截止T-1日的股票股本信息
-    :param order_book_ids:
-    :param count: 获取多少个交易日的数据
-    :param fields:
-    :param expect_df:
-    :return: Series/DataFrame/Panel，请参考rqdatac的文档
+    :param order_book_ids: 可输入order_book_id或symbol
+    :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+    :param fields: 期望返回的字段，默认为所有字段。见下方列表
+    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+
+    =========================   ===================================================
+    fields                      字段名
+    =========================   ===================================================
+    total                       总股本
+    circulation_a               流通A股
+    management_circulation      已流通高管持股
+    non_circulation_a           非流通A股合计
+    total_a                     A股总股本
+    =========================   ===================================================
+
+    :return: 查询时间段内某个股票的流通情况，当 expect_df 为 False 且 fields 指定为单一字段的情况时返回 pandas.Series
+
+    :example:
+
+    获取平安银行总股本数据:
+
+    ..  code-block:: python3
+        :linenos:
+
+        logger.info(get_shares('000001.XSHE', count=5, fields='total'))
+        #[Out]
+        #2016-08-01    1.717041e+10
+        #2016-08-02    1.717041e+10
+        #2016-08-03    1.717041e+10
+        #2016-08-04    1.717041e+10
+        #2016-08-05    1.717041e+10
+        #Name: total, dtype: float64
     """
     env = Environment.get_instance()
     dt = env.trading_dt
@@ -382,15 +584,61 @@ def get_shares(order_book_ids, count=1, fields=None, expect_df=False):
 @export_as_api
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_TURNOVER_FIELDS, ignore_none=True))
-def get_turnover_rate(order_book_ids, count=1, fields=None, expect_df=False):
+def get_turnover_rate(
+    order_book_ids,  # type: str
+    count=1,         # type: Optional[int]
+    fields=None,     # type: Optional[set]
+    expect_df=False  # type: Optional[bool]
+):                   # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
     """
     获取截止T-1交易日的换手率数据
-    :param order_book_ids:
-    :param count:
-    :param fields: str或list类型. 默认为None, 返回所有fields.
-                   field 包括： 'today', 'week', 'month', 'year', 'current_year'
-    :param expect_df:
-    :return: Series/DataFrame/Panel，请参考rqdatac的文档
+
+    :param order_book_ids: 可输入 order_book_id, order_book_id list, symbol, symbol list
+    :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
+    :param fields: 期望返回的字段，默认为所有字段。见下方列表
+    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+
+    =========================   ===================================================
+    fields                      字段名
+    =========================   ===================================================
+    today                       当天换手率
+    week                        过去一周平均换手率
+    month                       过去一个月平均换手率
+    three_month                 过去三个月平均换手率
+    six_month                   过去六个月平均换手率
+    year                        过去一年平均换手率
+    current_year                当年平均换手率
+    total                       上市以来平均换手率
+    =========================   ===================================================
+
+    当 expect_df 为 False 时，返回值的类型如下：
+
+        *   如果只传入一个order_book_id，多个fields，返回 `pandas.DataFrame`
+        *   如果传入order_book_id list，并指定单个field，函数会返回一个 `pandas.DataFrame`
+        *   如果传入order_book_id list，并指定多个fields，函数会返回一个 `pandas.Panel`
+
+    :example:
+
+    获取平安银行历史换手率情况:
+
+   ..  code-block:: python3
+        :linenos:
+
+        logger.info(get_turnover_rate('000001.XSHE', count=5))
+        #[Out]
+        #           today    week   month  three_month  six_month    year  \
+        #2016-08-01  0.5190  0.4478  0.3213       0.2877     0.3442  0.5027
+        #2016-08-02  0.3070  0.4134  0.3112       0.2843     0.3427  0.5019
+        #2016-08-03  0.2902  0.3460  0.3102       0.2823     0.3432  0.4982
+        #2016-08-04  0.9189  0.4938  0.3331       0.2914     0.3482  0.4992
+        #2016-08-05  0.4962  0.5031  0.3426       0.2960     0.3504  0.4994
+
+        #          current_year   total
+        #2016-08-01        0.3585  1.1341
+        #2016-08-02        0.3570  1.1341
+        #2016-08-03        0.3565  1.1339
+        #2016-08-04        0.3604  1.1339
+        #2016-08-05        0.3613  1.1338
     """
     env = Environment.get_instance()
     data_proxy = env.data_proxy
