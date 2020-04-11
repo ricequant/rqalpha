@@ -61,7 +61,7 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 
 回测数据的更新
 ==================
-您也可以使用 `RQData`_ 在每日盘后即时更新回测数据，更新命令如下：
+您也可以使用 `RQDatac`_ 在每日盘后即时更新回测数据，更新命令如下：
 
 .. code-block:: bash
 
@@ -69,7 +69,7 @@ bundle 默认存放在 :code:`~/.rqalpha` 下，您也可以指定 bundle 的存
 
 .. note::
 
-    您需要先安装 `RQData`_ 包，并通过 RiceQuant 网站获取一个有效的账号。请参考: https://www.ricequant.com/welcome/trial/rqdata-cloud
+    您需要先安装 `RQDatac`_ 包、获取 `RQDatac`_ 的使用权限，并使用 Ricequant 提供的配置脚本将您的 `RQDatac`_ license 配置到系统环境变量中。请参考: https://www.ricequant.com/welcome/trial/rqdata-cloud
 
 
 .. _intro-config:
@@ -179,4 +179,4 @@ Mac 下默认并没有安装很多命令，我们可以通过homebrew安装，�
 执行 :code:`pip install rqalpha` 后虽然会默认保存examples到python环境中，但路径相对复杂，我们建议您将examples目录重新保存到您认为方便的地方。
 
 
-.. _RQData: https://www.ricequant.com/welcome/rqdata
+.. _RQDatac: https://www.ricequant.com/welcome/rqdata

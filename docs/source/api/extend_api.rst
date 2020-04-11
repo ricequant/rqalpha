@@ -4,8 +4,8 @@
 扩展 API
 ==================
 
-扩展 API 是 Ricequant 从众多的数据源中整理、归纳和维护的众多数据类型的API。
-这些 API 中的数据大多由 `RQDatac`_ 提供，所以调用扩展 API 需要您在环境安装有 `RQDatac`_ 且获得了 `RQDatac`_ 的使用权限，
+扩展 API 是 Ricequant 从众多的数据源中整理、归纳和维护的API。
+这些 API 提供的数据大多来自 `RQDatac`_ ，所以调用扩展 API 需要您在环境安装有 `RQDatac`_ 且获得了 `RQDatac`_ 的使用权限，
 您可以访问 `Ricequant 官网 <https://www.ricequant.com/welcome/rqdata>`_ 免费申请试用 `RQDatac`_ 及获取 `RQDatac`_ 的文档。
 您亦可以在 `Ricequant 在线量化平台 <https://www.ricequant.com/welcome/quant>`_ 中运行策略并免费调用扩展 API。
 

@@ -451,6 +451,21 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 )
 def order_target_portfolio(target_portfolio):
     # type: (Dict[Union[str, Instrument]: float]) -> List[Order]
+    """
+    买入/卖出证券以批量调整证券的仓位，以期使其持仓市值占账户总权益的比重达到指定值。
+
+    :param target_portfolio: 下单标的物及其目标市值占比的字典
+
+    :example:
+
+    .. code-block:: python
+
+        # 调整仓位，以使平安银行和万科 A 的持仓占比分别达到 10% 和 15%
+        order_target_portfolio({
+            '000001.XSHE': 0.1
+            '000002.XSHE': 0.15
+        })
+    """
 
     if isinstance(target_portfolio, pd.Series):
         # FIXME: kind of dirty
