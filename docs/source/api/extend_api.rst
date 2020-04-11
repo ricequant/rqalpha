@@ -14,6 +14,9 @@
 .. _RQDatac: https://www.ricequant.com/welcome/rqdata
 
 
+行情
+=================
+
 ..  module:: rqalpha.api
 
 get_price - 合约历史数据
@@ -21,12 +24,67 @@ get_price - 合约历史数据
 
 .. autofunction:: get_price
 
+get_price_change_rate - 历史涨跌幅
+------------------------------------------------------
+
+.. autofunction:: get_price_change_rate
+
+
+股票
+=================
 
 get_split - 拆分数据
 ------------------------------------------------------
 
 .. autofunction:: get_split
 
+get_securities_margin - 融资融券信息
+------------------------------------------------------
+
+.. autofunction:: get_securities_margin
+
+concept - 概念股列表
+--------------------------------------------------------
+
+.. autofunction:: concept
+
+get_shares - 流通股信息
+------------------------------------------------------
+
+.. autofunction:: get_shares
+
+get_turnover_rate - 历史换手率
+------------------------------------------------------
+
+.. autofunction:: get_turnover_rate
+
+get_factor - 因子
+------------------------------------------------------
+
+.. autofunction:: get_factor
+
+get_industry - 行业股票列表
+------------------------------------------------------
+.. autofunction:: get_industry
+
+get_instrument_industry - 股票行业分类
+------------------------------------------------------
+
+.. autofunction:: get_instrument_industry
+
+get_stock_connect - 沪深港通持股信息
+------------------------------------------------------
+
+.. autofunction:: get_stock_connect
+
+current_performance - 财务快报数据
+------------------------------------------------------
+
+.. autofunction:: current_performance
+
+
+指数
+=================
 
 index_components - 指数成分股
 ------------------------------------------------------
@@ -40,31 +98,43 @@ index_weights - 指数成分股权重
 .. autofunction:: index_weights
 
 
-futures.get_dominant/get_dominant_future - 期货主力合约
---------------------------------------------------------
+期货
+=================
 
-.. autofunction:: get_dominant_future
+..  module:: rqalpha.api.futures
 
-
-get_securities_margin - 融资融券信息
+futures.get_dominant - 期货主力合约
 ------------------------------------------------------
 
-.. autofunction:: get_securities_margin
+.. autofunction:: get_dominant
 
 
-get_shares - 流通股信息
+futures.get_member_rank - 期货会员持仓等排名
 ------------------------------------------------------
 
-.. autofunction:: get_shares
+.. autofunction:: get_member_rank
 
 
-get_turnover_rate - 历史换手率
+futures.get_warehouse_stocks - 期货仓单数据
 ------------------------------------------------------
 
-.. autofunction:: get_turnover_rate
+.. autofunction:: get_warehouse_stocks
 
 
-concept - 概念股列表
---------------------------------------------------------
+宏观经济
+=================
 
-.. autofunction:: concept
+..  module:: rqalpha.api.econ
+
+
+econ.get_reverse_ratio - 存款准备金率
+------------------------------------------------------
+
+.. autofunction:: get_reserve_ratio
+
+
+econ.get_money_supply - 货币供应量
+------------------------------------------------------
+
+.. autofunction:: get_money_supply
+
