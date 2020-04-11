@@ -814,12 +814,12 @@ class econ:
 @apply_rules(verify_that('reserve_type').is_in(['all', 'major', 'other']),
              verify_that('n').is_instance_of(int).is_greater_than(0))
 def _econ_get_reserve_ratio(reserve_type='all', n=1):
+    # type: (str, int) -> Optional[pd.DataFrame]
     """
     获取截止T日的存款准备金率
 
-    :param reserve_type: major/other/all
-    :param n:
-    :return: DataFrame
+    :param reserve_type: 目前有大型金融机构（'major'） 和 其他金融机构（'other'）两种分类。默认为all，即所有类别都会返回。
+    :param n: 返回最近 n 个生效日期的存款准备金率数据
     """
     df = rqdatac.econ.get_reserve_ratio(reserve_type)
     if df is None or df.empty:
@@ -835,10 +835,11 @@ def _econ_get_reserve_ratio(reserve_type='all', n=1):
 
 @apply_rules(verify_that('n').is_instance_of(int).is_greater_than(0))
 def _econ_get_money_supply(n=1):
+    # type: (int) -> Optional[pd.DataFrame]
     """
     获取截止T日的货币供应量指标
-    :param n:
-    :return: DataFrame
+
+    :param n: 返回前 n 个消息公布日期的货币供应量指标数据
     """
     dt = Environment.get_instance().calendar_dt.date()
 
@@ -864,13 +865,23 @@ class futures:
 
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
 def _futures_get_dominant(underlying_symbol, rule=0):
+    # type: (str, Optional[int]) -> Optional[str]
     """
-    获取T日的主力合约
-    :param underlying_symbol: 如AL
-    :param rule: 默认是0，采用最大昨仓为当日主力合约，每个合约只能做一次主力合约，不会重复出现。
-                 针对股指期货，只在当月和次月合约中选择主力合约。
-                 当rule=1时，主力合约的选取只考虑最大昨仓这个条件。
-    :return:
+    获取某一期货品种策略当前日期的主力合约代码。 合约首次上市时，以当日收盘同品种持仓量最大者作为从第二个交易日开始的主力合约。当同品种其他合约持仓量在收盘后超过当前主力合约1.1倍时，从第二个交易日开始进行主力合约的切换。日内不会进行主力合约的切换。
+
+    :param underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
+    :param rule: 默认是rule=0,采用最大昨仓为当日主力合约，每个合约只能做一次主力合约，不会重复出现。针对股指期货，只在当月和次月选择主力合约。 当rule=1时，主力合约的选取只考虑最大昨仓这个条件。
+
+    :example:
+
+    获取某一天的主力合约代码（策略当前日期是20160801）:
+
+    ..  code-block:: python3
+        :linenos:
+
+        get_dominant_future('IF')
+        #[Out]
+        #'IF1608'
     """
     dt = Environment.get_instance().trading_dt.date()
     ret = rqdatac.futures.get_dominant(underlying_symbol, dt, dt, rule)
@@ -883,12 +894,13 @@ def _futures_get_dominant(underlying_symbol, rule=0):
 @apply_rules(verify_that('which').is_instance_of(str),
              verify_that('rank_by').is_in(['short', 'long']))
 def _futures_get_member_rank(which, count=1, rank_by='short'):
+    # type: (str, int, str) -> pd.DataFrame
     """
     获取截止T-1日的期货或品种的会员排名情况
+
     :param which: 期货合约或品种
     :param count: 获取多少个交易日的数据，默认为1
     :param rank_by: short/long
-    :return: DataFrame
     """
     env = Environment.get_instance()
     end_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
@@ -902,11 +914,12 @@ def _futures_get_member_rank(which, count=1, rank_by='short'):
 
 
 def _futures_get_warehouse_stocks(underlying_symbols, count=1):
+    # type: (Union[str, List[str]], int) -> pd.DataFrame
     """
     获取截止T-1日的期货仓单数据
+
     :param underlying_symbols: 期货品种，可以为str或列表
     :param count: 获取多少个交易日的数据，默认为1
-    :return: multi-index DataFrame
     """
     env = Environment.get_instance()
     end_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
