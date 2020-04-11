@@ -13,6 +13,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import datetime
+from typing import  Union, Optional, Iterable, List
 
 import six
 from dateutil.parser import parse
@@ -63,12 +64,35 @@ def to_date(date):
 @export_as_api
 @apply_rules(verify_that('start_date').is_valid_date())
 def get_split(order_book_ids, start_date=None):
+    # type: (Union[str, List[str]], Optional[Union[str, datetime.date]]) -> pd.DataFrame
     """
-    获取截止T-1日的拆分信息
-    :param order_book_ids:
-    :param start_date: 可选参数，不传入时，表示从上市时开始获取
-    :return: 传入多个标的时，返回multi-index dataframe，index为 (order_book_id, ex_dividend_date);
-            传入一个标的时，返回DataFrame，index 为 ex_dividend_date
+    获取某只股票到策略当前日期前一天的拆分情况（包含起止日期）。
+
+    :param order_book_ids: 证券代码，证券的独特的标识符，例如：'000001.XSHE'
+    :param start_date: 开始日期，用户必须指定，需要早于策略当前日期
+
+    :return: 查询时间段内的某个股票的拆分数据
+
+        *   ex_dividend_date: 除权除息日，该天股票的价格会因为拆分而进行调整
+        *   book_closure_date: 股权登记日
+        *   split_coefficient_from: 拆分因子（拆分前）
+        *   split_coefficient_to: 拆分因子（拆分后）
+
+        例如：每10股转增2股，则split_coefficient_from = 10, split_coefficient_to = 12.
+
+    :example:
+
+    ..  code-block:: python3
+        :linenos:
+
+        get_split('000001.XSHE', start_date='2010-01-04')
+        #[Out]
+        #                 book_closure_date payable_date  split_coefficient_from  \
+        #ex_dividend_date
+        #2013-06-20              2013-06-19   2013-06-20                      10
+        #                  split_coefficient_to
+        #ex_dividend_date
+        #2013-06-20                        16.0
     """
     # order_book_id 支持list类型
     env = Environment.get_instance()
@@ -87,11 +111,24 @@ def get_split(order_book_ids, start_date=None):
 @export_as_api
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True))
 def index_components(order_book_id, date=None):
+    # type: (str, Optional[Union[str, datetime.date]]) -> List[str]
+
     """
-    获取T日的指数成分
-    :param order_book_id: 指数
-    :param date: 可选，默认为策略当时时间
-    :return: list of order_book_id
+    获取某一指数的股票构成列表，也支持指数的历史构成查询。
+
+    :param order_book_id: 指数代码，可传入order_book_id
+    :param date: 查询日期，默认为策略当前日期。如指定，则应保证该日期不晚于策略当前日期
+    :return: 构成该指数股票的 order_book_id
+
+    :example:
+
+    得到上证指数在策略当前日期的构成股票的列表:
+
+    ..  code-block:: python3
+        :linenos:
+
+        index_components('000001.XSHG')
+        #[Out]['600000.XSHG', '600004.XSHG', ...]
     """
     env = Environment.get_instance()
     dt = env.trading_dt.date()
@@ -110,11 +147,34 @@ def index_components(order_book_id, date=None):
 @export_as_api
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True))
 def index_weights(order_book_id, date=None):
+    # type: (str, Optional[Union[str, datetime.date]]) -> pd.Series
     """
     获取T-1日的指数权重
+
     :param order_book_id: 指数
     :param date: 可选，默认为T-1日
-    :return: pd.Series
+    :return: 每只股票在指数中的构成权重
+
+    :example:
+
+    获取上证50指数上个交易日的指数构成
+
+    .. code-block:: python3
+        :linenos:
+
+        index_weights('000016.XSHG')
+        # [Out]
+        # Order_book_id
+        # 600000.XSHG    0.03750
+        # 600010.XSHG    0.00761
+        # 600016.XSHG    0.05981
+        # 600028.XSHG    0.01391
+        # 600029.XSHG    0.00822
+        # 600030.XSHG    0.03526
+        # 600036.XSHG    0.04889
+        # 600050.XSHG    0.00998
+        # 600104.XSHG    0.02122
+
     """
     env = Environment.get_instance()
     data_proxy = env.data_proxy
@@ -159,19 +219,77 @@ def concept(*concept_names):
              verify_that('fields').are_valid_fields(VALID_HISTORY_FIELDS, ignore_none=True),
              verify_that('adjust_type').is_in(['pre', 'post', 'none', 'internal']),
              verify_that('skip_suspended').is_instance_of(bool))
-def get_price(order_book_ids, start_date, end_date=None, frequency='1d',
-              fields=None, adjust_type='pre', skip_suspended=False, expect_df=False):
+def get_price(
+        order_book_ids,        # type: Union[str, Iterable[str]]
+        start_date,            # type: Union[datetime.date, str]
+        end_date=None,         # type: Optional[Union[datetime.date, datetime.datetime, str]]
+        frequency='1d',        # type: Optional[str]
+        fields=None,           # type: Optional[Iterable[str]]
+        adjust_type='pre',     # type: Optional[str]
+        skip_suspended=False,  # type: Optional[bool]
+        expect_df=False        # type: Optional[bool]
+):                             # type: (...) -> Union[pd.DataFrame, pd.Panel, pd.Series]
     """
-    通过rqdatac获取截止T-1日的历史价格
-    :param order_book_ids:
-    :param start_date:
-    :param end_date:
-    :param frequency:
-    :param fields:
-    :param adjust_type:
-    :param skip_suspended:
-    :param expect_df: 为true时，总是返回multi-index dataframe
-    :return: Series/DataFrame/Panel，请参考rqdatac的文档
+    获取指定合约或合约列表的历史行情（包含起止日期，日线或分钟线），不能在'handle_bar'函数中进行调用。
+
+    注意，这一函数主要是为满足在研究平台编写策略习惯而引入。在编写策略中，使用history_bars进行数据获取会更方便。
+
+    :param order_book_ids: 合约代码，合约代码，可传入order_book_id, order_book_id list, symbol, symbol list
+    :param start_date: 开始日期，用户必须指定
+    :param end_date: 结束日期，默认为策略当前日期前一天
+    :param frequency: 历史数据的频率。 现在支持日/分钟级别的历史数据，默认为'1d'。使用者可自由选取不同频率，例如'5m'代表5分钟线
+    :param fields: 期望返回的字段名称，如 open，close 等
+    :param adjust_type: 权息修复方案。前复权 - pre，后复权 - post，不复权 - none
+    :param skip_suspended: 是否跳过停牌数据。默认为False，不跳过，用停牌前数据进行补齐。True则为跳过停牌期。注意，当设置为True时，函数order_book_id只支持单个合约传入
+    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免试图构建 Panel 而产生异常
+
+    当 expect_df 为 False 时，返回值的类型如下
+
+        *   传入一个order_book_id，多个fields，函数会返回一个pandas DataFrame
+        *   传入一个order_book_id，一个field，函数会返回pandas Series
+        *   传入多个order_book_id，一个field，函数会返回一个pandas DataFrame
+        *   传入多个order_book_id，函数会返回一个pandas Panel
+
+
+        =========================   =========================   ==============================================================================
+        参数                         类型                        说明
+        =========================   =========================   ==============================================================================
+        open                        float                       开盘价
+        close                       float                       收盘价
+        high                        float                       最高价
+        low                         float                       最低价
+        limit_up                    float                       涨停价
+        limit_down                  float                       跌停价
+        total_turnover              float                       总成交额
+        volume                      float                       总成交量
+        acc_net_value               float                       累计净值（仅限基金日线数据）
+        unit_net_value              float                       单位净值（仅限基金日线数据）
+        discount_rate               float                       折价率（仅限基金日线数据）
+        settlement                  float                       结算价 （仅限期货日线数据）
+        prev_settlement             float                       昨日结算价（仅限期货日线数据）
+        open_interest               float                       累计持仓量（期货专用）
+        basis_spread                float                       基差点数（股指期货专用，股指期货收盘价-标的指数收盘价）
+        trading_date                pandas.TimeStamp             交易日期（仅限期货分钟线数据），对应期货夜盘的情况
+        =========================   =========================   ==============================================================================
+
+    :example:
+
+    获取单一股票历史日线行情:
+
+    ..  code-block:: python3
+        :linenos:
+
+        get_price('000001.XSHE', start_date='2015-04-01', end_date='2015-04-12')
+        #[Out]
+        #open    close    high    low    total_turnover    volume    limit_up    limit_down
+        #2015-04-01    10.7300    10.8249    10.9470    10.5469    2.608977e+09    236637563.0    11.7542    9.6177
+        #2015-04-02    10.9131    10.7164    10.9470    10.5943    2.222671e+09    202440588.0    11.9102    9.7397
+        #2015-04-03    10.6486    10.7503    10.8114    10.5876    2.262844e+09    206631550.0    11.7881    9.6448
+        #2015-04-07    10.9538    11.4015    11.5032    10.9538    4.898119e+09    426308008.0    11.8288    9.6787
+        #2015-04-08    11.4829    12.1543    12.2628    11.2929    5.784459e+09    485517069.0    12.5409    10.2620
+        #2015-04-09    12.1747    12.2086    12.9208    12.0255    5.794632e+09    456921108.0    13.3684    10.9403
+        #2015-04-10    12.2086    13.4294    13.4294    12.1069    6.339649e+09    480990210.0    13.4294    10.9877
+        #...
     """
     env = Environment.get_instance()
     yesterday = env.trading_dt.date() - datetime.timedelta(days=1)
@@ -417,6 +535,24 @@ def current_performance(order_book_id, info_date=None, quarter=None, interval='1
 @export_as_api
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
 def get_dominant_future(underlying_symbol, rule=0):
+    # type: (str, Optional[int]) -> Optional[str]
+    """
+    获取某一期货品种策略当前日期的主力合约代码。 合约首次上市时，以当日收盘同品种持仓量最大者作为从第二个交易日开始的主力合约。当同品种其他合约持仓量在收盘后超过当前主力合约1.1倍时，从第二个交易日开始进行主力合约的切换。日内不会进行主力合约的切换。
+
+    :param underlying_symbol: 期货合约品种，例如沪深300股指期货为'IF'
+    :param rule: 默认是rule=0,采用最大昨仓为当日主力合约，每个合约只能做一次主力合约，不会重复出现。针对股指期货，只在当月和次月选择主力合约。 当rule=1时，主力合约的选取只考虑最大昨仓这个条件。
+
+    :example:
+
+    获取某一天的主力合约代码（策略当前日期是20160801）:
+
+    ..  code-block:: python3
+        :linenos:
+
+        get_dominant_future('IF')
+        #[Out]
+        #'IF1608'
+    """
     dt = Environment.get_instance().trading_dt.date()
     ret = rqdatac.get_dominant_future(underlying_symbol, dt, dt, rule)
     if isinstance(ret, pd.Series) and ret.size == 1:
