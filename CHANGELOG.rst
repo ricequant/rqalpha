@@ -15,7 +15,7 @@ CHANGELOG
 - 新增
 
   - 新增集合竞价函数 :code:`open_auction` ，您可以在该函数内发单以实现开盘成交，详见 :ref:`api-base-api`
-  - 新增扩展 API 的实现，使用扩展 API 依赖 `RQDatac`_ ，详见 :ref:`api-extend-api`
+  - 新增扩展 API 的实现，现在您可以在开源的 rqalpha 框架下直接调用扩展 API，详见 :ref:`api-extend-api`
   - 新增股票下单 API，``order_target_portfolio``，使用该 API 可以根据给定的目标组合仓位批量下单，详见 :ref:`api-base-api-order-api`
 
 - 变更
