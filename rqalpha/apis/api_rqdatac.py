@@ -313,7 +313,7 @@ def get_price_change_rate(order_book_ids, count=1, expect_df=False):
     if count == 1:
         start_date = end_date
     else:
-        start_date = data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = data_proxy.get_previous_trading_date(end_date, count - 1)
 
     return rqdatac.get_price_change_rate(order_book_ids, start_date, end_date, expect_df=expect_df)
 
@@ -337,7 +337,7 @@ def get_factor(order_book_ids, factors, count=1, universe=None, expect_df=False)
     if count == 1:
         start_date = end_date
     else:
-        start_date = data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = data_proxy.get_previous_trading_date(end_date, count - 1)
 
     if isinstance(order_book_ids, six.string_types):
         order_book_ids = assure_order_book_id(order_book_ids)
@@ -515,7 +515,7 @@ def _futures_get_member_rank(which, count=1, rank_by='short'):
     if count == 1:
         start_date = end_date
     else:
-        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = env.data_proxy.get_previous_trading_date(end_date, count - 1)
 
     return rqdatac.futures.get_member_rank(which, start_date=start_date, end_date=end_date, rank_by=rank_by)
 
@@ -533,7 +533,7 @@ def _futures_get_warehouse_stocks(underlying_symbols, count=1):
     if count == 1:
         start_date = end_date
     else:
-        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = env.data_proxy.get_previous_trading_date(end_date, count - 1)
 
     return rqdatac.futures.get_warehouse_stocks(underlying_symbols, start_date=start_date, end_date=end_date)
 
