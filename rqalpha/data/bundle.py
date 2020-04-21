@@ -150,7 +150,11 @@ def init_future_info(d):
                 continue
             underlying_symbol_list.append(underlying_symbol)
             future_dict['underlying_symbol'] = underlying_symbol
-            dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            try:
+                dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            except AttributeError:
+                # FIXME: why get_dominant return None???
+                continue
             commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
             for p in fields:
                 future_dict[p] = commission[p]
@@ -235,7 +239,11 @@ def gen_future_info(d):
         else:
             symbol_list.append(underlying_symbol)
             future_dict['underlying_symbol'] = underlying_symbol
-            dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            try:
+                dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            except AttributeError:
+                # FIXME: why get_dominant return None???
+                continue
             commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
 
             for p in param:
