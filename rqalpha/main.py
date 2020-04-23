@@ -124,6 +124,9 @@ def init_rqdatac(rqdatac_uri):
 
 
 def run(config, source_code=None, user_funcs=None):
+    ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
+    ctx._push()
+
     env = Environment(config)
     persist_helper = None
     init_succeed = False
@@ -159,9 +162,6 @@ def run(config, source_code=None, user_funcs=None):
         if env.portfolio is None:
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
-
-        ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
-        ctx._push()
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
