@@ -43,8 +43,8 @@ class AssetAccount(AbstractAccount):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
-        event_bus.add_listener(EVENT.BAR, self._update_last_price)
-        event_bus.add_listener(EVENT.TICK, self._update_last_price)
+        event_bus.prepend_listener(EVENT.BAR, self._update_last_price)
+        event_bus.prepend_listener(EVENT.TICK, self._update_last_price)
 
     def get_state(self):
         """"""
