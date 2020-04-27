@@ -63,7 +63,7 @@ def export_as_api(func):
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
-def order_shares(id_or_ins, amount, price=None, style=None):
+def order_shares(id_or_ins, amount, price=None, style=None, **kwargs):
     """
     指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
@@ -100,10 +100,10 @@ def order_shares(id_or_ins, amount, price=None, style=None):
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
     order_book_id = assure_stock_order_book_id(id_or_ins)
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
-    return _order_shares(order_book_id, amount, style, auto_switch_order_value)
+    return _order_shares(order_book_id, amount, style, auto_switch_order_value, **kwargs)
 
 
-def _order_shares(order_book_id, amount, style, auto_switch_order_value):
+def _order_shares(order_book_id, amount, style, auto_switch_order_value, **kwargs):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
@@ -128,7 +128,7 @@ def _order_shares(order_book_id, amount, style, auto_switch_order_value):
         except ValueError:
             amount = 0
 
-    r_order = Order.__from_create__(order_book_id, amount, side, style, position_effect)
+    r_order = Order.__from_create__(order_book_id, amount, side, style, position_effect, **kwargs)
 
     if amount == 0:
         # 如果计算出来的下单量为0, 则不生成Order, 直接返回None
@@ -148,12 +148,12 @@ def _order_shares(order_book_id, amount, style, auto_switch_order_value):
             user_system_log.warn(_(
                 "Insufficient cash, use all remaining cash({}) to create order").format(remaining_cash)
             )
-            return _order_value(order_book_id, remaining_cash, style)
+            return _order_value(order_book_id, remaining_cash, style, **kwargs)
 
 
-def _sell_all_stock(order_book_id, amount, style):
+def _sell_all_stock(order_book_id, amount, style, **kwargs):
     env = Environment.get_instance()
-    order = Order.__from_create__(order_book_id, amount, SIDE.SELL, style, POSITION_EFFECT.CLOSE)
+    order = Order.__from_create__(order_book_id, amount, SIDE.SELL, style, POSITION_EFFECT.CLOSE, **kwargs)
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
         return
@@ -171,7 +171,7 @@ def _sell_all_stock(order_book_id, amount, style):
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
-def order_lots(id_or_ins, amount, price=None, style=None):
+def order_lots(id_or_ins, amount, price=None, style=None, **kwargs):
     """
     指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
@@ -203,7 +203,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
 
     style = cal_style(price, style)
 
-    return order_shares(id_or_ins, amount * round_lot, style=style)
+    return order_shares(id_or_ins, amount * round_lot, style=style, **kwargs)
 
 
 @export_as_api
@@ -214,7 +214,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
-def order_value(id_or_ins, cash_amount, price=None, style=None):
+def order_value(id_or_ins, cash_amount, price=None, style=None, **kwargs):
     """
     使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。如果资金不足，该API将不会创建发送订单。
 
@@ -252,10 +252,10 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
     order_book_id = assure_stock_order_book_id(id_or_ins)
-    return _order_value(order_book_id, cash_amount, style)
+    return _order_value(order_book_id, cash_amount, style, **kwargs)
 
 
-def _order_value(order_book_id, cash_amount, style):
+def _order_value(order_book_id, cash_amount, style, **kwargs):
     env = Environment.get_instance()
 
     price = env.get_last_price(order_book_id)
@@ -295,7 +295,7 @@ def _order_value(order_book_id, cash_amount, style):
     position = account.positions[order_book_id]
     amount = downsize_amount(amount, position)
 
-    return _order_shares(order_book_id, amount, style, auto_switch_order_value=False)
+    return _order_shares(order_book_id, amount, style, auto_switch_order_value=False, **kwargs)
 
 
 @export_as_api
@@ -306,7 +306,7 @@ def _order_value(order_book_id, cash_amount, style):
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
-def order_percent(id_or_ins, percent, price=None, style=None):
+def order_percent(id_or_ins, percent, price=None, style=None, **kwargs):
     """
     发送一个花费价值等于目前投资组合（市场价值和目前现金的总和）一定百分比现金的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
 
@@ -338,7 +338,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
 
     style = cal_style(price, style)
     account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK.name]
-    return order_value(id_or_ins, account.total_value * percent, style=style)
+    return order_value(id_or_ins, account.total_value * percent, style=style, **kwargs)
 
 
 @export_as_api
@@ -349,7 +349,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('cash_amount').is_number(),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
-def order_target_value(id_or_ins, cash_amount, price=None, style=None):
+def order_target_value(id_or_ins, cash_amount, price=None, style=None, **kwargs):
     """
     买入/卖出并且自动调整该证券的仓位到一个目标价值。
     加仓时，cash_amount 代表现有持仓的价值加上即将花费（包含税费）的现金的总价值。
@@ -382,7 +382,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
 
     style = cal_style(price, style)
     if cash_amount == 0:
-        return _sell_all_stock(order_book_id, position.sellable, style)
+        return _sell_all_stock(order_book_id, position.sellable, style, **kwargs)
 
     try:
         market_value = position.market_value
@@ -391,7 +391,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
         if order_result:
             raise
     else:
-        return order_value(order_book_id, cash_amount - market_value, style=style)
+        return order_value(order_book_id, cash_amount - market_value, style=style, **kwargs)
 
 
 @export_as_api
@@ -402,7 +402,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
 @apply_rules(verify_that('id_or_ins').is_valid_stock(),
              verify_that('percent').is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
              verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None))))
-def order_target_percent(id_or_ins, percent, price=None, style=None):
+def order_target_percent(id_or_ins, percent, price=None, style=None, **kwargs):
     """
     买入/卖出证券以自动调整该证券的仓位到占有一个目标价值。
 
@@ -446,7 +446,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     position = account.positions[order_book_id]
 
     if percent == 0:
-        return _sell_all_stock(order_book_id, position.sellable, style)
+        return _sell_all_stock(order_book_id, position.sellable, style, **kwargs)
 
     try:
         market_value = position.market_value
@@ -455,7 +455,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
         if order_result:
             raise
     else:
-        return order_value(order_book_id, account.total_value * percent - market_value, style=style)
+        return order_value(order_book_id, account.total_value * percent - market_value, style=style, **kwargs)
 
 
 @export_as_api

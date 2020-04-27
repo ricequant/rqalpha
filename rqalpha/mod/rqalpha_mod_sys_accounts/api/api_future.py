@@ -48,7 +48,7 @@ def export_as_api(func):
              verify_that('side').is_in([SIDE.BUY, SIDE.SELL]),
              verify_that('position_effect').is_in([POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE]),
              verify_that('style').is_instance_of((LimitOrder, MarketOrder, type(None))))
-def order(id_or_ins, amount, side, position_effect, style):
+def order(id_or_ins, amount, side, position_effect, style, **kwargs):
     if not isinstance(style, OrderStyle):
         raise RuntimeError
     if amount < 0:
@@ -100,7 +100,8 @@ def order(id_or_ins, amount, side, position_effect, style):
                         sell_old_quantity,
                         side,
                         style,
-                        POSITION_EFFECT.CLOSE
+                        POSITION_EFFECT.CLOSE,
+                        **kwargs
                     ))
                 # 剩下还有仓位，则创建一个 POSITION_EFFECT.CLOSE_TODAY 的平今单
                 orders.append(Order.__from_create__(
@@ -108,7 +109,8 @@ def order(id_or_ins, amount, side, position_effect, style):
                     amount - sell_old_quantity,
                     side,
                     style,
-                    POSITION_EFFECT.CLOSE_TODAY
+                    POSITION_EFFECT.CLOSE_TODAY,
+                    **kwargs
                 ))
             else:
                 # 创建 POSITION_EFFECT.CLOSE 的平仓单
@@ -117,7 +119,8 @@ def order(id_or_ins, amount, side, position_effect, style):
                     amount,
                     side,
                     style,
-                    POSITION_EFFECT.CLOSE
+                    POSITION_EFFECT.CLOSE,
+                    **kwargs
                 ))
         else:
             position = env.portfolio.positions[order_book_id]
@@ -137,14 +140,16 @@ def order(id_or_ins, amount, side, position_effect, style):
                         buy_old_quantity,
                         side,
                         style,
-                        POSITION_EFFECT.CLOSE
+                        POSITION_EFFECT.CLOSE,
+                        **kwargs
                     ))
                 orders.append(Order.__from_create__(
                     order_book_id,
                     amount - buy_old_quantity,
                     side,
                     style,
-                    POSITION_EFFECT.CLOSE_TODAY
+                    POSITION_EFFECT.CLOSE_TODAY,
+                    **kwargs
                 ))
             else:
                 orders.append(Order.__from_create__(
@@ -152,7 +157,8 @@ def order(id_or_ins, amount, side, position_effect, style):
                     amount,
                     side,
                     style,
-                    POSITION_EFFECT.CLOSE
+                    POSITION_EFFECT.CLOSE,
+                    **kwargs
                 ))
     else:
         orders.append(Order.__from_create__(
@@ -160,7 +166,8 @@ def order(id_or_ins, amount, side, position_effect, style):
             amount,
             side,
             style,
-            position_effect
+            position_effect,
+            **kwargs
         ))
 
     if len(orders) > 1:
@@ -190,7 +197,7 @@ def order(id_or_ins, amount, side, position_effect, style):
 
 
 @export_as_api
-def buy_open(id_or_ins, amount, price=None, style=None):
+def buy_open(id_or_ins, amount, price=None, style=None, **kwargs):
     """
     买入开仓。
 
@@ -213,11 +220,11 @@ def buy_open(id_or_ins, amount, price=None, style=None):
         #以价格为3500的限价单开仓买入2张上期所AG1607合约：
         buy_open('AG1607', amount=2, price=3500))
     """
-    return order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style))
+    return order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style), **kwargs)
 
 
 @export_as_api
-def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
+def buy_close(id_or_ins, amount, price=None, style=None, close_today=False, **kwargs):
     """
     平卖仓
 
@@ -243,11 +250,11 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
         buy_close('IF1603', 2)
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
-    return order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style))
+    return order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style), **kwargs)
 
 
 @export_as_api
-def sell_open(id_or_ins, amount, price=None, style=None):
+def sell_open(id_or_ins, amount, price=None, style=None, **kwargs):
     """
     卖出开仓
 
@@ -263,11 +270,11 @@ def sell_open(id_or_ins, amount, price=None, style=None):
 
     :return: :class:`~Order` object | list[:class:`~Order`] | None
     """
-    return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style))
+    return order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style), **kwargs)
 
 
 @export_as_api
-def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
+def sell_close(id_or_ins, amount, price=None, style=None, close_today=False, **kwargs):
     """
     平买仓
 
@@ -286,7 +293,7 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :return: :class:`~Order` object | list[:class:`~Order`] | None
     """
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
-    return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style))
+    return order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style), **kwargs)
 
 
 def assure_future_order_book_id(id_or_symbols):

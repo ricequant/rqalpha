@@ -218,7 +218,7 @@ def get_open_orders():
     verify_that("amount").is_number().is_greater_than(0),
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
-def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
+def submit_order(id_or_ins, amount, side, price=None, position_effect=None, **kwargs):
     """
     通用下单函数，策略可以通过该函数自由选择参数下单。
 
@@ -279,6 +279,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
         side=side,
         style=style,
         position_effect=position_effect,
+        **kwargs,
     )
 
     if order.type == ORDER_TYPE.MARKET:
