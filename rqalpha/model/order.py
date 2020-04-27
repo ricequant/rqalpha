@@ -300,6 +300,11 @@ class Order(object):
             if user_warn:
                 user_system_log.warn(cancelled_reason)
 
+    def mark_cancel_failed(self, cancel_failed_reason):
+        if self.status == ORDER_STATUS.PENDING_CANCEL:
+            self._status = ORDER_STATUS.ACTIVE
+            user_system_log.warning(cancel_failed_reason)
+
     def set_frozen_price(self, value):
         self._frozen_price = value
 
