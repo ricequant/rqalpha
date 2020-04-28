@@ -49,7 +49,7 @@ N/A           `- -` disable-user-system-log   关闭用户策略产生的系统�
 N/A           `- -` enable-profiler           启动策略逐行性能分析，启动后，在回测结束，会打印策略的运行性能分析报告，可以看到每一行消耗的时间
 N/A           `- -` config                    设置配置文件路径
 -mc           `- -` mod-config                配置 mod ，支持多个。:code:`-mc funcat_api.enabled True` 就可以启动一个 mod
-N/A           `- -` rqdatac                   配置 rqdatac 的用户名密码，以便使用扩展 API，如 :code:`username:password`
+N/A           `- -` rqdatac                   配置 rqdatac 的用户名密码，以便使用扩展 API，如 :code:`username:password`（若您已使用 Ricequant 提供的配置脚本将 rqdatac 的 license 配置到环境变量中，则无需再传入该参数）
 ===========   =============================   ==============================================================================
 
 

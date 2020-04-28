@@ -135,6 +135,8 @@ after_trading - 盘后
     :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
 
 
+.. _api-base-api-order-api:
+
 交易接口
 =================
 
@@ -191,6 +193,12 @@ order_target_percent - 目标比例下单「股票专用」
 ..  autofunction:: order_target_percent
 
 
+order_target_portfolio - 批量调仓「股票专用」
+------------------------------------------------------
+
+.. autofunction:: order_target_portfolio
+
+
 buy_open - 买开「期货专用」
 ------------------------------------------------------
 
@@ -232,6 +240,8 @@ exercise - 行权
 
 ..  autofunction:: exercise
 
+
+.. _api-position-api:
 
 持仓查询接口
 ======================================================
@@ -553,6 +563,8 @@ time_rule - 定时间运行
 
             scheduler.run_daily(function, time_rule='before_trading')
 
+
+.. _api-base-types:
 
 类
 ======================================================

@@ -230,6 +230,21 @@ def order_lots(id_or_ins, amount, price=None, style=None):
 )
 def order_target_portfolio(target_portfolio):
     # type: (Dict[Union[str, Instrument]: float]) -> List[Order]
+    """
+    买入/卖出证券以批量调整证券的仓位，以期使其持仓市值占账户总权益的比重达到指定值。
+
+    :param target_portfolio: 下单标的物及其目标市值占比的字典
+
+    :example:
+
+    .. code-block:: python
+
+        # 调整仓位，以使平安银行和万科 A 的持仓占比分别达到 10% 和 15%
+        order_target_portfolio({
+            '000001.XSHE': 0.1
+            '000002.XSHE': 0.15
+        })
+    """
 
     if isinstance(target_portfolio, pd.Series):
         # FIXME: kind of dirty
@@ -557,6 +572,22 @@ def get_dividend(order_book_id, start_date):
     payable_date                分红到帐日
     round_lot                   分红最小单位
     =========================   ===================================================
+
+    :example:
+
+    获取平安银行2013-01-04 到策略当前日期前一天的分红数据:
+
+    ..  code-block:: python3
+        :linenos:
+
+        get_dividend('000001.XSHE', start_date='20130104')
+        #[Out]
+        #array([(20130614, 20130619, 20130620, 20130620,  1.7 , 10),
+        #       (20140606, 20140611, 20140612, 20140612,  1.6 , 10),
+        #       (20150407, 20150410, 20150413, 20150413,  1.74, 10),
+        #       (20160608, 20160615, 20160616, 20160616,  1.53, 10)],
+        #      dtype=[('announcement_date', '<u4'), ('book_closure_date', '<u4'), ('ex_dividend_date', '<u4'), ('payable_date', '<u4'), ('dividend_cash_before_tax', '<f8'), ('round_lot', '<u4')])
+
     """
     # adjusted 参数在不复权数据回测时不再提供
     env = Environment.get_instance()
