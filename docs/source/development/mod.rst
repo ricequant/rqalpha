@@ -128,19 +128,19 @@ PyPI方式安装Mod
 
     会扫描当前目录下的 :code:`setup.py` 文件执行安装，同时直接修改项目内文件就可以实现修改对应Mod。
 
-安装成功后将看到下图：
-
-.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-install-success.png
-
 
 激活以及使用Mod
 --------------------
 
-对 Mod 进行激活：
+激活并查看我们安装的mod：
 
 .. code-block:: bash
 
     $ rqalpha mod enable hello
+    $ rqalpha mod list
+
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-install-success.png
+
 
 运行RQAlpha即可看到如下：
 
