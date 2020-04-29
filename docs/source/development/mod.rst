@@ -130,7 +130,7 @@ PyPI方式安装Mod
 
 安装成功后将看到下图：
 
-.. image:: https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/source/_static/mod-install-success.png
+.. image:: image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-install-success.png
 
 
 激活以及使用Mod
@@ -144,7 +144,7 @@ PyPI方式安装Mod
 
 运行RQAlpha即可看到如下：
 
-.. image:: https://raw.githubusercontent.com/ricequant/rqalpha/master/docs/source/_static/mod-run-success.png
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-run-success.png
 
 .. note::
 
