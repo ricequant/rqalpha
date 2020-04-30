@@ -52,6 +52,7 @@ def order_shares(id_or_ins, amount, price=None, style=None):
     :example:
 
     .. code-block:: python
+
         #购买Buy 2000 股的平安银行股票，并以市价单发送：
         order_shares('000001.XSHE', 2000)
         #卖出2000股的平安银行股票，并以市价单发送：
@@ -92,6 +93,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
     :example:
 
     .. code-block:: python
+
         #花费最多￥10000买入平安银行股票，并以市价单发送。具体下单的数量与您策略税费相关的配置有关。
         order_value('000001.XSHE', 10000)
         #卖出价值￥10000的现在持有的平安银行：
@@ -131,6 +133,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
     :example:
 
     .. code-block:: python
+
         #花费等于现有投资组合50%价值的现金买入平安银行股票：
         order_percent('000001.XSHG', 0.5)
     """
@@ -167,6 +170,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     :example:
 
     .. code-block:: python
+
         #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位，以下代码范例会发送花费 ￥7000 现金的平安银行买单到市场。（向下调整到最接近每手股数即100的倍数的股数）：
         order_target_value('000001.XSHE', 10000)
     """
@@ -210,6 +214,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     :example:
 
     .. code-block:: python
+
         #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会消耗相当于当前投资组合价值5%的现金买入平安银行股票：
         order_target_percent('000001.XSHE', 0.15)
     """
