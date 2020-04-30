@@ -209,7 +209,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
     :example:
 
     .. code-block:: python
-    
+
         #买入20手的平安银行股票，并且发送市价单：
         order_lots('000001.XSHE', 20)
         #买入10手平安银行股票，并且发送限价单，价格为￥10：

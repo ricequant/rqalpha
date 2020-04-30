@@ -29,8 +29,7 @@ from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import PropertyReprMeta
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
-from rqalpha.model.instrument import Instrument
-from rqalpha.interface import AbstractPosition, AbstractAccount
+from rqalpha.interface import AbstractPosition
 
 from .account import Account
 from .position import PositionType, PositionProxyType
