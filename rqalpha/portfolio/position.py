@@ -104,12 +104,12 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def quantity(self):
-        # type: () -> Union[int, float]
+        # type: () -> int
         return self._old_quantity + self._today_quantity
 
     @property
     def transaction_cost(self):
-        # type: () -> Union[int, float]
+        # type: () -> float
         return self._transaction_cost
 
     @property
@@ -172,11 +172,13 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def today_closable(self):
+        # type: () -> int
         return self._today_quantity - sum(
             o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
         )
 
     def get_state(self):
+        """"""
         return {
             "old_quantity": self._old_quantity,
             "logical_old_quantity": self._logical_old_quantity,
@@ -188,6 +190,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         }
 
     def set_state(self, state):
+        """"""
         self._old_quantity = state.get("old_quantity", 0)
         self._logical_old_quantity = state.get("logical_old_quantity", self._old_quantity)
         self._today_quantity = state.get("today_quantity", 0)

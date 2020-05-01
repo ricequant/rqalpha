@@ -54,6 +54,10 @@ class StockPosition(Position):
 
     @property
     def dividend_receivable(self):
+        # type: () -> float
+        """
+        应收分红
+        """
         if self._dividend_receivable:
             return self._dividend_receivable[1]
         return 0
@@ -61,10 +65,12 @@ class StockPosition(Position):
     @property
     def equity(self):
         # type: () -> float
+        """"""
         return super(StockPosition, self).equity + self.dividend_receivable
 
     @property
     def closable(self):
+        # type: () -> int
         order_quantity = sum(o for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
@@ -212,22 +218,27 @@ class FuturePosition(Position):
     @property
     def equity(self):
         # type: () -> float
+        """"""
         return self.quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
     def margin(self):
+        # type: () -> float
         return self.margin_rate * self.market_value
 
     @property
     def market_value(self):
+        # type: () -> float
         return self.contract_multiplier * super(FuturePosition, self).market_value
 
     @property
     def trading_pnl(self):
+        # type: () -> float
         return self.contract_multiplier * super(FuturePosition, self).trading_pnl
 
     @property
     def position_pnl(self):
+        # type: () -> float
         return self.contract_multiplier * super(FuturePosition, self).position_pnl
 
     def calc_close_today_amount(self, trade_amount):
