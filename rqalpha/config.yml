@@ -56,7 +56,3 @@ extra:
   is_hold: false
   locale: zh_Hans_CN
   logger: []
-
-validator:
-  # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
-  close_amount: true

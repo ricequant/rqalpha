@@ -455,7 +455,7 @@ def get_securities_margin(
     if count == 1:
         start_dt = dt
     else:
-        start_dt = data_proxy.get_nth_previous_trading_date(dt, count - 1)
+        start_dt = data_proxy.get_previous_trading_date(dt, count - 1)
 
     if isinstance(order_book_ids, six.string_types):
         order_book_ids = assure_order_book_id(order_book_ids)
@@ -513,7 +513,7 @@ def get_shares(
     if count == 1:
         start_dt = dt
     else:
-        start_dt = env.data_proxy.get_nth_previous_trading_date(dt, count - 1)
+        start_dt = env.data_proxy.get_previous_trading_date(dt, count - 1)
 
     if isinstance(order_book_ids, six.string_types):
         order_book_ids = assure_order_book_id(order_book_ids)
@@ -588,7 +588,7 @@ def get_turnover_rate(
     if count == 1:
         start_dt = dt
     else:
-        start_dt = data_proxy.get_nth_previous_trading_date(dt, count - 1)
+        start_dt = data_proxy.get_previous_trading_date(dt, count - 1)
 
     if isinstance(order_book_ids, six.string_types):
         order_book_ids = assure_order_book_id(order_book_ids)
@@ -647,7 +647,7 @@ def get_price_change_rate(
     if count == 1:
         start_date = end_date
     else:
-        start_date = data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = data_proxy.get_previous_trading_date(end_date, count - 1)
 
     return rqdatac.get_price_change_rate(order_book_ids, start_date, end_date, expect_df=expect_df)
 
@@ -677,7 +677,7 @@ def get_factor(
     if count == 1:
         start_date = end_date
     else:
-        start_date = data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = data_proxy.get_previous_trading_date(end_date, count - 1)
 
     if isinstance(order_book_ids, six.string_types):
         order_book_ids = assure_order_book_id(order_book_ids)
@@ -748,7 +748,7 @@ def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
     if count == 1:
         start_date = end_date
     else:
-        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = env.data_proxy.get_previous_trading_date(end_date, count - 1)
 
     return rqdatac.get_stock_connect(order_book_ids, start_date, end_date,
                                      fields=fields, expect_df=expect_df)
@@ -908,7 +908,7 @@ def _futures_get_member_rank(which, count=1, rank_by='short'):
     if count == 1:
         start_date = end_date
     else:
-        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = env.data_proxy.get_previous_trading_date(end_date, count - 1)
 
     return rqdatac.futures.get_member_rank(which, start_date=start_date, end_date=end_date, rank_by=rank_by)
 
@@ -927,7 +927,7 @@ def _futures_get_warehouse_stocks(underlying_symbols, count=1):
     if count == 1:
         start_date = end_date
     else:
-        start_date = env.data_proxy.get_nth_previous_trading_date(end_date, count - 1)
+        start_date = env.data_proxy.get_previous_trading_date(end_date, count - 1)
 
     return rqdatac.futures.get_warehouse_stocks(underlying_symbols, start_date=start_date, end_date=end_date)
 

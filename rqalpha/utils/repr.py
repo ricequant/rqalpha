@@ -26,7 +26,7 @@ def _repr(cls_name, properties):
     fmt_str = "{}({})".format(cls_name, ", ".join((str(p) + "={}") for p in properties))
 
     def __repr(inst):
-        return fmt_str.format(*(getattr(inst, p) for p in properties))
+        return fmt_str.format(*(getattr(inst, p, None) for p in properties))
     return __repr
 
 

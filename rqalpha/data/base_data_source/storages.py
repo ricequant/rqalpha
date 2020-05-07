@@ -16,7 +16,7 @@ import abc
 import codecs
 import pickle
 from copy import copy
-from typing import List
+from typing import Iterable
 
 import json
 import pandas
@@ -30,7 +30,7 @@ from rqalpha.model.instrument import Instrument
 class AbstractInstrumentStore:
     @abc.abstractmethod
     def get_all_instruments(self):
-        # type: () -> List[Instrument]
+        # type: () -> Iterable[Instrument]
         raise NotImplementedError
 
 

@@ -123,8 +123,11 @@ class ORDER_STATUS(CustomEnum):
 
 # noinspection PyPep8Naming
 class SIDE(CustomEnum):
-    BUY = "BUY"
-    SELL = "SELL"
+    BUY = "BUY"                      # 买
+    SELL = "SELL"                    # 卖
+    FINANCING = "FINANCING"          # 正回购
+    MARGIN = "MARGIN"                # 逆回购
+    CONVERT_STOCK = "CONVERT_STOCK"  # 转股
 
 
 # noinspection PyPep8Naming
@@ -134,12 +137,6 @@ class POSITION_EFFECT(CustomEnum):
     CLOSE_TODAY = "CLOSE_TODAY"
     EXERCISE = "EXERCISE"
     MATCH = "MATCH"
-
-
-# noinspection PyPep8Naming
-class RIGHT_TYPE(CustomEnum):
-    CONVERT = "CONVERT"  # 转股
-    SELL_BACK = "SELL_BACK"  # 回售
 
 
 # noinspection PyPep8Naming
@@ -216,14 +213,6 @@ class DAYS_CNT(object):
 class MARKET(CustomEnum):
     CN = "CN"
     HK = "HK"
-
-
-# noinspection PyPep8Naming
-class FRONT_VALIDATOR_TYPE(CustomEnum):
-    CASH = "CASH"
-    POSITION = "POSITION"
-    PRICE = "PRICE"
-    OTHER = "OTHER"
 
 
 # noinspection PyPep8Naming

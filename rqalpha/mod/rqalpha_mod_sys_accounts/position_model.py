@@ -20,10 +20,11 @@ from datetime import date
 from functools import lru_cache
 
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
-from rqalpha.portfolio.base_position import BasePosition, PositionProxy
+from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
@@ -35,15 +36,15 @@ def _int_to_date(d):
     return date(year=y, month=m, day=d)
 
 
-class StockPosition(BasePosition):
+class StockPosition(Position):
     __repr_properties__ = (
         "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
     )
+    __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
-    enable_position_validator = True
 
     def __init__(self, order_book_id, direction, init_quantity=0):
         super(StockPosition, self).__init__(order_book_id, direction, init_quantity)
@@ -53,6 +54,10 @@ class StockPosition(BasePosition):
 
     @property
     def dividend_receivable(self):
+        # type: () -> float
+        """
+        应收分红
+        """
         if self._dividend_receivable:
             return self._dividend_receivable[1]
         return 0
@@ -60,20 +65,18 @@ class StockPosition(BasePosition):
     @property
     def equity(self):
         # type: () -> float
+        """"""
         return super(StockPosition, self).equity + self.dividend_receivable
 
     @property
     def closable(self):
+        # type: () -> int
         order_quantity = sum(o for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
         if self.t_plus_enabled:
             return self.quantity - order_quantity - self._non_closable
         return self.quantity - order_quantity
-
-    @property
-    def position_validator_enabled(self):
-        return self.enable_position_validator
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
@@ -193,19 +196,14 @@ class StockPosition(BasePosition):
         self._avg_price /= ratio
 
 
-class FuturePosition(BasePosition):
+class FuturePosition(Position):
     __repr_properties__ = (
         "order_book_id", "direction", "old_quantity", "quantity", "margin", "market_value", "trading_pnl", "position_pnl"
     )
-
-    enable_position_validator = True
+    __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._today_quantity)
-
-    @property
-    def position_validator_enabled(self):
-        return self.enable_position_validator
 
     @property
     @lru_cache()
@@ -220,22 +218,27 @@ class FuturePosition(BasePosition):
     @property
     def equity(self):
         # type: () -> float
+        """"""
         return self.quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
     def margin(self):
+        # type: () -> float
         return self.margin_rate * self.market_value
 
     @property
     def market_value(self):
+        # type: () -> float
         return self.contract_multiplier * super(FuturePosition, self).market_value
 
     @property
     def trading_pnl(self):
+        # type: () -> float
         return self.contract_multiplier * super(FuturePosition, self).trading_pnl
 
     @property
     def position_pnl(self):
+        # type: () -> float
         return self.contract_multiplier * super(FuturePosition, self).position_pnl
 
     def calc_close_today_amount(self, trade_amount):
@@ -276,10 +279,10 @@ class FuturePosition(BasePosition):
 
 
 class StockPositionProxy(PositionProxy):
-
-    __abandon_properties__ = PositionProxy.__abandon_properties__ + [
-        "margin"
-    ]
+    __repr_properties__ = (
+        "order_book_id", "quantity", "avg_price", "market_value"
+    )
+    __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     @property
     def type(self):
@@ -316,17 +319,11 @@ class StockPositionProxy(PositionProxy):
 
 
 class FuturePositionProxy(PositionProxy):
-
-    __abandon_properties__ = PositionProxy.__abandon_properties__ +[
-        "holding_pnl",
-        "buy_holding_pnl",
-        "sell_holding_pnl",
-        "realized_pnl",
-        "buy_realized_pnl",
-        "sell_realized_pnl",
-        "buy_avg_holding_price",
-        "sell_avg_holding_price"
-    ]
+    __repr_properties__ = (
+        "order_book_id", "buy_quantity", "sell_quantity", "buy_market_value", "sell_market_value",
+        "buy_margin", "sell_margin"
+    )
+    __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
     @property
     def type(self):

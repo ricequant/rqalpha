@@ -169,7 +169,7 @@ class AnalyserMod(AbstractMod):
             'symbol': self._symbol(order_book_id),
             'date': date,
         }
-        if instrument.type in self.LONG_ONLY_INS_TYPE:
+        if instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
             for field in ['quantity', 'last_price', 'avg_price', 'market_value']:
                 data[field] = self._safe_convert(getattr(long, field, None))
         else:

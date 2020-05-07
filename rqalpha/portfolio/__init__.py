@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from functools import lru_cache
-from typing import Dict, Union, Callable, List, Optional, Tuple
+from typing import Dict, Union, Callable, List, Tuple
 from itertools import chain
 
 import six
@@ -24,16 +24,15 @@ import jsonpickle
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
+from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
 from rqalpha.utils import merge_dicts
 from rqalpha.utils.repr import PropertyReprMeta
 from rqalpha.events import EVENT
 from rqalpha.model.order import OrderStyle, Order
-from rqalpha.model.instrument import Instrument
-from rqalpha.interface import AbstractPosition, AbstractAccount
+from rqalpha.interface import AbstractPosition
 
 from .account import Account
-from .base_position import PositionType, PositionProxyType
+from .position import PositionType, PositionProxyType
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
@@ -45,9 +44,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
     __repr_properties__ = (
         "total_value", "unit_net_value", "daily_pnl", "daily_returns", "total_returns", "annualized_returns", "accounts"
     )
-
-    _account_types = {}  # type: Dict[INSTRUMENT_TYPE, Union[str, Callable[[Instrument, ], str]]]
-    _order_apis = {}  # type: Dict[INSTRUMENT_TYPE, OrderApiType]
 
     def __init__(self, starting_cash, init_positions):
         # type: (Dict[str, float], List[Tuple[str, int]]) -> Portfolio
@@ -65,31 +61,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
 
         self._register_event()
-
-    @classmethod
-    def register_instrument_type(
-            cls,
-            instrument_type,  # type: Union[INSTRUMENT_TYPE, str]
-            upper_account_type,  # type: Union[str, Callable[[Instrument, ], str]]
-            position_cls,  # type: PositionType
-            order_api,  # type: OrderApiType
-            position_proxy_cls=None  # type: Optional[PositionProxyType]
-    ):
-        cls._account_types[instrument_type] = upper_account_type
-        cls._order_apis[instrument_type] = order_api
-        Account.register_position_type(instrument_type, position_cls)
-        if position_proxy_cls:
-            from .base_position import PositionProxyDict
-            PositionProxyDict.register_position_proxy_dict(instrument_type, position_proxy_cls)
-
-    def order(self, order_book_id, quantity, style, target=False):
-        # type: (str, Union[int, float], OrderStyle, Optional[bool]) -> List[Order]
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
-        try:
-            order_func = self._order_apis[instrument_type]  # type: OrderApiType
-        except KeyError:
-            raise NotImplementedError("no implementation for API order, order_book_id={}".format(order_book_id))
-        return order_func(order_book_id, quantity, style, target)
 
     def get_state(self):
         return jsonpickle.encode({
@@ -120,16 +91,8 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     @classmethod
     def get_account_type(cls, order_book_id):
-        instrument =  Environment.get_instance().data_proxy.instruments(order_book_id)
-        try:
-            account_type = cls._account_types[instrument.type]
-        except KeyError:
-            raise NotImplementedError("no account_type registered, order_book_id={}, instrument_type={}".format(
-                order_book_id, instrument.type
-            ))
-        if isinstance(account_type, str):
-            return account_type
-        return account_type(instrument)
+        instrument = Environment.get_instance().data_proxy.instruments(order_book_id)
+        return instrument.account_type
 
     def get_account(self, order_book_id):
         return self._accounts[self.get_account_type(order_book_id)]

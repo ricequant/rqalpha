@@ -345,3 +345,69 @@ def test_subscribe_event():
         context.before_trading_ran = False
 
     return locals()
+
+
+def test_order():
+    __config__ = {
+        "base": {
+            "accounts": {
+                "stock": 100000000,
+                "future": 100000000,
+            }
+        },
+    }
+
+    def init(context):
+        context.counter = 0
+
+        context.stock = '000001.XSHE'
+        context.future = 'IF88'
+
+    def handle_bar(context, bar_dict):
+        context.counter += 1
+        if context.counter == 1:
+            order(context.stock, 200)
+            order(context.future, -100)
+        elif context.counter == 2:
+            assert get_position(context.stock).quantity == 200
+            assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 100
+            order(context.stock, -100)
+            order(context.future, 200)
+        elif context.counter == 3:
+            assert get_position(context.stock).quantity == 100
+            assert get_position(context.future, POSITION_DIRECTION.LONG).quantity == 100
+            assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 0
+    return locals()
+
+
+def test_order_to():
+    __config__ = {
+        "base": {
+            "accounts": {
+                "stock": 100000000,
+                "future": 100000000,
+            }
+        },
+    }
+
+    def init(context):
+        context.counter = 0
+
+        context.stock = '000001.XSHE'
+        context.future = 'IF88'
+
+    def handle_bar(context, bar_dict):
+        context.counter += 1
+        if context.counter == 1:
+            order_to(context.stock, 200)
+            order_to(context.future, -100)
+        elif context.counter == 2:
+            assert get_position(context.stock).quantity == 200
+            assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 100
+            order_to(context.stock, 100)
+            order_to(context.future, 100)
+        elif context.counter == 3:
+            assert get_position(context.stock).quantity == 100
+            assert get_position(context.future, POSITION_DIRECTION.LONG).quantity == 100
+            assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 0
+    return locals()

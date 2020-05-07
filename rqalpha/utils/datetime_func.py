@@ -13,9 +13,14 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
+from typing import Union
 from collections import namedtuple
 
+import six
+from dateutil.parser import parse
+
 from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.exception import RQInvalidArgument
 
 
 TimeRange = namedtuple('TimeRange', ['start', 'end'])
@@ -79,3 +84,16 @@ def convert_date_time_ms_int_to_datetime(date_int, time_int):
 
     return dt.replace(hour=hours, minute=minutes, second=seconds,
                       microsecond=millisecond * 1000)
+
+
+def to_date(date):
+    # type: (Union[str, datetime.date, datetime.datetime]) -> datetime.date
+    if isinstance(date, six.string_types):
+        return parse(date).date()
+    elif isinstance(date, datetime.date):
+        return date
+    elif isinstance(date, datetime.datetime):
+        return date.date()
+    else:
+        raise RQInvalidArgument("unknown date value: {}".format(date))
+

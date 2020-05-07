@@ -65,15 +65,16 @@ class RqAttrDict(object):
     def _update_dict_recursive(target, other):
         if isinstance(other, RqAttrDict):
             other = other.__dict__
-        if isinstance(target, RqAttrDict):
-            target = target.__dict__
+        target_dict = target.__dict__ if isinstance(target, RqAttrDict) else target
 
         for k, v in six.iteritems(other):
+            if isinstance(v, RqAttrDict):
+                v = v.__dict__
             if isinstance(v, collections.Mapping):
-                r = RqAttrDict._update_dict_recursive(target.get(k, {}), v)
-                target[k] = r
+                r = RqAttrDict._update_dict_recursive(target_dict.get(k, {}), v)
+                target_dict[k] = r
             else:
-                target[k] = other[k]
+                target_dict[k] = other[k]
         return target
 
     def convert_to_dict(self):
@@ -210,8 +211,10 @@ def get_position_direction(side, position_effect):
     # type: (SIDE, Optional[POSITION_EFFECT]) -> Optional[POSITION_DIRECTION]
     if position_effect is None:
         return POSITION_DIRECTION.LONG
+    if side == SIDE.CONVERT_STOCK:
+        return POSITION_DIRECTION.LONG
     if (side == SIDE.BUY and position_effect == POSITION_EFFECT.OPEN) or (side == SIDE.SELL and position_effect in (
-            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
+        POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
     )):
         return POSITION_DIRECTION.LONG
     return POSITION_DIRECTION.SHORT

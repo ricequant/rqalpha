@@ -13,5 +13,5 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from . import api_base
-from . import api_extension
 from . import api_rqdatac
+from . import api_abstract

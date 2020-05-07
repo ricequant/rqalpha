@@ -21,7 +21,7 @@ from itertools import chain
 
 import h5py
 import numpy as np
-import rqdatac
+from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
@@ -119,6 +119,7 @@ def gen_ex_factor(d):
 
 def gen_share_transformation(d):
     df = rqdatac.get_share_transformation()
+    df.drop_duplicates("predecessor", inplace=True)
     df.set_index('predecessor', inplace=True)
     df.effective_date = df.effective_date.astype(str)
     df.predecessor_delisted_date = df.predecessor_delisted_date.astype(str)
@@ -149,7 +150,11 @@ def init_future_info(d):
                 continue
             underlying_symbol_list.append(underlying_symbol)
             future_dict['underlying_symbol'] = underlying_symbol
-            dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            try:
+                dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            except AttributeError:
+                # FIXME: why get_dominant return None???
+                continue
             commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
             for p in fields:
                 future_dict[p] = commission[p]
@@ -234,7 +239,11 @@ def gen_future_info(d):
         else:
             symbol_list.append(underlying_symbol)
             future_dict['underlying_symbol'] = underlying_symbol
-            dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            try:
+                dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
+            except AttributeError:
+                # FIXME: why get_dominant return None???
+                continue
             commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
 
             for p in param:

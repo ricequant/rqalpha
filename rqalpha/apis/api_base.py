@@ -31,7 +31,6 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import RIGHT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.api import export_as_api
 from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
@@ -42,9 +41,8 @@ from rqalpha.const import (
 )
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.events import EVENT, Event
-from rqalpha.interface import AbstractPosition
 from rqalpha.core.strategy_context import StrategyContext
-from rqalpha.portfolio.base_position import BasePosition
+from rqalpha.portfolio.position import Position
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
@@ -60,17 +58,17 @@ export_as_api(MATCHING_TYPE, name='MATCHING_TYPE')
 export_as_api(EVENT, name='EVENT')
 
 
-def assure_order_book_id(id_or_ins):
+def assure_instrument(id_or_ins):
     if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
+        return id_or_ins
     elif isinstance(id_or_ins, six.string_types):
-        order_book_id = (
-            Environment.get_instance().data_proxy.instruments(id_or_ins).order_book_id
-        )
+        return Environment.get_instance().data_proxy.instruments(id_or_ins)
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
-    return order_book_id
+
+def assure_order_book_id(id_or_ins):
+    return assure_instrument(id_or_ins).order_book_id
 
 
 def cal_style(price, style):
@@ -202,50 +200,6 @@ def cancel_order(order):
     if env.can_cancel_order(order):
         env.broker.cancel_order(order)
     return order
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_BAR, EXECUTION_PHASE.ON_TICK, EXECUTION_PHASE.OPEN_AUCTION)
-@apply_rules(
-    verify_that("id_or_ins", pre_check=True).is_valid_instrument((INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.OPTION)),
-    verify_that("amount", pre_check=True).is_number().is_greater_or_equal_than(0),
-    verify_that("right_type", pre_check=True).is_in(RIGHT_TYPE, ignore_none=True)
-)
-def exercise(id_or_ins, amount, right_type=RIGHT_TYPE.SELL_BACK):
-    # type: (Union[str, Instrument], Union[int, float], Optional[RIGHT_TYPE]) -> Optional[Order]
-    """
-    行权。针对期权、可转债等含权合约，行使合约权利方被赋予的权利。
-
-    :param id_or_ins: 行权合约，order_book_id 或 Instrument 对象
-    :param amount: 参与行权的合约数量
-    :param right_type: 权利类型，对于含有多种权利的合约（如可转债），选择行使何种权利
-
-    :example:
-
-    .. code-block:: python
-
-        # 行使一张豆粕1905购2350的权力
-        exercise("M1905C2350", 1)
-
-    """
-
-    amount = int(amount)
-    if amount <= 0:
-        user_system_log.warn(_(u"Order Creation Failed: Order amount should be positive."))
-        return None
-    if right_type != RIGHT_TYPE.SELL_BACK:
-        raise NotImplementedError(_("exercise only supports sell back now"))
-    env = Environment.get_instance()
-    if isinstance(id_or_ins, Instrument):
-        order_book_id = id_or_ins.order_book_id
-    else:
-        order_book_id = env.data_proxy.instruments(id_or_ins).order_book_id
-    order = Order.__from_create__(
-        order_book_id, amount, SIDE.SELL, None, POSITION_EFFECT.EXERCISE, right_type=right_type
-    )
-    if env.can_submit_order(order):
-        env.broker.submit_order(order)
-        return order
 
 
 @export_as_api
@@ -861,7 +815,7 @@ def current_snapshot(id_or_symbol):
 
 @export_as_api
 def get_positions():
-    # type: () -> List[BasePosition]
+    # type: () -> List[Position]
     """
     获取所有持仓对象列表，
 
@@ -884,7 +838,7 @@ def get_positions():
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
 def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
-    # type: (str, Optional[POSITION_DIRECTION]) -> BasePosition
+    # type: (str, Optional[POSITION_DIRECTION]) -> Position
     """
     获取某个标的的持仓对象，
 
@@ -926,3 +880,12 @@ def subscribe_event(event_type, handler):
     env.event_bus.add_listener(
         event_type, user_strategy.wrap_user_event_handler(handler), user=True
     )
+
+
+@export_as_api
+def symbol(order_book_id, sep=", "):
+    if isinstance(order_book_id, six.string_types):
+        return "{}[{}]".format(order_book_id, Environment.get_instance().get_instrument(order_book_id).symbol)
+    else:
+        s = sep.join(symbol(item) for item in order_book_id)
+        return s

@@ -16,13 +16,13 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, List
+from itertools import chain
 
-from six import iteritems
 
 import rqalpha
 from rqalpha.events import EventBus
-from rqalpha.const import FRONT_VALIDATOR_TYPE, INSTRUMENT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
@@ -54,7 +54,8 @@ class Environment(object):
         self.mod_dict = None
         self.plot_store = None
         self.user_strategy = None
-        self._frontend_validators = {}
+        self._frontend_validators = {}  # type: Dict[INSTRUMENT_TYPE, List]
+        self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
 
         # Environment.event_bus used in StrategyUniverse()
@@ -104,41 +105,27 @@ class Environment(object):
     def set_broker(self, broker):
         self.broker = broker
 
-    def add_frontend_validator(self, validator, validator_type=FRONT_VALIDATOR_TYPE.OTHER):
-        # TODO: register validator with instrument_type
-        self._frontend_validators.setdefault(validator_type, []).append(validator)
-
-    def validate_order_submission(self, order):
-        if Environment.get_instance().config.extra.is_hold:
-            return False
-        try:
-            account = self.portfolio.get_account(order.order_book_id)
-        except NotImplementedError:
-            account = None
-
-        for validator_type, validators in iteritems(self._frontend_validators):
-            for v in validators:
-                if not v.can_submit_order(order, account):
-                    return validator_type
-
-    def validate_order_cancellation(self, order):
-        if order.is_final():
-            return False
-        try:
-            account = self.get_account(order.order_book_id)
-        except NotImplementedError:
-            account = None
-
-        for validator_type, validators in iteritems(self._frontend_validators):
-            for v in validators:
-                if not v.can_cancel_order(order, account):
-                    return validator_type
+    def add_frontend_validator(self, validator, instrument_type=None):
+        if instrument_type:
+            self._frontend_validators.setdefault(instrument_type, []).append(validator)
+        else:
+            self._default_frontend_validators.append(validator)
 
     def can_submit_order(self, order):
-        return self.validate_order_submission(order) is None
+        instrument_type = self.data_proxy.instruments(order.order_book_id).type
+        account = self.portfolio.get_account(order.order_book_id)
+        for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
+            if not v.can_submit_order(order, account):
+                return False
+        return True
 
     def can_cancel_order(self, order):
-        return self.validate_order_cancellation(order) is None
+        instrument_type = self.data_proxy.instruments(order.order_book_id).type
+        account = self.portfolio.get_account(order.order_book_id)
+        for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
+            if not v.can_cancel_order(order, account):
+                return False
+        return True
 
     def get_universe(self):
         return self._universe.get()
@@ -182,7 +169,7 @@ class Environment(object):
         try:
             return self._transaction_cost_decider_dict[instrument_type]
         except KeyError:
-            raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}.".format(
+            raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}".format(
                 order_book_id
             )))
 

@@ -15,12 +15,10 @@
 from .cash_validator import CashValidator
 from .is_trading_validator import IsTradingValidator
 from .price_validator import PriceValidator
-from .position_validator import PositionValidator
 from .self_trade_validator import SelfTradeValidator
 
 __all__ = [
     "CashValidator",
-    "PositionValidator",
     "PriceValidator",
     "IsTradingValidator",
     "SelfTradeValidator",

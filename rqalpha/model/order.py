@@ -15,13 +15,12 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Optional
 import time
 from decimal import Decimal
 
 import numpy as np
 
-from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION, RIGHT_TYPE
+from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION
 from rqalpha.utils import id_gen, decimal_rounding_floor, get_position_direction
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
@@ -43,7 +42,6 @@ class Order(object):
         self._order_book_id = None
         self._side = None
         self._position_effect = None
-        self._right_type = None  # type: Optional[RIGHT_TYPE]
         self._message = None
         self._filled_quantity = None
         self._status = None
@@ -66,7 +64,6 @@ class Order(object):
             'quantity': self._quantity,
             'side': self._side,
             'position_effect': self._position_effect,
-            'right_type': self._right_type,
             'message': self._message,
             'filled_quantity': self._filled_quantity,
             'status': self._status,
@@ -86,7 +83,6 @@ class Order(object):
         self._quantity = d['quantity']
         self._side = SIDE[d["side"]]
         self._position_effect = POSITION_EFFECT[d["position_effect"]] if d["position_effect"] else None
-        self._right_type = RIGHT_TYPE[d["right_type"]] if d["right_type"] else None
         self._message = d['message']
         self._filled_quantity = d['filled_quantity']
         self._status = ORDER_STATUS[d["order_status"]]
@@ -96,7 +92,7 @@ class Order(object):
         self._avg_price = d['avg_price']
 
     @classmethod
-    def __from_create__(cls, order_book_id, quantity, side, style, position_effect, right_type=None):
+    def __from_create__(cls, order_book_id, quantity, side, style, position_effect):
         env = Environment.get_instance()
         order = cls()
         order._order_id = next(order.order_id_gen)
@@ -106,7 +102,6 @@ class Order(object):
         order._order_book_id = order_book_id
         order._side = side
         order._position_effect = position_effect
-        order._right_type = right_type
         order._message = ""
         order._filled_quantity = 0
         order._status = ORDER_STATUS.PENDING_NEW
@@ -192,14 +187,6 @@ class Order(object):
             else:
                 return POSITION_EFFECT.CLOSE
         return self._position_effect
-
-    @property
-    def right_type(self):
-        # type: () -> Optional[RIGHT_TYPE]
-        """
-        权利类型，用于行权订单
-        """
-        return self._right_type
 
     @property
     def position_direction(self):

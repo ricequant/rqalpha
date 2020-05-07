@@ -17,10 +17,11 @@
 
 from typing import Optional
 
-from rqalpha.interface import AbstractFrontendValidator, AbstractAccount, AbstractPosition
+from rqalpha.interface import AbstractFrontendValidator, AbstractPosition
 from rqalpha.const import POSITION_EFFECT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -30,10 +31,8 @@ class PositionValidator(AbstractFrontendValidator):
         return True
 
     def can_submit_order(self, order, account=None):
-        # type: (Order, Optional[AbstractAccount]) -> bool
+        # type: (Order, Optional[Account]) -> bool
         if account is None:
-            return True
-        if not account.position_validator_enabled(order.order_book_id):
             return True
         if order.position_effect in (POSITION_EFFECT.OPEN, POSITION_EFFECT.EXERCISE):
             return True

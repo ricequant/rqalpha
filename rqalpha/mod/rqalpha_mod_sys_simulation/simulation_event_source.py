@@ -117,7 +117,7 @@ class SimulationEventSource(AbstractEventSource):
         for account_type in self._config.base.accounts:
             if account_type in (DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE, DEFAULT_ACCOUNT_TYPE.OPTION):
                 calendar_types.append(TRADING_CALENDAR_TYPE.EXCHANGE)
-            elif calendar_types == DEFAULT_ACCOUNT_TYPE.BOND:
+            elif account_type == DEFAULT_ACCOUNT_TYPE.BOND:
                 calendar_types.append(TRADING_CALENDAR_TYPE.INTER_BANK)
         trading_dates = self._get_merged_trading_dates(start_date, end_date, calendar_types)
 

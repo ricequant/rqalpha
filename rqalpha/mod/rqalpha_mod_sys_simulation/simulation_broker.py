@@ -15,19 +15,22 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-
-import jsonpickle
+from typing import List, Tuple, Dict
+from functools import lru_cache
 from itertools import chain
 
+import jsonpickle
+
+from rqalpha.portfolio.account import Account
 from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import AbstractBroker, Persistable
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.events import EVENT, Event
-from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTION_PHASE
+from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTION_PHASE, INSTRUMENT_TYPE
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
-from .matcher import Matcher, ExerciseMatcher
+from .matcher import DefaultMatcher, AbstractMatcher
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -35,14 +38,13 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env = env  # type: Environment
         self._mod_config = mod_config
 
-        self._matcher = None
-        self._exercise_matcher = None
+        self._matchers = {}  # type: Dict[INSTRUMENT_TYPE, AbstractMatcher]
 
         self._match_immediately = mod_config.matching_type == MATCHING_TYPE.CURRENT_BAR_CLOSE
 
-        self._open_orders = []
-        self._open_auction_orders = []
-        self._open_exercise_orders = []
+        self._open_orders = []  # type: List[Tuple[Account, Order]]
+        self._open_auction_orders = []   # type: List[Tuple[Account, Order]]
+        self._open_exercise_orders = []  # type: List[Tuple[Account, Order]]
 
         self._delayed_orders = []
         self._frontend_validator = {}
@@ -57,17 +59,18 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
         self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
 
-    @property
-    def matcher(self):
-        if not self._matcher:
-            self._matcher = Matcher(self._env, self._mod_config)
-        return self._matcher
+    @lru_cache(1024)
+    def _get_matcher(self, order_book_id):
+        # type: (str) -> AbstractMatcher
+        instrument_type = self._env.data_proxy.instruments(order_book_id).type
+        try:
+            return self._matchers[instrument_type]
+        except KeyError:
+            return self._matchers.setdefault(instrument_type, DefaultMatcher(self._env, self._mod_config))
 
-    @property
-    def exercise_matcher(self):
-        if not self._exercise_matcher:
-            self._exercise_matcher = ExerciseMatcher(self._env)
-        return self._exercise_matcher
+    def register_matcher(self, instrument_type, matcher):
+        # type: (INSTRUMENT_TYPE, AbstractMatcher) -> None
+        self._matchers[instrument_type] = matcher
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:
@@ -78,44 +81,37 @@ class SimulationBroker(AbstractBroker, Persistable):
     def get_state(self):
         return jsonpickle.dumps({
             'open_orders': [o.get_state() for account, o in self._open_orders],
-            'delayed_orders': [o.get_state() for account, o in self._delayed_orders]
+            'delayed_orders': [o.get_state() for account, o in self._delayed_orders],
+            "open_auction_orders": [o.get_state() for account, o in self._open_auction_orders],
         }).encode('utf-8')
 
     def set_state(self, state):
-        self._open_orders = []
-        self._delayed_orders = []
+        def _account_order_from_state(order_state):
+            o = Order()
+            o.set_state(order_state)
+            account = self._env.get_account(o.order_book_id)
+            return account, o
 
         value = jsonpickle.loads(state.decode('utf-8'))
-        for v in value['open_orders']:
-            o = Order()
-            o.set_state(v)
-            account = self._env.get_account(o.order_book_id)
-            self._open_orders.append((account, o))
-        for v in value['delayed_orders']:
-            o = Order()
-            o.set_state(v)
-            account = self._env.get_account(o.order_book_id)
-            self._delayed_orders.append((account, o))
+        self._open_orders = [_account_order_from_state(v) for v in value["open_orders"]]
+        self._delayed_orders = [_account_order_from_state(v) for v in value["delayed_orders"]]
+        self._open_auction_orders = [_account_order_from_state(v) for v in value.get("open_auction_orders", [])]
 
     def submit_order(self, order):
         if order.position_effect == POSITION_EFFECT.MATCH:
-            raise NotImplementedError(_("unsupported position_effect {}").format(order.position_effect))
+            raise TypeError(_("unsupported position_effect {}").format(order.position_effect))
         account = self._env.get_account(order.order_book_id)
         self._env.event_bus.publish_event(Event(EVENT.ORDER_PENDING_NEW, account=account, order=order))
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
-            return self._open_exercise_orders.append(order)
         if order.is_final():
             return
-        if self._env.config.base.frequency == '1d' and not self._match_immediately:
-            if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
-                self._open_orders.append((account, order))
-                order.active()
-            else:
-                self._delayed_orders.append((account, order))
-            return
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            return self._open_exercise_orders.append((account, order))
         if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
             self._open_auction_orders.append((account, order))
         else:
+            if self._env.config.base.frequency == '1d' and not self._match_immediately:
+                self._delayed_orders.append((account, order))
+                return
             self._open_orders.append((account, order))
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
@@ -154,25 +150,30 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._delayed_orders = []
 
     def pre_settlement(self, __):
-        self.exercise_matcher.match(self._open_exercise_orders)
+        for account, order in self._open_exercise_orders:
+            self._get_matcher(order.order_book_id).match(account, order, False)
         self._open_exercise_orders.clear()
 
     def on_bar(self, _):
-        self.matcher.update(self._env.calendar_dt, self._env.trading_dt)
+        for matcher in self._matchers.values():
+            matcher.update()
         self._match()
 
     def on_tick(self, event):
         tick = event.tick
-        self.matcher.update(self._env.calendar_dt, self._env.trading_dt)
+        self._get_matcher(tick.order_book_id).update()
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
         order_filter = None if order_book_id is None else lambda a_and_o: a_and_o[1].order_book_id == order_book_id
-        self.matcher.match(filter(order_filter, self._open_orders), open_auction=False)
-        self.matcher.match(filter(order_filter, self._open_auction_orders), open_auction=True)
+        for account, order in filter(order_filter, self._open_orders):
+            self._get_matcher(order.order_book_id).match(account, order, open_auction=False)
+        for account, order in filter(order_filter, self._open_auction_orders):
+            self._get_matcher(order.order_book_id).match(account, order, open_auction=True)
         final_orders = [(a, o) for a, o in chain(self._open_orders, self._open_auction_orders) if o.is_final()]
         self._open_orders = [(a, o) for a, o in chain(self._open_orders, self._open_auction_orders) if not o.is_final()]
         self._open_auction_orders.clear()
+
         for account, order in final_orders:
             if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:
                 self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
