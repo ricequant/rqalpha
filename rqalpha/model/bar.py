@@ -363,6 +363,8 @@ class BarMap(object):
                     bar = self._data_proxy.get_open_auction_bar(order_book_id, self._dt)
                 else:
                     bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
+            except PermissionError:
+                raise
             except Exception as e:
                 system_log.exception(e)
                 raise patch_user_exc(KeyError(_(u"id_or_symbols {} does not exist").format(key)))

@@ -35,6 +35,7 @@ class LogCapture:
     def __enter__(self):
         self._handlers = self._logger.handlers
         self._logger.handlers = [self._capture_handler]
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._logger.handlers = self._handlers
