@@ -62,49 +62,41 @@ def mod(cmd, params):
         six.print_(tabulate(table, headers=headers, tablefmt="psql"))
         six.print_("You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
 
+    def change_mod_status(mod_list, enabled):
+        for mod_name in mod_list:
+            if "rqalpha_mod_" in mod_name:
+                mod_name = mod_name.replace("rqalpha_mod_", "")
+
+            # check whether is installed
+            module_name = "rqalpha_mod_" + mod_name
+            if module_name.startswith("rqalpha_mod_sys_"):
+                module_name = "rqalpha.mod." + module_name
+
+            try:
+                import_module(module_name)
+            except ModuleNotFoundError:
+                print(f"can not find mod \033[93m[{mod_name}]\033[0m!, ignore")
+                continue
+
+
+            from rqalpha.utils.config import user_mod_conf_path, load_yaml
+            user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
+            user_conf['mod'].setdefault(mod_name, {'enabeld': enabled})['enabled'] = enabled
+            dump_config(user_mod_conf_path(), user_conf)
+
     def enable(params):
         """
         enable mod
         """
-        mod_name = params[0]
-        if "rqalpha_mod_" in mod_name:
-            mod_name = mod_name.replace("rqalpha_mod_", "")
-
-        # check whether is installed
-        module_name = "rqalpha_mod_" + mod_name
-        if module_name.startswith("rqalpha_mod_sys_"):
-            module_name = "rqalpha.mod." + module_name
-
-        import_module(module_name)
-
-        from rqalpha.utils.config import user_mod_conf_path, load_yaml
-        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
-
-        try:
-            user_conf['mod'][mod_name]['enabled'] = True
-        except KeyError:
-            user_conf['mod'][mod_name] = {'enabled': True}
-
-        dump_config(user_mod_conf_path(), user_conf)
+        mod_list = params
+        change_mod_status(mod_list, True)
 
     def disable(params):
         """
         disable mod
         """
-        mod_name = params[0]
-
-        if "rqalpha_mod_" in mod_name:
-            mod_name = mod_name.replace("rqalpha_mod_", "")
-
-        from rqalpha.utils.config import user_mod_conf_path, load_yaml
-        user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
-
-        try:
-            user_conf['mod'][mod_name]['enabled'] = False
-        except KeyError:
-            user_conf['mod'][mod_name] = {'enabled': False}
-
-        dump_config(user_mod_conf_path(), user_conf)
+        mod_list = params
+        change_mod_status(mod_list, False)
 
     locals()[cmd](params)
 

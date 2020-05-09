@@ -70,10 +70,6 @@ RQAlpha 提供了极具拓展性的 Mod Hook 接口，这意味着开发者可�
 
     # 查看当前安装的 Mod 列表及状态
     $ rqalpha mod list
-    # 安装 Mod
-    $ rqalpha mod install xxx
-    # 卸载 Mod
-    $ rqalpha mod uninstall xxx
     # 启用 Mod
     $ rqalpha mod enable xxx
     # 禁用 Mod
@@ -81,17 +77,17 @@ RQAlpha 提供了极具拓展性的 Mod Hook 接口，这意味着开发者可�
 
 以下是目前已经集成的 Mod 列表:
 
-========================    ==================================================================================
-Mod名                        说明
-========================    ==================================================================================
-`sys_accounts`_             【系统模块】为回测、模拟交易、实盘提供了股票和期货的账户模型及专用 API
-`sys_analyser`_             【系统模块】记录每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，并以csv、plot图标等形式输出分析结果
-`sys_progress`_             【系统模块】在控制台输出当前策略的回测进度
-`sys_risk`_                 【系统模块】对订单进行事前风控校验
-`sys_simulation`_           【系统模块】支持回测、撮合、滑点控制等
-`sys_benchmark`_            【系统模块】提供了使用单一标的作为基准的具体实现
-`sys_transaction_cost`_     【系统模块】实现了不同市场不同交易表的的税费计算逻辑
-========================    ==================================================================================
+=======================    ==================================================================================
+Mod名                       说明
+=======================    ==================================================================================
+`sys_accounts`_            提供了股票、期货的下单 API 实现及持仓模型的实现
+`sys_analyser`_            记录每天的下单、成交、投资组合、持仓等信息，并计算风险度指标，并以csv、plot图标等形式输出分析结果
+`sys_progress`_            在控制台输出当前策略的回测进度。
+`sys_risk`_                对订单进行事前风控校验
+`sys_scheduler`_           提供了定时器，即按照特定周期执行指定逻辑的功能
+`sys_simulation`_          提供了模拟撮合引擎及回测事件源等模块，为回测和模拟交易提供支持
+`sys_transaction_cost`_    实现了股票、期货的交易税费计算逻辑
+=======================    ==================================================================================
 
 如果您基于 RQAlpha 进行了 Mod 扩展，欢迎告知我们，在审核通过后，会在 Mod 列表中添加您的 Mod 信息和链接。
 
@@ -182,12 +178,11 @@ RQData数据本地化服务
 .. _rqalpha_mod_tushare: https://github.com/ricequant/rqalpha-mod-tushare
 .. _通过 Mod 扩展 RQAlpha: http://rqalpha.io/zh_CN/latest/development/mod.html
 .. _sys_analyser: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_analyser/README.rst
-.. _sys_funcat: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_funcat/README.rst
+.. _sys_scheduler: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_scheduler/README.rst
 .. _sys_progress: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_progress/README.rst
 .. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
 .. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
 .. _sys_accounts: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_accounts/README.rst
-.. _sys_benchmark: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_benchmark/README.rst
 .. _sys_transaction_cost: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_transaction_cost/README.rst
 .. _RQData数据本地化服务: https://www.ricequant.com/doc/rqdata-institutional
 .. _点击链接免费开通: https://ricequant.mikecrm.com/h7ZFJnT
