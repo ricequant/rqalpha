@@ -62,7 +62,7 @@ def mod(cmd, params):
         six.print_(tabulate(table, headers=headers, tablefmt="psql"))
         six.print_("You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
 
-    def change_mod_status(mod_list, status):
+    def change_mod_status(mod_list, enabled):
         for mod_name in mod_list:
             if "rqalpha_mod_" in mod_name:
                 mod_name = mod_name.replace("rqalpha_mod_", "")
@@ -75,15 +75,13 @@ def mod(cmd, params):
             try:
                 import_module(module_name)
             except ModuleNotFoundError:
-                print(f"can not find mod \033[93m[{mod_name}]\033[0m!, ignore")
+                print(f"can not find mod \033[93m[{mod_name}]\033[:qm!, ignore")
                 continue
 
 
             from rqalpha.utils.config import user_mod_conf_path, load_yaml
             user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
-
-            user_conf['mod'][mod_name].setdefault('enabled', status)
-
+            user_conf['mod'].setdefault(mod_name, {'enabeld': enabled})['enabled'] = enabled
             dump_config(user_mod_conf_path(), user_conf)
 
     def enable(params):
