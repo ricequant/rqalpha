@@ -75,7 +75,7 @@ def mod(cmd, params):
             try:
                 import_module(module_name)
             except ModuleNotFoundError:
-                print(f"can not find mod \033[93m[{mod_name}]\033[:qm!, ignore")
+                print(f"can not find mod \033[93m[{mod_name}]\033[0m!, ignore")
                 continue
 
 
