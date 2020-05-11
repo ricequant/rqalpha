@@ -92,10 +92,14 @@ Mod名                       说明
 如果您基于 RQAlpha 进行了 Mod 扩展，欢迎告知我们，在审核通过后，会在 Mod 列表中添加您的 Mod 信息和链接。
 
 
+关于 4.x 版本数据 bundle 变更的说明
+================================
 
-    RQAlpha 于近期更新了 4.0.0 版本，4.0.0 添加了大量功能改进和体验改善。
+RQAlpha 于近期更新了 4.0.0 版本，4.0.0 添加了大量功能改进和体验改善。
 
-    其中一点需要您额外注意：我们在 4.0.0 版本中重构了数据 bundle 的格式，原 3.x 版本的 bundle 已停止更新，您需要更新 RQAlpha 至 4.x 以使用优化过的 bundle。另外，为了平衡您的使用体验与我们的维护成本，4.x 版本提供下载的 bundle 改为月度更新，但您仍可以使用 `RQData`_ 在本地**随时**使用最新数据更新 bundle，具体操作可查看 `RQAlpha 文档 <https://rqalpha.readthedocs.io/zh_CN/latest/intro/install.html#intro-install-get-data>`_ 。
+其中一点需要您额外注意：我们在 4.0.0 版本中重构了数据 bundle 的格式，原 3.x 版本的 bundle 已停止更新，您需要更新 RQAlpha 至 4.x 以使用优化过的 bundle。
+另外，为了平衡您的使用体验与我们的维护成本，4.x 版本提供下载的 bundle 改为月度更新，但您仍可以使用 `RQData`_ 在本地**随时**使用最新数据更新 bundle，
+具体操作可查看 `RQAlpha 文档 <https://rqalpha.readthedocs.io/zh_CN/latest/intro/install.html#intro-install-get-data>`_ 。
 
 
 RQData数据本地化服务
