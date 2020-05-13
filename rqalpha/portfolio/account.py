@@ -117,7 +117,7 @@ class Account(AbstractAccount):
             self._total_cash = state["total_cash"]
         else:
             # forward compatible
-            total_cash = state["static_total_valueu"]
+            total_cash = state["static_total_value"]
             for p in self._iter_pos():
                 if p._instrument.type == INSTRUMENT_TYPE.FUTURE:
                     continue
