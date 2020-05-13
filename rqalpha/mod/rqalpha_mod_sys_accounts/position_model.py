@@ -91,6 +91,7 @@ class StockPosition(Position):
             "pending_transform": self._pending_transform,
             "non_closable": self._non_closable
         })
+        return state
 
     def before_trading(self, trading_date):
         # type: (date) -> float
