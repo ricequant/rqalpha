@@ -110,9 +110,8 @@ class Account(AbstractAccount):
         self._positions.clear()
         for order_book_id, positions_state in six.iteritems(state['positions']):
             for direction in POSITION_DIRECTION:
-                state = positions_state[direction]
                 position = self._get_or_create_pos(order_book_id, direction)
-                position.set_state(state)
+                position.set_state(positions_state[direction])
         if "total_cash" in state:
             self._total_cash = state["total_cash"]
         else:
