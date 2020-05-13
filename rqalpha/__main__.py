@@ -16,12 +16,11 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from rqalpha.cmds import cli
 
-cli(obj={})
-
 
 def entry_point():
     from rqalpha.mod.utils import inject_mod_commands
     inject_mod_commands()
+    cli(obj={})
 
 
 if __name__ == '__main__':
