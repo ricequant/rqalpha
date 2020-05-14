@@ -65,7 +65,7 @@ class PersistHelper(object):
         if key:
             return self._restore_obj(key, self._objects[key])
 
-        return any(self._restore_obj(key, obj) for key, obj in six.iteritems(self._objects))
+        return all(self._restore_obj(key, obj) for key, obj in six.iteritems(self._objects))
 
     def _restore_obj(self, key, obj):
         state = self._persist_provider.load(key)

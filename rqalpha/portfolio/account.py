@@ -94,8 +94,8 @@ class Account(AbstractAccount):
         return {
             'positions': {
                 order_book_id: {
-                    "long": positions[POSITION_DIRECTION.LONG].get_state(),
-                    "short": positions[POSITION_DIRECTION.SHORT].get_state()
+                    POSITION_DIRECTION.LONG: positions[POSITION_DIRECTION.LONG].get_state(),
+                    POSITION_DIRECTION.SHORT: positions[POSITION_DIRECTION.SHORT].get_state()
                 } for order_book_id, positions in six.iteritems(self._positions)
             },
             'frozen_cash': self._frozen_cash,
@@ -110,14 +110,13 @@ class Account(AbstractAccount):
         self._positions.clear()
         for order_book_id, positions_state in six.iteritems(state['positions']):
             for direction in POSITION_DIRECTION:
-                state = positions_state[direction]
                 position = self._get_or_create_pos(order_book_id, direction)
-                position.set_state(state)
+                position.set_state(positions_state[direction])
         if "total_cash" in state:
             self._total_cash = state["total_cash"]
         else:
             # forward compatible
-            total_cash = state["static_total_valueu"]
+            total_cash = state["static_total_value"]
             for p in self._iter_pos():
                 if p._instrument.type == INSTRUMENT_TYPE.FUTURE:
                     continue
