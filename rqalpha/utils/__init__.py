@@ -93,17 +93,6 @@ def id_gen(start=1):
         i += 1
 
 
-class Nop(object):
-    def __init__(self):
-        pass
-
-    def nop(*args, **kw):
-        pass
-
-    def __getattr__(self, _):
-        return self.nop
-
-
 def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):
     try:
         msg = str(exc_val)
