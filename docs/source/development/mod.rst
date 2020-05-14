@@ -179,7 +179,7 @@ PyPI方式安装Mod
             funcat.set_data_backend(RQAlphaDataBackend())
 
             # register funcat api into rqalpha
-            from rqalpha.api.api_base import register_api
+            from rqalpha.api import register_api
             for name in dir(funcat):
                 obj = getattr(funcat, name)
                 if getattr(obj, "__module__", "").startswith("funcat"):
