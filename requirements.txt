@@ -8,10 +8,8 @@ click >=7.0
 jsonpickle ==0.9.4
 simplejson >=3.10.0
 dill ==0.2.5
-XlsxWriter >=0.9.6
 PyYAML >=3.12
 tabulate
-xlwt
 
 rqrisk >=0.0.9
 h5py

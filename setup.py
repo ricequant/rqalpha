@@ -25,7 +25,6 @@ requirements = [
     'click',
     'jsonpickle',
     'simplejson',
-    'XlsxWriter',
     'PyYAML',
     'tabulate',
     'rqrisk',
