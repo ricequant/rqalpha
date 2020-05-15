@@ -12,7 +12,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from rqalpha.api import *
+from rqalpha.apis import *
 import os
 import sys
 
@@ -21,7 +21,7 @@ def init(context):
     strategy_file_path = context.config.base.strategy_file
     sys.path.append(os.path.realpath(os.path.dirname(strategy_file_path)))
 
-    from get_csv_module import get_csv
+    from .get_csv_module import get_csv
 
     IF1706_df = get_csv()
     context.IF1706_df = IF1706_df

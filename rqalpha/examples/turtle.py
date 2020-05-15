@@ -1,4 +1,4 @@
-from rqalpha.api import *
+from rqalpha.apis import *
 
 import numpy as np
 import talib

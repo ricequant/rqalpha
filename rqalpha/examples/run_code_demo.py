@@ -3,7 +3,7 @@
 from rqalpha import run_code
 
 code = """
-from rqalpha.api import *
+from rqalpha.apis import *
 
 
 def init(context):

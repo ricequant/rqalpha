@@ -1,5 +1,4 @@
-from rqalpha.api import *
-from rqalpha import subscribe_event
+from rqalpha.apis import *
 
 
 def on_trade_handler(event):

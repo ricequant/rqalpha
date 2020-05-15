@@ -17,7 +17,7 @@
 
 from datetime import date
 
-from rqalpha.api import *
+from rqalpha.apis import *
 
 
 __config__ = {
