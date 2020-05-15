@@ -21,7 +21,7 @@ from functools import wraps, lru_cache
 
 from rqalpha.model.instrument import Instrument
 from rqalpha.const import INSTRUMENT_TYPE
-from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.exception import RQInvalidArgument, RQApiNotSupportedError
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -30,10 +30,15 @@ def instype_singledispatch(func):
     data_proxy = None
 
     def rq_invalid_argument(arg):
-        return RQInvalidArgument(_(
-            u"function {}: invalid {} argument, "
-            u"expected an order_book_id or instrument with types {}, got {} (type: {})"
-        ).format(funcname, argname, [getattr(i, "name", str(i)) for i in registry], arg, type(arg)))
+        if registry:
+            return RQInvalidArgument(_(
+                u"function {}: invalid {} argument, "
+                u"expected an order_book_id or instrument with types {}, got {} (type: {})"
+            ).format(funcname, argname, [getattr(i, "name", str(i)) for i in registry], arg, type(arg)))
+        else:
+            return RQApiNotSupportedError(_(
+                "function {} are not supported, please check your account or mod config"
+            ).format(funcname))
 
     @lru_cache(1024)
     def dispatch(id_or_ins):
