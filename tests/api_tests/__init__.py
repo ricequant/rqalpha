@@ -46,7 +46,7 @@ def import_tests(dir, module):
                 m = import_module(".".join((module, file[:-3])), "tests.api_tests")
                 default_config = m.__dict__.pop("__config__", {})
                 for obj in six.itervalues(m.__dict__):
-                    if hasattr(obj, "__call__") and obj.__name__.startswith("test"):
+                    if hasattr(obj, "__call__") and getattr(obj, "__name__", "").startswith("test"):
                         strategy_locals = obj()
                         custom_config = strategy_locals.pop("__config__", {})
                         config = deepcopy(default_config)
@@ -59,5 +59,3 @@ def import_tests(dir, module):
 
 
 strategies = list(six.itervalues(import_tests(os.path.dirname(__file__), "")))
-
-
