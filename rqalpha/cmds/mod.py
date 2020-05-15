@@ -80,7 +80,7 @@ def mod(cmd, params):
 
             from rqalpha.utils.config import user_mod_conf_path, load_yaml
             user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
-            user_conf['mod'].setdefault(mod_name, {'enabeld': enabled})['enabled'] = enabled
+            user_conf['mod'].setdefault(mod_name, {'enabled': enabled})['enabled'] = enabled
             dump_config(user_mod_conf_path(), user_conf)
 
     def enable(params):
