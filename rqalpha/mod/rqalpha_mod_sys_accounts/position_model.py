@@ -136,6 +136,8 @@ class StockPosition(BasePosition):
                         position_effect=POSITION_EFFECT.OPEN,
                         order_book_id=successor
                     ))
+                    successor_position = self._env.portfolio.get_position(successor, self.direction)
+                    successor_position.update_last_price(self._last_price / conversion_ratio)
                     # 把购买 successor 消耗的 cash 补充回来
                     delta_cash = self.market_value
             if self.cash_return_by_stock_delisted:

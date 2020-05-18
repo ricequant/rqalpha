@@ -104,7 +104,7 @@ class BasePosition(AbstractPosition, metaclass=PropertyReprMeta):
     @property
     def equity(self):
         # type: () -> float
-        return self.last_price * self.quantity
+        return self.last_price * self.quantity if self.quantity != 0 else 0
 
     @property
     def prev_close(self):
