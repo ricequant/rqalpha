@@ -60,7 +60,7 @@ def mod(cmd, params):
         ]
 
         six.print_(tabulate(table, headers=headers, tablefmt="psql"))
-        six.print_("You can use `rqalpha mod list/install/uninstall/enable/disable` to manage your mods")
+        six.print_("You can use `rqalpha mod list/enable/disable` to manage your mods")
 
     def change_mod_status(mod_list, enabled):
         for mod_name in mod_list:
