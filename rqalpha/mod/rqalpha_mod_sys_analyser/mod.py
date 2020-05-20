@@ -98,12 +98,9 @@ class AnalyserMod(AbstractMod):
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
         self._benchmark_daily_returns.append(self.get_benchmark_daily_returns())
-        date_count = len(self._benchmark_daily_returns)
         self._total_benchmark_portfolios.append({
             "date": date,
-            "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod(),
-            "daily_returns": np.array(self._benchmark_daily_returns).prod(),
-            "annualized_returns": np.array(self._benchmark_daily_returns ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1).prod(),
+            "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod()
         })
 
         for account_type, account in six.iteritems(self._env.portfolio.accounts):
@@ -277,7 +274,6 @@ class AnalyserMod(AbstractMod):
             df['date'] = pd.to_datetime(df['date'])
             benchmark_portfolios = df.set_index('date').sort_index()
             result_dict['benchmark_portfolio'] = benchmark_portfolios
-            self._env.benchmark_portfolio = benchmark_portfolios
 
         if not self._env.get_plot_store().empty:
             plots = self._env.get_plot_store().get_plots()
