@@ -254,6 +254,9 @@ class AnalyserMod(AbstractMod):
             date_count = len(self._benchmark_daily_returns)
             benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
             summary['benchmark_annualized_returns'] = self._safe_convert(benchmark_annualized_returns)
+            self._env.benchmark['benchmark_daily_returns'] = benchmark_total_returns
+            self._env.benchmark['benchmark_annualized_returns'] = benchmark_annualized_returns
+            self._env.benchmark['benchmark_unit_net_value'] = 1 + benchmark_total_returns
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
