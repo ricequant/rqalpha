@@ -245,11 +245,6 @@ class FuturePosition(Position):
         # type: () -> float
         return self.contract_multiplier * super(FuturePosition, self).position_pnl
 
-    @property
-    def pnl(self):
-        # type: () -> float
-        return self.contract_multiplier * super(FuturePosition, self).pnl
-
     def calc_close_today_amount(self, trade_amount):
         close_today_amount = trade_amount - self.old_quantity
         return max(close_today_amount, 0)
@@ -289,7 +284,7 @@ class FuturePosition(Position):
 
 class StockPositionProxy(PositionProxy):
     __repr_properties__ = (
-        "order_book_id", "quantity", "avg_price", "market_value", "pnl"
+        "order_book_id", "quantity", "avg_price", "market_value"
     )
     __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
@@ -415,6 +410,11 @@ class FuturePositionProxy(PositionProxy):
         [float] 买方向累计盈亏
         """
         return self._long.pnl
+
+    @property
+    def pnl(self):
+        # type: () -> float
+        return self.contract_multiplier * self._long.pnl
 
     @property
     def sell_pnl(self):

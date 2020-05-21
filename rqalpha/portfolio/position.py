@@ -312,15 +312,6 @@ class PositionProxy(metaclass=PositionProxyMeta):
         return self._long.trading_pnl + self._short.trading_pnl
 
     @property
-    def pnl(self):
-        """
-        [float] 交易盈亏，当前交易日盈亏中来源于当日成交的部分
-
-        """
-        return (self._long.last_price - self._long.last_price) * self._long.quantity * self._long.contract_multiplier *\
-            self._long._direction_factor
-
-    @property
     def daily_pnl(self):
         """
         [float] 当日盈亏
