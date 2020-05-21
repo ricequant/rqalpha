@@ -281,7 +281,7 @@ class FuturePosition(Position):
 
 class StockPositionProxy(PositionProxy):
     __repr_properties__ = (
-        "order_book_id", "quantity", "avg_price", "market_value"
+        "order_book_id", "quantity", "avg_price", "market_value", "pnl"
     )
     __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
@@ -306,6 +306,13 @@ class StockPositionProxy(PositionProxy):
         [float] 平均开仓价格
         """
         return self._long.avg_price
+
+    @property
+    def pnl(self):
+        """
+        [float] 累计盈亏
+        """
+        return self._long.trading_pnl
 
     @property
     def value_percent(self):
