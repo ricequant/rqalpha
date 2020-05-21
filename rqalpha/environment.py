@@ -49,7 +49,6 @@ class Environment(object):
         self.user_system_log = user_system_log
         self.event_bus = EventBus()
         self.portfolio = None  # type: Optional[rqalpha.portfolio.Portfolio]
-        self.benchmark_portfolio = None
         self.calendar_dt = None  # type: Optional[datetime]
         self.trading_dt = None  # type: Optional[datetime]
         self.mod_dict = None
