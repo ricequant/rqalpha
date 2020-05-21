@@ -1202,62 +1202,6 @@ def current_snapshot(id_or_symbol):
 
 
 @export_as_api
-def get_positions():
-    """
-    获取所有持仓信息
-
-    :return: list BookingPosition
-
-    :example:
-
-    ..  code-block:: python3
-
-        [In] get_positions()
-        [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0}),
-         BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
-
-    """
-    booking = Environment.get_instance().booking
-    if not booking:
-        raise RuntimeError(
-            _("Booking has not been set, please check your broker configuration.")
-        )
-    return booking.get_positions()
-
-
-@export_as_api
-@apply_rules(
-    verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
-)
-def get_position(order_book_id, direction):
-    """
-    获取某个标的的持仓信息
-
-    :param order_book_id: 标的编号
-    :param direction: 持仓类型 “long_positions” | “short_positions” | “backward_trade_set”
-
-    :return: list BookingPosition
-
-    :example:
-
-    ..  code-block:: python3
-
-        [In] get_position('000014.XSHE','long_positions")
-        [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
-
-    """
-    booking = Environment.get_instance().booking
-    if not booking:
-        raise RuntimeError(
-            _("Booking has not been set, please check your broker configuration.")
-        )
-
-    return booking.get_position(order_book_id, direction)
-
-
-@export_as_api
 @apply_rules(
     verify_that("event_type").is_instance_of(EVENT),
     verify_that("handler").is_instance_of(types.FunctionType),
