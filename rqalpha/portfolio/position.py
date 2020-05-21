@@ -133,6 +133,13 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
+    def pnl(self):
+        # type: () -> float
+        if self.quantity == 0:
+            return 0
+        return (self.last_price - self.avg_price) * self.quantity
+
+    @property
     def market_value(self):
         # type: () -> float
         return self.last_price * self.quantity if self.quantity != 0 else 0
@@ -317,6 +324,10 @@ class PositionProxy(metaclass=PositionProxyMeta):
         """
         return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl +\
                self._short.trading_pnl - self.transaction_cost
+
+    @property
+    def pnl(self):
+        return self._long.pnl + self._short.pnl
 
     # -- Quantity 相关
     @property
