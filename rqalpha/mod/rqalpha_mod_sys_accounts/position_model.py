@@ -238,17 +238,17 @@ class FuturePosition(Position):
     @property
     def trading_pnl(self):
         # type: () -> float
-        return self.contract_multiplier * super(FuturePosition, self).trading_pnl
+        return self.contract_multiplier * super(FuturePosition, self).trading_pnl * self._direction_factor
 
     @property
     def position_pnl(self):
         # type: () -> float
-        return self.contract_multiplier * super(FuturePosition, self).position_pnl
+        return self.contract_multiplier * super(FuturePosition, self).position_pnl * self._direction_factor
 
     @property
     def pnl(self):
         # type: () -> float
-        return super(FuturePosition, self).pnl * self.contract_multiplier
+        return super(FuturePosition, self).pnl * self.contract_multiplier * self._direction_factor
 
     def calc_close_today_amount(self, trade_amount):
         close_today_amount = trade_amount - self.old_quantity
