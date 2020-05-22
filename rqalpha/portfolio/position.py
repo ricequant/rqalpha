@@ -137,7 +137,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         # type: () -> float
         if self.quantity == 0:
             return 0
-        return (self.last_price - self.avg_price) * self.quantity
+        return (self.last_price - self.avg_price) * self.quantity * self._direction_factor
 
     @property
     def market_value(self):
