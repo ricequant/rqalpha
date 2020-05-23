@@ -18,10 +18,6 @@ RQAlpha |version| Documentation
     :target: https://pypi.python.org/pypi/rqalpha
     :alt: PyPI Version
 
-..  image:: https://img.shields.io/pypi/l/rqalpha.svg
-    :target: https://opensource.org/licenses/Apache-2.0
-    :alt: License
-
 ..  image:: https://img.shields.io/pypi/pyversions/rqalpha.svg
     :target: https://pypi.python.org/pypi/rqalpha
     :alt: Python Version Support
