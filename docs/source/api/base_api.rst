@@ -638,9 +638,9 @@ Account - 账户
 
 Position - 持仓
 ------------------------------------------------------
-.. module:: rqalpha.portfolio.base_position
+.. module:: rqalpha.portfolio.position
 
-..  autoclass:: BasePosition
+..  autoclass:: Position
     :members:
     :inherited-members:
 
