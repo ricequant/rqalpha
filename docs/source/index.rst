@@ -10,17 +10,13 @@ RQAlpha |version| Documentation
 ..  image:: https://coveralls.io/repos/github/ricequant/rqalpha/badge.svg?branch=master
     :target: https://coveralls.io/github/ricequant/rqalpha?branch=master
 
-..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=stable
-    :target: http://rqalpha.readthedocs.io/zh_CN/stable/?badge=stable
+..  image:: https://readthedocs.org/projects/rqalpha/badge/?version=latest
+    :target: http://rqalpha.readthedocs.io/zh_CN/latest/?badge=latest
     :alt: Documentation Status
 
 ..  image:: https://img.shields.io/pypi/v/rqalpha.svg
     :target: https://pypi.python.org/pypi/rqalpha
     :alt: PyPI Version
-
-..  image:: https://img.shields.io/pypi/l/rqalpha.svg
-    :target: https://opensource.org/licenses/Apache-2.0
-    :alt: License
 
 ..  image:: https://img.shields.io/pypi/pyversions/rqalpha.svg
     :target: https://pypi.python.org/pypi/rqalpha

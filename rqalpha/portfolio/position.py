@@ -135,9 +135,12 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def pnl(self):
         # type: () -> float
+        """
+        返回该持仓的累积盈亏
+        """
         if self.quantity == 0:
             return 0
-        return (self.last_price - self.avg_price) * self.quantity
+        return (self.last_price - self.avg_price) * self.quantity * self._direction_factor
 
     @property
     def market_value(self):

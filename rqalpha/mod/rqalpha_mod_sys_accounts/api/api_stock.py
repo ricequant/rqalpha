@@ -230,7 +230,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
     EXECUTION_PHASE.GLOBAL
 )
 def order_target_portfolio(target_portfolio):
-    # type: (Dict[Union[str, Instrument]: float]) -> List[Order]
+    # type: (Dict[Union[str, Instrument], float]) -> List[Order]
     """
     买入/卖出证券以批量调整证券的仓位，以期使其持仓市值占账户总权益的比重达到指定值。
 

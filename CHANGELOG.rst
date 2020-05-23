@@ -2,6 +2,24 @@
 CHANGELOG
 ==================
 
+4.1.0
+==================
+
+**[For 开发/运行策略的用户]**
+
+- 移除了回测报告中的 Excel 文件，所有信息均可在 csv 文件中找到
+- 使用 IDE 编写策略的用户可通过执行 :code:`from rqalpha.apis import *` 以获得大部分 API 的代码提示
+- 修复了若干 4.0.0 版本引入的 bug
+
+**[For Mod 开发者]**
+
+- 下单 API 加入了 "singledispatch" 功能，mod 可为这些 API 针对不同的合约类型注册不同的实现，用法可参考 `sys_mod_accounts.api`_
+- :code:`SimulationBroker` 增加 :code:`register_matcher` 方法，mod 可为不同类型的合约注册不同撮合器已实现多样化的撮合逻辑
+- 重构 :code:`rqalpha.portfolio.position.Position` 类，自定义的持仓类只要继承该类并重写 :code:`__instrument_types__` 属性便可自动注册持仓类，可参考 `sys_mod_accounts.position_model`_
+- 为 :code:`Instrument` 类添加 :code:`account_type` property，Instrument 子类可通过重写该 property 标明该 Instrument 的持仓归属于哪个账户
+
+.. _sys_mod_accounts.api: https://github.com/ricequant/rqalpha/tree/master/rqalpha/mod/rqalpha_mod_sys_accounts/api
+.. _sys_mod_accounts.position_model: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py
 
 4.0.0
 ==================

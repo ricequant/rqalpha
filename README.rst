@@ -54,10 +54,15 @@ RQAlpha 所有的策略都可以直接在 `Ricequant`_ 上进行回测和实盘�
 *   `10分钟学会 RQAlpha`_
 *   `策略示例`_
 
-RQAlpha API
+API 手册
 ============================
 
-*   `API`_ : RQAlpha API 文档
+*   `API`_ : RQAlpha API 手册
+
+更新记录
+============================
+
+*   `CHANGELOG`_ RQALPHA 更新记录
 
 Mod
 ============================
@@ -177,3 +182,4 @@ RQData数据本地化服务
 .. _RQData数据本地化服务: https://www.ricequant.com/doc/rqdata-institutional
 .. _点击链接免费开通: https://ricequant.mikecrm.com/h7ZFJnT
 .. _RQData: https://www.ricequant.com/welcome/rqdata
+.. _CHANGELOG: https://rqalpha.readthedocs.io/zh_CN/latest/history.html
