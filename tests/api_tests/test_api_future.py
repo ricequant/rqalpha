@@ -28,7 +28,7 @@ __config__ = {
         }
     },
     "extra": {
-        "log_level": "error",
+        "log_level": "info",
     },
     "mod": {
         "sys_progress": {
@@ -86,4 +86,20 @@ def test_sell_close():
         orders = sell_close(context.f1, 1)
         # TODO: Add More Sell Close Test
         assert len(orders) == 0
+    return locals()
+
+
+def test_close_today():
+    def init(context):
+        context.fired = False
+        context.f1 = 'P88'
+        subscribe(context.f1)
+
+    def handle_bar(context, _):
+        if not context.fired:
+            buy_open(context.f1, 2)
+            sell_close(context.f1, 1, close_today=True)
+            assert get_position(context.f1).quantity == 1
+            context.fired = True
+
     return locals()

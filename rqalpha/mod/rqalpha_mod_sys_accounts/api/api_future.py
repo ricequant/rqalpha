@@ -66,30 +66,40 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
     env = Environment.get_instance()
 
     orders = []
-
-    if position_effect == POSITION_EFFECT.CLOSE:
+    if position_effect in (POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.CLOSE):
         direction = POSITION_DIRECTION.LONG if side == SIDE.SELL else POSITION_DIRECTION.SHORT
         position = env.portfolio.get_position(order_book_id, direction)  # type: Position
-        quantity, old_quantity = position.quantity, position.old_quantity
-        if amount > quantity:
-            user_system_log.warn(_(
-                u"Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
-                amount=amount, quantity=quantity
-            ))
-            return []
-        if amount > old_quantity:
-            if old_quantity != 0:
-                # 如果有昨仓，则创建一个 POSITION_EFFECT.CLOSE 的平仓单
-                orders.append(Order.__from_create__(
-                    order_book_id, old_quantity, side, style, POSITION_EFFECT.CLOSE
-                ))
-            # 剩下还有仓位，则创建一个 POSITION_EFFECT.CLOSE_TODAY 的平今单
+        if position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            if amount > position.today_closable:
+                user_system_log.warning(_(
+                    "Order Creation Failed: "
+                    "close today amount {amount} is larger than today closable quantity {quantity}"
+                ).format(amount=amount, quantity=position.today_closable))
+                return []
             orders.append(Order.__from_create__(
-                order_book_id, amount - old_quantity, side, style, POSITION_EFFECT.CLOSE_TODAY
+                order_book_id, amount, side, style, POSITION_EFFECT.CLOSE_TODAY
             ))
         else:
-            # 创建 POSITION_EFFECT.CLOSE 的平仓单
-            orders.append(Order.__from_create__(order_book_id, amount, side, style, POSITION_EFFECT.CLOSE))
+            quantity, old_quantity = position.quantity, position.old_quantity
+            if amount > quantity:
+                user_system_log.warn(_(
+                    u"Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
+                    amount=amount, quantity=quantity
+                ))
+                return []
+            if amount > old_quantity:
+                if old_quantity != 0:
+                    # 如果有昨仓，则创建一个 POSITION_EFFECT.CLOSE 的平仓单
+                    orders.append(Order.__from_create__(
+                        order_book_id, old_quantity, side, style, POSITION_EFFECT.CLOSE
+                    ))
+                # 剩下还有仓位，则创建一个 POSITION_EFFECT.CLOSE_TODAY 的平今单
+                orders.append(Order.__from_create__(
+                    order_book_id, amount - old_quantity, side, style, POSITION_EFFECT.CLOSE_TODAY
+                ))
+            else:
+                # 创建 POSITION_EFFECT.CLOSE 的平仓单
+                orders.append(Order.__from_create__(order_book_id, amount, side, style, POSITION_EFFECT.CLOSE))
     elif position_effect == POSITION_EFFECT.OPEN:
         orders.append(Order.__from_create__(order_book_id, amount, side, style, position_effect))
     else:
