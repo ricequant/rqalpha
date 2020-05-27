@@ -28,7 +28,7 @@ __config__ = {
         }
     },
     "extra": {
-        "log_level": "info",
+        "log_level": "error",
     },
     "mod": {
         "sys_progress": {
@@ -101,5 +101,28 @@ def test_close_today():
             sell_close(context.f1, 1, close_today=True)
             assert get_position(context.f1).quantity == 1
             context.fired = True
+
+    return locals()
+
+
+def test_future_order_to():
+    def init(context):
+        context.counter = 0
+        context.f1 = 'P88'
+        subscribe(context.f1)
+
+    def handle_bar(context, _):
+        context.counter += 1
+        if context.counter == 1:
+            order_to(context.f1, 3)
+            assert get_position(context.f1).quantity == 3
+            order_to(context.f1, 2)
+            assert get_position(context.f1).quantity == 2
+        elif context.counter == 2:
+            order_to(context.f1, -2)
+            assert get_position(context.f1, POSITION_DIRECTION.SHORT).quantity == 2
+            order_to(context.f1, 1)
+            assert get_position(context.f1, POSITION_DIRECTION.SHORT).quantity == 0
+            assert get_position(context.f1, POSITION_DIRECTION.LONG).quantity == 1
 
     return locals()
