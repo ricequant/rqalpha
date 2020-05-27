@@ -83,7 +83,7 @@ class AnalyserMod(AbstractMod):
     def _subscribe_events(self, _):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
-        self._env.event_bus.add_listener(EVENT.POST_AFTER_TRADING, self._collect_daily)
+        self._env.event_bus.add_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
 
     def _collect_trade(self, event):
         self._trades.append(self._to_trade_record(event.trade))
@@ -242,7 +242,7 @@ class AnalyserMod(AbstractMod):
         summary.update({
             'total_value': self._safe_convert(self._env.portfolio.total_value),
             'cash': self._safe_convert(self._env.portfolio.cash),
-            'total_returns': self._safe_convert(self._env.portfolio.total_returns),
+            'total_returns': self._safe_convert(self._env.portfolio.total_returns, 6),
             'annualized_returns': self._safe_convert(self._env.portfolio.annualized_returns),
             'unit_net_value': self._safe_convert(self._env.portfolio.unit_net_value),
             'units': self._env.portfolio.units,
