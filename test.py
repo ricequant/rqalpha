@@ -58,7 +58,7 @@ def run_tests(file_path=None):
             # print(old_df.drop(result.columns[result.all()], axis=1))
             # print("+" * 10, "new test Dataframe: ", "+" * 10)
             # print(df.drop(result.columns[result.all()], axis=1))
-            print('max diff:\n', (df - old_df).abs().max())
+            # print('max diff:\n', (df - old_df).abs().max())
             print(result.all())
     print(u"=" * 40)
     print(
