@@ -225,7 +225,7 @@ class BaseDataSource(AbstractDataSource):
         from rqalpha.const import DEFAULT_ACCOUNT_TYPE
         accounts = Environment.get_instance().config.base.accounts
         if not (DEFAULT_ACCOUNT_TYPE.STOCK in accounts or DEFAULT_ACCOUNT_TYPE.FUTURE in accounts):
-            return datetime.min, datetime.max
+            return date.min, date.max
         if frequency in ['tick', '1d']:
             s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
