@@ -22,9 +22,8 @@ class SchedulerMod(AbstractMod):
         self._scheduler = None
 
     def start_up(self, env, mod_config):
-        if DEFAULT_ACCOUNT_TYPE.STOCK not in env.config.base.accounts:
-            return
-
+        if not any(t in env.config.base.accounts for t in (DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE)):
+            return 
         from .scheduler import Scheduler, market_close, market_open
         self._scheduler = Scheduler(env.config.base.frequency)
         export_as_api(self._scheduler, name='scheduler')
