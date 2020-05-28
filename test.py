@@ -58,7 +58,13 @@ def run_tests(file_path=None):
             # print(old_df.drop(result.columns[result.all()], axis=1))
             # print("+" * 10, "new test Dataframe: ", "+" * 10)
             # print(df.drop(result.columns[result.all()], axis=1))
-            # print('max diff:\n', (df - old_df).abs().max())
+            if "summary" in df.keys():
+                df["summary"] = pd.DataFrame([df["summary"]])
+                old_df["summary"] = pd.DataFrame([old_df["summary"]])
+            for k in df.keys():
+                d = old_df[k][~old_df[k].isin(df[k])].dropna()
+                if not d.empty:
+                    print(k, 'max diff:', d.abs().max(), "\n")
             print(result.all())
     print(u"=" * 40)
     print(
