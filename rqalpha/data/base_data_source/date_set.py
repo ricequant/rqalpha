@@ -20,13 +20,16 @@ import numpy as np
 from rqalpha.utils.py2 import lru_cache
 
 
-def open_h5(path, **kwargs):
+def open_h5(path, *args, **kwargs):
     # why do this? non-ascii path in windows!!
     if sys.platform == "win32":
-        l = locale.getlocale(locale.LC_ALL)[1]
+        try:
+            l = locale.getlocale(locale.LC_ALL)[1]
+        except TypeError:
+            l = None
         if l and l.lower() == "utf-8":
             path = path.encode("utf-8")
-    return h5py.File(path, **kwargs)
+    return h5py.File(path, *args, **kwargs)
 
 
 class DateSet(object):
@@ -50,6 +53,6 @@ class DateSet(object):
             if isinstance(d, (int, np.int64, np.uint64)):
                 return int(d // 1000000) if d > 100000000 else int(d)
             else:
-                return d.year*10000 + d.month*100 + d.day
+                return d.year * 10000 + d.month * 100 + d.day
 
         return [(_to_dt_int(d) in date_set) for d in dates]
