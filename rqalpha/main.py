@@ -160,15 +160,16 @@ def run(config, source_code=None, user_funcs=None):
 
         broker = env.broker
         assert broker is not None
+
+        bar_dict = BaqrMap(env.data_proxy, config.base.frequency, start_dt)
+        env.set_bar_dict(bar_dict)
+
         env.portfolio = broker.get_portfolio()
         if env.benchmark_provider:
             env.benchmark_portfolio = BenchmarkPortfolio(env.benchmark_provider, env.portfolio.units)
 
         event_source = env.event_source
         assert event_source is not None
-
-        bar_dict = BarMap(env.data_proxy, config.base.frequency)
-        env.set_bar_dict(bar_dict)
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
