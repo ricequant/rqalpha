@@ -82,3 +82,35 @@ def test_future_info():
             assert trade.transaction_cost == 0
 
     return locals()
+
+
+def test_position():
+    __config__ = {
+        "base": {
+            "start_date": "2018-04-01",
+            "end_date": "2018-05-01",
+            "frequency": "1d",
+            "accounts": {
+                "stock": 10000000
+            }
+        },
+        "extra": {
+            "log_level": "error",
+        },
+        "mod": {
+            "sys_progress": {
+                "enabled": True,
+                "show": True,
+            },
+        },
+        "init_positions": {
+            "000006.XSHE": 10000
+        }
+    }
+
+    def init(context):
+        context.f1 = "000006.XSHE"
+        stock_position = context.portfolio.get_position('000006.XSHE', 'LONG')
+        assert stock_position.quantity == 10000
+
+    return locals()
