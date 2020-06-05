@@ -149,6 +149,9 @@ def run(config, source_code=None, user_funcs=None):
 
         _adjust_start_date(env.config, env.data_proxy)
 
+        ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
+        ctx._push()
+
         # FIXME
         start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
         env.calendar_dt = start_dt
@@ -160,8 +163,7 @@ def run(config, source_code=None, user_funcs=None):
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
 
-        ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
-        ctx._push()
+
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
