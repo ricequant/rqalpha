@@ -92,7 +92,8 @@ def test_position():
             "frequency": "1d",
             "accounts": {
                 "stock": 10000000
-            }
+            },
+            "init_positions": "000006.XSHE:10000"
         },
         "extra": {
             "log_level": "error",
@@ -103,9 +104,6 @@ def test_position():
                 "show": True,
             },
         },
-        "init_positions": {
-            "000006.XSHE": 10000
-        }
     }
 
     def init(context):
