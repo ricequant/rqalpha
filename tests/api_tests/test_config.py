@@ -87,24 +87,12 @@ def test_future_info():
 def test_position():
     __config__ = {
         "base": {
-            "start_date": "2018-04-01",
-            "end_date": "2018-05-01",
-            "frequency": "1d",
             "accounts": {
                 "stock": 10000000
             },
             "init_positions": "000006.XSHE:10000"
         },
-        "extra": {
-            "log_level": "error",
-        },
-        "mod": {
-            "sys_progress": {
-                "enabled": True,
-                "show": True,
-            },
-        },
-    }
+   }
 
     def init(context):
         context.f1 = "000006.XSHE"
