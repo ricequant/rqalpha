@@ -59,7 +59,7 @@ msgstr ""
 
 #: rqalpha/main.py:201
 msgid "system restored"
-msgstr "系统已还原"
+msgstr ""
 
 #: rqalpha/main.py:233
 msgid "strategy run successfully, normal exit"
