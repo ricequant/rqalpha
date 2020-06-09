@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-05-15 18:24+0800\n"
+"POT-Creation-Date: 2020-06-09 16:40+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -52,15 +52,15 @@ msgstr ""
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 
-#: rqalpha/main.py:199
+#: rqalpha/main.py:201
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:231
+#: rqalpha/main.py:233
 msgid "strategy run successfully, normal exit"
 msgstr ""
 
-#: rqalpha/main.py:236 rqalpha/main.py:238
+#: rqalpha/main.py:238 rqalpha/main.py:240
 msgid "strategy execute exception"
 msgstr ""
 
@@ -198,8 +198,14 @@ msgid ""
 "instead."
 msgstr ""
 
-#: rqalpha/data/base_data_source/data_source.py:241
+#: rqalpha/data/base_data_source/data_source.py:247
 msgid "Unsupported instrument type for tick size"
+msgstr ""
+
+#: rqalpha/data/base_data_source/date_set.py:35
+msgid ""
+"Failed to open {}，please delete and use 'bundle commands' remake it , or "
+"contact us"
 msgstr ""
 
 #: rqalpha/data/base_data_source/storages.py:95
@@ -228,7 +234,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:274
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:282
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
@@ -255,13 +261,19 @@ msgstr ""
 msgid "Limit order price should be positive"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:75
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:74
+msgid ""
+"Order Creation Failed: close today amount {amount} is larger than today "
+"closable quantity {quantity}"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:85
 msgid ""
 "Order Creation Failed: close amount {amount} is larger than position "
 "quantity {quantity}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:99
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:109
 msgid ""
 "Order was separated, original order: {original_order_repr}, new orders: "
 "[{new_orders_repr}]"
@@ -290,8 +302,8 @@ msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:71
 msgid ""
-"config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark "
-"instead'"
+"config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
+"instead"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:133
@@ -518,7 +530,7 @@ msgstr ""
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
-#: rqalpha/portfolio/position.py:159
+#: rqalpha/portfolio/position.py:173
 msgid "last price of position {} is not supposed to be nan"
 msgstr ""
 
