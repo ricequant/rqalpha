@@ -197,7 +197,9 @@ class StockPosition(Position):
             return
         self._today_quantity = int(self._today_quantity * ratio)
         self._old_quantity = int(self._old_quantity * ratio)
+        self._logical_old_quantity = int(self._logical_old_quantity * ratio)
         self._avg_price /= ratio
+        self._prev_close /= ratio
 
 
 class FuturePosition(Position):
