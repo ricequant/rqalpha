@@ -31,9 +31,10 @@ def open_h5(path, *args, **kwargs):
             path = path.encode("utf-8")
     try:
         return h5py.File(path, *args, **kwargs)
-    except OSError:
-        error_message = _("Failed to open {}，please delete and use 'bundle commands' remake it , or contact us")
-        raise RuntimeError(error_message.format(path))
+    except OSError as e:
+        raise RuntimeError(_(
+            "open data bundle failed, you can remove {} and try to regenerate bundle: {}"
+        ).format(path, e))
 
 
 class DateSet(object):

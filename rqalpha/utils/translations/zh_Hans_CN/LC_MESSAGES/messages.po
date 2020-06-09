@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-06-09 16:40+0800\n"
+"POT-Creation-Date: 2020-06-09 17:23+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -220,9 +220,9 @@ msgstr "无法获取该类型标的的最小价格变动单位。"
 
 #: rqalpha/data/base_data_source/date_set.py:35
 msgid ""
-"Failed to open {}，please delete and use 'bundle commands' remake it , or "
-"contact us"
-msgstr "读取文件{}失败，请删除该文件后使用bundle相关命令重新生成文件，或者联系我们。"
+"open data bundle failed, you can remove {} and try to regenerate bundle: "
+"{}"
+msgstr "读取 bundle 文件失败，请删除 {} 后尝试重新生成 bundle：{}"
 
 #: rqalpha/data/base_data_source/storages.py:95
 msgid "unsupported future instrument {}"
@@ -1060,4 +1060,10 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 #~ "config 'base.benchmark' is deprecated, use "
 #~ "'mod.sys_analyser.benchmark instead'"
 #~ msgstr "配置 'base.benchmark' 已被弃用, 使用 'mod.sys_analyser.benchmark' 代替"
+
+#~ msgid ""
+#~ "Failed to open {}，please delete and "
+#~ "use 'bundle commands' remake it , "
+#~ "or contact us"
+#~ msgstr "读取文件{}失败，请删除该文件后使用bundle相关命令重新生成文件，或者联系我们。"
 

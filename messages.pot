@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-06-09 16:40+0800\n"
+"POT-Creation-Date: 2020-06-09 17:23+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -204,8 +204,8 @@ msgstr ""
 
 #: rqalpha/data/base_data_source/date_set.py:35
 msgid ""
-"Failed to open {}，please delete and use 'bundle commands' remake it , or "
-"contact us"
+"open data bundle failed, you can remove {} and try to regenerate bundle: "
+"{}"
 msgstr ""
 
 #: rqalpha/data/base_data_source/storages.py:95
