@@ -68,7 +68,7 @@ class AnalyserMod(AbstractMod):
             if not mod_config.benchmark:
                 if getattr(env.config.base, "benchmark", None):
                     user_system_log.warning(
-                        _("config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark instead'")
+                        _("config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' instead")
                     )
                     mod_config.benchmark = getattr(env.config.base, "benchmark")
             if mod_config.benchmark:
