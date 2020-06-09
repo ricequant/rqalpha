@@ -44,7 +44,7 @@ class DefaultMatcher(AbstractMatcher):
         self._turnover = defaultdict(int)
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
-        self._liquidity_limit = mod_config.liquidity_limit
+        self._liquidity_limit = mod_config.liquidity_limit and env.config.base.frequency == "tick"
         self._volume_limit = mod_config.volume_limit
         self._env = env  # type: Environment
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
