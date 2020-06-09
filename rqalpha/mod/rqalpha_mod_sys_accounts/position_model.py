@@ -195,8 +195,8 @@ class StockPosition(Position):
         ratio = data_proxy.get_split_by_ex_date(self._order_book_id, trading_date)
         if ratio is None:
             return
-        self._today_quantity *= ratio
-        self._old_quantity *= ratio
+        self._today_quantity = int(self._today_quantity * ratio)
+        self._old_quantity = int(self._old_quantity * ratio)
         self._avg_price /= ratio
 
 
