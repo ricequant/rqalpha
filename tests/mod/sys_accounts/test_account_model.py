@@ -14,6 +14,7 @@
 
 from datetime import date
 
+from numpy.testing import assert_equal
 from rqalpha.api import *
 
 from ...utils import make_test_strategy_decorator
@@ -112,5 +113,33 @@ def test_stock_transform():
             order_shares(context.s1, 200)
         elif context.now.date() >= date(2015, 5, 20):
             assert int(context.portfolio.positions[context.s2].quantity) == 220
+
+    return init, handle_bar
+
+
+@as_test_strategy({
+    "base": {
+        "start_date": "2016-05-26",
+        "end_date": "2016-05-27"
+    }
+})
+def test_stock_split():
+    def init(context):
+        context.s = "000035.XSHE"
+        context.counter = 0
+        context.cash_before_split = None
+
+    def handle_bar(context, bar_dict):
+        context.counter += 1
+        if context.counter == 1:
+            order_shares(context.s, 1000)
+            assert_equal(get_position(context.s, POSITION_DIRECTION.LONG).quantity, 1000)
+            context.cash_before_split = context.portfolio.cash
+            print(context.portfolio.accounts["STOCK"]._static_total_value)
+        elif context.counter == 2:
+            position = get_position(context.s, POSITION_DIRECTION.LONG)
+            assert_equal(position.quantity, 2000)
+            # assert_equal(position.trading_pnl, 0)
+            assert_equal(context.portfolio.cash, context.cash_before_split)
 
     return init, handle_bar

@@ -217,9 +217,11 @@ class AssetPosition(object):
             self._trade_cost -= trade.last_price * trade.last_quantity
 
     def apply_split(self, ratio):
-        self._today_quantity *= ratio
-        self._old_quantity *= ratio
+        self._today_quantity = int(self._today_quantity * ratio)
+        self._old_quantity = int(self._old_quantity * ratio)
+        self._logical_old_quantity = int(self._logical_old_quantity * ratio)
         self._avg_price /= ratio
+        self._prev_close /= ratio
 
     def apply_dividend(self, dividend_per_unit):
         self._avg_price -= dividend_per_unit
