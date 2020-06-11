@@ -19,6 +19,7 @@ import tempfile
 import time
 import datetime
 import dateutil
+from six.moves.urllib.parse import urlparse
 
 import click
 import requests
@@ -144,11 +145,13 @@ def get_exactly_url():
 def download(out, total_length, url):
     retry_interval = 3
     retry_times = 5
+    proxy_uri = os.environ.get('RQALPHA_PROXY')
     with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
         for i in range(retry_times):
             try:
-                headers = {'Range': "bytes={}-".format(bar.pos), }
-                r = requests.get(url, headers=headers, stream=True, timeout=10)
+                headers = {'Range': "bytes={}-".format(bar.pos)}
+                r = requests.get(url, headers=headers, stream=True, timeout=10, proxies={'http': proxy_uri,
+                                                                                         'https': proxy_uri})
                 for data in r.iter_content(chunk_size=8192):
                     bar.update(len(data))
                     out.write(data)
