@@ -145,7 +145,7 @@ def get_exactly_url():
 def download(out, total_length, url):
     retry_interval = 3
     retry_times = 5
-    proxy_uri = os.environ.get('RQSDK_PROXY')
+    proxy_uri = os.environ.get('RQALPHA_PROXY')
     scheme = urlparse(proxy_uri).scheme
     with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
         for i in range(retry_times):
