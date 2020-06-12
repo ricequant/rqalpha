@@ -119,7 +119,7 @@ def init_rqdatac(rqdatac_uri):
     try:
         init_rqdatac_env(rqdatac_uri)
         rqdatac.init()
-    except ValueError as e:
+    except Exception as e:
         system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
 
 
@@ -162,8 +162,6 @@ def run(config, source_code=None, user_funcs=None):
         if env.portfolio is None:
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
-
-
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
@@ -287,15 +285,8 @@ def set_loggers(config):
     user_log.level = logbook.DEBUG
 
     if extra_config.log_level.upper() != "NONE":
-        if extra_config.user_log_disabled:
-            user_log.disable()
-        else:
-            user_log.enable()
-
-        if extra_config.user_system_log_disabled:
-            user_system_log.disable()
-        else:
-            user_system_log.enable()
+        user_log.disabled = extra_config.user_log_disabled
+        user_system_log.disabled = extra_config.user_system_log_disabled
 
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())

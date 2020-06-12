@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-05-15 18:24+0800\n"
+"POT-Creation-Date: 2020-06-09 17:23+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -57,15 +57,15 @@ msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:199
+#: rqalpha/main.py:201
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:231
+#: rqalpha/main.py:233
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:236 rqalpha/main.py:238
+#: rqalpha/main.py:238 rqalpha/main.py:240
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
@@ -105,27 +105,27 @@ msgstr "index_compoments 中，date {} 晚于策略当前运行日期 {}"
 
 #: rqalpha/apis/api_rqdatac.py:187
 msgid "in index_weights, date {} is no earlier than previous test date {}"
-msgstr ""
+msgstr "在API index_weights 中, 参数date={} 不应晚于上一交易日 {}"
 
 #: rqalpha/apis/api_rqdatac.py:330
 msgid "in get_price, end_date {} is no earlier than the previous test day {}"
-msgstr ""
+msgstr "在API get_price 中, 当前参数end_date={} 不应晚于上一交易日 {}"
 
 #: rqalpha/apis/api_rqdatac.py:338
 msgid "in get_price, start_date {} is no earlier than the previous test day {}"
-msgstr ""
+msgstr "在API get_price中, 参数start_date={} 不应晚于上一交易日 {}"
 
 #: rqalpha/apis/api_rqdatac.py:343
 msgid "in get_price, start_date {} > end_date {}"
-msgstr ""
+msgstr "在API get_price 中,当前参数 start_date={} 大于 end_date={}"
 
 #: rqalpha/apis/api_rqdatac.py:805
 msgid "'{0}' future does not exist"
-msgstr ""
+msgstr "期货品种 '{0}' 不存在"
 
 #: rqalpha/apis/api_rqdatac.py:969
 msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
-msgstr ""
+msgstr "在API get_fundamentals 中,财务数据开始日期 {} 不应晚于上一交易日 {}"
 
 #: rqalpha/apis/api_rqdatac.py:1001 rqalpha/apis/api_rqdatac.py:1066
 #: rqalpha/utils/arg_checker.py:311
@@ -214,13 +214,19 @@ msgid ""
 "instead."
 msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
 
-#: rqalpha/data/base_data_source/data_source.py:241
+#: rqalpha/data/base_data_source/data_source.py:247
 msgid "Unsupported instrument type for tick size"
 msgstr "无法获取该类型标的的最小价格变动单位。"
 
+#: rqalpha/data/base_data_source/date_set.py:35
+msgid ""
+"open data bundle failed, you can remove {} and try to regenerate bundle: "
+"{}"
+msgstr "读取 bundle 文件失败，请删除 {} 后尝试重新生成 bundle：{}"
+
 #: rqalpha/data/base_data_source/storages.py:95
 msgid "unsupported future instrument {}"
-msgstr ""
+msgstr "不支持的期货标的{}"
 
 #: rqalpha/mod/__init__.py:51
 msgid "loading mod {}"
@@ -244,7 +250,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:274
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:282
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓"
 
@@ -271,13 +277,19 @@ msgstr "订单创建失败: 下单量为 0"
 msgid "Limit order price should be positive"
 msgstr "Limit order 价格应该为正，请检查您的下单价格"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:75
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:74
+msgid ""
+"Order Creation Failed: close today amount {amount} is larger than today "
+"closable quantity {quantity}"
+msgstr "订单创建失败: 平今仓量 {amount} 大于当前可平今仓位 {quantity} "
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:85
 msgid ""
 "Order Creation Failed: close amount {amount} is larger than position "
 "quantity {quantity}"
 msgstr "订单创建失败: 平仓量 {amount} 大于当前持仓量 {quantity}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:99
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:109
 msgid ""
 "Order was separated, original order: {original_order_repr}, new orders: "
 "[{new_orders_repr}]"
@@ -290,7 +302,7 @@ msgstr "订单创建失败: 下单量为0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:89
 msgid "insufficient cash, use all remaining cash({}) to create order"
-msgstr ""
+msgstr "现金不足，使用当前剩余资金({})创建订单"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:256
 msgid "total percent should be lower than 1, current: {}"
@@ -306,9 +318,9 @@ msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的�
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:71
 msgid ""
-"config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark "
-"instead'"
-msgstr ""
+"config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
+"instead"
+msgstr "配置'base.benchmark'已被弃用，使用'mod.sys_analyser.benchmark'代替"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:133
 msgid "Total Returns"
@@ -536,9 +548,9 @@ msgstr ""
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/position.py:159
+#: rqalpha/portfolio/position.py:173
 msgid "last price of position {} is not supposed to be nan"
-msgstr ""
+msgstr "仓位 {} 最新价不应该为 nan"
 
 #: rqalpha/utils/arg_checker.py:50
 msgid ""
@@ -1037,4 +1049,21 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 #~ "{order_book_id} is less than order "
 #~ "quantity {order_quantity}"
 #~ msgstr "{order_book_id} 的可行权量 {exercisable_quantity} 低于目标行权量 {order_quantity}"
+
+#~ msgid ""
+#~ "Failed to open {}，please use 'bundle "
+#~ "commands' remake it , or contact "
+#~ "us"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "config 'base.benchmark' is deprecated, use "
+#~ "'mod.sys_analyser.benchmark instead'"
+#~ msgstr "配置 'base.benchmark' 已被弃用, 使用 'mod.sys_analyser.benchmark' 代替"
+
+#~ msgid ""
+#~ "Failed to open {}，please delete and "
+#~ "use 'bundle commands' remake it , "
+#~ "or contact us"
+#~ msgstr "读取文件{}失败，请删除该文件后使用bundle相关命令重新生成文件，或者联系我们。"
 
