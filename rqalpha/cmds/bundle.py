@@ -132,10 +132,11 @@ CDN_URL = 'http://bundle.assets.ricequant.com/bundles_v4/rqbundle_%04d%02d.tar.b
 
 def get_exactly_url():
     day = datetime.date.today()
+    proxy_uri = os.environ.get('RQALPHA_PROXY')
     while True:  # get exactly url
         url = CDN_URL % (day.year, day.month)
         six.print_(_(u"try {} ...").format(url))
-        r = requests.get(url, stream=True)
+        r = requests.get(url, stream=True, proxies={'http': proxy_uri, 'https': proxy_uri})
         if r.status_code == 200:
             return url, int(r.headers.get('content-length'))
 

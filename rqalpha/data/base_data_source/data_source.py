@@ -119,7 +119,7 @@ class BaseDataSource(AbstractDataSource):
 
     def get_trading_calendars(self):
         # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
-        return {t: store.get_trading_calendar() for t, store in six.iteritems(self._calendar_providers)}
+        return {t: store.get_trading_calendar() for t, store in self._calendar_providers.items()}
 
     def get_all_instruments(self):
         return self._instruments

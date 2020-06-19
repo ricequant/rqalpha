@@ -20,7 +20,7 @@ class RQAlphaTestCase(TestCase):
         pass
 
     def assertObj(self, obj, **kwargs):
-        for k, v in six.iteritems(kwargs):
+        for k, v in kwargs.items():
             if isinstance(v, dict) and not isinstance(getattr(obj, k), dict):
                 self.assertObj(getattr(obj, k), **v)
             else:

@@ -35,7 +35,7 @@ class PersistHelper(object):
             event_bus.add_listener(EVENT.DO_RESTORE, self.restore)
 
     def persist(self, *_):
-        for key, obj in six.iteritems(self._objects):
+        for key, obj in self._objects.items():
             try:
                 state = obj.get_state()
                 if not state:
@@ -65,7 +65,7 @@ class PersistHelper(object):
         if key:
             return self._restore_obj(key, self._objects[key])
 
-        return all(self._restore_obj(key, obj) for key, obj in six.iteritems(self._objects))
+        return all(self._restore_obj(key, obj) for key, obj in self._objects.items())
 
     def _restore_obj(self, key, obj):
         state = self._persist_provider.load(key)
