@@ -259,7 +259,7 @@ def order_target_portfolio(target_portfolio):
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     account_value = account.total_value
     target_quantities = {}
-    for id_or_ins, target_percent in six.iteritems(target_portfolio):
+    for id_or_ins, target_percent in target_portfolio.items():
         order_book_id = assure_order_book_id(id_or_ins)
         if target_percent < 0:
             raise RQInvalidArgument(_(u"target percent of {} should between 0 and 1, current: {}").format(
@@ -277,14 +277,14 @@ def order_target_portfolio(target_portfolio):
     current_quantities = {
         p.order_book_id: p.quantity for p in account.get_positions() if p.direction == POSITION_DIRECTION.LONG
     }
-    for order_book_id, quantity in six.iteritems(current_quantities):
+    for order_book_id, quantity in current_quantities.items():
         if order_book_id not in target_portfolio:
             close_orders.append(Order.__from_create__(
                 order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             ))
 
     round_lot = 100
-    for order_book_id, target_quantity in six.iteritems(target_quantities):
+    for order_book_id, target_quantity in target_quantities.items():
         if order_book_id in current_quantities:
             delta_quantity = target_quantity - current_quantities[order_book_id]
         else:
@@ -613,7 +613,7 @@ def get_dividend(order_book_id, start_date):
 
 
 def to_industry_code(s):
-    for __, v in six.iteritems(industry_code.__dict__):
+    for __, v in industry_code.__dict__.items():
         if isinstance(v, IndustryCodeItem):
             if v.name == s:
                 return v.code
@@ -621,7 +621,7 @@ def to_industry_code(s):
 
 
 def to_sector_name(s):
-    for __, v in six.iteritems(sector_code.__dict__):
+    for __, v in sector_code.__dict__.items():
         if isinstance(v, SectorCodeItem):
             if v.cn == s or v.en == s or v.name == s:
                 return v.name

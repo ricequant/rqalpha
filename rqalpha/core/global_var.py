@@ -20,7 +20,7 @@ from rqalpha.utils.logger import user_system_log, system_log
 class GlobalVars(object):
     def get_state(self):
         dict_data = {}
-        for key, value in six.iteritems(self.__dict__):
+        for key, value in self.__dict__.items():
             try:
                 dict_data[key] = pickle.dumps(value)
             except Exception:
@@ -29,7 +29,7 @@ class GlobalVars(object):
 
     def set_state(self, state):
         dict_data = pickle.loads(state)
-        for key, value in six.iteritems(dict_data):
+        for key, value in dict_data.items():
             try:
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore g.{} {}", key, type(self.__dict__[key]))

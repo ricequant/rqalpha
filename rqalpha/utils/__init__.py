@@ -40,7 +40,7 @@ class RqAttrDict(object):
     def __init__(self, d=None):
         self.__dict__ = d if d is not None else dict()
 
-        for k, v in list(six.iteritems(self.__dict__)):
+        for k, v in list(self.__dict__.items()):
             if isinstance(v, dict):
                 self.__dict__[k] = RqAttrDict(v)
 
@@ -54,7 +54,7 @@ class RqAttrDict(object):
         RqAttrDict._update_dict_recursive(self, other)
 
     def items(self):
-        return six.iteritems(self.__dict__)
+        return self.__dict__.items()
 
     iteritems = items
 
@@ -67,7 +67,7 @@ class RqAttrDict(object):
             other = other.__dict__
         target_dict = target.__dict__ if isinstance(target, RqAttrDict) else target
 
-        for k, v in six.iteritems(other):
+        for k, v in other.items():
             if isinstance(v, RqAttrDict):
                 v = v.__dict__
             if isinstance(v, collections.Mapping):
@@ -79,7 +79,7 @@ class RqAttrDict(object):
 
     def convert_to_dict(self):
         result_dict = {}
-        for k, v in list(six.iteritems(self.__dict__)):
+        for k, v in list(self.__dict__.items()):
             if isinstance(v, RqAttrDict):
                 v = v.convert_to_dict()
             result_dict[k] = v

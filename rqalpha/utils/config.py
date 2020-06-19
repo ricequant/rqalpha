@@ -141,7 +141,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         conf['base']['strategy_file'] = config_args['base']['strategy_file']
 
     if user_funcs is None:
-        for k, v in six.iteritems(code_config(conf, source_code)):
+        for k, v in code_config(conf, source_code).items():
             if k in conf['whitelist']:
                 deep_update(v, conf[k])
 
@@ -151,7 +151,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         config_args[key] = mod_config_value_parse(v)
 
     if click_type:
-        for k, v in six.iteritems(config_args):
+        for k, v in config_args.items():
             if v is None:
                 continue
             if k == 'base__accounts' and not v:
@@ -200,13 +200,13 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
 def parse_future_info(future_info):
     new_info = {}
 
-    for underlying_symbol, info in six.iteritems(future_info):
+    for underlying_symbol, info in future_info.items():
         try:
             underlying_symbol = underlying_symbol.upper()
         except AttributeError:
             raise RuntimeError(_("Invalid future info: underlying_symbol {} is illegal.".format(underlying_symbol)))
 
-        for field, value in six.iteritems(info):
+        for field, value in info.items():
             if field in (
                 "open_commission_ratio", "close_commission_ratio", "close_commission_today_ratio"
             ):
@@ -232,7 +232,7 @@ def parse_accounts(accounts):
     if isinstance(accounts, tuple):
         accounts = {account_type: starting_cash for account_type, starting_cash in accounts}
 
-    for account_type, starting_cash in six.iteritems(accounts):
+    for account_type, starting_cash in accounts.items():
         if starting_cash is None:
             continue
         starting_cash = float(starting_cash)

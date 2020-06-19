@@ -85,7 +85,7 @@ def init_persist_helper(env, ucontext, executor, config):
     if isinstance(env.event_source, Persistable):
         persist_helper.register('event_source', env.event_source)
     persist_helper.register('portfolio', env.portfolio)
-    for name, module in six.iteritems(env.mod_dict):
+    for name, module in env.mod_dict.items():
         if isinstance(module, Persistable):
             persist_helper.register('mod_{}'.format(name), module)
     # broker will restore open orders from account
@@ -188,7 +188,7 @@ def run(config, source_code=None, user_funcs=None):
             user_strategy.init()
 
         if config.extra.context_vars:
-            for k, v in six.iteritems(config.extra.context_vars):
+            for k, v in config.extra.context_vars.items():
                 if isinstance(v, RqAttrDict):
                     v = v.__dict__
                 setattr(ucontext, k, v)
@@ -257,7 +257,7 @@ def enable_profiler(env, scope):
         if inspect.isfunction(obj):
             scope[name] = profile_deco(obj)
         if inspect.isclass(obj):
-            for key, val in six.iteritems(obj.__dict__):
+            for key, val in obj.__dict__.items():
                 if inspect.isfunction(val):
                     setattr(obj, key, profile_deco(val))
 

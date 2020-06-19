@@ -58,7 +58,7 @@ def slots_repr(inst):
 def dict_repr(inst):
     # return pformat(inst.__dict__)
     return "%s(%s)" % (
-        inst.__class__.__name__, {k: v for k, v in six.iteritems(inst.__dict__) if k[0] != "_"})
+        inst.__class__.__name__, {k: v for k, v in inst.__dict__.items() if k[0] != "_"})
 
 
 def properties(inst):

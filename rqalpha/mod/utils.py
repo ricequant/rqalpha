@@ -37,7 +37,7 @@ def inject_mod_commands():
     from rqalpha.utils.package_helper import import_mod
     mod_config = get_mod_conf()
 
-    for mod_name, config in six.iteritems(mod_config['mod']):
+    for mod_name, config in mod_config['mod'].items():
         if 'lib' in config:
             lib_name = config["lib"]
         else:

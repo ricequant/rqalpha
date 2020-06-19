@@ -103,7 +103,7 @@ class AnalyserMod(AbstractMod):
             "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod()
         })
 
-        for account_type, account in six.iteritems(self._env.portfolio.accounts):
+        for account_type, account in self._env.portfolio.accounts.items():
             self._sub_accounts[account_type].append(self._to_account_record(date, account))
             pos_dict = {}
             for pos in account.get_positions():
@@ -217,7 +217,7 @@ class AnalyserMod(AbstractMod):
             'strategy_file': self._env.config.base.strategy_file,
             'run_type': self._env.config.base.run_type.value,
         }
-        for account_type, starting_cash in six.iteritems(self._env.config.base.accounts):
+        for account_type, starting_cash in self._env.config.base.accounts.items():
             summary[account_type] = starting_cash
 
         risk = Risk(
@@ -278,17 +278,17 @@ class AnalyserMod(AbstractMod):
         if not self._env.get_plot_store().empty:
             plots = self._env.get_plot_store().get_plots()
             plots_items = defaultdict(dict)
-            for series_name, value_dict in six.iteritems(plots):
-                for date, value in six.iteritems(value_dict):
+            for series_name, value_dict in plots.items():
+                for date, value in value_dict.items():
                     plots_items[date][series_name] = value
                     plots_items[date]["date"] = date
 
-            df = pd.DataFrame([dict_data for date, dict_data in six.iteritems(plots_items)])
+            df = pd.DataFrame([dict_data for date, dict_data in plots_items.items()])
             df["date"] = pd.to_datetime(df["date"])
             df = df.set_index("date").sort_index()
             result_dict["plots"] = df
 
-        for account_type, account in six.iteritems(self._env.portfolio.accounts):
+        for account_type, account in self._env.portfolio.accounts.items():
             account_name = account_type.lower()
             portfolios_list = self._sub_accounts[account_type]
             df = pd.DataFrame(portfolios_list)
