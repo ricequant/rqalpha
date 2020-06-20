@@ -82,7 +82,7 @@ class RUN_TYPE(CustomEnum):
 # noinspection PyPep8Naming
 class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     """
-    *   关于 ACCOUNT_TYPE，目前主要表示为交易账户。STOCK / FUTURE / OPTION 目前均表示为中国 对应的交易账户。
+    *   关于 ACCOUNT_TYPE，目前主要表示为交易账户。STOCK / FUTURE / BOND 目前均表示为中国 对应的交易账户。
     *   ACCOUNT_TYPE 不区分交易所，比如 A 股区分上海交易所和深圳交易所，但对应的都是一个账户，因此统一为 STOCK
     *   目前暂时不添加其他 DEFAULT_ACCOUNT_TYPE 类型，如果需要增加自定义账户及类型，请参考 https://github.com/ricequant/rqalpha/issues/160
     """
@@ -90,8 +90,6 @@ class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     STOCK = "STOCK"
     # 期货
     FUTURE = "FUTURE"
-    # 期权
-    OPTION = "OPTION"
     # 债券
     BOND = "BOND"
 
