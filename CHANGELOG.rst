@@ -2,10 +2,18 @@
 CHANGELOG
 ==================
 
+4.1.4
+==================
+
+- 增加了通过环境变量 RQALPHA_PROXY 设置代理的功能
+- 修复了设置初始仓位后会抛出异常的 bug
+- 修复了股票拆分后持仓收益计算错误的 bug
+
+
 4.1.3
 ==================
 
-- 修了在部分 windows 计算机上打开 bundle 时报错的问题
+- 修复了在部分 windows 计算机上打开 bundle 时报错的问题
 
 
 4.1.2
@@ -85,6 +93,7 @@ RQAlpha 4.x 相对于 3.x 版本进行了部分重构，重构的核心目标是
 - 移除了以下冗余的 logger 对象：``user_detail_log``、``basic_system_log``、``std_log``
 
 .. _RQDatac: https://www.ricequant.com/welcome/rqdata
+.. _rqalpha_mod_sys_accounts: https://github.com/ricequant/rqalpha/tree/master/rqalpha/mod/rqalpha_mod_sys_accounts
 
 
 3.4.4
