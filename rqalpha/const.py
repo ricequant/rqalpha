@@ -158,9 +158,6 @@ class INSTRUMENT_TYPE(CustomEnum):
     ETF = "ETF"
     LOF = "LOF"
     INDX = "INDX"
-    FENJI_MU = "FenjiMu"
-    FENJI_A = "FenjiA"
-    FENJI_B = "FenjiB"
     PUBLIC_FUND = 'PublicFund'
     BOND = "Bond"
     CONVERTIBLE = "Convertible"

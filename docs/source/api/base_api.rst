@@ -693,7 +693,7 @@ Instrument - 交易标的
 
     ..  py:attribute:: type
 
-        【str】合约类型，目前支持的类型有: 'CS', 'INDX', 'LOF', 'ETF', 'FenjiMu', 'FenjiA', 'FenjiB', 'Future'
+        【str】合约类型，目前支持的类型有: 'CS', 'INDX', 'LOF', 'ETF', 'Future'
 
     ..  py:attribute:: concept_names（股票专用）
 

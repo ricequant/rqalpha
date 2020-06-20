@@ -238,7 +238,7 @@ class BaseDataSource(AbstractDataSource):
             return 0.01
         elif instrument.type == "INDX":
             return 0.01
-        elif instrument.type in ['ETF', 'LOF', 'FenjiB', 'FenjiA', 'FenjiMu']:
+        elif instrument.type in ['ETF', 'LOF']:
             return 0.001
         elif instrument.type == 'Future':
             return self._future_info_store.get_future_info(instrument)["tick_size"]
