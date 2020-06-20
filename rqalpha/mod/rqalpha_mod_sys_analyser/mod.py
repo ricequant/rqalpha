@@ -141,7 +141,6 @@ class AnalyserMod(AbstractMod):
     ACCOUNT_FIELDS_MAP = {
         DEFAULT_ACCOUNT_TYPE.STOCK: [],
         DEFAULT_ACCOUNT_TYPE.FUTURE: ['position_pnl', 'trading_pnl', 'daily_pnl', 'margin'],
-        DEFAULT_ACCOUNT_TYPE.OPTION: ['position_pnl', 'trading_pnl', 'daily_pnl', 'margin'],
         DEFAULT_ACCOUNT_TYPE.BOND: [],
     }
 
