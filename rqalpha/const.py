@@ -17,8 +17,6 @@
 
 from enum import Enum, EnumMeta
 
-import six
-
 
 class CustomEnumMeta(EnumMeta):
     def __new__(metacls, cls, bases, classdict):
@@ -40,16 +38,7 @@ class CustomEnumMeta(EnumMeta):
             return self._member_reverse_map[item]
 
 
-if six.PY2:
-    # six.with_metaclass not working
-    class CustomEnumCore(str, Enum):
-        __metaclass__ = CustomEnumMeta
-else:
-    exec("class CustomEnumCore(str, Enum, metaclass=CustomEnumMeta): pass")
-
-
-# noinspection PyUnresolvedReferences
-class CustomEnum(CustomEnumCore):
+class CustomEnum(str, Enum, metaclass=CustomEnumMeta):
     def __repr__(self):
         return "%s.%s" % (
             self.__class__.__name__, self._name_)
@@ -173,12 +162,6 @@ class PERSIST_MODE(CustomEnum):
 
 
 # noinspection PyPep8Naming
-class MARGIN_TYPE(CustomEnum):
-    BY_MONEY = "BY_MONEY"
-    BY_VOLUME = "BY_VOLUME"
-
-
-# noinspection PyPep8Naming
 class COMMISSION_TYPE(CustomEnum):
     BY_MONEY = "BY_MONEY"
     BY_VOLUME = "BY_VOLUME"
@@ -214,26 +197,6 @@ class MARKET(CustomEnum):
 class TRADING_CALENDAR_TYPE(CustomEnum):
     EXCHANGE = "EXCHANGE"
     INTER_BANK = "INTERBANK"
-
-
-class CURRENCY(CustomEnum):
-    CNY = "CNY"  # 人民币
-    USD = "USD"  # 美元
-    EUR = "EUR"  # 欧元
-    HKD = "HKD"  # 港币
-    GBP = "GBP"  # 英镑
-    JPY = "JPY"  # 日元
-    KRW = "KWR"  # 韩元
-    CAD = "CAD"  # 加元
-    AUD = "AUD"  # 澳元
-    CHF = "CHF"  # 瑞郎
-    SGD = "SGD"  # 新加坡元
-    MYR = "MYR"  # 马拉西亚币
-    IDR = "IDR"  # 印尼币
-    NZD = "NZD"  # 新西兰币
-    VND = "VND"  # 越南盾
-    THB = "THB"  # 泰铢
-    PHP = "PHP"  # 菲律宾币
 
 
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"
