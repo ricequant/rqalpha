@@ -1,7 +1,5 @@
 from unittest import TestCase
 
-import six
-
 from .mocking import mock_instrument, mock_bar, mock_tick
 from .fixtures import (
     MagicMock,

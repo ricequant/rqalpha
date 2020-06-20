@@ -16,7 +16,6 @@ from __future__ import division
 import pprint
 import os
 import re
-import six
 import collections
 from decimal import getcontext, ROUND_FLOOR
 from datetime import time

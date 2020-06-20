@@ -16,11 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from itertools import chain
-
-
-import six
-
 
 def _repr(cls_name, properties):
     fmt_str = "{}({})".format(cls_name, ", ".join((str(p) + "={}") for p in properties))

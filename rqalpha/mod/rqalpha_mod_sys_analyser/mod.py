@@ -23,7 +23,6 @@ from collections import defaultdict
 from enum import Enum
 from typing import Dict, Optional
 
-import six
 import numpy as np
 import pandas as pd
 from rqrisk import Risk
