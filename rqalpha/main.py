@@ -284,9 +284,5 @@ def set_loggers(config):
 
     user_log.level = logbook.DEBUG
 
-    if extra_config.log_level.upper() != "NONE":
-        user_log.disabled = extra_config.user_log_disabled
-        user_system_log.disabled = extra_config.user_system_log_disabled
-
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())

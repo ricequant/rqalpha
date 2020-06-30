@@ -42,9 +42,6 @@ from .entry import cli
               help='rqdatac uri, eg user:password or or license:xxxxxxx or tcp://user:password@ip:port')
 # -- Extra Configuration
 @click.option('-l', '--log-level', 'extra__log_level', type=click.Choice(['verbose', 'debug', 'info', 'error', 'none']))
-@click.option('--disable-user-system-log', 'extra__user_system_log_disabled', is_flag=True,
-              help='disable user system log stdout')
-@click.option('--disable-user-log', 'extra__user_log_disabled', is_flag=True, help='disable user log stdout')
 @click.option('--logger', 'extra__logger', nargs=2, multiple=True, help='config logger, e.g. --logger system_log debug')
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")

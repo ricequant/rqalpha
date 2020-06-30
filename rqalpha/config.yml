@@ -47,8 +47,6 @@ extra:
   # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
   # 或者设置 `error` 只查看错误级别的日志输出
   log_level: info
-  user_system_log_disabled: false
-  user_log_disabled: false
   # 通过该参数可以将预定义变量传入 `context` 内。
   context_vars: ~
   # enable_profiler: 是否启动性能分析
