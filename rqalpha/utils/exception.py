@@ -12,8 +12,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
-
 from rqalpha import const
 
 
@@ -59,7 +57,7 @@ class CustomError(object):
         for filename, lineno, func_name, code, local_variables in self.stacks:
             content.append('  File %s, line %s in %s' % (filename, lineno, func_name))
             content.append('    %s' % (code, ))
-            for k, v in six.iteritems(local_variables):
+            for k, v in local_variables.items():
                 content.append('    --> %s = %s' % (k, _repr(v)))
             content.append('')
         content.append("%s: %s" % (self.exc_type.__name__, self.msg))

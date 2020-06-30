@@ -12,7 +12,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
 import pickle
 from rqalpha.utils.logger import user_system_log, system_log
 
@@ -20,7 +19,7 @@ from rqalpha.utils.logger import user_system_log, system_log
 class GlobalVars(object):
     def get_state(self):
         dict_data = {}
-        for key, value in six.iteritems(self.__dict__):
+        for key, value in self.__dict__.items():
             try:
                 dict_data[key] = pickle.dumps(value)
             except Exception:
@@ -29,7 +28,7 @@ class GlobalVars(object):
 
     def set_state(self, state):
         dict_data = pickle.loads(state)
-        for key, value in six.iteritems(dict_data):
+        for key, value in dict_data.items():
             try:
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore g.{} {}", key, type(self.__dict__[key]))

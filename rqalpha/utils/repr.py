@@ -16,11 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from itertools import chain
-
-
-import six
-
 
 def _repr(cls_name, properties):
     fmt_str = "{}({})".format(cls_name, ", ".join((str(p) + "={}") for p in properties))
@@ -58,7 +53,7 @@ def slots_repr(inst):
 def dict_repr(inst):
     # return pformat(inst.__dict__)
     return "%s(%s)" % (
-        inst.__class__.__name__, {k: v for k, v in six.iteritems(inst.__dict__) if k[0] != "_"})
+        inst.__class__.__name__, {k: v for k, v in inst.__dict__.items() if k[0] != "_"})
 
 
 def properties(inst):

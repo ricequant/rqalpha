@@ -15,7 +15,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
 import pickle
 from datetime import datetime, date
 from typing import Set
@@ -136,7 +135,7 @@ class StrategyContext(object):
     """
     def __repr__(self):
         items = ("%s = %r" % (k, v)
-                 for k, v in six.iteritems(self.__dict__)
+                 for k, v in self.__dict__.items()
                  if not callable(v) and not k.startswith("_"))
         return "Context({%s})" % (', '.join(items),)
 
@@ -145,7 +144,7 @@ class StrategyContext(object):
 
     def get_state(self):
         dict_data = {}
-        for key, value in six.iteritems(self.__dict__):
+        for key, value in self.__dict__.items():
             if key.startswith("_"):
                 continue
             try:
@@ -156,7 +155,7 @@ class StrategyContext(object):
 
     def set_state(self, state):
         dict_data = pickle.loads(state)
-        for key, value in six.iteritems(dict_data):
+        for key, value in dict_data.items():
             try:
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore context.{} {}", key, type(self.__dict__[key]))

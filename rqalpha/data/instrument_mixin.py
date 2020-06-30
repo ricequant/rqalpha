@@ -28,7 +28,7 @@ from rqalpha.const import INSTRUMENT_TYPE
 class InstrumentMixin(object):
     def __init__(self, instruments):
         self._instruments = {i.order_book_id: i for i in instruments}
-        self._sym_id_map = {i.symbol: k for k, i in six.iteritems(self._instruments)
+        self._sym_id_map = {i.symbol: k for k, i in self._instruments.items()
                             # 过滤掉 CSI300, SSE50, CSI500, SSE180
                             if not i.order_book_id.endswith('INDX')}
         try:
@@ -70,9 +70,7 @@ class InstrumentMixin(object):
 
     def get_future_contracts(self, underlying, date):
         date = date.replace(hour=0, minute=0, second=0)
-        futures = [v for o, v in six.iteritems(
-            self._instruments
-        ) if v.type == 'Future' and v.underlying_symbol == underlying and not re.match(self.CONTINUOUS_CONTRACT, o)]
+        futures = [v for o, v in self._instruments.items() if v.type == 'Future' and v.underlying_symbol == underlying and not re.match(self.CONTINUOUS_CONTRACT, o)]
         if not futures:
             return []
 

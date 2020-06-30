@@ -115,7 +115,7 @@ class SimulationEventSource(AbstractEventSource):
     def events(self, start_date, end_date, frequency):
         calendar_types = []
         for account_type in self._config.base.accounts:
-            if account_type in (DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE, DEFAULT_ACCOUNT_TYPE.OPTION):
+            if account_type in (DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE):
                 calendar_types.append(TRADING_CALENDAR_TYPE.EXCHANGE)
             elif account_type == DEFAULT_ACCOUNT_TYPE.BOND:
                 calendar_types.append(TRADING_CALENDAR_TYPE.INTER_BANK)

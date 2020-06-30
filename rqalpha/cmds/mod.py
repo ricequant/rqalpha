@@ -48,7 +48,7 @@ def mod(cmd, params):
         mod_config = get_mod_conf()
         table = []
 
-        for mod_name, mod in six.iteritems(mod_config['mod']):
+        for mod_name, mod in mod_config['mod'].items():
             table.append([
                 mod_name,
                 ("enabled" if mod['enabled'] else "disabled")

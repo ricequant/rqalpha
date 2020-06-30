@@ -486,7 +486,7 @@ msgstr "您在涨停状态下交易了 {quantity} 单位的 {order_book_id}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:97
 msgid "You have traded {order_book_id} with {quantity} lots in limit down status"
-msgstr "您在跌停状态下交易了 {} 单位的 {order_book_id}"
+msgstr "您在跌停状态下交易了 {quantity} 单位的 {order_book_id}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:102
 msgid "unsupported position_effect {}"

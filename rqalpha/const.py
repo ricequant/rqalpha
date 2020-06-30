@@ -17,8 +17,6 @@
 
 from enum import Enum, EnumMeta
 
-import six
-
 
 class CustomEnumMeta(EnumMeta):
     def __new__(metacls, cls, bases, classdict):
@@ -40,16 +38,7 @@ class CustomEnumMeta(EnumMeta):
             return self._member_reverse_map[item]
 
 
-if six.PY2:
-    # six.with_metaclass not working
-    class CustomEnumCore(str, Enum):
-        __metaclass__ = CustomEnumMeta
-else:
-    exec("class CustomEnumCore(str, Enum, metaclass=CustomEnumMeta): pass")
-
-
-# noinspection PyUnresolvedReferences
-class CustomEnum(CustomEnumCore):
+class CustomEnum(str, Enum, metaclass=CustomEnumMeta):
     def __repr__(self):
         return "%s.%s" % (
             self.__class__.__name__, self._name_)
@@ -82,7 +71,7 @@ class RUN_TYPE(CustomEnum):
 # noinspection PyPep8Naming
 class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     """
-    *   关于 ACCOUNT_TYPE，目前主要表示为交易账户。STOCK / FUTURE / OPTION 目前均表示为中国 对应的交易账户。
+    *   关于 ACCOUNT_TYPE，目前主要表示为交易账户。STOCK / FUTURE / BOND 目前均表示为中国 对应的交易账户。
     *   ACCOUNT_TYPE 不区分交易所，比如 A 股区分上海交易所和深圳交易所，但对应的都是一个账户，因此统一为 STOCK
     *   目前暂时不添加其他 DEFAULT_ACCOUNT_TYPE 类型，如果需要增加自定义账户及类型，请参考 https://github.com/ricequant/rqalpha/issues/160
     """
@@ -90,8 +79,6 @@ class DEFAULT_ACCOUNT_TYPE(CustomEnum):
     STOCK = "STOCK"
     # 期货
     FUTURE = "FUTURE"
-    # 期权
-    OPTION = "OPTION"
     # 债券
     BOND = "BOND"
 
@@ -160,9 +147,6 @@ class INSTRUMENT_TYPE(CustomEnum):
     ETF = "ETF"
     LOF = "LOF"
     INDX = "INDX"
-    FENJI_MU = "FenjiMu"
-    FENJI_A = "FenjiA"
-    FENJI_B = "FenjiB"
     PUBLIC_FUND = 'PublicFund'
     BOND = "Bond"
     CONVERTIBLE = "Convertible"
@@ -175,12 +159,6 @@ class PERSIST_MODE(CustomEnum):
     ON_CRASH = "ON_CRASH"
     REAL_TIME = "REAL_TIME"
     ON_NORMAL_EXIT = "ON_NORMAL_EXIT"
-
-
-# noinspection PyPep8Naming
-class MARGIN_TYPE(CustomEnum):
-    BY_MONEY = "BY_MONEY"
-    BY_VOLUME = "BY_VOLUME"
 
 
 # noinspection PyPep8Naming
@@ -219,26 +197,6 @@ class MARKET(CustomEnum):
 class TRADING_CALENDAR_TYPE(CustomEnum):
     EXCHANGE = "EXCHANGE"
     INTER_BANK = "INTERBANK"
-
-
-class CURRENCY(CustomEnum):
-    CNY = "CNY"  # 人民币
-    USD = "USD"  # 美元
-    EUR = "EUR"  # 欧元
-    HKD = "HKD"  # 港币
-    GBP = "GBP"  # 英镑
-    JPY = "JPY"  # 日元
-    KRW = "KWR"  # 韩元
-    CAD = "CAD"  # 加元
-    AUD = "AUD"  # 澳元
-    CHF = "CHF"  # 瑞郎
-    SGD = "SGD"  # 新加坡元
-    MYR = "MYR"  # 马拉西亚币
-    IDR = "IDR"  # 印尼币
-    NZD = "NZD"  # 新西兰币
-    VND = "VND"  # 越南盾
-    THB = "THB"  # 泰铢
-    PHP = "PHP"  # 菲律宾币
 
 
 UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"

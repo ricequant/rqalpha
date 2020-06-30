@@ -60,14 +60,14 @@ class Account(AbstractAccount):
 
         self.register_event()
 
-        for order_book_id, init_quantity in six.iteritems(init_positions):
+        for order_book_id, init_quantity in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
             self._get_or_create_pos(order_book_id, position_direction, init_quantity)
 
     def __repr__(self):
         positions_repr = {}
-        for order_book_id, positions in six.iteritems(self._positions):
-            for direction, position in six.iteritems(positions):
+        for order_book_id, positions in self._positions.items():
+            for direction, position in positions.items():
                 if position.quantity != 0:
                     positions_repr.setdefault(order_book_id, {})[direction.value] = position.quantity
         return "Account(cash={}, total_value={}, positions={})".format(
@@ -96,7 +96,7 @@ class Account(AbstractAccount):
                 order_book_id: {
                     POSITION_DIRECTION.LONG: positions[POSITION_DIRECTION.LONG].get_state(),
                     POSITION_DIRECTION.SHORT: positions[POSITION_DIRECTION.SHORT].get_state()
-                } for order_book_id, positions in six.iteritems(self._positions)
+                } for order_book_id, positions in self._positions.items()
             },
             'frozen_cash': self._frozen_cash,
             "total_cash": self._total_cash,
@@ -108,7 +108,7 @@ class Account(AbstractAccount):
         self._backward_trade_set = set(state['backward_trade_set'])
 
         self._positions.clear()
-        for order_book_id, positions_state in six.iteritems(state['positions']):
+        for order_book_id, positions_state in state['positions'].items():
             for direction in POSITION_DIRECTION:
                 position = self._get_or_create_pos(order_book_id, direction)
                 position.set_state(positions_state[direction])
@@ -128,12 +128,12 @@ class Account(AbstractAccount):
 
         # forward compatible
         if "dividend_receivable" in state:
-            for order_book_id, dividend in six.iteritems(state["dividend_receivable"]):
+            for order_book_id, dividend in state["dividend_receivable"].items():
                 self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._dividend_receivable = (
                     dividend["payable_date"], dividend["quantity"] * dividend["dividend_per_share"]
                 )
         if "pending_transform" in state:
-            for order_book_id, transform_info in six.iteritems(state["pending_transform"]):
+            for order_book_id, transform_info in state["pending_transform"].items():
                 self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._pending_transform = transform_info
 
     def fast_forward(self, orders=None, trades=None):
@@ -300,12 +300,12 @@ class Account(AbstractAccount):
     def _on_settlement(self, _):
         trading_date = Environment.get_instance().trading_dt.date()
 
-        for order_book_id, positions in list(six.iteritems(self._positions)):
+        for order_book_id, positions in list(self._positions.items()):
             for position in six.itervalues(positions):
                 delta_cash = position.settlement(trading_date)
                 self._total_cash += delta_cash
 
-        for order_book_id, positions in list(six.iteritems(self._positions)):
+        for order_book_id, positions in list(self._positions.items()):
             if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
                 del self._positions[order_book_id]
 
@@ -381,7 +381,7 @@ class Account(AbstractAccount):
 
     def _update_last_price(self, _):
         env = Environment.get_instance()
-        for order_book_id, positions in six.iteritems(self._positions):
+        for order_book_id, positions in self._positions.items():
             price = env.get_last_price(order_book_id)
             if price == price:
                 for position in six.itervalues(positions):

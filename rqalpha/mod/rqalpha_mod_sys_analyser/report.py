@@ -29,7 +29,7 @@ def generate_report(result_dict, output_path):
     # summary.csv
     csv_txt = StringIO()
     summary = result_dict["summary"]
-    csv_txt.write(u"\n".join(sorted("{},{}".format(key, value) for key, value in six.iteritems(summary))))
+    csv_txt.write(u"\n".join(sorted("{},{}".format(key, value) for key, value in summary.items())))
 
     with open(os.path.join(output_path, "summary.csv"), 'w') as csvfile:
         csvfile.write(csv_txt.getvalue())

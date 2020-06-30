@@ -51,13 +51,13 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._last_unit_net_value = 1
 
         account_args = {}
-        for account_type, cash in six.iteritems(starting_cash):
+        for account_type, cash in starting_cash.items():
             account_args[account_type] = {"type": account_type, "total_cash": cash, "init_positions": {}}
         for order_book_id, quantity in init_positions:
             account_type = self.get_account_type(order_book_id)
             if account_type in account_args:
                 account_args[account_type]["init_positions"][order_book_id] = quantity
-        self._accounts = {account_type: Account(**args) for account_type, args in six.iteritems(account_args)}
+        self._accounts = {account_type: Account(**args) for account_type, args in account_args.items()}
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
 
         self._register_event()
@@ -68,7 +68,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             'last_unit_net_value': self._last_unit_net_value,
             'units': self._units,
             'accounts': {
-                name: account.get_state() for name, account in six.iteritems(self._accounts)
+                name: account.get_state() for name, account in self._accounts.items()
             }
         }).encode('utf-8')
 
@@ -78,7 +78,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._static_unit_net_value = value['static_unit_net_value']
         self._last_unit_net_value = value.get('last_unit_net_value', self._static_unit_net_value)
         self._units = value['units']
-        for k, v in six.iteritems(value['accounts']):
+        for k, v in value['accounts'].items():
             self._accounts[k].set_state(v)
 
     def get_positions(self):

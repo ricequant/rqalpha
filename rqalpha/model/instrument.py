@@ -101,7 +101,7 @@ class Instrument(metaclass=PropertyReprMeta):
     def type(self):
         # type: () -> str
         """
-        [sty] 合约类型，目前支持的类型有: ‘CS’, ‘INDX’, ‘LOF’, ‘ETF’, ‘FenjiMu’, ‘FenjiA’, ‘FenjiB’, ‘Future’
+        [sty] 合约类型，目前支持的类型有: ‘CS’, ‘INDX’, ‘LOF’, ‘ETF’, ‘Future’
         """
         return INSTRUMENT_TYPE[self.__dict__["type"]]
 

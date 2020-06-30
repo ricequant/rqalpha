@@ -561,29 +561,9 @@ def all_instruments(type=None, date=None):
     CS                          Common Stock, 即股票
     ETF                         Exchange Traded Fund, 即交易所交易基金
     LOF                         Listed Open-Ended Fund，即上市型开放式基金
-    FenjiMu                     Fenji Mu Fund, 即分级母基金
-    FenjiA                      Fenji A Fund, 即分级A类基金
-    FenjiB                      Fenji B Funds, 即分级B类基金
     INDX                        Index, 即指数
     Future                      Futures，即期货，包含股指、国债和商品期货
     =========================   ===================================================
-
-    :example:
-
-    获取中国市场所有分级基金的基础信息:
-
-    ..  code-block:: python3
-        :linenos:
-
-        [In]all_instruments('FenjiA')
-        [Out]
-            abbrev_symbol    order_book_id    product    sector_code  symbol
-        0    CYGA    150303.XSHE    null    null    华安创业板50A
-        1    JY500A    150088.XSHE    null    null    金鹰500A
-        2    TD500A    150053.XSHE    null    null    泰达稳健
-        3    HS500A    150110.XSHE    null    null    华商500A
-        4    QSAJ    150235.XSHE    null    null    鹏华证券A
-        ...
 
     """
     env = Environment.get_instance()
@@ -602,7 +582,7 @@ def all_instruments(type=None, date=None):
             if t == "Stock":
                 types.add("CS")
             elif t == "Fund":
-                types.update(["ETF", "LOF", "SF", "FenjiA", "FenjiB", "FenjiMu"])
+                types.update(["ETF", "LOF"])
             else:
                 types.add(t)
     else:
