@@ -234,8 +234,8 @@ def run(config, source_code=None, user_funcs=None):
 
 def _exception_handler(e):
     user_system_log.exception(_(u"strategy execute exception"))
+    user_system_log.error(e.error)
     if not is_user_exc(e.error.exc_val):
-        system_log.exception(_(u"strategy execute exception"))
         return const.EXIT_CODE.EXIT_INTERNAL_ERROR
 
     return const.EXIT_CODE.EXIT_USER_ERROR
