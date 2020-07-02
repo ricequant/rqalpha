@@ -823,20 +823,6 @@ POSITION_EFFECT - 交易动作
         轧差
 
 
-RIGHT_TYPE - 权利类型
-------------------------------------------------------
-
-.. py:class:: RIGHT_TYPE
-
-    ..  py:attribute:: CONVERT
-
-        转股
-
-    ..  py:attribute:: SELL_BACK
-
-        回售
-
-
 ORDER_TYPE - 订单类型
 ------------------------------------------------------
 
