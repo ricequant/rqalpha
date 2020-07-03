@@ -16,7 +16,7 @@ import abc
 import codecs
 import pickle
 from copy import copy
-from typing import Iterable
+from typing import Iterable, List
 
 import json
 import pandas
@@ -30,7 +30,7 @@ from rqalpha.model.instrument import Instrument
 class AbstractInstrumentStore:
     @abc.abstractmethod
     def get_all_instruments(self):
-        # type: () -> Iterable[Instrument]
+        # type: () -> List[Instrument]
         raise NotImplementedError
 
 
@@ -102,13 +102,14 @@ class InstrumentStore(AbstractInstrumentStore):
         INSTRUMENT_TYPE.PUBLIC_FUND,
     )
 
-    def __init__(self, f):
+    def __init__(self, f, future_info_store):
+        # type: (str, FutureInfoStore) -> None
         with open(f, 'rb') as store:
             d = pickle.load(store)
 
         self._instruments = []
         for i in d:
-            ins = Instrument(i)
+            ins = Instrument(i, future_info_store)
             if ins.type in self.SUPPORTED_TYPES:
                 self._instruments.append(ins)
 
