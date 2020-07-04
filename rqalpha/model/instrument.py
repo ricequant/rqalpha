@@ -41,7 +41,7 @@ class Instrument(metaclass=PropertyReprMeta):
 
     __repr__ = property_repr
 
-    def __init__(self, dic, future_info_store):
+    def __init__(self, dic, future_info_store=None):
         self.__dict__ = copy.copy(dic)
         self._future_info_store = future_info_store
 
