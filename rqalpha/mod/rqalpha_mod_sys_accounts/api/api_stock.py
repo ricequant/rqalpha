@@ -108,6 +108,12 @@ def _order_value(account, position, ins, cash_amount, style):
         price = style.get_limit_price()
     else:
         price = env.data_proxy.get_last_price(ins.order_book_id)
+        if not is_valid_price(price):
+            user_system_log.warn(
+                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+            )
+            return
+
     amount = int(Decimal(cash_amount) / Decimal(price))
 
     if cash_amount > 0:
