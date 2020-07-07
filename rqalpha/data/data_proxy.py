@@ -252,8 +252,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return self._data_source.is_st_stock(order_book_id, trading_dates)
 
     def get_tick_size(self, order_book_id):
-        instrument = self.instruments(order_book_id)
-        return self._data_source.get_tick_size(instrument)
+        return self.instruments(order_book_id).tick_size()
 
     def get_last_price(self, order_book_id):
         # type: (str) -> float

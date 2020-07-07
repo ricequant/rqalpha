@@ -234,8 +234,8 @@ def run(config, source_code=None, user_funcs=None):
 
 def _exception_handler(e):
     user_system_log.exception(_(u"strategy execute exception"))
+    user_system_log.error(e.error)
     if not is_user_exc(e.error.exc_val):
-        system_log.exception(_(u"strategy execute exception"))
         return const.EXIT_CODE.EXIT_INTERNAL_ERROR
 
     return const.EXIT_CODE.EXIT_USER_ERROR
@@ -283,10 +283,6 @@ def set_loggers(config):
         log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
 
     user_log.level = logbook.DEBUG
-
-    if extra_config.log_level.upper() != "NONE":
-        user_log.disabled = extra_config.user_log_disabled
-        user_system_log.disabled = extra_config.user_system_log_disabled
 
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())

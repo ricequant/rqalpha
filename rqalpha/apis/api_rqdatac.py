@@ -178,7 +178,7 @@ def index_weights(order_book_id, date=None):
     """
     env = Environment.get_instance()
     data_proxy = env.data_proxy
-    dt = data_proxy.get_previous_trading_date(env.trading_dt.date())
+    dt = to_date(data_proxy.get_previous_trading_date(env.trading_dt.date()))
     if date is None:
         date = dt
     else:

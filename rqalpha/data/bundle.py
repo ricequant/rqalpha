@@ -21,6 +21,7 @@ from itertools import chain
 
 import h5py
 import numpy as np
+
 from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
@@ -327,6 +328,7 @@ class UpdateDayBarTask(DayBarTask):
                 df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
                                        adjust_type='none', fields=fields, expect_df=True)
                 if not (df is None or df.empty):
+                    df = df[fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
                     df = df.loc[order_book_id]
                     df.reset_index(inplace=True)
                     df['datetime'] = [convert_date_to_int(d) for d in df['date']]

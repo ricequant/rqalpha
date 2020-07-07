@@ -41,8 +41,9 @@ class Instrument(metaclass=PropertyReprMeta):
 
     __repr__ = property_repr
 
-    def __init__(self, dic):
+    def __init__(self, dic, future_info_store=None):
         self.__dict__ = copy.copy(dic)
+        self._future_info_store = future_info_store
 
         if "listed_date" in dic:
             self.__dict__["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
@@ -392,7 +393,14 @@ class Instrument(metaclass=PropertyReprMeta):
         return -1 if days < 0 else days
 
     def tick_size(self):
-        return Environment.get_instance().data_proxy.get_tick_size(self.order_book_id)
+        if self.type in (INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.INDX):
+            return 0.01
+        elif self.type in ("ETF", "LOF"):
+            return 0.001
+        elif self.type == INSTRUMENT_TYPE.FUTURE:
+            return self._future_info_store.get_future_info(self)["tick_size"]
+        else:
+            raise NotImplementedError
 
     def calc_cash_occupation(self, price, quantity, direction):
         # type: (float, float, POSITION_DIRECTION) -> float

@@ -59,8 +59,10 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF
         ):
             self.register_day_bar_store(instrument_type, funds_day_bar_store)
-
-        self._instruments = InstrumentStore(_p('instruments.pk')).get_all_instruments()  # type: List[Instrument]
+        self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
+        self._instruments = InstrumentStore(
+            _p('instruments.pk'), self._future_info_store
+        ).get_all_instruments()  # type: List[Instrument]
 
         dividend_store = DividendStore(_p('dividends.h5'))
         self._dividends = {
@@ -85,7 +87,7 @@ class BaseDataSource(AbstractDataSource):
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
         self._suspend_days = DateSet(_p('suspended_days.h5'))
 
-        self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
+
 
     def register_day_bar_store(self, instrument_type, store):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
@@ -232,19 +234,6 @@ class BaseDataSource(AbstractDataSource):
 
     def get_ticks(self, order_book_id, date):
         raise NotImplementedError
-
-    def get_tick_size(self, instrument):
-        if instrument.type == 'CS':
-            return 0.01
-        elif instrument.type == "INDX":
-            return 0.01
-        elif instrument.type in ['ETF', 'LOF']:
-            return 0.001
-        elif instrument.type == 'Future':
-            return self._future_info_store.get_future_info(instrument)["tick_size"]
-        else:
-            # NOTE: you can override get_tick_size in your custom data source
-            raise RuntimeError(_("Unsupported instrument type for tick size"))
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
