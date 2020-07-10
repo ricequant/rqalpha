@@ -43,7 +43,7 @@ except ImportError:
             return self
 
         def __call__(self, *args, **kwargs):
-            raise RuntimeError('rqdatac is required')
+            raise RuntimeError(_('rqdatac is not available, extension apis will not function properly'))
 
 
     rqdatac = DummyRQDatac()

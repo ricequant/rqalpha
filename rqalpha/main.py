@@ -113,7 +113,6 @@ def init_rqdatac(rqdatac_uri):
     try:
         import rqdatac
     except ImportError:
-        system_log.info(_('rqdatac is not available, some apis will not function properly'))
         return
 
     try:
