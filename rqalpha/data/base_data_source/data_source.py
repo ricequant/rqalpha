@@ -87,8 +87,6 @@ class BaseDataSource(AbstractDataSource):
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
         self._suspend_days = DateSet(_p('suspended_days.h5'))
 
-
-
     def register_day_bar_store(self, instrument_type, store):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
         self._day_bars[instrument_type] = store
