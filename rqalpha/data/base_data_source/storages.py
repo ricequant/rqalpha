@@ -226,7 +226,7 @@ class DateSet(AbstractDateSet):
     def contains(self, order_book_id, dates):
         date_set = self.get_days(order_book_id)
         if not date_set:
-            return [False] * len(dates)
+            return None
 
         def _to_dt_int(d):
             if isinstance(d, (int, np.int64, np.uint64)):
