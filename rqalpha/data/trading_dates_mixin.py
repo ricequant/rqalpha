@@ -20,7 +20,7 @@ from typing import Dict
 
 import pandas as pd
 
-from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.functools import lru_cache
 from rqalpha.const import TRADING_CALENDAR_TYPE
 
 

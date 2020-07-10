@@ -17,7 +17,7 @@
 
 from typing import Tuple, Optional
 from datetime import date
-from functools import lru_cache
+from rqalpha.utils.functools import lru_cache
 
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE

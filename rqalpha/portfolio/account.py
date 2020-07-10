@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import six
-from functools import lru_cache
+from rqalpha.utils.functools import lru_cache
 from itertools import chain
 from typing import Dict, Iterable, Union, Optional, Type, Callable, List
 

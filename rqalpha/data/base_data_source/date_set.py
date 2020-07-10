@@ -21,7 +21,7 @@ import h5py
 import numpy as np
 from rqalpha.utils.typing import DateLike
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.functools import lru_cache
 
 
 def open_h5(path, *args, **kwargs):

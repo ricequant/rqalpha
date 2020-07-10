@@ -17,15 +17,31 @@
 
 from inspect import signature
 from typing import Callable, Union, Iterable
-from functools import wraps, lru_cache
+from functools import wraps, lru_cache as origin_lru_cache
 
-from rqalpha.model.instrument import Instrument
-from rqalpha.const import INSTRUMENT_TYPE
-from rqalpha.utils.exception import RQInvalidArgument, RQApiNotSupportedError
-from rqalpha.utils.i18n import gettext as _
+cached_functions = []
+
+
+def lru_cache(*args, **kwargs):
+    def decorator(func):
+        func = origin_lru_cache(*args, **kwargs)(func)
+        cached_functions.append(func)
+        return func
+
+    return decorator
+
+
+def clear_all_cached_functions():
+    for func in cached_functions:
+        func.cache_clear()
 
 
 def instype_singledispatch(func):
+    from rqalpha.model.instrument import Instrument
+    from rqalpha.const import INSTRUMENT_TYPE
+    from rqalpha.utils.exception import RQInvalidArgument, RQApiNotSupportedError
+    from rqalpha.utils.i18n import gettext as _
+
     registry = {}
     data_proxy = None
 

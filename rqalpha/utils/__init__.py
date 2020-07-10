@@ -31,7 +31,7 @@ from rqalpha.const import (
 )
 from rqalpha.utils.datetime_func import TimeRange
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.functools import lru_cache
 
 
 class RqAttrDict(object):
