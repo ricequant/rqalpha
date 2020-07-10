@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-07-10 16:07+0800\n"
+"POT-Creation-Date: 2020-07-10 16:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -185,18 +185,6 @@ msgstr ""
 
 #: rqalpha/core/strategy.py:53
 msgid "deprecated parameter[bar_dict] in before_trading function."
-msgstr ""
-
-#: rqalpha/core/strategy.py:70
-msgid ""
-"[deprecated] before_day_trading is no longer used. use before_trading "
-"instead."
-msgstr ""
-
-#: rqalpha/core/strategy.py:72
-msgid ""
-"[deprecated] before_night_trading is no longer used. use before_trading "
-"instead."
 msgstr ""
 
 #: rqalpha/data/base_data_source/storages.py:80

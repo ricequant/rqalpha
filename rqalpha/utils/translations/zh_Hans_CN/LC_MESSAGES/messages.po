@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-07-10 16:07+0800\n"
+"POT-Creation-Date: 2020-07-10 16:10+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -92,7 +92,9 @@ msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
 #: rqalpha/apis/api_rqdatac.py:46
 msgid "rqdatac is not available, extension apis will not function properly"
-msgstr "rqdatac 不存在，扩展 API 无法使用，您可以访问 https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
+msgstr ""
+"rqdatac 不存在，扩展 API 无法使用，您可以访问 https://www.ricequant.com/welcome/rqdata 获取"
+" rqdatac"
 
 #: rqalpha/apis/api_rqdatac.py:102
 msgid "in get_split, start_date {} is no earlier than the previous test day {}"
@@ -200,18 +202,6 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 #: rqalpha/core/strategy.py:53
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
-
-#: rqalpha/core/strategy.py:70
-msgid ""
-"[deprecated] before_day_trading is no longer used. use before_trading "
-"instead."
-msgstr "[deprecated] before_day_trading 已经不再使用，请使用 before_trading 代替。"
-
-#: rqalpha/core/strategy.py:72
-msgid ""
-"[deprecated] before_night_trading is no longer used. use before_trading "
-"instead."
-msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
 
 #: rqalpha/data/base_data_source/storages.py:80
 msgid "unsupported future instrument {}"
@@ -1069,4 +1059,14 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 
 #~ msgid "Unsupported instrument type for tick size"
 #~ msgstr "无法获取该类型标的的最小价格变动单位。"
+
+#~ msgid ""
+#~ "[deprecated] before_day_trading is no longer"
+#~ " used. use before_trading instead."
+#~ msgstr "[deprecated] before_day_trading 已经不再使用，请使用 before_trading 代替。"
+
+#~ msgid ""
+#~ "[deprecated] before_night_trading is no longer"
+#~ " used. use before_trading instead."
+#~ msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
 
