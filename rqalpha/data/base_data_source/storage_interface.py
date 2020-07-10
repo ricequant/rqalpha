@@ -14,55 +14,44 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-import locale
-import sys
 
-import h5py
+import abc
+from typing import List, Sequence, Optional
+
+import pandas
 import numpy as np
+
 from rqalpha.utils.typing import DateLike
-from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.functools import lru_cache
+from rqalpha.model.instrument import Instrument
 
 
-def open_h5(path, *args, **kwargs):
-    # why do this? non-ascii path in windows!!
-    if sys.platform == "win32":
-        try:
-            l = locale.getlocale(locale.LC_ALL)[1]
-        except TypeError:
-            l = None
-        if l and l.lower() == "utf-8":
-            path = path.encode("utf-8")
-    try:
-        return h5py.File(path, *args, **kwargs)
-    except OSError as e:
-        raise RuntimeError(_(
-            "open data bundle failed, you can remove {} and try to regenerate bundle: {}"
-        ).format(path, e))
+class AbstractInstrumentStore:
+    @abc.abstractmethod
+    def get_all_instruments(self):
+        # type: () -> List[Instrument]
+        raise NotImplementedError
 
 
-class DateSet(object):
-    def __init__(self, f):
-        self._h5 = open_h5(f, mode="r")
+class AbstractDayBarStore:
+    @abc.abstractmethod
+    def get_bars(self, order_book_id):
+        # type: (str) -> np.ndarray
+        raise NotImplementedError
 
-    @lru_cache(None)
-    def get_days(self, order_book_id):
-        try:
-            days = self._h5[order_book_id][:]
-            return set(days.tolist())
-        except KeyError:
-            return set()
+    def get_date_range(self, order_book_id):
+        raise NotImplementedError
 
+
+class AbstractCalendarStore:
+    @abc.abstractmethod
+    def get_trading_calendar(self):
+        # type: () -> pandas.DatetimeIndex
+        raise NotImplementedError
+
+
+class AbstractDateSet:
+    @abc.abstractmethod
     def contains(self, order_book_id, dates):
-        # type: (str, Sequence[DateLike]) -> List[bool]
-        date_set = self.get_days(order_book_id)
-        if not date_set:
-            return [False] * len(dates)
-
-        def _to_dt_int(d):
-            if isinstance(d, (int, np.int64, np.uint64)):
-                return int(d // 1000000) if d > 100000000 else int(d)
-            else:
-                return d.year * 10000 + d.month * 100 + d.day
-
-        return [(_to_dt_int(d) in date_set) for d in dates]
+        # type: (str, Sequence[DateLike]) -> Optional[List[bool]]
+        # 若 DateSet 中不包含该 order_book_id 的信息则返回 None，否则返回 List[bool]
+        raise NotImplementedError

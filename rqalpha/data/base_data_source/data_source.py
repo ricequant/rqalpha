@@ -16,28 +16,25 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 from datetime import date, datetime
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Sequence
 
 import six
 import numpy as np
 import pandas as pd
 
 from rqalpha.interface import AbstractDataSource
-from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
-from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.typing import DateLike
 
+from .storage_interface import AbstractInstrumentStore, AbstractCalendarStore, AbstractDayBarStore, AbstractDateSet
 from .storages import (
-    InstrumentStore, ShareTransformationStore, FutureInfoStore, AbstractDayBarStore, AbstractInstrumentStore,
-    AbstractCalendarStore, ExchangeTradingCalendarStore
+    InstrumentStore, ShareTransformationStore, FutureInfoStore, ExchangeTradingCalendarStore, DateSet, DayBarStore,
+    DividendStore, YieldCurveStore, SimpleFactorStore
 )
-from .h5_storages import (
-    DayBarStore, DividendStore, YieldCurveStore, SimpleFactorStore
-)
-from .date_set import DateSet
 from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 
 
@@ -49,17 +46,17 @@ class BaseDataSource(AbstractDataSource):
         def _p(name):
             return os.path.join(path, name)
 
+        funds_day_bar_store = DayBarStore(_p('funds.h5'))
         self._day_bars = {
             INSTRUMENT_TYPE.CS: DayBarStore(_p('stocks.h5')),
             INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),
             INSTRUMENT_TYPE.FUTURE: DayBarStore(_p('futures.h5')),
+            INSTRUMENT_TYPE.ETF: funds_day_bar_store,
+            INSTRUMENT_TYPE.LOF: funds_day_bar_store
         }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
-        funds_day_bar_store = DayBarStore(_p('funds.h5'))
-        for instrument_type in (
-            INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF
-        ):
-            self.register_day_bar_store(instrument_type, funds_day_bar_store)
+
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
+
         self._instruments = InstrumentStore(
             _p('instruments.pk'), self._future_info_store
         ).get_all_instruments()  # type: List[Instrument]
@@ -70,9 +67,11 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.ETF: dividend_store,
             INSTRUMENT_TYPE.LOF: dividend_store,
         }
+
         self._calendar_providers = {
             TRADING_CALENDAR_TYPE.EXCHANGE: ExchangeTradingCalendarStore(_p("trading_dates.npy"))
         }
+
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
 
         split_store = SimpleFactorStore(_p('split_factor.h5'))
@@ -84,8 +83,8 @@ class BaseDataSource(AbstractDataSource):
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.h5'))
         self._share_transformation = ShareTransformationStore(_p('share_transformation.json'))
 
+        self._suspend_days = [DateSet(_p('suspended_days.h5'))]  # type: List[AbstractDateSet]
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
-        self._suspend_days = DateSet(_p('suspended_days.h5'))
 
     def register_day_bar_store(self, instrument_type, store):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
@@ -105,6 +104,10 @@ class BaseDataSource(AbstractDataSource):
     def register_calendar_store(self, calendar_type, calendar_store):
         # type: (TRADING_CALENDAR_TYPE, AbstractCalendarStore) -> None
         self._calendar_providers[calendar_type] = calendar_store
+
+    def append_suspend_date_set(self, date_set):
+        # type: (AbstractDateSet) -> None
+        self._suspend_days.append(date_set)
 
     def get_dividend(self, instrument):
         try:
@@ -128,7 +131,13 @@ class BaseDataSource(AbstractDataSource):
         return self._share_transformation.get_share_transformation(order_book_id)
 
     def is_suspended(self, order_book_id, dates):
-        return self._suspend_days.contains(order_book_id, dates)
+        # type: (str, Sequence[DateLike]) -> List[bool]
+        for date_set in self._suspend_days:
+            result = date_set.contains(order_book_id, dates)
+            if result is not None:
+                return result
+        else:
+            return [False] * len(dates)
 
     def is_st_stock(self, order_book_id, dates):
         return self._st_stock_days.contains(order_book_id, dates)
