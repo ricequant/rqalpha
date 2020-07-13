@@ -29,6 +29,7 @@ from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.model.order import OrderStyle, Order
 from rqalpha.model.trade import Trade
 from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.i18n import gettext as _
 
 from .position import Position, PositionProxyDict
 
@@ -297,7 +298,7 @@ class Account(AbstractAccount):
         for position in self._iter_pos():
             self._total_cash += position.before_trading(trading_date)
 
-    def _on_settlement(self, _):
+    def _on_settlement(self, event):
         trading_date = Environment.get_instance().trading_dt.date()
 
         for order_book_id, positions in list(self._positions.items()):
