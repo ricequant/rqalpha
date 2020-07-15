@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union
+from typing import Union, List
 
 import six
 import numpy as np
@@ -29,8 +29,9 @@ from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
-from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
+from rqalpha.utils.typing import DateLike
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):
@@ -238,6 +239,7 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)
 
     def is_suspended(self, order_book_id, dt, count=1):
+        # type: (str, DateLike, int) -> List[bool]
         if count == 1:
             return self._data_source.is_suspended(order_book_id, [dt])[0]
 

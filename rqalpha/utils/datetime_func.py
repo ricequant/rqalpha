@@ -19,7 +19,7 @@ from collections import namedtuple
 import six
 from dateutil.parser import parse
 
-from rqalpha.utils.py2 import lru_cache
+from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.exception import RQInvalidArgument
 
 

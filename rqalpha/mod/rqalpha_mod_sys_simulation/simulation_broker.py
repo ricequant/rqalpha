@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from typing import List, Tuple, Dict
-from functools import lru_cache
+from rqalpha.utils.functools import lru_cache
 from itertools import chain
 
 import jsonpickle

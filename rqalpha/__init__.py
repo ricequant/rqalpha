@@ -46,7 +46,7 @@ def run(config, source_code=None):
 
 def run_ipython_cell(line, cell=None):
     from rqalpha.cmds.run import run
-    from rqalpha.utils.py2 import clear_all_cached_functions
+    from rqalpha.utils.functools import clear_all_cached_functions
     clear_all_cached_functions()
     args = line.split()
     args.extend(["--source-code", cell if cell is not None else ""])
@@ -59,7 +59,7 @@ def run_ipython_cell(line, cell=None):
 
 def run_file(strategy_file_path, config=None):
     from rqalpha.utils.config import parse_config
-    from rqalpha.utils.py2 import clear_all_cached_functions
+    from rqalpha.utils.functools import clear_all_cached_functions
     from rqalpha import main
 
     if config is None:
@@ -83,7 +83,7 @@ def run_file(strategy_file_path, config=None):
 
 def run_code(code, config=None):
     from rqalpha.utils.config import parse_config
-    from rqalpha.utils.py2 import clear_all_cached_functions
+    from rqalpha.utils.functools import clear_all_cached_functions
     from rqalpha import main
 
     if config is None:
@@ -100,7 +100,7 @@ def run_code(code, config=None):
 
 
 def run_func(**kwargs):
-    from rqalpha.utils.py2 import clear_all_cached_functions
+    from rqalpha.utils.functools import clear_all_cached_functions
     from rqalpha.utils.config import parse_config
     from rqalpha import main
 

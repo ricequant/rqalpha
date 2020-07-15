@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-06-09 17:23+0800\n"
+"POT-Creation-Date: 2020-07-10 16:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,23 +44,19 @@ msgid ""
 "persist"
 msgstr ""
 
-#: rqalpha/main.py:116
-msgid "rqdatac is not available, some apis will not function properly"
-msgstr ""
-
-#: rqalpha/main.py:123
+#: rqalpha/main.py:122
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 
-#: rqalpha/main.py:201
+#: rqalpha/main.py:198
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:233
+#: rqalpha/main.py:230
 msgid "strategy run successfully, normal exit"
 msgstr ""
 
-#: rqalpha/main.py:238 rqalpha/main.py:240
+#: rqalpha/main.py:235
 msgid "strategy execute exception"
 msgstr ""
 
@@ -86,8 +82,13 @@ msgstr ""
 #: rqalpha/apis/api_base.py:158
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:75
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:271
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:113
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:277
 msgid "Order Creation Failed: [{order_book_id}] No market data"
+msgstr ""
+
+#: rqalpha/apis/api_rqdatac.py:46
+msgid "rqdatac is not available, extension apis will not function properly"
 msgstr ""
 
 #: rqalpha/apis/api_rqdatac.py:102
@@ -129,29 +130,29 @@ msgid ""
 "got {} (type: {})"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:44
+#: rqalpha/cmds/bundle.py:45
 msgid ""
 "rqdatac is required to create bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:55 rqalpha/cmds/bundle.py:85
+#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:86
 msgid "rqdatac init failed with error: {}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:74
+#: rqalpha/cmds/bundle.py:75
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:89
+#: rqalpha/cmds/bundle.py:90
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:108
+#: rqalpha/cmds/bundle.py:109
 msgid ""
 "\n"
 "    [WARNING]\n"
@@ -160,19 +161,19 @@ msgid ""
 "    Are you sure to continue?"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:126
+#: rqalpha/cmds/bundle.py:127
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:136
+#: rqalpha/cmds/bundle.py:138
 msgid "try {} ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:147
+#: rqalpha/cmds/bundle.py:150
 msgid "downloading ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:160
+#: rqalpha/cmds/bundle.py:164
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
@@ -186,30 +187,14 @@ msgstr ""
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr ""
 
-#: rqalpha/core/strategy.py:70
-msgid ""
-"[deprecated] before_day_trading is no longer used. use before_trading "
-"instead."
+#: rqalpha/data/base_data_source/storages.py:80
+msgid "unsupported future instrument {}"
 msgstr ""
 
-#: rqalpha/core/strategy.py:72
-msgid ""
-"[deprecated] before_night_trading is no longer used. use before_trading "
-"instead."
-msgstr ""
-
-#: rqalpha/data/base_data_source/data_source.py:247
-msgid "Unsupported instrument type for tick size"
-msgstr ""
-
-#: rqalpha/data/base_data_source/date_set.py:35
+#: rqalpha/data/base_data_source/storages.py:130
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
-msgstr ""
-
-#: rqalpha/data/base_data_source/storages.py:95
-msgid "unsupported future instrument {}"
 msgstr ""
 
 #: rqalpha/mod/__init__.py:51
@@ -234,7 +219,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:282
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:284
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
@@ -280,7 +265,7 @@ msgid ""
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:81
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:124
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:130
 msgid "Order Creation Failed: 0 order quantity"
 msgstr ""
 
@@ -288,19 +273,19 @@ msgstr ""
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:256
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:262
 msgid "total percent should be lower than 1, current: {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:265
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:271
 msgid "target percent of {} should between 0 and 1, current: {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:599
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:605
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:71
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:70
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
 "instead"
@@ -670,13 +655,13 @@ msgstr ""
 msgid "unknown market type: {}"
 msgstr ""
 
-#: rqalpha/utils/functools.py:34
+#: rqalpha/utils/functools.py:50
 msgid ""
 "function {}: invalid {} argument, expected an order_book_id or instrument"
 " with types {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/functools.py:39
+#: rqalpha/utils/functools.py:55
 msgid "function {} are not supported, please check your account or mod config"
 msgstr ""
 

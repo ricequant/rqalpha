@@ -66,11 +66,6 @@ class Strategy(object):
         if self._open_auction is not None:
             event_bus.add_listener(EVENT.OPEN_AUCTION, self.open_auction)
 
-        if scope.get('before_day_trading', None) is not None:
-            user_system_log.warn(_(u"[deprecated] before_day_trading is no longer used. use before_trading instead."))
-        if scope.get('before_night_trading', None) is not None:
-            user_system_log.warn(_(u"[deprecated] before_night_trading is no longer used. use before_trading instead."))
-
     @property
     def user_context(self):
         return self._user_context

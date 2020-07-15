@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-06-09 17:23+0800\n"
+"POT-Creation-Date: 2020-07-10 16:10+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -45,27 +45,21 @@ msgid ""
 "persist"
 msgstr "Persist provider 未加载，加载 Persist provider 方可使用 persist 功能。"
 
-#: rqalpha/main.py:116
-msgid "rqdatac is not available, some apis will not function properly"
-msgstr ""
-"rqdatac 不存在，部分扩展 API 可能无法使用，您可以访问 "
-"https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
-
-#: rqalpha/main.py:123
+#: rqalpha/main.py:122
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:201
+#: rqalpha/main.py:198
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:233
+#: rqalpha/main.py:230
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:238 rqalpha/main.py:240
+#: rqalpha/main.py:235
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
@@ -91,9 +85,16 @@ msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 #: rqalpha/apis/api_base.py:158
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:75
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:271
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:113
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:277
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
+
+#: rqalpha/apis/api_rqdatac.py:46
+msgid "rqdatac is not available, extension apis will not function properly"
+msgstr ""
+"rqdatac 不存在，扩展 API 无法使用，您可以访问 https://www.ricequant.com/welcome/rqdata 获取"
+" rqdatac"
 
 #: rqalpha/apis/api_rqdatac.py:102
 msgid "in get_split, start_date {} is no earlier than the previous test day {}"
@@ -134,7 +135,7 @@ msgid ""
 "got {} (type: {})"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:44
+#: rqalpha/cmds/bundle.py:45
 msgid ""
 "rqdatac is required to create bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -143,11 +144,11 @@ msgstr ""
 "创建 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:55 rqalpha/cmds/bundle.py:85
+#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:86
 msgid "rqdatac init failed with error: {}"
 msgstr "rqdatac 初始化失败：{}"
 
-#: rqalpha/cmds/bundle.py:74
+#: rqalpha/cmds/bundle.py:75
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -156,11 +157,11 @@ msgstr ""
 "更新 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:89
+#: rqalpha/cmds/bundle.py:90
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr "bundle 不存在，执行 \"rqalpha create-bundle\" 以创建 bundle"
 
-#: rqalpha/cmds/bundle.py:108
+#: rqalpha/cmds/bundle.py:109
 msgid ""
 "\n"
 "    [WARNING]\n"
@@ -174,19 +175,19 @@ msgstr ""
 "    该路径下的内容将会被移除.\n"
 "    确定继续吗?"
 
-#: rqalpha/cmds/bundle.py:126
+#: rqalpha/cmds/bundle.py:127
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr "数据下载成功: {bundle_path}"
 
-#: rqalpha/cmds/bundle.py:136
+#: rqalpha/cmds/bundle.py:138
 msgid "try {} ..."
 msgstr "尝试 {} ..."
 
-#: rqalpha/cmds/bundle.py:147
+#: rqalpha/cmds/bundle.py:150
 msgid "downloading ..."
 msgstr "下载中 ..."
 
-#: rqalpha/cmds/bundle.py:160
+#: rqalpha/cmds/bundle.py:164
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
@@ -202,31 +203,15 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/core/strategy.py:70
-msgid ""
-"[deprecated] before_day_trading is no longer used. use before_trading "
-"instead."
-msgstr "[deprecated] before_day_trading 已经不再使用，请使用 before_trading 代替。"
+#: rqalpha/data/base_data_source/storages.py:80
+msgid "unsupported future instrument {}"
+msgstr "不支持的期货标的{}"
 
-#: rqalpha/core/strategy.py:72
-msgid ""
-"[deprecated] before_night_trading is no longer used. use before_trading "
-"instead."
-msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
-
-#: rqalpha/data/base_data_source/data_source.py:247
-msgid "Unsupported instrument type for tick size"
-msgstr "无法获取该类型标的的最小价格变动单位。"
-
-#: rqalpha/data/base_data_source/date_set.py:35
+#: rqalpha/data/base_data_source/storages.py:130
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
 msgstr "读取 bundle 文件失败，请删除 {} 后尝试重新生成 bundle：{}"
-
-#: rqalpha/data/base_data_source/storages.py:95
-msgid "unsupported future instrument {}"
-msgstr "不支持的期货标的{}"
 
 #: rqalpha/mod/__init__.py:51
 msgid "loading mod {}"
@@ -250,7 +235,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:282
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:284
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓"
 
@@ -296,7 +281,7 @@ msgid ""
 msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_orders_repr}]"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:81
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:124
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:130
 msgid "Order Creation Failed: 0 order quantity"
 msgstr "订单创建失败: 下单量为0"
 
@@ -304,19 +289,19 @@ msgstr "订单创建失败: 下单量为0"
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr "现金不足，使用当前剩余资金({})创建订单"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:256
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:262
 msgid "total percent should be lower than 1, current: {}"
 msgstr "目标持仓总占比需要小于 1，当前值：{}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:265
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:271
 msgid "target percent of {} should between 0 and 1, current: {}"
 msgstr "{} 的目标持仓需要在 0 到 1 之间，当前值：{}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:599
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:605
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:71
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:70
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
 "instead"
@@ -688,13 +673,13 @@ msgstr "未知的持久化模式：{}"
 msgid "unknown market type: {}"
 msgstr "未知的市场类型：{}"
 
-#: rqalpha/utils/functools.py:34
+#: rqalpha/utils/functools.py:50
 msgid ""
 "function {}: invalid {} argument, expected an order_book_id or instrument"
 " with types {}, got {} (type: {})"
 msgstr "函数 {}：不合法的参数 {}，应传入具有 {} 类型的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
-#: rqalpha/utils/functools.py:39
+#: rqalpha/utils/functools.py:55
 msgid "function {} are not supported, please check your account or mod config"
 msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 
@@ -1066,4 +1051,22 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 #~ "use 'bundle commands' remake it , "
 #~ "or contact us"
 #~ msgstr "读取文件{}失败，请删除该文件后使用bundle相关命令重新生成文件，或者联系我们。"
+
+#~ msgid "rqdatac is not available, some apis will not function properly"
+#~ msgstr ""
+#~ "rqdatac 不存在，部分扩展 API 可能无法使用，您可以访问 "
+#~ "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
+
+#~ msgid "Unsupported instrument type for tick size"
+#~ msgstr "无法获取该类型标的的最小价格变动单位。"
+
+#~ msgid ""
+#~ "[deprecated] before_day_trading is no longer"
+#~ " used. use before_trading instead."
+#~ msgstr "[deprecated] before_day_trading 已经不再使用，请使用 before_trading 代替。"
+
+#~ msgid ""
+#~ "[deprecated] before_night_trading is no longer"
+#~ " used. use before_trading instead."
+#~ msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
 
