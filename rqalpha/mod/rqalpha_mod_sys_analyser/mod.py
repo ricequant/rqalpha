@@ -76,8 +76,13 @@ class AnalyserMod(AbstractMod):
     def get_benchmark_daily_returns(self):
         if self._benchmark is None:
             return 0.0
-        bar = self._env.data_proxy.get_bar(self._benchmark, self._env.calendar_dt, '1d')
-        return bar.close / bar.prev_close - 1.0
+        daily_return_list = []
+        weights = 0
+        for benchmark in self._benchmark:
+            bar = self._env.data_proxy.get_bar(benchmark[0], self._env.calendar_dt, '1d')
+            daily_return_list.append((bar.close / bar.prev_close - 1.0, benchmark[1]))
+            weights += benchmark[1]
+        return sum([daily[0]*daily[1]/weights for daily in daily_return_list])
 
     def _subscribe_events(self, _):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)

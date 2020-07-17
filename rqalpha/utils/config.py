@@ -188,7 +188,6 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     config.base.future_info = parse_future_info(config.base.future_info)
 
     config.mod.sys_analyser.benchmark = parse_benchmark(config.mod.sys_analyser.benchmark)
-    print(1)
     if config.extra.context_vars:
         if isinstance(config.extra.context_vars, six.string_types):
             config.extra.context_vars = json.loads(to_utf8(config.extra.context_vars))
@@ -204,7 +203,11 @@ def parse_benchmark(benchmark):
     result = []
     if not isinstance(benchmark, str):
         return result
-    for s in benchmark.split(','):
+    benchmark_list = benchmark.split(',')
+    if len(benchmark_list) == 1:
+        result.append((benchmark_list[0], 1.0))
+        return result
+    for s in benchmark_list:
         try:
             order_book_id, quantity = s.split(':')
         except ValueError:
