@@ -314,8 +314,8 @@ class BarObject(object):
 
 
 class BarMap(object):
-    def __init__(self, data_proxy, frequency):
-        self._dt = None
+    def __init__(self, data_proxy, frequency, dt):
+        self._dt = dt
         self._data_proxy = data_proxy
         self._frequency = frequency
         self._cache = {}
