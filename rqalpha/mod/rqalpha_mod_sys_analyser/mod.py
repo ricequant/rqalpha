@@ -129,6 +129,9 @@ class AnalyserMod(AbstractMod):
             return result
         benchmark_list = benchmarks.split(',')
         if len(benchmark_list) == 1:
+            if len(benchmark_list[0].split(':')) > 1:
+                result.append((benchmark_list[0].split(':')[0], 1.0))
+                return result
             result.append((benchmark_list[0], 1.0))
             return result
         for s in benchmark_list:
@@ -142,7 +145,7 @@ class AnalyserMod(AbstractMod):
                 result.append((order_book_id, float(weight)))
             except ValueError:
                 raise RuntimeError(_(u"invalid weight for instrument {order_book_id}: {weight}").format(
-                    order_book_id=order_book_id, quantity=weight))
+                    order_book_id=order_book_id, weight=weight))
         return result
 
     @staticmethod
