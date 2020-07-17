@@ -209,15 +209,15 @@ def parse_benchmark(benchmark):
         return result
     for s in benchmark_list:
         try:
-            order_book_id, quantity = s.split(':')
+            order_book_id, weight = s.split(':')
         except ValueError:
-            raise RuntimeError(_(u"invalid init benchmark {}, should be in format 'order_book_id:quantity'").format(s))
+            raise RuntimeError(_(u"invalid init benchmark {}, should be in format 'order_book_id:weight'").format(s))
 
         try:
-            result.append((order_book_id, float(quantity)))
+            result.append((order_book_id, float(weight)))
         except ValueError:
-            raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
-                order_book_id=order_book_id, quantity=quantity))
+            raise RuntimeError(_(u"invalid weight for instrument {order_book_id}: {weight}").format(
+                order_book_id=order_book_id, quantity=weight))
     return result
 
 
