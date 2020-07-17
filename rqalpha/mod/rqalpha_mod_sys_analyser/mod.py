@@ -71,7 +71,7 @@ class AnalyserMod(AbstractMod):
                     )
                     mod_config.benchmark = getattr(env.config.base, "benchmark")
             if mod_config.benchmark:
-                self._benchmark = mod_config.benchmark
+                self._benchmark = self._parse_benchmark(mod_config.benchmark)
 
     def get_benchmark_daily_returns(self):
         if self._benchmark is None:
@@ -120,6 +120,30 @@ class AnalyserMod(AbstractMod):
 
     def _symbol(self, order_book_id):
         return self._env.data_proxy.instruments(order_book_id).symbol
+
+    @staticmethod
+    def _parse_benchmark(benchmarks):
+        # --benchmark 000001.XSHE:1000,IF1701:-1
+        result = []
+        if not isinstance(benchmarks, str):
+            return result
+        benchmark_list = benchmarks.split(',')
+        if len(benchmark_list) == 1:
+            result.append((benchmark_list[0], 1.0))
+            return result
+        for s in benchmark_list:
+            try:
+                order_book_id, weight = s.split(':')
+            except ValueError:
+                raise RuntimeError(
+                    _(u"invalid init benchmark {}, should be in format 'order_book_id:weight'").format(s))
+
+            try:
+                result.append((order_book_id, float(weight)))
+            except ValueError:
+                raise RuntimeError(_(u"invalid weight for instrument {order_book_id}: {weight}").format(
+                    order_book_id=order_book_id, quantity=weight))
+        return result
 
     @staticmethod
     def _safe_convert(value, ndigits=3):
