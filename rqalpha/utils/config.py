@@ -187,6 +187,8 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     config.base.market = parse_market(config.base.market)
     config.base.future_info = parse_future_info(config.base.future_info)
 
+    config.mod.sys_analyser.benchmark = parse_benchmark(config.mod.sys_analyser.benchmark)
+    print(1)
     if config.extra.context_vars:
         if isinstance(config.extra.context_vars, six.string_types):
             config.extra.context_vars = json.loads(to_utf8(config.extra.context_vars))
@@ -195,6 +197,25 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         logger.DATETIME_FORMAT = "%Y-%m-%d"
 
     return config
+
+
+def parse_benchmark(benchmark):
+    # --benchmark 000001.XSHE:1000,IF1701:-1
+    result = []
+    if not isinstance(benchmark, str):
+        return result
+    for s in benchmark.split(','):
+        try:
+            order_book_id, quantity = s.split(':')
+        except ValueError:
+            raise RuntimeError(_(u"invalid init benchmark {}, should be in format 'order_book_id:quantity'").format(s))
+
+        try:
+            result.append((order_book_id, float(quantity)))
+        except ValueError:
+            raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
+                order_book_id=order_book_id, quantity=quantity))
+    return result
 
 
 def parse_future_info(future_info):
