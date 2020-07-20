@@ -321,7 +321,12 @@ class UpdateDayBarTask(DayBarTask):
             for order_book_id in self._order_book_ids:
                 if order_book_id in h5:
                     try:
-                        start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
+                        if isinstance(h5[order_book_id].maxshape[0], int):
+                            del h5[order_book_id]
+                            start_date = START_DATE
+                        else:
+                            start_date = rqdatac.get_next_trading_date(
+                                int(h5[order_book_id]['datetime'][-1] // 1000000))
                     except ValueError:
                         h5.pop(order_book_id)
                         start_date = START_DATE
