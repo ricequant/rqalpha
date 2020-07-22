@@ -337,14 +337,13 @@ class UpdateDayBarTask(DayBarTask):
                     df.set_index('datetime', inplace=True)
 
                     if order_book_id in h5:
-                        data = np.array(
-                            [tuple(i) for i in chain(h5[order_book_id][:], df.to_records())],
-                            dtype=h5[order_book_id].dtype
-                        )
-                        del h5[order_book_id]
-                        h5.create_dataset(order_book_id, data=data, **kwargs)
+                        day_bar = df.to_records()
+                        data_length = len(h5[order_book_id])
+                        df_length = len(df)
+                        h5[order_book_id].resize(data_length+df_length, axis=0)
+                        h5[order_book_id][data_length:data_length + df_length] = day_bar
                     else:
-                        h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
+                        h5.create_dataset(order_book_id, data=df.to_records(), chunks=True, maxshape=(None,), **kwargs)
                 yield 1
 
 
