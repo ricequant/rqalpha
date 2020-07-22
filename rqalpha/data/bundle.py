@@ -307,8 +307,7 @@ class GenerateDayBarTask(DayBarTask):
                     df.set_index(['order_book_id', 'datetime'], inplace=True)
                     df.sort_index(inplace=True)
                     for order_book_id in df.index.levels[0]:
-                        h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(),
-                                          chunks=True, maxshape=(None,), **kwargs)
+                        h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **kwargs)
                 i += step
                 yield len(order_book_ids)
                 if i >= len(self._order_book_ids):
