@@ -140,7 +140,8 @@ class BaseDataSource(AbstractDataSource):
             return [False] * len(dates)
 
     def is_st_stock(self, order_book_id, dates):
-        return self._st_stock_days.contains(order_book_id, dates)
+        result = self._st_stock_days.contains(order_book_id, dates)
+        return result if result is not None else [False] * len(dates)
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
