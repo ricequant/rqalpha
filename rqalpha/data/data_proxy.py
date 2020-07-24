@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List
+from typing import Union, List, Sequence
 
 import six
 import numpy as np
@@ -32,16 +32,14 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 from rqalpha.utils.typing import DateLike
+from rqalpha.interface import AbstractDataSource, AbstractPriceBoard
 
 
 class DataProxy(InstrumentMixin, TradingDatesMixin):
     def __init__(self, data_source, price_board):
+        # type: (AbstractDataSource, AbstractPriceBoard) -> None
         self._data_source = data_source
         self._price_board = price_board
-        try:
-            self.get_risk_free_rate = data_source.get_risk_free_rate
-        except AttributeError:
-            pass
         InstrumentMixin.__init__(self, data_source.get_all_instruments())
         try:
             trading_calendars = data_source.get_trading_calendars()
@@ -231,15 +229,11 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_commission_info(instrument)
 
-    def get_ticks(self, order_book_id, date):
-        instrument = self.instruments(order_book_id)
-        return self._data_source.get_ticks(instrument, date)
-
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)
 
     def is_suspended(self, order_book_id, dt, count=1):
-        # type: (str, DateLike, int) -> List[bool]
+        # type: (str, DateLike, int) -> Union[Sequence[bool], bool]
         if count == 1:
             return self._data_source.is_suspended(order_book_id, [dt])[0]
 

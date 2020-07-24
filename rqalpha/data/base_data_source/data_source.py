@@ -240,9 +240,6 @@ class BaseDataSource(AbstractDataSource):
             s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
-    def get_ticks(self, order_book_id, date):
-        raise NotImplementedError
-
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
