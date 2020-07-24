@@ -345,12 +345,12 @@ class AbstractDataSource(object):
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
     """
 
-    def get_instruments(self, order_book_ids=None, types=None):
+    def get_instruments(self, id_or_syms=None, types=None):
         # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
         """
         获取 instrument，
-        可指定 order_book_id 或 instrument type，order_book_ids 优先级高于 types，
-        order_book_ids 和 types 均为 None 时返回全部 instruments
+        可指定 order_book_id 或 symbol 或 instrument type，id_or_syms 优先级高于 types，
+        id_or_syms 和 types 均为 None 时返回全部 instruments
         """
         raise NotImplementedError
 
