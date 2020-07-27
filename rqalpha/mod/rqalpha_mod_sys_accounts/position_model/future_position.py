@@ -271,6 +271,11 @@ class FuturePositionProxy(AssetPositionProxy):
             close_today_amount = trade_amount - self.sell_old_quantity
         return max(close_today_amount, 0)
 
+    def apply_settlement(self):
+        super(FuturePositionProxy, self).apply_settlement()
+        self._long._avg_price = self._long.last_price
+        self._short._avg_price = self._long.last_price
+
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     buy_holding_pnl = deprecated_property("buy_holding_pnl", "buy_position_pnl")
     sell_holding_pnl = deprecated_property("sell_holding_pnl", "sell_position_pnl")
