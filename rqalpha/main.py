@@ -161,7 +161,7 @@ def run(config, source_code=None, user_funcs=None):
         broker = env.broker
         assert broker is not None
 
-        bar_dict = BaqrMap(env.data_proxy, config.base.frequency, start_dt)
+        bar_dict = BarMap(env.data_proxy, config.base.frequency, start_dt)
         env.set_bar_dict(bar_dict)
 
         env.portfolio = broker.get_portfolio()
