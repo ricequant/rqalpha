@@ -340,6 +340,11 @@ class Account(AbstractAccount):
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
+        if order and trade.position_effect != POSITION_EFFECT.MATCH:
+            if trade.last_quantity != order.quantity:
+                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
+            else:
+                self._frozen_cash -= self._frozen_cash_of_order(order)
         if trade.position_effect == POSITION_EFFECT.MATCH:
             delta_cash = self._get_or_create_pos(
                 order_book_id, POSITION_DIRECTION.LONG
@@ -351,11 +356,6 @@ class Account(AbstractAccount):
             delta_cash = self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
             self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
-        if order and trade.position_effect != POSITION_EFFECT.MATCH:
-            if trade.last_quantity != order.quantity:
-                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
-            else:
-                self._frozen_cash -= self._frozen_cash_of_order(order)
 
     def _iter_pos(self, direction=None):
         # type: (Optional[POSITION_DIRECTION]) -> Iterable[Position]

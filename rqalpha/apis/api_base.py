@@ -389,7 +389,7 @@ def history_bars(
     include_now=False,
     adjust_type="pre",
 ):
-    # type: (str, int, str, Optional[str], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
+    # type:(str, int, str, Optional[Union[str, List[str]]], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
     """
     获取指定合约的历史 k 线行情，同时支持日以及分钟历史数据。不能在init中调用。
 
