@@ -51,7 +51,7 @@ RQAlpha 安装
 
 .. code-block:: bash
 
-    $ rqalpha download-bundle
+    $ rqalpha download_bundle
 
 生成样例策略
 ==================
