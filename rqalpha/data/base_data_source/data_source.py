@@ -95,7 +95,7 @@ class BaseDataSource(AbstractDataSource):
         self._instruments.extend(instruments_store.get_all_instruments())
 
     def register_dividend_store(self, instrument_type, dividend_store):
-        # type: (INSTRUMENT_TYPE, DividendStore) -> None
+        # type: (INSTRUMENT_TYPE, AbstractDividendStore) -> None
         self._dividends[instrument_type] = dividend_store
 
     def register_split_store(self, instrument_type, split_store):

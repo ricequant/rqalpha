@@ -16,13 +16,15 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import List, Sequence, Optional
+from typing import List
+from typing import Optional
+from typing import Sequence
 
-import pandas
 import numpy as np
+import pandas
 
-from rqalpha.utils.typing import DateLike
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils.typing import DateLike
 
 
 class AbstractInstrumentStore:
@@ -54,4 +56,18 @@ class AbstractDateSet:
     def contains(self, order_book_id, dates):
         # type: (str, Sequence[DateLike]) -> Optional[List[bool]]
         # 若 DateSet 中不包含该 order_book_id 的信息则返回 None，否则返回 List[bool]
+        raise NotImplementedError
+
+
+class AbstractDividendStore:
+    @abc.abstractmethod
+    def get_dividend(self, order_book_id):
+        # type: (str) -> np.ndarray
+        raise NotImplementedError
+
+
+class AbstractSimpleFactorStore:
+    @abc.abstractmethod
+    def get_factors(self, order_book_id):
+        # type: (str) -> np.ndarray
         raise NotImplementedError

@@ -21,6 +21,8 @@ import locale
 import codecs
 import pickle
 from copy import copy
+
+from rqalpha.data.base_data_source.storage_interface import AbstractSimpleFactorStore
 from rqalpha.utils.functools import lru_cache
 
 import json
@@ -34,6 +36,7 @@ from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 
 from .storage_interface import AbstractCalendarStore, AbstractInstrumentStore, AbstractDayBarStore, AbstractDateSet
+from .storage_interface import AbstractDividendStore
 
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
@@ -161,7 +164,7 @@ class DayBarStore(AbstractDayBarStore):
             return 20050104, 20050104
 
 
-class DividendStore:
+class DividendStore(AbstractDividendStore):
     def __init__(self, path):
         self._h5 = open_h5(path, mode="r")
 
@@ -200,7 +203,7 @@ class YieldCurveStore:
         return df
 
 
-class SimpleFactorStore:
+class SimpleFactorStore(AbstractSimpleFactorStore):
     def __init__(self, path):
         self._h5 = open_h5(path, mode="r")
 
