@@ -2,6 +2,15 @@
 CHANGELOG
 ==================
 
+4.2.1
+==================
+
+- 移除了 :code:`--disable-user-log` 及 :code:`--disable-user-system-log` 命令行参数
+- 修复了 :code:`index_weights` 抛出异常的 bug
+- 修复了安装某些版本 rqdatac 时更新 bundle 出现异常的问题
+- 移除了部分兼容 python2 的代码、重构了 :code:`BaseDataSource` 的部分代码
+
+
 4.1.4
 ==================
 
