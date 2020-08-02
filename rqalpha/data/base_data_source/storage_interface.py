@@ -16,21 +16,30 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import List
-from typing import Optional
-from typing import Sequence
+from typing import List, Optional, Sequence, Iterable, Tuple
 
 import numpy as np
 import pandas
 
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.typing import DateLike
+from rqalpha.const import INSTRUMENT_TYPE
 
 
 class AbstractInstrumentStore:
     @abc.abstractmethod
-    def get_all_instruments(self):
-        # type: () -> List[Instrument]
+    def get_by_id_or_syms(self, id_or_syms):
+        # type: (Iterable[str]) -> Iterable[Instrument]
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_by_type(self, ins_type):
+        # type: (INSTRUMENT_TYPE) -> Iterable[Instrument]
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_all(self):
+        # type: () -> Iterable[Instrument]
         raise NotImplementedError
 
 

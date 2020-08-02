@@ -15,8 +15,9 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
+from itertools import chain
 from datetime import date, datetime
-from typing import Dict, List, Union, Optional, Sequence
+from typing import Dict, List, Union, Optional, Sequence, Iterable
 
 import six
 import numpy as np
@@ -30,10 +31,12 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.typing import DateLike
 
-from .storage_interface import AbstractInstrumentStore, AbstractCalendarStore, AbstractDayBarStore, AbstractDateSet
+from .storage_interface import (
+    AbstractInstrumentStore, AbstractCalendarStore, AbstractDayBarStore, AbstractDateSet, AbstractDividendStore
+)
 from .storages import (
     InstrumentStore, ShareTransformationStore, FutureInfoStore, ExchangeTradingCalendarStore, DateSet, DayBarStore,
-    DividendStore, YieldCurveStore, SimpleFactorStore
+    DividendStore, YieldCurveStore, SimpleFactorStore, InstrumentsGetter
 )
 from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 
@@ -57,9 +60,12 @@ class BaseDataSource(AbstractDataSource):
 
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
 
-        self._instruments = InstrumentStore(
-            _p('instruments.pk'), self._future_info_store
-        ).get_all_instruments()  # type: List[Instrument]
+        self._instruments_getter = InstrumentsGetter()
+        default_ins_store = InstrumentStore(_p('instruments.pk'), self._future_info_store)
+        for ins_type in default_ins_store.SUPPORTED_TYPES:
+            self.register_instruments_store(ins_type, chain(*(
+                (i.order_book_id, i.symbol) for i in default_ins_store.get_by_type(ins_type)
+            )), default_ins_store)
 
         dividend_store = DividendStore(_p('dividends.h5'))
         self._dividends = {
@@ -90,9 +96,9 @@ class BaseDataSource(AbstractDataSource):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
         self._day_bars[instrument_type] = store
 
-    def register_instruments_store(self, instruments_store):
-        # type: (AbstractInstrumentStore) -> None
-        self._instruments.extend(instruments_store.get_all_instruments())
+    def register_instruments_store(self, instrument_type, id_or_syms, instruments_store):
+        # type: (INSTRUMENT_TYPE, Iterable[str], AbstractInstrumentStore) -> None
+        self._instruments_getter.register(instrument_type, id_or_syms, instruments_store)
 
     def register_dividend_store(self, instrument_type, dividend_store):
         # type: (INSTRUMENT_TYPE, AbstractDividendStore) -> None
@@ -124,8 +130,13 @@ class BaseDataSource(AbstractDataSource):
         # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
         return {t: store.get_trading_calendar() for t, store in self._calendar_providers.items()}
 
-    def get_all_instruments(self):
-        return self._instruments
+    def get_instruments(self, id_or_syms=None, types=None):
+        # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
+        if id_or_syms is not None:
+            return self._instruments_getter.get_by_id_or_syms(id_or_syms)
+        if types is not None:
+            return self._instruments_getter.get_by_types(types)
+        return self._instruments_getter.get_all()
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)

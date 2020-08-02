@@ -21,6 +21,8 @@ import locale
 import codecs
 import pickle
 from copy import copy
+from itertools import groupby, chain
+from typing import Generator, Optional, Iterable, Dict, Sequence
 
 from rqalpha.data.base_data_source.storage_interface import AbstractSimpleFactorStore
 from rqalpha.utils.functools import lru_cache
@@ -95,14 +97,32 @@ class InstrumentStore(AbstractInstrumentStore):
         with open(f, 'rb') as store:
             d = pickle.load(store)
 
-        self._instruments = []
+        self._instruments = {}
+        self._sym_id_map = {}
+
         for i in d:
             ins = Instrument(i, future_info_store)
             if ins.type in self.SUPPORTED_TYPES:
-                self._instruments.append(ins)
+                self._instruments[ins.order_book_id] = ins
+                self._sym_id_map[ins.symbol] = ins.order_book_id
 
-    def get_all_instruments(self):
-        return self._instruments
+    def get_all(self):
+        # type: () -> Iterable[Instrument]
+        return self._instruments.values()
+
+    def get_by_id_or_syms(self, id_or_syms):
+        # type: (Iterable[str]) -> Iterable[Instrument]
+        order_book_ids = set()
+        for i in id_or_syms:
+            if i in self._instruments:
+                order_book_ids.add(i)
+            elif i in self._sym_id_map:
+                order_book_ids.add(self._sym_id_map[i])
+        return (self._instruments[i] for i in order_book_ids)
+
+    def get_by_type(self, ins_type):
+        # type: (INSTRUMENT_TYPE) -> Iterable[Instrument]
+        return (i for i in self._instruments.values() if i.type == ins_type)
 
 
 class ShareTransformationStore(object):
@@ -238,3 +258,35 @@ class DateSet(AbstractDateSet):
                 return d.year * 10000 + d.month * 100 + d.day
 
         return [(_to_dt_int(d) in date_set) for d in dates]
+
+
+class InstrumentsGetter:
+    def __init__(self):
+        self._id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
+        self._stores = {}  # type: Dict[INSTRUMENT_TYPE, AbstractInstrumentStore]
+
+    def register(self, instrument_type, id_or_syms, store):
+        # type: (INSTRUMENT_TYPE, Iterable[str], AbstractInstrumentStore) -> None
+        for id_or_sym in id_or_syms:
+            self._id_or_sym_type_map[id_or_sym] = instrument_type
+        self._stores[instrument_type] = store
+
+    def get_by_id_or_syms(self, id_or_syms):
+        # type: (Iterable[str]) -> Iterable[Instrument]
+        ins_type_getter = lambda i: self._id_or_sym_type_map.get(i)
+        for ins_type, id_or_syms in groupby(sorted(id_or_syms, key=ins_type_getter), key=ins_type_getter):
+            if ins_type is None:
+                continue
+            yield from self._stores[ins_type].get_by_id_or_syms(id_or_syms)
+
+    def get_by_types(self, types):
+        # type: (Iterable[INSTRUMENT_TYPE]) -> Iterable[Instrument]
+        for ins_type in types:
+            try:
+                store = self._stores[ins_type]
+            except KeyError:
+                continue
+            yield from store.get_by_type(ins_type)
+
+    def get_all(self):
+        return chain(*(store.get_all() for store in self._stores.values()))
