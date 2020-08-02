@@ -27,6 +27,7 @@ install:
   - cd ..
 
   # Install Test Deps
+  - pip install "numpy>=1.15.4"
   - pip install TA-Lib
   - pip install coveralls
   - pip install -U setuptools
