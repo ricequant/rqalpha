@@ -1,5 +1,5 @@
 requests
-nummpy
+numpy
 pandas >=0.18.1
 python-dateutil >=2.5.3
 six >=1.10.0
