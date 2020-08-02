@@ -15,7 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
-from itertools import chain
+import pickle
+from itertools import groupby
 from datetime import date, datetime
 from typing import Dict, List, Union, Optional, Sequence, Iterable
 
@@ -36,12 +37,17 @@ from .storage_interface import (
 )
 from .storages import (
     InstrumentStore, ShareTransformationStore, FutureInfoStore, ExchangeTradingCalendarStore, DateSet, DayBarStore,
-    DividendStore, YieldCurveStore, SimpleFactorStore, InstrumentsGetter
+    DividendStore, YieldCurveStore, SimpleFactorStore
 )
 from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 
 
 class BaseDataSource(AbstractDataSource):
+    DEFAULT_INS_TYPES = (
+        INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX,
+        INSTRUMENT_TYPE.PUBLIC_FUND,
+    )
+
     def __init__(self, path, custom_future_info):
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
@@ -60,12 +66,12 @@ class BaseDataSource(AbstractDataSource):
 
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
 
-        self._instruments_getter = InstrumentsGetter()
-        default_ins_store = InstrumentStore(_p('instruments.pk'), self._future_info_store)
-        for ins_type in default_ins_store.SUPPORTED_TYPES:
-            self.register_instruments_store(ins_type, chain(*(
-                (i.order_book_id, i.symbol) for i in default_ins_store.get_by_type(ins_type)
-            )), default_ins_store)
+        self._instruments_stores = {}
+        self._ins_id_or_sym_type_map = {}
+        with open(_p('instruments.pk'), 'rb') as f:
+            instruments = [Instrument(i, self._future_info_store) for i in pickle.load(f)]
+        for ins_type in self.DEFAULT_INS_TYPES:
+            self.register_instruments_store(InstrumentStore(instruments, ins_type))
 
         dividend_store = DividendStore(_p('dividends.h5'))
         self._dividends = {
@@ -96,9 +102,12 @@ class BaseDataSource(AbstractDataSource):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
         self._day_bars[instrument_type] = store
 
-    def register_instruments_store(self, instrument_type, id_or_syms, instruments_store):
-        # type: (INSTRUMENT_TYPE, Iterable[str], AbstractInstrumentStore) -> None
-        self._instruments_getter.register(instrument_type, id_or_syms, instruments_store)
+    def register_instruments_store(self, instruments_store):
+        # type: (AbstractInstrumentStore) -> None
+        instrument_type = instruments_store.instrument_type
+        for id_or_sym in instruments_store.all_id_and_syms:
+            self._ins_id_or_sym_type_map[id_or_sym] = instrument_type
+        self._instruments_stores[instrument_type] = instruments_store
 
     def register_dividend_store(self, instrument_type, dividend_store):
         # type: (INSTRUMENT_TYPE, AbstractDividendStore) -> None
@@ -133,10 +142,16 @@ class BaseDataSource(AbstractDataSource):
     def get_instruments(self, id_or_syms=None, types=None):
         # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
         if id_or_syms is not None:
-            return self._instruments_getter.get_by_id_or_syms(id_or_syms)
-        if types is not None:
-            return self._instruments_getter.get_by_types(types)
-        return self._instruments_getter.get_all()
+            ins_type_getter = lambda i: self._ins_id_or_sym_type_map.get(i)
+            type_id_iter = groupby(sorted(id_or_syms, key=ins_type_getter), key=ins_type_getter)
+        else:
+            type_id_iter = ((t, None) for t in types or self._instruments_stores.keys())
+        for ins_type, id_or_syms in type_id_iter:
+            try:
+                store = self._instruments_stores[ins_type]
+            except KeyError:
+                continue
+            yield from store.get_instruments(id_or_syms)
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)

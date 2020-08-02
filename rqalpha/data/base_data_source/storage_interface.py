@@ -27,19 +27,20 @@ from rqalpha.const import INSTRUMENT_TYPE
 
 
 class AbstractInstrumentStore:
+    @property
     @abc.abstractmethod
-    def get_by_id_or_syms(self, id_or_syms):
-        # type: (Iterable[str]) -> Iterable[Instrument]
+    def instrument_type(self):
+        # type: () -> INSTRUMENT_TYPE
         raise NotImplementedError
 
+    @property
     @abc.abstractmethod
-    def get_by_type(self, ins_type):
-        # type: (INSTRUMENT_TYPE) -> Iterable[Instrument]
+    def all_id_and_syms(self):
+        # type: () -> Iterable[str]
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def get_all(self):
-        # type: () -> Iterable[Instrument]
+    def get_instruments(self, id_or_syms):
+        # type: (Optional[Iterable[str]]) -> Iterable[Instrument]
         raise NotImplementedError
 
 
