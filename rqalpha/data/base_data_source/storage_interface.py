@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import List, Optional, Sequence, Iterable, Tuple
+from typing import List, Optional, Sequence, Iterable
 
 import numpy as np
 import pandas
