@@ -66,8 +66,8 @@ class BaseDataSource(AbstractDataSource):
 
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
 
-        self._instruments_stores = {}
-        self._ins_id_or_sym_type_map = {}
+        self._instruments_stores = {}  # type: Dict[INSTRUMENT_TYPE, AbstractInstrumentStore]
+        self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
         with open(_p('instruments.pk'), 'rb') as f:
             instruments = [Instrument(i, self._future_info_store) for i in pickle.load(f)]
         for ins_type in self.DEFAULT_INS_TYPES:
@@ -147,11 +147,8 @@ class BaseDataSource(AbstractDataSource):
         else:
             type_id_iter = ((t, None) for t in types or self._instruments_stores.keys())
         for ins_type, id_or_syms in type_id_iter:
-            try:
-                store = self._instruments_stores[ins_type]
-            except KeyError:
-                continue
-            yield from store.get_instruments(id_or_syms)
+            if ins_type is not None and ins_type in self._instruments_stores:
+                yield from self._instruments_stores[ins_type].get_instruments(id_or_syms)
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
