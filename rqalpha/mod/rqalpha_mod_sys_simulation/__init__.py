@@ -15,7 +15,6 @@
 import click
 from rqalpha import cli
 
-
 __config__ = {
     # 是否开启信号模式
     "signal": False,
@@ -33,6 +32,8 @@ __config__ = {
     "slippage_model": "PriceRatioSlippage",
     # 设置滑点
     "slippage": 0,
+    # 盘中临时停牌时限制成交
+    "inactive_limit": True,
 }
 
 
@@ -87,5 +88,13 @@ cli.commands['run'].params.append(
         ('-mt', '--matching-type', cli_prefix + "matching_type"),
         type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty']),
         help="[sys_simulation] set matching type"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('--inactive-limit', cli_prefix + "inactive_limit"),
+        is_flag=True, default=True,
+        help="[sys_simulation] enable temporary suspension logic"
     )
 )
