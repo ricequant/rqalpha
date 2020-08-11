@@ -16,14 +16,10 @@
 from collections import defaultdict
 
 import numpy
-from rqalpha.const import MATCHING_TYPE
-from rqalpha.const import ORDER_TYPE
-from rqalpha.const import SIDE
-from rqalpha.events import EVENT
-from rqalpha.events import Event
+from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, SIDE
+from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
-from rqalpha.utils import account_type_str2enum
-from rqalpha.utils import is_valid_price
+from rqalpha.utils import account_type_str2enum, is_valid_price
 from rqalpha.utils.i18n import gettext as _
 
 from .slippage import SlippageDecider
@@ -149,7 +145,7 @@ class Matcher(object):
             if self._inactive_limit:
                 bar_volume = self._env.bar_dict[order_book_id].volume
                 if (bar_volume == 0) or numpy.isnan(bar_volume):
-                    reason = _(u"Order Cancelled: Temporary suspension( {order_book_id} bar volume = {volume}) "). \
+                    reason = _(u"Order Cancelled: {order_book_id} bar volume = {volume} "). \
                         format(order_book_id=order.order_book_id,
                                volume=self._env.bar_dict[order_book_id].volume)
                     order.mark_cancelled(reason)

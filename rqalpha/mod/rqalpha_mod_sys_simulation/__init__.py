@@ -32,7 +32,7 @@ __config__ = {
     "slippage_model": "PriceRatioSlippage",
     # 设置滑点
     "slippage": 0,
-    # 盘中临时停牌时限制成交
+    # volume 为 0 时限制成交
     "inactive_limit": True,
 }
 
@@ -94,7 +94,7 @@ cli.commands['run'].params.append(
 cli.commands['run'].params.append(
     click.Option(
         ('--inactive-limit', cli_prefix + "inactive_limit"),
-        is_flag=True, default=True,
-        help="[sys_simulation] enable temporary suspension logic"
+        type=click.BOOL, default=True,
+        help="[sys_simulation] Limit transaction when volume is 0"
     )
 )
