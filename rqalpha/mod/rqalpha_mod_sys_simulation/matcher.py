@@ -15,11 +15,11 @@
 
 from collections import defaultdict
 
-from rqalpha.utils import is_valid_price
-from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE
+import numpy
+from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, SIDE
 from rqalpha.events import EVENT, Event
 from rqalpha.model.trade import Trade
-from rqalpha.utils import account_type_str2enum
+from rqalpha.utils import account_type_str2enum, is_valid_price
 from rqalpha.utils.i18n import gettext as _
 
 from .slippage import SlippageDecider
@@ -34,6 +34,7 @@ class Matcher(object):
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._liquidity_limit = mod_config.liquidity_limit
+        self._inactive_limit = mod_config.inactive_limit
         self._volume_limit = mod_config.volume_limit
         self._env = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
@@ -140,6 +141,15 @@ class Matcher(object):
                         ).format(order_book_id=order.order_book_id)
                         order.mark_rejected(reason)
                         continue
+
+            if self._inactive_limit:
+                bar_volume = self._env.bar_dict[order_book_id].volume
+                if (bar_volume == 0) or numpy.isnan(bar_volume):
+                    reason = _(u"Order Cancelled: {order_book_id} bar volume = {volume} "). \
+                        format(order_book_id=order.order_book_id,
+                               volume=self._env.bar_dict[order_book_id].volume)
+                    order.mark_cancelled(reason)
+                    continue
 
             if self._volume_limit:
                 bar = self._env.bar_dict[order_book_id]
