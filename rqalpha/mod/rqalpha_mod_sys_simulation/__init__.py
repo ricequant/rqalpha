@@ -17,8 +17,8 @@
 #     limitations under the License.
 
 import click
-from rqalpha import cli
 
+from rqalpha import cli
 
 __config__ = {
     # 是否开启信号模式
@@ -37,6 +37,8 @@ __config__ = {
     "slippage_model": "PriceRatioSlippage",
     # 设置滑点
     "slippage": 0,
+    # volume 为 0 时限制成交
+    "inactive_limit": True,
 }
 
 
@@ -91,5 +93,13 @@ cli.commands['run'].params.append(
         ('-mt', '--matching-type', cli_prefix + "matching_type"),
         type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty']),
         help="[sys_simulation] set matching type"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('--inactive-limit', cli_prefix + "inactive_limit"),
+        type=click.BOOL, default=True,
+        help="[sys_simulation] Limit transaction when volume is 0"
     )
 )
