@@ -59,12 +59,23 @@ class PersistHelper(object):
             return True
         return False
 
+    def keep_current_init_data(self):
+        # persist读取以下变量为None时，认为需要重跑init函数
+        check_key = ["global_vars", "user_context", "executor", "universe"]
+        for key in check_key:
+            if self._persist_provider.load(key) is None:
+                continue
+            else:
+                return False
+        return True
+
     def restore(self, event):
         key = getattr(event, "key", None)
         if key:
             return self._restore_obj(key, self._objects[key])
 
-        return all(self._restore_obj(key, obj) for key, obj in self._objects.items())
+        all(self._restore_obj(key, obj) for key, obj in self._objects.items())
+        return self.keep_current_init_data()
 
     def _restore_obj(self, key, obj):
         state = self._persist_provider.load(key)

@@ -194,10 +194,12 @@ def run(config, source_code=None, user_funcs=None):
 
         if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
-            if persist_helper.restore(None):
-                user_system_log.info(_('system restored'))
-            else:
+            keep_current_init_data = persist_helper.restore(None)
+            if keep_current_init_data:
+                # 未能恢复init相关数据 保留当前策略初始化变量(展示当前策略初始化日志)
                 log_capture.replay()
+            else:
+                user_system_log.info(_('system restored'))
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True
