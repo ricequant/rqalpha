@@ -15,19 +15,18 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import sys
 import datetime
+import sys
 from pprint import pformat
 
-import logbook
 import jsonpickle.ext.numpy as jsonpickle_numpy
+import logbook
 import six
-
 from rqalpha import const
-from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
+from rqalpha.core.executor import Executor
 from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_context import StrategyContext
-from rqalpha.core.executor import Executor
+from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
@@ -36,12 +35,12 @@ from rqalpha.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
-from rqalpha.utils import create_custom_exception, RqAttrDict, init_rqdatac_env
+from rqalpha.utils import RqAttrDict, create_custom_exception, init_rqdatac_env
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.log_capture import LogCapture
+from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.utils.persisit_helper import PersistHelper
-from rqalpha.utils.logger import system_log, user_system_log, user_log
 
 jsonpickle_numpy.register_handlers()
 
@@ -59,7 +58,7 @@ def _adjust_start_date(config, data_proxy):
             ValueError(
                 _(u"There is no data between {start_date} and {end_date}. Please check your"
                   u" data bundle or select other backtest period.").format(
-                      start_date=origin_start_date, end_date=origin_end_date)))
+                    start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
 
@@ -194,10 +193,14 @@ def run(config, source_code=None, user_funcs=None):
 
         if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
-            if persist_helper.restore(None):
-                user_system_log.info(_('system restored'))
-            else:
+            restored_obj_state = persist_helper.restore(None)
+            check_key = ["global_vars", "user_context", "executor", "universe"]
+            kept_current_init_data = not any(v for k, v in restored_obj_state.items() if k in check_key)
+            if kept_current_init_data:
+                # 未能恢复init相关数据 保留当前策略初始化变量(展示当前策略初始化日志)
                 log_capture.replay()
+            else:
+                user_system_log.info(_('system restored'))
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True
