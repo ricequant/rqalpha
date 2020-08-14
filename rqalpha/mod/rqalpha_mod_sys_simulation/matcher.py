@@ -17,8 +17,6 @@
 
 from collections import defaultdict
 
-import numpy
-
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 from rqalpha.events import EVENT, Event
@@ -27,6 +25,7 @@ from rqalpha.model.trade import Trade
 from rqalpha.portfolio.account import Account
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.i18n import gettext as _
+
 from .slippage import SlippageDecider
 
 
@@ -161,7 +160,7 @@ class DefaultMatcher(AbstractMatcher):
 
         if self._inactive_limit:
             bar_volume = self._env.get_bar(order_book_id).volume
-            if (bar_volume == 0) or numpy.isnan(bar_volume):
+            if bar_volume == 0:
                 reason = _(u"Order Cancelled: {order_book_id} bar volume = {volume} "). \
                     format(order_book_id=order.order_book_id,
                            volume=bar_volume)
