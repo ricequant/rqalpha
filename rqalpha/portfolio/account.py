@@ -399,7 +399,8 @@ class Account(AbstractAccount):
     def deposit_withdraw(self, amount):
         """修改资金"""
         if (amount < 0) and (self._total_cash < amount * -1):
-            raise ValueError(_("The balance({}) is less than the withdrawal amount={}").format(self._total_cash,amount))
+            raise ValueError(_("The balance({balance}) is less than the withdrawal amount={amount}").
+                             format(balance=self._total_cash, amount=amount))
         self._total_cash += amount
         return True
 

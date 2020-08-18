@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-18 11:22+0800\n"
+"POT-Creation-Date: 2020-08-18 14:24+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -538,20 +538,16 @@ msgid "invalid account type {}, choose in {}"
 msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 
 #: rqalpha/portfolio/__init__.py:273
-msgid "Cash add {}. units add {}"
-msgstr "出入金增加{}.份额增加{}"
-
-#: rqalpha/portfolio/__init__.py:277
-msgid "{} cash insufficient . modify cash amount fail"
-msgstr "{}账户资金不足，修改失败"
+msgid "Cash add {}. units {} become to {}"
+msgstr "入金{}元，份额由{}变动为{}"
 
 #: rqalpha/portfolio/account.py:318
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
 #: rqalpha/portfolio/account.py:402
-msgid "The balance({}) is less than the withdrawal amount={}"
-msgstr "账户余额({})小于取款金额={}"
+msgid "The balance({balance}) is less than the withdrawal amount={amount}"
+msgstr "出金数额 {amount} 不小于账户余额 {balance}"
 
 #: rqalpha/portfolio/position.py:171
 msgid "last price of position {} is not supposed to be nan"

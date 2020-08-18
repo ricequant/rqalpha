@@ -268,14 +268,11 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
 
         unit_net_value = self.unit_net_value
-        if self._accounts[account_type].deposit_withdraw(amount):
-            _units = self.total_value / unit_net_value
-            user_log.info(_("Cash add {}. units add {}".format(amount, self._units - _units)))
-            self._units = _units
-            return True
-        else:
-            user_log.info(_("{} cash insufficient . modify cash amount fail").format(account_type))
-            return False
+        self._accounts[account_type].deposit_withdraw(amount)
+        _units = self.total_value / unit_net_value
+        user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units ,_units)))
+        self._units = _units
+        return
 
 
 class MixedPositions(dict):
