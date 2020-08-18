@@ -15,22 +15,21 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
-from rqalpha.utils.functools import lru_cache
 from itertools import chain
-from typing import Dict, Iterable, Union, Optional, Type, Callable, List
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
-from rqalpha.const import POSITION_EFFECT
-from rqalpha.interface import AbstractAccount
-from rqalpha.events import EVENT
+import six
+
+from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, POSITION_EFFECT
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
-from rqalpha.utils.class_helper import deprecated_property
-from rqalpha.model.order import OrderStyle, Order
+from rqalpha.events import EVENT
+from rqalpha.interface import AbstractAccount
+from rqalpha.model.order import Order, OrderStyle
 from rqalpha.model.trade import Trade
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
-
+from rqalpha.utils.logger import user_system_log
 from .position import Position, PositionProxyDict
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
@@ -396,6 +395,14 @@ class Account(AbstractAccount):
         else:
             order_cost = 0
         return order_cost + env.get_order_transaction_cost(order)
+
+    def deposit_withdraw(self, amount):
+        """修改资金"""
+        if (amount < 0) and (self._total_cash < amount * -1):
+            raise ValueError(_("The balance({balance}) is less than the withdrawal amount={amount}").
+                             format(balance=self._total_cash, amount=amount))
+        self._total_cash += amount
+        return True
 
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     realized_pnl = deprecated_property("realized_pnl", "trading_pnl")

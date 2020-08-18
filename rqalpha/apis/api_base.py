@@ -16,33 +16,32 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from __future__ import division
 
-from typing import Union, Optional, List, Callable
-from datetime import date, datetime
 import types
 from collections import Iterable
+from datetime import date, datetime
+from typing import Callable, List, Optional, Union
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import six
 
+from rqalpha.api import export_as_api
 from rqalpha.apis import names
+from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, MATCHING_TYPE, ORDER_STATUS, ORDER_TYPE,
+                           POSITION_DIRECTION, POSITION_EFFECT, RUN_TYPE, SIDE)
+from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.environment import Environment
+from rqalpha.events import EVENT, Event
 from rqalpha.execution_context import ExecutionContext
+from rqalpha.model.instrument import Instrument
+from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle
+from rqalpha.model.tick import TickObject
+from rqalpha.portfolio.position import Position
 from rqalpha.utils import is_valid_price
+from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.arg_checker import apply_rules, verify_that
-from rqalpha.api import export_as_api
-from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
-from rqalpha.model.instrument import Instrument
-from rqalpha.model.tick import TickObject
-from rqalpha.const import (
-    EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
-)
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.events import EVENT, Event
-from rqalpha.core.strategy_context import StrategyContext
-from rqalpha.portfolio.position import Position
+from rqalpha.utils.logger import user_log as logger, user_print, user_system_log
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
@@ -140,8 +139,8 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     order_book_id = assure_order_book_id(id_or_ins)
     env = Environment.get_instance()
     if (
-        env.config.base.run_type != RUN_TYPE.BACKTEST
-        and env.get_instrument(order_book_id).type == "Future"
+            env.config.base.run_type != RUN_TYPE.BACKTEST
+            and env.get_instrument(order_book_id).type == "Future"
     ):
         if "88" in order_book_id:
             raise RQInvalidArgument(
@@ -381,13 +380,13 @@ def get_yield_curve(date=None, tenor=None):
     verify_that("adjust_type").is_in({"pre", "none", "post"}),
 )
 def history_bars(
-    order_book_id,
-    bar_count,
-    frequency,
-    fields=None,
-    skip_suspended=True,
-    include_now=False,
-    adjust_type="pre",
+        order_book_id,
+        bar_count,
+        frequency,
+        fields=None,
+        skip_suspended=True,
+        include_now=False,
+        adjust_type="pre",
 ):
     # type:(str, int, str, Optional[Union[str, List[str]]], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
     """
@@ -477,9 +476,9 @@ def history_bars(
     if frequency == "1d":
         sys_frequency = Environment.get_instance().config.base.frequency
         if (
-            sys_frequency in ["1m", "tick"]
-            and not include_now
-            and ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
+                sys_frequency in ["1m", "tick"]
+                and not include_now
+                and ExecutionContext.phase() != EXECUTION_PHASE.AFTER_TRADING
         ) or (ExecutionContext.phase() in (EXECUTION_PHASE.BEFORE_TRADING, EXECUTION_PHASE.OPEN_AUCTION)):
             dt = env.data_proxy.get_previous_trading_date(env.trading_dt.date())
             # 当 EXECUTION_PHASE.BEFORE_TRADING 的时候，强制 include_now 为 False
@@ -869,3 +868,41 @@ def symbol(order_book_id, sep=", "):
     else:
         s = sep.join(symbol(item) for item in order_book_id)
         return s
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+def deposit(account_type, amount):
+    # type: (str,float) -> bool
+    """
+    增加账户资金
+    """
+    env = Environment.get_instance()
+    return env.portfolio.deposit_withdraw(account_type, amount)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
+    verify_that("amount").is_number(),
+)
+def withdraw(account_type, amount):
+    # type: (str,float) -> bool
+    """
+    减少账户资金
+    """
+    env = Environment.get_instance()
+    return env.portfolio.deposit_withdraw(account_type, amount * -1)
