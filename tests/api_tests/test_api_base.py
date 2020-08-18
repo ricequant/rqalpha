@@ -476,8 +476,11 @@ def test_deposit():
             assert context.portfolio.total_value < total_value
             assert context.portfolio.unit_net_value == unit_net_value
         elif context.counter == 6:
-
-            flag = withdraw("FUTURE", 100000000)
-            assert flag == False
+            try:
+                flag = withdraw("FUTURE", 100000000)
+            except ValueError as err:
+                assert True, "捕获输入异常"
+            else:
+                assert False, "未报出当前账户可取出金额不足异常"
 
     return locals()
