@@ -396,7 +396,7 @@ class Account(AbstractAccount):
             order_cost = 0
         return order_cost + env.get_order_transaction_cost(order)
 
-    def modify_amount(self, amount):
+    def deposit_withdraw(self, amount):
         """修改资金"""
         if (amount < 0) and (self._total_cash < amount * -1):
             raise ValueError(_("The balance({}) is less than the withdrawal amount={}").format(self._total_cash,amount))
