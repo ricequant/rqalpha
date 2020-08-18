@@ -163,6 +163,12 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
                 if p not in sub_dict:
                     sub_dict[p] = {}
                 sub_dict = sub_dict[p]
+            sub_dict[key_path[-1]] = v if v != tuple() else sub_dict.get(key_path[-1], v)
+
+            if v == tuple():
+                v = sub_dict.get(key_path[-1], v)
+                if isinstance(v, dict):
+                    v = tuple((_k, _v) for _k, _v in v.items())
             sub_dict[key_path[-1]] = v
     else:
         deep_update(config_args, conf)
