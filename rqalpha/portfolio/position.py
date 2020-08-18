@@ -409,7 +409,7 @@ class PositionProxyDict(UserDict):
         return repr({k: self[k] for k in self._positions.keys()})
 
     def _get_position_types(self, order_book_id):
-        # type: (str) -> Tuple[Position, PositionProxy]
+        # type: (str) -> Tuple[type, type]
         instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
         position_type = POSITION_TYPE_MAP.get(instrument_type, Position)
         position_proxy_type = POSITION_PROXY_TYPE_MAP.get(instrument_type, PositionProxy)

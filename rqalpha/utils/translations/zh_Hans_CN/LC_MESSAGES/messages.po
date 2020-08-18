@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-17 17:03+0800\n"
+"POT-Creation-Date: 2020-08-18 11:22+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -438,16 +438,16 @@ msgid "Order Cancelled: [{order_book_id}] has no liquidity."
 msgstr "合约 [{order_book_id}] 流动性不足，拒单。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:163
-msgid "Order Cancelled: {order_book_id} bar volume = {volume} "
-msgstr "订单取消: {order_book_id}当前行情数据交易量为{volume}"
+msgid "Order Cancelled: {order_book_id} bar no volume"
+msgstr "订单被撤销：{order_book_id} 当前无成交量"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:180
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:179
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} due "
 "to volume limit"
 msgstr "订单被撤销: 订单 [{order_book_id}] 的下单量 {order_volume} 超过了成交量限制。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:215
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:214
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
 "larger than {volume_percent_limit} percent of current bar volume, fill "
@@ -533,17 +533,25 @@ msgid ""
 " {tax}, {frozen_price}"
 msgstr ""
 
-#: rqalpha/portfolio/__init__.py:266
-msgid "No account type = {}. Choose in {}"
-msgstr "没有账户类型{}，请在以下类型中选择{}"
+#: rqalpha/portfolio/__init__.py:268
+msgid "invalid account type {}, choose in {}"
+msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 
-#: rqalpha/portfolio/__init__.py:274
+#: rqalpha/portfolio/__init__.py:273
+msgid "Cash add {}. units add {}"
+msgstr "出入金增加{}.份额增加{}"
+
+#: rqalpha/portfolio/__init__.py:277
 msgid "{} cash insufficient . modify cash amount fail"
 msgstr "{}账户资金不足，修改失败"
 
 #: rqalpha/portfolio/account.py:318
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
+
+#: rqalpha/portfolio/account.py:402
+msgid "The balance({}) is less than the withdrawal amount={}"
+msgstr "账户余额({})小于取款金额={}"
 
 #: rqalpha/portfolio/position.py:171
 msgid "last price of position {} is not supposed to be nan"

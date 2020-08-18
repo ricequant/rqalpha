@@ -882,10 +882,9 @@ def deposit(account_type, amount):
     # type: (str,float) -> bool
     """
     增加账户资金
-    入金：现金增加，份额增加，总权益增加，单位净值不变
     """
     env = Environment.get_instance()
-    return env.portfolio.modify_amount(account_type, amount)
+    return env.portfolio.deposit_withdraw(account_type, amount)
 
 
 @export_as_api
@@ -904,7 +903,6 @@ def withdraw(account_type, amount):
     # type: (str,float) -> bool
     """
     减少账户资金
-    现金减少，份额减少，总权益减少，单位净值不变
     """
     env = Environment.get_instance()
-    return env.portfolio.modify_amount(account_type, amount * -1)
+    return env.portfolio.deposit_withdraw(account_type, amount * -1)

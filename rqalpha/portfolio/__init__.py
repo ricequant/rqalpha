@@ -27,12 +27,12 @@ from rqalpha.environment import Environment
 from rqalpha.events import EVENT
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
+from rqalpha.portfolio.account import Account
 from rqalpha.utils import merge_dicts
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.repr import PropertyReprMeta
-from rqalpha.portfolio.account import Account
 from rqalpha.utils.logger import user_log
+from rqalpha.utils.repr import PropertyReprMeta
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
@@ -260,14 +260,17 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
 
-    def modify_amount(self, account_type, amount):
+    def deposit_withdraw(self, account_type, amount):
         """修改出入金"""
+        # 入金 现金增加，份额增加，总权益增加，单位净值不变
+        # 出金 现金减少，份额减少，总权益减少，单位净值不变
         if account_type not in self._accounts.keys():
-            raise ValueError(_("No account type = {}. Choose in {}".format(account_type, list(self._accounts.keys()))))
+            raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
 
         unit_net_value = self.unit_net_value
         if self._accounts[account_type].modify_amount(amount):
             _units = self.total_value / unit_net_value
+            user_log.info(_("Cash add {}. units add {}".format(amount, self._units - _units)))
             self._units = _units
             return True
         else:

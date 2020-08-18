@@ -399,7 +399,7 @@ class Account(AbstractAccount):
     def modify_amount(self, amount):
         """修改资金"""
         if (amount < 0) and (self._total_cash < amount * -1):
-            return False
+            raise ValueError(_("The balance({}) is less than the withdrawal amount={}").format(self._total_cash,amount))
         self._total_cash += amount
         return True
 
