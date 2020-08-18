@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-18 11:22+0800\n"
+"POT-Creation-Date: 2020-08-18 14:24+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -520,11 +520,7 @@ msgid "invalid account type {}, choose in {}"
 msgstr ""
 
 #: rqalpha/portfolio/__init__.py:273
-msgid "Cash add {}. units add {}"
-msgstr ""
-
-#: rqalpha/portfolio/__init__.py:277
-msgid "{} cash insufficient . modify cash amount fail"
+msgid "Cash add {}. units {} become {}"
 msgstr ""
 
 #: rqalpha/portfolio/account.py:318
@@ -532,7 +528,7 @@ msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
 #: rqalpha/portfolio/account.py:402
-msgid "The balance({}) is less than the withdrawal amount={}"
+msgid "The balance({balance}) is less than the withdrawal amount={amount}"
 msgstr ""
 
 #: rqalpha/portfolio/position.py:171
