@@ -397,12 +397,10 @@ class Account(AbstractAccount):
         return order_cost + env.get_order_transaction_cost(order)
 
     def deposit_withdraw(self, amount):
-        """修改资金"""
+        """出入金"""
         if (amount < 0) and (self._total_cash < amount * -1):
-            raise ValueError(_("The balance({balance}) is less than the withdrawal amount={amount}").
-                             format(balance=self._total_cash, amount=amount))
+            raise ValueError(_('insufficient cash, current {}, target withdrawal {}').format(self._total_cash, amount))
         self._total_cash += amount
-        return True
 
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     realized_pnl = deprecated_property("realized_pnl", "trading_pnl")

@@ -879,9 +879,9 @@ def symbol(order_book_id, sep=", "):
     EXECUTION_PHASE.GLOBAL
 )
 def deposit(account_type, amount):
-    # type: (str,float) -> bool
+    # type: (str, float) -> None
     """
-    增加账户资金
+    入金（增加账户资金）
     """
     env = Environment.get_instance()
     return env.portfolio.deposit_withdraw(account_type, amount)
@@ -900,9 +900,9 @@ def deposit(account_type, amount):
     verify_that("amount").is_number(),
 )
 def withdraw(account_type, amount):
-    # type: (str,float) -> bool
+    # type: (str, float) -> None
     """
-    减少账户资金
+    出金（减少账户资金）
     """
     env = Environment.get_instance()
     return env.portfolio.deposit_withdraw(account_type, amount * -1)

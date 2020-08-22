@@ -261,18 +261,16 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
 
     def deposit_withdraw(self, account_type, amount):
-        """修改出入金"""
+        """出入金"""
         # 入金 现金增加，份额增加，总权益增加，单位净值不变
         # 出金 现金减少，份额减少，总权益减少，单位净值不变
-        if account_type not in self._accounts.keys():
+        if account_type not in self._accounts:
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
-
         unit_net_value = self.unit_net_value
         self._accounts[account_type].deposit_withdraw(amount)
         _units = self.total_value / unit_net_value
         user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units ,_units)))
         self._units = _units
-        return
 
 
 class MixedPositions(dict):
