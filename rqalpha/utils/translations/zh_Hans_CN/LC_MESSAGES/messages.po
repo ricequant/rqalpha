@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-18 14:24+0800\n"
+"POT-Creation-Date: 2020-08-23 10:52+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -537,7 +537,7 @@ msgstr ""
 msgid "invalid account type {}, choose in {}"
 msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 
-#: rqalpha/portfolio/__init__.py:273
+#: rqalpha/portfolio/__init__.py:272
 msgid "Cash add {}. units {} become to {}"
 msgstr "入金{}元，份额由{}变动为{}"
 
@@ -546,8 +546,8 @@ msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
 #: rqalpha/portfolio/account.py:402
-msgid "The balance({balance}) is less than the withdrawal amount={amount}"
-msgstr "出金数额 {amount} 不小于账户余额 {balance}"
+msgid "insufficient cash, current {}, target withdrawal {}"
+msgstr "现金不足，当前现金 {}，目标出金 {}"
 
 #: rqalpha/portfolio/position.py:171
 msgid "last price of position {} is not supposed to be nan"
@@ -655,37 +655,37 @@ msgstr "\"{}\" 已被弃用，请使用 \"{}\"，查询文档以获取更多信�
 msgid "in parse_user_config, exception: {e}"
 msgstr "在执行 parse_user_config 时，产生异常: {e}"
 
-#: rqalpha/utils/config.py:207
+#: rqalpha/utils/config.py:208
 msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr "无效的 future info: 合约品种 {} 不合法"
 
-#: rqalpha/utils/config.py:222
+#: rqalpha/utils/config.py:223
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
 msgstr "无效的 future info: commission_type 字段应为 BY_MONEY 或 BY_VOLUME"
 
-#: rqalpha/utils/config.py:226
+#: rqalpha/utils/config.py:227
 msgid "Invalid future info: field {} is not valid"
 msgstr "无效的 future info: 字段 {} 不合法"
 
-#: rqalpha/utils/config.py:256
+#: rqalpha/utils/config.py:257
 msgid "invalid init position {}, should be in format 'order_book_id:quantity'"
 msgstr "无效的初始仓位：{}，格式应该为 'order_book_id:quantity'"
 
-#: rqalpha/utils/config.py:261
+#: rqalpha/utils/config.py:262
 msgid "invalid quantity for instrument {order_book_id}: {quantity}"
 msgstr "初始仓位中合约 {order_book_id} 的数量 {quantity} 不是有效的数字"
 
-#: rqalpha/utils/config.py:276
+#: rqalpha/utils/config.py:277
 msgid "unknown run type: {}"
 msgstr "未知的策略类型：{}"
 
-#: rqalpha/utils/config.py:289
+#: rqalpha/utils/config.py:290
 msgid "unknown persist mode: {}"
 msgstr "未知的持久化模式：{}"
 
-#: rqalpha/utils/config.py:302
+#: rqalpha/utils/config.py:303
 msgid "unknown market type: {}"
 msgstr "未知的市场类型：{}"
 
@@ -1085,4 +1085,7 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 #~ "[deprecated] before_night_trading is no longer"
 #~ " used. use before_trading instead."
 #~ msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
+
+#~ msgid "The balance({balance}) is less than the withdrawal amount={amount}"
+#~ msgstr "出金数额 {amount} 不小于账户余额 {balance}"
 

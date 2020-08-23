@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-18 14:24+0800\n"
+"POT-Creation-Date: 2020-08-23 10:52+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -519,8 +519,8 @@ msgstr ""
 msgid "invalid account type {}, choose in {}"
 msgstr ""
 
-#: rqalpha/portfolio/__init__.py:273
-msgid "Cash add {}. units {} become {}"
+#: rqalpha/portfolio/__init__.py:272
+msgid "Cash add {}. units {} become to {}"
 msgstr ""
 
 #: rqalpha/portfolio/account.py:318
@@ -528,7 +528,7 @@ msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
 #: rqalpha/portfolio/account.py:402
-msgid "The balance({balance}) is less than the withdrawal amount={amount}"
+msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr ""
 
 #: rqalpha/portfolio/position.py:171
@@ -637,37 +637,37 @@ msgstr ""
 msgid "in parse_user_config, exception: {e}"
 msgstr ""
 
-#: rqalpha/utils/config.py:207
+#: rqalpha/utils/config.py:208
 msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr ""
 
-#: rqalpha/utils/config.py:222
+#: rqalpha/utils/config.py:223
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
 msgstr ""
 
-#: rqalpha/utils/config.py:226
+#: rqalpha/utils/config.py:227
 msgid "Invalid future info: field {} is not valid"
 msgstr ""
 
-#: rqalpha/utils/config.py:256
+#: rqalpha/utils/config.py:257
 msgid "invalid init position {}, should be in format 'order_book_id:quantity'"
 msgstr ""
 
-#: rqalpha/utils/config.py:261
+#: rqalpha/utils/config.py:262
 msgid "invalid quantity for instrument {order_book_id}: {quantity}"
 msgstr ""
 
-#: rqalpha/utils/config.py:276
+#: rqalpha/utils/config.py:277
 msgid "unknown run type: {}"
 msgstr ""
 
-#: rqalpha/utils/config.py:289
+#: rqalpha/utils/config.py:290
 msgid "unknown persist mode: {}"
 msgstr ""
 
-#: rqalpha/utils/config.py:302
+#: rqalpha/utils/config.py:303
 msgid "unknown market type: {}"
 msgstr ""
 
