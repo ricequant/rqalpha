@@ -398,7 +398,7 @@ class Account(AbstractAccount):
 
     def deposit_withdraw(self, amount):
         """出入金"""
-        if (amount < 0) and (self._total_cash < amount * -1):
+        if (amount < 0) and (self.cash < amount * -1):
             raise ValueError(_('insufficient cash, current {}, target withdrawal {}').format(self._total_cash, amount))
         self._total_cash += amount
 
