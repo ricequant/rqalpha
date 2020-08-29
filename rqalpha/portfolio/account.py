@@ -21,7 +21,6 @@ from itertools import chain
 from typing import Dict, Iterable, Union, Optional, Type, Callable, List
 
 from rqalpha.const import POSITION_EFFECT
-from rqalpha.interface import AbstractAccount
 from rqalpha.events import EVENT
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
@@ -37,7 +36,7 @@ OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 PositionType = Type[Position]
 
 
-class Account(AbstractAccount):
+class Account:
     """
     账户，多种持仓和现金的集合。
 
