@@ -16,7 +16,7 @@ import numpy as np
 
 from rqalpha.interface import AbstractPriceBoard
 from rqalpha.environment import Environment
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.const import EXECUTION_PHASE
 
 

@@ -21,7 +21,7 @@ from itertools import chain
 from typing import Dict, Iterable, Union, Optional, Type, Callable, List
 
 from rqalpha.const import POSITION_EFFECT
-from rqalpha.events import EVENT
+from rqalpha.core.events import EVENT
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
 from rqalpha.utils.class_helper import deprecated_property

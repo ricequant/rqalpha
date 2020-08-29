@@ -18,7 +18,7 @@
 from typing import Union, Optional, List
 
 from rqalpha.api import export_as_api
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.const import EXECUTION_PHASE
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import MarketOrder, LimitOrder, OrderStyle, Order
