@@ -17,6 +17,7 @@
 
 import abc
 
+
 def _repr(cls_name, properties):
     fmt_str = "{}({})".format(cls_name, ", ".join((str(p) + "={}") for p in properties))
 
