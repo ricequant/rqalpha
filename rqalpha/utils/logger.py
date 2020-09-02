@@ -54,6 +54,8 @@ user_log_group.add_logger(user_system_log)
 # 系统日志
 system_log = Logger("system_log")
 
+original_print = print
+
 
 def init_logger():
     system_log.handlers = [StderrHandler(bubble=True)]
@@ -70,4 +72,9 @@ def user_print(*args, **kwargs):
     user_log.info(message)
 
 
-init_logger()
+def release_print(scope):
+    for func in scope.values():
+        if hasattr(func, "__globals__"):
+            print_funt = func.__globals__.get('print')
+            if print_funt is not None and print_funt.__name__ == user_print.__name__:
+                func.__globals__['print'] = original_print
