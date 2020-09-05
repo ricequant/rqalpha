@@ -95,8 +95,8 @@ class Account(AbstractAccount):
         return {
             'positions': {
                 order_book_id: {
-                    "long": positions[POSITION_DIRECTION.LONG].get_state(),
-                    "short": positions[POSITION_DIRECTION.SHORT].get_state()
+                    POSITION_DIRECTION.LONG.lower(): positions[POSITION_DIRECTION.LONG].get_state(),
+                    POSITION_DIRECTION.SHORT.lower(): positions[POSITION_DIRECTION.SHORT].get_state()
                 } for order_book_id, positions in self._positions.items()
             },
             'frozen_cash': self._frozen_cash,
@@ -112,7 +112,7 @@ class Account(AbstractAccount):
         for order_book_id, positions_state in state['positions'].items():
             for direction in POSITION_DIRECTION:
                 position = self._get_or_create_pos(order_book_id, direction)
-                position.set_state(positions_state[direction])
+                position.set_state(positions_state[direction.lower()])
         if "total_cash" in state:
             self._total_cash = state["total_cash"]
         else:
