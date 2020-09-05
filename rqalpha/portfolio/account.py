@@ -95,8 +95,8 @@ class Account(AbstractAccount):
         return {
             'positions': {
                 order_book_id: {
-                    POSITION_DIRECTION.LONG: positions[POSITION_DIRECTION.LONG].get_state(),
-                    POSITION_DIRECTION.SHORT: positions[POSITION_DIRECTION.SHORT].get_state()
+                    "long": positions[POSITION_DIRECTION.LONG].get_state(),
+                    "short": positions[POSITION_DIRECTION.SHORT].get_state()
                 } for order_book_id, positions in self._positions.items()
             },
             'frozen_cash': self._frozen_cash,
