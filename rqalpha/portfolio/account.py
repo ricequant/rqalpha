@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import six
+from datetime import datetime
 from rqalpha.utils.functools import lru_cache
 from itertools import chain
 from typing import Dict, Iterable, Union, Optional, Type, Callable, List
@@ -122,10 +123,11 @@ class Account(AbstractAccount):
                 if p._instrument.type == INSTRUMENT_TYPE.FUTURE:
                     continue
                 # FIXME: not exactly right
-                try:
-                    total_cash -= p.equity
-                except RuntimeError:
-                    total_cash -= p.prev_close * p.quantity
+                prev_close = Environment.get_instance().data_proxy.get_prev_close(p.order_book_id, datetime.now())
+                if prev_close != prev_close:
+                    prev_close = p.prev_close
+                total_cash -= prev_close * p.quantity
+                self._total_cash = total_cash
 
         # forward compatible
         if "dividend_receivable" in state:
