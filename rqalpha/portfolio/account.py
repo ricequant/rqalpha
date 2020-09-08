@@ -95,8 +95,8 @@ class Account:
         return {
             'positions': {
                 order_book_id: {
-                    POSITION_DIRECTION.LONG.lower(): positions[POSITION_DIRECTION.LONG].get_state(),
-                    POSITION_DIRECTION.SHORT.lower(): positions[POSITION_DIRECTION.SHORT].get_state()
+                    POSITION_DIRECTION.LONG: positions[POSITION_DIRECTION.LONG].get_state(),
+                    POSITION_DIRECTION.SHORT: positions[POSITION_DIRECTION.SHORT].get_state()
                 } for order_book_id, positions in self._positions.items()
             },
             'frozen_cash': self._frozen_cash,
@@ -113,7 +113,7 @@ class Account:
         for order_book_id, positions_state in state['positions'].items():
             for direction in POSITION_DIRECTION:
                 position = self._get_or_create_pos(order_book_id, direction)
-                position.set_state(positions_state[direction.lower()])
+                position.set_state(positions_state.get(direction, positions_state[direction.lower()]))
 
     def fast_forward(self, orders=None, trades=None):
         if trades:
