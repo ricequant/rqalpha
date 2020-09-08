@@ -16,7 +16,7 @@ import hashlib
 from collections import OrderedDict
 
 from rqalpha.const import PERSIST_MODE
-from rqalpha.events import EVENT
+from rqalpha.core.events import EVENT
 from rqalpha.utils.logger import system_log
 
 

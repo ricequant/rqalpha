@@ -15,12 +15,10 @@
 
 import six
 
-from rqalpha.environment import Environment
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.const import MATCHING_TYPE, RUN_TYPE
-from rqalpha.events import EVENT
 
 from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_broker import SimulationBroker
 from rqalpha.mod.rqalpha_mod_sys_simulation.signal_broker import SignalBroker

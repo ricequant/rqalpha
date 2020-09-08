@@ -20,7 +20,7 @@ from rqalpha.utils.functools import lru_cache
 import six
 import numpy as np
 
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.const import RUN_TYPE
 from rqalpha.utils.datetime_func import convert_int_to_datetime

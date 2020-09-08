@@ -40,7 +40,7 @@ class ExtendAPIDemoMod(AbstractMod):
 
     def _inject_api(self):
         from rqalpha.api import export_as_api
-        from rqalpha.execution_context import ExecutionContext
+        from rqalpha.core.execution_context import ExecutionContext
         from rqalpha.const import EXECUTION_PHASE
 
         @export_as_api

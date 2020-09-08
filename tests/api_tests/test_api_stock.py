@@ -164,3 +164,23 @@ def test_order_target_portfolio():
             assert 0 < target_portfolio[o] - p.market_value / total_value < 0.05
 
     return locals()
+
+
+def test_is_st_stock():
+    __config__ = {
+        "base": {
+            "start_date": "2016-03-07",
+            "end_date": "2016-03-07",
+        }
+    }
+
+    def handle_bar(_, __):
+        for order_book_id, expected_result in [
+            ("600603.XSHG", [True, True]),
+            ("600305.XSHG", [False, False])
+        ]:
+            result = is_st_stock(order_book_id, 2)
+            assert result == expected_result
+
+    return locals()
+

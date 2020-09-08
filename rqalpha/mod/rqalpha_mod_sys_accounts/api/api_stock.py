@@ -36,7 +36,7 @@ from rqalpha.const import (
     INSTRUMENT_TYPE
 )
 from rqalpha.environment import Environment
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.model.instrument import (
     Instrument, IndustryCode as industry_code, IndustryCodeItem, SectorCode as sector_code, SectorCodeItem
 )
