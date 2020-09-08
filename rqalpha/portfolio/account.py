@@ -107,36 +107,13 @@ class Account:
     def set_state(self, state):
         self._frozen_cash = state['frozen_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
+        self._total_cash = state["total_cash"]
 
         self._positions.clear()
         for order_book_id, positions_state in state['positions'].items():
             for direction in POSITION_DIRECTION:
                 position = self._get_or_create_pos(order_book_id, direction)
                 position.set_state(positions_state[direction.lower()])
-        if "total_cash" in state:
-            self._total_cash = state["total_cash"]
-        else:
-            # forward compatible
-            total_cash = state["static_total_value"]
-            for p in self._iter_pos():
-                if p._instrument.type == INSTRUMENT_TYPE.FUTURE:
-                    continue
-                # FIXME: not exactly right
-                prev_close = Environment.get_instance().data_proxy.get_prev_close(p.order_book_id, datetime.now())
-                if prev_close != prev_close:
-                    prev_close = p.prev_close
-                total_cash -= prev_close * p.quantity
-                self._total_cash = total_cash
-
-        # forward compatible
-        if "dividend_receivable" in state:
-            for order_book_id, dividend in state["dividend_receivable"].items():
-                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._dividend_receivable = (
-                    dividend["payable_date"], dividend["quantity"] * dividend["dividend_per_share"]
-                )
-        if "pending_transform" in state:
-            for order_book_id, transform_info in state["pending_transform"].items():
-                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._pending_transform = transform_info
 
     def fast_forward(self, orders=None, trades=None):
         if trades:
