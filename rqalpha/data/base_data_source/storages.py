@@ -21,6 +21,7 @@ import locale
 import codecs
 import pickle
 from copy import copy
+from typing import Dict
 
 from rqalpha.data.base_data_source.storage_interface import AbstractSimpleFactorStore
 from rqalpha.utils.functools import lru_cache
@@ -70,6 +71,7 @@ class FutureInfoStore(object):
         return item
 
     def get_future_info(self, instrument):
+        # type: (Instrument) -> Dict[str, float]
         order_book_id = instrument.order_book_id
         try:
             return self._future_info[order_book_id]
@@ -97,7 +99,7 @@ class InstrumentStore(AbstractInstrumentStore):
 
         self._instruments = []
         for i in d:
-            ins = Instrument(i, future_info_store)
+            ins = Instrument(i, lambda i: future_info_store.get_future_info(i)["tick_size"])
             if ins.type in self.SUPPORTED_TYPES:
                 self._instruments.append(ins)
 
