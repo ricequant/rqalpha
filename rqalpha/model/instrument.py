@@ -17,6 +17,7 @@
 
 import copy
 import datetime
+from typing import Dict, Callable, Optional
 
 import numpy as np
 
@@ -41,9 +42,10 @@ class Instrument(metaclass=PropertyReprMeta):
 
     __repr__ = property_repr
 
-    def __init__(self, dic, future_info_store=None):
+    def __init__(self, dic, future_tick_size_getter=None):
+        # type: (Dict, Optional[Callable[[Instrument], float]]) -> None
         self.__dict__ = copy.copy(dic)
-        self._future_info_store = future_info_store
+        self._future_tick_size_getter = future_tick_size_getter
 
         if "listed_date" in dic:
             self.__dict__["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
@@ -393,12 +395,13 @@ class Instrument(metaclass=PropertyReprMeta):
         return -1 if days < 0 else days
 
     def tick_size(self):
+        # type: () -> float
         if self.type in (INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.INDX):
             return 0.01
         elif self.type in ("ETF", "LOF"):
             return 0.001
         elif self.type == INSTRUMENT_TYPE.FUTURE:
-            return self._future_info_store.get_future_info(self)["tick_size"]
+            return self._future_tick_size_getter(self)
         else:
             raise NotImplementedError
 

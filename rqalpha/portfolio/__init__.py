@@ -24,7 +24,7 @@ import six
 
 from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
 from rqalpha.environment import Environment
-from rqalpha.events import EVENT
+from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.portfolio.account import Account

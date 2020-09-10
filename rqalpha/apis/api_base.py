@@ -21,27 +21,29 @@ from collections import Iterable
 from datetime import date, datetime
 from typing import Callable, List, Optional, Union
 
-import numpy as np
 import pandas as pd
+import numpy as np
 import six
 
-from rqalpha.api import export_as_api
 from rqalpha.apis import names
-from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, MATCHING_TYPE, ORDER_STATUS, ORDER_TYPE,
-                           POSITION_DIRECTION, POSITION_EFFECT, RUN_TYPE, SIDE)
-from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.environment import Environment
-from rqalpha.events import EVENT, Event
-from rqalpha.execution_context import ExecutionContext
-from rqalpha.model.instrument import Instrument
-from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle
-from rqalpha.model.tick import TickObject
-from rqalpha.portfolio.position import Position
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
-from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_log as logger, user_print, user_system_log
+from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.api import export_as_api
+from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
+from rqalpha.model.instrument import Instrument
+from rqalpha.model.tick import TickObject
+from rqalpha.const import (
+    EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
+    DEFAULT_ACCOUNT_TYPE
+)
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
+from rqalpha.core.events import EVENT, Event
+from rqalpha.core.strategy_context import StrategyContext
+from rqalpha.portfolio.position import Position
 
 export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')

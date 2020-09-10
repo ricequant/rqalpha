@@ -18,7 +18,7 @@
 from copy import copy
 from datetime import datetime
 
-from rqalpha.events import EVENT, Event
+from rqalpha.core.events import EVENT, Event
 from rqalpha.utils.rq_json import convert_dict_to_json, convert_json_to_dict
 from rqalpha.utils.logger import system_log
 

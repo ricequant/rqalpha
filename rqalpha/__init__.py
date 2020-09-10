@@ -17,6 +17,7 @@ RQAlpha - a Algorithm Trading System
 """
 from rqalpha.cmds import cli
 from rqalpha.api import export_as_api
+from rqalpha.apis import subscribe_event
 from . import data
 from . import interface
 from . import portfolio

@@ -31,104 +31,6 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE
 
 
-class AbstractAccount(with_metaclass(abc.ABCMeta)):
-    """
-    账户接口，主要用于构建账户信息
-    """
-
-    @abc.abstractmethod
-    def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
-        # type: (str, Union[int, float], POSITION_DIRECTION) -> Union[int, float]
-        """
-        根据计算当前不超过 trade_amount 的最大可平仓量
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_state(self):
-        # type: () -> Any
-        """
-        主要用于进行持久化时候，提供对应需要持久化的数据
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def set_state(self, state):
-        # type: (Any) -> None
-        """
-        主要用于持久化恢复时，根据提供的持久化数据进行恢复Account的实现
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_positions(self):
-        # type: () -> Iterable[AbstractPosition]
-        """
-        获取当前账户下的全部持仓对象
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_position(self, order_book_id, direction):
-        # type: (str, POSITION_DIRECTION) -> AbstractPosition
-        """
-        根据指定的 order_book_id 和方向获取持仓对象
-        """
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def frozen_cash(self):
-        # type: () -> Union[int, float]
-        """
-        返回当前账户的冻结资金
-        """
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def cash(self):
-        # type: () -> Union[int, float]
-        """
-        返回当前账户的可用资金
-        """
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def market_value(self):
-        # type: () -> Union[int, float]
-        # 返回当前账户的市值
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def total_value(self):
-        # type: () -> Union[int, float]
-        """
-        返回当前账户的总权益
-        """
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def transaction_cost(self):
-        # type: () -> Union[int, float]
-        """
-        返回当前账户的当日交易费用
-        """
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def daily_pnl(self):
-        # type: () -> Union[int, float]
-        """
-        返回当前账户的当日盈亏
-        """
-        raise NotImplementedError
-
-
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
     仓位接口，主要用于构建仓位信息
@@ -687,7 +589,6 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     """
     @abc.abstractmethod
     def can_submit_order(self, order, account=None):
-        # type: (Order, Optional[AbstractAccount]) -> bool
         """
         判断是否可以下单
         """
@@ -695,7 +596,6 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
     def can_cancel_order(self, order, account=None):
-        # type: (Order, Optional[AbstractAccount]) -> bool
         """
         判读是否可以撤单
         """

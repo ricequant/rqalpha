@@ -21,7 +21,7 @@ from itertools import chain
 
 
 import rqalpha
-from rqalpha.events import EventBus
+from rqalpha.core.events import EventBus
 from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars

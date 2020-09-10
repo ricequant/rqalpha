@@ -20,10 +20,9 @@ from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 import six
 
-from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, POSITION_EFFECT
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
 from rqalpha.environment import Environment
-from rqalpha.events import EVENT
-from rqalpha.interface import AbstractAccount
+from rqalpha.core.events import EVENT
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.model.trade import Trade
 from rqalpha.utils.class_helper import deprecated_property
@@ -36,7 +35,7 @@ OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 PositionType = Type[Position]
 
 
-class Account(AbstractAccount):
+class Account:
     """
     账户，多种持仓和现金的集合。
 
@@ -106,35 +105,16 @@ class Account(AbstractAccount):
     def set_state(self, state):
         self._frozen_cash = state['frozen_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
+        self._total_cash = state["total_cash"]
 
         self._positions.clear()
         for order_book_id, positions_state in state['positions'].items():
             for direction in POSITION_DIRECTION:
                 position = self._get_or_create_pos(order_book_id, direction)
-                position.set_state(positions_state[direction])
-        if "total_cash" in state:
-            self._total_cash = state["total_cash"]
-        else:
-            # forward compatible
-            total_cash = state["static_total_value"]
-            for p in self._iter_pos():
-                if p._instrument.type == INSTRUMENT_TYPE.FUTURE:
-                    continue
-                # FIXME: not exactly right
-                try:
-                    total_cash -= p.equity
-                except RuntimeError:
-                    total_cash -= p.prev_close * p.quantity
-
-        # forward compatible
-        if "dividend_receivable" in state:
-            for order_book_id, dividend in state["dividend_receivable"].items():
-                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._dividend_receivable = (
-                    dividend["payable_date"], dividend["quantity"] * dividend["dividend_per_share"]
-                )
-        if "pending_transform" in state:
-            for order_book_id, transform_info in state["pending_transform"].items():
-                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._pending_transform = transform_info
+                if direction in positions_state.keys():
+                    position.set_state(positions_state[direction])
+                else:
+                    position.set_state(positions_state[direction.lower()])
 
     def fast_forward(self, orders=None, trades=None):
         if trades:

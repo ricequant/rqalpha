@@ -19,7 +19,7 @@ from collections import defaultdict
 
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
-from rqalpha.events import EVENT, Event
+from rqalpha.core.events import EVENT, Event
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
 from rqalpha.portfolio.account import Account

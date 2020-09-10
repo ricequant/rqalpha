@@ -19,10 +19,9 @@ import os
 import sys
 import locale
 import codecs
-import pickle
 from copy import copy
 from itertools import chain
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Dict
 
 from rqalpha.data.base_data_source.storage_interface import AbstractSimpleFactorStore
 from rqalpha.utils.functools import lru_cache
@@ -72,6 +71,7 @@ class FutureInfoStore(object):
         return item
 
     def get_future_info(self, instrument):
+        # type: (Instrument) -> Dict[str, float]
         order_book_id = instrument.order_book_id
         try:
             return self._future_info[order_book_id]
