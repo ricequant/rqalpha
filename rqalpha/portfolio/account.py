@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from itertools import chain
-from typing import Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union
 
 import six
 
@@ -32,7 +32,6 @@ from rqalpha.utils.logger import user_system_log
 from .position import Position, PositionProxyDict
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
-PositionType = Type[Position]
 
 
 class Account:
