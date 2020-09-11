@@ -14,6 +14,7 @@
 
 
 import six
+from rqalpha.utils.logger import user_system_log
 
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.i18n import gettext as _
@@ -53,6 +54,11 @@ class SimulationMod(AbstractMod):
                 MATCHING_TYPE.CURRENT_BAR_CLOSE,
             ]:
                 raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
+
+        if env.config.base.frequency == "1d" and mod_config.matching_type == MATCHING_TYPE.NEXT_BAR_OPEN:
+            mod_config.matching_type = MATCHING_TYPE.CURRENT_BAR_CLOSE
+            user_system_log.warn(_(u"matching_type = 'next_bar' is abandoned when frequency == '1d',"
+                                   u"Current matching_type is 'current_bar'."))
 
         if mod_config.signal:
             env.set_broker(SignalBroker(env, mod_config))

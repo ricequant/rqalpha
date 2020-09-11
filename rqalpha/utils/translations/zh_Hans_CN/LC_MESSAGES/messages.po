@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-23 10:52+0800\n"
+"POT-Creation-Date: 2020-09-11 10:46+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -28,11 +28,6 @@ msgstr "Environment 并没有被创建，请再 RQAlpha 初始化之后使用 `E
 msgid "No such transaction cost decider, order_book_id = {}"
 msgstr ""
 
-#: rqalpha/execution_context.py:103
-#, python-format
-msgid "You cannot call %s when executing %s"
-msgstr "%s 不能在 %s 中调用。"
-
 #: rqalpha/main.py:59
 msgid ""
 "There is no data between {start_date} and {end_date}. Please check your "
@@ -51,42 +46,42 @@ msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:203
+#: rqalpha/main.py:205
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:233
+#: rqalpha/main.py:236
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:238
+#: rqalpha/main.py:241
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
-#: rqalpha/apis/api_base.py:66 rqalpha/apis/api_base.py:265
-#: rqalpha/apis/api_base.py:301
+#: rqalpha/apis/api_base.py:68 rqalpha/apis/api_base.py:267
+#: rqalpha/apis/api_base.py:303
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
-#: rqalpha/apis/api_base.py:86 rqalpha/apis/api_base.py:90
+#: rqalpha/apis/api_base.py:88 rqalpha/apis/api_base.py:92
 msgid "Limit order price should not be nan."
 msgstr "限价单价格不能为 nan。"
 
-#: rqalpha/apis/api_base.py:147
+#: rqalpha/apis/api_base.py:149
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:55
 msgid "Main Future contracts[88] are not supported in paper trading."
 msgstr "期货主力连续合约[88] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:151
+#: rqalpha/apis/api_base.py:153
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:57
 msgid "Index Future contracts[99] are not supported in paper trading."
 msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:157
+#: rqalpha/apis/api_base.py:159
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:69
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:107
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:271
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:75
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:113
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:277
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
@@ -195,6 +190,11 @@ msgstr ""
 "\n"
 "下载失败，{} 秒后重试。"
 
+#: rqalpha/core/execution_context.py:103
+#, python-format
+msgid "You cannot call %s when executing %s"
+msgstr "%s 不能在 %s 中调用。"
+
 #: rqalpha/core/strategy.py:36
 msgid "not run {}({}, {}) because strategy is hold"
 msgstr "策略暂停中，取消执行 {}({}, {})"
@@ -258,7 +258,7 @@ msgid "Order Creation Failed: Order amount is 0."
 msgstr "订单创建失败: 下单量为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:48
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:65
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:71
 msgid "Limit order price should be positive"
 msgstr "Limit order 价格应该为正，请检查您的下单价格"
 
@@ -280,24 +280,24 @@ msgid ""
 "[{new_orders_repr}]"
 msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_orders_repr}]"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:75
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:124
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:81
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:130
 msgid "Order Creation Failed: 0 order quantity"
 msgstr "订单创建失败: 下单量为0"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:83
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:89
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr "现金不足，使用当前剩余资金({})创建订单"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:256
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:262
 msgid "total percent should be lower than 1, current: {}"
 msgstr "目标持仓总占比需要小于 1，当前值：{}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:265
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:271
 msgid "target percent of {} should between 0 and 1, current: {}"
 msgstr "{} 的目标持仓需要在 0 到 1 之间，当前值：{}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:599
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:605
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
@@ -456,14 +456,20 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:42
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:40
 msgid "invalid margin multiplier value: value range is (0, +∞]"
 msgstr "无效的 保证金乘数 设置: 其值范围为 (0, +∞]"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:51
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:57
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:49
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:55
 msgid "Not supported matching type {}"
 msgstr "不支持撮合类型: {}"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:59
+msgid ""
+"matching_type = 'next_bar' is abandoned when frequency == '1d',Current "
+"matching_type is 'current_bar'."
+msgstr "日回测 'next_bar' 撮合方式已废弃，当前按 'current_bar' 撮合方式成交"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:53
 msgid "cancel_order function is not supported in signal mode"
@@ -541,11 +547,11 @@ msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 msgid "Cash add {}. units {} become to {}"
 msgstr "入金{}元，份额由{}变动为{}"
 
-#: rqalpha/portfolio/account.py:318
+#: rqalpha/portfolio/account.py:297
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/account.py:402
+#: rqalpha/portfolio/account.py:381
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
 
