@@ -69,7 +69,7 @@ class SimulationMod(AbstractMod):
         if mod_config.management_fee:
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self.register_management_fee_calculator)
 
-        event_source = SimulationEventSource(env)
+        event_source = self._env.event_source or SimulationEventSource(env)
         env.set_event_source(event_source)
 
     def tear_down(self, code, exception=None):
