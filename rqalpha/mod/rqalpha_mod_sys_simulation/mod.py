@@ -19,7 +19,7 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_user_exc
-from rqalpha.const import MATCHING_TYPE, RUN_TYPE
+from rqalpha.const import MATCHING_TYPE, RUN_TYPE, DEFAULT_ACCOUNT_TYPE
 
 from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_broker import SimulationBroker
 from rqalpha.mod.rqalpha_mod_sys_simulation.signal_broker import SignalBroker
@@ -65,6 +65,9 @@ class SimulationMod(AbstractMod):
         else:
             env.set_broker(SimulationBroker(env, mod_config))
 
+        if mod_config.management_fee:
+            self.register_management_fee_calculator(env, mod_config.management_fee)
+
         event_source = SimulationEventSource(env)
         env.set_event_source(event_source)
 
@@ -86,3 +89,12 @@ class SimulationMod(AbstractMod):
             return MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY
         else:
             raise NotImplementedError
+
+    @staticmethod
+    def register_management_fee_calculator(env, management_fee):
+        for _account_type, v in management_fee:
+            _account_type = _account_type.upper()
+            if _account_type not in DEFAULT_ACCOUNT_TYPE:
+                all_account_type = [i.value for i in DEFAULT_ACCOUNT_TYPE]
+                raise ValueError("NO account_type = ({}) in {}".format(_account_type, all_account_type))
+            env.set_management_fee_calculator(_account_type, lambda account: account.equity * float(v) * 0.01)

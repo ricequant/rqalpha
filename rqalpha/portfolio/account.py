@@ -83,6 +83,7 @@ class Account:
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
 
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
+        event_bus.add_listener(EVENT.AFTER_TRADING, self._on_after_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
         event_bus.prepend_listener(EVENT.BAR, self._update_last_price)
@@ -374,6 +375,18 @@ class Account:
         else:
             order_cost = 0
         return order_cost + env.get_order_transaction_cost(order)
+
+    def _management_fee(self):
+        """计算账户管理费用"""
+        _management_fee_calculator_func = Environment.get_instance().get_management_fee_calculator(self._type)
+        if _management_fee_calculator_func is None:
+            return 0
+        fee = _management_fee_calculator_func(self)
+        return fee
+
+    def _on_after_trading(self, event):
+        fee = self._management_fee()
+        self._total_cash -= fee
 
     def deposit_withdraw(self, amount):
         """出入金"""
