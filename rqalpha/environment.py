@@ -16,13 +16,13 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime
-from typing import Optional, Dict, List, Callable
+from typing import Optional, Dict, List
 from itertools import chain
 
 
 import rqalpha
 from rqalpha.core.events import EventBus
-from rqalpha.const import INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
@@ -57,7 +57,6 @@ class Environment(object):
         self._frontend_validators = {}  # type: Dict[INSTRUMENT_TYPE, List]
         self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
-        self._management_fee_calculators = {}  # type: Dict[DEFAULT_ACCOUNT_TYPE, Callable]
 
         # Environment.event_bus used in StrategyUniverse()
         from rqalpha.core.strategy_universe import StrategyUniverse
@@ -182,12 +181,6 @@ class Environment(object):
 
     def get_order_transaction_cost(self, order):
         return self._get_transaction_cost_decider(order.order_book_id).get_order_transaction_cost(order)
-
-    def set_management_fee_calculator(self, account_type, calculator):
-        self._management_fee_calculators[account_type] = calculator
-
-    def get_management_fee_calculator(self, account_type):
-        return self._management_fee_calculators.get(account_type)
 
     def update_time(self, calendar_dt, trading_dt):
         # type: (datetime, datetime) -> None

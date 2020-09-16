@@ -57,6 +57,7 @@ class Account:
         self._frozen_cash = 0
 
         self.register_event()
+        self._management_fee_calculator_func = None
 
         for order_book_id, init_quantity in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
@@ -83,7 +84,6 @@ class Account:
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
 
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
-        event_bus.add_listener(EVENT.AFTER_TRADING, self._on_after_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
         event_bus.prepend_listener(EVENT.BAR, self._update_last_price)
@@ -291,6 +291,9 @@ class Account:
 
         self._backward_trade_set.clear()
 
+        fee = self._management_fee()
+        self._total_cash -= fee
+
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         forced_liquidation = Environment.get_instance().config.base.forced_liquidation
         if self.total_value <= 0 and forced_liquidation:
@@ -378,15 +381,13 @@ class Account:
 
     def _management_fee(self):
         """计算账户管理费用"""
-        _management_fee_calculator_func = Environment.get_instance().get_management_fee_calculator(self._type)
-        if _management_fee_calculator_func is None:
+        if self._management_fee_calculator_func is None:
             return 0
-        fee = _management_fee_calculator_func(self)
+        fee = self._management_fee_calculator_func(self)
         return fee
 
-    def _on_after_trading(self, event):
-        fee = self._management_fee()
-        self._total_cash -= fee
+    def set_management_fee_calculator(self, calculator):
+        self._management_fee_calculator_func = calculator
 
     def deposit_withdraw(self, amount):
         """出入金"""

@@ -14,6 +14,7 @@
 
 
 import six
+from rqalpha.core.events import EVENT
 from rqalpha.utils.logger import user_system_log
 
 from rqalpha.interface import AbstractMod
@@ -28,10 +29,10 @@ from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_event_source import Simul
 
 class SimulationMod(AbstractMod):
     def __init__(self):
-        pass
+        self._env = None
 
     def start_up(self, env, mod_config):
-
+        self._env = env
         if env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
             return
 
@@ -66,7 +67,7 @@ class SimulationMod(AbstractMod):
             env.set_broker(SimulationBroker(env, mod_config))
 
         if mod_config.management_fee:
-            self.register_management_fee_calculator(env, mod_config.management_fee)
+            env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self.register_management_fee_calculator)
 
         event_source = SimulationEventSource(env)
         env.set_event_source(event_source)
@@ -90,11 +91,12 @@ class SimulationMod(AbstractMod):
         else:
             raise NotImplementedError
 
-    @staticmethod
-    def register_management_fee_calculator(env, management_fee):
+    def register_management_fee_calculator(self, event):
+        management_fee = self._env.config.mod.sys_simulation.management_fee
+        accounts = self._env.portfolio.accounts
         for _account_type, v in management_fee:
             _account_type = _account_type.upper()
             if _account_type not in DEFAULT_ACCOUNT_TYPE:
                 all_account_type = [i.value for i in DEFAULT_ACCOUNT_TYPE]
                 raise ValueError("NO account_type = ({}) in {}".format(_account_type, all_account_type))
-            env.set_management_fee_calculator(_account_type, lambda account: account.equity * float(v) * 0.01)
+            accounts[_account_type].set_management_fee_calculator(lambda account: account.equity * float(v))
