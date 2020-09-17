@@ -20,7 +20,7 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_user_exc
-from rqalpha.const import MATCHING_TYPE, RUN_TYPE, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import MATCHING_TYPE, RUN_TYPE
 
 from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_broker import SimulationBroker
 from rqalpha.mod.rqalpha_mod_sys_simulation.signal_broker import SignalBroker
@@ -96,7 +96,7 @@ class SimulationMod(AbstractMod):
         accounts = self._env.portfolio.accounts
         for _account_type, v in management_fee:
             _account_type = _account_type.upper()
-            if _account_type not in DEFAULT_ACCOUNT_TYPE:
-                all_account_type = [i.value for i in DEFAULT_ACCOUNT_TYPE]
-                raise ValueError("NO account_type = ({}) in {}".format(_account_type, all_account_type))
+            if _account_type not in accounts:
+                all_account_type = list(accounts.keys())
+                raise ValueError(_("NO account_type = ({}) in {}").format(_account_type, all_account_type))
             accounts[_account_type].set_management_fee_rate(float(v))
