@@ -99,4 +99,4 @@ class SimulationMod(AbstractMod):
             if _account_type not in DEFAULT_ACCOUNT_TYPE:
                 all_account_type = [i.value for i in DEFAULT_ACCOUNT_TYPE]
                 raise ValueError("NO account_type = ({}) in {}".format(_account_type, all_account_type))
-            accounts[_account_type].set_management_fee_calculator(lambda account: account.equity * float(v))
+            accounts[_account_type].set_management_fee_rate(float(v))

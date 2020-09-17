@@ -19,7 +19,6 @@ from itertools import chain
 from typing import Callable, Dict, Iterable, List, Optional, Union
 
 import six
-
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
@@ -29,7 +28,7 @@ from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-from .position import Position, PositionProxyDict
+from rqalpha.portfolio.position import Position, PositionProxyDict
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
@@ -57,7 +56,10 @@ class Account:
         self._frozen_cash = 0
 
         self.register_event()
-        self._management_fee_calculator_func = None
+
+        self._management_fee_calculator_func = lambda account, rate: account.equity * rate
+        self._management_fee_rate = 0.0
+        self._management_fees = 0.0
 
         for order_book_id, init_quantity in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
@@ -292,6 +294,7 @@ class Account:
         self._backward_trade_set.clear()
 
         fee = self._management_fee()
+        self._management_fees += fee
         self._total_cash -= fee
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
@@ -380,16 +383,43 @@ class Account:
         return order_cost + env.get_order_transaction_cost(order)
 
     def _management_fee(self):
+        # type: () -> float
         """计算账户管理费用"""
-        if self._management_fee_calculator_func is None:
+        if self._management_fee_rate == 0:
             return 0
-        fee = self._management_fee_calculator_func(self)
+        fee = self._management_fee_calculator_func(self, self._management_fee_rate)
         return fee
 
-    def set_management_fee_calculator(self, calculator):
+    def register_management_fee_calculator(self, calculator):
+        # type: (Callable[[Account, float], float]) -> None
+        """
+        设置管理费用计算逻辑
+        该方法需要传入一个函数
+
+        .. code-block:: python
+
+        def management_fee_calculator(account, rate):
+            return len(account.positions) * rate
+
+        def init(context):
+            context.portfolio.accounts["STOCK"].set_management_fee_calculator(management_fee_calculator)
+
+        """
         self._management_fee_calculator_func = calculator
 
+    def set_management_fee_rate(self, rate):
+        # type: (float) -> None
+        """管理费用计算费率"""
+        self._management_fee_rate = rate
+
+    @property
+    def management_fees(self):
+        # type: () -> float
+        """该账户的管理费用总计"""
+        return self._management_fees
+
     def deposit_withdraw(self, amount):
+        # type: (float) -> None
         """出入金"""
         if (amount < 0) and (self.cash < amount * -1):
             raise ValueError(_('insufficient cash, current {}, target withdrawal {}').format(self._total_cash, amount))
