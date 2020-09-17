@@ -35,6 +35,8 @@ __config__ = {
     "slippage": 0,
     # volume 为 0 时限制成交
     "inactive_limit": True,
+    # 账户级别每日的管理费用
+    "management_fee": (),
 }
 
 
@@ -97,5 +99,13 @@ cli.commands['run'].params.append(
         ('--inactive-limit', cli_prefix + "inactive_limit"),
         type=click.BOOL, default=True,
         help="[sys_simulation] Limit transaction when volume is 0"
+    )
+)
+
+cli.commands["run"].params.append(
+    click.Option(
+        ('--management-fee', cli_prefix + "redemption_receiving_days",),
+        type=click.STRING, nargs=2, multiple=True,
+        help="[sys_simulation] Account management rate. eg '--management-fee stock 0.02' "
     )
 )

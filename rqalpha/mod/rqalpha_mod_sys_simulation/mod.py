@@ -14,6 +14,7 @@
 
 
 import six
+from rqalpha.core.events import EVENT
 from rqalpha.utils.logger import user_system_log
 
 from rqalpha.interface import AbstractMod
@@ -28,10 +29,10 @@ from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_event_source import Simul
 
 class SimulationMod(AbstractMod):
     def __init__(self):
-        pass
+        self._env = None
 
     def start_up(self, env, mod_config):
-
+        self._env = env
         if env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
             return
 
@@ -65,6 +66,9 @@ class SimulationMod(AbstractMod):
         else:
             env.set_broker(SimulationBroker(env, mod_config))
 
+        if mod_config.management_fee:
+            env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self.register_management_fee_calculator)
+
         event_source = SimulationEventSource(env)
         env.set_event_source(event_source)
 
@@ -86,3 +90,13 @@ class SimulationMod(AbstractMod):
             return MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY
         else:
             raise NotImplementedError
+
+    def register_management_fee_calculator(self, event):
+        management_fee = self._env.config.mod.sys_simulation.management_fee
+        accounts = self._env.portfolio.accounts
+        for _account_type, v in management_fee:
+            _account_type = _account_type.upper()
+            if _account_type not in accounts:
+                all_account_type = list(accounts.keys())
+                raise ValueError(_("NO account_type = ({}) in {}").format(_account_type, all_account_type))
+            accounts[_account_type].set_management_fee_rate(float(v))
