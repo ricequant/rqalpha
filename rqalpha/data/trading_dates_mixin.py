@@ -32,7 +32,7 @@ class TradingDatesMixin(object):
     def __init__(self, trading_calendars):
         # type: (Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]) -> TradingDatesMixin
         self.trading_calendars = trading_calendars
-        self.merged_trading_calendars = pd.DatetimeIndex(sorted(set(*(
+        self.merged_trading_calendars = pd.DatetimeIndex(sorted(set.union(*(
             set(calendar) for calendar in trading_calendars.values()
         ))))
 
