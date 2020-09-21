@@ -57,7 +57,7 @@ class Account:
 
         self.register_event()
 
-        self._management_fee_calculator_func = lambda account, rate: account.equity * rate
+        self._management_fee_calculator_func = lambda account, rate: account.total_value * rate
         self._management_fee_rate = 0.0
         self._management_fees = 0.0
 
