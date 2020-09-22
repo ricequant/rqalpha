@@ -3,7 +3,7 @@ numpy
 pandas >=0.18.1
 python-dateutil >=2.5.3
 six >=1.10.0
-logbook >=1.0.0
+Logbook >=1.0.0
 click >=7.0
 jsonpickle ==0.9.4
 simplejson >=3.10.0
