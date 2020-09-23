@@ -884,6 +884,9 @@ def deposit(account_type, amount):
     # type: (str, float) -> None
     """
     入金（增加账户资金）
+    :param account_type: 账户类型
+    :param amount: 增加金额
+    :return: None
     """
     env = Environment.get_instance()
     return env.portfolio.deposit_withdraw(account_type, amount)
@@ -905,6 +908,9 @@ def withdraw(account_type, amount):
     # type: (str, float) -> None
     """
     出金（减少账户资金）
+    :param account_type: 账户类型
+    :param amount: 减少金额
+    :return: None
     """
     env = Environment.get_instance()
     return env.portfolio.deposit_withdraw(account_type, amount * -1)
