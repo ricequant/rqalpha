@@ -104,8 +104,8 @@ cli.commands['run'].params.append(
 
 cli.commands["run"].params.append(
     click.Option(
-        ('--management-fee', cli_prefix + "redemption_receiving_days",),
+        ('--management-fee', cli_prefix + "management_fee",),
         type=click.STRING, nargs=2, multiple=True,
-        help="[sys_simulation] Account management rate. eg '--management-fee stock 0.02' "
+        help="[sys_simulation] Account management rate. eg '--management-fee stock 0.0002' "
     )
 )

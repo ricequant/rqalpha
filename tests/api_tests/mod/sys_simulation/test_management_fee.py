@@ -52,9 +52,9 @@ def test_set_management_fee_rate():
             order_shares(stock, 100)
             assert context.portfolio.positions[stock].quantity == 100
             context.fired = True
-            context.equity = bar_dict[stock].last * 100
+            context.total_value = context.portfolio.accounts["STOCK"].total_value
         if context.day_count == 2:
-            assert context.portfolio.accounts["STOCK"]._management_fees == context.equity * 0.05
+            assert context.portfolio.accounts["STOCK"]._management_fees == context.total_value * 0.05
 
     return locals()
 
