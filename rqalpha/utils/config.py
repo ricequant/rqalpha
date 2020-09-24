@@ -164,7 +164,16 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
                 if p not in sub_dict:
                     sub_dict[p] = {}
                 sub_dict = sub_dict[p]
-            sub_dict[key_path[-1]] = v
+
+            if key_path[-1] in sub_dict and isinstance(sub_dict[key_path[-1]], tuple):
+                # tuple类型 需要改变为list后 增加参数组
+                sub_dict[key_path[-1]] = list(sub_dict[key_path[-1]])
+
+            if key_path[-1] in sub_dict and isinstance(sub_dict[key_path[-1]], list):
+                # click.Option中 参数属性multiple=True时 用户输入参数叠加在命令行参数中
+                sub_dict[key_path[-1]].append(v)
+            else:
+                sub_dict[key_path[-1]] = v
     else:
         deep_update(config_args, conf)
 
