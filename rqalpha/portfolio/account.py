@@ -236,7 +236,7 @@ class Account:
     def equity(self):
         # type: () -> float
         """
-        总权益
+        持仓总权益
         """
         return sum(p.equity for p in self._iter_pos())
 
