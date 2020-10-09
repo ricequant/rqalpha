@@ -23,9 +23,9 @@ __config__ = {
     # 设置手续费乘数，默认为1
     "commission_multiplier": 1,
     # A股印花税率
-    "cn_stock_tax_rate": 0.01,
+    "cn_stock_tax_rate": 0.001,
     # 港股印花税率
-    "hk_stock_tax_rate": 0.011,
+    "hk_stock_tax_rate": 0.0011,
     # 印花税乘数，默认为1
     "tax_multiplier": 1,
 }
