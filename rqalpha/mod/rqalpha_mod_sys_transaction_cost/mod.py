@@ -26,8 +26,9 @@ from .deciders import CNStockTransactionCostDecider, CNFutureTransactionCostDeci
 
 class TransactionCostMod(AbstractMod):
     def start_up(self, env, mod_config):
-        if mod_config.commission_multiplier < 0:
-            raise patch_user_exc(ValueError(_(u"invalid commission multiplier value: value range is [0, +∞)")))
+        if mod_config.commission_multiplier < 0 or mod_config.tax_multiplier < 0:
+            raise patch_user_exc(ValueError(_(u"invalid commission multiplier or tax multiplier"
+                                              u" value: value range is [0, +∞)")))
 
         if env.config.base.market == MARKET.CN:
             for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
