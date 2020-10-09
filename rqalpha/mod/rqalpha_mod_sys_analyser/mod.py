@@ -17,6 +17,7 @@
 
 import os
 import pickle
+import jsonpickle
 import numbers
 import datetime
 from collections import defaultdict
@@ -54,6 +55,29 @@ class AnalyserMod(AbstractMod):
 
         self._benchmark = None  # type: Optional[str]
 
+    def get_state(self):
+        return jsonpickle.dumps({
+            'benchmark_daily_returns': [float(v) for v in self._benchmark_daily_returns],
+            'portfolio_daily_returns': [float(v) for v in self._portfolio_daily_returns],
+            'total_portfolios': self._total_portfolios,
+            'total_benchmark_portfolios': self._total_benchmark_portfolios,
+            'sub_accounts': self._sub_accounts,
+            'positions': self._positions,
+            'orders': self._orders,
+            'trades': self._trades,
+        }).encode('utf-8')
+
+    def set_state(self, state):
+        value = jsonpickle.loads(state.decode('utf-8'))
+        self._benchmark_daily_returns = value['benchmark_daily_returns']
+        self._portfolio_daily_returns = value["portfolio_daily_returns"]
+        self._total_portfolios = value['total_portfolios']
+        self._total_benchmark_portfolios = value["total_benchmark_portfolios"]
+        self._sub_accounts = value['sub_accounts']
+        self._positions = value["positions"]
+        self._orders = value['orders']
+        self._trades = value["trades"]
+
     def start_up(self, env, mod_config):
         self._env = env
         self._mod_config = mod_config
@@ -71,13 +95,18 @@ class AnalyserMod(AbstractMod):
                     )
                     mod_config.benchmark = getattr(env.config.base, "benchmark")
             if mod_config.benchmark:
-                self._benchmark = mod_config.benchmark
+                self._benchmark = self._parse_benchmark(mod_config.benchmark)
 
     def get_benchmark_daily_returns(self):
         if self._benchmark is None:
             return 0.0
-        bar = self._env.data_proxy.get_bar(self._benchmark, self._env.calendar_dt, '1d')
-        return bar.close / bar.prev_close - 1.0
+        daily_return_list = []
+        weights = 0
+        for benchmark in self._benchmark:
+            bar = self._env.data_proxy.get_bar(benchmark[0], self._env.calendar_dt, '1d')
+            daily_return_list.append((bar.close / bar.prev_close - 1.0, benchmark[1]))
+            weights += benchmark[1]
+        return sum([daily[0]*daily[1]/weights for daily in daily_return_list])
 
     def _subscribe_events(self, _):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
@@ -117,7 +146,37 @@ class AnalyserMod(AbstractMod):
         return self._env.data_proxy.instruments(order_book_id).symbol
 
     @staticmethod
-    def _safe_convert(value, ndigits=3):
+    def _parse_benchmark(benchmarks):
+        # --benchmark 000001.XSHE:1000,IF1701:-1
+        result = []
+        if not isinstance(benchmarks, str):
+            # 字典
+            for order_book_id, weight in benchmarks.items():
+                result.append((order_book_id, float(weight)))
+            return result
+        benchmark_list = benchmarks.split(',')
+        if len(benchmark_list) == 1:
+            if len(benchmark_list[0].split(':')) > 1:
+                result.append((benchmark_list[0].split(':')[0], 1.0))
+                return result
+            result.append((benchmark_list[0], 1.0))
+            return result
+        for s in benchmark_list:
+            try:
+                order_book_id, weight = s.split(':')
+            except ValueError:
+                raise RuntimeError(
+                    _(u"invalid init benchmark {}, should be in format 'order_book_id:weight'").format(s))
+
+            try:
+                result.append((order_book_id, float(weight)))
+            except ValueError:
+                raise RuntimeError(_(u"invalid weight for instrument {order_book_id}: {weight}").format(
+                    order_book_id=order_book_id, weight=weight))
+        return result
+
+    @staticmethod
+    def _safe_convert(value, ndigits=4):
         if isinstance(value, Enum):
             return value.name
 

@@ -15,11 +15,10 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-
 __config__ = {
     "base": {
-        "start_date": "2015-04-11",
-        "end_date": "2015-04-20",
+        "start_date": "2015-04-10",
+        "end_date": "2015-05-10",
         "frequency": "1d",
         "accounts": {
             "stock": 1000000,
@@ -34,41 +33,48 @@ __config__ = {
             "show": True,
         },
         "sys_simulation": {
-            "volume_limit": True,
-            "volume_percent": 0.000002
+            "signal": True,
+            "management_fee": [("stock", 0.05)]
         }
     },
 }
 
 
-def test_open_auction_match():
-    __config__ = {
-        "mod": {
-            "sys_simulation": {
-                "volume_limit": True,
-                "volume_percent": 0.000002
-            }
-        },
-    }
-
+def test_set_management_fee_rate():
     def init(context):
-        context.s = "000001.XSHE"
-        context.bar = None
-        context.first_day = True
-
-    def open_auction(context, bar_dict):
-        bar = bar_dict[context.s]
-        if context.first_day:
-            order_shares(context.s, 1000, bar.limit_up * 0.99)
-            # 部分成交，仅能成交 900 股
-            assert get_position(context.s).quantity == 900
-            assert get_position(context.s).avg_price == bar.open
+        context.day_count = 0
+        context.equity = 0
 
     def handle_bar(context, bar_dict):
-        if context.first_day:
-            bar = bar_dict[context.s]
-            assert get_position(context.s).quantity == 1000
-            assert get_position(context.s).avg_price == (bar.open * 900 + bar.close * 100) / 1000
-            context.first_day = False
+        context.day_count += 1
+        if context.day_count == 1:
+            stock = "000001.XSHE"
+            order_shares(stock, 100)
+            assert context.portfolio.positions[stock].quantity == 100
+            context.fired = True
+            context.total_value = context.portfolio.accounts["STOCK"].total_value
+        if context.day_count == 2:
+            assert context.portfolio.accounts["STOCK"]._management_fees == context.total_value * 0.05
+
+    return locals()
+
+
+def test_set_management_function():
+    def management_fee_calculator(account, rate):
+        return len(account.positions) * 100
+
+    def init(context):
+        context.day_count = 0
+        context.portfolio.accounts["STOCK"].register_management_fee_calculator(management_fee_calculator)
+
+    def handle_bar(context, bar_dict):
+        context.day_count += 1
+        if context.day_count == 1:
+            stock = "000001.XSHE"
+            order_shares(stock, 100)
+            assert context.portfolio.positions[stock].quantity == 100
+            context.fired = True
+        if context.day_count == 4:
+            assert context.portfolio.accounts["STOCK"].management_fees == 300
 
     return locals()

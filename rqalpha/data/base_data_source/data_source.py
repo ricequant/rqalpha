@@ -15,8 +15,10 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
+import pickle
+from itertools import groupby
 from datetime import date, datetime
-from typing import Dict, List, Union, Optional, Sequence
+from typing import Dict, List, Union, Optional, Sequence, Iterable
 
 import six
 import numpy as np
@@ -30,7 +32,9 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.typing import DateLike
 
-from .storage_interface import AbstractInstrumentStore, AbstractCalendarStore, AbstractDayBarStore, AbstractDateSet
+from .storage_interface import (
+    AbstractInstrumentStore, AbstractCalendarStore, AbstractDayBarStore, AbstractDateSet, AbstractDividendStore
+)
 from .storages import (
     InstrumentStore, ShareTransformationStore, FutureInfoStore, ExchangeTradingCalendarStore, DateSet, DayBarStore,
     DividendStore, YieldCurveStore, SimpleFactorStore
@@ -39,6 +43,11 @@ from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
 
 
 class BaseDataSource(AbstractDataSource):
+    DEFAULT_INS_TYPES = (
+        INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX,
+        INSTRUMENT_TYPE.PUBLIC_FUND,
+    )
+
     def __init__(self, path, custom_future_info):
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
@@ -57,9 +66,14 @@ class BaseDataSource(AbstractDataSource):
 
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
 
-        self._instruments = InstrumentStore(
-            _p('instruments.pk'), self._future_info_store
-        ).get_all_instruments()  # type: List[Instrument]
+        self._instruments_stores = {}  # type: Dict[INSTRUMENT_TYPE, AbstractInstrumentStore]
+        self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
+        with open(_p('instruments.pk'), 'rb') as f:
+            instruments = [Instrument(
+                i, lambda i: self._future_info_store.get_future_info(i)["tick_size"]
+            ) for i in pickle.load(f)]
+        for ins_type in self.DEFAULT_INS_TYPES:
+            self.register_instruments_store(InstrumentStore(instruments, ins_type))
 
         dividend_store = DividendStore(_p('dividends.h5'))
         self._dividends = {
@@ -92,7 +106,10 @@ class BaseDataSource(AbstractDataSource):
 
     def register_instruments_store(self, instruments_store):
         # type: (AbstractInstrumentStore) -> None
-        self._instruments.extend(instruments_store.get_all_instruments())
+        instrument_type = instruments_store.instrument_type
+        for id_or_sym in instruments_store.all_id_and_syms:
+            self._ins_id_or_sym_type_map[id_or_sym] = instrument_type
+        self._instruments_stores[instrument_type] = instruments_store
 
     def register_dividend_store(self, instrument_type, dividend_store):
         # type: (INSTRUMENT_TYPE, AbstractDividendStore) -> None
@@ -124,8 +141,16 @@ class BaseDataSource(AbstractDataSource):
         # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
         return {t: store.get_trading_calendar() for t, store in self._calendar_providers.items()}
 
-    def get_all_instruments(self):
-        return self._instruments
+    def get_instruments(self, id_or_syms=None, types=None):
+        # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
+        if id_or_syms is not None:
+            ins_type_getter = lambda i: self._ins_id_or_sym_type_map.get(i)
+            type_id_iter = groupby(sorted(id_or_syms, key=ins_type_getter), key=ins_type_getter)
+        else:
+            type_id_iter = ((t, None) for t in types or self._instruments_stores.keys())
+        for ins_type, id_or_syms in type_id_iter:
+            if ins_type is not None and ins_type in self._instruments_stores:
+                yield from self._instruments_stores[ins_type].get_instruments(id_or_syms)
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
@@ -239,9 +264,6 @@ class BaseDataSource(AbstractDataSource):
         if frequency in ['tick', '1d']:
             s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
-
-    def get_ticks(self, order_book_id, date):
-        raise NotImplementedError
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)

@@ -152,7 +152,8 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
 
     if click_type:
         for k, v in config_args.items():
-            if v is None:
+            # click multiple=True时传入tuple类型 无输入时为tuple()
+            if v is None or (v == tuple()):
                 continue
             if k == 'base__accounts' and not v:
                 continue

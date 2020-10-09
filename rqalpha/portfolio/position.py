@@ -15,23 +15,22 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Iterable, Tuple, Dict, Type, Union
-from datetime import date
 from collections import UserDict
+from datetime import date
+from typing import Dict, Iterable, Tuple
 
-from rqalpha.interface import AbstractPosition
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_EFFECT, POSITION_DIRECTION
+from rqalpha.interface import AbstractPosition
+from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
-from rqalpha.model.instrument import Instrument
-from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.repr import property_repr, PropertyReprMeta
 from rqalpha.utils import is_valid_price
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.repr import PropertyReprMeta, property_repr
 
 
 def new_position_meta():
-
     type_map = {}
 
     class Meta(PropertyReprMeta):
@@ -54,7 +53,6 @@ POSITION_PROXY_TYPE_MAP, PositionProxyMeta = new_position_meta()
 
 
 class Position(AbstractPosition, metaclass=PositionMeta):
-
     __repr_properties__ = (
         "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
     )
@@ -216,6 +214,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def before_trading(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量
+        self._transaction_cost = 0
         return 0
 
     def apply_trade(self, trade):
@@ -246,7 +245,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
-        self._today_quantity = self._trade_cost = self._transaction_cost = self._non_closable = 0
+        self._today_quantity = self._trade_cost = self._non_closable = 0
         self._prev_close = self.last_price
         return 0
 
@@ -325,7 +324,7 @@ class PositionProxy(metaclass=PositionProxyMeta):
         当日盈亏 = 昨仓盈亏 + 交易盈亏
 
         """
-        return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl +\
+        return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl + \
                self._short.trading_pnl - self.transaction_cost
 
     @property
@@ -370,8 +369,6 @@ class PositionProxy(metaclass=PositionProxyMeta):
         return self._short
 
 
-PositionType = Type[Position]
-PositionProxyType = Type[PositionProxy]
 PositionDictType = Dict[str, Dict[POSITION_DIRECTION, Position]]
 
 
@@ -413,7 +410,7 @@ class PositionProxyDict(UserDict):
         return repr({k: self[k] for k in self._positions.keys()})
 
     def _get_position_types(self, order_book_id):
-        # type: (str) -> Tuple[Type[Position], Type[PositionProxy]]
+        # type: (str) -> Tuple[type, type]
         instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
         position_type = POSITION_TYPE_MAP.get(instrument_type, Position)
         position_proxy_type = POSITION_PROXY_TYPE_MAP.get(instrument_type, PositionProxy)
