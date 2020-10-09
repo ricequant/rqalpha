@@ -75,9 +75,9 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
 
 
 class CNStockTransactionCostDecider(StockTransactionCostDecider):
-    def __init__(self, commission_multiplier, min_commission, tax_rate, tax_multiplier):
+    def __init__(self, commission_multiplier, min_commission, tax_multiplier):
         super(CNStockTransactionCostDecider, self).__init__(0.0008, commission_multiplier, min_commission)
-        self.tax_rate = tax_rate
+        self.tax_rate = 0.001
         self.tax_multiplier = tax_multiplier
 
     def _get_tax(self, order_book_id, side, cost_money):
@@ -88,9 +88,9 @@ class CNStockTransactionCostDecider(StockTransactionCostDecider):
 
 
 class HKStockTransactionCostDecider(StockTransactionCostDecider):
-    def __init__(self, commission_multiplier, min_commission, tax_rate, tax_multiplier):
+    def __init__(self, commission_multiplier, min_commission, tax_multiplier):
         super(HKStockTransactionCostDecider, self).__init__(0.0005, commission_multiplier, min_commission)
-        self.tax_rate = tax_rate
+        self.tax_rate = 0.0011
         self.tax_multiplier = tax_multiplier
 
     def _get_tax(self, order_book_id, _, cost_money):

@@ -36,7 +36,7 @@ class TransactionCostMod(AbstractMod):
                     continue
                 env.set_transaction_cost_decider(instrument_type, CNStockTransactionCostDecider(
                     mod_config.commission_multiplier, mod_config.cn_stock_min_commission,
-                    mod_config.cn_stock_tax_rate,  mod_config.tax_multiplier
+                    mod_config.tax_multiplier
                 ))
 
             env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(
@@ -47,7 +47,7 @@ class TransactionCostMod(AbstractMod):
             for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
                 env.set_transaction_cost_decider(instrument_type, HKStockTransactionCostDecider(
                     mod_config.commission_multiplier, mod_config.hk_stock_min_commission,
-                    mod_config.hk_stock_tax_rate, mod_config.tax_multiplier
+                    mod_config.tax_multiplier
                 ))
 
     def tear_down(self, code, exception=None):

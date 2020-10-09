@@ -22,10 +22,6 @@ __config__ = {
     "hk_stock_min_commission": 50,
     # 设置手续费乘数，默认为1
     "commission_multiplier": 1,
-    # A股印花税率
-    "cn_stock_tax_rate": 0.001,
-    # 港股印花税率
-    "hk_stock_tax_rate": 0.0011,
     # 印花税乘数，默认为1
     "tax_multiplier": 1,
 }
@@ -66,22 +62,6 @@ cli.commands['run'].params.append(
         ('-smc', '--stock-min-commission', cli_prefix + 'cn_stock_min_commission'),
         type=click.FLOAT,
         help="[sys_simulation][deprecated] set minimum commission in chinese stock trades."
-    )
-)
-
-cli.commands['run'].params.append(
-    click.Option(
-        ('-cnstr', '--cn-stock-tax-rate', cli_prefix + 'cn_stock_tax_rate'),
-        type=click.FLOAT,
-        help="[sys_simulation] set tax rate in chinese stock trades."
-    )
-)
-
-cli.commands['run'].params.append(
-    click.Option(
-        ('-khstr', '--hk-stock-tax-rate', cli_prefix + 'hk_stock_tax_rate'),
-        type=click.FLOAT,
-        help="[sys_simulation] set tax rate in Hong Kong stock trades."
     )
 )
 
