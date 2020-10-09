@@ -77,7 +77,7 @@ def _submit_order(ins, amount, side, position_effect, style, quantity, auto_swit
     round_lot = int(ins.round_lot)
 
     if side in [SIDE.BUY, side.SELL]:
-        if not (side == SIDE.SELL and -quantity == amount):
+        if not (side == SIDE.SELL and quantity == abs(amount)):
             amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
 
     if amount == 0:
