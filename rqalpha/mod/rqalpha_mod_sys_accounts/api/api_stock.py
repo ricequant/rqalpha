@@ -64,7 +64,7 @@ def _get_account_position_ins(id_or_ins):
     return account, position, ins
 
 
-def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_value):
+def _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value):
     env = Environment.get_instance()
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
@@ -74,9 +74,12 @@ def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_v
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
         return
-    if side == SIDE.BUY:
-        round_lot = int(ins.round_lot)
-        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+    round_lot = int(ins.round_lot)
+
+    if side in [SIDE.BUY, side.SELL]:
+        if not (side == SIDE.SELL and quantity == abs(amount)):
+            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
         return
@@ -95,9 +98,9 @@ def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_v
         return order
 
 
-def _order_shares(ins, amount, style, auto_switch_order_value):
+def _order_shares(ins, amount, style, quantity, auto_switch_order_value):
     side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
-    return _submit_order(ins, amount, side, position_effect, style, auto_switch_order_value)
+    return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value)
 
 
 def _order_value(account, position, ins, cash_amount, style):
@@ -116,8 +119,8 @@ def _order_value(account, position, ins, cash_amount, style):
 
     amount = int(Decimal(cash_amount) / Decimal(price))
 
+    round_lot = int(ins.round_lot)
     if cash_amount > 0:
-        round_lot = int(ins.round_lot)
         amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
         while amount > 0:
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
@@ -133,13 +136,15 @@ def _order_value(account, position, ins, cash_amount, style):
     if amount < 0:
         amount = max(amount, -position.closable)
 
-    return _order_shares(ins, amount, style, auto_switch_order_value=False)
+    return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False)
 
 
 @order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_shares(id_or_ins, amount, price=None, style=None):
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
-    return _order_shares(assure_instrument(id_or_ins), amount, cal_style(price, style), auto_switch_order_value)
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    return _order_shares(assure_instrument(id_or_ins), amount, cal_style(price, style), position.quantity,
+                         auto_switch_order_value)
 
 
 @order_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
@@ -158,7 +163,8 @@ def stock_order_percent(id_or_ins, percent, price=None, style=None):
 def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     if cash_amount == 0:
-        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style), False)
+        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style),
+                             position.quantity, False)
     return _order_value(account, position, ins, cash_amount - position.market_value, cal_style(price, style))
 
 
@@ -166,7 +172,8 @@ def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
 def stock_order_target_percent(id_or_ins, percent, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     if percent == 0:
-        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style), False)
+        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style),
+                             position.quantity, False)
     else:
         return _order_value(
             account, position, ins, account.total_value * percent - position.market_value, cal_style(price, style)
@@ -222,9 +229,10 @@ def order_lots(id_or_ins, amount, price=None, style=None):
         order_lots('000001.XSHE', 10, style=LimitOrder(10))
 
     """
-    ins = assure_instrument(id_or_ins)
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
-    return _order_shares(ins, amount * int(ins.round_lot), cal_style(price, style), auto_switch_order_value)
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    return _order_shares(ins, amount * int(ins.round_lot), cal_style(price, style), position.quantity,
+                         auto_switch_order_value)
 
 
 @export_as_api
