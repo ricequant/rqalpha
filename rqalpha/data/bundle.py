@@ -21,10 +21,11 @@ from itertools import chain
 
 import h5py
 import numpy as np
-
 from rqalpha.apis.api_rqdatac import rqdatac
-from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
-from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
+from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
+                                      ProgressedTask)
+from rqalpha.utils.datetime_func import (convert_date_to_date_int,
+                                         convert_date_to_int)
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -370,6 +371,8 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         ("futures.h5", rqdatac.all_instruments('Future').order_book_id.tolist(), FUTURES_FIELDS),
         ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
     )
+
+    rqdatac.reset()
 
     gen_file_funcs = (
         gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
