@@ -102,7 +102,7 @@ class Trade(object):
 
     def __getattr__(self, item):
         try:
-            return self._kwargs[item]
+            return self.__dict__["_kwargs"][item]
         except KeyError:
             raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
 
