@@ -49,7 +49,7 @@ class Order(object):
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
-        self._kwargs = None
+        self._kwargs = {}
 
     @staticmethod
     def _str_to_enum(enum_class, s):
