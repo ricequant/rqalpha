@@ -261,6 +261,12 @@ class Order(object):
     def kwargs(self):
         return self._kwargs
 
+    def __getattr__(self, item):
+        try:
+            return self._kwargs[item]
+        except KeyError:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
+
     def is_final(self):
         return self._status not in {
             ORDER_STATUS.PENDING_NEW,
