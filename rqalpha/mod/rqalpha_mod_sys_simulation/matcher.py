@@ -85,9 +85,12 @@ class DefaultMatcher(AbstractMatcher):
     def _open_auction_deal_price_decider(self, order_book_id, _):
         return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).open
 
+    SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE)
+    SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
+
     def match(self, account, order, open_auction):
         # type: (Account, Order, bool) -> None
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
+        if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
             raise NotImplementedError
         order_book_id = order.order_book_id
         instrument = self._env.get_instrument(order_book_id)

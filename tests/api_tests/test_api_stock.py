@@ -183,4 +183,3 @@ def test_is_st_stock():
             assert result == expected_result
 
     return locals()
-

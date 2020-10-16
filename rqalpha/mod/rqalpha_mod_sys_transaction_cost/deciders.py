@@ -152,4 +152,3 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
         return self._get_commission(
             order.order_book_id, order.position_effect, order.frozen_price, order.quantity, close_today_quantity
         )
-
