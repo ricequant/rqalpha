@@ -15,40 +15,40 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import math
 import datetime
-from itertools import chain
+import math
 from decimal import Decimal, getcontext
-from typing import Dict, List, Union, Optional
+from itertools import chain
+from typing import Dict, List, Optional, Union
 
-import six
 import numpy as np
 import pandas as pd
-
+import six
 from rqalpha.api import export_as_api
-from rqalpha.apis.api_base import cal_style, assure_order_book_id, assure_instrument
-from rqalpha.apis.api_abstract import (
-    order_shares, order_value, order_percent, order_target_value, order_target_percent, order, order_to
-)
-
-from rqalpha.const import (
-    DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, POSITION_DIRECTION,
-    INSTRUMENT_TYPE
-)
-from rqalpha.environment import Environment
+from rqalpha.apis.api_abstract import (order, order_percent, order_shares,
+                                       order_target_percent,
+                                       order_target_value, order_to,
+                                       order_value)
+from rqalpha.apis.api_base import (assure_instrument, assure_order_book_id,
+                                   cal_style)
+from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE,
+                           INSTRUMENT_TYPE, ORDER_TYPE, POSITION_DIRECTION,
+                           POSITION_EFFECT, SIDE)
 from rqalpha.core.execution_context import ExecutionContext
-from rqalpha.model.instrument import (
-    Instrument, IndustryCode as industry_code, IndustryCodeItem, SectorCode as sector_code, SectorCodeItem
-)
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.utils import is_valid_price, INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.environment import Environment
+from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import \
+    is_cash_enough
+from rqalpha.model.instrument import IndustryCode as industry_code
+from rqalpha.model.instrument import IndustryCodeItem, Instrument
+from rqalpha.model.instrument import SectorCode as sector_code
+from rqalpha.model.instrument import SectorCodeItem
+from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-from rqalpha.utils.datetime_func import to_date
-
-from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import is_cash_enough
 
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
@@ -266,7 +266,7 @@ def order_target_portfolio(target_portfolio):
         total_percent = sum(target_portfolio)
     else:
         total_percent = sum(six.itervalues(target_portfolio))
-    if total_percent > 1:
+    if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
 
     env = Environment.get_instance()
