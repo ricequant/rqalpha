@@ -35,6 +35,7 @@ from rqalpha.utils.i18n import gettext as _
 from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractInstrumentStore)
 
+FUTURES_MISSING_FIELDS = ['open_interest', 'basis_spread']
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
     def __init__(self, f):
@@ -153,19 +154,17 @@ class DayBarStore(AbstractDayBarStore):
         except KeyError:
             bars = np.empty(0, dtype=self.DEFAULT_DTYPE)
         if instrument is not None and instrument.type == 'Future':
-            if 'open_interest' not in bars.dtype.names:
-                new_dt = np.dtype(bars.dtype.descr + [('open_interest', '<f8')])
+            new_fields = []
+            for field in FUTURES_MISSING_FIELDS:
+                if field not in bars.dtype.names:
+                    new_fields.append(field)
+            if new_fields:
+                new_dt = np.dtype(bars.dtype.descr + [(field, '<f8') for field in new_fields])
                 b = np.zeros(bars.shape, dtype=new_dt)
                 for name in bars.dtype.names:
                     b[name] = bars[name]
-                b['open_interest'] = np.nan
-                bars = b
-            if 'basis_spread' not in bars.dtype.names:
-                new_dt = np.dtype(bars.dtype.descr + [('basis_spread', '<f8')])
-                b = np.zeros(bars.shape, dtype=new_dt)
-                for name in bars.dtype.names:
-                    b[name] = bars[name]
-                b['basis_spread'] = np.nan
+                for field in new_fields:
+                    b[field] = np.nan
                 bars = b
         return bars
 
