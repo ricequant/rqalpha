@@ -21,8 +21,8 @@ from copy import copy
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import is_valid_price, account_type_str2enum
-from rqalpha.events import EVENT, Event
+from rqalpha.utils import is_valid_price
+from rqalpha.core.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT
 

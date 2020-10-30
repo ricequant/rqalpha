@@ -15,40 +15,40 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import math
 import datetime
-from itertools import chain
+import math
 from decimal import Decimal, getcontext
-from typing import Dict, List, Union, Optional
+from itertools import chain
+from typing import Dict, List, Optional, Union
 
-import six
 import numpy as np
 import pandas as pd
-
+import six
 from rqalpha.api import export_as_api
-from rqalpha.apis.api_base import cal_style, assure_order_book_id, assure_instrument
-from rqalpha.apis.api_abstract import (
-    order_shares, order_value, order_percent, order_target_value, order_target_percent, order, order_to
-)
-
-from rqalpha.const import (
-    DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE, SIDE, ORDER_TYPE, POSITION_EFFECT, POSITION_DIRECTION,
-    INSTRUMENT_TYPE
-)
+from rqalpha.apis.api_abstract import (order, order_percent, order_shares,
+                                       order_target_percent,
+                                       order_target_value, order_to,
+                                       order_value)
+from rqalpha.apis.api_base import (assure_instrument, assure_order_book_id,
+                                   cal_style)
+from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE,
+                           INSTRUMENT_TYPE, ORDER_TYPE, POSITION_DIRECTION,
+                           POSITION_EFFECT, SIDE)
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
-from rqalpha.execution_context import ExecutionContext
-from rqalpha.model.instrument import (
-    Instrument, IndustryCode as industry_code, IndustryCodeItem, SectorCode as sector_code, SectorCodeItem
-)
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.utils import is_valid_price, INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import \
+    is_cash_enough
+from rqalpha.model.instrument import IndustryCode as industry_code
+from rqalpha.model.instrument import IndustryCodeItem, Instrument
+from rqalpha.model.instrument import SectorCode as sector_code
+from rqalpha.model.instrument import SectorCodeItem
+from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-from rqalpha.utils.datetime_func import to_date
-
-from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import is_cash_enough
 
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
@@ -64,7 +64,7 @@ def _get_account_position_ins(id_or_ins):
     return account, position, ins
 
 
-def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_value):
+def _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value):
     env = Environment.get_instance()
     if isinstance(style, LimitOrder):
         if style.get_limit_price() <= 0:
@@ -74,9 +74,12 @@ def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_v
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
         return
-    if side == SIDE.BUY:
-        round_lot = int(ins.round_lot)
-        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+    round_lot = int(ins.round_lot)
+
+    if side in [SIDE.BUY, side.SELL]:
+        if not (side == SIDE.SELL and quantity == abs(amount)):
+            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
         return
@@ -95,9 +98,9 @@ def _submit_order(ins, amount, side, position_effect, style, auto_switch_order_v
         return order
 
 
-def _order_shares(ins, amount, style, auto_switch_order_value):
+def _order_shares(ins, amount, style, quantity, auto_switch_order_value):
     side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
-    return _submit_order(ins, amount, side, position_effect, style, auto_switch_order_value)
+    return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value)
 
 
 def _order_value(account, position, ins, cash_amount, style):
@@ -116,8 +119,8 @@ def _order_value(account, position, ins, cash_amount, style):
 
     amount = int(Decimal(cash_amount) / Decimal(price))
 
+    round_lot = int(ins.round_lot)
     if cash_amount > 0:
-        round_lot = int(ins.round_lot)
         amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
         while amount > 0:
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
@@ -133,13 +136,15 @@ def _order_value(account, position, ins, cash_amount, style):
     if amount < 0:
         amount = max(amount, -position.closable)
 
-    return _order_shares(ins, amount, style, auto_switch_order_value=False)
+    return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False)
 
 
 @order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_shares(id_or_ins, amount, price=None, style=None):
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
-    return _order_shares(assure_instrument(id_or_ins), amount, cal_style(price, style), auto_switch_order_value)
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    return _order_shares(assure_instrument(id_or_ins), amount, cal_style(price, style), position.quantity,
+                         auto_switch_order_value)
 
 
 @order_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
@@ -158,7 +163,8 @@ def stock_order_percent(id_or_ins, percent, price=None, style=None):
 def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     if cash_amount == 0:
-        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style), False)
+        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style),
+                             position.quantity, False)
     return _order_value(account, position, ins, cash_amount - position.market_value, cal_style(price, style))
 
 
@@ -166,7 +172,8 @@ def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None):
 def stock_order_target_percent(id_or_ins, percent, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     if percent == 0:
-        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style), False)
+        return _submit_order(ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, cal_style(price, style),
+                             position.quantity, False)
     else:
         return _order_value(
             account, position, ins, account.total_value * percent - position.market_value, cal_style(price, style)
@@ -222,9 +229,10 @@ def order_lots(id_or_ins, amount, price=None, style=None):
         order_lots('000001.XSHE', 10, style=LimitOrder(10))
 
     """
-    ins = assure_instrument(id_or_ins)
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
-    return _order_shares(ins, amount * int(ins.round_lot), cal_style(price, style), auto_switch_order_value)
+    account, position, ins = _get_account_position_ins(id_or_ins)
+    return _order_shares(ins, amount * int(ins.round_lot), cal_style(price, style), position.quantity,
+                         auto_switch_order_value)
 
 
 @export_as_api
@@ -258,7 +266,7 @@ def order_target_portfolio(target_portfolio):
         total_percent = sum(target_portfolio)
     else:
         total_percent = sum(six.itervalues(target_portfolio))
-    if total_percent > 1:
+    if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
 
     env = Environment.get_instance()

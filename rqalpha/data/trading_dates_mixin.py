@@ -32,14 +32,19 @@ class TradingDatesMixin(object):
     def __init__(self, trading_calendars):
         # type: (Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]) -> TradingDatesMixin
         self.trading_calendars = trading_calendars
+        self.merged_trading_calendars = pd.DatetimeIndex(sorted(set.union(*(
+            set(calendar) for calendar in trading_calendars.values()
+        ))))
 
-    def get_trading_calendar(self, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+    def get_trading_calendar(self, trading_calendar_type=None):
+        if trading_calendar_type is None:
+            return self.merged_trading_calendars
         try:
             return self.trading_calendars[trading_calendar_type]
         except KeyError:
             raise NotImplementedError("unsupported trading_calendar_type {}".format(trading_calendar_type))
 
-    def get_trading_dates(self, start_date, end_date, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+    def get_trading_dates(self, start_date, end_date, trading_calendar_type=None):
         # 只需要date部分
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         start_date = _to_timestamp(start_date)
@@ -48,7 +53,7 @@ class TradingDatesMixin(object):
         right = trading_dates.searchsorted(end_date, side='right')
         return trading_dates[left:right]
 
-    def get_previous_trading_date(self, date, n=1, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+    def get_previous_trading_date(self, date, n=1, trading_calendar_type=None):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
         if pos >= n:
@@ -56,7 +61,7 @@ class TradingDatesMixin(object):
         else:
             return trading_dates[0]
 
-    def get_next_trading_date(self, date, n=1, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+    def get_next_trading_date(self, date, n=1, trading_calendar_type=None):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date), side='right')
         if pos + n > len(trading_dates):
@@ -64,24 +69,15 @@ class TradingDatesMixin(object):
         else:
             return trading_dates[pos + n - 1]
 
-    def is_trading_date(self, date, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+    def is_trading_date(self, date, trading_calendar_type=None):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
         return pos < len(trading_dates) and trading_dates[pos] == date
 
-    def get_trading_dt(self, calendar_dt, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
-        if trading_calendar_type == TRADING_CALENDAR_TYPE.EXCHANGE:
-            trading_date = self.get_future_trading_date(calendar_dt)
-        else:
-            if _to_timestamp(trading_calendar_type) not in self.get_trading_calendar(trading_calendar_type):
-                raise RuntimeError('invalid {} calendar datetime: {}'.format(trading_calendar_type, calendar_dt))
-            trading_date = calendar_dt.date()
-        return datetime.datetime.combine(trading_date, calendar_dt.time())
-
     def get_future_trading_date(self, dt):
         return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))
 
-    def get_n_trading_dates_until(self, dt, n, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+    def get_n_trading_dates_until(self, dt, n, trading_calendar_type=None):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(dt), side='right')
         if pos >= n:
@@ -89,7 +85,7 @@ class TradingDatesMixin(object):
 
         return trading_dates[:pos]
 
-    def count_trading_dates(self, start_date, end_date, trading_calendar_type=TRADING_CALENDAR_TYPE.EXCHANGE):
+    def count_trading_dates(self, start_date, end_date, trading_calendar_type=None):
         start_date = _to_timestamp(start_date)
         end_date = _to_timestamp(end_date)
         trading_dates = self.get_trading_calendar(trading_calendar_type)

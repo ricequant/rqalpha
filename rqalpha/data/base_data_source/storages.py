@@ -21,6 +21,9 @@ import locale
 import codecs
 import pickle
 from copy import copy
+from typing import Dict
+
+from rqalpha.data.base_data_source.storage_interface import AbstractSimpleFactorStore
 from rqalpha.utils.functools import lru_cache
 
 import json
@@ -34,6 +37,7 @@ from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 
 from .storage_interface import AbstractCalendarStore, AbstractInstrumentStore, AbstractDayBarStore, AbstractDateSet
+from .storage_interface import AbstractDividendStore
 
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
@@ -67,6 +71,7 @@ class FutureInfoStore(object):
         return item
 
     def get_future_info(self, instrument):
+        # type: (Instrument) -> Dict[str, float]
         order_book_id = instrument.order_book_id
         try:
             return self._future_info[order_book_id]
@@ -94,7 +99,7 @@ class InstrumentStore(AbstractInstrumentStore):
 
         self._instruments = []
         for i in d:
-            ins = Instrument(i, future_info_store)
+            ins = Instrument(i, lambda i: future_info_store.get_future_info(i)["tick_size"])
             if ins.type in self.SUPPORTED_TYPES:
                 self._instruments.append(ins)
 
@@ -161,7 +166,7 @@ class DayBarStore(AbstractDayBarStore):
             return 20050104, 20050104
 
 
-class DividendStore:
+class DividendStore(AbstractDividendStore):
     def __init__(self, path):
         self._h5 = open_h5(path, mode="r")
 
@@ -200,7 +205,7 @@ class YieldCurveStore:
         return df
 
 
-class SimpleFactorStore:
+class SimpleFactorStore(AbstractSimpleFactorStore):
     def __init__(self, path):
         self._h5 = open_h5(path, mode="r")
 

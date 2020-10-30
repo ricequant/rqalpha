@@ -17,14 +17,14 @@
 
 from collections import defaultdict
 
-from rqalpha.utils import is_valid_price
-from rqalpha.portfolio.account import Account
-from rqalpha.const import ORDER_TYPE, SIDE, MATCHING_TYPE, POSITION_EFFECT
-from rqalpha.events import EVENT, Event
-from rqalpha.model.trade import Trade
-from rqalpha.model.order import Order
-from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
+from rqalpha.core.events import EVENT, Event
+from rqalpha.model.order import Order
+from rqalpha.model.trade import Trade
+from rqalpha.portfolio.account import Account
+from rqalpha.utils import is_valid_price
+from rqalpha.utils.i18n import gettext as _
 
 from .slippage import SlippageDecider
 
@@ -45,6 +45,7 @@ class DefaultMatcher(AbstractMatcher):
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._liquidity_limit = mod_config.liquidity_limit and env.config.base.frequency == "tick"
+        self._inactive_limit = mod_config.inactive_limit
         self._volume_limit = mod_config.volume_limit
         self._env = env  # type: Environment
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
@@ -85,9 +86,12 @@ class DefaultMatcher(AbstractMatcher):
     def _open_auction_deal_price_decider(self, order_book_id, _):
         return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).open
 
+    SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY)
+    SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
+
     def match(self, account, order, open_auction):
         # type: (Account, Order, bool) -> None
-        if order.position_effect == POSITION_EFFECT.EXERCISE:
+        if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
             raise NotImplementedError
         order_book_id = order.order_book_id
         instrument = self._env.get_instrument(order_book_id)
@@ -156,6 +160,15 @@ class DefaultMatcher(AbstractMatcher):
                     ).format(order_book_id=order.order_book_id)
                     order.mark_rejected(reason)
                     return
+
+        if self._inactive_limit:
+            bar_volume = self._env.get_bar(order_book_id).volume
+            if bar_volume == 0:
+                reason = _(u"Order Cancelled: {order_book_id} bar volume = {volume} "). \
+                    format(order_book_id=order.order_book_id,
+                           volume=bar_volume)
+                order.mark_cancelled(reason)
+                return
 
         if self._volume_limit:
             if open_auction:

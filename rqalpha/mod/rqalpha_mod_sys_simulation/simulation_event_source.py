@@ -22,7 +22,7 @@ import pandas
 
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractEventSource
-from rqalpha.events import Event, EVENT
+from rqalpha.core.events import Event, EVENT
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET, TRADING_CALENDAR_TYPE

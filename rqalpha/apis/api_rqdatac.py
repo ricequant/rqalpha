@@ -25,7 +25,7 @@ from rqalpha.apis.names import (
     VALID_HISTORY_FIELDS, VALID_MARGIN_FIELDS, VALID_SHARE_FIELDS, VALID_TURNOVER_FIELDS,
     VALID_CURRENT_PERFORMANCE_FIELDS, VALID_STOCK_CONNECT_FIELDS,
 )
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument

@@ -49,6 +49,7 @@ class Order(object):
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
+        self._kwargs = None
 
     @staticmethod
     def _str_to_enum(enum_class, s):
@@ -71,6 +72,7 @@ class Order(object):
             'type': self._type,
             'transaction_cost': self._transaction_cost,
             'avg_price': self._avg_price,
+            'kwargs': self._kwargs,
         }
 
     def set_state(self, d):
@@ -90,9 +92,10 @@ class Order(object):
         self._type = ORDER_TYPE[d["type"]]
         self._transaction_cost = d['transaction_cost']
         self._avg_price = d['avg_price']
+        self._kwargs = d['kwargs']
 
     @classmethod
-    def __from_create__(cls, order_book_id, quantity, side, style, position_effect):
+    def __from_create__(cls, order_book_id, quantity, side, style, position_effect, **kwargs):
         env = Environment.get_instance()
         order = cls()
         order._order_id = next(order.order_id_gen)
@@ -116,6 +119,7 @@ class Order(object):
             order._type = ORDER_TYPE.MARKET
         order._avg_price = 0
         order._transaction_cost = 0
+        order._kwargs = kwargs
         return order
 
     @property
@@ -252,6 +256,10 @@ class Order(object):
         if np.isnan(self._frozen_price):
             raise RuntimeError("Frozen price of order {} is not supposed to be nan.".format(self.order_id))
         return self._frozen_price
+
+    @property
+    def kwargs(self):
+        return self._kwargs
 
     def is_final(self):
         return self._status not in {

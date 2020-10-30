@@ -15,29 +15,27 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
-from rqalpha.utils.functools import lru_cache
 from itertools import chain
-from typing import Dict, Iterable, Union, Optional, Type, Callable, List
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
-from rqalpha.const import POSITION_EFFECT
-from rqalpha.interface import AbstractAccount
-from rqalpha.events import EVENT
+import six
+
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
+from rqalpha.core.events import EVENT
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_DIRECTION, INSTRUMENT_TYPE
-from rqalpha.utils.class_helper import deprecated_property
-from rqalpha.model.order import OrderStyle, Order
+from rqalpha.model.order import Order, OrderStyle
 from rqalpha.model.trade import Trade
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
-
+from rqalpha.utils.logger import user_system_log
 from .position import Position, PositionProxyDict
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 PositionType = Type[Position]
 
 
-class Account(AbstractAccount):
+class Account:
     """
     账户，多种持仓和现金的集合。
 
@@ -107,35 +105,16 @@ class Account(AbstractAccount):
     def set_state(self, state):
         self._frozen_cash = state['frozen_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
+        self._total_cash = state["total_cash"]
 
         self._positions.clear()
         for order_book_id, positions_state in state['positions'].items():
             for direction in POSITION_DIRECTION:
                 position = self._get_or_create_pos(order_book_id, direction)
-                position.set_state(positions_state[direction])
-        if "total_cash" in state:
-            self._total_cash = state["total_cash"]
-        else:
-            # forward compatible
-            total_cash = state["static_total_value"]
-            for p in self._iter_pos():
-                if p._instrument.type == INSTRUMENT_TYPE.FUTURE:
-                    continue
-                # FIXME: not exactly right
-                try:
-                    total_cash -= p.equity
-                except RuntimeError:
-                    total_cash -= p.prev_close * p.quantity
-
-        # forward compatible
-        if "dividend_receivable" in state:
-            for order_book_id, dividend in state["dividend_receivable"].items():
-                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._dividend_receivable = (
-                    dividend["payable_date"], dividend["quantity"] * dividend["dividend_per_share"]
-                )
-        if "pending_transform" in state:
-            for order_book_id, transform_info in state["pending_transform"].items():
-                self._get_or_create_pos(order_book_id, POSITION_DIRECTION.LONG)._pending_transform = transform_info
+                if direction in positions_state.keys():
+                    position.set_state(positions_state[direction])
+                else:
+                    position.set_state(positions_state[direction.lower()])
 
     def fast_forward(self, orders=None, trades=None):
         if trades:
@@ -257,7 +236,7 @@ class Account(AbstractAccount):
     def equity(self):
         # type: () -> float
         """
-        总权益
+        持仓总权益
         """
         return sum(p.equity for p in self._iter_pos())
 
@@ -340,6 +319,11 @@ class Account(AbstractAccount):
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
+        if order and trade.position_effect != POSITION_EFFECT.MATCH:
+            if trade.last_quantity != order.quantity:
+                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
+            else:
+                self._frozen_cash -= self._frozen_cash_of_order(order)
         if trade.position_effect == POSITION_EFFECT.MATCH:
             delta_cash = self._get_or_create_pos(
                 order_book_id, POSITION_DIRECTION.LONG
@@ -351,11 +335,6 @@ class Account(AbstractAccount):
             delta_cash = self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
             self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
-        if order and trade.position_effect != POSITION_EFFECT.MATCH:
-            if trade.last_quantity != order.quantity:
-                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
-            else:
-                self._frozen_cash -= self._frozen_cash_of_order(order)
 
     def _iter_pos(self, direction=None):
         # type: (Optional[POSITION_DIRECTION]) -> Iterable[Position]

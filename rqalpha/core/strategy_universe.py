@@ -16,7 +16,7 @@ import six
 import json
 import copy
 
-from rqalpha.events import EVENT, Event
+from rqalpha.core.events import EVENT, Event
 from rqalpha.environment import Environment
 from rqalpha.model.instrument import Instrument
 
