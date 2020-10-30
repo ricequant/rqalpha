@@ -154,10 +154,7 @@ class DayBarStore(AbstractDayBarStore):
         except KeyError:
             bars = np.empty(0, dtype=self.DEFAULT_DTYPE)
         if instrument is not None and instrument.type == 'Future':
-            new_fields = []
-            for field in FUTURES_MISSING_FIELDS:
-                if field not in bars.dtype.names:
-                    new_fields.append(field)
+            new_fields = [field for field in FUTURES_MISSING_FIELDS if field not in bars.dtype.names]
             if new_fields:
                 new_dt = np.dtype(bars.dtype.descr + [(field, '<f8') for field in new_fields])
                 b = np.zeros(bars.shape, dtype=new_dt)
