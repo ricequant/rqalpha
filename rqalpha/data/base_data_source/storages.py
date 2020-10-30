@@ -15,25 +15,25 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import os
-import sys
-import locale
 import codecs
-import pickle
-from copy import copy
-from rqalpha.utils.functools import lru_cache
-
 import json
-import h5py
-import pandas
-import numpy as np
+import locale
+import os
+import pickle
+import sys
+from copy import copy
 
-from rqalpha.utils.datetime_func import convert_date_to_date_int
-from rqalpha.utils.i18n import gettext as _
+import h5py
+import numpy as np
+import pandas
 from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils.datetime_func import convert_date_to_date_int
+from rqalpha.utils.functools import lru_cache
+from rqalpha.utils.i18n import gettext as _
 
-from .storage_interface import AbstractCalendarStore, AbstractInstrumentStore, AbstractDayBarStore, AbstractDateSet
+from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
+                                AbstractDayBarStore, AbstractInstrumentStore)
 
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
@@ -147,11 +147,27 @@ class DayBarStore(AbstractDayBarStore):
             raise FileExistsError("File {} not exist，please update bundle.".format(path))
         self._h5 = open_h5(path, mode="r")
 
-    def get_bars(self, order_book_id):
+    def get_bars(self, order_book_id, instrument=None):
         try:
-            return self._h5[order_book_id][:]
+            bars = self._h5[order_book_id][:]
         except KeyError:
-            return np.empty(0, dtype=self.DEFAULT_DTYPE)
+            bars = np.empty(0, dtype=self.DEFAULT_DTYPE)
+        if instrument is not None and instrument.type == 'Future':
+            if 'open_interest' not in bars.dtype.names:
+                new_dt = np.dtype(bars.dtype.descr + [('open_interest', '<f8')])
+                b = np.zeros(bars.shape, dtype=new_dt)
+                for name in bars.dtype.names:
+                    b[name] = bars[name]
+                b['open_interest'] = np.nan
+                bars = b
+            if 'basis_spread' not in bars.dtype.names:
+                new_dt = np.dtype(bars.dtype.descr + [('basis_spread', '<f8')])
+                b = np.zeros(bars.shape, dtype=new_dt)
+                for name in bars.dtype.names:
+                    b[name] = bars[name]
+                b['basis_spread'] = np.nan
+                bars = b
+        return bars
 
     def get_date_range(self, order_book_id):
         try:

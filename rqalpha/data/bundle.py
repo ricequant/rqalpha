@@ -21,10 +21,11 @@ from itertools import chain
 
 import h5py
 import numpy as np
-
 from rqalpha.apis.api_rqdatac import rqdatac
-from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
-from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
+from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
+                                      ProgressedTask)
+from rqalpha.utils.datetime_func import (convert_date_to_date_int,
+                                         convert_date_to_int)
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -274,7 +275,7 @@ class GenerateFileTask(ProgressedTask):
 STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
 INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
 # FUTURES_FIELDS = STOCK_FIELDS + ['basis_spread', 'settlement', 'prev_settlement']
-FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement']
+FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement', 'open_interest', 'basis_spread']
 # FUND_FIELDS = STOCK_FIELDS + ['acc_net_value', 'unit_net_value', 'discount_rate']
 FUND_FIELDS = STOCK_FIELDS
 
@@ -370,7 +371,6 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         ("futures.h5", rqdatac.all_instruments('Future').order_book_id.tolist(), FUTURES_FIELDS),
         ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
     )
-
     gen_file_funcs = (
         gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
