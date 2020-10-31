@@ -34,8 +34,7 @@ install:
   - pip install coveralls
   - pip install -U setuptools
   - pip install ipython==5.3.0
-  - pip install --prefer-binary kiwisolver
-  - pip install .
+  - pip install --prefer-binary .
 script:
   - ls -al $HOME/.rqalpha/
   - ls -al $HOME/.rqalpha/bundle/
