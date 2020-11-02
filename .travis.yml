@@ -5,7 +5,6 @@ branches:
   only:
     - develop
     - master
-    - fix_travis
 matrix:
   include:
     - python: 3.5
