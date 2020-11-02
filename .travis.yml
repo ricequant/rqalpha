@@ -27,12 +27,13 @@ install:
   - cd ..
 
   # Install Test Deps
+  - pip install -U pip
   - pip install "numpy>=1.15.4"
   - pip install TA-Lib
   - pip install coveralls
   - pip install -U setuptools
   - pip install ipython==5.3.0
-  - pip install .
+  - pip install --prefer-binary .
 script:
   - ls -al $HOME/.rqalpha/
   - ls -al $HOME/.rqalpha/bundle/
