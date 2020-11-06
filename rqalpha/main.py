@@ -114,9 +114,12 @@ def init_rqdatac(rqdatac_uri):
     except ImportError:
         return
 
+    import warnings
+
     try:
         init_rqdatac_env(rqdatac_uri)
-        rqdatac.init()
+        with warnings.catch_warnings(record=True):
+            rqdatac.init()
     except Exception as e:
         system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
 
