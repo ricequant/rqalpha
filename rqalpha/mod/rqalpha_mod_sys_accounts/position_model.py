@@ -71,7 +71,7 @@ class StockPosition(Position):
     @property
     def closable(self):
         # type: () -> int
-        order_quantity = sum(o for o in self._open_orders if o.position_effect in (
+        order_quantity = sum(o.unfilled_quantity for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
         if self.t_plus_enabled:

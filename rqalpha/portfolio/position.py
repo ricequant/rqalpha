@@ -177,7 +177,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         """
         可平仓位
         """
-        order_quantity = sum(o for o in self._open_orders if o.position_effect in (
+        order_quantity = sum(o.unfilled_quantity for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
         return self.quantity - order_quantity
