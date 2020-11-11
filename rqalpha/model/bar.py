@@ -313,9 +313,13 @@ class BarObject(object):
 
     def __getattr__(self, item):
         try:
-            return self._data[item]
+            value = self._data[item]
         except KeyError:
             raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
+        else:
+            if isinstance(value, bytes):
+                return value.decode("utf-8")
+            return value
 
 
 class BarMap(object):
