@@ -54,17 +54,13 @@ def run_tests(file_path=None):
             system_log.error(result_data)
         else:
             df, old_df, result = result_data
-            # print("+" * 10, "old test Dataframe: ", "+" * 10)
-            # print(old_df.drop(result.columns[result.all()], axis=1))
-            # print("+" * 10, "new test Dataframe: ", "+" * 10)
-            # print(df.drop(result.columns[result.all()], axis=1))
             if "summary" in df.keys():
                 df["summary"] = pd.DataFrame([df["summary"]])
                 old_df["summary"] = pd.DataFrame([old_df["summary"]])
-            for k in df.keys():
-                d = old_df[k][~old_df[k].isin(df[k])].dropna()
-                if not d.empty:
-                    print(k, 'max diff:', d.abs().max(), "\n")
+            # for k in df.keys():
+            #     d = old_df[k][~old_df[k].isin(df[k])].dropna()
+            #     if not d.empty:
+            #         print(k, 'max diff:', d.abs().max(), "\n")
             print(result.all())
     print(u"=" * 40)
     print(
@@ -79,7 +75,7 @@ def run_test(filename):
     config = {"base": {"strategy_file": os.path.join(TEST_DIR, filename)}}
     print(u"Start test: " + str(config["base"]["strategy_file"]))
     result_dict = run(config)["sys_analyser"]
-    df = result_dict["portfolio"]
+
     # del df['positions']
 
     old_pickle_file = os.path.join(TEST_OUT, filename.replace(".py", ".pkl"))
@@ -93,22 +89,8 @@ def run_test(filename):
         old_result_dict = pd.read_pickle(old_pickle_file)
 
         # 比较 portfolios
-        old_df = old_result_dict["portfolio"]
-        old_df = old_df.fillna(0)
-        old_df = old_df.replace([np.inf, -np.inf], 0)
-        df = df.fillna(0)
-        df = df.replace([np.inf, -np.inf], 0)
-        # del old_df["trades"]
-        # del df["trades"]
-        try:
-            del old_df["dividend_receivable"]
-            del df["dividend_receivable"]
-        except:
-            pass
-
-        df = df.round(0)
-        old_df = old_df.round(0)
-
+        old_df = old_result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(4)
+        df = result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(4)
         result = df.eq(old_df)
         if not result.all().all():
             return result.all(), (df, old_df, result)
