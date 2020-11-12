@@ -89,8 +89,14 @@ def run_test(filename):
         old_result_dict = pd.read_pickle(old_pickle_file)
 
         # 比较 portfolios
-        old_df = old_result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(4)
-        df = result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(4)
+        old_df = old_result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(0)
+        df = result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(0)
+        try:
+            del old_df["dividend_receivable"]
+            del df["dividend_receivable"]
+        except:
+            pass
+
         result = df.eq(old_df)
         if not result.all().all():
             return result.all(), (df, old_df, result)
