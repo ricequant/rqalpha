@@ -58,7 +58,8 @@ class Executor(object):
                 self._env.event_bus.publish_event(event)
 
         # publish settlement after last day
-        self._split_and_publish(Event(EVENT.SETTLEMENT))
+        if self._env.trading_dt.date() == conf.end_date:
+            self._split_and_publish(Event(EVENT.SETTLEMENT))
 
     def _ensure_before_trading(self, event):
         # return True if before_trading won't run this time

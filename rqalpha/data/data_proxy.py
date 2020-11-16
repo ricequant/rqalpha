@@ -15,34 +15,31 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import re
 from datetime import datetime, date
-from typing import Union, List
+from typing import Union, List, Sequence, Optional, Iterable
 
 import six
 import numpy as np
 import pandas as pd
 
 from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
-from rqalpha.utils import risk_free_helper
-from rqalpha.data.instrument_mixin import InstrumentMixin
+from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
-from rqalpha.utils.typing import DateLike
+from rqalpha.utils.typing import DateLike, StrOrIter
+from rqalpha.interface import AbstractDataSource, AbstractPriceBoard
 
 
-class DataProxy(InstrumentMixin, TradingDatesMixin):
+class DataProxy(TradingDatesMixin):
     def __init__(self, data_source, price_board):
+        # type: (AbstractDataSource, AbstractPriceBoard) -> None
         self._data_source = data_source
         self._price_board = price_board
-        try:
-            self.get_risk_free_rate = data_source.get_risk_free_rate
-        except AttributeError:
-            pass
-        InstrumentMixin.__init__(self, data_source.get_all_instruments())
         try:
             trading_calendars = data_source.get_trading_calendars()
         except NotImplementedError:
@@ -231,15 +228,11 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_commission_info(instrument)
 
-    def get_ticks(self, order_book_id, date):
-        instrument = self.instruments(order_book_id)
-        return self._data_source.get_ticks(instrument, date)
-
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)
 
     def is_suspended(self, order_book_id, dt, count=1):
-        # type: (str, DateLike, int) -> List[bool]
+        # type: (str, DateLike, int) -> Union[Sequence[bool], bool]
         if count == 1:
             return self._data_source.is_suspended(order_book_id, [dt])[0]
 
@@ -259,3 +252,33 @@ class DataProxy(InstrumentMixin, TradingDatesMixin):
     def get_last_price(self, order_book_id):
         # type: (str) -> float
         return float(self._price_board.get_last_price(order_book_id))
+
+    def all_instruments(self, types, dt=None):
+        # type: (List[INSTRUMENT_TYPE], Optional[datetime]) -> List[Instrument]
+        return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
+
+    def instruments(self, sym_or_ids):
+        # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
+        if isinstance(sym_or_ids, str):
+            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_ids])), None)
+        else:
+            return list(self._data_source.get_instruments(id_or_syms=sym_or_ids))
+
+    FUTURE_CONTINUOUS_CONTRACT = re.compile("^[A-Z]{1,2}(88|888|99|889)$")
+
+    def get_future_contracts(self, underlying, date):
+        # type: (str, DateLike) -> List[str]
+        return sorted(i.order_book_id for i in self.all_instruments(
+            [INSTRUMENT_TYPE.FUTURE], date
+        ) if i.underlying_symbol == underlying and not re.match(self.FUTURE_CONTINUOUS_CONTRACT, i.order_book_id))
+
+    def get_trading_period(self, sym_or_ids, default_trading_period=None):
+        # type: (StrOrIter, Optional[Sequence[TimeRange]]) -> List[TimeRange]
+        trading_period = default_trading_period or []
+        for instrument in self.instruments(sym_or_ids):
+            trading_period.extend(instrument.trading_hours or [])
+        return merge_trading_period(trading_period)
+
+    def is_night_trading(self, sym_or_ids):
+        # type: (StrOrIter) -> bool
+        return any((instrument.trade_at_night for instrument in self.instruments(sym_or_ids)))

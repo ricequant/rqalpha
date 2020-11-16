@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-07-10 16:10+0800\n"
+"POT-Creation-Date: 2020-09-11 10:46+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -28,61 +28,56 @@ msgstr "Environment 并没有被创建，请再 RQAlpha 初始化之后使用 `E
 msgid "No such transaction cost decider, order_book_id = {}"
 msgstr ""
 
-#: rqalpha/execution_context.py:103
-#, python-format
-msgid "You cannot call %s when executing %s"
-msgstr "%s 不能在 %s 中调用。"
-
-#: rqalpha/main.py:60
+#: rqalpha/main.py:59
 msgid ""
 "There is no data between {start_date} and {end_date}. Please check your "
 "data bundle or select other backtest period."
 msgstr "未在 {start_date} 和 {end_date} 区间内查询到数据，请检查并升级您的 data bundle 或者选择其他回测区间。"
 
-#: rqalpha/main.py:79
+#: rqalpha/main.py:78
 msgid ""
 "Missing persist provider. You need to set persist_provider before use "
 "persist"
 msgstr "Persist provider 未加载，加载 Persist provider 方可使用 persist 功能。"
 
-#: rqalpha/main.py:122
+#: rqalpha/main.py:121
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:198
+#: rqalpha/main.py:205
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:230
+#: rqalpha/main.py:236
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:235
+#: rqalpha/main.py:241
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
-#: rqalpha/apis/api_base.py:67 rqalpha/apis/api_base.py:266
-#: rqalpha/apis/api_base.py:302
+#: rqalpha/apis/api_base.py:68 rqalpha/apis/api_base.py:267
+#: rqalpha/apis/api_base.py:303
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
-#: rqalpha/apis/api_base.py:87 rqalpha/apis/api_base.py:91
+#: rqalpha/apis/api_base.py:88 rqalpha/apis/api_base.py:92
 msgid "Limit order price should not be nan."
 msgstr "限价单价格不能为 nan。"
 
-#: rqalpha/apis/api_base.py:148
+#: rqalpha/apis/api_base.py:149
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:55
 msgid "Main Future contracts[88] are not supported in paper trading."
 msgstr "期货主力连续合约[88] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:152
+#: rqalpha/apis/api_base.py:153
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:57
 msgid "Index Future contracts[99] are not supported in paper trading."
 msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:158
+#: rqalpha/apis/api_base.py:159
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:75
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:113
@@ -195,6 +190,11 @@ msgstr ""
 "\n"
 "下载失败，{} 秒后重试。"
 
+#: rqalpha/core/execution_context.py:103
+#, python-format
+msgid "You cannot call %s when executing %s"
+msgstr "%s 不能在 %s 中调用。"
+
 #: rqalpha/core/strategy.py:36
 msgid "not run {}({}, {}) because strategy is hold"
 msgstr "策略暂停中，取消执行 {}({}, {})"
@@ -203,11 +203,11 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/base_data_source/storages.py:80
+#: rqalpha/data/base_data_source/storages.py:85
 msgid "unsupported future instrument {}"
 msgstr "不支持的期货标的{}"
 
-#: rqalpha/data/base_data_source/storages.py:130
+#: rqalpha/data/base_data_source/storages.py:150
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
@@ -437,13 +437,17 @@ msgstr "订单被拒单: [{order_book_id}] 已跌停。"
 msgid "Order Cancelled: [{order_book_id}] has no liquidity."
 msgstr "合约 [{order_book_id}] 流动性不足，拒单。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:172
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:163
+msgid "Order Cancelled: {order_book_id} bar no volume"
+msgstr "订单被撤销：{order_book_id} 当前无成交量"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:179
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} due "
 "to volume limit"
 msgstr "订单被撤销: 订单 [{order_book_id}] 的下单量 {order_volume} 超过了成交量限制。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:207
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:214
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
 "larger than {volume_percent_limit} percent of current bar volume, fill "
@@ -452,14 +456,20 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:42
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:40
 msgid "invalid margin multiplier value: value range is (0, +∞]"
 msgstr "无效的 保证金乘数 设置: 其值范围为 (0, +∞]"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:51
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:57
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:49
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:55
 msgid "Not supported matching type {}"
 msgstr "不支持撮合类型: {}"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:59
+msgid ""
+"matching_type = 'next_bar' is abandoned when frequency == '1d',Current "
+"matching_type is 'current_bar'."
+msgstr "日回测 'next_bar' 撮合方式已废弃，当前按 'current_bar' 撮合方式成交"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:53
 msgid "cancel_order function is not supported in signal mode"
@@ -529,11 +539,23 @@ msgid ""
 " {tax}, {frozen_price}"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:318
+#: rqalpha/portfolio/__init__.py:268
+msgid "invalid account type {}, choose in {}"
+msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
+
+#: rqalpha/portfolio/__init__.py:272
+msgid "Cash add {}. units {} become to {}"
+msgstr "入金{}元，份额由{}变动为{}"
+
+#: rqalpha/portfolio/account.py:297
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/position.py:173
+#: rqalpha/portfolio/account.py:381
+msgid "insufficient cash, current {}, target withdrawal {}"
+msgstr "现金不足，当前现金 {}，目标出金 {}"
+
+#: rqalpha/portfolio/position.py:171
 msgid "last price of position {} is not supposed to be nan"
 msgstr "仓位 {} 最新价不应该为 nan"
 
@@ -639,37 +661,37 @@ msgstr "\"{}\" 已被弃用，请使用 \"{}\"，查询文档以获取更多信�
 msgid "in parse_user_config, exception: {e}"
 msgstr "在执行 parse_user_config 时，产生异常: {e}"
 
-#: rqalpha/utils/config.py:207
+#: rqalpha/utils/config.py:208
 msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr "无效的 future info: 合约品种 {} 不合法"
 
-#: rqalpha/utils/config.py:222
+#: rqalpha/utils/config.py:223
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
 msgstr "无效的 future info: commission_type 字段应为 BY_MONEY 或 BY_VOLUME"
 
-#: rqalpha/utils/config.py:226
+#: rqalpha/utils/config.py:227
 msgid "Invalid future info: field {} is not valid"
 msgstr "无效的 future info: 字段 {} 不合法"
 
-#: rqalpha/utils/config.py:256
+#: rqalpha/utils/config.py:257
 msgid "invalid init position {}, should be in format 'order_book_id:quantity'"
 msgstr "无效的初始仓位：{}，格式应该为 'order_book_id:quantity'"
 
-#: rqalpha/utils/config.py:261
+#: rqalpha/utils/config.py:262
 msgid "invalid quantity for instrument {order_book_id}: {quantity}"
 msgstr "初始仓位中合约 {order_book_id} 的数量 {quantity} 不是有效的数字"
 
-#: rqalpha/utils/config.py:276
+#: rqalpha/utils/config.py:277
 msgid "unknown run type: {}"
 msgstr "未知的策略类型：{}"
 
-#: rqalpha/utils/config.py:289
+#: rqalpha/utils/config.py:290
 msgid "unknown persist mode: {}"
 msgstr "未知的持久化模式：{}"
 
-#: rqalpha/utils/config.py:302
+#: rqalpha/utils/config.py:303
 msgid "unknown market type: {}"
 msgstr "未知的市场类型：{}"
 
@@ -1069,4 +1091,7 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 #~ "[deprecated] before_night_trading is no longer"
 #~ " used. use before_trading instead."
 #~ msgstr "[deprecated] before_night_trading 已经不再使用，请使用 before_trading 代替。"
+
+#~ msgid "The balance({balance}) is less than the withdrawal amount={amount}"
+#~ msgstr "出金数额 {amount} 不小于账户余额 {balance}"
 

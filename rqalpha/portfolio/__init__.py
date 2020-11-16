@@ -15,24 +15,24 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from rqalpha.utils.functools import lru_cache
-from typing import Dict, Union, Callable, List, Tuple
 from itertools import chain
+from typing import Callable, Dict, List, Tuple, Union
 
-import six
 import jsonpickle
 import numpy as np
+import six
 
-from rqalpha.environment import Environment
 from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
-from rqalpha.utils import merge_dicts
-from rqalpha.utils.repr import PropertyReprMeta
+from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
-from rqalpha.model.order import OrderStyle, Order
 from rqalpha.interface import AbstractPosition
-
-from .account import Account
-from .position import PositionType, PositionProxyType
+from rqalpha.model.order import Order, OrderStyle
+from rqalpha.portfolio.account import Account
+from rqalpha.utils import merge_dicts
+from rqalpha.utils.functools import lru_cache
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_log
+from rqalpha.utils.repr import PropertyReprMeta
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
@@ -138,9 +138,9 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         """
         [float] 实时净值
         """
-        if self._units == 0:
+        if self.units == 0:
             return np.nan
-        return self.total_value / self._units
+        return self.total_value / self.units
 
     @property
     def static_unit_net_value(self):
@@ -259,6 +259,18 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+
+    def deposit_withdraw(self, account_type, amount):
+        """出入金"""
+        # 入金 现金增加，份额增加，总权益增加，单位净值不变
+        # 出金 现金减少，份额减少，总权益减少，单位净值不变
+        if account_type not in self._accounts:
+            raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
+        unit_net_value = self.unit_net_value
+        self._accounts[account_type].deposit_withdraw(amount)
+        _units = self.total_value / unit_net_value
+        user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units ,_units)))
+        self._units = _units
 
 
 class MixedPositions(dict):

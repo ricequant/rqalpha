@@ -15,7 +15,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Optional
 import time
 
 from rqalpha.utils import id_gen, get_position_direction
@@ -45,11 +44,12 @@ class Trade(object):
         self._position_effect = None
         self._order_book_id = None
         self._frozen_price = None
+        self._kwargs = {}
 
     @classmethod
     def __from_create__(
             cls, order_id, price, amount, side, position_effect, order_book_id, commission=0., tax=0.,
-            trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None
+            trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None, **kwargs
     ):
 
         trade = cls()
@@ -79,6 +79,7 @@ class Trade(object):
         trade._position_effect = position_effect
         trade._order_book_id = order_book_id
         trade._frozen_price = frozen_price
+        trade._kwargs = kwargs
         return trade
 
     order_book_id = property(lambda self: self._order_book_id)
@@ -98,6 +99,12 @@ class Trade(object):
     exec_id = property(lambda self: self._trade_id)
     frozen_price = property(lambda self: self._frozen_price)
     close_today_amount = property(lambda self: self._close_today_amount)
+
+    def __getattr__(self, item):
+        try:
+            return self.__dict__["_kwargs"][item]
+        except KeyError:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
 
     def __simple_object__(self):
         return properties(self)

@@ -49,7 +49,7 @@ class Order(object):
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
-        self._kwargs = None
+        self._kwargs = {}
 
     @staticmethod
     def _str_to_enum(enum_class, s):
@@ -260,6 +260,12 @@ class Order(object):
     @property
     def kwargs(self):
         return self._kwargs
+
+    def __getattr__(self, item):
+        try:
+            return self.__dict__["_kwargs"][item]
+        except KeyError:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
 
     def is_final(self):
         return self._status not in {

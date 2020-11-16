@@ -25,7 +25,6 @@ from rqalpha.model.trade import Trade
 from rqalpha.portfolio.account import Account
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.i18n import gettext as _
-
 from .slippage import SlippageDecider
 
 
@@ -164,9 +163,7 @@ class DefaultMatcher(AbstractMatcher):
         if self._inactive_limit:
             bar_volume = self._env.get_bar(order_book_id).volume
             if bar_volume == 0:
-                reason = _(u"Order Cancelled: {order_book_id} bar volume = {volume} "). \
-                    format(order_book_id=order.order_book_id,
-                           volume=bar_volume)
+                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
                 order.mark_cancelled(reason)
                 return
 

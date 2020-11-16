@@ -17,17 +17,18 @@
 
 import abc
 from datetime import datetime
-from typing import Any, Union, Optional, Iterable, Dict, List
+from typing import Any, Union, Optional, Iterable, Dict, List, Sequence
 
 import numpy
 from six import with_metaclass
 import pandas
 
+from rqalpha.utils.typing import DateLike
 from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
 from rqalpha.model.instrument import Instrument
-from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE
+from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE
 
 
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
@@ -245,12 +246,13 @@ class AbstractDataSource(object):
 
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
     """
-    def get_all_instruments(self):
-        # type: () -> Iterable[Instrument]
-        """
-        获取所有Instrument。
 
-        :return: list[:class:`~Instrument`]
+    def get_instruments(self, id_or_syms=None, types=None):
+        # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
+        """
+        获取 instrument，
+        可指定 order_book_id 或 symbol 或 instrument type，id_or_syms 优先级高于 types，
+        id_or_syms 和 types 均为 None 时返回全部 instruments
         """
         raise NotImplementedError
 
@@ -435,6 +437,14 @@ class AbstractDataSource(object):
         :param order_book_id: 合约代码
         :return: (successor, conversion_ratio), (转换后的合约代码，换股倍率)
         """
+        raise NotImplementedError
+
+    def is_suspended(self, order_book_id, dates):
+        # type: (str, Sequence[DateLike]) -> Sequence[bool]
+        raise NotImplementedError
+
+    def is_st_stock(self, order_book_id, dates):
+        # type: (str, Sequence[DateLike]) -> Sequence[bool]
         raise NotImplementedError
 
 

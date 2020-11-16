@@ -39,7 +39,7 @@ from rqalpha.utils import RqAttrDict, create_custom_exception, init_rqdatac_env
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.log_capture import LogCapture
-from rqalpha.utils.logger import system_log, user_log, user_system_log
+from rqalpha.utils.logger import release_print, system_log, user_log, user_system_log
 from rqalpha.utils.persisit_helper import PersistHelper
 
 jsonpickle_numpy.register_handlers()
@@ -216,6 +216,7 @@ def run(config, source_code=None, user_funcs=None):
 
         if env.profile_deco:
             output_profile_result(env)
+        release_print(scope)
     except CustomException as e:
         if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()

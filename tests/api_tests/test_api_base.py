@@ -53,6 +53,7 @@ def test_get_open_order():
         if context.counter == 2:
             assert order.order_id in get_open_orders()
         context.counter = 0
+
     return locals()
 
 
@@ -68,6 +69,7 @@ def test_submit_order():
             context.fired = True
         if context.fired:
             assert context.portfolio.positions[context.s1].quantity == context.amount
+
     return locals()
 
 
@@ -83,6 +85,7 @@ def test_cancel_order():
         assert order.filled_quantity == 0
         assert order.price == bar_dict[context.s1].limit_down
         assert order.status == ORDER_STATUS.CANCELLED
+
     return locals()
 
 
@@ -99,6 +102,7 @@ def test_update_universe():
             update_universe(context.s2)
             his = history_bars(context.s2, 5, '1d', 'close')
             assert sorted(his.tolist()) == sorted([26.06, 26.13, 26.54, 26.6, 26.86])
+
     return locals()
 
 
@@ -110,6 +114,7 @@ def test_subscribe():
 
     def handle_bar(context, _):
         assert context.f1 in context.universe
+
     return locals()
 
 
@@ -122,6 +127,7 @@ def test_unsubscribe():
 
     def handle_bar(context, _):
         assert context.f1 not in context.universe
+
     return locals()
 
 
@@ -130,6 +136,7 @@ def test_get_yield_curve():
         df = get_yield_curve('20161101')
         assert df.iloc[0, 0] == 0.019923
         assert df.iloc[0, 6] == 0.021741
+
     return locals()
 
 
@@ -159,6 +166,7 @@ def test_history_bars():
         return_list = history_bars("000003.XSHE", 100, "1d")
         assert len(return_list) == 0
         assert isinstance(return_list, numpy.ndarray)
+
     return locals()
 
 
@@ -187,6 +195,7 @@ def test_all_instruments():
 
         df3 = all_instruments(['Future', 'Stock'])
         assert sorted(list(df['order_book_id']) + list(df2['order_book_id'])) == sorted(df3['order_book_id'])
+
     return locals()
 
 
@@ -200,12 +209,14 @@ def test_instruments_code():
         assert ins.symbol == '平安银行'
         assert ins.order_book_id == context.s1
         assert ins.type == 'CS'
+
     return locals()
 
 
 def test_sector():
     def handle_bar(_, __):
         assert len(sector('金融')) >= 80, "sector('金融') 返回结果少于 80 个"
+
     return locals()
 
 
@@ -221,6 +232,7 @@ def test_industry():
         industry_list_2 = industry(ins_2.industry_name)
         assert context.s1 in industry_list_1
         assert context.s2 in industry_list_2
+
     return locals()
 
 
@@ -237,6 +249,7 @@ def test_get_trading_dates():
         assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted(
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
+
     return locals()
 
 
@@ -249,6 +262,7 @@ def test_get_previous_trading_date():
         assert str(get_previous_trading_date('2010-01-03').date()) == '2009-12-31'
         assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
         assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
+
     return locals()
 
 
@@ -256,6 +270,7 @@ def test_get_next_trading_date():
     def init(_):
         assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
         assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
+
     return locals()
 
 
@@ -266,6 +281,7 @@ def test_get_dividend():
         assert len(df) >= 4
         assert df_to_assert[0]['dividend_cash_before_tax'] == 1.7
         assert df_to_assert[0]['payable_date'] == 20130620
+
     return locals()
 
 
@@ -276,12 +292,13 @@ def test_current_snapshot():
 
         assert snapshot.last == bar.close
         for field in (
-            "open", "high", "low", "prev_close", "volume", "total_turnover", "order_book_id", "datetime",
-            "limit_up", "limit_down"
+                "open", "high", "low", "prev_close", "volume", "total_turnover", "order_book_id", "datetime",
+                "limit_up", "limit_down"
         ):
             assert getattr(bar, field) == getattr(snapshot, field), "snapshot.{} = {}, bar.{} = {}".format(
                 field, getattr(snapshot, field), field, getattr(bar, field)
             )
+
     return locals()
 
 
@@ -377,6 +394,7 @@ def test_order():
             assert get_position(context.stock).quantity == 100
             assert get_position(context.future, POSITION_DIRECTION.LONG).quantity == 100
             assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 0
+
     return locals()
 
 
@@ -410,4 +428,59 @@ def test_order_to():
             assert get_position(context.stock).quantity == 100
             assert get_position(context.future, POSITION_DIRECTION.LONG).quantity == 100
             assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 0
+
+    return locals()
+
+
+def test_deposit():
+    __config__ = {
+        "base": {
+            "accounts": {
+                "stock": 100000000,
+                "future": 100000000,
+            }
+        },
+    }
+
+    def init(context):
+        context.counter = 0
+
+        context.stock = '000001.XSHE'
+        context.future = 'IF88'
+
+    def handle_bar(context, bar_dict):
+        context.counter += 1
+        if context.counter == 1:
+            order(context.stock, 200)
+            order(context.future, -100)
+
+        elif context.counter == 2:
+            unit_net_value = context.portfolio.unit_net_value
+            units = context.portfolio.units
+            total_value = context.portfolio.total_value
+            cash = context.portfolio.accounts["STOCK"].cash
+            deposit("STOCK", 50000000)
+            assert int(context.portfolio.accounts["STOCK"].cash) == int(cash) + 50000000
+            assert context.portfolio.units > units
+            assert context.portfolio.total_value > total_value
+            assert context.portfolio.unit_net_value == unit_net_value
+
+        elif context.counter == 3:
+            unit_net_value = context.portfolio.unit_net_value
+            units = context.portfolio.units
+            total_value = context.portfolio.total_value
+            cash = context.portfolio.accounts["FUTURE"].cash
+            flag = withdraw("FUTURE", 50000000)
+            assert context.portfolio.accounts["FUTURE"].cash == cash - 50000000
+            assert context.portfolio.units < units
+            assert context.portfolio.total_value < total_value
+            assert context.portfolio.unit_net_value == unit_net_value
+        elif context.counter == 6:
+            try:
+                flag = withdraw("FUTURE", 100000000)
+            except ValueError as err:
+                assert True, "捕获输入异常"
+            else:
+                assert False, "未报出当前账户可取出金额不足异常"
+
     return locals()
