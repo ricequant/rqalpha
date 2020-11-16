@@ -95,13 +95,14 @@ class StockPosition(Position):
 
     def before_trading(self, trading_date):
         # type: (date) -> float
+        delta_cash = super(StockPosition, self).before_trading(trading_date)
         if self.quantity == 0:
-            return 0
+            return delta_cash
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         data_proxy = Environment.get_instance().data_proxy
         self._handle_dividend_book_closure(trading_date, data_proxy)
-        delta_cash = self._handle_dividend_payable(trading_date)
+        delta_cash += self._handle_dividend_payable(trading_date)
         self._handle_split(trading_date, data_proxy)
         return delta_cash
 
@@ -204,7 +205,8 @@ class StockPosition(Position):
 
 class FuturePosition(Position):
     __repr_properties__ = (
-        "order_book_id", "direction", "old_quantity", "quantity", "margin", "market_value", "trading_pnl", "position_pnl"
+        "order_book_id", "direction", "old_quantity", "quantity", "margin", "market_value", "trading_pnl",
+        "position_pnl"
     )
     __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
