@@ -39,7 +39,7 @@ from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractInstrumentStore,
                                 AbstractSimpleFactorStore)
 
-FUTURES_MISSING_FIELDS = ['open_interest', 'basis_spread']
+FUTURES_MISSING_FIELDS = ['open_interest']
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
     def __init__(self, f):
