@@ -104,23 +104,8 @@ class SimulationEventSource(AbstractEventSource):
         return sorted(list(trading_minutes))
     # [END] minute event helper
 
-    def _get_merged_trading_dates(self, start_date, end_date, trading_calendar_types):
-        if len(trading_calendar_types) == 1:
-            return self._env.data_proxy.get_trading_dates(start_date, end_date, trading_calendar_types[0])
-        trading_calendars = []
-        for calendar_type in trading_calendar_types:
-            trading_calendars.append(self._env.data_proxy.get_trading_dates(start_date, end_date, calendar_type))
-        return pandas.DatetimeIndex(chain(*trading_calendars)).unique()
-
     def events(self, start_date, end_date, frequency):
-        calendar_types = []
-        for account_type in self._config.base.accounts:
-            if account_type in (DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE):
-                calendar_types.append(TRADING_CALENDAR_TYPE.EXCHANGE)
-            elif account_type == DEFAULT_ACCOUNT_TYPE.BOND:
-                calendar_types.append(TRADING_CALENDAR_TYPE.INTER_BANK)
-        trading_dates = self._get_merged_trading_dates(start_date, end_date, calendar_types)
-
+        trading_dates = self._env.data_proxy.get_trading_dates(start_date, end_date)
         if frequency == "1d":
             # 根据起始日期和结束日期，获取所有的交易日，然后再循环获取每一个交易日
             for day in trading_dates:
