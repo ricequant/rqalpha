@@ -18,7 +18,7 @@ from __future__ import division
 
 import types
 from collections import Iterable
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Callable, List, Optional, Union
 
 import pandas as pd
@@ -380,6 +380,7 @@ def get_yield_curve(date=None, tenor=None):
     verify_that("skip_suspended").is_instance_of(bool),
     verify_that("include_now").is_instance_of(bool),
     verify_that("adjust_type").is_in({"pre", "none", "post"}),
+    verify_that("dt").is_valid_date(ignore_none=True),
 )
 def history_bars(
         order_book_id,
@@ -389,8 +390,9 @@ def history_bars(
         skip_suspended=True,
         include_now=False,
         adjust_type="pre",
+        dt=None,
 ):
-    # type:(str, int, str, Optional[Union[str, List[str]]], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
+    # type:(str, int, str, Optional[Union[str, List[str]]], Optional[bool], Optional[bool], Optional[str], Union[str, datetime, date]) -> np.ndarray
     """
     获取指定合约的历史 k 线行情，同时支持日以及分钟历史数据。不能在init中调用。
 
@@ -430,6 +432,8 @@ def history_bars(
     :param skip_suspended: 是否跳过停牌数据
     :param include_now: 是否包含当前数据
     :param adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
+    :param adjust_type: 复权类型，默认为前复权 pre；可选 pre, none, post
+    :param dt: 查询时间点
 
     =========================   ===================================================
     fields                      字段名
@@ -461,8 +465,12 @@ def history_bars(
     """
     order_book_id = assure_order_book_id(order_book_id)
     env = Environment.get_instance()
-    dt = env.calendar_dt
-
+    if dt is None:
+        dt = env.calendar_dt
+    else:
+        dt = pd.Timestamp(dt).to_pydatetime()
+        dt = min(dt, env.trading_dt)
+        dt = dt + timedelta(hours=15)
     if frequency[-1] not in {"m", "d"}:
         raise RQInvalidArgument("invalid frequency {}".format(frequency))
 
@@ -501,7 +509,7 @@ def history_bars(
         skip_suspended=skip_suspended,
         include_now=include_now,
         adjust_type=adjust_type,
-        adjust_orig=env.trading_dt,
+        adjust_orig=dt,
     )
 
 

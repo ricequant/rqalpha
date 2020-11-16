@@ -162,7 +162,9 @@ def test_history_bars():
                 pass
             else:
                 raise AssertionError("instrument has not been listed yet, RQInvalidArgument is supposed to be raised")
-
+        if str(context.now.date()) == '2005-01-21':
+            return_list1 = history_bars("000001.XSHE", 5, "1d", 'close', dt='2005-01-10')
+            assert return_list1.tolist() == [6.52, 6.46, 6.52, 6.51, 6.59]
         return_list = history_bars("000003.XSHE", 100, "1d")
         assert len(return_list) == 0
         assert isinstance(return_list, numpy.ndarray)
