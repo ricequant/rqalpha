@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 # Version: 0.18
 
 """The Versioneer - like a rocketeer, but for versions.
@@ -277,6 +277,7 @@ https://creativecommons.org/publicdomain/zero/1.0/ .
 """
 
 from __future__ import print_function
+
 try:
     import configparser
 except ImportError:
@@ -287,6 +288,9 @@ import os
 import re
 import subprocess
 import sys
+
+
+from pkg_resources import parse_version
 
 
 class VersioneerConfig:
@@ -348,6 +352,7 @@ def get_config_from_root(root):
         if parser.has_option("versioneer", name):
             return parser.get("versioneer", name)
         return None
+
     cfg = VersioneerConfig()
     cfg.VCS = VCS
     cfg.style = get(parser, "style") or ""
@@ -372,12 +377,14 @@ HANDLERS = {}
 
 def register_vcs_handler(vcs, method):  # decorator
     """Decorator to mark a method as the handler for a particular VCS."""
+
     def decorate(f):
         """Store f in HANDLERS[vcs][method]."""
         if vcs not in HANDLERS:
             HANDLERS[vcs] = {}
         HANDLERS[vcs][method] = f
         return f
+
     return decorate
 
 
@@ -800,6 +807,54 @@ def render_pep440_post(pieces):
     return rendered
 
 
+def render_pep440_ricequant(pieces):
+    tag = pieces["closest-tag"]
+    parsed_tag = parse_version(tag) if tag else None
+
+    working = working_version()
+    parsed_working = parse_version(working)
+
+    rendered = working
+
+    if tag:
+        if parsed_working < parsed_tag:
+            if parsed_working.base_version == parsed_tag.base_version:
+                if not parsed_tag.is_postrelease:
+                    raise Exception("Only post release tag allowed, tag %s" % tag)
+                if parsed_tag._version.post[0] != "post":
+                    raise Exception("Only post release tag allowed, tag %s" % tag)
+                post_num = parsed_tag._version.post[1]
+                rendered += ".post%d" % (post_num + 1)
+                if pieces["distance"] or pieces["dirty"]:
+                    rendered += ".dev%d" % pieces["distance"]
+                if pieces["dirty"]:
+                    rendered += ".dirty"
+            else:
+                raise Exception(f"Developing version can not go back in time: {working_version()} < {tag}")
+        elif parsed_working == parsed_tag:
+            if pieces["distance"] or pieces["dirty"]:
+                rendered += ".post1.dev%d" % pieces["distance"]
+            if pieces["dirty"]:
+                rendered += ".dirty"
+        else:
+            if pieces["distance"] or pieces["dirty"]:
+                rendered += ".dev%d" % pieces["distance"]
+            else:
+                rendered += ".dev0"
+
+            if pieces["dirty"]:
+                rendered += ".dirty"
+    else:
+        if pieces["distance"] or pieces["dirty"]:
+            rendered += ".dev%d" % pieces["distance"]
+        else:
+            rendered += ".dev0"
+
+        if pieces["dirty"]:
+            rendered += ".dirty"
+    return rendered
+
+
 def render_pep440_old(pieces):
     """TAG[.postDISTANCE[.dev0]] .
 
@@ -882,6 +937,8 @@ def render(pieces, style):
         rendered = render_pep440_post(pieces)
     elif style == "pep440-old":
         rendered = render_pep440_old(pieces)
+    elif style == 'pep440-ricequant':
+        rendered = render_pep440_ricequant(pieces)
     elif style == "git-describe":
         rendered = render_git_describe(pieces)
     elif style == "git-describe-long":
@@ -1023,6 +1080,14 @@ def git_versions_from_keywords(keywords, tag_prefix, verbose):
     return {"version": "0+unknown",
             "full-revisionid": keywords["full"].strip(),
             "dirty": False, "error": "no suitable tags", "date": None}
+
+
+def git_tracking_branch():
+    GITS = ["git"]
+    branch_out, rc = run_command(GITS, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], hide_stderr=True)
+    if rc != 0:
+        return "notrack"
+    return branch_out
 
 
 @register_vcs_handler("git", "pieces_from_vcs")
@@ -1301,6 +1366,72 @@ def render_pep440_post(pieces):
     return rendered
 
 
+def debug_info():
+    root = get_root()
+    cfg = get_config_from_root(root)
+    pieces = git_pieces_from_vcs(cfg.tag_prefix, root, cfg.verbose)
+    return "Developing: %s, CurrentTag: %s, Distance: %d, Dirty: %s" % (
+        working_version(), pieces["closest-tag"], pieces["distance"], pieces["dirty"])
+
+
+def render_pep440_ricequant(pieces):
+    tag = pieces["closest-tag"]
+    parsed_tag = parse_version(tag) if tag else None
+
+    working = working_version()
+    parsed_working = parse_version(working)
+
+    rendered = working
+
+    if tag:
+        # 当前开发系列正式版如果小于最近的tag，那么该tag肯定就是该系列的post版本了
+        # 当前开发版本应该总是大于最近的tag，那么当前到commit必须大于等于最近的commit
+        if parsed_working < parsed_tag:
+            if parsed_working.base_version == parsed_tag.base_version:
+                if not parsed_tag.is_postrelease:
+                    raise Exception("Only post release tag allowed, tag %s" % tag)
+                if parsed_tag._version.post[0] != "post":
+                    raise Exception("Only post release tag allowed, tag %s" % tag)
+                if pieces["distance"] > 0:
+                    rendered += ".post%d" % (parsed_tag._version.post[1] + 1)
+                    rendered += ".dev%d" % pieces["distance"]
+                elif pieces["distance"] == 0:
+                    rendered += ".post%d" % parsed_tag._version.post[1]
+                if pieces["dirty"]:
+                    rendered += ".dirty"
+            else:
+                raise Exception("Developing version can not go back in time: %s < %s" % (working, tag))
+        # 如果最近的tag是正式版tag，那么就是在开发该系列的.post1
+        elif parsed_working == parsed_tag:
+            if pieces["distance"] > 0:
+                rendered += ".post1.dev%d" % pieces["distance"]
+            if pieces["dirty"]:
+                rendered += ".dirty"
+        # 如果正在开发到是一个新的系列，那么就从该系列的.dev0开始
+        else:
+            if pieces["distance"] >= 0:
+                rendered += ".dev%d" % pieces["distance"]
+
+            if pieces["dirty"]:
+                rendered += ".dirty"
+    # 没有最近的tag等价于正在开发到是一个新的系列，那么就从该系列的.dev0开始
+    else:
+        if pieces["distance"] >= 0:
+            rendered += ".dev%d" % pieces["distance"]
+
+        if pieces["dirty"]:
+            rendered += ".dirty"
+
+    tracking_branch = git_tracking_branch()
+    # # 如果是dev和master分支或者hotfix分支来的，或者是一个tag，那就用pep440的版本号，否则带上git commit id
+    if tracking_branch in ["origin/develop", "origin/master"] or tracking_branch.startswith("origin/hotfix/") or pieces[
+        "distance"] == 0:
+        return rendered
+
+    rendered += ".g%s" % pieces["short"]
+    return rendered
+
+
 def render_pep440_old(pieces):
     """TAG[.postDISTANCE[.dev0]] .
 
@@ -1383,6 +1514,8 @@ def render(pieces, style):
         rendered = render_pep440_post(pieces)
     elif style == "pep440-old":
         rendered = render_pep440_old(pieces)
+    elif style == 'pep440-ricequant':
+        rendered = render_pep440_ricequant(pieces)
     elif style == "git-describe":
         rendered = render_git_describe(pieces)
     elif style == "git-describe-long":
@@ -1521,6 +1654,7 @@ def get_cmdclass():
             print(" date: %s" % vers.get("date"))
             if vers["error"]:
                 print(" error: %s" % vers["error"])
+
     cmds["version"] = cmd_version
 
     # we override "build_py" in both distutils and setuptools
@@ -1557,6 +1691,7 @@ def get_cmdclass():
                                                   cfg.versionfile_build)
                 print("UPDATING %s" % target_versionfile)
                 write_to_version_file(target_versionfile, versions)
+
     cmds["build_py"] = cmd_build_py
 
     if "cx_Freeze" in sys.modules:  # cx_freeze enabled?
@@ -1588,6 +1723,7 @@ def get_cmdclass():
                              "PARENTDIR_PREFIX": cfg.parentdir_prefix,
                              "VERSIONFILE_SOURCE": cfg.versionfile_source,
                              })
+
         cmds["build_exe"] = cmd_build_exe
         del cmds["build_py"]
 
@@ -1617,6 +1753,7 @@ def get_cmdclass():
                              "PARENTDIR_PREFIX": cfg.parentdir_prefix,
                              "VERSIONFILE_SOURCE": cfg.versionfile_source,
                              })
+
         cmds["py2exe"] = cmd_py2exe
 
     # we override different "sdist" commands for both environments
@@ -1645,6 +1782,7 @@ def get_cmdclass():
             print("UPDATING %s" % target_versionfile)
             write_to_version_file(target_versionfile,
                                   self._versioneer_generated_versions)
+
     cmds["sdist"] = cmd_sdist
 
     return cmds
@@ -1813,6 +1951,168 @@ def scan_setup_py():
     return errors
 
 
+def get_metadata():
+    setup_cfg = os.path.join(get_root(), "setup.cfg")
+    parser = configparser.SafeConfigParser()
+    with open(setup_cfg, "r") as f:
+        parser.readfp(f)
+
+    def get(section, parser, name):
+        if parser.has_option(section, name):
+            return parser.get(section, name)
+        return None
+
+    return {
+        "name": parser.get("metadata", "name"),
+        "version": parser.get("metadata", "version")
+    }
+
+
+def package_name():
+    return get_metadata()["name"]
+
+
+def working_version():
+    return get_metadata()["version"]
+
+
+def next_tag_name():
+    root = get_root()
+    cfg = get_config_from_root(root)
+    pieces = git_pieces_from_vcs(cfg.tag_prefix, root, cfg.verbose)
+
+    tag = pieces["closest-tag"]
+    parsed_tag = parse_version(tag) if tag else None
+
+    working = working_version()
+    parsed_working = parse_version(working)
+
+    rendered = working
+
+    curr_version = get_version()
+    parsed_curr_version = parse_version(curr_version)
+
+    if tag:
+        # 如果当前开发系列正式版小于最近的tag，那么当前开发系列和该tag必须属于同一个开发版本系列
+        # 当前开发都没有做完，大于当前开发系列的tag不可能存
+        # 因为大于当前开发系列的正式版, 该tag必然是post release
+        # 如果发现当前commit和最近的tag的commit相同，规定next tag不变. 这也限制只有最近tag后的第一个commit存在，
+        # 才会获取到next tag name
+        if parsed_working < parsed_tag:
+            if parsed_working.base_version == parsed_tag.base_version:
+                if not parsed_tag.is_postrelease:
+                    raise Exception("Only post release tag allowed, tag %s" % tag)
+                if parsed_tag._version.post[0] != "post":
+                    raise Exception("Only post release tag allowed, tag %s" % tag)
+                # 正在开发的版本不可能小于等于最近的tag
+                if parsed_curr_version <= parsed_tag:
+                    raise Exception("Current version %s should > latest tag %s" % (curr_version, tag))
+                if pieces["distance"] == 0:
+                    return tag
+
+                rendered += ".post%d" % parsed_curr_version._version.post[1]
+            else:
+                raise Exception(
+                    "Developing version can not go back in time: %s(working version series) < %s(latest tag)" % working,
+                    tag)
+        # 如果当前开发系列的正式版等于最近的tag，那么下一个tag必定是.post1
+        elif parsed_working == parsed_tag:
+            if parsed_curr_version._version.post[0] != "post":
+                raise Exception("Current version should be a post version %s" % curr_version)
+            rendered += ".post%d" % parsed_curr_version._version.post[1]
+
+    # 如果当前开发版本系列正式版大于最近的tag，那么下一个的tag将是当前开发系列的正式版tag
+    return rendered
+
+
+def is_same_package(package_file):
+    curr_version = get_versions()
+    v = _get_version_py_in_tar(package_file)
+    if not v:
+        v = _get_version_py_in_zip(package_file)
+    if not v:
+        raise Exception("Can not get _version.py from %s" % package_file)
+
+    from types import ModuleType
+    m = ModuleType("get_versions")
+    exec(v, m.__dict__)
+    version_info = m.get_versions()
+    return curr_version["full-revisionid"] == version_info["full-revisionid"]
+
+
+def _get_package_dir():
+    package = None
+    for d in os.listdir():
+        if os.path.isdir(d):
+            if "__init__.py" in os.listdir(d):
+                package = d
+    return package
+
+
+def _get_version_py_in_zip(package_file):
+    import zipfile
+    package_dir = _get_package_dir()
+
+    if zipfile.is_zipfile(package_file):
+        f = zipfile.ZipFile(package_file)
+        il = f.infolist()
+        if len(il) == 0:
+            raise Exception("No member found in %s" % package_file)
+        for i in il:
+            if i.filename == os.path.join(package_dir, "_version.py"):
+                return f.open(i).read()
+    return None
+
+
+def _get_version_py_in_tar(package_file):
+    import tarfile
+    package_dir = _get_package_dir()
+    if tarfile.is_tarfile(package_file):
+        f = tarfile.open(package_file)
+        ms = f.getmembers()
+        if len(ms) == 0:
+            raise Exception("No members found in %s" % package_file)
+        for m in ms:
+            if os.path.join(ms[0].name, package_dir, "_version.py") == m.path:
+                version_file = f.extractfile(m)
+                return version_file.read()
+    return None
+
+
+def get_package_name_in_pypi(version=None):
+    from pip._internal.commands.install import InstallCommand
+    from pip._internal.cli.cmdoptions import make_target_python
+
+    class ListVersionCommand(InstallCommand):
+        def __init__(self, name, summary):
+            super().__init__(name, summary)
+
+        def get_version_list(self):
+            with self.main_context():
+                options, args = self.parse_args([package_name()])
+                session = self.get_default_session(options=options)
+                target_python = make_target_python(options)
+                finder = self._build_package_finder(
+                    options=options,
+                    session=session,
+                    target_python=target_python,
+                    ignore_requires_python=options.ignore_requires_python,
+                )
+                versions = {}
+                for c in finder.find_all_candidates(package_name()):
+                    v = str(c.version)
+                    f = c.link.filename
+                    if (v in versions and f.endswith(".whl")) or v not in versions:
+                        versions[v] = f
+                return versions
+
+    if not version:
+        version = get_version()
+    c = ListVersionCommand("listversion", summary="list versions")
+    versions = c.get_version_list()
+    return versions.get(version, "")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "setup":
@@ -1820,3 +2120,5 @@ if __name__ == "__main__":
         errors += scan_setup_py()
         if errors:
             sys.exit(1)
+    elif cmd == "is_pypi_has":
+        get_package_name_in_pypi(sys.argv[2])

@@ -40,7 +40,7 @@ def get_config():
     # _version.py
     cfg = VersioneerConfig()
     cfg.VCS = "git"
-    cfg.style = "pep440"
+    cfg.style = "pep440-ricequant"
     cfg.tag_prefix = "release/"
     cfg.parentdir_prefix = "rqalpha"
     cfg.versionfile_source = "rqalpha/_version.py"
@@ -380,6 +380,28 @@ def render_pep440_post(pieces):
     return rendered
 
 
+def render_pep440_ricequant(pieces):
+    """TAG[.devDISTANCE.gHEX[.dirty]] .
+
+    Exceptions:
+    1: no tags. 0.devDISTANCE.gHEX[.dirty]
+    """
+    if pieces["closest-tag"]:
+        rendered = pieces["closest-tag"]
+        if pieces["distance"] or pieces["dirty"]:
+            rendered += ".dev%d" % pieces["distance"]
+            rendered += ".g%s" % pieces["short"]
+    else:
+        # exception #1
+        rendered = "0.dev%d" % pieces["distance"]
+        rendered += ".g%s" % pieces["short"]
+
+    if pieces["dirty"]:
+        rendered += ".dirty"
+
+    return rendered
+
+
 def render_pep440_old(pieces):
     """TAG[.postDISTANCE[.dev0]] .
 
@@ -462,6 +484,8 @@ def render(pieces, style):
         rendered = render_pep440_post(pieces)
     elif style == "pep440-old":
         rendered = render_pep440_old(pieces)
+    elif style == 'pep440-ricequant':
+        rendered = render_pep440_ricequant(pieces)
     elif style == "git-describe":
         rendered = render_git_describe(pieces)
     elif style == "git-describe-long":
