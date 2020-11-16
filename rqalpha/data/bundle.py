@@ -275,7 +275,7 @@ class GenerateFileTask(ProgressedTask):
 STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
 INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
 # FUTURES_FIELDS = STOCK_FIELDS + ['basis_spread', 'settlement', 'prev_settlement']
-FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement']
+FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement', 'open_interest']
 # FUND_FIELDS = STOCK_FIELDS + ['acc_net_value', 'unit_net_value', 'discount_rate']
 FUND_FIELDS = STOCK_FIELDS
 
