@@ -16,26 +16,27 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 from datetime import date, datetime
-from typing import Dict, List, Union, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
-import six
 import numpy as np
 import pandas as pd
-
-from rqalpha.interface import AbstractDataSource
-from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date
+import six
 from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
+from rqalpha.interface import AbstractDataSource
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils.datetime_func import (convert_date_to_int,
+                                         convert_int_to_date)
 from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.typing import DateLike
 
-from .storage_interface import AbstractInstrumentStore, AbstractCalendarStore, AbstractDayBarStore, AbstractDateSet
-from .storages import (
-    InstrumentStore, ShareTransformationStore, FutureInfoStore, ExchangeTradingCalendarStore, DateSet, DayBarStore,
-    DividendStore, YieldCurveStore, SimpleFactorStore
-)
-from .adjust import adjust_bars, FIELDS_REQUIRE_ADJUSTMENT
+from .adjust import FIELDS_REQUIRE_ADJUSTMENT, adjust_bars
+from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
+                                AbstractDayBarStore, AbstractInstrumentStore)
+from .storages import (DateSet, DayBarStore, DividendStore,
+                       ExchangeTradingCalendarStore, FutureInfoStore,
+                       InstrumentStore, ShareTransformationStore,
+                       SimpleFactorStore, YieldCurveStore)
 
 
 class BaseDataSource(AbstractDataSource):
@@ -145,7 +146,7 @@ class BaseDataSource(AbstractDataSource):
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
-        return self._day_bars[instrument.type].get_bars(instrument.order_book_id)
+        return self._day_bars[instrument.type].get_bars(instrument.order_book_id, instrument=instrument) 
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
@@ -231,8 +232,8 @@ class BaseDataSource(AbstractDataSource):
 
     def available_data_range(self, frequency):
         # FIXME
-        from rqalpha.environment import Environment
         from rqalpha.const import DEFAULT_ACCOUNT_TYPE
+        from rqalpha.environment import Environment
         accounts = Environment.get_instance().config.base.accounts
         if not (DEFAULT_ACCOUNT_TYPE.STOCK in accounts or DEFAULT_ACCOUNT_TYPE.FUTURE in accounts):
             return date.min, date.max
