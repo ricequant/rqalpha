@@ -22,7 +22,7 @@ requirements = [
     'python-dateutil',
     'six',
     'logbook',
-    'click',
+    'click >=7.0.0',
     'jsonpickle',
     'simplejson',
     'PyYAML',

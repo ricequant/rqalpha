@@ -50,7 +50,7 @@ class SimulationEventSourceTestCase(UniverseFixture, SimulationEventSourceFixtur
         self.assertObj(e, **kwargs)
 
     def test_tick_events(self):
-        from rqalpha.events import EVENT
+        from rqalpha.core.events import EVENT
 
         with self.mock_data_proxy_method("get_merge_ticks", self._mock_get_merge_ticks):
             events = self.simulation_event_source.events(datetime(2018, 9, 14), datetime(2018, 9, 14), "tick")

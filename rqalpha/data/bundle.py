@@ -371,6 +371,9 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         ("futures.h5", rqdatac.all_instruments('Future').order_book_id.tolist(), FUTURES_FIELDS),
         ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
     )
+
+    rqdatac.reset()
+
     gen_file_funcs = (
         gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info

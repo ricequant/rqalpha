@@ -27,7 +27,7 @@ import six
 
 from rqalpha.apis import names
 from rqalpha.environment import Environment
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
@@ -40,7 +40,7 @@ from rqalpha.const import (
     EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
 )
 from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.events import EVENT, Event
+from rqalpha.core.events import EVENT, Event
 from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.portfolio.position import Position
 
@@ -389,7 +389,7 @@ def history_bars(
     include_now=False,
     adjust_type="pre",
 ):
-    # type: (str, int, str, Optional[str], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
+    # type:(str, int, str, Optional[Union[str, List[str]]], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
     """
     获取指定合约的历史 k 线行情，同时支持日以及分钟历史数据。不能在init中调用。
 
@@ -805,8 +805,8 @@ def get_positions():
 
         [In] get_positions()
         [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0}),
-         BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
+        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0}),
+         BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
 
     """
     portfolio = Environment.get_instance().portfolio
@@ -831,7 +831,7 @@ def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
 
         [In] get_position('000014.XSHE','long_positions")
         [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'today_quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
+        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
 
     """
     portfolio = Environment.get_instance().portfolio

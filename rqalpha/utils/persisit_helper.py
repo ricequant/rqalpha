@@ -15,8 +15,8 @@
 import hashlib
 from collections import OrderedDict
 
-from rqalpha.events import EVENT
 from rqalpha.const import PERSIST_MODE
+from rqalpha.core.events import EVENT
 from rqalpha.utils.logger import system_log
 
 
@@ -64,7 +64,8 @@ class PersistHelper(object):
         if key:
             return self._restore_obj(key, self._objects[key])
 
-        return all(self._restore_obj(key, obj) for key, obj in self._objects.items())
+        ret = {key: self._restore_obj(key, obj) for key, obj in self._objects.items()}
+        return ret
 
     def _restore_obj(self, key, obj):
         state = self._persist_provider.load(key)

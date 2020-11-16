@@ -74,7 +74,7 @@ def mod(cmd, params):
 
             try:
                 import_module(module_name)
-            except ModuleNotFoundError:
+            except ImportError:
                 print("can not find mod [{}] !, ignore".format(mod_name))
                 continue
 

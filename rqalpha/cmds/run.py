@@ -45,7 +45,7 @@ from .entry import cli
 @click.option('--logger', 'extra__logger', nargs=2, multiple=True, help='config logger, e.g. --logger system_log debug')
 @click.option('--locale', 'extra__locale', type=click.Choice(['cn', 'en']), default="cn")
 @click.option('--extra-vars', 'extra__context_vars', type=click.STRING, help="override context vars")
-@click.option("--enable-profiler", "extra__enable_profiler", is_flag=True,
+@click.option("--enable-profiler", "extra__enable_profiler", is_flag=True, default=None,
               help="add line profiler to profile your strategy")
 @click.option('--config', 'config_path', type=click.STRING, help="config file path")
 # -- Mod Configuration
