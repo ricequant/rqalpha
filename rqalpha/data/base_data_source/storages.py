@@ -15,28 +15,30 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import codecs
-import json
-import locale
 import os
-import pickle
 import sys
+import locale
+import codecs
+import pickle
 from copy import copy
 from typing import Dict
 
-import h5py
-import numpy as np
-import pandas
+from rqalpha.data.base_data_source.storage_interface import AbstractSimpleFactorStore
+from rqalpha.utils.functools import lru_cache
 
+import json
+import h5py
+import pandas
+import numpy as np
+
+from rqalpha.utils.datetime_func import convert_date_to_date_int
+from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
-from rqalpha.utils.datetime_func import convert_date_to_date_int
-from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.i18n import gettext as _
-from .storage_interface import AbstractCalendarStore, AbstractInstrumentStore, AbstractDayBarStore, AbstractDateSet
-from .storage_interface import AbstractDividendStore, AbstractSimpleFactorStore
 
-FUTURES_MISSING_FIELDS = ['open_interest', 'basis_spread']
+from .storage_interface import AbstractCalendarStore, AbstractInstrumentStore, AbstractDayBarStore, AbstractDateSet
+from .storage_interface import AbstractDividendStore
+
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
     def __init__(self, f):
@@ -150,22 +152,11 @@ class DayBarStore(AbstractDayBarStore):
             raise FileExistsError("File {} not exist，please update bundle.".format(path))
         self._h5 = open_h5(path, mode="r")
 
-    def get_bars(self, order_book_id, instrument=None):
+    def get_bars(self, order_book_id):
         try:
-            bars = self._h5[order_book_id][:]
+            return self._h5[order_book_id][:]
         except KeyError:
-            bars = np.empty(0, dtype=self.DEFAULT_DTYPE)
-        if instrument is not None and instrument.type == 'Future':
-            new_fields = [field for field in FUTURES_MISSING_FIELDS if field not in bars.dtype.names]
-            if new_fields:
-                new_dt = np.dtype(bars.dtype.descr + [(field, '<f8') for field in new_fields])
-                b = np.zeros(bars.shape, dtype=new_dt)
-                for name in bars.dtype.names:
-                    b[name] = bars[name]
-                for field in new_fields:
-                    b[field] = np.nan
-                bars = b
-        return bars
+            return np.empty(0, dtype=self.DEFAULT_DTYPE)
 
     def get_date_range(self, order_book_id):
         try:
