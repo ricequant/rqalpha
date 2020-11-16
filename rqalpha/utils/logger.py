@@ -75,6 +75,10 @@ def user_print(*args, **kwargs):
 def release_print(scope):
     for func in scope.values():
         if hasattr(func, "__globals__"):
-            print_funt = func.__globals__.get('print')
-            if print_funt is not None and print_funt.__name__ == user_print.__name__:
+            try:
+                print_func = func.__globals__.get('print')
+            except RuntimeError:
+                # DummyRQDatac
+                continue
+            if print_func is not None and print_func.__name__ == user_print.__name__:
                 func.__globals__['print'] = original_print
