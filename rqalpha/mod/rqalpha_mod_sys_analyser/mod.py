@@ -88,7 +88,7 @@ class AnalyserMod(AbstractMod):
         if self._enabled:
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
 
-            if not mod_config.benchmark:
+            if (isinstance(mod_config.benchmark, dict) and mod_config.benchmark.keys()) or mod_config.benchmark:
                 if getattr(env.config.base, "benchmark", None):
                     user_system_log.warning(
                         _("config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' instead")
