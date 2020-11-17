@@ -49,6 +49,9 @@ class RqAttrDict(object):
     def __iter__(self):
         return self.__dict__.__iter__()
 
+    def __bool__(self):
+        return bool(self.__dict__)
+
     def update(self, other):
         RqAttrDict._update_dict_recursive(self, other)
 
