@@ -27,7 +27,7 @@ __config__ = {
     # 如果指定路径，则输出 plot 对应的图片文件
     'plot_save_file': None,
     # 基准 order_book_id
-    "benchmark": None
+    "benchmark": {}
 }
 
 
