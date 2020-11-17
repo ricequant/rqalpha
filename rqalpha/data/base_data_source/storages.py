@@ -168,22 +168,11 @@ class DayBarStore(AbstractDayBarStore):
             raise FileExistsError("File {} not exist，please update bundle.".format(path))
         self._h5 = open_h5(path, mode="r")
 
-    def get_bars(self, order_book_id, instrument=None):
+    def get_bars(self, order_book_id):
         try:
-            bars = self._h5[order_book_id][:]
+            return self._h5[order_book_id][:]
         except KeyError:
-            bars = np.empty(0, dtype=self.DEFAULT_DTYPE)
-        if instrument is not None and instrument.type == 'Future':
-            new_fields = [field for field in FUTURES_MISSING_FIELDS if field not in bars.dtype.names]
-            if new_fields:
-                new_dt = np.dtype(bars.dtype.descr + [(field, '<f8') for field in new_fields])
-                b = np.zeros(bars.shape, dtype=new_dt)
-                for name in bars.dtype.names:
-                    b[name] = bars[name]
-                for field in new_fields:
-                    b[field] = np.nan
-                bars = b
-        return bars
+            return np.empty(0, dtype=self.DEFAULT_DTYPE)
 
     def get_date_range(self, order_book_id):
         try:
@@ -192,6 +181,26 @@ class DayBarStore(AbstractDayBarStore):
         except KeyError:
             return 20050104, 20050104
 
+class FutureDayBarStore(DayBarStore):
+    def __init__(self, *args, **kwargs):
+        self.DEFAULT_DTYPE = np.dtype(self.DEFAULT_DTYPE.descr + [(field, '<f8') for field in FUTURES_MISSING_FIELDS])
+        super().__init__(*args, **kwargs)
+
+    def get_bars(self, order_book_id):
+        try:
+            bars = self._h5[order_book_id][:]
+        except KeyError:
+            bars = np.empty(0, dtype=self.DEFAULT_DTYPE)
+        new_fields = [field for field in FUTURES_MISSING_FIELDS if field not in bars.dtype.names]
+        if new_fields:
+            new_dt = np.dtype(bars.dtype.descr + [(field, '<f8') for field in new_fields])
+            b = np.zeros(bars.shape, dtype=new_dt)
+            for name in bars.dtype.names:
+                b[name] = bars[name]
+            for field in new_fields:
+                b[field] = np.nan
+            bars = b
+        return bars
 
 class DividendStore(AbstractDividendStore):
     def __init__(self, path):

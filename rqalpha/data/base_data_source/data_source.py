@@ -37,9 +37,10 @@ from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
                                 AbstractInstrumentStore)
 from .storages import (DateSet, DayBarStore, DividendStore,
-                       ExchangeTradingCalendarStore, FutureInfoStore,
-                       InstrumentStore, ShareTransformationStore,
-                       SimpleFactorStore, YieldCurveStore)
+                       ExchangeTradingCalendarStore, FutureDayBarStore,
+                       FutureInfoStore, InstrumentStore,
+                       ShareTransformationStore, SimpleFactorStore,
+                       YieldCurveStore)
 
 
 class BaseDataSource(AbstractDataSource):
@@ -59,7 +60,7 @@ class BaseDataSource(AbstractDataSource):
         self._day_bars = {
             INSTRUMENT_TYPE.CS: DayBarStore(_p('stocks.h5')),
             INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),
-            INSTRUMENT_TYPE.FUTURE: DayBarStore(_p('futures.h5')),
+            INSTRUMENT_TYPE.FUTURE: FutureDayBarStore(_p('futures.h5')),
             INSTRUMENT_TYPE.ETF: funds_day_bar_store,
             INSTRUMENT_TYPE.LOF: funds_day_bar_store
         }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
@@ -170,7 +171,7 @@ class BaseDataSource(AbstractDataSource):
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
-        return self._day_bars[instrument.type].get_bars(instrument.order_book_id, instrument=instrument) 
+        return self._day_bars[instrument.type].get_bars(instrument.order_book_id) 
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
