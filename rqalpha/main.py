@@ -18,6 +18,7 @@
 import datetime
 import sys
 from pprint import pformat
+from itertools import chain
 
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import logbook
@@ -77,20 +78,20 @@ def init_persist_helper(env, ucontext, executor, config):
     if persist_provider is None:
         raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
     persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
+    for key, obj in chain([
+        ('user_context', ucontext),
+        ('global_vars', env.global_vars),
+        ('universe', env._universe),
+        ('portfolio', env.portfolio),
+        ('executor', executor),
+    ], ((key, obj) for key, obj in [
+        ('event_source', env.event_source),
+        ('broker', env.broker)
+    ] if isinstance(obj, Persistable)), ((
+        "mod_{}".format(name), module
+    ) for name, module in env.mod_dict.items() if isinstance(module, Persistable))):
+        persist_helper.register(key, obj)
     env.set_persist_helper(persist_helper)
-    persist_helper.register('user_context', ucontext)
-    persist_helper.register('global_vars', env.global_vars)
-    persist_helper.register('universe', env._universe)
-    if isinstance(env.event_source, Persistable):
-        persist_helper.register('event_source', env.event_source)
-    persist_helper.register('portfolio', env.portfolio)
-    for name, module in env.mod_dict.items():
-        if isinstance(module, Persistable):
-            persist_helper.register('mod_{}'.format(name), module)
-    # broker will restore open orders from account
-    if isinstance(env.broker, Persistable):
-        persist_helper.register('broker', env.broker)
-    persist_helper.register('executor', executor)
     return persist_helper
 
 
