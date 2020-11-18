@@ -19,7 +19,6 @@ import codecs
 import json
 import locale
 import os
-import pickle
 import sys
 from copy import copy
 from itertools import chain
@@ -39,7 +38,6 @@ from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractInstrumentStore,
                                 AbstractSimpleFactorStore)
 
-FUTURES_MISSING_FIELDS = ['open_interest']
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
     def __init__(self, f):
@@ -181,26 +179,10 @@ class DayBarStore(AbstractDayBarStore):
         except KeyError:
             return 20050104, 20050104
 
-class FutureDayBarStore(DayBarStore):
-    def __init__(self, *args, **kwargs):
-        self.DEFAULT_DTYPE = np.dtype(self.DEFAULT_DTYPE.descr + [(field, '<f8') for field in FUTURES_MISSING_FIELDS])
-        super().__init__(*args, **kwargs)
 
-    def get_bars(self, order_book_id):
-        try:
-            bars = self._h5[order_book_id][:]
-        except KeyError:
-            bars = np.empty(0, dtype=self.DEFAULT_DTYPE)
-        new_fields = [field for field in FUTURES_MISSING_FIELDS if field not in bars.dtype.names]
-        if new_fields:
-            new_dt = np.dtype(bars.dtype.descr + [(field, '<f8') for field in new_fields])
-            b = np.zeros(bars.shape, dtype=new_dt)
-            for name in bars.dtype.names:
-                b[name] = bars[name]
-            for field in new_fields:
-                b[field] = np.nan
-            bars = b
-        return bars
+class FutureDayBarStore(DayBarStore):
+    DEFAULT_DTYPE = np.dtype(DayBarStore.DEFAULT_DTYPE.descr + [("open_interest", '<f8')])
+
 
 class DividendStore(AbstractDividendStore):
     def __init__(self, path):
