@@ -373,7 +373,7 @@ def init_rqdatac_with_warnings_catch():
         rqdatac.init()
 
 
-def update_bundle(path, create, enable_compression=False, concurrency=1):
+def update_bundle(path, create, enable_compression=False, concurrency=1, stock_only=False):
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
@@ -383,19 +383,26 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
     if enable_compression:
         kwargs['compression'] = 9
 
-    day_bar_args = (
+    day_bar_args = [
         ("stocks.h5", rqdatac.all_instruments('CS').order_book_id.tolist(), STOCK_FIELDS),
         ("indexes.h5", rqdatac.all_instruments('INDX').order_book_id.tolist(), INDEX_FIELDS),
-        ("futures.h5", rqdatac.all_instruments('Future').order_book_id.tolist(), FUTURES_FIELDS),
         ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
-    )
+    ]
+    if not stock_only:
+        day_bar_args.extend([
+            ("futures.h5", rqdatac.all_instruments('Future').order_book_id.tolist(), FUTURES_FIELDS)
+        ])
 
     rqdatac.reset()
 
-    gen_file_funcs = (
+    gen_file_funcs = [
         gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
-        gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
-    )
+        gen_suspended_days, gen_yield_curve, gen_share_transformation
+    ]
+    if not stock_only:
+        gen_file_funcs.extend([
+            gen_future_info
+        ])
 
     with ProgressedProcessPoolExecutor(
             max_workers=concurrency, initializer=init_rqdatac_with_warnings_catch

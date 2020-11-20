@@ -67,7 +67,8 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
               help='rqdatac uri, eg user:password or tcp://user:password@ip:port')
 @click.option('--compression', default=False, type=click.BOOL, help='enable compression to reduce file size')
 @click.option('-c', '--concurrency', type=click.INT, default=1)
-def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
+@click.option('--stock-only', is_flag=True, default=False, help='update stock/index/ETF/LOF data only')
+def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency, stock_only=False):
     """update bundle using rqdatac"""
     try:
         import rqdatac
@@ -91,7 +92,7 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
+    update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency, stock_only)
 
 
 @cli.command()
