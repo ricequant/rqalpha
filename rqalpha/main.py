@@ -88,8 +88,8 @@ def init_persist_helper(env, ucontext, executor, config):
         ('event_source', env.event_source),
         ('broker', env.broker)
     ] if isinstance(obj, Persistable)), ((
-        "mod_{}".format(name), module
-    ) for name, module in env.mod_dict.items() if isinstance(module, Persistable))):
+        "mod_{}".format(name), mod
+    ) for name, mod in env.mod_dict.items() if isinstance(mod, Persistable))):
         persist_helper.register(key, obj)
     env.set_persist_helper(persist_helper)
     return persist_helper
