@@ -18,8 +18,9 @@
 import copy
 from collections import OrderedDict
 
+from rqalpha.interface import AbstractMod
 from rqalpha.utils.package_helper import import_mod
-from rqalpha.utils.logger import system_log, system_log
+from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import RqAttrDict
 
@@ -53,7 +54,7 @@ class ModHandler(object):
             if mod_module is None:
                 del self._mod_list[idx]
                 return
-            mod = mod_module.load_mod()
+            mod = mod_module.load_mod()  # type: AbstractMod
 
             mod_config = RqAttrDict(copy.deepcopy(getattr(mod_module, "__config__", {})))
             mod_config.update(user_mod_config)
