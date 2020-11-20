@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import copy
+import typing
 from collections import OrderedDict
 
 from rqalpha.interface import AbstractMod
@@ -28,8 +29,8 @@ from rqalpha.utils import RqAttrDict
 class ModHandler(object):
     def __init__(self):
         self._env = None
-        self._mod_list = list()
-        self._mod_dict = OrderedDict()
+        self._mod_list = list()  # type: typing.List[typing.Tuple[str, RqAttrDict]]
+        self._mod_dict = OrderedDict()  # type: typing.OrderedDict[str, AbstractMod]
 
     def set_env(self, environment):
         self._env = environment
