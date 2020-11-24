@@ -100,12 +100,12 @@ class ORDER_TYPE(CustomEnum):
 
 # noinspection PyPep8Naming
 class ORDER_STATUS(CustomEnum):
-    PENDING_NEW = "PENDING_NEW"
-    ACTIVE = "ACTIVE"
-    FILLED = "FILLED"
-    REJECTED = "REJECTED"
-    PENDING_CANCEL = "PENDING_CANCEL"
-    CANCELLED = "CANCELLED"
+    PENDING_NEW = "PENDING_NEW"        # 待报
+    ACTIVE = "ACTIVE"                  # 已报/部成
+    FILLED = "FILLED"                  # 已成
+    REJECTED = "REJECTED"              # 拒单
+    PENDING_CANCEL = "PENDING_CANCEL"  # 待撤
+    CANCELLED = "CANCELLED"            # 已撤
 
 
 # noinspection PyPep8Naming
