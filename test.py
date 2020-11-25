@@ -38,35 +38,26 @@ set_locale("zh_Hans_CN")
 
 
 def run_tests(file_path=None):
-    if file_path is not None:
-        files = [file_path]
-    else:
-        files = [f for f in os.listdir(TEST_DIR) if f.find("test") == 0]
+    tests = {f.replace(".py", ""): f for f in (
+        (file_path, ) if file_path else (f for f in os.listdir(TEST_DIR) if f.find("test") == 0)
+    )}
     error_map = {}
-    for filename in files:
+    for name, filename in tests.items():
         try:
             result_data = run_test(filename)
             if result_data is not None:
-                error_map[filename.replace(".py", "")] = result_data
+                error_map[name] = result_data
         except Exception as e:
-            system_log.exception()
-            error_map[filename.replace(".py", "")] = e
+            error_map[name] = e
     for filename, result_data in iteritems(error_map):
         print(u"*" * 20, u"[{}]did not pass!".format(filename), u"*" * 20)
         if isinstance(result_data, Exception):
             system_log.error(result_data)
         else:
-            df, old_df, result = result_data
-            if "summary" in df.keys():
-                df["summary"] = pd.DataFrame([df["summary"]])
-                old_df["summary"] = pd.DataFrame([old_df["summary"]])
+            _, __, result = result_data
             print(result.all())
     print(u"=" * 40)
-    print(
-        u"[{}|{}] strategies has been passed!".format(
-            len(files) - len(error_map), len(files)
-        )
-    )
+    print("[{}|{}] strategies has been passed!".format(len(tests) - len(error_map), len(tests)))
     return len(error_map)
 
 
