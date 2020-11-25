@@ -48,7 +48,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
     def __init__(self, starting_cash, init_positions):
         # type: (Dict[str, float], List[Tuple[str, int]]) -> Portfolio
         self._static_unit_net_value = 1
-        self._last_unit_net_value = 1
 
         account_args = {}
         for account_type, cash in starting_cash.items():
@@ -60,12 +59,12 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._accounts = {account_type: Account(**args) for account_type, args in account_args.items()}
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
 
-        self._register_event()
+        event_bus = Environment.get_instance().event_bus
+        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
     def get_state(self):
         return jsonpickle.encode({
             'static_unit_net_value': self._static_unit_net_value,
-            'last_unit_net_value': self._last_unit_net_value,
             'units': self._units,
             'accounts': {
                 name: account.get_state() for name, account in self._accounts.items()
@@ -76,7 +75,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         state = state.decode('utf-8')
         value = jsonpickle.decode(state)
         self._static_unit_net_value = value['static_unit_net_value']
-        self._last_unit_net_value = value.get('last_unit_net_value', self._static_unit_net_value)
         self._units = value['units']
         for k, v in value['accounts'].items():
             self._accounts[k].set_state(v)
@@ -247,18 +245,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         return sum(account.frozen_cash for account in six.itervalues(self._accounts))
 
     def _pre_before_trading(self, _):
-        if not np.isnan(self.unit_net_value):
-            self._static_unit_net_value = self.unit_net_value
-        else:
-            self._static_unit_net_value = self._last_unit_net_value
-
-    def _post_settlement(self, event):
-        self._last_unit_net_value = self.unit_net_value
-
-    def _register_event(self):
-        event_bus = Environment.get_instance().event_bus
-        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
-        event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
+        self._static_unit_net_value = self.unit_net_value
 
     def deposit_withdraw(self, account_type, amount):
         """出入金"""
