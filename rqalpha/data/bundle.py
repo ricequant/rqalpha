@@ -274,9 +274,7 @@ class GenerateFileTask(ProgressedTask):
 
 STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
 INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
-# FUTURES_FIELDS = STOCK_FIELDS + ['basis_spread', 'settlement', 'prev_settlement']
 FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement', 'open_interest']
-# FUND_FIELDS = STOCK_FIELDS + ['acc_net_value', 'unit_net_value', 'discount_rate']
 FUND_FIELDS = STOCK_FIELDS
 
 
@@ -333,7 +331,7 @@ class UpdateDayBarTask(DayBarTask):
         with h5py.File(path, 'r') as h5:
             need_recreate_h5 = not self.h5_has_valid_fields(h5, fields)
         if need_recreate_h5:
-            return GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
+            yield from GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
         else:
             with h5py.File(path, 'a') as h5:
                 for order_book_id in self._order_book_ids:
