@@ -13,7 +13,7 @@ CHANGELOG
 
 - :code:`rqalpha-mod-sys-simulation` 增加配置项 :code:`inactive_limit`，开启该选项可禁止订单在成交量为 0 的 bar 成交
 - :code:`rqalpha-mod-sys-transaction-cost` 增加 :code:`tax_multiplier` 配置项，用于设置印花税倍率
-- :code:`Order`对象的构造函数增加关键字参数
+- :code:`Order` 对象的构造函数增加关键字参数
 - 移除 :code:`AbstractAccount` 接口
 - 移动部分 module 至 :code:`rqalpha.core` package
 
