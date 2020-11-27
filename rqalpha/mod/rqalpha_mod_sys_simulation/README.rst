@@ -43,6 +43,8 @@ RQAlpha 回测 Mod，启用该模块开启回测功能。
         "slippage_model": "PriceRatioSlippage",
         # 设置滑点
         "slippage": 0,
+         # volume 为 0 时限制成交
+        "inactive_limit": True,
     }
 
 您可以通过如下方式来修改模块的配置信息，比如下面的示例中介绍了如何设置滑点

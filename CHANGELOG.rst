@@ -2,6 +2,22 @@
 CHANGELOG
 ==================
 
+4.2.5
+==================
+
+- 修复了访问持仓对象 :code:`closable` 字段会抛出异常的 bug
+
+
+4.2.4
+==================
+
+- :code:`rqalpha-mod-sys-simulation` 增加配置项 :code:`inactive_limit`，开启该选项可禁止订单在成交量为 0 的 bar 成交
+- :code:`rqalpha-mod-sys-transaction-cost` 增加 :code:`tax_multiplier` 配置项，用于设置印花税倍率
+- :code:`Order`对象的构造函数增加关键字参数
+- 移除 :code:`AbstractAccount` 接口
+- 移动部分 module 至 :code:`rqalpha.core` package
+
+
 4.2.1
 ==================
 
