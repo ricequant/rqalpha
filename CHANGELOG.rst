@@ -2,6 +2,23 @@
 CHANGELOG
 ==================
 
+4.3.0
+==================
+
+- 新增
+
+  - 新增出入金 API :code:`withdraw` 和 :code:`deposit`，用于为指定账户出金/入金
+  - 新增使用资产收益加权作为基准的功能，参数形如 :code:`--benchmark 000300.XSHG:0.5,510050.XSHG:-1`
+  - 新增按日簿记账户管理费用的功能，参数形如 :code:`--management-fee stock 0.0002`
+  - :code:`Trade` 类的构造函数增加了关键字参数
+
+- 重构
+
+  - 重构了 :code:`BaseDataSource` 所使用的 :code:`InstrumentStore`，使得通过 mod 扩展支持的资产品种变得更加容易
+  - 重构了 :code:`AbstractDataSource` 中的 instruments 的相关接口
+  - 不再支持在日级别回测中使用"下一个 bar 撮合"
+
+
 4.2.5
 ==================
 
@@ -13,7 +30,7 @@ CHANGELOG
 
 - :code:`rqalpha-mod-sys-simulation` 增加配置项 :code:`inactive_limit`，开启该选项可禁止订单在成交量为 0 的 bar 成交
 - :code:`rqalpha-mod-sys-transaction-cost` 增加 :code:`tax_multiplier` 配置项，用于设置印花税倍率
-- :code:`Order` 对象的构造函数增加关键字参数
+- :code:`Order` 类的构造函数增加关键字参数
 - 移除 :code:`AbstractAccount` 接口
 - 移动部分 module 至 :code:`rqalpha.core` package
 
