@@ -5,3 +5,4 @@ nbsphinx ==0.3.5
 jupyter_client
 sphinx-autodoc-typehints
 astroid ==2.2.5
+nbconvert <6.0.0

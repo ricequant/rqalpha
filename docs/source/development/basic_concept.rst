@@ -25,13 +25,6 @@ Mod
     :members:
 
 
-Account
-------------------
-
-.. autoclass:: AbstractAccount
-    :members:
-
-
 Position
 ------------------
 
