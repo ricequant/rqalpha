@@ -184,7 +184,7 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 
         def _inject_api(self):
             from rqalpha import export_as_api
-            from rqalpha.execution_context import ExecutionContext
+            from rqalpha.core.execution_context import ExecutionContext
             from rqalpha.const import EXECUTION_PHASE
 
             @export_as_api

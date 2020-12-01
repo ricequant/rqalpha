@@ -166,7 +166,7 @@ ProgressMod 需要实现的需求非常的简单：在命令行输出目前回�
     import click
 
     from rqalpha.interface import AbstractMod
-    from rqalpha.events import EVENT
+    from rqalpha.core.events import EVENT
 
 
     class ProgressMod(AbstractMod):
