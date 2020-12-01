@@ -44,7 +44,7 @@ class DefaultMatcher(AbstractMatcher):
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._liquidity_limit = mod_config.liquidity_limit and env.config.base.frequency == "tick"
-        self._inactive_limit = mod_config.inactive_limit
+        self._inactive_limit = self._env.config.base.frequency != 'tick' and mod_config.inactive_limit
         self._volume_limit = mod_config.volume_limit
         self._env = env  # type: Environment
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
@@ -160,7 +160,6 @@ class DefaultMatcher(AbstractMatcher):
                     order.mark_rejected(reason)
                     return
 
-        if self._inactive_limit:
             bar_volume = self._env.get_bar(order_book_id).volume
             if bar_volume == 0:
                 reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
