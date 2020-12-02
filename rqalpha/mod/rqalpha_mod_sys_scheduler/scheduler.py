@@ -21,7 +21,7 @@ from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.const import EXC_TYPE, EXECUTION_PHASE
 from rqalpha.core.events import EVENT
-from rqalpha.utils.py2 import signature
+from inspect import signature
 from rqalpha.utils.exception import patch_user_exc, ModifyExceptionFromType
 
 
