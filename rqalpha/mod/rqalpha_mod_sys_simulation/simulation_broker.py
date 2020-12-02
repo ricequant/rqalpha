@@ -46,7 +46,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_auction_orders = []   # type: List[Tuple[Account, Order]]
         self._open_exercise_orders = []  # type: List[Tuple[Account, Order]]
 
-        self._delayed_orders = []
         self._frontend_validator = {}
 
         # 该事件会触发策略的before_trading函数
@@ -81,7 +80,6 @@ class SimulationBroker(AbstractBroker, Persistable):
     def get_state(self):
         return jsonpickle.dumps({
             'open_orders': [o.get_state() for account, o in self._open_orders],
-            'delayed_orders': [o.get_state() for account, o in self._delayed_orders],
             "open_auction_orders": [o.get_state() for account, o in self._open_auction_orders],
         }).encode('utf-8')
 
@@ -94,7 +92,6 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         value = jsonpickle.loads(state.decode('utf-8'))
         self._open_orders = [_account_order_from_state(v) for v in value["open_orders"]]
-        self._delayed_orders = [_account_order_from_state(v) for v in value["delayed_orders"]]
         self._open_auction_orders = [_account_order_from_state(v) for v in value.get("open_auction_orders", [])]
 
     def submit_order(self, order):
@@ -109,9 +106,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
             self._open_auction_orders.append((account, order))
         else:
-            if self._env.config.base.frequency == '1d' and not self._match_immediately:
-                self._delayed_orders.append((account, order))
-                return
             self._open_orders.append((account, order))
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
@@ -130,10 +124,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         try:
             self._open_orders.remove((account, order))
         except ValueError:
-            try:
-                self._delayed_orders.remove((account, order))
-            except ValueError:
-                pass
+            pass
 
     def before_trading(self, _):
         for account, order in self._open_orders:
@@ -146,8 +137,7 @@ class SimulationBroker(AbstractBroker, Persistable):
                 order_book_id=order.order_book_id
             ))
             self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
-        self._open_orders = self._delayed_orders
-        self._delayed_orders = []
+        self._open_orders = []
 
     def pre_settlement(self, __):
         for account, order in self._open_exercise_orders:
