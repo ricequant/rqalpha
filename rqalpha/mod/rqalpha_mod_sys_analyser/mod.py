@@ -22,7 +22,7 @@ import numbers
 import datetime
 from collections import defaultdict
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -53,7 +53,7 @@ class AnalyserMod(AbstractMod):
         self._benchmark_daily_returns = []
         self._portfolio_daily_returns = []
 
-        self._benchmark = None  # type: Optional[str]
+        self._benchmark = None  # type: Optional[List[Tuple[str, float]]]
 
     def get_state(self):
         return jsonpickle.dumps({
@@ -147,6 +147,7 @@ class AnalyserMod(AbstractMod):
 
     @staticmethod
     def _parse_benchmark(benchmarks):
+        # type: (Union[str, Dict]) -> List[Tuple[str, float]]
         # --benchmark 000001.XSHE:1000,IF1701:-1
         result = []
         if not isinstance(benchmarks, str):
