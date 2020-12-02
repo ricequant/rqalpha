@@ -341,8 +341,8 @@ class AnalyserMod(AbstractMod):
             benchmark_portfolios = df.set_index('date').sort_index()
             result_dict['benchmark_portfolio'] = benchmark_portfolios
 
-        if not self._plot_store.empty:
-            plots = self._plot_store.get_plots()
+        plots = self._plot_store.get_plots()
+        if plots:
             plots_items = defaultdict(dict)
             for series_name, value_dict in plots.items():
                 for date, value in value_dict.items():
