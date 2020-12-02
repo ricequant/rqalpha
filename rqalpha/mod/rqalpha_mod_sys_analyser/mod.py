@@ -35,6 +35,9 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.const import DAYS_CNT
+from rqalpha.api import export_as_api
+
+from .plot_store import PlotStore
 
 
 class AnalyserMod(AbstractMod):
@@ -54,6 +57,8 @@ class AnalyserMod(AbstractMod):
         self._portfolio_daily_returns = []
 
         self._benchmark = None  # type: Optional[List[Tuple[str, float]]]
+
+        self._plot_store = None
 
     def get_state(self):
         return jsonpickle.dumps({
@@ -96,6 +101,9 @@ class AnalyserMod(AbstractMod):
                     mod_config.benchmark = getattr(env.config.base, "benchmark")
             if mod_config.benchmark:
                 self._benchmark = self._parse_benchmark(mod_config.benchmark)
+
+            self._plot_store = PlotStore(env)
+            export_as_api(self._plot_store.plot)
 
     def get_benchmark_daily_returns(self):
         if self._benchmark is None:
@@ -333,8 +341,8 @@ class AnalyserMod(AbstractMod):
             benchmark_portfolios = df.set_index('date').sort_index()
             result_dict['benchmark_portfolio'] = benchmark_portfolios
 
-        if not self._env.get_plot_store().empty:
-            plots = self._env.get_plot_store().get_plots()
+        if not self._plot_store.empty:
+            plots = self._plot_store.get_plots()
             plots_items = defaultdict(dict)
             for series_name, value_dict in plots.items():
                 for date, value in value_dict.items():

@@ -726,25 +726,6 @@ def get_next_trading_date(date, n=1):
 
 @export_as_api
 @ExecutionContext.enforce_phase(
-    EXECUTION_PHASE.ON_BAR, EXECUTION_PHASE.ON_TICK, EXECUTION_PHASE.SCHEDULED
-)
-@apply_rules(
-    verify_that("series_name", pre_check=True).is_instance_of(str),
-    verify_that("value", pre_check=True).is_number(),
-)
-def plot(series_name, value):
-    # type: (str, float) -> None
-    """
-    在生成的图标结果中，某一个根线上增加一个点。
-
-    :param series_name: 序列名称
-    :param value: 值
-    """
-    Environment.get_instance().add_plot(series_name, value)
-
-
-@export_as_api
-@ExecutionContext.enforce_phase(
     EXECUTION_PHASE.BEFORE_TRADING,
     EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,

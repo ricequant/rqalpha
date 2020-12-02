@@ -52,7 +52,6 @@ class Environment(object):
         self.calendar_dt = None  # type: Optional[datetime]
         self.trading_dt = None  # type: Optional[datetime]
         self.mod_dict = None
-        self.plot_store = None
         self.user_strategy = None
         self._frontend_validators = {}  # type: Dict[INSTRUMENT_TYPE, List]
         self._default_frontend_validators = []
@@ -132,15 +131,6 @@ class Environment(object):
 
     def update_universe(self, universe):
         self._universe.update(universe)
-
-    def get_plot_store(self):
-        if self.plot_store is None:
-            from rqalpha.utils.plot_store import PlotStore
-            self.plot_store = PlotStore()
-        return self.plot_store
-
-    def add_plot(self, series_name, value):
-        self.get_plot_store().add_plot(self.trading_dt.date(), series_name, value)
 
     def get_bar(self, order_book_id):
         return self.data_proxy.get_bar(order_book_id, self.calendar_dt, self.config.base.frequency)
