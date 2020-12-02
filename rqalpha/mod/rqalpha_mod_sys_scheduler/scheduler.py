@@ -17,7 +17,7 @@
 
 import datetime
 import json
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Optional
 
 from dateutil.parser import parse
 
@@ -54,12 +54,12 @@ def _verify_function(name, func):
 
 class Scheduler(object):
     def __init__(self, frequency):
-        self._registry = []  # type: List[Tuple[Callable[[], bool], Callable[[], bool], Callable]]
-        self._today = None
-        self._this_week = None
-        self._this_month = None
-        self._last_minute = 0
-        self._current_minute = 0
+        self._registry = []       # type: List[Tuple[Callable[[], bool], Callable[[], bool], Callable]]
+        self._today = None        # type: Optional[datetime.date]
+        self._this_week = None    # type: Optional[List[datetime.date]]
+        self._this_month = None   # type: Optional[List[datetime.date]]
+        self._last_minute = 0     # type: Optional[int]
+        self._current_minute = 0  # type: Optional[int]
         self._stage = None
         self._frequency = frequency
         self._trading_calendar = None
