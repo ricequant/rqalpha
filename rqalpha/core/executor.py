@@ -27,12 +27,18 @@ class Executor(object):
     def __init__(self, env):
         self._env = env
         self._last_before_trading = None
+        self._env_calendar_dt = None
 
     def get_state(self):
-        return convert_dict_to_json({"last_before_trading": self._last_before_trading}).encode('utf-8')
+        return convert_dict_to_json(
+            {
+                "last_before_trading": self._last_before_trading,
+                "env_calendar_dt": self._env_calendar_dt,
+             }).encode('utf-8')
 
     def set_state(self, state):
         self._last_before_trading = convert_json_to_dict(state.decode('utf-8')).get("last_before_trading")
+        self._env.calendar_dt = convert_json_to_dict(state.decode('utf-8')).get("env_calendar_dt")
 
     def run(self, bar_dict):
         conf = self._env.config.base
@@ -44,11 +50,13 @@ class Executor(object):
                 if self._ensure_before_trading(event):
                     bar_dict.update_dt(event.calendar_dt)
                     event.bar_dict = bar_dict
+                    self._env_calendar_dt = bar_dict.dt
                     self._split_and_publish(event)
             elif event.event_type == EVENT.OPEN_AUCTION:
                 if self._ensure_before_trading(event):
                     bar_dict.update_dt(event.calendar_dt)
                     event.bar_dict = bar_dict
+                    self._env_calendar_dt = bar_dict.dt
                     self._split_and_publish(event)
             elif event.event_type == EVENT.BEFORE_TRADING:
                 self._ensure_before_trading(event)
