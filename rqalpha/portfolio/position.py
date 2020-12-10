@@ -214,6 +214,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def before_trading(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量
+        self._prev_close = self.last_price
         self._transaction_cost = 0
         return 0
 
@@ -246,7 +247,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._non_closable = 0
-        self._prev_close = self.last_price
         return 0
 
     def update_last_price(self, price):
