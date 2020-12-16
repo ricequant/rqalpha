@@ -87,7 +87,7 @@ class Order(object):
         self._position_effect = POSITION_EFFECT[d["position_effect"]] if d["position_effect"] else None
         self._message = d['message']
         self._filled_quantity = d['filled_quantity']
-        self._status = ORDER_STATUS[d["order_status"]]
+        self._status = ORDER_STATUS[d["status"]]
         self._frozen_price = d['frozen_price']
         self._type = ORDER_TYPE[d["type"]]
         self._transaction_cost = d['transaction_cost']
