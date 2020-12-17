@@ -50,7 +50,7 @@ cli.commands['run'].params.append(
 cli.commands['run'].params.append(
     click.Option(
         ('--dividend-reinvestment', cli_prefix + 'dividend_reinvestment'),
-        default=False, is_flag=True,
+        default=None, is_flag=True,
         help="[sys_accounts] enable dividend reinvestment"
     )
 )
