@@ -112,7 +112,10 @@ class AnalyserMod(AbstractMod):
         weights = 0
         for benchmark in self._benchmark:
             bar = self._env.data_proxy.get_bar(benchmark[0], self._env.calendar_dt, '1d')
-            daily_return_list.append((bar.close / bar.prev_close - 1.0, benchmark[1]))
+            if bar.close != bar.close:
+                daily_return_list.append((0.0, benchmark[1]))
+            else:
+                daily_return_list.append((bar.close / bar.prev_close - 1.0, benchmark[1]))
             weights += benchmark[1]
         return sum([daily[0]*daily[1]/weights for daily in daily_return_list])
 
