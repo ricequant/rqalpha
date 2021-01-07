@@ -22,7 +22,11 @@
 命令行运行
 ------------------------------------------------------
 
-在命令行模式中，我们预先定义了常用的参数作为命令行的 option，您可以直接在控制台输入参数来配置 RQAlpha，但并不是所有的参数都可以通过命令行来配置，如果有一些特殊的参数需要配置，请结合其他方式来配置您的策略。当然您也可以扩展命令行，来实现您指定的命令行 option 选项。
+在命令行模式中，我们预先定义了常用的参数作为命令行的 option，您可以直接在控制台输入参数来配置 RQAlpha，
+但并不是所有的参数都可以通过命令行来配置，如果有一些特殊的参数需要配置，请结合其他方式来配置您的策略。
+当然您也可以扩展命令行，来实现您指定的命令行 option 选项。
+
+此处列出一些常用 option 选项，完整的命令行 option 列表可以执行 :code:`rqalpha run -h` 查询.
 
 命令行参数
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,7 +38,6 @@
 -f            `- -` strategy-file             启动的策略文件路径
 -s            `- -` start-date                回测起始日期
 -e            `- -` end-date                  回测结束日期(如果是实盘，则忽略该配置)
--bm           `- -` benchmark                 Benchmark，如果不设置，默认没有基准参照
 -mm           `- -` margin-multiplier         设置保证金乘数，默认为1
 -a            `- -` account                   设置账户类型及起始资金，比如股票期货混合策略，起始资金分别为10000, 20000 :code:`--account stock 10000 --account future 20000`
 -fq           `- -` frequency                 目前支持 :code:`1d` (日线回测) 和 :code:`1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的
@@ -46,28 +49,20 @@ N/A           `- -` disable-user-system-log   关闭用户策略产生的系统�
 N/A           `- -` enable-profiler           启动策略逐行性能分析，启动后，在回测结束，会打印策略的运行性能分析报告，可以看到每一行消耗的时间
 N/A           `- -` config                    设置配置文件路径
 -mc           `- -` mod-config                配置 mod ，支持多个。:code:`-mc funcat_api.enabled True` 就可以启动一个 mod
+N/A           `- -` rqdatac                   配置 rqdatac 的用户名密码，以便使用扩展 API，如 :code:`username:password`（若您已使用 Ricequant 提供的配置脚本将 rqdatac 的 license 配置到环境变量中，则无需再传入该参数）
 ===========   =============================   ==============================================================================
 
-传递 Mod 参数
+
+系统内置 Mod Option 扩展
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-对于 mod 的参数传递，可以使用 :code:`-mc` 传递 mod 设置。
-
-- :code:`-mc sys_stock_realtime.enabled True` 启动 sys_stock_realtime 这个 mod。
-- :code:`-mc sys_stock_realtime.fps 60` 设置 sys_stock_realtime 的 fps 参数为 60。
-
-.. code-block:: python3
-
-   rqalpha run -rt p -fq 1m -f strategy.py --account stock 100000 -mc sys_stock_realtime.enabled True -mc sys_stock_realtime.fps 60
-
-系统内置 Mod Option扩展
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-系统内置 Mod 也提供了启动参数的扩展，当您开启了对应的 Mod 时，即可使用:
+系统内置 Mod 也提供了启动参数的扩展，当您开启了对应的 Mod 时，即可使用。
+这里列出一些常用的扩展 option，完整的可用选项亦可以通过执行 :code:`rqalpha run -h` 查询。
 
 ===========   =============================   ==============================================================================
 参数名缩写      参数名全称                        说明
 ===========   =============================   ==============================================================================
+-bm           `- -` benchmark                 Benchmark，如果不设置，默认没有基准参照
 N/A           `- -` report                    [sys_analyser]保存交易详情
 -o            `- -` output-file               [sys_analyser]指定回测结束时将回测数据输出到指定文件中
 -p            `- -` plot                      [sys_analyser]在回测结束后，查看图形化的收益曲线
@@ -83,6 +78,41 @@ N/A           `- -` signal                    [sys_simulation]开启信号模式
 -me           `- -` match-engine              [sys_simulation]启用的回测引擎，目前支持 :code:`current_bar` (当前Bar收盘价撮合) 和 :code:`next_bar` (下一个Bar开盘价撮合)
 -r            `- -` rid                       [sys_simulation]可以指定回测的唯一ID，用户区分多次回测的结果
 ===========   =============================   ==============================================================================
+
+
+传递 Mod 参数
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+另外，部分可用的 mod 配置项没有直接暴露出命令行选项，对于这类参数，可以使用 :code:`-mc` 进行设置，如：
+
+- :code:`-mc sys_accounts.auto_switch_order_value True` 开启股票下单接口资金不足时自动使用全部剩余资金下单的功能
+
+.. code-block:: python3
+
+   rqalpha run -rt p -fq 1m -f strategy.py --account stock 100000 -mc sys_accounts.auto_switch_order_value True
+
+系统内置 mod 的可用配置项可以通过访问 mod 的 readme 页面查看，以下是目前已经集成的 Mod 列表:
+
+========================    ==================================================================================
+Mod                         说明
+========================    ==================================================================================
+`sys_accounts`_             股票分红退市、下单等行为的控制，股票期货的风控选项
+`sys_analyser`_             回测后输出图片、记录文件等行为的控制；策略 benchmark 的控制
+`sys_progress`_             策略运行过程中显示的进度条的控制
+`sys_risk`_                 策略前端风控选项
+`sys_simulation`_           回测、模拟交易中撮合行为的选项
+`sys_transaction_cost`_     回测，模拟交易中税费的控制
+========================    ==================================================================================
+
+.. _sys_analyser: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_analyser/README.rst
+.. _sys_funcat: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_funcat/README.rst
+.. _sys_progress: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_progress/README.rst
+.. _sys_risk: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_risk/README.rst
+.. _sys_simulation: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_simulation/README.rst
+.. _sys_accounts: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_accounts/README.rst
+.. _sys_benchmark: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_benchmark/README.rst
+.. _sys_transaction_cost: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_transaction_cost/README.rst
+
 
 通过 Mod 自定义扩展命令行参数
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,7 +210,7 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
 
 .. code-block:: bash
 
-    $ rqalpha generate_config
+    $ rqalpha generate-config
 
 ::
 
@@ -208,10 +238,6 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
       run_type: b
       # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
       frequency: 1d
-      # Benchmark，如果不设置，默认没有基准参照。
-      benchmark: ~
-      # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 resume 功能
-      resume_mode: false
       # 在模拟交易和实盘交易中，RQAlpha支持策略的pause && resume，该选项表示开启 persist 功能呢，
       # 其会在每个bar结束对进行策略的持仓、账户信息，用户的代码上线文等内容进行持久化
       persist: false
@@ -221,27 +247,33 @@ RQAlpha 在运行策略时候会在当前目录下寻找 `config.yml` 或者  `c
         # 如果想设置使用某个账户，只需要增加对应的初始资金即可
         stock: ~
         future: ~
+      # 交易市场，如 cn 中国市场，hk 香港市场
+      market: cn
+      # 设置初始仓位
+      init_positions: {}
+      # 根据价格最小变动单位调整发单价格
+      round_price: false
+      # 用户自定义的期货合约数据，用于设置期货手续菲费率
+      future_info: {}
+      # 强平
+      forced_liquidation: true
+
 
     extra:
-      # 选择日志的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
+      # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
       # 或者设置 `error` 只查看错误级别的日志输出
       log_level: info
-      user_system_log_disabled: false
       # 通过该参数可以将预定义变量传入 `context` 内。
       context_vars: ~
-      # force_run_init_when_pt_resume: 在PT的resume模式时，是否强制执行用户init。主要用于用户改代码。
-      force_run_init_when_pt_resume: false
       # enable_profiler: 是否启动性能分析
       enable_profiler: false
       is_hold: false
       locale: zh_Hans_CN
+      logger: []
 
     validator:
-      # cash_return_by_stock_delisted: 开启该项，当持仓股票退市时，按照退市价格返还现金
-      cash_return_by_stock_delisted: false
       # close_amount: 在执行order_value操作时，进行实际下单数量的校验和scale，默认开启
       close_amount: true
-
 
 .. warning::
 
@@ -342,7 +374,7 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
 此种模式下，您需要以字符串的方式传入策略源码，并传入配置参数以启动策略
 
 .. code-block:: python
-    
+
     # run_code_demo
     from rqalpha import run_code
 
@@ -372,7 +404,7 @@ RQAlpha 会自动识别策略中的 :code:`__config__` 变量。
       "base": {
         "start_date": "2016-06-01",
         "end_date": "2016-12-01",
-        "benchmark": "000300.XSHG"，
+        "benchmark": "000300.XSHG",
         "accounts": {
             "stock": 100000
         }

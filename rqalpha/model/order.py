@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import time
 from decimal import Decimal
 
 import numpy as np
 
-from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT
-from rqalpha.utils import id_gen, decimal_rounding_floor
+from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION
+from rqalpha.utils import id_gen, decimal_rounding_floor, get_position_direction
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
 from rqalpha.environment import Environment
@@ -48,10 +49,7 @@ class Order(object):
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
-
-    @staticmethod
-    def _enum_to_str(v):
-        return v.name
+        self._kwargs = {}
 
     @staticmethod
     def _str_to_enum(enum_class, s):
@@ -65,15 +63,16 @@ class Order(object):
             'trading_dt': self._trading_dt,
             'order_book_id': self._order_book_id,
             'quantity': self._quantity,
-            'side': self._enum_to_str(self._side),
-            'position_effect': self._enum_to_str(self._position_effect) if self._position_effect is not None else None,
+            'side': self._side,
+            'position_effect': self._position_effect,
             'message': self._message,
             'filled_quantity': self._filled_quantity,
-            'status': self._enum_to_str(self._status),
+            'status': self._status,
             'frozen_price': self._frozen_price,
-            'type': self._enum_to_str(self._type),
+            'type': self._type,
             'transaction_cost': self._transaction_cost,
             'avg_price': self._avg_price,
+            'kwargs': self._kwargs,
         }
 
     def set_state(self, d):
@@ -84,21 +83,19 @@ class Order(object):
         self._trading_dt = d['trading_dt']
         self._order_book_id = d['order_book_id']
         self._quantity = d['quantity']
-        self._side = self._str_to_enum(SIDE, d['side'])
-        if d['position_effect'] is None:
-            self._position_effect = None
-        else:
-            self._position_effect = self._str_to_enum(POSITION_EFFECT, d['position_effect'])
+        self._side = SIDE[d["side"]]
+        self._position_effect = POSITION_EFFECT[d["position_effect"]] if d["position_effect"] else None
         self._message = d['message']
         self._filled_quantity = d['filled_quantity']
-        self._status = self._str_to_enum(ORDER_STATUS, d['status'])
+        self._status = ORDER_STATUS[d["status"]]
         self._frozen_price = d['frozen_price']
-        self._type = self._str_to_enum(ORDER_TYPE, d['type'])
+        self._type = ORDER_TYPE[d["type"]]
         self._transaction_cost = d['transaction_cost']
         self._avg_price = d['avg_price']
+        self._kwargs = d['kwargs']
 
     @classmethod
-    def __from_create__(cls, order_book_id, quantity, side, style, position_effect):
+    def __from_create__(cls, order_book_id, quantity, side, style, position_effect, **kwargs):
         env = Environment.get_instance()
         order = cls()
         order._order_id = next(order.order_id_gen)
@@ -122,6 +119,7 @@ class Order(object):
             order._type = ORDER_TYPE.MARKET
         order._avg_price = 0
         order._transaction_cost = 0
+        order._kwargs = kwargs
         return order
 
     @property
@@ -187,7 +185,17 @@ class Order(object):
         """
         [POSITION_EFFECT] 订单开平（期货专用）
         """
+        if self._position_effect is None:
+            if self._side == SIDE.BUY:
+                return POSITION_EFFECT.OPEN
+            else:
+                return POSITION_EFFECT.CLOSE
         return self._position_effect
+
+    @property
+    def position_direction(self):
+        # type: () -> POSITION_DIRECTION
+        return get_position_direction(self._side, self._position_effect)
 
     @property
     def message(self):
@@ -249,6 +257,16 @@ class Order(object):
             raise RuntimeError("Frozen price of order {} is not supposed to be nan.".format(self.order_id))
         return self._frozen_price
 
+    @property
+    def kwargs(self):
+        return self._kwargs
+
+    def __getattr__(self, item):
+        try:
+            return self.__dict__["_kwargs"][item]
+        except KeyError:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
+
     def is_final(self):
         return self._status not in {
             ORDER_STATUS.PENDING_NEW,
@@ -270,11 +288,12 @@ class Order(object):
         quantity = trade.last_quantity
         assert self.filled_quantity + quantity <= self.quantity
         new_quantity = self._filled_quantity + quantity
-        self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
         self._transaction_cost += trade.commission + trade.tax
         self._filled_quantity = new_quantity
         if self.unfilled_quantity == 0:
             self._status = ORDER_STATUS.FILLED
+        if trade.position_effect != POSITION_EFFECT.MATCH:
+            self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
 
     def mark_rejected(self, reject_reason):
         if not self.is_final():
@@ -323,6 +342,8 @@ class LimitOrder(OrderStyle):
     def round_price(self, tick_size):
         if tick_size:
             with decimal_rounding_floor():
-                self.limit_price = float((Decimal(self.limit_price) / Decimal(tick_size)).to_integral() * Decimal(tick_size))
+                limit_price_decimal = Decimal("{:.4f}".format(self.limit_price))
+                tick_size_decimal = Decimal("{:.4f}".format(tick_size))
+                self.limit_price = float((limit_price_decimal / tick_size_decimal).to_integral() * tick_size_decimal)
         else:
             user_system_log.warn('Invalid tick size: {}'.format(tick_size))

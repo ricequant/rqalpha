@@ -1,4 +1,8 @@
-include requirements.txt
-include requirements-py2.txt
-include rqalpha/VERSION.txt
 recursive-include rqalpha/resource *.png
+include versioneer.py
+include rqalpha/_version.py
+include README.rst
+include CHANGELOG.rst
+include LICENSE
+include rqalpha/utils/translations/zh_Hans_CN/LC_MESSAGES/*
+graft rqalpha/examples

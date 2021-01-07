@@ -31,31 +31,7 @@ RQAlpha 风控 Mod
         "validate_is_trading": True,
         # 检查可用资金是否充足
         "validate_cash": True,
-        # 检查可平仓位是否充足
-        "validate_position": True,
+        # 检查是否存在自成交的风险
+        "validate_self_trade": False,
     }
 
-您可以通过如下方式来修改模块的配置信息，从而选择开启/关闭风控模块对应的风控项
-
-..  code-block:: python
-
-    from rqalpha import run
-    config = {
-        "base": {
-            "strategy_file": "strategy.py",
-            "start_date": "2015-01-09",
-            "end_date": "2015-03-09",
-            "frequency": "1d",
-            "accounts": {
-                "stock": 100000
-            }
-        }
-        "mod": {
-            "sys_risk": {
-                "enabled": True,
-                # 关闭仓位是否充足相关的风控判断
-                "validate_position": False,
-            }
-        }
-    }
-    run(config)

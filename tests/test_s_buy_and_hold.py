@@ -13,6 +13,7 @@ def handle_bar(context, bar_dict):
 def after_trading(context):
     pass
 
+
 __config__ = {
     "base": {
         "start_date": "2015-01-09",

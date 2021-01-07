@@ -1,35 +1,40 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import copy
 import datetime
+from typing import Dict, Callable, Optional
 
-import six
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.utils import instrument_type_str2enum
-from rqalpha.utils.repr import property_repr
+from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
+from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils.repr import property_repr, PropertyReprMeta
 
 
-class Instrument(object):
+class Instrument(metaclass=PropertyReprMeta):
     DEFAULT_LISTED_DATE = datetime.datetime(1990, 1, 1)
     DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
 
     @staticmethod
     def _fix_date(ds, dflt):
+        if isinstance(ds, datetime.datetime):
+            return ds
         if ds == '0000-00-00':
             return dflt
         year, month, day = ds.split('-')
@@ -37,15 +42,17 @@ class Instrument(object):
 
     __repr__ = property_repr
 
-    def __init__(self, dic):
-        self._ins_dict = dic
+    def __init__(self, dic, future_tick_size_getter=None):
+        # type: (Dict, Optional[Callable[[Instrument], float]]) -> None
+        self.__dict__ = copy.copy(dic)
+        self._future_tick_size_getter = future_tick_size_getter
 
         if "listed_date" in dic:
-            self._ins_dict["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
+            self.__dict__["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
         if "de_listed_date" in dic:
-            self._ins_dict["de_listed_date"] = self._fix_date(dic["de_listed_date"], self.DEFAULT_DE_LISTED_DATE)
-        if "maturity_date" in self._ins_dict:
-            self._ins_dict["maturity_date"] = self._fix_date(dic["maturity_date"], self.DEFAULT_DE_LISTED_DATE)
+            self.__dict__["de_listed_date"] = self._fix_date(dic["de_listed_date"], self.DEFAULT_DE_LISTED_DATE)
+        if "maturity_date" in self.__dict__:
+            self.__dict__["maturity_date"] = self._fix_date(dic["maturity_date"], self.DEFAULT_DE_LISTED_DATE)
 
         if 'contract_multiplier' in dic:
             if np.isnan(self.contract_multiplier):
@@ -53,62 +60,71 @@ class Instrument(object):
 
     @property
     def order_book_id(self):
+        # type: () -> str
         """
         [str] 股票：证券代码，证券的独特的标识符。应以’.XSHG’或’.XSHE’结尾，前者代表上证，后者代表深证。
         期货：期货代码，期货的独特的标识符（郑商所期货合约数字部分进行了补齐。例如原有代码’ZC609’补齐之后变为’ZC1609’）。
         主力连续合约UnderlyingSymbol+88，例如’IF88’ ；指数连续合约命名规则为UnderlyingSymbol+99
         """
-        return self._ins_dict["order_book_id"]
+        return self.__dict__["order_book_id"]
 
     @property
     def symbol(self):
+        # type: () -> str
         """
         [str] 股票：证券的简称，例如’平安银行’。期货：期货的简称，例如’沪深1005’。
         """
-        return self._ins_dict["symbol"]
+        return self.__dict__["symbol"]
 
     @property
     def round_lot(self):
+        # type: () -> int
         """
         [int] 股票：一手对应多少股，中国A股一手是100股。期货：一律为1。
         """
-        return self._ins_dict["round_lot"]
+        return self.__dict__["round_lot"]
 
     @property
     def listed_date(self):
+        # type: () -> datetime.datetime
         """
         [datetime] 股票：该证券上市日期。期货：期货的上市日期，主力连续合约与指数连续合约都为 datetime(1990, 1, 1)。
         """
-        return self._ins_dict["listed_date"]
+        return self.__dict__["listed_date"]
 
     @property
     def de_listed_date(self):
+        # type: () -> datetime.datetime
         """
         [datetime] 股票：退市日期。期货：交割日期。
         """
-        return self._ins_dict["de_listed_date"]
+        return self.__dict__["de_listed_date"]
 
     @property
     def type(self):
+        # type: () -> str
         """
-        [sty] 合约类型，目前支持的类型有: ‘CS’, ‘INDX’, ‘LOF’, ‘ETF’, ‘FenjiMu’, ‘FenjiA’, ‘FenjiB’, ‘Future’
+        [sty] 合约类型，目前支持的类型有: ‘CS’, ‘INDX’, ‘LOF’, ‘ETF’, ‘Future’
         """
-        return self._ins_dict["type"]
+        return INSTRUMENT_TYPE[self.__dict__["type"]]
 
     @property
     def exchange(self):
+        # type: () -> str
         """
         [str] 交易所。股票：’XSHE’ - 深交所, ‘XSHG’ - 上交所。期货：’DCE’ - 大连商品交易所, ‘SHFE’ - 上海期货交易所，
         ’CFFEX’ - 中国金融期货交易所, ‘CZCE’- 郑州商品交易所
         """
-        return self._ins_dict["exchange"]
+        return self.__dict__["exchange"]
 
     @property
     def market_tplus(self):
+        # type: () -> int
         """
         [int] 合约卖出和买入操作需要间隔的最小交易日数，如A股为 1
+        公募基金的 market_tplus 默认0
         """
-        return self._ins_dict["market_tplus"]
+        return self.__dict__.get("market_tplus") or 0
 
     @property
     def sector_code(self):
@@ -116,7 +132,7 @@ class Instrument(object):
         [str] 板块缩写代码，全球通用标准定义（股票专用）
         """
         try:
-            return self._ins_dict["sector_code"]
+            return self.__dict__["sector_code"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'sector_code' ".format(self.order_book_id)
@@ -128,7 +144,7 @@ class Instrument(object):
         [str] 以当地语言为标准的板块代码名（股票专用）
         """
         try:
-            return self._ins_dict["sector_code_name"]
+            return self.__dict__["sector_code_name"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'sector_code_name' ".format(self.order_book_id)
@@ -140,7 +156,7 @@ class Instrument(object):
         [str] 国民经济行业分类代码，具体可参考“Industry列表” （股票专用）
         """
         try:
-            return self._ins_dict["industry_code"]
+            return self.__dict__["industry_code"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'industry_code' ".format(self.order_book_id)
@@ -152,7 +168,7 @@ class Instrument(object):
         [str] 国民经济行业分类名称（股票专用）
         """
         try:
-            return self._ins_dict["industry_name"]
+            return self.__dict__["industry_name"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'industry_name' ".format(self.order_book_id)
@@ -164,7 +180,7 @@ class Instrument(object):
         [str] 概念股分类，例如：’铁路基建’，’基金重仓’等（股票专用）
         """
         try:
-            return self._ins_dict["concept_names"]
+            return self.__dict__["concept_names"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'concept_names' ".format(self.order_book_id)
@@ -176,7 +192,7 @@ class Instrument(object):
         [str] 板块类别，’MainBoard’ - 主板,’GEM’ - 创业板（股票专用）
         """
         try:
-            return self._ins_dict["board_type"]
+            return self.__dict__["board_type"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'board_type' ".format(self.order_book_id)
@@ -189,7 +205,7 @@ class Instrument(object):
         ‘PreIPO’ - 发行配售期间, ‘FailIPO’ - 发行失败（股票专用）
         """
         try:
-            return self._ins_dict["status"]
+            return self.__dict__["status"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'status' ".format(self.order_book_id)
@@ -202,7 +218,7 @@ class Instrument(object):
         ‘PT’ - 代表该股票连续3年收入为负，将被暂停交易, ‘Other’ - 其他（股票专用）
         """
         try:
-            return self._ins_dict["special_type"]
+            return self.__dict__["special_type"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'special_type' ".format(self.order_book_id)
@@ -213,24 +229,14 @@ class Instrument(object):
         """
         [float] 合约乘数，例如沪深300股指期货的乘数为300.0（期货专用）
         """
-        try:
-            return self._ins_dict["contract_multiplier"]
-        except (KeyError, ValueError):
-            raise AttributeError(
-                "Instrument(order_book_id={}) has no attribute 'contract_multiplier' ".format(self.order_book_id)
-            )
+        return self.__dict__.get('contract_multiplier', 1)
 
     @property
     def margin_rate(self):
         """
         [float] 合约最低保证金率（期货专用）
         """
-        try:
-            return self._ins_dict["margin_rate"]
-        except (KeyError, ValueError):
-            raise AttributeError(
-                "Instrument(order_book_id={}) has no attribute 'margin_rate' ".format(self.order_book_id)
-            )
+        return self.__dict__.get("margin_rate", 1)
 
     @property
     def underlying_order_book_id(self):
@@ -238,7 +244,7 @@ class Instrument(object):
         [str] 合约标的代码，目前除股指期货(IH, IF, IC)之外的期货合约，这一字段全部为’null’（期货专用）
         """
         try:
-            return self._ins_dict["underlying_order_book_id"]
+            return self.__dict__["underlying_order_book_id"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'underlying_order_book_id' ".format(self.order_book_id)
@@ -250,7 +256,7 @@ class Instrument(object):
         [str] 合约标的代码，目前除股指期货(IH, IF, IC)之外的期货合约，这一字段全部为’null’（期货专用）
         """
         try:
-            return self._ins_dict["underlying_symbol"]
+            return self.__dict__["underlying_symbol"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'underlying_symbol' ".format(self.order_book_id)
@@ -258,11 +264,12 @@ class Instrument(object):
 
     @property
     def maturity_date(self):
+        # type: () -> datetime.datetime
         """
-        [datetime] 期货到期日。主力连续合约与指数连续合约都为 datetime(2999, 12, 31)（期货专用）
+        [datetime] 到期日
         """
         try:
-            return self._ins_dict["maturity_date"]
+            return self.__dict__["maturity_date"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'maturity_date' ".format(self.order_book_id)
@@ -274,7 +281,7 @@ class Instrument(object):
         [str] 交割方式，’CashSettlementRequired’ - 现金交割, ‘PhysicalSettlementRequired’ - 实物交割（期货专用）
         """
         try:
-            return self._ins_dict["settlement_method"]
+            return self.__dict__["settlement_method"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'settlement_method' ".format(self.order_book_id)
@@ -285,9 +292,88 @@ class Instrument(object):
         """
         [bool] 该合约当前日期是否在交易
         """
+        trading_dt = Environment.get_instance().trading_dt
+        return self.listing_at(trading_dt)
 
-        now = Environment.get_instance().calendar_dt
-        return self.listed_date <= now <= self.de_listed_date
+    @property
+    def listed(self):
+        """
+        [bool] 该合约当前交易日是否已上市
+        """
+        return self.listed_at(Environment.get_instance().trading_dt)
+
+    @property
+    def de_listed(self):
+        """
+        [bool] 该合约当前交易日是否已退市
+        """
+        return self.de_listed_at(Environment.get_instance().trading_dt)
+
+    @property
+    def account_type(self):
+        if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
+            return DEFAULT_ACCOUNT_TYPE.STOCK
+        elif self.type == INSTRUMENT_TYPE.FUTURE:
+            return DEFAULT_ACCOUNT_TYPE.FUTURE
+        else:
+            raise NotImplementedError
+
+    def listing_at(self, dt):
+        """
+        该合约在指定日期是否在交易
+        :param dt: datetime.datetime
+        :return: bool
+        """
+        return self.listed_at(dt) and not self.de_listed_at(dt)
+
+    def listed_at(self, dt):
+        """
+        该合约在指定日期是否已上日
+        :param dt: datetime.datetime
+        :return: bool
+        """
+        return self.listed_date <= dt
+
+    def de_listed_at(self, dt):
+        """
+        该合约在指定日期是否已退市
+        :param dt: datetime.datetime
+        :return: bool
+        """
+        if self.type in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
+            return dt.date() > self.de_listed_date.date()
+        else:
+            return dt >= self.de_listed_date
+
+    STOCK_TRADING_PERIOD = [
+        TimeRange(start=datetime.time(9, 31), end=datetime.time(11, 30)),
+        TimeRange(start=datetime.time(13, 1), end=datetime.time(15, 0)),
+    ]
+
+    @property
+    def trading_hours(self):
+        # trading_hours='09:31-11:30,13:01-15:00'
+        try:
+            trading_hours = self.__dict__["trading_hours"]
+        except KeyError:
+            if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
+                return self.STOCK_TRADING_PERIOD
+            return None
+        trading_period = []
+        trading_hours = trading_hours.replace("-", ":")
+        for time_range_str in trading_hours.split(","):
+            start_h, start_m, end_h, end_m = (int(i) for i in time_range_str.split(":"))
+            start, end = datetime.time(start_h, start_m), datetime.time(end_h, end_m)
+            if start > end:
+                trading_period.append(TimeRange(start, datetime.time(23, 59)))
+                trading_period.append(TimeRange(datetime.time(0, 0), end))
+            else:
+                trading_period.append(TimeRange(start, end))
+        return trading_period
+
+    @property
+    def trade_at_night(self):
+        return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
     def days_from_listed(self):
         if self.listed_date == self.DEFAULT_LISTED_DATE:
@@ -300,10 +386,6 @@ class Instrument(object):
         ipo_days = (date - self.listed_date.date()).days
         return ipo_days if ipo_days >= 0 else -1
 
-    @property
-    def enum_type(self):
-        return instrument_type_str2enum(self.type)
-
     def days_to_expire(self):
         if self.type != 'Future' or self.order_book_id[-2:] == '88' or self.order_book_id[-2:] == '99':
             return -1
@@ -313,7 +395,25 @@ class Instrument(object):
         return -1 if days < 0 else days
 
     def tick_size(self):
-        return Environment.get_instance().data_proxy.get_tick_size(self.order_book_id)
+        # type: () -> float
+        if self.type in (INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.INDX):
+            return 0.01
+        elif self.type in ("ETF", "LOF"):
+            return 0.001
+        elif self.type == INSTRUMENT_TYPE.FUTURE:
+            return self._future_tick_size_getter(self)
+        else:
+            raise NotImplementedError
+
+    def calc_cash_occupation(self, price, quantity, direction):
+        # type: (float, float, POSITION_DIRECTION) -> float
+        if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
+            return price * quantity
+        elif self.type == INSTRUMENT_TYPE.FUTURE:
+            margin_multiplier = Environment.get_instance().config.base.margin_multiplier
+            return price * quantity * self.contract_multiplier * self.margin_rate * margin_multiplier
+        else:
+            raise NotImplementedError
 
 
 class SectorCodeItem(object):

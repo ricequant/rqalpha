@@ -1,50 +1,23 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
 import hashlib
 from collections import OrderedDict
 
-import jsonpickle
-
-from rqalpha.events import EVENT
 from rqalpha.const import PERSIST_MODE
+from rqalpha.core.events import EVENT
 from rqalpha.utils.logger import system_log
-
-
-class CoreObjectsPersistProxy(object):
-    def __init__(self, scheduler):
-        self._objects = {'scheduler': scheduler}
-
-    def get_state(self):
-        result = {}
-        for key, obj in six.iteritems(self._objects):
-            state = obj.get_state()
-            if state is not None:
-                result[key] = state
-
-        return jsonpickle.dumps(result).encode('utf-8')
-
-    def set_state(self, state):
-        state = jsonpickle.loads(state.decode('utf-8'))
-        for key, value in six.iteritems(state):
-            try:
-                self._objects[key].set_state(value)
-            except KeyError:
-                system_log.warn('core object state for {} ignored'.format(key))
 
 
 class PersistHelper(object):
@@ -58,9 +31,10 @@ class PersistHelper(object):
             event_bus.add_listener(EVENT.POST_BAR, self.persist)
             event_bus.add_listener(EVENT.DO_PERSIST, self.persist)
             event_bus.add_listener(EVENT.POST_SETTLEMENT, self.persist)
+            event_bus.add_listener(EVENT.DO_RESTORE, self.restore)
 
-    def persist(self, *args):
-        for key, obj in six.iteritems(self._objects):
+    def persist(self, *_):
+        for key, obj in self._objects.items():
             try:
                 state = obj.get_state()
                 if not state:
@@ -85,10 +59,21 @@ class PersistHelper(object):
             return True
         return False
 
-    def restore(self):
-        for key, obj in six.iteritems(self._objects):
-            state = self._persist_provider.load(key)
-            system_log.debug('restore {} with state = {}', key, state)
-            if not state:
-                continue
+    def restore(self, event):
+        key = getattr(event, "key", None)
+        if key:
+            return self._restore_obj(key, self._objects[key])
+
+        ret = {key: self._restore_obj(key, obj) for key, obj in self._objects.items()}
+        return ret
+
+    def _restore_obj(self, key, obj):
+        state = self._persist_provider.load(key)
+        system_log.debug('restore {} with state = {}', key, state)
+        if not state:
+            return False
+        try:
             obj.set_state(state)
+        except Exception:
+            system_log.exception('restore failed: key={} state={}'.format(key, state))
+        return True

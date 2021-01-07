@@ -1,60 +1,47 @@
 # -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
 #
-# Copyright 2017 Ricequant, Inc
+# 除非遵守当前许可，否则不得使用本软件。
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import os
-import sys
-import tarfile
-import tempfile
 import datetime
-import shutil
+import sys
 from pprint import pformat
+from itertools import chain
 
-import logbook
-import click
 import jsonpickle.ext.numpy as jsonpickle_numpy
-import pytz
-import requests
+import logbook
 import six
-
 from rqalpha import const
-from rqalpha.api import helper as api_helper
-from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
+from rqalpha.core.executor import Executor
 from rqalpha.core.strategy import Strategy
-from rqalpha.core.strategy_universe import StrategyUniverse
-from rqalpha.core.global_var import GlobalVars
 from rqalpha.core.strategy_context import StrategyContext
+from rqalpha.core.strategy_loader import FileStrategyLoader, SourceCodeStrategyLoader, UserFuncStrategyLoader
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
-from rqalpha.events import EVENT, Event
-from rqalpha.execution_context import ExecutionContext
+from rqalpha.core.events import EVENT, Event
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
 from rqalpha.model.bar import BarMap
-from rqalpha.model.portfolio import Portfolio
-from rqalpha.model.base_position import Positions
-from rqalpha.const import RUN_TYPE
-from rqalpha.utils import create_custom_exception, run_with_user_log_disabled, scheduler as mod_scheduler
+from rqalpha.utils import RqAttrDict, create_custom_exception, init_rqdatac_env
 from rqalpha.utils.exception import CustomException, is_user_exc, patch_user_exc
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.persisit_helper import CoreObjectsPersistProxy, PersistHelper
-from rqalpha.utils.scheduler import Scheduler
-from rqalpha.utils.config import set_locale
-from rqalpha.utils.logger import system_log, basic_system_log, user_system_log, user_detail_log
-
+from rqalpha.utils.log_capture import LogCapture
+from rqalpha.utils.logger import release_print, system_log, user_log, user_system_log
+from rqalpha.utils.persisit_helper import PersistHelper
 
 jsonpickle_numpy.register_handlers()
 
@@ -66,123 +53,76 @@ def _adjust_start_date(config, data_proxy):
     config.base.start_date = max(start, config.base.start_date)
     config.base.end_date = min(end, config.base.end_date)
 
-    # for annualized risk indicator calculation
-    config.base.natural_start_date = config.base.start_date
-    config.base.natural_end_date = config.base.end_date
-
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
         raise patch_user_exc(
             ValueError(
                 _(u"There is no data between {start_date} and {end_date}. Please check your"
                   u" data bundle or select other backtest period.").format(
-                      start_date=origin_start_date, end_date=origin_end_date)))
+                    start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
-    config.base.timezone = pytz.utc
 
 
-def _validate_benchmark(config, data_proxy):
-    benchmark = config.base.benchmark
-    if benchmark is None:
-        return
-    instrument = data_proxy.instruments(benchmark)
-    if instrument is None:
-        raise patch_user_exc(ValueError(_(u"invalid benchmark {}").format(benchmark)))
-
-    if instrument.order_book_id == "000300.XSHG":
-        # 000300.XSHG 数据进行了补齐，因此认为只要benchmark设置了000300.XSHG，就存在数据，不受限于上市日期。
-        return
-    config = Environment.get_instance().config
-    start_date = config.base.start_date
-    end_date = config.base.end_date
-    if instrument.listed_date.date() > start_date:
-        raise patch_user_exc(ValueError(
-            _(u"benchmark {benchmark} has not been listed on {start_date}").format(benchmark=benchmark,
-                                                                                   start_date=start_date)))
-    if instrument.de_listed_date.date() < end_date:
-        raise patch_user_exc(ValueError(
-            _(u"benchmark {benchmark} has been de_listed on {end_date}").format(benchmark=benchmark,
-                                                                                end_date=end_date)))
-
-
-def create_benchmark_portfolio(env):
-    if env.config.base.benchmark is None:
-        return None
-
-    BenchmarkAccount = env.get_account_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
-    BenchmarkPosition = env.get_position_model(const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name)
-
-    start_date = env.config.base.start_date
-    total_cash = sum(env.config.base.accounts.values())
-    accounts = {
-        const.DEFAULT_ACCOUNT_TYPE.BENCHMARK.name: BenchmarkAccount(total_cash, Positions(BenchmarkPosition))
-    }
-    return Portfolio(start_date, 1, total_cash, accounts)
-
-
-def create_base_scope(copy_scope=False):
-    from rqalpha.utils.logger import user_print, user_log
+def create_base_scope():
     from . import user_module
+    from copy import copy
 
-    if copy_scope:
-        from copy import copy
-        scope = copy(user_module.__dict__)
+    return copy(user_module.__dict__)
+
+
+def init_persist_helper(env, ucontext, executor, config):
+    if not config.base.persist:
+        return None
+    persist_provider = env.persist_provider
+    if persist_provider is None:
+        raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
+    persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
+    for key, obj in chain([
+        ('user_context', ucontext),
+        ('global_vars', env.global_vars),
+        ('universe', env._universe),
+        ('portfolio', env.portfolio),
+        ('executor', executor),
+    ], ((key, obj) for key, obj in [
+        ('event_source', env.event_source),
+        ('broker', env.broker)
+    ] if isinstance(obj, Persistable)), ((
+        "mod_{}".format(name), mod
+    ) for name, mod in env.mod_dict.items() if isinstance(mod, Persistable))):
+        persist_helper.register(key, obj)
+    env.set_persist_helper(persist_helper)
+    return persist_helper
+
+
+def init_strategy_loader(env, source_code, user_funcs, config):
+    if source_code is not None:
+        return SourceCodeStrategyLoader(source_code)
+    elif user_funcs is not None:
+        return UserFuncStrategyLoader(user_funcs)
     else:
-        scope = user_module.__dict__
-    scope.update({
-        "logger": user_log,
-        "print": user_print,
-    })
-
-    return scope
+        return FileStrategyLoader(config.base.strategy_file)
 
 
-def update_bundle(data_bundle_path=None, locale="zh_Hans_CN", confirm=True):
-    set_locale(locale)
-    default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
-    if data_bundle_path is None:
-        data_bundle_path = default_bundle_path
-    else:
-        data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
-    if (confirm and os.path.exists(data_bundle_path) and data_bundle_path != default_bundle_path and
-            os.listdir(data_bundle_path)):
-        click.confirm(_(u"""
-[WARNING]
-Target bundle path {data_bundle_path} is not empty.
-The content of this folder will be REMOVED before updating.
-Are you sure to continue?""").format(data_bundle_path=data_bundle_path), abort=True)
+def get_strategy_apis():
+    from rqalpha import api
+    return {n: getattr(api, n) for n in api.__all__}
 
-    day = datetime.date.today()
-    tmp = os.path.join(tempfile.gettempdir(), 'rq.bundle')
 
-    while True:
-        url = 'http://7xjci3.com1.z0.glb.clouddn.com/bundles_v3/rqbundle_%04d%02d%02d.tar.bz2' % (
-            day.year, day.month, day.day)
-        six.print_(_(u"try {} ...").format(url))
-        r = requests.get(url, stream=True)
-        if r.status_code != 200:
-            day = day - datetime.timedelta(days=1)
-            continue
+def init_rqdatac(rqdatac_uri):
+    try:
+        import rqdatac
+    except ImportError:
+        return
 
-        out = open(tmp, 'wb')
-        total_length = int(r.headers.get('content-length'))
+    import warnings
 
-        with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
-            for data in r.iter_content(chunk_size=8192):
-                bar.update(len(data))
-                out.write(data)
-
-        out.close()
-        break
-
-    shutil.rmtree(data_bundle_path, ignore_errors=True)
-    os.makedirs(data_bundle_path)
-    tar = tarfile.open(tmp, 'r:bz2')
-    tar.extractall(data_bundle_path)
-    tar.close()
-    os.remove(tmp)
-    six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
+    try:
+        init_rqdatac_env(rqdatac_uri)
+        with warnings.catch_warnings(record=True):
+            rqdatac.init()
+    except Exception as e:
+        system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
 
 
 def run(config, source_code=None, user_funcs=None):
@@ -195,144 +135,97 @@ def run(config, source_code=None, user_funcs=None):
         # avoid register handlers everytime
         # when running in ipython
         set_loggers(config)
-        basic_system_log.debug("\n" + pformat(config.convert_to_dict()))
+        init_rqdatac(getattr(config.base, 'rqdatac_uri', None))
+        system_log.debug("\n" + pformat(config.convert_to_dict()))
 
-        if source_code is not None:
-            env.set_strategy_loader(SourceCodeStrategyLoader(source_code))
-        elif user_funcs is not None:
-            env.set_strategy_loader(UserFuncStrategyLoader(user_funcs))
-        else:
-            env.set_strategy_loader(FileStrategyLoader(config.base.strategy_file))
-        env.set_global_vars(GlobalVars())
+        env.set_strategy_loader(init_strategy_loader(env, source_code, user_funcs, config))
         mod_handler.set_env(env)
         mod_handler.start_up()
 
         if not env.data_source:
-            env.set_data_source(BaseDataSource(config.base.data_bundle_path))
-        env.set_data_proxy(DataProxy(env.data_source))
-
-        Scheduler.set_trading_dates_(env.data_source.get_trading_calendar())
-        scheduler = Scheduler(config.base.frequency)
-        mod_scheduler._scheduler = scheduler
-
-        env._universe = StrategyUniverse()
+            env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {})))
+        if env.price_board is None:
+            from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
+            env.price_board = BarDictPriceBoard()
+        env.set_data_proxy(DataProxy(env.data_source, env.price_board))
 
         _adjust_start_date(env.config, env.data_proxy)
 
-        _validate_benchmark(env.config, env.data_proxy)
+        ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
+        ctx._push()
 
         # FIXME
         start_dt = datetime.datetime.combine(config.base.start_date, datetime.datetime.min.time())
         env.calendar_dt = start_dt
         env.trading_dt = start_dt
 
-        broker = env.broker
-        assert broker is not None
-        try:
-            env.portfolio = broker.get_portfolio()
-        except NotImplementedError:
-            pass
-
-        try:
-            env.booking = broker.get_booking()
-        except NotImplementedError:
-            pass
-
-        env.benchmark_portfolio = create_benchmark_portfolio(env)
-
-        event_source = env.event_source
-        assert event_source is not None
-
-        bar_dict = BarMap(env.data_proxy, config.base.frequency)
-        env.set_bar_dict(bar_dict)
-
-        if env.price_board is None:
-            from .core.bar_dict_price_board import BarDictPriceBoard
-            env.price_board = BarDictPriceBoard()
-
-        ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
-        ctx._push()
+        assert env.broker is not None
+        assert env.event_source is not None
+        if env.portfolio is None:
+            from rqalpha.portfolio import Portfolio
+            env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
-        scope = create_base_scope(config.base.run_type == RUN_TYPE.BACKTEST)
-        scope.update({
-            "g": env.global_vars
-        })
-
-        apis = api_helper.get_apis()
-        scope.update(apis)
-
+        scope = create_base_scope()
+        scope.update({"g": env.global_vars})
+        scope.update(get_strategy_apis())
         scope = env.strategy_loader.load(scope)
 
-        if env.config.extra.enable_profiler:
+        if config.extra.enable_profiler:
             enable_profiler(env, scope)
 
         ucontext = StrategyContext()
-        user_strategy = Strategy(env.event_bus, scope, ucontext)
-        scheduler.set_user_context(ucontext)
-
-        if not config.extra.force_run_init_when_pt_resume:
-            with run_with_user_log_disabled(disabled=config.base.resume_mode):
-                user_strategy.init()
-
-        if config.extra.context_vars:
-            for k, v in six.iteritems(config.extra.context_vars):
-                setattr(ucontext, k, v)
-
-        from .core.executor import Executor
         executor = Executor(env)
 
-        if config.base.persist:
-            persist_provider = env.persist_provider
-            if persist_provider is None:
-                raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
-            persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
-            env.set_persist_helper(persist_helper)
-            persist_helper.register('core', CoreObjectsPersistProxy(scheduler))
-            persist_helper.register('user_context', ucontext)
-            persist_helper.register('global_vars', env.global_vars)
-            persist_helper.register('universe', env._universe)
-            if isinstance(event_source, Persistable):
-                persist_helper.register('event_source', event_source)
-            if env.portfolio:
-                persist_helper.register('portfolio', env.portfolio)
-            if env.benchmark_portfolio:
-                persist_helper.register('benchmark_portfolio', env.benchmark_portfolio)
-            for name, module in six.iteritems(env.mod_dict):
-                if isinstance(module, Persistable):
-                    persist_helper.register('mod_{}'.format(name), module)
-            # broker will restore open orders from account
-            if isinstance(broker, Persistable):
-                persist_helper.register('broker', broker)
-            persist_helper.register('executor', executor)
+        persist_helper = init_persist_helper(env, ucontext, executor, config)
+        user_strategy = Strategy(env.event_bus, scope, ucontext)
+        env.user_strategy = user_strategy
 
+        env.event_bus.publish_event(Event(EVENT.BEFORE_STRATEGY_RUN))
+        if persist_helper:
+            with LogCapture(user_log) as log_capture:
+                user_strategy.init()
+        else:
+            user_strategy.init()
+
+        if config.extra.context_vars:
+            for k, v in config.extra.context_vars.items():
+                if isinstance(v, RqAttrDict):
+                    v = v.__dict__
+                setattr(ucontext, k, v)
+
+        if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
-            persist_helper.restore()
+            restored_obj_state = persist_helper.restore(None)
+            check_key = ["global_vars", "user_context", "executor", "universe"]
+            kept_current_init_data = not any(v for k, v in restored_obj_state.items() if k in check_key)
+            system_log.debug("restored_obj_state: {}".format(restored_obj_state))
+            system_log.debug("kept_current_init_data: {}".format(kept_current_init_data))
+            if kept_current_init_data:
+                # 未能恢复init相关数据 保留当前策略初始化变量(展示当前策略初始化日志)
+                log_capture.replay()
+            else:
+                user_system_log.info(_('system restored'))
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True
 
-        # When force_run_init_when_pt_resume is active,
-        # we should run `init` after restore persist data
-        if config.extra.force_run_init_when_pt_resume:
-            assert config.base.resume_mode == True
-            with run_with_user_log_disabled(disabled=False):
-                env._universe._set = set()
-                user_strategy.init()
-
+        bar_dict = BarMap(env.data_proxy, config.base.frequency)
         executor.run(bar_dict)
+        env.event_bus.publish_event(Event(EVENT.POST_STRATEGY_RUN))
 
         if env.profile_deco:
             output_profile_result(env)
+        release_print(scope)
     except CustomException as e:
-        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
+        if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         code = _exception_handler(e)
         mod_handler.tear_down(code, e)
     except Exception as e:
-        if init_succeed and env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
+        if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
         exc_type, exc_val, exc_tb = sys.exc_info()
@@ -341,7 +234,7 @@ def run(config, source_code=None, user_funcs=None):
         code = _exception_handler(user_exc)
         mod_handler.tear_down(code, user_exc)
     else:
-        if (env.config.base.persist and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT):
+        if persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT:
             persist_helper.persist()
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug(_(u"strategy run successfully, normal exit"))
@@ -349,25 +242,21 @@ def run(config, source_code=None, user_funcs=None):
 
 
 def _exception_handler(e):
-    try:
-        sys.excepthook(e.error.exc_type, e.error.exc_val, e.error.exc_tb)
-    except Exception as e:
-        system_log.exception("hook exception failed")
-
+    user_system_log.exception(_(u"strategy execute exception"))
     user_system_log.error(e.error)
     if not is_user_exc(e.error.exc_val):
-        code = const.EXIT_CODE.EXIT_INTERNAL_ERROR
-        system_log.error(_(u"strategy execute exception"), exc=e)
-    else:
-        code = const.EXIT_CODE.EXIT_USER_ERROR
-        user_detail_log.error(_(u"strategy execute exception"), exc=e)
+        return const.EXIT_CODE.EXIT_INTERNAL_ERROR
 
-    return code
+    return const.EXIT_CODE.EXIT_USER_ERROR
 
 
 def enable_profiler(env, scope):
     # decorate line profiler
-    import line_profiler
+    try:
+        import line_profiler
+    except ImportError:
+        raise RuntimeError('--enable-profiler needs line_profiler')
+
     import inspect
     env.profile_deco = profile_deco = line_profiler.LineProfiler()
     for name in scope:
@@ -377,7 +266,7 @@ def enable_profiler(env, scope):
         if inspect.isfunction(obj):
             scope[name] = profile_deco(obj)
         if inspect.isclass(obj):
-            for key, val in six.iteritems(obj.__dict__):
+            for key, val in obj.__dict__.items():
                 if inspect.isfunction(val):
                     setattr(obj, key, profile_deco(val))
 
@@ -392,23 +281,17 @@ def output_profile_result(env):
 
 
 def set_loggers(config):
-    from rqalpha.utils.logger import user_log, user_system_log, user_detail_log, system_log, basic_system_log, std_log
-    from rqalpha.utils.logger import user_std_handler, init_logger
+    from rqalpha.utils.logger import user_log, user_system_log, system_log
+    from rqalpha.utils.logger import init_logger
     from rqalpha.utils import logger
     extra_config = config.extra
 
     init_logger()
 
-    for log in [basic_system_log, system_log, std_log, user_system_log, user_detail_log]:
+    for log in [system_log, user_system_log]:
         log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
 
     user_log.level = logbook.DEBUG
-
-    if extra_config.log_level.upper() != "NONE":
-        if not extra_config.user_log_disabled:
-            user_log.handlers.append(user_std_handler)
-        if not extra_config.user_system_log_disabled:
-            user_system_log.handlers.append(user_std_handler)
 
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())

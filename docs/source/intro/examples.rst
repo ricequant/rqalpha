@@ -93,8 +93,8 @@ Golden Cross算法示例
         plot("short avg", short_avg[-1])
         plot("long avg", long_avg[-1])
 
-        # 计算现在portfolio中股票的仓位
-        cur_position = context.portfolio.positions[context.s1].quantity
+        # 获取当前投资组合中股票的仓位
+        cur_position = get_position(context.s1).quantity
         # 计算现在portfolio中的现金可以购买多少股票
         shares = context.portfolio.cash/bar_dict[context.s1].close
 
@@ -156,8 +156,8 @@ Golden Cross算法示例
         # 如果macd从上往下跌破macd_signal
 
         if macd[-1] - signal[-1] < 0 and macd[-2] - signal[-2] > 0:
-            # 计算现在portfolio中股票的仓位
-            curPosition = context.portfolio.positions[context.s1].quantity
+            # 获取当前投资组合中股票的仓位
+            curPosition = get_position(context.s1).quantity
             #进行清仓
             if curPosition > 0:
                 order_target_value(context.s1, 0)
@@ -212,7 +212,7 @@ Golden Cross算法示例
             # 用Talib计算RSI值
             rsi_data = talib.RSI(prices, timeperiod=context.TIME_PERIOD)[-1]
 
-            cur_position = context.portfolio.positions[stock].quantity
+            cur_position = get_position(stock).quantity
             # 用剩余现金的30%来购买新的股票
             target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 
@@ -296,7 +296,7 @@ Golden Cross算法示例
         else:
             context.max_add = bar_dict[context.s].last
 
-        cur_position = context.portfolio.positions[context.s].quantity
+        cur_position = get_position(context.s).quantity
         available_cash = context.portfolio.cash
         market_value = context.portfolio.market_value
 
@@ -388,7 +388,7 @@ Golden Cross算法示例
 
         # macd 是长短均线的差值，signal是macd的均线，如果短均线从下往上突破长均线，为入场信号，进行买入开仓操作
         if macd[-1] - signal[-1] > 0 and macd[-2] - signal[-2] < 0:
-            sell_qty = context.portfolio.positions[context.s1].sell_quantity
+            sell_qty = get_position(context.s1, POSITION_DIRECTION.SHORT).quantity
             # 先判断当前卖方仓位，如果有，则进行平仓操作
             if sell_qty > 0:
                 buy_close(context.s1, 1)
@@ -396,7 +396,7 @@ Golden Cross算法示例
             buy_open(context.s1, 1)
 
         if macd[-1] - signal[-1] < 0 and macd[-2] - signal[-2] > 0:
-            buy_qty = context.portfolio.positions[context.s1].buy_quantity
+            buy_qty = get_position(context.s1, POSITION_DIRECTION.LONG).quantity
             # 先判断当前买方仓位，如果有，则进行平仓操作
             if buy_qty > 0:
                 sell_close(context.s1, 1)
@@ -450,8 +450,10 @@ Golden Cross算法示例
     def handle_bar(context, bar_dict):
 
         # 获取当前一对合约的仓位情况。如尚未有仓位,则对应持仓量都为0
-        position_a = context.portfolio.positions[context.s1]
-        position_b = context.portfolio.positions[context.s2]
+        long_pos_a = get_position(context.s1, POSITION_DIRECTION.LONG)
+        short_pos_a = get_position(context.s1, POSITION_DIRECTION.SHORT)
+        long_pos_b = get_position(context.s2, POSITION_DIRECTION.LONG)
+        short_pos_b = get_position(context.s2, POSITION_DIRECTION.SHORT)
 
         context.counter += 1
         # 当累积满一定数量的bar数据时候,进行交易逻辑的判断
@@ -480,8 +482,8 @@ Golden Cross算法示例
                 logger.info('创建买入价差中...')
 
                 # 获取当前剩余的应建仓的数量
-                qty_a = 1 - position_a.buy_quantity
-                qty_b = context.ratio - position_b.sell_quantity
+                qty_a = 1 - long_pos_a.quantity
+                qty_b = context.ratio - short_pos_b.sell_quantity
 
                 # 由于存在成交不超过下一bar成交量25%的限制,所以可能要通过多次发单成交才能够成功建仓
                 if qty_a > 0:
@@ -499,8 +501,8 @@ Golden Cross算法示例
                 logger.info('对买入价差仓位进行平仓操作中...')
 
                 # 由于存在成交不超过下一bar成交量25%的限制,所以可能要通过多次发单成交才能够成功建仓
-                qty_a = position_a.buy_quantity
-                qty_b = position_b.sell_quantity
+                qty_a = long_pos_a.quantity
+                qty_b = short_pos_b.quantity
                 if qty_a > 0:
                     sell_close(context.s1, qty_a)
                 if qty_b > 0:
@@ -513,8 +515,8 @@ Golden Cross算法示例
             if spread >= up_limit and not context.up_cross_up_limit:
                 logger.info('spread: {}, mean: {}, up_limit: {}'.format(spread, mean, up_limit))
                 logger.info('创建卖出价差中...')
-                qty_a = 1 - position_a.sell_quantity
-                qty_b = context.ratio - position_b.buy_quantity
+                qty_a = 1 - short_pos_a.quantity
+                qty_b = context.ratio - long_pos_b.quantity
                 if qty_a > 0:
                     sell_open(context.s1, qty_a)
                 if qty_b > 0:
@@ -527,8 +529,8 @@ Golden Cross算法示例
             if spread < mean and context.up_cross_up_limit:
                 logger.info('spread: {}, mean: {}, up_limit: {}'.format(spread, mean, up_limit))
                 logger.info('对卖出价差仓位进行平仓操作中...')
-                qty_a = position_a.sell_quantity
-                qty_b = position_b.buy_quantity
+                qty_a = short_pos_a.quantity
+                qty_b = long_pos_b.quantity
                 if qty_a > 0:
                     buy_close(context.s1, qty_a)
                 if qty_b > 0:

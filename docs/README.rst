@@ -1,4 +1,3 @@
-
 =================================
 RQAlpha Documentation Instruction
 =================================
@@ -16,10 +15,13 @@ Requirements
 *   sphinx_rtd_theme
 *   nbsphinx
 *   jupyter_client
+*   sphinx-autodoc-typehints
 
 .. code-block:: bash
 
-    pip install Sphinx watchdog sphinx_rtd_theme nbsphinx jupyter_client
+    pip install Sphinx watchdog sphinx_rtd_theme nbsphinx jupyter_client sphinx-autodoc-typehints
+
+# pandoc 需要下载 http://pandoc.org/installing.html 且重启pycharm（修改了环境变量）
 
 Usage
 -----

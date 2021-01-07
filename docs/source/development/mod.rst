@@ -40,8 +40,8 @@ Mod开发环境搭建
     ├── README.rst
     ├── setup.py
     └── rqalpha_mod_hello
-        ├── __init__.py
-        └── mod.py
+        ├── __init__.py
+        └── mod.py
 
 假设在新的环境中已经可以成功运行 RQAlpha ，便按照Mod的标准命名格式创建项目 :code:`rqalpha-mod-hello`。进入 :code:`rqalpha-mod-hello` 文件夹，创建 :code:`__init__.py`，填入以下代码：
 
@@ -80,7 +80,11 @@ PyPI方式安装Mod
 .. code-block:: python3
 
 
-    from pip.req import parse_requirements
+    #from pip.req import parse_requirements 这样的话如果pip版本较高会报错
+    try: # for pip >= 10
+        from pip._internal.req import parse_requirements
+    except ImportError: # for pip <= 9.0.3
+        from pip.req import parse_requirements
 
     from setuptools import (
         find_packages,
@@ -114,29 +118,29 @@ PyPI方式安装Mod
 
 .. code-block:: bash
 
-    $ rqalpha mod install -e .
+    $ pip install -e .
 
 .. note::
 
     .. code-block:: bash
 
-        $ rqalpha mod install -e .
+        $ pip install -e .
 
     会扫描当前目录下的 :code:`setup.py` 文件执行安装，同时直接修改项目内文件就可以实现修改对应Mod。
-
-安装成功后将看到下图：
-
-.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-install-success.png
 
 
 激活以及使用Mod
 --------------------
 
-对 Mod 进行激活：
+激活并查看我们安装的mod：
 
 .. code-block:: bash
 
     $ rqalpha mod enable hello
+    $ rqalpha mod list
+
+.. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/mod-install-success.png
+
 
 运行RQAlpha即可看到如下：
 
@@ -175,7 +179,7 @@ PyPI方式安装Mod
             funcat.set_data_backend(RQAlphaDataBackend())
 
             # register funcat api into rqalpha
-            from rqalpha.api.api_base import register_api
+            from rqalpha.api import register_api
             for name in dir(funcat):
                 obj = getattr(funcat, name)
                 if getattr(obj, "__module__", "").startswith("funcat"):
@@ -194,12 +198,6 @@ RQAlpha 支持安装、卸载、启用、停止第三方Mod。
 .. code-block:: bash
 
     # 以名为 "xxx" 的 Mod 为例，介绍RQAlpha 第三方Mod的使用
-
-    # 安装
-    $ rqalpha mod install xxx
-
-    # 卸载
-    $ rqalpha mod uninstall xxx
 
     # 启用
     $ rqalpha mod enable xxx
@@ -240,7 +238,7 @@ RQAlpha 支持安装、卸载、启用、停止第三方Mod。
 
 1.  需要定义并实现 :code:`load_mod` 函数, 其返回值为对应的继承自 :code:`AbstractMod` 的类，并且 :code:`load_mod` 所在文件必须按照 :code:`rqalpha_mod_xxx` 规则进行命名。
 2.  如果有自定义参数的话，需要实现 :code:`__mod_config__` 变量，其为字符串，配置的具体格式为 `yaml` 格式(支持注释)。RQAlpha 会自动将其扩展到默认配置项中。
-3.  当写好 Mod 以后，需要发布到 Pypi 仓库中，并且包名需要如下格式: :code:`rqalpha-mod-xxx`，一下的 setup.py 文件可作参考。
+3.  当写好 Mod 以后，需要发布到 Pypi 仓库中，并且包名需要如下格式: :code:`rqalpha-mod-xxx`，以下的 setup.py 文件可作参考。
 
 .. code-block:: python3
 
@@ -267,7 +265,6 @@ RQAlpha 支持安装、卸载、启用、停止第三方Mod。
             'Programming Language :: Python',
             'Operating System :: Microsoft :: Windows',
             'Operating System :: Unix',
-            'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
         ],
     )

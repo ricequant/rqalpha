@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from rqalpha.api import *
+from rqalpha.apis import *
 from rqalpha import run_func
 
 

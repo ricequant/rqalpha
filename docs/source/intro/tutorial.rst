@@ -11,9 +11,7 @@
 
 我们从 :ref:`intro-examples` 中选取 :ref:`intro-examples-buy-and-hold` 来进行回测。
 
-如果对于策略、数据路径存在疑问，请参考：:ref:`FAQ-examples-path`
-
-在进行回测的过程中需要明确以下几个回测要素，您可通过生成config.yml传参 :ref:`intro-config` 或者通过命令行传参：
+在进行回测的过程中需要明确以下几个回测要素，您可通过生成 config.yml 传参（:ref:`intro-config`）或者通过命令行传参：
 
 *   数据源路径
 *   策略文件路径
@@ -22,19 +20,19 @@
 *   起始资金
 *   Benchmark
 
-假如我们的策略存放在了 :code:`./rqalpha/examples/buy_and_hold.py` 路径下， 数据源存放在 :code:`./rqalpha/bundle/` 路径下，回测的起始时间为 :code:`2016-06-01`, 结束时间为 :code:`2016-12-01`，我们给策略分配的起始资金为 :code:`100000`, Benchmark 设置为 :code:`000300.XSHG`
+假如我们的策略存放在了 :code:`./rqalpha/examples/buy_and_hold.py` 路径下，回测的起始时间为 :code:`2016-06-01`, 结束时间为 :code:`2016-12-01`，我们给策略分配的起始资金为 :code:`100000`, Benchmark 设置为 :code:`000300.XSHG`
 
 那么我们通过如下命令来运行回测
 
 ..  code-block:: bash
 
-    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG
 
 如果我们想要以图形的方式查看回测的结果， 则增加 :code:`--plot` 参数
 
 ..  code-block:: bash
 
-    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot
 
 .. image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/buy_and_hold.png
 
@@ -42,7 +40,7 @@
 
 ..  code-block:: bash
 
-    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -d ./rqalpha/bundle/ -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot -o result.pkl
+    rqalpha run -f ./rqalpha/examples/buy_and_hold.py -s 2016-06-01 -e 2016-12-01 --account stock 100000 --benchmark 000300.XSHG --plot -o result.pkl
 
 
 等回测结束后可以通过 :code:`pandas.read_pickle` 函数来读取数据进行之后的数据分析。
@@ -63,7 +61,7 @@
 
 RQAlpha 抽离了策略框架的所有技术细节，以API的方式提供给策略研发者用于编写策略，从而避免陷入过多的技术细节，而非金融程序建模本身。
 
-RQAlpha 的 API 主要分为三类：约定函数、数据查询和交易接口。
+RQAlpha 的 API 主要分为约定函数、数据查询接口、交易接口等几类，参看 :ref:`api-base-api`。
 
 *   约定函数: 作为 API 的入口函数，用户必须实现对应的约定函数才可以正确的使用RQAlpha
 
@@ -118,7 +116,7 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
 
 *   bar_dict: 在 :func:`handle_bar` 中我们可以使用 `bar_dict` 来获取相应的 :class:`Bar` 数据，`bar_dict` 是一个字典类型变量，直接通过传 `key` 的方式就可以获取到对应的 :class:`Bar` 数据。
 
-*   我们可以引用第三方库来帮我们生成相应的指标序列，比如使用 `TA-Lib`_ 来获取移动平均线序列。`TA-Lib`_ 的安装可以参考 :ref:`intro-detail-install-talib` 相应文档。
+*   我们可以引用第三方库来帮我们生成相应的指标序列，比如使用 `TA-Lib`_ 来获取移动平均线序列。
 
 .. _TA-Lib: https://github.com/mrjbq7/ta-lib
 
@@ -159,8 +157,8 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
         plot("short avg", short_avg[-1])
         plot("long avg", long_avg[-1])
 
-        # 计算现在portfolio中股票的仓位
-        cur_position = context.portfolio.positions[context.s1].quantity
+        # 获取当前投资组合中股票的仓位
+        cur_position = get_position(context.s1).quantity
         # 计算现在portfolio中的现金可以购买多少股票
         shares = context.portfolio.cash/bar_dict[context.s1].close
 
@@ -229,8 +227,8 @@ Ricequant 金融、财务、合约历史数据等数据接口请查看 :ref:`api
         plot("short avg", short_avg[-1])
         plot("long avg", long_avg[-1])
 
-        # 计算现在portfolio中股票的仓位
-        cur_position = context.portfolio.positions[context.s1].quantity
+        # 获取当前投资组合中股票的仓位
+        cur_position = get_position(context.s1).quantity
         # 计算现在portfolio中的现金可以购买多少股票
         shares = context.portfolio.cash/bar_dict[context.s1].close
 

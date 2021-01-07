@@ -1,0 +1,16 @@
+requests
+numpy
+pandas >=0.18.1
+python-dateutil >=2.5.3
+six >=1.10.0
+logbook >=1.0.0
+click >=7.0
+jsonpickle ==0.9.4
+simplejson >=3.10.0
+dill ==0.2.5
+PyYAML >=3.12
+tabulate
+rqrisk >=0.0.9
+h5py
+matplotlib >=1.5.1 ; python_version >= '3.6'
+matplotlib >=1.5.1,<=3.0.3 ; python_version == '3.5'
