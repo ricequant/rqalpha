@@ -285,7 +285,7 @@ def order_target_portfolio(target_portfolio):
                 _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
             )
             continue
-        target_quantities[order_book_id] = account_value * target_percent / price
+        target_quantities[order_book_id] = (account_value * target_percent / price, price)
 
     close_orders, open_orders = [], []
     current_quantities = {
@@ -298,13 +298,12 @@ def order_target_portfolio(target_portfolio):
             ))
 
     round_lot = 100
-    for order_book_id, target_quantity in target_quantities.items():
+    for order_book_id, (target_quantity, price) in target_quantities.items():
         if order_book_id in current_quantities:
             delta_quantity = target_quantity - current_quantities[order_book_id]
         else:
             delta_quantity = target_quantity
 
-        price = env.data_proxy.get_last_price(order_book_id)
         if delta_quantity >= round_lot:
             delta_quantity = math.floor(delta_quantity / round_lot) * round_lot
             open_order = Order.__from_create__(
