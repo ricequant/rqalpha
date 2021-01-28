@@ -304,16 +304,21 @@ def order_target_portfolio(target_portfolio):
         else:
             delta_quantity = target_quantity
 
+        price = env.data_proxy.get_last_price(order_book_id)
         if delta_quantity >= round_lot:
             delta_quantity = math.floor(delta_quantity / round_lot) * round_lot
-            open_orders.append(Order.__from_create__(
+            open_order = Order.__from_create__(
                 order_book_id, delta_quantity, SIDE.BUY, MarketOrder(), POSITION_EFFECT.OPEN
-            ))
+            )
+            open_order.set_frozen_price(price)
+            open_orders.append(open_order)
         elif delta_quantity < -1:
             delta_quantity = math.floor(delta_quantity)
-            close_orders.append(Order.__from_create__(
+            close_order = Order.__from_create__(
                 order_book_id, abs(delta_quantity), SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
-            ))
+            )
+            close_order.set_frozen_price(price)
+            close_orders.append(close_order)
 
     submit_orders = []
     for order in chain(close_orders, open_orders):
