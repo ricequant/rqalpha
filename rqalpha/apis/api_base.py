@@ -463,7 +463,7 @@ def history_bars(
     env = Environment.get_instance()
     dt = env.calendar_dt
 
-    if frequency[-1] not in {"m", "d"}:
+    if frequency[-1] not in {"m", "d", "w"}:
         raise RQInvalidArgument("invalid frequency {}".format(frequency))
 
     if frequency[-1] == "m" and env.config.base.frequency == "1d":
