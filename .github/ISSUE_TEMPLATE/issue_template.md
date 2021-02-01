@@ -1,3 +1,12 @@
+---
+name: Bug 反馈
+about: 有一个bug需要解决
+title: 发现一枚bug
+labels: bug
+assignees: Cuizi7
+
+---
+
 # 提 ISSUE 须知
 
 请先阅读文档 [rqalpha文档](http://rqalpha.readthedocs.io/)
