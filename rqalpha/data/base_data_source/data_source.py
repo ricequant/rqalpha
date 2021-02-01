@@ -43,7 +43,7 @@ from .storages import (DateSet, DayBarStore, DividendStore,
                        YieldCurveStore)
 
 
-FIELD_METHOD_MAP2 = {
+BAR_RESAMPLE_FIELD_METHODS = {
     "open": "first",
     "close": "last",
     "iopv": "last",
@@ -62,7 +62,6 @@ FIELD_METHOD_MAP2 = {
     "contract_multiplier": "last",
     "strike_price": "last",
 }
-pd.set_option('display.max_columns', None)
 
 
 class BaseDataSource(AbstractDataSource):
@@ -248,16 +247,16 @@ class BaseDataSource(AbstractDataSource):
         nead_fields = fields
         if isinstance(nead_fields, str):
             nead_fields = [nead_fields]
-        hows = {field: FIELD_METHOD_MAP2[field] for field in nead_fields if field in FIELD_METHOD_MAP2}
-        df_bars_1 = df_bars.resample('W-Fri').agg(hows)
-        df_bars_1.index = df_bars_1.index.map(self._update_weekly_trading_date_index)
-        df_bars_1 = df_bars_1[~df_bars_1.index.duplicated(keep='first')]
-        df_bars_1.sort_index(inplace=True)
-        df_bars_1 = df_bars_1[-bar_count:]
-        df_bars_1 = df_bars_1.reset_index()
-        df_bars_1['datetime'] = df_bars_1.apply(lambda x: np.uint64(convert_date_to_int(x['datetime'].date())), axis=1)
-        df_bars_1 = df_bars_1.set_index('datetime')
-        bars = df_bars_1.to_records()
+        hows = {field: BAR_RESAMPLE_FIELD_METHODS[field] for field in nead_fields if field in BAR_RESAMPLE_FIELD_METHODS}
+        df_bars = df_bars.resample('W-Fri').agg(hows)
+        df_bars.index = df_bars.index.map(self._update_weekly_trading_date_index)
+        df_bars = df_bars[~df_bars.index.duplicated(keep='first')]
+        df_bars.sort_index(inplace=True)
+        df_bars = df_bars[-bar_count:]
+        df_bars = df_bars.reset_index()
+        df_bars['datetime'] = df_bars.apply(lambda x: np.uint64(convert_date_to_int(x['datetime'].date())), axis=1)
+        df_bars = df_bars.set_index('datetime')
+        bars = df_bars.to_records()
         return bars
 
     def history_bars(self, instrument, bar_count, frequency, fields, dt,
@@ -277,6 +276,7 @@ class BaseDataSource(AbstractDataSource):
 
         if len(bars) <= 0:
             return bars
+
         if frequency == '1w':
             if include_now:
                 dt = np.uint64(convert_date_to_int(dt))
@@ -288,13 +288,16 @@ class BaseDataSource(AbstractDataSource):
 
             left = i - bar_count * 5 if i >= bar_count * 5 else 0
             bars = bars[left:i]
-            week_bars = self.resample_week_bars(bars, bar_count, fields)
+
             if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
                 # 期货及指数无需复权
+                week_bars = self.resample_week_bars(bars, bar_count, fields)
                 return week_bars if fields is None else week_bars[fields]
 
             if isinstance(fields, str) and fields not in FIELDS_REQUIRE_ADJUSTMENT:
+                week_bars = self.resample_week_bars(bars, bar_count, fields)
                 return week_bars if fields is None else week_bars[fields]
+
             adjust_bars_date = adjust_bars(bars, self.get_ex_cum_factor(instrument.order_book_id),
                                            fields, adjust_type, adjust_orig)
             adjust_week_bars = self.resample_week_bars(adjust_bars_date, bar_count, fields)
