@@ -285,7 +285,7 @@ def order_target_portfolio(target_portfolio):
                 _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
             )
             continue
-        target_quantities[order_book_id] = account_value * target_percent / price
+        target_quantities[order_book_id] = (account_value * target_percent / price, price)
 
     close_orders, open_orders = [], []
     current_quantities = {
@@ -298,7 +298,7 @@ def order_target_portfolio(target_portfolio):
             ))
 
     round_lot = 100
-    for order_book_id, target_quantity in target_quantities.items():
+    for order_book_id, (target_quantity, price) in target_quantities.items():
         if order_book_id in current_quantities:
             delta_quantity = target_quantity - current_quantities[order_book_id]
         else:
@@ -306,14 +306,18 @@ def order_target_portfolio(target_portfolio):
 
         if delta_quantity >= round_lot:
             delta_quantity = math.floor(delta_quantity / round_lot) * round_lot
-            open_orders.append(Order.__from_create__(
+            open_order = Order.__from_create__(
                 order_book_id, delta_quantity, SIDE.BUY, MarketOrder(), POSITION_EFFECT.OPEN
-            ))
+            )
+            open_order.set_frozen_price(price)
+            open_orders.append(open_order)
         elif delta_quantity < -1:
             delta_quantity = math.floor(delta_quantity)
-            close_orders.append(Order.__from_create__(
+            close_order = Order.__from_create__(
                 order_book_id, abs(delta_quantity), SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
-            ))
+            )
+            close_order.set_frozen_price(price)
+            close_orders.append(close_order)
 
     submit_orders = []
     for order in chain(close_orders, open_orders):
