@@ -52,6 +52,7 @@ class DefaultMatcher(AbstractMatcher):
     def _create_deal_price_decider(self, matching_type):
         decider_dict = {
             MATCHING_TYPE.CURRENT_BAR_CLOSE: self._current_bar_close_decider,
+            MATCHING_TYPE.VWAP: self._vwap_decider,
             MATCHING_TYPE.NEXT_BAR_OPEN: self._next_bar_open_decider,
             MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(
                 order_book_id),
@@ -73,6 +74,13 @@ class DefaultMatcher(AbstractMatcher):
         try:
             return self._env.get_bar(order_book_id).open
         except (KeyError, TypeError):
+            return 0
+
+    def _vwap_decider(self, order_book_id, _):
+        try:
+            bar = self._env.get_bar(order_book_id)
+            return bar.total_turnover / bar.volume
+        except (KeyError, TypeError, ZeroDivisionError):
             return 0
 
     def _best_own_price_decider(self, order_book_id, side):
