@@ -52,6 +52,7 @@ class SimulationMod(AbstractMod):
         else:
             if mod_config.matching_type not in [
                 MATCHING_TYPE.NEXT_BAR_OPEN,
+                MATCHING_TYPE.VWAP,
                 MATCHING_TYPE.CURRENT_BAR_CLOSE,
             ]:
                 raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
@@ -78,8 +79,11 @@ class SimulationMod(AbstractMod):
     @staticmethod
     def parse_matching_type(me_str):
         assert isinstance(me_str, six.string_types)
+        me_str = me_str.lower()
         if me_str == "current_bar":
             return MATCHING_TYPE.CURRENT_BAR_CLOSE
+        if me_str == "vwap":
+            return MATCHING_TYPE.VWAP
         elif me_str == "next_bar":
             return MATCHING_TYPE.NEXT_BAR_OPEN
         elif me_str == "last":

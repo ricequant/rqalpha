@@ -89,7 +89,7 @@ cli.commands['run'].params.append(
 cli.commands['run'].params.append(
     click.Option(
         ('-mt', '--matching-type', cli_prefix + "matching_type"),
-        type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty']),
+        type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty', 'vwap']),
         help="[sys_simulation] set matching type"
     )
 )
