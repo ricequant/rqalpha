@@ -56,12 +56,18 @@ getcontext().prec = 10
 export_as_api(industry_code, name='industry_code')
 export_as_api(sector_code, name='sector_code')
 
+KSH_MIN_AMOUNT = 200
+
 
 def _get_account_position_ins(id_or_ins):
     ins = assure_instrument(id_or_ins)
     account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     position = account.get_position(ins.order_book_id, POSITION_DIRECTION.LONG)
     return account, position, ins
+
+
+def _get_ksh_amount(amount):
+    return 0 if abs(amount) < KSH_MIN_AMOUNT else amount // 1
 
 
 def _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value):
@@ -78,7 +84,11 @@ def _submit_order(ins, amount, side, position_effect, style, quantity, auto_swit
 
     if side in [SIDE.BUY, side.SELL]:
         if not (side == SIDE.SELL and quantity == abs(amount)):
-            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+            if ins.board_type == "KSH":
+                # KSH can buy(sell) 201, 202 shares
+                amount = _get_ksh_amount(amount)
+            else:
+                amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
 
     if amount == 0:
         user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
@@ -121,7 +131,11 @@ def _order_value(account, position, ins, cash_amount, style):
 
     round_lot = int(ins.round_lot)
     if cash_amount > 0:
-        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+        if ins.board_type == "KSH":
+            amount = _get_ksh_amount(amount)
+            round_lot = 1
+        else:
+            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
         while amount > 0:
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
                 ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
@@ -231,7 +245,8 @@ def order_lots(id_or_ins, amount, price=None, style=None):
     """
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
     account, position, ins = _get_account_position_ins(id_or_ins)
-    return _order_shares(ins, amount * int(ins.round_lot), cal_style(price, style), position.quantity,
+    round_lot = int(ins.round_lot) if ins.board_type == "KSH" else 1
+    return _order_shares(ins, amount * round_lot, cal_style(price, style), position.quantity,
                          auto_switch_order_value)
 
 
@@ -265,7 +280,7 @@ def order_target_portfolio(target_portfolio):
         # FIXME: kind of dirty
         total_percent = sum(target_portfolio)
     else:
-        total_percent = sum(six.itervalues(target_portfolio))
+        total_percent = sum(target_portfolio.values())
     if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
 
