@@ -78,15 +78,6 @@ cli.commands['run'].params.append(
 )
 
 cli.commands['run'].params.append(
-    # [Deprecated] using matching type
-    click.Option(
-        ('-me', '--match-engine', cli_prefix + "matching_type"),
-        type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty']),
-        help="[Deprecated][sys_simulation] set matching type"
-    )
-)
-
-cli.commands['run'].params.append(
     click.Option(
         ('-mt', '--matching-type', cli_prefix + "matching_type"),
         type=click.Choice(['current_bar', 'next_bar', 'last', 'best_own', 'best_counterparty', 'vwap']),

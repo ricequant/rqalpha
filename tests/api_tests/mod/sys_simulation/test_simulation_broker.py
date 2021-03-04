@@ -72,3 +72,28 @@ def test_open_auction_match():
             context.first_day = False
 
     return locals()
+
+
+def test_vwap_match():
+    __config__ = {
+        "mod": {
+            "sys_simulation": {
+                "volume_limit": True,
+                "matching_type": "vwap"
+            }
+        },
+    }
+
+    def init(context):
+        context.s = "000001.XSHE"
+        context.first_day = True
+        context.vwap_price = None
+
+    def handle_bar(context, bar_dict):
+        if context.first_day == 1:
+            bar = bar_dict[context.s]
+            vwap_order = order_shares(context.s, 1000)
+            assert bar.total_turnover / bar.volume == vwap_order.avg_price
+            context.first_day = False
+
+    return locals()
