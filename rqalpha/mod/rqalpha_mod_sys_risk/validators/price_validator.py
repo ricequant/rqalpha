@@ -32,8 +32,10 @@ class PriceValidator(AbstractFrontendValidator):
         limit_up = round(self._env.price_board.get_limit_up(order.order_book_id), 4)
         if order.price > limit_up:
             reason = _(
-                "Order Creation Failed: limit order price {limit_price} is higher than limit up {limit_up}."
+                "Order Creation Failed: {order_book_id} limit order price {limit_price} is higher "
+                "than limit up {limit_up}."
             ).format(
+                order_book_id=order.order_book_id,
                 limit_price=order.price,
                 limit_up=limit_up
             )
@@ -43,8 +45,10 @@ class PriceValidator(AbstractFrontendValidator):
         limit_down = round(self._env.price_board.get_limit_down(order.order_book_id), 4)
         if order.price < limit_down:
             reason = _(
-                "Order Creation Failed: limit order price {limit_price} is lower than limit down {limit_down}."
+                "Order Creation Failed: {order_book_id} limit order price {limit_price} is lower "
+                "than limit down {limit_down}."
             ).format(
+                order_book_id=order.order_book_id,
                 limit_price=order.price,
                 limit_down=limit_down
             )

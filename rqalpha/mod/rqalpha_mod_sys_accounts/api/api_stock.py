@@ -81,7 +81,7 @@ def _submit_order(ins, amount, side, position_effect, style, quantity, auto_swit
             amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
 
     if amount == 0:
-        user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+        user_system_log.warn(_(u"Order Creation Failed: {order_book_id} 0 order quantity").format(order_book_id=ins.order_book_id))
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if order.type == ORDER_TYPE.MARKET:
@@ -130,7 +130,7 @@ def _order_value(account, position, ins, cash_amount, style):
                 break
             amount -= round_lot
         else:
-            user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+            user_system_log.warn(_(u"Order Creation Failed: {order_book_id} 0 order quantity").format(order_book_id=ins.order_book_id))
             return
 
     if amount < 0:

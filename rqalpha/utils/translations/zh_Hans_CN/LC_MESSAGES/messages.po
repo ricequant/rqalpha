@@ -254,8 +254,8 @@ msgid ""
 msgstr "订单创建失败：{order_book_id} 的仓位不足，目标平仓/行权量为 {quantity}，可平仓/行权量为 {closable}"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:45
-msgid "Order Creation Failed: Order amount is 0."
-msgstr "订单创建失败: 下单量为 0"
+# msgid "Order Creation Failed: Order amount is 0."
+# msgstr "订单创建失败: 下单量为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:48
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:71
@@ -280,10 +280,11 @@ msgid ""
 "[{new_orders_repr}]"
 msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_orders_repr}]"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:81
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:130
-msgid "Order Creation Failed: 0 order quantity"
-msgstr "订单创建失败: 下单量为0"
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:45
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:84
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:133
+msgid "Order Creation Failed: {order_book_id} 0 order quantity"
+msgstr "订单创建失败: {order_book_id} 下单量为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:89
 msgid "insufficient cash, use all remaining cash({}) to create order"
@@ -396,15 +397,15 @@ msgstr "订单创建失败: {order_book_id} 在 {date} 时停牌"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:34
 msgid ""
-"Order Creation Failed: limit order price {limit_price} is higher than "
+"Order Creation Failed: {order_book_id} limit order price {limit_price} is higher than "
 "limit up {limit_up}."
-msgstr "订单创建失败: 订单价格 {limit_price} 超过当天涨停板价格 {limit_up}"
+msgstr "订单创建失败: {order_book_id} 订单价格 {limit_price} 超过当天涨停板价格 {limit_up}"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:45
 msgid ""
-"Order Creation Failed: limit order price {limit_price} is lower than "
+"Order Creation Failed: {order_book_id} limit order price {limit_price} is lower than "
 "limit down {limit_down}."
-msgstr "订单创建失败: 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
+msgstr "订单创建失败: {order_book_id} 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/self_trade_validator.py:32
 msgid ""
