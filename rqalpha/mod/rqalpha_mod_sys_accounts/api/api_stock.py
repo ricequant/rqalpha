@@ -312,22 +312,27 @@ def order_target_portfolio(target_portfolio):
                 order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             ))
 
-    round_lot = 100
     for order_book_id, (target_quantity, price) in target_quantities.items():
+        ins = assure_instrument(order_book_id)
+        round_lot = 100
         if order_book_id in current_quantities:
             delta_quantity = target_quantity - current_quantities[order_book_id]
         else:
             delta_quantity = target_quantity
 
-        if delta_quantity >= round_lot:
-            delta_quantity = math.floor(delta_quantity / round_lot) * round_lot
+        if ins.board_type == "KSH":
+            # KSH can buy(sell) 201, 202 shares
+            delta_quantity = _get_ksh_amount(delta_quantity)
+        else:
+            delta_quantity = int(Decimal(delta_quantity) / Decimal(round_lot)) * round_lot
+
+        if delta_quantity > 0:
             open_order = Order.__from_create__(
                 order_book_id, delta_quantity, SIDE.BUY, MarketOrder(), POSITION_EFFECT.OPEN
             )
             open_order.set_frozen_price(price)
             open_orders.append(open_order)
         elif delta_quantity < -1:
-            delta_quantity = math.floor(delta_quantity)
             close_order = Order.__from_create__(
                 order_book_id, abs(delta_quantity), SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             )
