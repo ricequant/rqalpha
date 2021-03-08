@@ -2,7 +2,7 @@ name: Rqalpha test
 on: [push, pull_request]
 
 jobs:
-  run-test:
+  test:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
           pip install -U setuptools
           pip install ipython==5.3.0
           pip install --prefer-binary .
-    - name: run test
+    - name: Unit Test
       run:  |
           rqalpha download-bundle
           coverage run --source=rqalpha test.py
@@ -48,8 +48,16 @@ jobs:
           $HOME/.cache/pip
           $HOME/.rqalpha/bundle
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-    - name: Upload coverage report
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      if: ${{ matrix.python-version }} == 3.8
-      run: COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" coveralls
+    - name: Coveralls
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel: true
+        flag-name: Unit Test
+  coveralls_finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel-finished: true
