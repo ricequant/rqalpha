@@ -283,7 +283,7 @@ msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:45
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:84
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:133
-msgid "Order Creation Failed: {order_book_id} 0 order quantity"
+msgid "Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
 msgstr "订单创建失败: {order_book_id} 下单量为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:89
@@ -397,14 +397,14 @@ msgstr "订单创建失败: {order_book_id} 在 {date} 时停牌"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:34
 msgid ""
-"Order Creation Failed: {order_book_id} limit order price {limit_price} is higher than "
-"limit up {limit_up}."
+"Order Creation Failed: limit order price {limit_price} is higher "
+"than limit up {limit_up}, order_book_id={order_book_id}"
 msgstr "订单创建失败: {order_book_id} 订单价格 {limit_price} 超过当天涨停板价格 {limit_up}"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:45
 msgid ""
-"Order Creation Failed: {order_book_id} limit order price {limit_price} is lower than "
-"limit down {limit_down}."
+"Order Creation Failed: limit order price {limit_price} is lower "
+"than limit down {limit_down}, order_book_id={order_book_id}"
 msgstr "订单创建失败: {order_book_id} 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/self_trade_validator.py:32

@@ -46,7 +46,9 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
 
     amount = int(amount)
     if amount == 0:
-        user_system_log.warn(_(u"Order Creation Failed: {order_book_id} 0 order quantity").format(order_book_id=order_book_id))
+        user_system_log.warn(_(
+            u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
+        ).format(order_book_id=order_book_id))
         return None
     if isinstance(style, LimitOrder) and style.get_limit_price() <= 0:
         raise RQInvalidArgument(_(u"Limit order price should be positive"))
