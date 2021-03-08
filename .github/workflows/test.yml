@@ -1,11 +1,10 @@
-
 name: Rqalpha test
 on: [push, pull_request]
 
 jobs:
   run-test:
     runs-on: ubuntu-latest
-    env: 
+    env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
@@ -50,5 +49,7 @@ jobs:
           $HOME/.rqalpha/bundle
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
     - name: Upload coverage report
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
       if: ${{ matrix.python-version }} == 3.8
-      run: coveralls
+      run: COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" coveralls
