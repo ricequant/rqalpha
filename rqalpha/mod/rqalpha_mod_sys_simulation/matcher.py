@@ -78,8 +78,9 @@ class DefaultMatcher(AbstractMatcher):
 
     def _vwap_decider(self, order_book_id, _):
         try:
+            contract_multiplier = self._env.get_instrument(order_book_id).contract_multiplier
             bar = self._env.get_bar(order_book_id)
-            return bar.total_turnover / bar.volume
+            return bar.total_turnover / bar.volume / contract_multiplier
         except (KeyError, TypeError, ZeroDivisionError):
             return 0
 
