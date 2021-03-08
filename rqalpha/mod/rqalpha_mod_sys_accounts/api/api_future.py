@@ -40,16 +40,20 @@ __all__ = [
 
 
 def _submit_order(id_or_ins, amount, side, position_effect, style):
+    instrument = assure_instrument(id_or_ins)
+    order_book_id = instrument.order_book_id
+    env = Environment.get_instance()
+
     amount = int(amount)
     if amount == 0:
-        user_system_log.warn(_(u"Order Creation Failed: Order amount is 0."))
+        user_system_log.warn(_(
+            u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
+        ).format(order_book_id=order_book_id))
         return None
     if isinstance(style, LimitOrder) and style.get_limit_price() <= 0:
         raise RQInvalidArgument(_(u"Limit order price should be positive"))
 
-    instrument = assure_instrument(id_or_ins)
-    order_book_id = instrument.order_book_id
-    env = Environment.get_instance()
+
     if env.config.base.run_type != RUN_TYPE.BACKTEST and instrument.type == INSTRUMENT_TYPE.FUTURE:
         if "88" in order_book_id:
             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
