@@ -46,7 +46,7 @@ jobs:
         COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
       run: |
-        coveralls
+        coveralls --service=github
     - name: Cache bundle
       # cache will change when runner.os or requirements.txt changed
       uses: actions/cache@v2
