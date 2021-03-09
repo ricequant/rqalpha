@@ -249,8 +249,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
     """
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
     account, position, ins = _get_account_position_ins(id_or_ins)
-    round_lot = 1 if _is_ksh(ins) else int(ins.round_lot)
-    return _order_shares(ins, amount * round_lot, cal_style(price, style), position.quantity,
+    return _order_shares(ins, amount * int(ins.round_lot), cal_style(price, style), position.quantity,
                          auto_switch_order_value)
 
 
