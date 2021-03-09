@@ -4,9 +4,9 @@ RQAlpha
 
 ..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/logo.jpg
 
-..  image:: https://img.shields.io/travis/ricequant/rqalpha/master.svg
-    :target: https://travis-ci.org/ricequant/rqalpha/branches
-    :alt: Build
+..  image:: https://github.com/ricequant/rqalpha/workflows/Test/badge.svg
+    :target: https://github.com/ricequant/rqalpha/actions?query=workflow%3ATest
+    :alt: GitHub Actions status for master branch
 
 ..  image:: https://coveralls.io/repos/github/ricequant/rqalpha/badge.svg?branch=master
     :target: https://coveralls.io/github/ricequant/rqalpha?branch=master
