@@ -88,7 +88,7 @@ cli.commands['run'].params.append(
 cli.commands['run'].params.append(
     click.Option(
         ('--inactive-limit', cli_prefix + "inactive_limit"),
-        type=click.BOOL, default=True,
+        type=click.BOOL,
         help="[sys_simulation] Limit transaction when volume is 0"
     )
 )
