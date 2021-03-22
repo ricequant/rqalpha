@@ -287,7 +287,6 @@ class AbstractDataSource(object):
         """
         获取拆股信息
         """
-
         raise NotImplementedError
 
     def get_bar(self, instrument, dt, frequency):
