@@ -431,14 +431,6 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_share_transformation(self, order_book_id):
-        """
-        获取股票转换信息
-        :param order_book_id: 合约代码
-        :return: (successor, conversion_ratio), (转换后的合约代码，换股倍率)
-        """
-        raise NotImplementedError
-
     def is_suspended(self, order_book_id, dates):
         # type: (str, Sequence[DateLike]) -> Sequence[bool]
         raise NotImplementedError

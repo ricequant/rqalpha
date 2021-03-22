@@ -15,7 +15,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Tuple, Optional
 from datetime import date
 from rqalpha.utils.functools import lru_cache
 
@@ -28,6 +27,8 @@ from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
+
+from .data import get_share_transformation
 
 
 def _int_to_date(d):
@@ -126,26 +127,22 @@ class StockPosition(Position):
         instrument = self._env.data_proxy.instruments(self._order_book_id)
         delta_cash = 0
         if instrument.de_listed_at(next_date):
-            try:
-                transform_data = self._env.data_proxy.get_share_transformation(self._order_book_id)
-            except NotImplementedError:
-                pass
-            else:
-                if transform_data is not None:
-                    successor, conversion_ratio = transform_data
-                    self._env.portfolio.get_account(successor).apply_trade(Trade.__from_create__(
-                        order_id=None,
-                        price=self.avg_price / conversion_ratio,
-                        amount=self.quantity * conversion_ratio,
-                        side=SIDE.BUY,
-                        position_effect=POSITION_EFFECT.OPEN,
-                        order_book_id=successor
-                    ))
-                    for direction in POSITION_DIRECTION:
-                        successor_position = self._env.portfolio.get_position(successor, direction)
-                        successor_position.update_last_price(self._last_price / conversion_ratio)
-                    # 把购买 successor 消耗的 cash 补充回来
-                    delta_cash = self.market_value
+            transform_data = get_share_transformation(self._order_book_id)
+            if transform_data is not None:
+                successor, conversion_ratio = transform_data
+                self._env.portfolio.get_account(successor).apply_trade(Trade.__from_create__(
+                    order_id=None,
+                    price=self.avg_price / conversion_ratio,
+                    amount=self.quantity * conversion_ratio,
+                    side=SIDE.BUY,
+                    position_effect=POSITION_EFFECT.OPEN,
+                    order_book_id=successor
+                ))
+                for direction in POSITION_DIRECTION:
+                    successor_position = self._env.portfolio.get_position(successor, direction)
+                    successor_position.update_last_price(self._last_price / conversion_ratio)
+                # 把购买 successor 消耗的 cash 补充回来
+                delta_cash = self.market_value
             if self.cash_return_by_stock_delisted:
                 delta_cash = self.market_value
             self._today_quantity = self._old_quantity = 0

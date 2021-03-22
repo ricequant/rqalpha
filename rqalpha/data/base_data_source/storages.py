@@ -15,20 +15,17 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import codecs
 import json
-import locale
 import os
-import sys
 from copy import copy
 from itertools import chain
 from typing import Dict, Iterable, Optional
 
-import h5py
 import numpy as np
 import pandas
 from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils import open_h5
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
@@ -119,36 +116,6 @@ class InstrumentStore(AbstractInstrumentStore):
             elif i in self._sym_id_map:
                 order_book_ids.add(self._sym_id_map[i])
         return (self._instruments[i] for i in order_book_ids)
-
-
-class ShareTransformationStore(object):
-    def __init__(self, f):
-        with codecs.open(f, 'r', encoding="utf-8") as store:
-            self._share_transformation = json.load(store)
-
-    def get_share_transformation(self, order_book_id):
-        try:
-            transformation_data = self._share_transformation[order_book_id]
-        except KeyError:
-            return
-        return transformation_data["successor"], transformation_data["share_conversion_ratio"]
-
-
-def open_h5(path, *args, **kwargs):
-    # why do this? non-ascii path in windows!!
-    if sys.platform == "win32":
-        try:
-            l = locale.getlocale(locale.LC_ALL)[1]
-        except TypeError:
-            l = None
-        if l and l.lower() == "utf-8":
-            path = path.encode("utf-8")
-    try:
-        return h5py.File(path, *args, **kwargs)
-    except OSError as e:
-        raise RuntimeError(_(
-            "open data bundle failed, you can remove {} and try to regenerate bundle: {}"
-        ).format(path, e))
 
 
 class DayBarStore(AbstractDayBarStore):

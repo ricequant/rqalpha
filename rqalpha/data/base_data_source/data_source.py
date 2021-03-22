@@ -14,6 +14,7 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+
 import os
 import pickle
 from datetime import date, datetime, timedelta
@@ -39,7 +40,7 @@ from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
 from .storages import (DateSet, DayBarStore, DividendStore,
                        ExchangeTradingCalendarStore, FutureDayBarStore,
                        FutureInfoStore, InstrumentStore,
-                       ShareTransformationStore, SimpleFactorStore,
+                       SimpleFactorStore,
                        YieldCurveStore)
 
 
@@ -117,7 +118,6 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.LOF: split_store,
         }
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.h5'))
-        self._share_transformation = ShareTransformationStore(_p('share_transformation.json'))
 
         self._suspend_days = [DateSet(_p('suspended_days.h5'))]  # type: List[AbstractDateSet]
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
@@ -173,9 +173,6 @@ class BaseDataSource(AbstractDataSource):
         for ins_type, id_or_syms in type_id_iter:
             if ins_type is not None and ins_type in self._instruments_stores:
                 yield from self._instruments_stores[ins_type].get_instruments(id_or_syms)
-
-    def get_share_transformation(self, order_book_id):
-        return self._share_transformation.get_share_transformation(order_book_id)
 
     def is_suspended(self, order_book_id, dates):
         # type: (str, Sequence[DateLike]) -> List[bool]
