@@ -435,10 +435,6 @@ class AbstractDataSource(object):
         # type: (str, Sequence[DateLike]) -> Sequence[bool]
         raise NotImplementedError
 
-    def is_st_stock(self, order_book_id, dates):
-        # type: (str, Sequence[DateLike]) -> Sequence[bool]
-        raise NotImplementedError
-
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):
     """

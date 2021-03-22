@@ -120,7 +120,6 @@ class BaseDataSource(AbstractDataSource):
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.h5'))
 
         self._suspend_days = [DateSet(_p('suspended_days.h5'))]  # type: List[AbstractDateSet]
-        self._st_stock_days = DateSet(_p('st_stock_days.h5'))
 
     def register_day_bar_store(self, instrument_type, store):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
@@ -182,10 +181,6 @@ class BaseDataSource(AbstractDataSource):
                 return result
         else:
             return [False] * len(dates)
-
-    def is_st_stock(self, order_book_id, dates):
-        result = self._st_stock_days.contains(order_book_id, dates)
-        return result if result is not None else [False] * len(dates)
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):

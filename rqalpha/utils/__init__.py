@@ -24,7 +24,7 @@ import locale
 import collections
 from decimal import getcontext, ROUND_FLOOR
 from datetime import time
-from typing import Optional
+from typing import Optional, Any
 
 from contextlib import contextmanager
 import numpy as np
@@ -250,6 +250,7 @@ def init_rqdatac_env(uri):
 
 
 def open_h5(path, *args, **kwargs):
+    # type: (str, *Any, **Any) -> h5py.File
     # why do this? non-ascii path in windows!!
     if sys.platform == "win32":
         try:
@@ -262,7 +263,7 @@ def open_h5(path, *args, **kwargs):
         return h5py.File(path, *args, **kwargs)
     except OSError as e:
         raise RuntimeError(_(
-            "open data bundle failed, you can remove {} and try to regenerate bundle: {}"
+            "open data bundle failed, you can remove {} and try to regenerate bundle, error message:\n    {}"
         ).format(path, e))
 
 

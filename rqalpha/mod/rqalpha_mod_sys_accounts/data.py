@@ -18,11 +18,16 @@
 import os
 import json
 import codecs
-from typing import Tuple, Optional, Sequence
+from datetime import date
+from typing import Tuple, Optional, Sequence, Set, List
+
+from h5py import File
 
 from rqalpha.environment import Environment
-from rqalpha.utils.functools import lru_cache
+from rqalpha.utils import open_h5
 from rqalpha.utils.typing import DateLike
+from rqalpha.utils.datetime_func import convert_date_to_date_int
+from rqalpha.utils.functools import lru_cache
 
 
 @lru_cache(None)
@@ -45,3 +50,28 @@ def get_share_transformation(order_book_id):
         return
     return transformation_data["successor"], transformation_data["share_conversion_ratio"]
 
+
+@lru_cache(None)
+def _st_stock_file():
+    # type: () -> File
+    bundle_path = Environment.get_instance().config.base.data_bundle_path
+    return open_h5(os.path.join(bundle_path, "st_stock_days.h5"), mode="r")
+
+
+@lru_cache(2048)
+def get_st_stock_days(order_book_id):
+    # type: (str) -> Set
+    try:
+        days = _st_stock_file()[order_book_id][:]
+    except KeyError:
+        return set()
+    else:
+        return set(days.tolist())
+
+
+def is_st_stock(order_book_id, dates):
+    # type: (str, Sequence[DateLike]) -> List[bool]
+    date_set = get_st_stock_days(order_book_id)
+    if not date_set:
+        return [False] * len(dates)
+    return [convert_date_to_date_int(d) in date_set for d in dates]

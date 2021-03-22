@@ -239,13 +239,6 @@ class DataProxy(TradingDatesMixin):
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_suspended(order_book_id, trading_dates)
 
-    def is_st_stock(self, order_book_id, dt, count=1):
-        if count == 1:
-            return self._data_source.is_st_stock(order_book_id, [dt])[0]
-
-        trading_dates = self.get_n_trading_dates_until(dt, count)
-        return self._data_source.is_st_stock(order_book_id, trading_dates)
-
     def get_tick_size(self, order_book_id):
         return self.instruments(order_book_id).tick_size()
 

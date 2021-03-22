@@ -49,6 +49,7 @@ from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from ..data import is_st_stock as _is_st_stock
 
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
@@ -365,7 +366,7 @@ def is_suspended(order_book_id, count=1):
                                 EXECUTION_PHASE.SCHEDULED)
 @apply_rules(verify_that('order_book_id').is_valid_instrument())
 def is_st_stock(order_book_id, count=1):
-    # type: (str, Optional[int]) -> Union[bool, pd.DataFrame]
+    # type: (str, Optional[int]) -> Union[bool, List[bool]]
     """
     判断股票在一段时间内是否为ST股（包括ST与*ST）。
 
@@ -374,9 +375,13 @@ def is_st_stock(order_book_id, count=1):
     :param order_book_id: 某只股票的代码，可传入单只股票的order_book_id, symbol
     :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
     """
-    dt = Environment.get_instance().calendar_dt.date()
+    env = Environment.get_instance()
+    dt = env.calendar_dt.date()
     order_book_id = assure_order_book_id(order_book_id)
-    return Environment.get_instance().data_proxy.is_st_stock(order_book_id, dt, count)
+    if count == 1:
+        return _is_st_stock(order_book_id, [dt])[0]
+    trading_dates = env.data_proxy.get_n_trading_dates_until(dt, count)
+    return _is_st_stock(order_book_id, trading_dates)
 
 
 @export_as_api
