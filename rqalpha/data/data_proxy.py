@@ -17,7 +17,7 @@
 
 import re
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Iterable
+from typing import Union, List, Sequence, Optional
 
 import six
 import numpy as np
