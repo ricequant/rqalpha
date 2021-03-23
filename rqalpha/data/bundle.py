@@ -131,112 +131,79 @@ def gen_share_transformation(d):
         f.write(df.to_json(orient='index'))
 
 
-def init_future_info(d):
-    all_futures_info = []
-    underlying_symbol_list = []
-    fields = ['close_commission_ratio', 'close_commission_today_ratio', 'commission_type', 'open_commission_ratio']
-
-    futures_order_book_id = rqdatac.all_instruments(type='Future')['order_book_id'].unique()
-    for future in futures_order_book_id:
-        future_dict = {}
-        underlying_symbol = re.match(r'^[a-zA-Z]*', future).group()
-        commission = rqdatac.futures.get_commission_margin(future)
-        if not commission.empty:
-            future_dict['order_book_id'] = future
-            commission = commission.iloc[0]
-            for p in fields:
-                future_dict[p] = commission[p]
-            future_dict['tick_size'] = rqdatac.instruments(future).tick_size()
-        elif underlying_symbol not in underlying_symbol_list:
-            if underlying_symbol in {'S', 'TC', 'ER', 'WS', 'WT', 'RO', 'ME'}:
-                continue
-            underlying_symbol_list.append(underlying_symbol)
-            future_dict['underlying_symbol'] = underlying_symbol
-            try:
-                dominant = rqdatac.futures.get_dominant(underlying_symbol).iloc[-1]
-            except AttributeError:
-                # FIXME: why get_dominant return None???
-                continue
-            commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
-            for p in fields:
-                future_dict[p] = commission[p]
-            future_dict['tick_size'] = rqdatac.instruments(dominant).tick_size()
-        else:
-            continue
-        all_futures_info.append(future_dict)
-
-    hard_info = [{'underlying_symbol': 'TC',
-                  'close_commission_ratio': 4.0,
-                  'close_commission_today_ratio': 0.0,
-                  'commission_type': "by_volume",
-                  'open_commission_ratio': 4.0,
-                  'tick_size': 0.2},
-                 {'underlying_symbol': 'ER',
-                  'close_commission_ratio': 2.5,
-                  'close_commission_today_ratio': 2.5,
-                  'commission_type': "by_volume",
-                  'open_commission_ratio': 2.5,
-                  'tick_size': 1.0},
-                 {'underlying_symbol': 'WS',
-                  'close_commission_ratio': 2.5,
-                  'close_commission_today_ratio': 0.0,
-                  'commission_type': "by_volume",
-                  'open_commission_ratio': 2.5,
-                  'tick_size': 1.0},
-                 {'underlying_symbol': 'RO',
-                  'close_commission_ratio': 2.5,
-                  'close_commission_today_ratio': 0.0,
-                  'commission_type': "by_volume",
-                  'open_commission_ratio': 2.5,
-                  'tick_size': 2.0},
-                 {'underlying_symbol': 'ME',
-                  'close_commission_ratio': 1.4,
-                  'close_commission_today_ratio': 0.0,
-                  'commission_type': "by_volume",
-                  'open_commission_ratio': 1.4,
-                  'tick_size': 1.0}]
-
-    all_futures_info += hard_info
-
-    with open(os.path.join(d, 'future_info.json'), 'w') as f:
-        json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
+NON_INFO_UNDERLYING_SYMBOLS = {'S', 'TC', 'ER', 'WS', 'WT', 'RO', 'ME'}
+FUTURES_INFO_FIELDS = [
+    'close_commission_ratio', 'close_commission_today_ratio', 'commission_type', 'open_commission_ratio'
+]
+HARD_FUTURES_INFO = [
+    {'underlying_symbol': 'TC',
+      'close_commission_ratio': 4.0,
+      'close_commission_today_ratio': 0.0,
+      'commission_type': "by_volume",
+      'open_commission_ratio': 4.0,
+      'tick_size': 0.2},
+     {'underlying_symbol': 'ER',
+      'close_commission_ratio': 2.5,
+      'close_commission_today_ratio': 2.5,
+      'commission_type': "by_volume",
+      'open_commission_ratio': 2.5,
+      'tick_size': 1.0},
+     {'underlying_symbol': 'WS',
+      'close_commission_ratio': 2.5,
+      'close_commission_today_ratio': 0.0,
+      'commission_type': "by_volume",
+      'open_commission_ratio': 2.5,
+      'tick_size': 1.0},
+     {'underlying_symbol': 'RO',
+      'close_commission_ratio': 2.5,
+      'close_commission_today_ratio': 0.0,
+      'commission_type': "by_volume",
+      'open_commission_ratio': 2.5,
+      'tick_size': 2.0},
+     {'underlying_symbol': 'ME',
+      'close_commission_ratio': 1.4,
+      'close_commission_today_ratio': 0.0,
+      'commission_type': "by_volume",
+      'open_commission_ratio': 1.4,
+      'tick_size': 1.0}
+]
 
 
 def gen_future_info(d):
     future_info_file = os.path.join(d, 'future_info.json')
-    if not os.path.exists(future_info_file):
-        init_future_info(d)
-        return
 
-    with open(future_info_file, 'r') as f:
-        all_futures_info = json.load(f)
+    if os.path.exists(future_info_file):
+        with open(future_info_file, 'r') as f:
+            all_futures_info = json.load(f)
+    else:
+        all_futures_info = HARD_FUTURES_INFO
 
     future_list = []
     symbol_list = []
-    param = ['close_commission_ratio', 'close_commission_today_ratio', 'commission_type', 'open_commission_ratio']
-
     for i in all_futures_info:
         if i.get('order_book_id'):
             future_list.append(i.get('order_book_id'))
         else:
             symbol_list.append(i.get('underlying_symbol'))
 
-    futures_order_book_id = rqdatac.all_instruments(type='Future')['order_book_id'].unique()
-    for future in futures_order_book_id:
+    all_obids = rqdatac.all_instruments(type='Future')['order_book_id'].unique()
+    missing_obids = set(all_obids).difference(future_list)
+    if not missing_obids:
+        return
+    commission_margin_df = rqdatac.futures.get_commission_margin(missing_obids)
+    if commission_margin_df.empty:
+        commission_margins = {}
+    else:
+        commission_margins = commission_margin_df.set_index("order_book_id").to_dict("index")
+    for future in missing_obids:
         underlying_symbol = re.match(r'^[a-zA-Z]*', future).group()
-        if future in future_list:
-            continue
         future_dict = {}
-        commission = rqdatac.futures.get_commission_margin(future)
-        if not commission.empty:
-            future_list.append(future)
+        if future in commission_margins:
             future_dict['order_book_id'] = future
-            commission = commission.iloc[0]
-            for p in param:
-                future_dict[p] = commission[p]
+            for p in FUTURES_INFO_FIELDS:
+                future_dict[p] = commission_margins[future][p]
             future_dict['tick_size'] = rqdatac.instruments(future).tick_size()
-        elif underlying_symbol in symbol_list \
-                or underlying_symbol in {'S', 'TC', 'ER', 'WS', 'WT', 'RO', 'ME'}:
+        elif underlying_symbol in symbol_list or underlying_symbol in NON_INFO_UNDERLYING_SYMBOLS:
             continue
         else:
             symbol_list.append(underlying_symbol)
@@ -246,13 +213,10 @@ def gen_future_info(d):
             except AttributeError:
                 # FIXME: why get_dominant return None???
                 continue
-            commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
-
-            for p in param:
-                future_dict[p] = commission[p]
+            for p in FUTURES_INFO_FIELDS:
+                future_dict[p] = commission_margins[dominant][p]
             future_dict['tick_size'] = rqdatac.instruments(dominant).tick_size()
         all_futures_info.append(future_dict)
-
     with open(os.path.join(d, 'future_info.json'), 'w') as f:
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
