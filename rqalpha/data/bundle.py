@@ -17,18 +17,49 @@ import json
 import os
 import pickle
 import re
+from queue import Queue
 from itertools import chain
+from typing import Any, Generator, Tuple, List, Dict, Callable, Iterable
 
 import h5py
 import numpy as np
+import click
+from rqdatac.share.errors import PermissionDenied
+
+from rqalpha.utils.i18n import gettext as _
 from rqalpha.apis.api_rqdatac import rqdatac
-from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
-                                      ProgressedTask)
-from rqalpha.utils.datetime_func import (convert_date_to_date_int,
-                                         convert_date_to_int)
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 
 START_DATE = 20050104
 END_DATE = 29991231
+
+
+class BundleTask:
+    @property
+    def total_steps(self):
+        # type: () -> int
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwargs):
+        # type: (*Any, **Any) -> Generator
+        raise NotImplementedError
+
+
+class FuncBundleTask(BundleTask):
+    TOTAL_STEPS = 100
+
+    def __init__(self, func):
+        self._func = func
+
+    @property
+    def total_steps(self):
+        # type: () -> int
+        return self.TOTAL_STEPS
+
+    def __call__(self, *args, **kwargs):
+        self._func(*args, **kwargs)
+        yield self.TOTAL_STEPS
 
 
 def gen_instruments(d):
@@ -221,28 +252,13 @@ def gen_future_info(d):
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
 
-class GenerateFileTask(ProgressedTask):
-    def __init__(self, func):
-        self._func = func
-        self._step = 100
-
-    @property
-    def total_steps(self):
-        # type: () -> int
-        return self._step
-
-    def __call__(self, *args, **kwargs):
-        self._func(*args, **kwargs)
-        yield self._step
-
-
 STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
 INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
 FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement', 'open_interest']
 FUND_FIELDS = STOCK_FIELDS
 
 
-class DayBarTask(ProgressedTask):
+class DayBarTask(BundleTask):
     def __init__(self, order_book_ids):
         self._order_book_ids = order_book_ids
 
@@ -335,35 +351,110 @@ def init_rqdatac_with_warnings_catch():
         rqdatac.init()
 
 
+class BundleTaskExecutor:
+    def __init__(self, concurrency):
+        # type: (int) -> None
+        self._concurrency = concurrency
+        self._tasks = []  # type: List[Tuple[str, BundleTask, *Any, *Any]]
+
+    def submit(self, key, task, *args, **kwargs):
+        if not isinstance(task, BundleTask):
+            task = FuncBundleTask(task)
+        self._tasks.append((key, task, args, kwargs))
+
+    def execute(self) -> Dict[str, BaseException]:
+        total_steps = sum(t.total_steps for key, t, *_ in self._tasks)
+        progress_bar = click.progressbar(length=total_steps, show_eta=False)
+
+        excepations = {}
+        if self._concurrency <= 1:
+            for key, task, args, kwargs in self._tasks:
+                try:
+                    for s in task(*args, **kwargs):
+                        progress_bar.update(s)
+                except BaseException as e:
+                    excepations[task] = e
+        else:
+            step_queue = Queue()
+
+            def _execute(task, args, kwargs):
+                for s in task(*args, **kwargs):
+                    step_queue.put(s)
+
+            executor = ThreadPoolExecutor()
+            futures = []
+            for key, task, args, kwargs in self._tasks:
+                futures.append((key, executor.submit(_execute, task, args, kwargs)))
+
+            while True:
+                # TODO: progress_bar
+
+                try:
+                    key, fut = futures[0]
+                except IndexError:
+                    break
+                try:
+                    e = fut.result(timeout=1)
+                except TimeoutError:
+                    continue
+                except BaseException as e:
+                    excepations[key] = e
+                futures.pop(0)
+        return excepations
+
+
+BASE_FUNCS = [gen_instruments, gen_trading_dates, gen_yield_curve]
+FUTURES_FUNCS = [gen_future_info]
+STOCK_FUNCS = [
+    gen_dividends, gen_splits, gen_ex_factor, gen_st_days, gen_suspended_days, gen_share_transformation
+]
+
+STOCK_DAY_BARS = [
+    ("stocks.h5", "CS", STOCK_FIELDS),
+    ("indexes.h5", "INDX", INDEX_FIELDS),
+    ("funds.h5", "FUND", FUND_FIELDS)
+]
+FUTURES_DAY_BARS = [("futures.h5", "Future", FUTURES_FIELDS)]
+
+
 def update_bundle(path, create, enable_compression=False, concurrency=1):
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
         _DayBarTask = UpdateDayBarTask
-
-    kwargs = {}
+    daybar_kwargs = {}
     if enable_compression:
-        kwargs['compression'] = 9
+        daybar_kwargs['compression'] = 9
 
-    day_bar_args = (
-        ("stocks.h5", rqdatac.all_instruments('CS').order_book_id.tolist(), STOCK_FIELDS),
-        ("indexes.h5", rqdatac.all_instruments('INDX').order_book_id.tolist(), INDEX_FIELDS),
-        ("futures.h5", rqdatac.all_instruments('Future').order_book_id.tolist(), FUTURES_FIELDS),
-        ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
-    )
+    def _tasks(funcs, daybars):
+        # type: (List[Callable], List[Tuple[str, str, List]]) -> Iterable[Tuple[str, Callable, Tuple, Dict]]
+        for f in funcs:
+            yield f.__name__, f, (), {}
+        for file, ins_type, fields in daybars:
+            task = _DayBarTask(rqdatac.all_instruments(ins_type).order_book_id.tolist())
+            yield "day_bar_{}".format(file), task, (os.path.join(path, file), fields), daybar_kwargs
 
-    rqdatac.reset()
+    executor = BundleTaskExecutor(concurrency)
+    base_tasks = list(_tasks(BASE_FUNCS, []))
+    future_tasks = list(_tasks(FUTURES_FUNCS, FUTURES_DAY_BARS))
+    stock_tasks = list(_tasks(STOCK_FUNCS, STOCK_DAY_BARS))
+    for key, task, args, kwargs in chain(base_tasks, future_tasks, stock_tasks):
+        executor.submit(key, task, *args, *kwargs)
 
-    gen_file_funcs = (
-        gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
-        gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
-    )
+    non_permission_task_keys = []
+    for key, exception in executor.execute().items():
+        if isinstance(exception, PermissionDenied):
+            non_permission_task_keys.append(key)
+        else:
+            raise exception
 
-    with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=init_rqdatac_with_warnings_catch
-    ) as executor:
-        # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
-        for func in gen_file_funcs:
-            executor.submit(GenerateFileTask(func), path)
-        for file, order_book_id, field in day_bar_args:
-            executor.submit(_DayBarTask(order_book_id), os.path.join(path, file), field, **kwargs)
+    if non_permission_task_keys:
+        if any(key in non_permission_task_keys for key, *__ in base_tasks):
+            click.echo("更新日线失败，当前账户缺少更新日线及基础数据所需的必要权限，请联系商务或技术支持。", err=True)
+        else:
+            if all(key not in non_permission_task_keys for key, *__ in stock_tasks):
+                click.echo("更新股票日线及基础数据完成")
+            elif all(key not in non_permission_task_keys for key, *__ in future_tasks):
+                click.echo("更新期货日线及基础数据完成")
+            else:
+                click.echo("更新日线失败，当前账户缺少更新日线及基础数据所需的必要权限，请联系商务或技术支持。", err=True)
