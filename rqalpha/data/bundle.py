@@ -17,7 +17,7 @@ import json
 import os
 import pickle
 import re
-from queue import Queue
+from queue import Queue, Empty
 from itertools import chain
 from typing import Any, Generator, Tuple, List, Dict, Callable, Iterable
 
@@ -381,6 +381,15 @@ class BundleTaskExecutor:
                 for s in task(*args, **kwargs):
                     step_queue.put(s)
 
+            def _update_progress_bar():
+                while True:
+                    try:
+                        s = step_queue.get_nowait()
+                    except Empty:
+                        break
+                    else:
+                        progress_bar.update(s)
+
             executor = ThreadPoolExecutor()
             futures = []
             for key, task, args, kwargs in self._tasks:
@@ -388,7 +397,7 @@ class BundleTaskExecutor:
 
             while True:
                 # TODO: progress_bar
-
+                _update_progress_bar()
                 try:
                     key, fut = futures[0]
                 except IndexError:
@@ -400,6 +409,9 @@ class BundleTaskExecutor:
                 except BaseException as e:
                     excepations[key] = e
                 futures.pop(0)
+            _update_progress_bar()
+
+        progress_bar.render_finish()
         return excepations
 
 
