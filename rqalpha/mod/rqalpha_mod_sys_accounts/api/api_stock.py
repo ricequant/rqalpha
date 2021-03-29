@@ -133,20 +133,20 @@ def _order_value(account, position, ins, cash_amount, style):
 
     amount = int(Decimal(cash_amount) / Decimal(price))
 
-    round_lot = int(ins.round_lot)
+    min_round_lot = int(ins.round_lot)
     if cash_amount > 0:
         if _is_ksh(ins):
             amount = _get_ksh_amount(amount)
-            round_lot = 1
+            min_round_lot = 1
         else:
-            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+            amount = int(Decimal(amount) / Decimal(min_round_lot)) * min_round_lot
         while amount > 0:
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
                 ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
             ))
             if amount * price + expected_transaction_cost <= cash_amount:
                 break
-            amount -= round_lot
+            amount -= min_round_lot
         else:
             user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
             return
