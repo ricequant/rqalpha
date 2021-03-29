@@ -56,12 +56,22 @@ getcontext().prec = 10
 export_as_api(industry_code, name='industry_code')
 export_as_api(sector_code, name='sector_code')
 
+KSH_MIN_AMOUNT = 200
+
 
 def _get_account_position_ins(id_or_ins):
     ins = assure_instrument(id_or_ins)
     account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     position = account.get_position(ins.order_book_id, POSITION_DIRECTION.LONG)
     return account, position, ins
+
+
+def _get_ksh_amount(amount):
+    return 0 if abs(amount) < KSH_MIN_AMOUNT else amount // 1
+
+
+def _is_ksh(ins):
+    return ins.type == "CS" and ins.board_type == "KSH"
 
 
 def _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value):
@@ -78,10 +88,16 @@ def _submit_order(ins, amount, side, position_effect, style, quantity, auto_swit
 
     if side in [SIDE.BUY, side.SELL]:
         if not (side == SIDE.SELL and quantity == abs(amount)):
-            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+            if _is_ksh(ins):
+                # KSH can buy(sell) 201, 202 shares
+                amount = _get_ksh_amount(amount)
+            else:
+                amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
 
     if amount == 0:
-        user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+        user_system_log.warn(_(
+            u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
+        ).format(order_book_id=ins.order_book_id))
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if order.type == ORDER_TYPE.MARKET:
@@ -119,18 +135,24 @@ def _order_value(account, position, ins, cash_amount, style):
 
     amount = int(Decimal(cash_amount) / Decimal(price))
 
-    round_lot = int(ins.round_lot)
+    min_round_lot = int(ins.round_lot)
     if cash_amount > 0:
-        amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+        if _is_ksh(ins):
+            amount = _get_ksh_amount(amount)
+            min_round_lot = 1
+        else:
+            amount = int(Decimal(amount) / Decimal(min_round_lot)) * min_round_lot
         while amount > 0:
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
                 ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
             ))
             if amount * price + expected_transaction_cost <= cash_amount:
                 break
-            amount -= round_lot
+            amount -= min_round_lot
         else:
-            user_system_log.warn(_(u"Order Creation Failed: 0 order quantity"))
+            user_system_log.warn(_(
+                u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
+            ).format(order_book_id=ins.order_book_id))
             return
 
     if amount < 0:
@@ -265,7 +287,7 @@ def order_target_portfolio(target_portfolio):
         # FIXME: kind of dirty
         total_percent = sum(target_portfolio)
     else:
-        total_percent = sum(six.itervalues(target_portfolio))
+        total_percent = sum(target_portfolio.values())
     if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
 
@@ -297,22 +319,27 @@ def order_target_portfolio(target_portfolio):
                 order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             ))
 
-    round_lot = 100
     for order_book_id, (target_quantity, price) in target_quantities.items():
+        ins = assure_instrument(order_book_id)
+        round_lot = 100
         if order_book_id in current_quantities:
             delta_quantity = target_quantity - current_quantities[order_book_id]
         else:
             delta_quantity = target_quantity
 
-        if delta_quantity >= round_lot:
-            delta_quantity = math.floor(delta_quantity / round_lot) * round_lot
+        if _is_ksh(ins):
+            # KSH can buy(sell) 201, 202 shares
+            delta_quantity = _get_ksh_amount(delta_quantity)
+        else:
+            delta_quantity = int(Decimal(delta_quantity) / Decimal(round_lot)) * round_lot
+
+        if delta_quantity > 0:
             open_order = Order.__from_create__(
                 order_book_id, delta_quantity, SIDE.BUY, MarketOrder(), POSITION_EFFECT.OPEN
             )
             open_order.set_frozen_price(price)
             open_orders.append(open_order)
         elif delta_quantity < -1:
-            delta_quantity = math.floor(delta_quantity)
             close_order = Order.__from_create__(
                 order_book_id, abs(delta_quantity), SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             )

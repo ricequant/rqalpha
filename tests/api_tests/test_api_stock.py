@@ -183,3 +183,45 @@ def test_is_st_stock():
             assert result == expected_result
 
     return locals()
+
+
+def test_ksh():
+    """科创版买卖最低200股，大于就可以201，202股买卖"""
+    __config__ = {
+        "base": {
+            "start_date": "2019-07-30",
+            "end_date": "2019-08-05",
+            "accounts": {
+                "stock": 1000000
+            }
+        }
+    }
+
+    def init(context):
+        context.counter = 0
+        context.amount_s1 = 100
+        context.amount_s2 = 200
+
+        context.s1 = "688016.XSHG"
+        context.s2 = "688010.XSHG"
+
+    def handle_bar(context, bar_dict):
+        context.counter += 1
+        if context.counter == 1:
+            order_shares(context.s1, 201)
+            order_shares(context.s2, 199)
+
+            assert context.portfolio.positions[context.s1].quantity == 201
+            assert context.portfolio.positions[context.s2].quantity == 0
+        if context.counter == 2:
+            order_lots(context.s1, 2)
+
+            order_price_s1 = bar_dict[context.s1].close
+            order_price_s2 = bar_dict[context.s2].close
+            # 5 块最小手续费
+            order_value(context.s1, context.amount_s1 * order_price_s1 + 5, order_price_s1)
+            order_value(context.s2, context.amount_s2 * order_price_s2 + 5, order_price_s2)
+            assert context.portfolio.positions[context.s1].quantity == 401
+            assert context.portfolio.positions[context.s2].quantity == 0
+
+    return locals()
