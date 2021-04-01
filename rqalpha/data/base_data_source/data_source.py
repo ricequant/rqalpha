@@ -58,9 +58,9 @@ class BaseDataSource(AbstractDataSource):
 
         funds_day_bar_store = DayBarStore(_p('funds.h5'))
         self._day_bars = {
-            INSTRUMENT_TYPE.CS: DayBarStore(_p('stocks.h5')),
-            INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),
-            INSTRUMENT_TYPE.FUTURE: FutureDayBarStore(_p('futures.h5')),
+            INSTRUMENT_TYPE.CS: DayBarStore(_p('stocks.h5')),  # 股票
+            INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),  # 股指
+            INSTRUMENT_TYPE.FUTURE: FutureDayBarStore(_p('futures.h5')),  # 期货
             INSTRUMENT_TYPE.ETF: funds_day_bar_store,
             INSTRUMENT_TYPE.LOF: funds_day_bar_store
         }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]

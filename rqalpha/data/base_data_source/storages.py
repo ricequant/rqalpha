@@ -86,6 +86,9 @@ class FutureInfoStore(object):
 
 
 class InstrumentStore(AbstractInstrumentStore):
+    """
+    合约信息
+    """
     def __init__(self, instruments, instrument_type):
         # type: (Iterable[Instrument], INSTRUMENT_TYPE) -> None
         self._instrument_type = instrument_type
@@ -181,10 +184,14 @@ class DayBarStore(AbstractDayBarStore):
 
 
 class FutureDayBarStore(DayBarStore):
+    
     DEFAULT_DTYPE = np.dtype(DayBarStore.DEFAULT_DTYPE.descr + [("open_interest", '<f8')])
 
 
 class DividendStore(AbstractDividendStore):
+    """
+    股利数据
+    """
     def __init__(self, path):
         self._h5 = open_h5(path, mode="r")
 
@@ -196,6 +203,9 @@ class DividendStore(AbstractDividendStore):
 
 
 class YieldCurveStore:
+    """
+    国债利率
+    """
     def __init__(self, path):
         self._data = open_h5(path, mode="r")["data"][:]
 
@@ -235,6 +245,10 @@ class SimpleFactorStore(AbstractSimpleFactorStore):
 
 
 class DateSet(AbstractDateSet):
+    """
+    split_factor:股票拆分数据
+    ex_cum_factor:累计复权数据
+    """
     def __init__(self, f):
         self._h5 = open_h5(f, mode="r")
 

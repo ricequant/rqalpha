@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from rqalpha.apis import *
+from rqalpha.api import *
 from rqalpha import run_func
 
 
@@ -9,6 +9,8 @@ def init(context):
     context.s1 = "000001.XSHE"
     update_universe(context.s1)
     context.fired = False
+
+    context.slippage = 0.5
 
 
 def before_trading(context):
@@ -43,7 +45,7 @@ config = {
 }
 
 # 您可以指定您要传递的参数
-run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)
+# run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)
 
 # 如果你的函数命名是按照 API 规范来，则可以直接按照以下方式来运行
-# run_func(**globals())
+run_func(**globals())

@@ -1,3 +1,5 @@
+
+
 # 导入函数库
 from jqdata import *
 from kuanke.wizard import *
@@ -40,7 +42,7 @@ def initialize(context):
     #止盈止损
     run_weekly(stop_loss,3,time='open', reference_security='000300.XSHG')
 
-## 开盘前运行函数     
+## 开盘前运行函数   
 def before_market_open(context):
 
     #获取满足条件的股票列表
@@ -251,6 +253,7 @@ def get_check_stocks_sort(context,check_out_lists):
     df = df.sort_values('circulating_cap',ascending=False)
     out_lists = list(df['code'].values)
     return out_lists
+
 def get_stock_list(context):
     temp_list = list(get_all_securities(types=['stock']).index)    
     #剔除停牌股
@@ -351,8 +354,8 @@ def get_data(context, pool, periods):
             return str(int(quarter[:4])-1)+'q4'
 
     q = query(valuation.code,valuation.code,valuation.circulating_market_cap,balance.total_current_assets,balance.total_current_liability,\
-    indicator.roe,cash_flow.net_operate_cash_flow,cash_flow.net_invest_cash_flow,indicator.inc_revenue_year_on_year,indicator.eps
-              )
+                indicator.roe,cash_flow.net_operate_cash_flow,cash_flow.net_invest_cash_flow,indicator.inc_revenue_year_on_year,indicator.eps
+            )
 
     stat_date_panels = { sd:None for sd in stat_dates }
 

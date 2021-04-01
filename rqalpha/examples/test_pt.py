@@ -1,9 +1,9 @@
 import time
 
-import talib
-
-
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
+from rqalpha.apis import current_snapshot, order_shares, get_positions
+
+
 def init(context):
     context.s1 = "000001.XSHE"
 

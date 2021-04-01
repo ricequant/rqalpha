@@ -11,6 +11,17 @@ def init(context):
     context.SHORTPERIOD = 20
     context.LONGPERIOD = 120
 
+    # 设置滑点 0.5%
+    context.slippage = 0.5
+
+    #其中的数值应为x % 中的x， 例子中的0.02 = 0.02 %，即万分之2.
+    context.commission = 0.02
+    
+    ## 定期运行
+    #scheduler.run_daily(function)
+    #scheduler.run_weekly(function, weekday=x, tradingday=t)
+    #scheduler.run_monthly(function, tradingday=t)
+
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):

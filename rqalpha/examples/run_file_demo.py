@@ -22,6 +22,6 @@ config = {
   }
 }
 
-strategy_file_path = "./buy_and_hold.py"
+strategy_file_path = "./macd.py"
 
 run_file(strategy_file_path, config)
