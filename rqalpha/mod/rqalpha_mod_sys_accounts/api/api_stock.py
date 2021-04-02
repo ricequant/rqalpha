@@ -77,7 +77,7 @@ def _is_ksh(ins):
 def _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value):
     env = Environment.get_instance()
     if isinstance(style, LimitOrder):
-        if style.get_limit_price() <= 0:
+        if not is_valid_price(style.get_limit_price()):
             raise RQInvalidArgument(_(u"Limit order price should be positive"))
     price = env.data_proxy.get_last_price(ins.order_book_id)
     if not is_valid_price(price):
