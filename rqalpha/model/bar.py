@@ -15,8 +15,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from rqalpha.utils.functools import lru_cache
-
 import six
 import numpy as np
 
@@ -28,6 +26,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.repr import PropertyReprMeta
+from rqalpha.utils.class_helper import cached_property
 from rqalpha.const import EXECUTION_PHASE
 
 NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down', 'volume', 'total_turnover',
@@ -48,7 +47,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         self._instrument = instrument
         self._env = Environment.get_instance()
 
-    @property
+    @cached_property
     def datetime(self):
         """
         [datetime.datetime] 时间戳
@@ -57,32 +56,32 @@ class PartialBarObject(metaclass=PropertyReprMeta):
             return self._dt
         return convert_int_to_datetime(self._data['datetime'])
 
-    @property
+    @cached_property
     def instrument(self):
         return self._instrument
 
-    @property
+    @cached_property
     def order_book_id(self):
         """
         [str] 交易标的代码
         """
         return self._instrument.order_book_id
 
-    @property
+    @cached_property
     def symbol(self):
         """
         [str] 合约简称
         """
         return self._instrument.symbol
 
-    @property
+    @cached_property
     def open(self):
         """
         [float] 开盘价
         """
         return self._data["open"]
 
-    @property
+    @cached_property
     def limit_up(self):
         """
         [float] 涨停价
@@ -93,7 +92,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         except (KeyError, ValueError):
             return np.nan
 
-    @property
+    @cached_property
     def limit_down(self):
         """
         [float] 跌停价
@@ -104,7 +103,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         except (KeyError, ValueError):
             return np.nan
 
-    @property
+    @cached_property
     def last(self):
         """
         [float] 当前最新价
@@ -114,22 +113,21 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         except KeyError:
             return self.open
 
-    @property
+    @cached_property
     def volume(self):
         """
         [float] 截止到当前的成交量
         """
         return self._data["volume"]
 
-    @property
+    @cached_property
     def total_turnover(self):
         """
         [float] 截止到当前的成交额
         """
         return self._data['total_turnover']
 
-    @property
-    @lru_cache(None)
+    @cached_property
     def prev_close(self):
         """
         [float] 昨日收盘价
@@ -139,8 +137,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         except (ValueError, KeyError):
             return self._env.data_proxy.get_prev_close(self._instrument.order_book_id, self._env.trading_dt)
 
-    @property
-    @lru_cache(None)
+    @cached_property
     def prev_settlement(self):
         """
         [float] 昨日结算价（期货专用）
@@ -150,7 +147,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         except (ValueError, KeyError):
             return self._env.data_proxy.get_prev_settlement(self._instrument.order_book_id, self._env.trading_dt)
 
-    @property
+    @cached_property
     def isnan(self):
         return np.isnan(self._data['close'])
 
@@ -160,43 +157,43 @@ class BarObject(PartialBarObject):
         "order_book_id", "datetime", "open", "close", "high", "low", "limit_up", "limit_down"
     )
 
-    @property
+    @cached_property
     def close(self):
         """
         [float] 收盘价
         """
         return self._data["close"]
 
-    @property
+    @cached_property
     def low(self):
         """
         [float] 最低价
         """
         return self._data["low"]
 
-    @property
+    @cached_property
     def high(self):
         """
         [float] 最高价
         """
         return self._data["high"]
 
-    @property
+    @cached_property
     def last(self):
         """
         [float] 当前最新价
         """
         return self.close
 
-    @property
+    @cached_property
     def discount_rate(self):
         return self._data['discount_rate']
 
-    @property
+    @cached_property
     def acc_net_value(self):
         return self._data['acc_net_value']
 
-    @property
+    @cached_property
     def unit_net_value(self):
         return self._data['unit_net_value']
 
@@ -206,8 +203,7 @@ class BarObject(PartialBarObject):
         'IC': '000905.XSHG',
     }
 
-    @property
-    @lru_cache(None)
+    @cached_property
     def basis_spread(self):
         try:
             return self._data['basis_spread']
@@ -221,32 +217,32 @@ class BarObject(PartialBarObject):
             else:
                 return np.nan
 
-    @property
+    @cached_property
     def settlement(self):
         """
         [float] 结算价（期货专用）
         """
         return self._data['settlement']
 
-    @property
+    @cached_property
     def open_interest(self):
         """
         [float] 截止到当前的持仓量（期货专用）
         """
         return self._data['open_interest']
 
-    @property
+    @cached_property
     def is_trading(self):
         """
         [bool] 是否有成交量
         """
         return self._data['volume'] > 0
 
-    @property
+    @cached_property
     def isnan(self):
         return np.isnan(self._data['close'])
 
-    @property
+    @cached_property
     def suspended(self):
         if self.isnan:
             return True
@@ -378,7 +374,7 @@ class BarMap(object):
                 self._cache[order_book_id] = bar
                 return bar
 
-    @property
+    @cached_property
     def dt(self):
         return self._dt
 
