@@ -169,7 +169,14 @@ class DataProxy(TradingDatesMixin):
 
     def get_open_auction_bar(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
-        bar = self._data_source.get_open_auction_bar(instrument, dt)
+        try:
+            bar = self._data_source.get_open_auction_bar(instrument, dt)
+        except NotImplementedError:
+            # forward compatible
+            tick = self.current_snapshot(order_book_id, "1d", dt)
+            bar = {k: getattr(tick, k) for k in [
+                "datetime", "open", "limit_up", "limit_down", "volume", "total_turnover"
+            ]}
         return PartialBarObject(instrument, bar)
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
