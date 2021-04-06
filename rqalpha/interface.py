@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Union, Optional, Iterable, Dict, List, Sequence
 
 import numpy
@@ -24,6 +24,7 @@ from six import with_metaclass
 import pandas
 
 from rqalpha.utils.typing import DateLike
+from rqalpha.model.bar import BarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
@@ -303,6 +304,10 @@ class AbstractDataSource(object):
 
         :return: `numpy.ndarray` | `dict`
         """
+        raise NotImplementedError
+
+    def get_open_auction_bar(self, instrument, dt):
+        # type: (Instrument, Union[datetime, date]) -> Dict
         raise NotImplementedError
 
     def get_settle_price(self, instrument, date):

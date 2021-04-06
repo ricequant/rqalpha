@@ -30,8 +30,6 @@ from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.repr import PropertyReprMeta
 from rqalpha.const import EXECUTION_PHASE
 
-from .tick import TickObject
-
 NAMES = ['open', 'close', 'low', 'high', 'settlement', 'limit_up', 'limit_down', 'volume', 'total_turnover',
          'discount_rate', 'acc_net_value', 'unit_net_value', 'open_interest',
          'basis_spread', 'prev_settlement', 'datetime']
@@ -39,30 +37,43 @@ NANDict = {i: np.nan for i in NAMES}
 
 
 class PartialBarObject(metaclass=PropertyReprMeta):
+    # 用于 open_auction
     __repr_properties__ = (
         "order_book_id", "datetime", "open", "limit_up", "limit_down"
     )
 
-    order_book_id = property(lambda self: self._tick.order_book_id)
-    datetime = property(lambda self: self._tick.datetime)
-    open = property(fget=lambda self: self._tick.open)
-    limit_up = property(lambda self: self._tick.limit_up)
-    limit_down = property(lambda self: self._tick.limit_down)
-    last = property(lambda self: self.open)
-    volume = property(lambda self: self._tick.volume)
-    prev_close = property(lambda self: self._tick.prev_close)
-    prev_settlement = property(lambda self: self._tick.prev_settlement)
-    isnan = property(lambda self: self._tick.isnan)
-
-    def __init__(self, tick):
-        self._tick = tick  # type: TickObject
-
-
-class BarObject(object):
     def __init__(self, instrument, data, dt=None):
         self._dt = dt
         self._data = data if data is not None else NANDict
         self._instrument = instrument
+        self._env = Environment.get_instance()
+
+    @property
+    def datetime(self):
+        """
+        [datetime.datetime] 时间戳
+        """
+        if self._dt is not None:
+            return self._dt
+        return convert_int_to_datetime(self._data['datetime'])
+
+    @property
+    def instrument(self):
+        return self._instrument
+
+    @property
+    def order_book_id(self):
+        """
+        [str] 交易标的代码
+        """
+        return self._instrument.order_book_id
+
+    @property
+    def symbol(self):
+        """
+        [str] 合约简称
+        """
+        return self._instrument.symbol
 
     @property
     def open(self):
@@ -70,27 +81,6 @@ class BarObject(object):
         [float] 开盘价
         """
         return self._data["open"]
-
-    @property
-    def close(self):
-        """
-        [float] 收盘价
-        """
-        return self._data["close"]
-
-    @property
-    def low(self):
-        """
-        [float] 最低价
-        """
-        return self._data["low"]
-
-    @property
-    def high(self):
-        """
-        [float] 最高价
-        """
-        return self._data["high"]
 
     @property
     def limit_up(self):
@@ -115,24 +105,14 @@ class BarObject(object):
             return np.nan
 
     @property
-    @lru_cache(None)
-    def prev_close(self):
-        """
-        [float] 昨日收盘价
-        """
-        try:
-            return self._data['prev_close']
-        except (ValueError, KeyError):
-            trading_dt = Environment.get_instance().trading_dt
-            data_proxy = Environment.get_instance().data_proxy
-            return data_proxy.get_prev_close(self._instrument.order_book_id, trading_dt)
-
-    @property
     def last(self):
         """
         [float] 当前最新价
         """
-        return self.close
+        try:
+            return self._data["last"]
+        except KeyError:
+            return self.open
 
     @property
     def volume(self):
@@ -147,6 +127,66 @@ class BarObject(object):
         [float] 截止到当前的成交额
         """
         return self._data['total_turnover']
+
+    @property
+    @lru_cache(None)
+    def prev_close(self):
+        """
+        [float] 昨日收盘价
+        """
+        try:
+            return self._data['prev_close']
+        except (ValueError, KeyError):
+            return self._env.data_proxy.get_prev_close(self._instrument.order_book_id, self._env.trading_dt)
+
+    @property
+    @lru_cache(None)
+    def prev_settlement(self):
+        """
+        [float] 昨日结算价（期货专用）
+        """
+        try:
+            return self._data['prev_settlement']
+        except (ValueError, KeyError):
+            return self._env.data_proxy.get_prev_settlement(self._instrument.order_book_id, self._env.trading_dt)
+
+    @property
+    def isnan(self):
+        return np.isnan(self._data['close'])
+
+
+class BarObject(PartialBarObject):
+    __repr_properties__ = (
+        "order_book_id", "datetime", "open", "close", "high", "low", "limit_up", "limit_down"
+    )
+
+    @property
+    def close(self):
+        """
+        [float] 收盘价
+        """
+        return self._data["close"]
+
+    @property
+    def low(self):
+        """
+        [float] 最低价
+        """
+        return self._data["low"]
+
+    @property
+    def high(self):
+        """
+        [float] 最高价
+        """
+        return self._data["high"]
+
+    @property
+    def last(self):
+        """
+        [float] 当前最新价
+        """
+        return self.close
 
     @property
     def discount_rate(self):
@@ -189,51 +229,11 @@ class BarObject(object):
         return self._data['settlement']
 
     @property
-    @lru_cache(None)
-    def prev_settlement(self):
-        """
-        [float] 昨日结算价（期货专用）
-        """
-        try:
-            return self._data['prev_settlement']
-        except (ValueError, KeyError):
-            trading_dt = Environment.get_instance().trading_dt
-            data_proxy = Environment.get_instance().data_proxy
-            return data_proxy.get_prev_settlement(self._instrument.order_book_id, trading_dt)
-
-    @property
     def open_interest(self):
         """
         [float] 截止到当前的持仓量（期货专用）
         """
         return self._data['open_interest']
-
-    @property
-    def datetime(self):
-        """
-        [datetime.datetime] 时间戳
-        """
-        if self._dt is not None:
-            return self._dt
-        return convert_int_to_datetime(self._data['datetime'])
-
-    @property
-    def instrument(self):
-        return self._instrument
-
-    @property
-    def order_book_id(self):
-        """
-        [str] 交易标的代码
-        """
-        return self._instrument.order_book_id
-
-    @property
-    def symbol(self):
-        """
-        [str] 合约简称
-        """
-        return self._instrument.symbol
 
     @property
     def is_trading(self):
