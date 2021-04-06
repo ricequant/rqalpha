@@ -24,7 +24,6 @@ from six import with_metaclass
 import pandas
 
 from rqalpha.utils.typing import DateLike
-from rqalpha.model.bar import BarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
@@ -307,6 +306,10 @@ class AbstractDataSource(object):
 
     def get_open_auction_bar(self, instrument, dt):
         # type: (Instrument, Union[datetime, date]) -> Dict
+        """
+        获取指定资产当日的集合竞价 Bar 数据，该 Bar 数据应包含的字段有：
+            datetime, open, limit_up, limit_down, volume, total_turnover
+        """
         raise NotImplementedError
 
     def get_settle_price(self, instrument, date):
