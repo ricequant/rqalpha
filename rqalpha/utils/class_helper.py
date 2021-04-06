@@ -25,3 +25,19 @@ def deprecated_property(property_name, instead_property_name):
         ).format(property_name, instead_property_name))
         return getattr(self, instead_property_name)
     return property(getter)
+
+
+class CachedProperty:
+    def __init__(self, getter):
+        self._getter = getter
+        self._name = getter.__name__
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self._getter
+        value = self._getter(instance)
+        setattr(instance, self._name, value)
+        return value
+
+
+cached_property = CachedProperty
