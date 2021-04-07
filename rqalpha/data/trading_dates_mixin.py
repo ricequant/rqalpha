@@ -75,6 +75,10 @@ class TradingDatesMixin(object):
         pos = trading_dates.searchsorted(_to_timestamp(date))
         return pos < len(trading_dates) and trading_dates[pos] == date
 
+    def get_trading_dt(self, calendar_dt):
+        trading_date = self.get_future_trading_date(calendar_dt)
+        return datetime.datetime.combine(trading_date, calendar_dt.time())
+
     def get_future_trading_date(self, dt):
         return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))
 
