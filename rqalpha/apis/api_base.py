@@ -425,7 +425,7 @@ def history_bars(
 
     :param order_book_id: 合约代码
     :param bar_count: 获取的历史数据数量，必填项
-    :param frequency: 获取数据什么样的频率进行。'1d'或'1m'分别表示每日和每分钟，必填项
+    :param frequency: 获取数据什么样的频率进行。'1d'、'1m' 和 '1w' 分别表示每日、每分钟和每周，必填项
     :param fields: 返回数据字段。必填项。见下方列表。
     :param skip_suspended: 是否跳过停牌数据
     :param include_now: 是否包含当前数据
