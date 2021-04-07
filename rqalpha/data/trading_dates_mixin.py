@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
-from typing import Dict
+from typing import Dict, Optional
 
 import pandas as pd
 
@@ -37,6 +37,7 @@ class TradingDatesMixin(object):
         ))))
 
     def get_trading_calendar(self, trading_calendar_type=None):
+        # type: (Optional[TRADING_CALENDAR_TYPE]) -> pd.DatetimeIndex
         if trading_calendar_type is None:
             return self.merged_trading_calendars
         try:
