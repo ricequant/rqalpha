@@ -48,7 +48,7 @@ def generate_report(result_dict, output_path):
             df = df.set_index("date")
 
         csv_txt = StringIO()
-        csv_txt.write(df.to_csv(encoding='utf-8'))
+        csv_txt.write(df.to_csv(encoding='utf-8', line_terminator='\n'))
 
         with open(os.path.join(output_path, "{}.csv".format(name)), 'w') as csvfile:
             csvfile.write(csv_txt.getvalue())
