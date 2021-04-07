@@ -394,7 +394,15 @@ withdraw - 出金（减少账户资金）
 plot - 画图
 ------------------------------------------------------
 
-..  autofunction:: plot
+..  py:function:: after_trading(context)
+
+    在生成的图标结果中，某一个根线上增加一个点。
+
+    :param series_name: 序列名称
+    :type series_name: str
+
+    :param value: 值
+    :type value: float
 
 
 scheduler定时器
