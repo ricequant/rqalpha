@@ -107,7 +107,7 @@ class AnalyserMod(AbstractMod):
 
     def get_benchmark_daily_returns(self):
         if self._benchmark is None:
-            return 0.0
+            return np.nan
         daily_return_list = []
         weights = 0
         for benchmark in self._benchmark:
