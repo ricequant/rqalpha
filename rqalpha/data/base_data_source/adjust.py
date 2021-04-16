@@ -54,6 +54,7 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
     factors = ex_cum_factors.take(dates.searchsorted(bars['datetime'], side='right') - 1)
 
     # 复权
+    bars = np.copy(bars)
     factors /= base_adjust_rate
     if isinstance(fields, str):
         if fields in PRICE_FIELDS:
@@ -65,7 +66,6 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
         # should not got here
         return bars
 
-    result = np.copy(bars)
     for f in result.dtype.names:
         if f in PRICE_FIELDS:
             result[f] *= factors
