@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import six
+from datetime import datetime
 import numpy as np
 
 from rqalpha.core.execution_context import ExecutionContext
@@ -54,7 +55,10 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         """
         if self._dt is not None:
             return self._dt
-        return convert_int_to_datetime(self._data['datetime'])
+        dt = self._data["datetime"]
+        if isinstance(dt, datetime):
+            return dt
+        return convert_int_to_datetime(dt)
 
     @cached_property
     def instrument(self):
