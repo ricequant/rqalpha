@@ -15,6 +15,32 @@
 import pickle
 from rqalpha.utils.logger import user_system_log, system_log
 
+import io
+import builtins
+
+safe_builtins = {
+    'range',
+    'complex',
+    'set',
+    'frozenset',
+    'slice',
+}
+
+class RestrictedUnpickler(pickle.Unpickler):
+
+    def find_class(self, module, name):
+        # Only allow safe classes from builtins
+        if module == "builtins" and name in safe_builtins:
+            return getattr(builtins, name)
+        """Forbid everything else"""
+        raise pickle.UnpicklingError("global '%s.%s' is forbidden" %
+                                     (module, name))
+
+def restricted_loads(s):
+    # Helper function analogous to pickle.loads()
+    return RestrictedUnpickler(io.BytesIO(s)).load()
+
+
 
 class GlobalVars(object):
     def get_state(self):
@@ -27,9 +53,11 @@ class GlobalVars(object):
         return pickle.dumps(dict_data)
 
     def set_state(self, state):
+        restricted_loads(state)
         dict_data = pickle.loads(state)
         for key, value in dict_data.items():
             try:
+                restricted_loads(value)
                 self.__dict__[key] = pickle.loads(value)
                 system_log.debug("restore g.{} {}", key, type(self.__dict__[key]))
             except Exception:
