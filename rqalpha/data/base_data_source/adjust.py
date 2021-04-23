@@ -66,9 +66,9 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
         # should not got here
         return bars
 
-    for f in result.dtype.names:
+    for f in bars.dtype.names:
         if f in PRICE_FIELDS:
-            result[f] *= factors
+            bars[f] *= factors
         elif f == 'volume':
-            result[f] *= (1 / factors)
-    return result
+            bars[f] *= (1 / factors)
+    return bars
