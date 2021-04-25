@@ -287,7 +287,6 @@ class FuturePosition(Position):
                 order_book_id=self._order_book_id
             ))
             self._today_quantity = self._old_quantity = 0
-        self._avg_price = self._prev_close
         return delta_cash
 
 

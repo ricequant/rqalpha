@@ -21,6 +21,7 @@ from typing import Dict, Iterable, Tuple
 
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
 from rqalpha.environment import Environment
+from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order
@@ -89,6 +90,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._last_price = float("NaN")
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
+
+        event_bus = Environment.get_instance().event_bus
+        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
     @property
     def order_book_id(self):
@@ -211,6 +215,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._transaction_cost = state.get("transaction_cost", 0)
         self._prev_close = state.get("prev_close")
 
+    def _pre_before_trading(self, _):
+        self._prev_close = self.last_price
+
     def before_trading(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量
@@ -246,7 +253,8 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._non_closable = 0
-        self._prev_close = self.last_price
+        if self.quantity:
+            self._avg_price = self.last_price
         return 0
 
     def update_last_price(self, price):
