@@ -253,8 +253,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._old_quantity += self._today_quantity
         self._logical_old_quantity = self._old_quantity
         self._today_quantity = self._trade_cost = self._non_closable = 0
-        if self.quantity:
-            self._avg_price = self.last_price
         return 0
 
     def update_last_price(self, price):
