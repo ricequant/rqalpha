@@ -936,20 +936,13 @@ futures.get_dominant = staticmethod(_futures_get_dominant)
 futures.get_member_rank = staticmethod(_futures_get_member_rank)
 futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
 
-# =======================  以下 API 不建议使用  =================================
-
-_get_fundamentals_warning_fired = False
-
 
 @export_as_api
 @apply_rules(verify_that('entry_date').is_valid_date(ignore_none=True),
              verify_that('interval').is_valid_interval(),
              verify_that('report_quarter').is_instance_of(bool))
 def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False, expect_df=False, **kwargs):
-    global _get_fundamentals_warning_fired
-    if not _get_fundamentals_warning_fired:
-        user_log.warn('get_fundamentals is deprecated, use get_factor instead')
-        _get_fundamentals_warning_fired = True
+    user_log.warn('get_fundamentals is deprecated, use get_factor instead')
 
     env = Environment.get_instance()
     dt = env.calendar_dt.date()
@@ -987,6 +980,8 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
 @export_as_api
 @apply_rules(verify_that('interval').is_valid_interval())
 def get_financials(query, quarter=None, interval='4q', expect_df=False):
+    user_log.warn('get_financials is deprecated, use get_pit_finacials_ex instead')
+
     if quarter is None:
         valid = True
     else:
@@ -1093,6 +1088,34 @@ def get_pit_financials(fields, quarter=None, interval=None, order_book_ids=None,
         result = result.drop(['info_date', 'if_adjusted'], axis=1)
         result = result.drop_duplicates(['order_book_id', 'end_date'], keep='last')
         result = result.set_index(['order_book_id', 'end_date']).sort_index()
+    return result
+
+
+@export_as_api
+@apply_rules(verify_that('statements').is_in(['all', 'latest'], ignore_none=True))
+def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
+    if isinstance(order_book_ids, str):
+        order_book_ids = [order_book_ids]
+    env = Environment.get_instance()
+    dt = env.calendar_dt.date()
+    year = dt.year
+    mon = dt.month
+    q = (mon - 4) // 3 + 1
+    y = year
+    if q <= 0:
+        y -= 1
+        q = 4
+    end_quarter = str(y) + 'q' + str(q)
+
+    delta_year = count // 4
+    start_q = q - count % 4
+    if start_q <= 0:
+        start_q = 4
+        delta_year += 1
+    start_quarter = str(y - delta_year) + 'q' + str(start_q)
+
+    result = rqdatac.get_pit_financials_ex(fields=fields, start_quarter=start_quarter, end_quarter=end_quarter,
+        order_book_ids=order_book_ids, statements=statements, market='cn')
     return result
 
 

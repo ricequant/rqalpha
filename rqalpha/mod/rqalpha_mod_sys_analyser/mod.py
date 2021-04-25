@@ -107,7 +107,7 @@ class AnalyserMod(AbstractMod):
 
     def get_benchmark_daily_returns(self):
         if self._benchmark is None:
-            return 0.0
+            return np.nan
         daily_return_list = []
         weights = 0
         for benchmark in self._benchmark:
@@ -319,10 +319,10 @@ class AnalyserMod(AbstractMod):
 
         if self._benchmark:
             benchmark_total_returns = (np.array(self._benchmark_daily_returns) + 1.0).prod() - 1.0
-            summary['benchmark_total_returns'] = self._safe_convert(benchmark_total_returns)
+            summary['benchmark_total_returns'] = self._safe_convert(benchmark_total_returns, ndigits=6)
             date_count = len(self._benchmark_daily_returns)
             benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
-            summary['benchmark_annualized_returns'] = self._safe_convert(benchmark_annualized_returns)
+            summary['benchmark_annualized_returns'] = self._safe_convert(benchmark_annualized_returns, ndigits=6)
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
