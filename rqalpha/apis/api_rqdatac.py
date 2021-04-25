@@ -936,21 +936,13 @@ futures.get_dominant = staticmethod(_futures_get_dominant)
 futures.get_member_rank = staticmethod(_futures_get_member_rank)
 futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
 
-# =======================  以下 API 不建议使用  =================================
-
-_get_fundamentals_warning_fired = False
-_get_financials_warning_fired = False
-
 
 @export_as_api
 @apply_rules(verify_that('entry_date').is_valid_date(ignore_none=True),
              verify_that('interval').is_valid_interval(),
              verify_that('report_quarter').is_instance_of(bool))
 def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False, expect_df=False, **kwargs):
-    global _get_fundamentals_warning_fired
-    if not _get_fundamentals_warning_fired:
-        user_log.warn('get_fundamentals is deprecated, use get_factor instead')
-        _get_fundamentals_warning_fired = True
+    user_log.warn('get_fundamentals is deprecated, use get_factor instead')
 
     env = Environment.get_instance()
     dt = env.calendar_dt.date()
@@ -988,10 +980,7 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
 @export_as_api
 @apply_rules(verify_that('interval').is_valid_interval())
 def get_financials(query, quarter=None, interval='4q', expect_df=False):
-    global _get_financials_warning_fired
-    if not _get_financials_warning_fired:
-        user_log.warn('get_financials is deprecated, use get_pit_finacials_ex instead')
-        _get_financials_warning_fired = True
+    user_log.warn('get_financials is deprecated, use get_pit_finacials_ex instead')
 
     if quarter is None:
         valid = True
