@@ -127,6 +127,9 @@ def init_rqdatac(rqdatac_uri):
 
 
 def run(config, source_code=None, user_funcs=None):
+    ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
+    ctx._push()
+
     env = Environment(config)
     persist_helper = None
     init_succeed = False
