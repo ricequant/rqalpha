@@ -200,6 +200,7 @@ class StockPosition(Position):
         self._old_quantity = int(self._old_quantity * ratio)
         self._logical_old_quantity = int(self._logical_old_quantity * ratio)
         self._avg_price /= ratio
+        self._last_price /= ratio
         self._prev_close /= ratio
 
 
