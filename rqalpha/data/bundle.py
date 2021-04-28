@@ -333,35 +333,39 @@ class UpdateDayBarTask(DayBarTask):
         if need_recreate_h5:
             yield from GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
         else:
-            with h5py.File(path, 'a') as h5:
-                for order_book_id in self._order_book_ids:
-                    if order_book_id in h5:
-                        try:
-                            start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
-                        except ValueError:
-                            h5.pop(order_book_id)
-                            start_date = START_DATE
-                    else:
-                        start_date = START_DATE
-                    df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
-                                        adjust_type='none', fields=fields, expect_df=True)
-                    if not (df is None or df.empty):
-                        df = df[fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
-                        df = df.loc[order_book_id]
-                        df.reset_index(inplace=True)
-                        df['datetime'] = [convert_date_to_int(d) for d in df['date']]
-                        del df['date']
-                        df.set_index('datetime', inplace=True)
+            try:
+                with h5py.File(path, 'a') as h5:
+                    for order_book_id in self._order_book_ids:
                         if order_book_id in h5:
-                            data = np.array(
-                                [tuple(i) for i in chain(h5[order_book_id][:], df.to_records())],
-                                dtype=h5[order_book_id].dtype
-                            )
-                            del h5[order_book_id]
-                            h5.create_dataset(order_book_id, data=data, **kwargs)
+                            try:
+                                start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
+                            except ValueError:
+                                h5.pop(order_book_id)
+                                start_date = START_DATE
                         else:
-                            h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
-                    yield 1
+                            start_date = START_DATE
+                        df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
+                                            adjust_type='none', fields=fields, expect_df=True)
+                        if not (df is None or df.empty):
+                            df = df[fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
+                            df = df.loc[order_book_id]
+                            df.reset_index(inplace=True)
+                            df['datetime'] = [convert_date_to_int(d) for d in df['date']]
+                            del df['date']
+                            df.set_index('datetime', inplace=True)
+                            if order_book_id in h5:
+                                data = np.array(
+                                    [tuple(i) for i in chain(h5[order_book_id][:], df.to_records())],
+                                    dtype=h5[order_book_id].dtype
+                                )
+                                del h5[order_book_id]
+                                h5.create_dataset(order_book_id, data=data, **kwargs)
+                            else:
+                                h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
+                        yield 1
+            except OSError:
+                raise OSError("File {} update failed, if it is using, please update later, "
+                              "or you can delete then update again".format(path))
 
 
 def init_rqdatac_with_warnings_catch():
