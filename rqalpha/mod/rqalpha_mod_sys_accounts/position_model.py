@@ -198,6 +198,7 @@ class StockPosition(Position):
         if ratio is None:
             return
         self._avg_price /= ratio
+        self._last_price /= ratio
         self._prev_close /= ratio
         ratio = Decimal(ratio)
         self._today_quantity = int(Decimal(self._today_quantity) * ratio)
