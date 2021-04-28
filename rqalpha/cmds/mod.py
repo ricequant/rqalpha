@@ -75,9 +75,8 @@ def mod(cmd, params):
             try:
                 import_module(module_name)
             except ImportError:
-                if enabled:
-                    print("can not find mod [{}], ignored".format(mod_name))
-                    continue
+                print("can not find mod [{}], ignored".format(mod_name))
+                continue
 
             from rqalpha.utils.config import user_mod_conf_path, load_yaml
             user_conf = load_yaml(user_mod_conf_path()) if os.path.exists(user_mod_conf_path()) else {'mod': {}}
