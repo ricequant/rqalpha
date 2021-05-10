@@ -948,69 +948,7 @@ def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False
 @export_as_api
 @apply_rules(verify_that('interval').is_valid_interval())
 def get_financials(query, quarter=None, interval='4q', expect_df=False):
-    user_log.warn('get_financials is deprecated, use get_pit_finacials_ex instead')
-
-    if quarter is None:
-        valid = True
-    else:
-        valid = isinstance(quarter, six.string_types) and quarter[-2] == 'q'
-        if valid:
-            try:
-                valid = 1990 <= int(quarter[:-2]) <= 2050 and 1 <= int(quarter[-1]) <= 4
-            except ValueError:
-                valid = False
-    if not valid:
-        raise RQInvalidArgument(
-            _(u"function {}: invalid {} argument, quarter should be in form of '2012q3', "
-              u"got {} (type: {})").format(
-                'get_financials', 'quarter', quarter, type(quarter)
-            ))
-    env = Environment.get_instance()
-    dt = env.calendar_dt.date() - datetime.timedelta(days=1)  # Take yesterday's data as default
-    year = dt.year
-    mon = dt.month
-    day = dt.day
-    int_date = year * 10000 + mon * 100 + day
-    q = (mon - 4) // 3 + 1
-    y = year
-    if q <= 0:
-        y -= 1
-        q = 4
-    default_quarter = str(y) + 'q' + str(q)
-    if quarter is None or quarter > default_quarter:
-        quarter = default_quarter
-
-    include_date = False
-    for d in query.column_descriptions:
-        if d['name'] == 'announce_date':
-            include_date = True
-    if not include_date:
-        query = query.add_column(rqdatac.fundamentals.announce_date)
-
-    result = rqdatac.get_financials(query, quarter, interval, expect_df=expect_df)
-    if result is None:
-        return pd.DataFrame()
-    if isinstance(result, pd.Series):
-        return result
-    elif isinstance(result, pd.DataFrame):
-        result = result[(result['announce_date'] <= int_date) | pd.isnull(result['announce_date'])]
-        if not include_date:
-            del result['announce_date']
-    else:
-        d = dict()
-        for order_book_id in result.minor_axis:
-            df = result.minor_xs(order_book_id)
-            df = df[(df.announce_date < int_date) | (pd.isnull(df.announce_date))]
-            d[order_book_id] = df
-        pl = pd.Panel.from_dict(d, orient='minor')
-        if not include_date:
-            pl.drop('announce_date', axis=0, inplace=True)
-            if len(pl.items) == 1:
-                pl = pl[pl.items[0]]
-        return pl
-
-    return result
-
+    raise RuntimeError('get_financials is deprecated, use get_pit_finacials_ex instead')
 
 @export_as_api
 @apply_rules(verify_that('if_adjusted').is_in([0, 1, '0', '1', 'all', 'ignore'], ignore_none=True))
