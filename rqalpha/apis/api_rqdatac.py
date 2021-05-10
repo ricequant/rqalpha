@@ -942,39 +942,7 @@ futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
              verify_that('interval').is_valid_interval(),
              verify_that('report_quarter').is_instance_of(bool))
 def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False, expect_df=False, **kwargs):
-    user_log.warn('get_fundamentals is deprecated, use get_factor instead')
-
-    env = Environment.get_instance()
-    dt = env.calendar_dt.date()
-    if entry_date is None and 'date' in kwargs:
-        entry_date = kwargs.pop('date')
-    if kwargs:
-        raise RQInvalidArgument('unknown arguments: {}'.format(kwargs))
-
-    latest_query_day = dt - datetime.timedelta(days=1)
-
-    if entry_date:
-        entry_date = to_date(entry_date)
-        if entry_date <= latest_query_day:
-            query_date = entry_date
-        else:
-            raise RQInvalidArgument(
-                _('in get_fundamentals entry_date {} is no earlier than test date {}').format(entry_date, dt))
-    else:
-        query_date = latest_query_day
-
-    result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
-    if result is None:
-        return pd.DataFrame()
-
-    if expect_df:
-        return result
-
-    if len(result.major_axis) == 1:
-        frame = result.major_xs(result.major_axis[0])
-        # research 与回测返回的Frame维度相反
-        return frame.T
-    return result
+    raise RuntimeError('get_fundamentals is deprecated, use get_pit_financials_ex instead')
 
 
 @export_as_api
