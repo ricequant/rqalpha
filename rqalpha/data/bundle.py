@@ -337,7 +337,7 @@ class UpdateDayBarTask(DayBarTask):
             yield from GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
         else:
             try:
-                h5 =  h5py.File(path, 'a')
+                h5 = h5py.File(path, 'a')
             except OSError:
                 raise OSError("File {} update failed, if it is using, please update later, "
                               "or you can delete then update again".format(path))
@@ -375,6 +375,7 @@ class UpdateDayBarTask(DayBarTask):
                         h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
                 yield 1
             h5.close()
+
 
 def init_rqdatac_with_warnings_catch():
     import warnings
