@@ -942,7 +942,7 @@ futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
              verify_that('interval').is_valid_interval(),
              verify_that('report_quarter').is_instance_of(bool))
 def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False, expect_df=False, **kwargs):
-    user_log.warn('get_fundamentals is deprecated, use get_factor instead')
+    user_log.warn('get_fundamentals is deprecated, use get_pit_financials_ex instead')
 
     env = Environment.get_instance()
     dt = env.calendar_dt.date()
