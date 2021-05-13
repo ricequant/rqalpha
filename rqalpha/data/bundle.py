@@ -331,7 +331,7 @@ class UpdateDayBarTask(DayBarTask):
         try:
             with h5py.File(path, 'r') as h5:
                 need_recreate_h5 = not self.h5_has_valid_fields(h5, fields)
-        except OSError:
+        except (OSError, RuntimeError):
             need_recreate_h5 = True
         if need_recreate_h5:
             yield from GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
