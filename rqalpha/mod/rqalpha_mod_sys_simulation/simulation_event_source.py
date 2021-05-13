@@ -15,17 +15,14 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from itertools import chain
 from datetime import timedelta, datetime, time
-
-import pandas
 
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractEventSource
 from rqalpha.core.events import Event, EVENT
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET, TRADING_CALENDAR_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET
 from rqalpha.utils.i18n import gettext as _
 
 
