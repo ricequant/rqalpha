@@ -103,24 +103,19 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     plots_area_size = 0
     if "plots" in result_dict:
         plots_area_size = 5
+    img_width = 13
+    img_height = 6 + int(plots_area_size * 0.9)
 
-    figsize = (18, 6 + int(plots_area_size * 0.9))
-    plt.figure(title, figsize=figsize)
-    max_height = 10 + plots_area_size
-    gs = gridspec.GridSpec(max_height, 8)
-
-    # draw logo
-    ax = plt.subplot(gs[:3, -1:])
-    ax.axis("off")
-    filename = os.path.join(
+    logo_file = os.path.join(
         os.path.dirname(os.path.realpath(rqalpha.__file__)),
         "resource", 'ricequant-logo.png')
-    img = mpimg.imread(filename)
-    ax.imshow(img, interpolation="nearest")
-    ax.autoscale_view()
+    logo_img = mpimg.imread(logo_file)
+    dpi = logo_img.shape[1] / img_width * 1.1
+
+    fig = plt.figure(title, figsize=(img_width, img_height), dpi=dpi)
+    gs = gridspec.GridSpec(10 + plots_area_size, 8)
 
     # draw risk and portfolio
-
     font_size = 12
     value_font_size = 11
     label_height, value_height = 0.8, 0.6
@@ -197,6 +192,14 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
         leg = plt.legend(loc="best")
         leg.get_frame().set_alpha(0.5)
+
+    # logo as watermark
+    fig.figimage(
+        logo_img,
+        xo=((img_width * dpi) - logo_img.shape[1]) / 2,
+        yo=(img_height * dpi - logo_img.shape[0]) / 2,
+        alpha=0.4,
+    )
 
     if savefile:
         fnmame = savefile
