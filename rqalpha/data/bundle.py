@@ -328,19 +328,32 @@ class UpdateDayBarTask(DayBarTask):
 
     def __call__(self, path, fields, **kwargs):
         need_recreate_h5 = False
-        with h5py.File(path, 'r') as h5:
-            need_recreate_h5 = not self.h5_has_valid_fields(h5, fields)
+        try:
+            with h5py.File(path, 'r') as h5:
+                need_recreate_h5 = not self.h5_has_valid_fields(h5, fields)
+        except OSError:
+            need_recreate_h5 = True
         if need_recreate_h5:
             yield from GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
         else:
-            with h5py.File(path, 'a') as h5:
+            try:
+                h5 = h5py.File(path, 'a')
+            except OSError:
+                raise OSError("File {} update failed, if it is using, please update later, "
+                              "or you can delete then update again".format(path))
+            try:
                 for order_book_id in self._order_book_ids:
                     if order_book_id in h5:
                         try:
-                            start_date = rqdatac.get_next_trading_date(int(h5[order_book_id]['datetime'][-1] // 1000000))
+                            last_date = int(h5[order_book_id]['datetime'][-1] // 1000000)
+                        except OSError:
+                            raise OSError("File {} update failed, if it is using, please update later, "
+                                          "or you can delete then update again".format(path))
                         except ValueError:
                             h5.pop(order_book_id)
                             start_date = START_DATE
+                        else:
+                            start_date = rqdatac.get_next_trading_date(last_date)
                     else:
                         start_date = START_DATE
                     df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
@@ -362,6 +375,8 @@ class UpdateDayBarTask(DayBarTask):
                         else:
                             h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
                     yield 1
+            finally:
+                h5.close()
 
 
 def init_rqdatac_with_warnings_catch():
