@@ -591,7 +591,11 @@ def all_instruments(type=None, date=None):
 
     result = env.data_proxy.all_instruments(types, dt)
     if types is not None and len(types) == 1:
-        return pd.DataFrame([i.__dict__ for i in result])
+        data = []
+        for i in result:
+            instrument_dic = {k: v for k, v in i.__dict__.items() if not k.startswith("_")}
+            data.append(instrument_dic)
+        return pd.DataFrame(data)
 
     return pd.DataFrame(
         [
