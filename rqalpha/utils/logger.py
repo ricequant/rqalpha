@@ -79,6 +79,6 @@ def release_print(scope):
                 print_func = func.__globals__.get('print')
                 if print_func is not None and print_func.__name__ == user_print.__name__:
                     func.__globals__['print'] = original_print
-        except RuntimeError:
+        except (RuntimeError, AttributeError):
             # DummyRQDatac
             continue
