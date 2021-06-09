@@ -56,11 +56,12 @@ class DefaultMatcher(AbstractMatcher):
             MATCHING_TYPE.NEXT_BAR_OPEN: self._next_bar_open_decider,
             MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(
                 order_book_id),
+            MATCHING_TYPE.COUNTERPARTY_OFFER: lambda order_book_id, side, n: self._env.price_board.get_price_by_side(
+                order_book_id, side, n),
             MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: self._best_own_price_decider(order_book_id,
                                                                                                        side),
             MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
-                self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(
-                    order_book_id))
+                self._env.price_board.get_price_by_side(order_book_id, side, 1))
         }
         return decider_dict[matching_type]
 
@@ -236,3 +237,124 @@ class DefaultMatcher(AbstractMatcher):
 
     def update(self):
         self._turnover.clear()
+
+
+class CounterPartyOfferMatcher(DefaultMatcher):
+    def __init__(self, env, mod_config):
+        super(CounterPartyOfferMatcher, self).__init__(env, mod_config)
+        self._price_limit = None
+        self._trade_order_book_id = None
+        self._env = env
+        self._turnover = defaultdict(list)
+        env.event_bus.add_listener(EVENT.PRE_TICK, self.post_tick)
+
+    def match(self, account, order, open_auction, unfilled_quantity=0, n=1):
+        # type: (Account, Order, bool) -> None
+        #
+        if n > 5:
+            # 一档到五档全部吃完
+            return
+        len_turnover = len(self._turnover[order.order_book_id])
+        if order.type == ORDER_TYPE.MARKET:
+            amount = order.quantity
+            matching_price = self._env.price_board.get_price_by_side(order.order_book_id, order.side, 1)
+        else:
+            if order.side == SIDE.BUY:
+                if len_turnover > n:
+                    volume = self._env.price_board.get_volume_by_side(order.order_book_id, order.side,
+                                                                           len_turnover)
+                else:
+                    volume = self._env.price_board.get_volume_by_side(order.order_book_id, order.side, n)
+                if volume != volume:
+                    return
+                if len_turnover < n:
+                    self._turnover[order.order_book_id].append(0)
+                    volume_limit = volume
+                else:
+                    volume_limit = volume - self._turnover[order.order_book_id][-1]
+            else:
+                volume = self._env.price_board.get_b_volume(order.order_book_id, n)
+                if volume != volume:
+                    return
+                if len(self._turnover[order.order_book_id]) < n:
+                    self._turnover[order.order_book_id].append(volume)
+                    volume_limit = volume
+                else:
+                    volume_limit = volume - self._turnover[order.order_book_id][-1]
+
+            if (unfilled_quantity or order.quantity) > volume_limit:
+                amount = volume_limit
+                matching_price = self._deal_price_decider(order.order_book_id, order.side, n)
+            else:
+                amount = volume_limit
+                matching_price = self._deal_price_decider(order.order_book_id, order.side, n)
+            if amount == 0.0 and order.unfilled_quantity != 0:
+                # if order.unfilled_quantity != 0:
+                self.match(account, order, open_auction, unfilled_quantity=order.unfilled_quantity, n=n + 1)
+
+        if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
+            raise NotImplementedError
+        order_book_id = order.order_book_id
+        if order.type == ORDER_TYPE.LIMIT:
+            if order.side == SIDE.BUY and order.price < matching_price:
+                return
+            if order.side == SIDE.SELL and order.price > matching_price:
+                return
+        fill = order.unfilled_quantity
+
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+
+        if matching_price != matching_price:
+            return
+
+        trade = Trade.__from_create__(
+            order_id=order.order_id,
+            price=matching_price,
+            amount=min(amount, fill),
+            side=order.side,
+            position_effect=order.position_effect,
+            order_book_id=order.order_book_id,
+            frozen_price=order.frozen_price,
+            close_today_amount=ct_amount
+        )
+        trade._commission = self._env.get_trade_commission(trade)
+        trade._tax = self._env.get_trade_tax(trade)
+        if order._avg_price != order._avg_price:
+            order._avg_price = 0
+        order.fill(trade)
+        if len_turnover > n:
+            # 该tick用于下一个order了
+            self._turnover[order.order_book_id][-1] += min(amount, fill)
+        else:
+            try:
+                self._turnover[order.order_book_id][n - 1] += min(amount, fill)
+            except IndexError:
+                self._turnover[order.order_book_id].append(min(amount, fill))
+        self._trade_order_book_id = order.order_book_id
+
+        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
+
+        if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
+            reason = _(
+                u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
+                u" larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
+            ).format(
+                order_book_id=order.order_book_id,
+                order_volume=order.quantity,
+                filled_volume=order.filled_quantity,
+                volume_percent_limit=self._volume_percent * 100.0
+            )
+            order.mark_cancelled(reason)
+        if order.unfilled_quantity != 0:
+            self.match(account, order, open_auction, unfilled_quantity=order.unfilled_quantity, n=n + 1)
+
+    def post_tick(self, event):
+        order_book_id = event.tick.order_book_id
+        try:
+            del self._turnover[order_book_id]
+        except KeyError:
+            # 没有成交
+            pass
+
+    def update(self):
+        pass

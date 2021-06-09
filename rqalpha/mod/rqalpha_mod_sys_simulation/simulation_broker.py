@@ -30,7 +30,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTIO
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
-from .matcher import DefaultMatcher, AbstractMatcher
+from .matcher import DefaultMatcher, AbstractMatcher, CounterPartyOfferMatcher
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -40,10 +40,11 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._matchers = {}  # type: Dict[INSTRUMENT_TYPE, AbstractMatcher]
 
-        self._match_immediately = mod_config.matching_type in [MATCHING_TYPE.CURRENT_BAR_CLOSE, MATCHING_TYPE.VWAP]
+        self._match_immediately = mod_config.matching_type in [MATCHING_TYPE.CURRENT_BAR_CLOSE, MATCHING_TYPE.VWAP,
+                                                               MATCHING_TYPE.COUNTERPARTY_OFFER]
 
         self._open_orders = []  # type: List[Tuple[Account, Order]]
-        self._open_auction_orders = []   # type: List[Tuple[Account, Order]]
+        self._open_auction_orders = []  # type: List[Tuple[Account, Order]]
         self._open_exercise_orders = []  # type: List[Tuple[Account, Order]]
 
         self._frontend_validator = {}
@@ -65,6 +66,8 @@ class SimulationBroker(AbstractBroker, Persistable):
         try:
             return self._matchers[instrument_type]
         except KeyError:
+            if self._mod_config.matching_type == MATCHING_TYPE.COUNTERPARTY_OFFER:
+                return self._matchers.setdefault(instrument_type, CounterPartyOfferMatcher(self._env, self._mod_config))
             return self._matchers.setdefault(instrument_type, DefaultMatcher(self._env, self._mod_config))
 
     def register_matcher(self, instrument_type, matcher):
