@@ -46,6 +46,7 @@ class Order(object):
         self._filled_quantity = None
         self._status = None
         self._frozen_price = None
+        self._frozen_cash = None
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
@@ -258,6 +259,15 @@ class Order(object):
         return self._frozen_price
 
     @property
+    def frozen_cash(self):
+        """
+        [float] 冻结资金
+        """
+        if np.isnan(self._frozen_cash):
+            raise RuntimeError("Frozen cash of order {} is not supposed to be nan.".format(self.order_id))
+        return self._frozen_cash
+
+    @property
     def kwargs(self):
         return self._kwargs
 
@@ -310,6 +320,9 @@ class Order(object):
 
     def set_frozen_price(self, value):
         self._frozen_price = value
+
+    def set_frozen_cash(self, value):
+        self._frozen_cash = value
 
     def set_secondary_order_id(self, secondary_order_id):
         self._secondary_order_id = str(secondary_order_id)
