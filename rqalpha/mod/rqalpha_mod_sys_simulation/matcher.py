@@ -273,7 +273,7 @@ class CounterPartyOfferMatcher(DefaultMatcher):
                 else:
                     volume_limit = volume - self._turnover[order.order_book_id][-1]
             else:
-                volume = self._env.price_board.get_b_volume(order.order_book_id, n)
+                volume = self._env.price_board.get_volume_by_side(order.order_book_id, order.side, n)
                 if volume != volume:
                     return
                 if len(self._turnover[order.order_book_id]) < n:
