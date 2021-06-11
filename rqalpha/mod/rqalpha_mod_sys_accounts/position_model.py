@@ -15,10 +15,11 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Tuple, Optional
 from datetime import date
-from rqalpha.utils.functools import lru_cache
 
+from decimal import Decimal
+
+from rqalpha.utils.functools import lru_cache
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
@@ -196,11 +197,14 @@ class StockPosition(Position):
         ratio = data_proxy.get_split_by_ex_date(self._order_book_id, trading_date)
         if ratio is None:
             return
-        self._today_quantity = int(self._today_quantity * ratio)
-        self._old_quantity = int(self._old_quantity * ratio)
-        self._logical_old_quantity = int(self._logical_old_quantity * ratio)
         self._avg_price /= ratio
+        self._last_price /= ratio
         self._prev_close /= ratio
+        ratio = Decimal(ratio)
+        self._today_quantity = int(Decimal(self._today_quantity) * ratio)
+        # int(6000 * 1.15) -> 6899
+        self._old_quantity = int(Decimal(self._old_quantity) * ratio)
+        self._logical_old_quantity = int(Decimal(self._logical_old_quantity) * ratio)
 
 
 class FuturePosition(Position):
@@ -287,7 +291,7 @@ class FuturePosition(Position):
                 order_book_id=self._order_book_id
             ))
             self._today_quantity = self._old_quantity = 0
-        self._avg_price = self._prev_close
+        self._avg_price = self.last_price
         return delta_cash
 
 

@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Union, Optional, Iterable, Dict, List, Sequence
 
 import numpy
@@ -287,7 +287,6 @@ class AbstractDataSource(object):
         """
         获取拆股信息
         """
-
         raise NotImplementedError
 
     def get_bar(self, instrument, dt, frequency):
@@ -302,6 +301,14 @@ class AbstractDataSource(object):
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
 
         :return: `numpy.ndarray` | `dict`
+        """
+        raise NotImplementedError
+
+    def get_open_auction_bar(self, instrument, dt):
+        # type: (Instrument, Union[datetime, date]) -> Dict
+        """
+        获取指定资产当日的集合竞价 Bar 数据，该 Bar 数据应包含的字段有：
+            datetime, open, limit_up, limit_down, volume, total_turnover
         """
         raise NotImplementedError
 

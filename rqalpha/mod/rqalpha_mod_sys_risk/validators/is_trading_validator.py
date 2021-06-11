@@ -42,7 +42,7 @@ class IsTradingValidator(AbstractFrontendValidator):
         if instrument.type == 'CS' and self._env.data_proxy.is_suspended(order.order_book_id, self._env.trading_dt):
             user_system_log.warn(_(u"Order Creation Failed: security {order_book_id} is suspended on {date}").format(
                 order_book_id=order.order_book_id,
-                date=self._env.trading_dt
+                date=self._env.trading_dt.date()
             ))
             return False
 

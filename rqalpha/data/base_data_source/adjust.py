@@ -33,7 +33,7 @@ def _factor_for_date(dates, factors, d):
 
 def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
     if ex_factors is None or len(bars) == 0:
-        return bars if fields is None else bars[fields]
+        return bars
 
     dates = ex_factors['start_date']
     ex_cum_factors = ex_factors['ex_cum_factor']
@@ -49,24 +49,26 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
 
     if (_factor_for_date(dates, ex_cum_factors, start_date) == base_adjust_rate and
             _factor_for_date(dates, ex_cum_factors, end_date) == base_adjust_rate):
-        return bars if fields is None else bars[fields]
+        return bars
 
     factors = ex_cum_factors.take(dates.searchsorted(bars['datetime'], side='right') - 1)
 
     # 复权
+    bars = np.copy(bars)
     factors /= base_adjust_rate
     if isinstance(fields, str):
         if fields in PRICE_FIELDS:
-            return bars[fields] * factors
+            bars[fields] *= factors
+            return bars
         elif fields == 'volume':
-            return bars[fields] * (1 / factors)
+            bars[fields] *= (1 / factors)
+            return bars
         # should not got here
-        return bars[fields]
+        return bars
 
-    result = np.copy(bars if fields is None else bars[fields])
-    for f in result.dtype.names:
+    for f in bars.dtype.names:
         if f in PRICE_FIELDS:
-            result[f] *= factors
+            bars[f] *= factors
         elif f == 'volume':
-            result[f] *= (1 / factors)
-    return result
+            bars[f] *= (1 / factors)
+    return bars

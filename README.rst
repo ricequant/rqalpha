@@ -4,9 +4,9 @@ RQAlpha
 
 ..  image:: https://raw.githubusercontent.com/ricequant/rq-resource/master/rqalpha/logo.jpg
 
-..  image:: https://img.shields.io/travis/ricequant/rqalpha/master.svg
-    :target: https://travis-ci.org/ricequant/rqalpha/branches
-    :alt: Build
+..  image:: https://github.com/ricequant/rqalpha/workflows/Test/badge.svg
+    :target: https://github.com/ricequant/rqalpha/actions?query=workflow%3ATest
+    :alt: GitHub Actions status for master branch
 
 ..  image:: https://coveralls.io/repos/github/ricequant/rqalpha/badge.svg?branch=master
     :target: https://coveralls.io/github/ricequant/rqalpha?branch=master
@@ -22,6 +22,11 @@ RQAlpha
 ..  image:: https://img.shields.io/pypi/pyversions/rqalpha.svg
     :target: https://pypi.python.org/pypi/rqalpha
     :alt: Python Version Support
+
+
+..  image:: https://img.shields.io/pypi/dm/rqalpha?label=pypi%20downloads
+    :target: https://pypi.python.org/pypi/rqalpha
+    :alt: PyPI - Downloads
 
 
 RQAlpha 从数据获取、算法交易、回测引擎，实盘模拟，实盘交易到数据分析，为程序化交易者提供了全套解决方案。

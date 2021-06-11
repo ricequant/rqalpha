@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
-from typing import Dict
+from typing import Dict, Optional
 
 import pandas as pd
 
@@ -37,6 +37,7 @@ class TradingDatesMixin(object):
         ))))
 
     def get_trading_calendar(self, trading_calendar_type=None):
+        # type: (Optional[TRADING_CALENDAR_TYPE]) -> pd.DatetimeIndex
         if trading_calendar_type is None:
             return self.merged_trading_calendars
         try:
@@ -73,6 +74,10 @@ class TradingDatesMixin(object):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
         return pos < len(trading_dates) and trading_dates[pos] == date
+
+    def get_trading_dt(self, calendar_dt):
+        trading_date = self.get_future_trading_date(calendar_dt)
+        return datetime.datetime.combine(trading_date, calendar_dt.time())
 
     def get_future_trading_date(self, dt):
         return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))

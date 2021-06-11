@@ -17,7 +17,7 @@
 
 import re
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Iterable
+from typing import Union, List, Sequence, Optional
 
 import six
 import numpy as np
@@ -168,7 +168,16 @@ class DataProxy(TradingDatesMixin):
         return BarObject(instrument, NANDict, dt)
 
     def get_open_auction_bar(self, order_book_id, dt):
-        return PartialBarObject(self.current_snapshot(order_book_id, "1d", dt))
+        instrument = self.instruments(order_book_id)
+        try:
+            bar = self._data_source.get_open_auction_bar(instrument, dt)
+        except NotImplementedError:
+            # forward compatible
+            tick = self.current_snapshot(order_book_id, "1d", dt)
+            bar = {k: getattr(tick, k) for k in [
+                "datetime", "open", "limit_up", "limit_down", "volume", "total_turnover"
+            ]}
+        return PartialBarObject(instrument, bar)
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
         data = self.history_bars(order_book_id, bar_count, frequency,
