@@ -49,6 +49,9 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._frontend_validator = {}
 
+        if self._mod_config.matching_type == MATCHING_TYPE.COUNTERPARTY_OFFER:
+            for instrument_type in INSTRUMENT_TYPE:
+                self.register_matcher(instrument_type, CounterPartyOfferMatcher(self._env, self._mod_config))
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
         # 该事件会触发策略的handle_bar函数
@@ -66,8 +69,6 @@ class SimulationBroker(AbstractBroker, Persistable):
         try:
             return self._matchers[instrument_type]
         except KeyError:
-            if self._mod_config.matching_type == MATCHING_TYPE.COUNTERPARTY_OFFER:
-                return self._matchers.setdefault(instrument_type, CounterPartyOfferMatcher(self._env, self._mod_config))
             return self._matchers.setdefault(instrument_type, DefaultMatcher(self._env, self._mod_config))
 
     def register_matcher(self, instrument_type, matcher):

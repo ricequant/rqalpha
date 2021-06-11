@@ -239,6 +239,34 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
+    def get_ask_vols(self, order_book_id):
+        # type: (str) -> list
+        """
+        获取合约的1-5档卖方交易量
+        """
+        raise NotImplementedError
+
+    def get_bid_vols(self, order_book_id):
+        # type: (str) -> list
+        """
+        获取合约的1-5档买方交易量
+        """
+        raise NotImplementedError
+
+    def get_ask_price(self, order_book_id):
+        # type: (str) -> list
+        """
+        获取合约的1-5档卖价
+        """
+        raise NotImplementedError
+
+    def get_bid_price(self, order_book_id):
+        # type: (str) -> list
+        """
+        获取合约的1-5档买价
+        """
+        raise NotImplementedError
+
 
 class AbstractDataSource(object):
     """
