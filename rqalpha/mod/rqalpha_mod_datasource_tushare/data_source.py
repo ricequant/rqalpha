@@ -6,15 +6,22 @@
 """
 
 import six
+import pandas as pd
 import tushare as ts
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from rqalpha.data.base_data_source import BaseDataSource
 
+from rqalpha.data.base_data_source import BaseDataSource
+from rqalpha.data.trading_dates_mixin import TradingDatesMixin
+
+ts.set_token("52ce20f28dbd5796c6ecf3e40d76a08756de4dd796ed914377596070")
+pro = ts.pro_api()
 
 class TushareKDataSource(BaseDataSource):
+
     def __init__(self, path):
-        super(TushareKDataSource, self).__init__(path)
+        super(TushareKDataSource, self).__init__(path, {})
+
 
     @staticmethod
     def get_tushare_k_data(instrument, start_dt, end_dt):
@@ -28,7 +35,12 @@ class TushareKDataSource(BaseDataSource):
         else:
             return None
 
-        return ts.get_k_data(code, index=index, start=start_dt.strftime('%Y-%m-%d'), end=end_dt.strftime('%Y-%m-%d'))
+        code = '000001.SZ'
+        if not index:
+            ts.pro_bar(ts_code='000001.SZ', adj='qfq', start_date='20180101', end_date='20181011')
+            return pro.pro_bar(ts_code=code, adj='hfq', start_date=start_dt.strftime('%Y%m%d'), end_date=end_dt.strftime('%Y%m%d'))
+        else:
+            pro.index_daily(code, start_date='20180101', end_date='20181010')
 
     def get_bar(self, instrument, dt, frequency):
         if frequency != '1d':
@@ -41,12 +53,14 @@ class TushareKDataSource(BaseDataSource):
         else:
             return bar_data.iloc[0].to_dict()
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True):
+    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True,
+                     include_now=False, adjust_type='pre', adjust_orig=None):
         if frequency != '1d' or not skip_suspended:
             return super(TushareKDataSource, self).history_bars(instrument, bar_count, frequency, fields, dt, skip_suspended)
 
-        start_dt_loc = self.get_trading_calendar().get_loc(dt.replace(hour=0, minute=0, second=0, microsecond=0)) - bar_count + 1
-        start_dt = self.get_trading_calendar()[start_dt_loc]
+        trading_calendar = TradingDatesMixin(self.get_trading_calendars()).get_trading_calendar()
+        start_dt_loc = trading_calendar.get_loc(dt.replace(hour=0, minute=0, second=0, microsecond=0)) - bar_count + 1
+        start_dt = trading_calendar[start_dt_loc]
 
         bar_data = self.get_tushare_k_data(instrument, start_dt, dt)
 
@@ -57,7 +71,7 @@ class TushareKDataSource(BaseDataSource):
                 fields = [fields]
             fields = [field for field in fields if field in bar_data.columns]
 
-            return bar_data[fields].as_matrix()
+            return bar_data[fields].values
 
     def available_data_range(self, frequency):
         return date(2005, 1, 1), date.today() - relativedelta(days=1)
