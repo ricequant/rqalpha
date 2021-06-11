@@ -27,9 +27,9 @@ def handle_bar(context, bar_dict):
 
     # 读取历史数据，使用sma方式计算均线准确度和数据长度无关，但是在使用ema方式计算均线时建议将历史数据窗口适当放大，结果会更加准确
     prices = history_bars(context.s1, context.OBSERVATION, '1d', 'close')
-
+    closes = prices[:, 0]
     # 用Talib计算MACD取值，得到三个时间序列数组，分别为macd, signal 和 hist
-    macd, signal, hist = talib.MACD(prices, context.SHORTPERIOD,
+    macd, signal, hist = talib.MACD(closes, context.SHORTPERIOD,
                                     context.LONGPERIOD, context.SMOOTHPERIOD)
 
     plot("macd", macd[-1])
