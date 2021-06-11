@@ -60,8 +60,6 @@ class DefaultMatcher(AbstractMatcher):
                 order_book_id, side, n),
             MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: self._best_own_price_decider(order_book_id,
                                                                                                        side),
-            MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
-                self._env.price_board.get_price_by_side(order_book_id, side, 1))
         }
         return decider_dict[matching_type]
 
