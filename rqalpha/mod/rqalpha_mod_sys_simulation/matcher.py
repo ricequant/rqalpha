@@ -250,6 +250,14 @@ class CounterPartyOfferMatcher(DefaultMatcher):
     def match(self, account, order, open_auction):
         # type: (Account, Order, bool) -> None
         #
+        """限价撮合：
+        订单买价>卖x价
+        买量>卖x量，按照卖x价成交，订单减去卖x量，继续撮合卖x+1，直至该tick中所有报价被买完。买完后若有剩余买量，则在下一个tick继续撮合。
+        买量<卖x量，按照卖x价成交。
+        反之亦然
+        市价单：
+        按照该tick，a1，b1进行成交，剩余订单直接撤单
+        """
         order_book_id = order.order_book_id
 
         if order.side == SIDE.BUY:
