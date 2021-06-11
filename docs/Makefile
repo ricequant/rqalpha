@@ -204,4 +204,4 @@ htmlview: html
 	 $(PYTHON) -c "import webbrowser; webbrowser.get('open -a /Applications/Google\ Chrome.app %s').open('build/html/index.html')"
 
 watch: htmlview
-	watchmedo shell-command -p '*.rst' -c 'make html' -R -D
+	watchmedo shell-command -p '*.rst' -c 'make html' -R -D --wait
