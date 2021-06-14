@@ -6,7 +6,7 @@
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
 #         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
 #         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
-#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发submit_order时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
@@ -845,6 +845,15 @@ def subscribe_event(event_type, handler):
 
 
 @export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT
+)
+def set_slippage(slippage_model, slippage):
+    env = Environment.get_instance()
+    env.broker.set_simulation_slippage(slippage_model, slippage)
+    
+
+@export_as_api
 def symbol(order_book_id, sep=", "):
     if isinstance(order_book_id, six.string_types):
         return "{}[{}]".format(order_book_id, Environment.get_instance().get_instrument(order_book_id).symbol)
@@ -897,3 +906,5 @@ def withdraw(account_type, amount):
     """
     env = Environment.get_instance()
     return env.portfolio.deposit_withdraw(account_type, amount * -1)
+
+

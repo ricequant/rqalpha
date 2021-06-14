@@ -1125,7 +1125,7 @@ def query(*entities):
     return rqdatac.query(*entities)
 
 
-export_as_api(rqdatac.financials, name='financials')
-export_as_api(rqdatac.financials, name='Financials')
-export_as_api(rqdatac.fundamentals, name='fundamentals')
-export_as_api(rqdatac.Fundamentals, name='Fundamentals')
+# export_as_api(rqdatac.financials, name='financials')
+# export_as_api(rqdatac.financials, name='Financials')
+# export_as_api(rqdatac.fundamentals, name='fundamentals')
+# export_as_api(rqdatac.Fundamentals, name='Fundamentals')

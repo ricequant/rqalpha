@@ -116,3 +116,9 @@ class SignalBroker(AbstractBroker):
         order.fill(trade)
 
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))
+
+    def set_simulation_slippage(self, slippage_model, slippage):
+        self._slippage_decider = SlippageDecider(slippage_model, slippage)
+    
+    
+        

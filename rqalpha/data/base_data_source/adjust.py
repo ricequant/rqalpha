@@ -15,6 +15,7 @@
 from bisect import bisect_right
 
 import numpy as np
+import copy
 
 from rqalpha.utils.datetime_func import convert_date_to_int
 
@@ -54,7 +55,7 @@ def adjust_bars(bars, ex_factors, fields, adjust_type, adjust_orig):
     factors = ex_cum_factors.take(dates.searchsorted(bars['datetime'], side='right') - 1)
 
     # 复权
-    bars = np.copy(bars)
+    bars = copy.deepcopy(bars)
     factors /= base_adjust_rate
     if isinstance(fields, str):
         if fields in PRICE_FIELDS:

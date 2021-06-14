@@ -192,7 +192,7 @@ class BaseDataSource(AbstractDataSource):
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
-        return self._day_bars[instrument.type].get_bars(instrument.order_book_id) 
+        return self._day_bars[instrument.type].get_bars(instrument.order_book_id)
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
@@ -200,7 +200,7 @@ class BaseDataSource(AbstractDataSource):
         return bars[bars['volume'] > 0]
 
     def get_bar(self, instrument, dt, frequency):
-        # type: (Instrument, Union[datetime, date], str) -> Optional[np.ndarray]
+        # type: (Instrument, Union[datetime, date], str) -> Optional[pandas.DataFrame]
         if frequency != '1d':
             raise NotImplementedError
 
@@ -212,7 +212,7 @@ class BaseDataSource(AbstractDataSource):
         if pos >= len(bars) or bars['datetime'][pos] != dt:
             return None
 
-        return bars[pos]
+        return bars[pos,:]
 
     OPEN_AUCTION_BAR_FIELDS = ["datetime", "open", "limit_up", "limit_down", "volume", "total_turnover"]
 
@@ -263,7 +263,7 @@ class BaseDataSource(AbstractDataSource):
         df_bars = df_bars.reset_index()
         df_bars['datetime'] = df_bars.apply(lambda x: np.uint64(convert_date_to_int(x['datetime'].date())), axis=1)
         df_bars = df_bars.set_index('datetime')
-        bars = df_bars.to_records()
+        bars = df_bars
         return bars
 
     def history_bars(self, instrument, bar_count, frequency, fields, dt,
@@ -294,7 +294,7 @@ class BaseDataSource(AbstractDataSource):
                 i = bars['datetime'].searchsorted(monday, side='left')
 
             left = i - bar_count * 5 if i >= bar_count * 5 else 0
-            bars = bars[left:i]
+            bars = bars[left:i,:]
 
             if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
                 # 期货及指数无需复权
@@ -312,7 +312,7 @@ class BaseDataSource(AbstractDataSource):
         dt = np.uint64(convert_date_to_int(dt))
         i = bars['datetime'].searchsorted(dt, side='right')
         left = i - bar_count if i >= bar_count else 0
-        bars = bars[left:i]
+        bars = bars[left:i,]
         if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
             # 期货及指数无需复权
             return bars if fields is None else bars[fields]

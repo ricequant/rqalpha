@@ -199,6 +199,20 @@ class DataProxy(TradingDatesMixin):
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
                                               skip_suspended=skip_suspended, include_now=include_now,
                                               adjust_type=adjust_type, adjust_orig=adjust_orig)
+    
+    def get_price(self, order_book_ids, bar_count, frequency, field, dt, skip_suspended=True,
+                  include_now=False, adjust_type='pre', adjust_orig=None):
+        df = pd.DataFrame()
+        for order_book_id in order_book_ids:
+            data = self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended,
+                                     include_now, adjust_type, adjust_orig)
+            data = pd.DataFrame(data=data)
+            data['order_book_id'] = order_book_id
+            df = pd.concat([df, data], axis=0)
+        return df
+        
+        
+    
 
     def history_ticks(self, order_book_id, count, dt):
         instrument = self.instruments(order_book_id)

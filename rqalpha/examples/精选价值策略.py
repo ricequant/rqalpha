@@ -27,7 +27,8 @@
 
 import pandas as pd
 import numpy as np
-from jqdata import *
+
+
 
 # 初始化函数，设定基准等等
 def initialize(context):

@@ -189,7 +189,7 @@ class Instrument(metaclass=PropertyReprMeta):
     @property
     def board_type(self):
         """
-        [str] 板块类别，’MainBoard’ - 主板,’GEM’ - 创业板（股票专用）
+        [str] 板块类别，’MainBoard’ - 主板,’GEM’ - 创业板, 'KSH' - '科创板'（股票专用）
         """
         try:
             return self.__dict__["board_type"]

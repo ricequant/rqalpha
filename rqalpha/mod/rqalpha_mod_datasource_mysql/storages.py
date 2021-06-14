@@ -168,9 +168,9 @@ class DayBarStore(AbstractDayBarStore):
     ])
 
     def __init__(self, model):
-        # if not os.path.exists(path):
-        #     raise FileExistsError("File {} not exist，please update bundle.".format(path))
-        # self._h5 = open_h5(path, mode="r")
+        """
+        :param model: Model
+        """
         self.model = model
 
     def get_bars(self, order_book_id):
@@ -179,9 +179,6 @@ class DayBarStore(AbstractDayBarStore):
             df = pd.read_sql(session.query(self.model).filter_by(code=order_book_id).statement, session.bind)
             df.sort_values(by=['datetime'], inplace=True)
             df = df[['datetime', 'open', 'close', 'high', 'low', 'volume']]
-            #df['datetime'] = df.datetime.astype(np.uint64)
-            # aa = df.to_records()
-            # ndf = np.rec.array(df.to_records(index=False), dtype=self.DEFAULT_DTYPE)
             return np.array(df.to_records(index=False), dtype=self.DEFAULT_DTYPE)
         except KeyError:
             return np.empty(0, dtype=self.DEFAULT_DTYPE)
