@@ -318,14 +318,9 @@ class CounterPartyOfferMatcher(DefaultMatcher):
             self._b_volume[order.order_book_id][0] -= min(amount, fill)
 
         if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
-            reason = _(
-                u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
-                u" larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
-            ).format(
+            reason = "Order Cancelled: market order {order_book_id} fill {filled_volume} actually".format(
                 order_book_id=order.order_book_id,
-                order_volume=order.quantity,
                 filled_volume=order.filled_quantity,
-                volume_percent_limit=self._volume_percent * 100.0
             )
             order.mark_cancelled(reason)
         if order.unfilled_quantity != 0:
