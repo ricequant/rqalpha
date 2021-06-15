@@ -349,8 +349,8 @@ class CounterPartyOfferMatcher(DefaultMatcher):
             self._a_volume[order_book_id] = self._env.price_board.get_ask_vols(order_book_id)
             self._b_volume[order_book_id] = self._env.price_board.get_bid_vols(order_book_id)
 
-            self._a_price[order_book_id] = self._env.price_board.get_ask_price(order_book_id)
-            self._b_price[order_book_id] = self._env.price_board.get_bid_price(order_book_id)
+            self._a_price[order_book_id] = self._env.price_board.get_ask_prices(order_book_id)
+            self._b_price[order_book_id] = self._env.price_board.get_bid_prices(order_book_id)
 
     def update(self):
         pass

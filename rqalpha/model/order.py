@@ -302,6 +302,7 @@ class Order(object):
         if trade.position_effect != POSITION_EFFECT.MATCH:
             self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
         self._filled_quantity = new_quantity
+        self._frozen_cash *= self.unfilled_quantity / self.quantity
         if self.unfilled_quantity == 0:
             self._status = ORDER_STATUS.FILLED
 
@@ -309,12 +310,14 @@ class Order(object):
         if not self.is_final():
             self._message = reject_reason
             self._status = ORDER_STATUS.REJECTED
+            self._frozen_cash = 0
             user_system_log.warn(reject_reason)
 
     def mark_cancelled(self, cancelled_reason, user_warn=True):
         if not self.is_final():
             self._message = cancelled_reason
             self._status = ORDER_STATUS.CANCELLED
+            self._frozen_cash = 0
             if user_warn:
                 user_system_log.warn(cancelled_reason)
 

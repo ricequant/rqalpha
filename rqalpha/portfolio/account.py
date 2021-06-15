@@ -328,9 +328,9 @@ class Account:
         order_book_id = trade.order_book_id
         if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:
-                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
+                self._frozen_cash -= trade.last_quantity / order.quantity * order.frozen_cash
             else:
-                self._frozen_cash -= self._frozen_cash_of_order(order)
+                self._frozen_cash -= order.frozen_cash
         if trade.position_effect == POSITION_EFFECT.MATCH:
             delta_cash = self._get_or_create_pos(
                 order_book_id, POSITION_DIRECTION.LONG

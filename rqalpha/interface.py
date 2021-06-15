@@ -253,14 +253,14 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
-    def get_ask_price(self, order_book_id):
+    def get_ask_prices(self, order_book_id):
         # type: (str) -> list
         """
         获取合约的1-5档卖价
         """
         raise NotImplementedError
 
-    def get_bid_price(self, order_book_id):
+    def get_bid_prices(self, order_book_id):
         # type: (str) -> list
         """
         获取合约的1-5档买价
