@@ -242,28 +242,28 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
     def get_ask_vols(self, order_book_id):
         # type: (str) -> list
         """
-        获取合约的1-5档卖方交易量
+        获取合约的多档卖方申报量
         """
         raise NotImplementedError
 
     def get_bid_vols(self, order_book_id):
         # type: (str) -> list
         """
-        获取合约的1-5档买方交易量
+        获取合约的多档买方申报量
         """
         raise NotImplementedError
 
     def get_ask_prices(self, order_book_id):
         # type: (str) -> list
         """
-        获取合约的1-5档卖价
+        获取合约的多档卖方申报价
         """
         raise NotImplementedError
 
     def get_bid_prices(self, order_book_id):
         # type: (str) -> list
         """
-        获取合约的1-5档买价
+        获取合约的多档买方申报价
         """
         raise NotImplementedError
 
