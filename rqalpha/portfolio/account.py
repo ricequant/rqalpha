@@ -135,7 +135,9 @@ class Account:
 
         # 计算 Frozen Cash
         if orders:
-            self._frozen_cash = sum(self._frozen_cash_of_order(order) for order in orders if order.is_active())
+            self._frozen_cash = sum(
+                order.unfilled_quantity * order.quantity / order.init_frozen_cash for order in orders if
+                order.is_active())
 
     def get_positions(self):
         # type: () -> Iterable[Position]
@@ -309,16 +311,17 @@ class Account:
         if event.account != self:
             return
         order = event.order
-        self._frozen_cash += self._frozen_cash_of_order(order)
+        order.set_frozen_cash(self._frozen_cash_of_order(order))
+        self._frozen_cash += order.init_frozen_cash
 
     def _on_order_unsolicited_update(self, event):
         if event.account != self:
             return
         order = event.order
         if order.filled_quantity != 0:
-            self._frozen_cash -= order.unfilled_quantity / order.quantity * self._frozen_cash_of_order(order)
+            self._frozen_cash -= order.unfilled_quantity / order.quantity * order.init_frozen_cash
         else:
-            self._frozen_cash -= self._frozen_cash_of_order(event.order)
+            self._frozen_cash -= order.init_frozen_cash
 
     def apply_trade(self, trade, order=None):
         # type: (Trade, Optional[Order]) -> None
@@ -327,9 +330,9 @@ class Account:
         order_book_id = trade.order_book_id
         if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:
-                self._frozen_cash -= trade.last_quantity / order.quantity * self._frozen_cash_of_order(order)
+                self._frozen_cash -= trade.last_quantity / order.quantity * order.init_frozen_cash
             else:
-                self._frozen_cash -= self._frozen_cash_of_order(order)
+                self._frozen_cash -= order.init_frozen_cash
         if trade.position_effect == POSITION_EFFECT.MATCH:
             delta_cash = self._get_or_create_pos(
                 order_book_id, POSITION_DIRECTION.LONG

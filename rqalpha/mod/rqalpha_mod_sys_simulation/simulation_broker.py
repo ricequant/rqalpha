@@ -30,7 +30,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTIO
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
-from .matcher import DefaultMatcher, AbstractMatcher
+from .matcher import DefaultMatcher, AbstractMatcher, CounterPartyOfferMatcher
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -43,11 +43,14 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match_immediately = mod_config.matching_type in [MATCHING_TYPE.CURRENT_BAR_CLOSE, MATCHING_TYPE.VWAP]
 
         self._open_orders = []  # type: List[Tuple[Account, Order]]
-        self._open_auction_orders = []   # type: List[Tuple[Account, Order]]
+        self._open_auction_orders = []  # type: List[Tuple[Account, Order]]
         self._open_exercise_orders = []  # type: List[Tuple[Account, Order]]
 
         self._frontend_validator = {}
 
+        if self._mod_config.matching_type == MATCHING_TYPE.COUNTERPARTY_OFFER:
+            for instrument_type in INSTRUMENT_TYPE:
+                self.register_matcher(instrument_type, CounterPartyOfferMatcher(self._env, self._mod_config))
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
         # 该事件会触发策略的handle_bar函数

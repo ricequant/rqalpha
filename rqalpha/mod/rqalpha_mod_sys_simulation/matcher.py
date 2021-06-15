@@ -58,6 +58,7 @@ class DefaultMatcher(AbstractMatcher):
                 order_book_id),
             MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: self._best_own_price_decider(order_book_id,
                                                                                                        side),
+            MATCHING_TYPE.COUNTERPARTY_OFFER: None,
             MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
                 self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(
                     order_book_id))
@@ -236,3 +237,120 @@ class DefaultMatcher(AbstractMatcher):
 
     def update(self):
         self._turnover.clear()
+
+
+class CounterPartyOfferMatcher(DefaultMatcher):
+    def __init__(self, env, mod_config):
+        super(CounterPartyOfferMatcher, self).__init__(env, mod_config)
+        self._env = env
+        self._a_volume = {}
+        self._b_volume = {}
+        self._a_price = {}
+        self._b_price = {}
+
+    def match(self, account, order, open_auction):
+        # type: (Account, Order, bool) -> None
+        #
+        """限价撮合：
+        订单买价>卖x价
+        买量>卖x量，按照卖x价成交，订单减去卖x量，继续撮合卖x+1，直至该tick中所有报价被买完。买完后若有剩余买量，则在下一个tick继续撮合。
+        买量<卖x量，按照卖x价成交。
+        反之亦然
+        市价单：
+        按照该tick，a1，b1进行成交，剩余订单直接撤单
+        """
+        order_book_id = order.order_book_id
+        self._pre_match(order_book_id)
+
+        self._pop_volume_and_price(order)
+        if order.side == SIDE.BUY:
+            if len(self._a_volume[order_book_id]) == 0:
+                return
+            volume_limit = self._a_volume[order_book_id][0]
+            matching_price = self._a_price[order_book_id][0]
+        else:
+            if len(self._b_volume[order_book_id]) == 0:
+                return
+            volume_limit = self._b_volume[order_book_id][0]
+            matching_price = self._b_price[order_book_id][0]
+
+        if order.type == ORDER_TYPE.MARKET:
+            amount = volume_limit
+        else:
+            if volume_limit != volume_limit:
+                return
+            amount = volume_limit
+            if amount == 0.0 and order.unfilled_quantity != 0:
+                # if order.unfilled_quantity != 0:
+                return self.match(account, order, open_auction)
+
+        if matching_price != matching_price:
+            return
+
+        if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
+            raise NotImplementedError
+        if order.type == ORDER_TYPE.LIMIT:
+            if order.side == SIDE.BUY and order.price < matching_price:
+                return
+            if order.side == SIDE.SELL and order.price > matching_price:
+                return
+        fill = order.unfilled_quantity
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+
+        trade = Trade.__from_create__(
+            order_id=order.order_id,
+            price=matching_price,
+            amount=min(amount, fill),
+            side=order.side,
+            position_effect=order.position_effect,
+            order_book_id=order.order_book_id,
+            frozen_price=order.frozen_price,
+            close_today_amount=ct_amount
+        )
+        trade._commission = self._env.get_trade_commission(trade)
+        trade._tax = self._env.get_trade_tax(trade)
+        order.fill(trade)
+        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
+
+        if order.side == SIDE.BUY:
+            self._a_volume[order.order_book_id][0] -= min(amount, fill)
+        else:
+            self._b_volume[order.order_book_id][0] -= min(amount, fill)
+
+        if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
+            reason = _(
+                u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
+                u" larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
+            ).format(
+                order_book_id=order.order_book_id,
+                order_volume=order.quantity,
+                filled_volume=order.filled_quantity,
+                volume_percent_limit=self._volume_percent * 100.0
+            )
+            order.mark_cancelled(reason)
+        if order.unfilled_quantity != 0:
+            self.match(account, order, open_auction)
+
+    def _pop_volume_and_price(self, order):
+        try:
+            if order.side == SIDE.BUY:
+                if self._a_volume[order.order_book_id][0] == 0:
+                    self._a_volume[order.order_book_id].pop(0)
+                    self._a_price[order.order_book_id].pop(0)
+            else:
+                if self._b_volume[order.order_book_id][0] == 0:
+                    self._b_volume[order.order_book_id].pop(0)
+                    self._b_price[order.order_book_id].pop(0)
+        except IndexError:
+            return
+
+    def _pre_match(self, order_book_id):
+        if self._a_volume.get(order_book_id) is None:
+            self._a_volume[order_book_id] = self._env.price_board.get_ask_vols(order_book_id)
+            self._b_volume[order_book_id] = self._env.price_board.get_bid_vols(order_book_id)
+
+            self._a_price[order_book_id] = self._env.price_board.get_ask_prices(order_book_id)
+            self._b_price[order_book_id] = self._env.price_board.get_bid_prices(order_book_id)
+
+    def update(self):
+        pass
