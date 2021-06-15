@@ -40,8 +40,7 @@ class SimulationBroker(AbstractBroker, Persistable):
 
         self._matchers = {}  # type: Dict[INSTRUMENT_TYPE, AbstractMatcher]
 
-        self._match_immediately = mod_config.matching_type in [MATCHING_TYPE.CURRENT_BAR_CLOSE, MATCHING_TYPE.VWAP,
-                                                               MATCHING_TYPE.COUNTERPARTY_OFFER]
+        self._match_immediately = mod_config.matching_type in [MATCHING_TYPE.CURRENT_BAR_CLOSE, MATCHING_TYPE.VWAP]
 
         self._open_orders = []  # type: List[Tuple[Account, Order]]
         self._open_auction_orders = []  # type: List[Tuple[Account, Order]]

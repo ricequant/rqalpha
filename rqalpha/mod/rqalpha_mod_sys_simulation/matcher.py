@@ -56,10 +56,12 @@ class DefaultMatcher(AbstractMatcher):
             MATCHING_TYPE.NEXT_BAR_OPEN: self._next_bar_open_decider,
             MATCHING_TYPE.NEXT_TICK_LAST: lambda order_book_id, side: self._env.price_board.get_last_price(
                 order_book_id),
-            MATCHING_TYPE.COUNTERPARTY_OFFER: lambda order_book_id, side, n: self._env.price_board.get_price_by_side(
-                order_book_id, side, n),
             MATCHING_TYPE.NEXT_TICK_BEST_OWN: lambda order_book_id, side: self._best_own_price_decider(order_book_id,
                                                                                                        side),
+            MATCHING_TYPE.COUNTERPARTY_OFFER: None,
+            MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY: lambda order_book_id, side: (
+                self._env.price_board.get_a1(order_book_id) if side == SIDE.BUY else self._env.price_board.get_b1(
+                    order_book_id))
         }
         return decider_dict[matching_type]
 
@@ -245,7 +247,6 @@ class CounterPartyOfferMatcher(DefaultMatcher):
         self._b_volume = {}
         self._a_price = {}
         self._b_price = {}
-        env.event_bus.add_listener(EVENT.TICK, self._pre_tick)
 
     def match(self, account, order, open_auction):
         # type: (Account, Order, bool) -> None
@@ -259,7 +260,9 @@ class CounterPartyOfferMatcher(DefaultMatcher):
         按照该tick，a1，b1进行成交，剩余订单直接撤单
         """
         order_book_id = order.order_book_id
+        self._pre_match(order_book_id)
 
+        self._pop_volume_and_price(order)
         if order.side == SIDE.BUY:
             if len(self._a_volume[order_book_id]) == 0:
                 return
@@ -279,7 +282,7 @@ class CounterPartyOfferMatcher(DefaultMatcher):
             amount = volume_limit
             if amount == 0.0 and order.unfilled_quantity != 0:
                 # if order.unfilled_quantity != 0:
-                self.match(account, order, open_auction)
+                return self.match(account, order, open_auction)
 
         if matching_price != matching_price:
             return
@@ -306,19 +309,13 @@ class CounterPartyOfferMatcher(DefaultMatcher):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
-        if order._avg_price != order._avg_price:
-            order._avg_price = 0
         order.fill(trade)
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
 
         if order.side == SIDE.BUY:
             self._a_volume[order.order_book_id][0] -= min(amount, fill)
-            if self._a_volume[order.order_book_id][0] == 0:
-                self._a_volume[order.order_book_id].pop(0)
         else:
             self._b_volume[order.order_book_id][0] -= min(amount, fill)
-            if self._b_volume[order.order_book_id][0] == 0:
-                self._b_volume[order.order_book_id].pop(0)
 
         if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
             reason = _(
@@ -334,13 +331,26 @@ class CounterPartyOfferMatcher(DefaultMatcher):
         if order.unfilled_quantity != 0:
             self.match(account, order, open_auction)
 
-    def _pre_tick(self, event):
-        order_book_id = event.tick.order_book_id
-        self._a_volume[order_book_id] = self._env.price_board.get_ask_vols(order_book_id)
-        self._b_volume[order_book_id] = self._env.price_board.get_bid_vols(order_book_id)
+    def _pop_volume_and_price(self, order):
+        try:
+            if order.side == SIDE.BUY:
+                if self._a_volume[order.order_book_id][0] == 0:
+                    self._a_volume[order.order_book_id].pop(0)
+                    self._a_price[order.order_book_id].pop(0)
+            else:
+                if self._b_volume[order.order_book_id][0] == 0:
+                    self._b_volume[order.order_book_id].pop(0)
+                    self._b_price[order.order_book_id].pop(0)
+        except IndexError:
+            return
 
-        self._a_price[order_book_id] = self._env.price_board.get_ask_price(order_book_id)
-        self._b_price[order_book_id] = self._env.price_board.get_bid_price(order_book_id)
+    def _pre_match(self, order_book_id):
+        if self._a_volume.get(order_book_id) is None:
+            self._a_volume[order_book_id] = self._env.price_board.get_ask_vols(order_book_id)
+            self._b_volume[order_book_id] = self._env.price_board.get_bid_vols(order_book_id)
+
+            self._a_price[order_book_id] = self._env.price_board.get_ask_price(order_book_id)
+            self._b_price[order_book_id] = self._env.price_board.get_bid_price(order_book_id)
 
     def update(self):
         pass
