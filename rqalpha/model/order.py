@@ -46,7 +46,7 @@ class Order(object):
         self._filled_quantity = None
         self._status = None
         self._frozen_price = None
-        self._frozen_cash = None
+        self._init_frozen_cash = None
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
@@ -259,13 +259,13 @@ class Order(object):
         return self._frozen_price
 
     @property
-    def frozen_cash(self):
+    def init_frozen_cash(self):
         """
         [float] 冻结资金
         """
-        if np.isnan(self._frozen_cash):
+        if np.isnan(self._init_frozen_cash):
             raise RuntimeError("Frozen cash of order {} is not supposed to be nan.".format(self.order_id))
-        return self._frozen_cash
+        return self._init_frozen_cash
 
     @property
     def kwargs(self):
@@ -302,7 +302,6 @@ class Order(object):
         if trade.position_effect != POSITION_EFFECT.MATCH:
             self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
         self._filled_quantity = new_quantity
-        self._frozen_cash *= self.unfilled_quantity / self.quantity
         if self.unfilled_quantity == 0:
             self._status = ORDER_STATUS.FILLED
 
@@ -310,14 +309,12 @@ class Order(object):
         if not self.is_final():
             self._message = reject_reason
             self._status = ORDER_STATUS.REJECTED
-            self._frozen_cash = 0
             user_system_log.warn(reject_reason)
 
     def mark_cancelled(self, cancelled_reason, user_warn=True):
         if not self.is_final():
             self._message = cancelled_reason
             self._status = ORDER_STATUS.CANCELLED
-            self._frozen_cash = 0
             if user_warn:
                 user_system_log.warn(cancelled_reason)
 
@@ -325,7 +322,7 @@ class Order(object):
         self._frozen_price = value
 
     def set_frozen_cash(self, value):
-        self._frozen_cash = value
+        self._init_frozen_cash = value
 
     def set_secondary_order_id(self, secondary_order_id):
         self._secondary_order_id = str(secondary_order_id)

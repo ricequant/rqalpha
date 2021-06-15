@@ -275,7 +275,7 @@ class CounterPartyOfferMatcher(DefaultMatcher):
             matching_price = self._b_price[order_book_id][0]
 
         if order.type == ORDER_TYPE.MARKET:
-            amount = order.quantity
+            amount = volume_limit
         else:
             if volume_limit != volume_limit:
                 return
