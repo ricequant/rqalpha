@@ -463,6 +463,12 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:226
+msgid ""
+"Order Cancelled: market order {order_book_id} fill {filled_volume} actually"
+msgstr ""
+"订单取消：标的 {order_book_id} 实际成交 {filled_volume}"
+
 #: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:42
 msgid "invalid margin multiplier value: value range is (0, +∞]"
 msgstr "无效的 保证金乘数 设置: 其值范围为 (0, +∞]"
@@ -505,6 +511,10 @@ msgstr "订单 {order_id} 被手动取消。"
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:136
 msgid "Order Rejected: {order_book_id} can not match. Market close."
 msgstr "订单被拒单: {order_book_id} 当天交易结束，订单无法成交。"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:177
+msgid "{order_book_id} should be subscribed when frequency is tick."
+msgstr "tick回测下单失败，请使用 subscribe 订阅合约 {order_book_id}。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:44
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:72

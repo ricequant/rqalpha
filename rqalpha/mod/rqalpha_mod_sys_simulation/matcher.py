@@ -247,6 +247,7 @@ class CounterPartyOfferMatcher(DefaultMatcher):
         self._b_volume = {}
         self._a_price = {}
         self._b_price = {}
+        self._env.event_bus.add_listener(EVENT.TICK, self._pre_tick)
 
     def match(self, account, order, open_auction):
         # type: (Account, Order, bool) -> None
@@ -260,7 +261,6 @@ class CounterPartyOfferMatcher(DefaultMatcher):
         按照该tick，a1，b1进行成交，剩余订单直接撤单
         """
         order_book_id = order.order_book_id
-        self._pre_match(order_book_id)
 
         self._pop_volume_and_price(order)
         if order.side == SIDE.BUY:
@@ -318,16 +318,12 @@ class CounterPartyOfferMatcher(DefaultMatcher):
             self._b_volume[order.order_book_id][0] -= min(amount, fill)
 
         if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
-            reason = _(
-                u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
-                u" larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
-            ).format(
+            reason = _("Order Cancelled: market order {order_book_id} fill {filled_volume} actually").format(
                 order_book_id=order.order_book_id,
-                order_volume=order.quantity,
                 filled_volume=order.filled_quantity,
-                volume_percent_limit=self._volume_percent * 100.0
             )
             order.mark_cancelled(reason)
+            return
         if order.unfilled_quantity != 0:
             self.match(account, order, open_auction)
 
@@ -344,13 +340,13 @@ class CounterPartyOfferMatcher(DefaultMatcher):
         except IndexError:
             return
 
-    def _pre_match(self, order_book_id):
-        if self._a_volume.get(order_book_id) is None:
-            self._a_volume[order_book_id] = self._env.price_board.get_ask_vols(order_book_id)
-            self._b_volume[order_book_id] = self._env.price_board.get_bid_vols(order_book_id)
+    def _pre_tick(self, event):
+        order_book_id = event.tick.order_book_id
+        self._a_volume[order_book_id] = event.tick.ask_vols
+        self._b_volume[order_book_id] = event.tick.bid_vols
 
-            self._a_price[order_book_id] = self._env.price_board.get_ask_prices(order_book_id)
-            self._b_price[order_book_id] = self._env.price_board.get_bid_prices(order_book_id)
+        self._a_price[order_book_id] = event.tick.asks
+        self._b_price[order_book_id] = event.tick.bids
 
     def update(self):
         pass
