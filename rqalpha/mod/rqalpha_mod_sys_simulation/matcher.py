@@ -342,11 +342,11 @@ class CounterPartyOfferMatcher(DefaultMatcher):
 
     def _pre_tick(self, event):
         order_book_id = event.tick.order_book_id
-        self._a_volume[order_book_id] = self._env.price_board.get_ask_vols(order_book_id)
-        self._b_volume[order_book_id] = self._env.price_board.get_bid_vols(order_book_id)
+        self._a_volume[order_book_id] = event.tick.ask_vols
+        self._b_volume[order_book_id] = event.tick.bid_vols
 
-        self._a_price[order_book_id] = self._env.price_board.get_ask_prices(order_book_id)
-        self._b_price[order_book_id] = self._env.price_board.get_bid_prices(order_book_id)
+        self._a_price[order_book_id] = event.tick.asks
+        self._b_price[order_book_id] = event.tick.bids
 
     def update(self):
         pass
