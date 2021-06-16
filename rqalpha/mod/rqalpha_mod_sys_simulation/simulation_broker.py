@@ -174,4 +174,5 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def _check_subscribe(self, order):
         if self._env.config.base.frequency == "tick" and order.order_book_id not in self._env.get_universe():
-            raise RuntimeError("{} should be subscribed when frequency is tick".format(order.order_book_id))
+            raise RuntimeError(_("{order_book_id} should be subscribed when frequency is tick.").format(
+                    order_book_id=order.order_book_id))
