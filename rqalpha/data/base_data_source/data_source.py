@@ -212,7 +212,7 @@ class BaseDataSource(AbstractDataSource):
         if pos >= len(bars) or bars['datetime'][pos] != dt:
             return None
 
-        return bars[pos,:]
+        return bars[pos]
 
     OPEN_AUCTION_BAR_FIELDS = ["datetime", "open", "limit_up", "limit_down", "volume", "total_turnover"]
 
