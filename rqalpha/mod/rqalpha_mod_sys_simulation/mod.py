@@ -47,6 +47,7 @@ class SimulationMod(AbstractMod):
                 MATCHING_TYPE.NEXT_TICK_LAST,
                 MATCHING_TYPE.NEXT_TICK_BEST_OWN,
                 MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY,
+                MATCHING_TYPE.COUNTERPARTY_OFFER,
             ]:
                 raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
         else:
@@ -92,6 +93,8 @@ class SimulationMod(AbstractMod):
             return MATCHING_TYPE.NEXT_TICK_BEST_OWN
         elif me_str == "best_counterparty":
             return MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY
+        elif me_str == "counterparty_offer":
+            return MATCHING_TYPE.COUNTERPARTY_OFFER
         else:
             raise NotImplementedError
 

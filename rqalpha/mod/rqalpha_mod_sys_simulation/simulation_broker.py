@@ -30,7 +30,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTIO
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
-from .matcher import DefaultMatcher, AbstractMatcher
+from .matcher import DefaultMatcher, AbstractMatcher, CounterPartyOfferMatcher
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -43,11 +43,14 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match_immediately = mod_config.matching_type in [MATCHING_TYPE.CURRENT_BAR_CLOSE, MATCHING_TYPE.VWAP]
 
         self._open_orders = []  # type: List[Tuple[Account, Order]]
-        self._open_auction_orders = []   # type: List[Tuple[Account, Order]]
+        self._open_auction_orders = []  # type: List[Tuple[Account, Order]]
         self._open_exercise_orders = []  # type: List[Tuple[Account, Order]]
 
         self._frontend_validator = {}
 
+        if self._mod_config.matching_type == MATCHING_TYPE.COUNTERPARTY_OFFER:
+            for instrument_type in INSTRUMENT_TYPE:
+                self.register_matcher(instrument_type, CounterPartyOfferMatcher(self._env, self._mod_config))
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
         # 该事件会触发策略的handle_bar函数
@@ -95,6 +98,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_auction_orders = [_account_order_from_state(v) for v in value.get("open_auction_orders", [])]
 
     def submit_order(self, order):
+        self._check_subscribe(order)
         if order.position_effect == POSITION_EFFECT.MATCH:
             raise TypeError(_("unsupported position_effect {}").format(order.position_effect))
         account = self._env.get_account(order.order_book_id)
@@ -167,3 +171,8 @@ class SimulationBroker(AbstractBroker, Persistable):
         for account, order in final_orders:
             if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:
                 self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
+
+    def _check_subscribe(self, order):
+        if self._env.config.base.frequency == "tick" and order.order_book_id not in self._env.get_universe():
+            raise RuntimeError(_("{order_book_id} should be subscribed when frequency is tick.").format(
+                    order_book_id=order.order_book_id))
