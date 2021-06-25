@@ -115,7 +115,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         try:
             return self._data["last"]
         except KeyError:
-            return self.open
+            return self.prev_close
 
     @cached_property
     def volume(self):
