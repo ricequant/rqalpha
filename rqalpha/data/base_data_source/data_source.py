@@ -219,7 +219,9 @@ class BaseDataSource(AbstractDataSource):
     def get_open_auction_bar(self, instrument, dt):
         # type: (Instrument, Union[datetime, date]) -> Dict
         day_bar = self.get_bar(instrument, dt, "1d")
-        return {k: day_bar[k] for k in self.OPEN_AUCTION_BAR_FIELDS}
+        bar = {k: day_bar[k] for k in self.OPEN_AUCTION_BAR_FIELDS}
+        bar["last"] = bar["open"]
+        return bar
 
     def get_settle_price(self, instrument, date):
         bar = self.get_bar(instrument, date, '1d')

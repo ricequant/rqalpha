@@ -112,10 +112,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         """
         [float] 当前最新价
         """
-        try:
-            return self._data["last"]
-        except KeyError:
-            return self.prev_close
+        return self._data["last"]
 
     @cached_property
     def volume(self):
