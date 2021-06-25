@@ -39,7 +39,7 @@ NANDict = {i: np.nan for i in NAMES}
 class PartialBarObject(metaclass=PropertyReprMeta):
     # 用于 open_auction
     __repr_properties__ = (
-        "order_book_id", "datetime", "open", "limit_up", "limit_down"
+        "order_book_id", "datetime", "open", "limit_up", "limit_down", "last"
     )
 
     def __init__(self, instrument, data, dt=None):
