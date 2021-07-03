@@ -372,6 +372,16 @@ class Instrument(metaclass=PropertyReprMeta):
         return trading_period
 
     @property
+    def trading_code(self):
+        # type: () -> str
+        try:
+            return self.__dict__["trading_code"]
+        except (KeyError, ValueError):
+            raise AttributeError(
+                "Instrument(order_book_id={}) has no attribute 'trading_code' ".format(self.order_book_id)
+            )
+
+    @property
     def trade_at_night(self):
         return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
