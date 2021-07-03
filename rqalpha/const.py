@@ -195,6 +195,17 @@ class MARKET(CustomEnum):
     HK = "HK"
 
 
+class EXCHANGE(CustomEnum):
+    XSHE = "XSHE"
+    XSHG = "XSHG"
+    SHFE = "SHFE"
+    INE = "INE"
+    DCE = "DCE"
+    CZCE = "CZCE"
+    CFFEX = "CFFEX"
+    SGEX = "SGEX"
+
+
 # noinspection PyPep8Naming
 class TRADING_CALENDAR_TYPE(CustomEnum):
     EXCHANGE = "EXCHANGE"

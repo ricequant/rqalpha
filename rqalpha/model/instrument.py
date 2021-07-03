@@ -22,7 +22,7 @@ from typing import Dict, Callable, Optional
 import numpy as np
 
 from rqalpha.environment import Environment
-from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr, PropertyReprMeta
 
@@ -110,7 +110,7 @@ class Instrument(metaclass=PropertyReprMeta):
 
     @property
     def exchange(self):
-        # type: () -> str
+        # type: () -> EXCHANGE
         """
         [str] 交易所。股票：’XSHE’ - 深交所, ‘XSHG’ - 上交所。期货：’DCE’ - 大连商品交易所, ‘SHFE’ - 上海期货交易所，
         ’CFFEX’ - 中国金融期货交易所, ‘CZCE’- 郑州商品交易所
