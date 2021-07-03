@@ -80,6 +80,7 @@ class TradingDatesMixin(object):
         return datetime.datetime.combine(trading_date, calendar_dt.time())
 
     def get_future_trading_date(self, dt):
+        # type: (datetime.datetime) -> pd.Timestamp
         return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))
 
     def get_n_trading_dates_until(self, dt, n, trading_calendar_type=None):
@@ -98,6 +99,9 @@ class TradingDatesMixin(object):
 
     @lru_cache(512)
     def _get_future_trading_date(self, dt):
+        # 获取指定时间所在的期货交易日
+        # 认为晚八点后为第二个交易日，认为晚八点至次日凌晨四点为夜盘
+        # 非交易日抛出 RuntimeError
         dt1 = dt - datetime.timedelta(hours=4)
         td = pd.Timestamp(dt1.date())
         trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.EXCHANGE)
