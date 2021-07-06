@@ -144,7 +144,7 @@ class Account:
         """
         获取所有持仓对象列表，
         """
-        return (p for p in self._iter_pos() if p.quantity != 0 and p.market_value !=0)
+        return self._iter_pos()
 
     def get_position(self, order_book_id, direction):
         # type: (str, POSITION_DIRECTION) -> Position
