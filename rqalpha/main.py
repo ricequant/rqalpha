@@ -65,11 +65,22 @@ def _adjust_start_date(config, data_proxy):
     config.base.end_date = config.base.trading_calendar[-1].date()
 
 
-def create_base_scope():
+def create_base_scope(forbidden_builtins, forbidden_modules):
     from . import user_module
     from copy import copy
+    import importlib
 
-    return copy(user_module.__dict__)
+    scope = copy(user_module.__dict__)
+    if forbidden_builtins:
+        for name in forbidden_builtins:
+            scope["__builtins__"].pop(name, None)
+    if forbidden_modules:
+        def user_importer(name, globals=None, locals=None, fromlist=(), level=0):
+            if name in forbidden_modules:
+                raise ImportError(f"module {name} is restricted")
+            return importlib.__import__(name, globals, locals, fromlist, level)
+        scope["__builtins__"]["__import__"] = user_importer
+    return scope
 
 
 def init_persist_helper(env, ucontext, executor, config):
@@ -168,7 +179,7 @@ def run(config, source_code=None, user_funcs=None):
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
-        scope = create_base_scope()
+        scope = create_base_scope(config.extra.forbidden_builtins, config.extra.forbidden_modules)
         scope.update({"g": env.global_vars})
         scope.update(get_strategy_apis())
         scope = env.strategy_loader.load(scope)

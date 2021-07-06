@@ -54,3 +54,11 @@ extra:
   is_hold: false
   locale: zh_Hans_CN
   logger: []
+  forbidden_builtins:
+    - open
+  forbidden_modules:
+    - sys
+    - os
+    - requests
+    - urllib
+    - socket
