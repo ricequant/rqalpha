@@ -33,12 +33,12 @@ rqalpha_path = "~/.rqalpha"
 
 
 def load_yaml(path):
-    with codecs.open(path, encoding='utf-8') as f:
+    with open(path, encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 
 def load_json(path):
-    with codecs.open(path, encoding='utf-8') as f:
+    with open(path, encoding='utf-8') as f:
         return json.loads(f.read())
 
 
@@ -88,7 +88,7 @@ def project_config():
 def code_config(config, source_code=None):
     try:
         if source_code is None:
-            with codecs.open(config["base"]["strategy_file"], encoding="utf-8") as f:
+            with open(config["base"]["strategy_file"], encoding="utf-8") as f:
                 source_code = f.read()
 
         # FIXME: hardcode for parametric mod
@@ -109,7 +109,7 @@ def dump_config(config_path, config, dumper=yaml.Dumper):
     dirname = os.path.dirname(config_path)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    with codecs.open(config_path, mode='w', encoding='utf-8') as stream:
+    with open(config_path, mode='w', encoding='utf-8') as stream:
         stream.write(yaml.dump(config, Dumper=dumper))
 
 
