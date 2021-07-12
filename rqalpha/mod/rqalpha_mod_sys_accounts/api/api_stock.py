@@ -65,7 +65,7 @@ def _get_account_position_ins(id_or_ins):
         account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     except KeyError:
         raise KeyError(_(
-                u"order_book_id: {order_book_id} need stock account, please set and try again!"
+                u"order_book_id: {order_book_id} needs stock account, please set and try again!"
             ).format(order_book_id=ins.order_book_id))
     position = account.get_position(ins.order_book_id, POSITION_DIRECTION.LONG)
     return account, position, ins
