@@ -70,11 +70,8 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
     def __init__(self, *args, **kwargs):
         super(BaseDataSourceFixture, self).__init__(*args, **kwargs)
 
-        from rqalpha.const import MARKET
-
         self.env_config = {
             "base": {
-                "market": MARKET.CN,
                 "accounts": {"STOCK": 100}
             }
         }
@@ -152,7 +149,7 @@ class MatcherFixture(EnvironmentFixture):
     def init_fixture(self):
         from datetime import datetime
         from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import DefaultMatcher
-        
+
         super(MatcherFixture, self).init_fixture()
 
         print(DefaultMatcher, type(self.env_config["mod"]))

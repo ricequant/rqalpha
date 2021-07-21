@@ -87,29 +87,6 @@ class CNStockTransactionCostDecider(StockTransactionCostDecider):
         return cost_money * self.tax_rate * self.tax_multiplier if side == SIDE.SELL else 0
 
 
-class HKStockTransactionCostDecider(StockTransactionCostDecider):
-    def __init__(self, commission_multiplier, min_commission, tax_multiplier):
-        super(HKStockTransactionCostDecider, self).__init__(0.0005, commission_multiplier, min_commission)
-        self.tax_rate = 0.0011
-        self.tax_multiplier = tax_multiplier
-
-    def _get_tax(self, order_book_id, _, cost_money):
-        """
-        港交所收费项目繁多，按照如下逻辑计算税费：
-        1. 税费比例为 0.11%，不足 1 元按 1 元记，四舍五入保留两位小数（包括印花税、交易征费、交易系统使用费）。
-        2，五元固定费用（包括卖方收取的转手纸印花税、买方收取的过户费用）。
-        """
-        instrument = Environment.get_instance().get_instrument(order_book_id)
-        if instrument.type != 'CS':
-            return 0
-        tax = cost_money * self.tax_rate * self.tax_multiplier
-        if tax < 1:
-            tax = 1
-        else:
-            tax = round(tax, 2)
-        return tax + 5
-
-
 class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
     def __init__(self, commission_multiplier):
         self.commission_multiplier = commission_multiplier

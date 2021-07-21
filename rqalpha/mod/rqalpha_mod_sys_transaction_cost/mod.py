@@ -16,12 +16,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from rqalpha.interface import AbstractMod
-from rqalpha.const import MARKET, INSTRUMENT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.i18n import gettext as _
 
-from .deciders import CNStockTransactionCostDecider, CNFutureTransactionCostDecider, HKStockTransactionCostDecider
+from .deciders import CNStockTransactionCostDecider, CNFutureTransactionCostDecider
 
 
 class TransactionCostMod(AbstractMod):
@@ -30,25 +30,17 @@ class TransactionCostMod(AbstractMod):
             raise patch_user_exc(ValueError(_(u"invalid commission multiplier or tax multiplier"
                                               u" value: value range is [0, +∞)")))
 
-        if env.config.base.market == MARKET.CN:
-            for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
-                if instrument_type == INSTRUMENT_TYPE.PUBLIC_FUND:
-                    continue
-                env.set_transaction_cost_decider(instrument_type, CNStockTransactionCostDecider(
-                    mod_config.commission_multiplier, mod_config.cn_stock_min_commission,
-                    mod_config.tax_multiplier
-                ))
-
-            env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(
-                mod_config.commission_multiplier
+        for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
+            if instrument_type == INSTRUMENT_TYPE.PUBLIC_FUND:
+                continue
+            env.set_transaction_cost_decider(instrument_type, CNStockTransactionCostDecider(
+                mod_config.commission_multiplier, mod_config.cn_stock_min_commission,
+                mod_config.tax_multiplier
             ))
 
-        elif env.config.base.market == MARKET.HK:
-            for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
-                env.set_transaction_cost_decider(instrument_type, HKStockTransactionCostDecider(
-                    mod_config.commission_multiplier, mod_config.hk_stock_min_commission,
-                    mod_config.tax_multiplier
-                ))
+        env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(
+            mod_config.commission_multiplier
+        ))
 
     def tear_down(self, code, exception=None):
         pass

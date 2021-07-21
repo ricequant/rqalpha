@@ -18,8 +18,6 @@ from rqalpha import cli
 __config__ = {
     # A股最小手续费
     "cn_stock_min_commission": 5,
-    # 港股最小手续费
-    "hk_stock_min_commission": 50,
     # 设置手续费乘数，默认为1
     "commission_multiplier": 1,
     # 印花税乘数，默认为1
@@ -45,16 +43,6 @@ cli.commands['run'].params.append(
         help="[sys_simulation] set minimum commission in chinese stock trades."
     )
 )
-
-
-cli.commands['run'].params.append(
-    click.Option(
-        ('-hksmc', '--hk-stock-min-commission', cli_prefix + 'hk_stock_min_commission'),
-        type=click.FLOAT,
-        help="[sys_simulation] set minimum commission in Hong Kong stock trades."
-    )
-)
-
 
 # [deprecated]
 cli.commands['run'].params.append(
