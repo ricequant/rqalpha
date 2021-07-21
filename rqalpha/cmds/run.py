@@ -36,7 +36,6 @@ from .entry import cli
 @click.option('-fq', '--frequency', 'base__frequency', type=click.Choice(['1d', '1m', 'tick']))
 @click.option('-rt', '--run-type', 'base__run_type', type=click.Choice(['b', 'p', 'r']), default="b")
 @click.option('-rp', '--round-price', 'base__round_price', is_flag=True)
-@click.option('-mk', '--market', 'base__market', type=click.Choice(['cn', 'hk']), default=None)
 @click.option('--source-code', 'base__source_code')
 @click.option('--rqdatac', '--rqdatac-uri', 'base__rqdatac_uri', default=None,
               help='rqdatac uri, eg user:password or or license:xxxxxxx or tcp://user:password@ip:port')

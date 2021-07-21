@@ -94,7 +94,7 @@ def test_stock_dividend():
         elif context.now.date() == date(2017, 7, 11):
             assert context.portfolio.cash == context.last_cash + 2970
         elif context.now.date() == date(2018, 7, 9):
-            assert context.portfolio.cash == context.last_cash + 91
+            assert context.portfolio.cash == context.last_cash + 910
 
     return locals()
 

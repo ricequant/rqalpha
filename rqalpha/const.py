@@ -189,12 +189,6 @@ class DAYS_CNT(object):
     TRADING_DAYS_A_YEAR = 252
 
 
-# noinspection PyPep8Naming
-class MARKET(CustomEnum):
-    CN = "CN"
-    HK = "HK"
-
-
 class EXCHANGE(CustomEnum):
     XSHE = "XSHE"
     XSHG = "XSHG"

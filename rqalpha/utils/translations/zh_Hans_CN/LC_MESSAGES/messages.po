@@ -253,6 +253,10 @@ msgid ""
 "{closable}"
 msgstr "订单创建失败：{order_book_id} 的仓位不足，目标平仓/行权量为 {quantity}，可平仓/行权量为 {closable}"
 
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:67
+msgid "order_book_id: {order_book_id} need stock account, please set and try again!"
+msgstr "标的 {order_book_id} 下单需要股票账户，请设置后重试！"
+
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:49
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:98
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:153
