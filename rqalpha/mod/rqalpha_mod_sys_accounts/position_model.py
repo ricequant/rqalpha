@@ -97,7 +97,7 @@ class StockPosition(Position):
     def before_trading(self, trading_date):
         # type: (date) -> float
         delta_cash = super(StockPosition, self).before_trading(trading_date)
-        if self.quantity == 0:
+        if self.quantity == 0 and not self._dividend_receivable:
             return delta_cash
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
