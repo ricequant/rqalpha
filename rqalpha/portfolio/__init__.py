@@ -279,7 +279,7 @@ class MixedPositions(dict):
     def __repr__(self):
         keys = []
         for account in six.itervalues(self._accounts):
-            keys += account.positions.keys()
+            keys += [order_book_id for order_book_id, position in account.positions.items() if position.quantity > 0]
         return str(sorted(keys))
 
     def __len__(self):
