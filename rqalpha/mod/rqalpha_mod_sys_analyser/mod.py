@@ -244,8 +244,8 @@ class AnalyserMod(AbstractMod):
         else:
             for field in ['margin', 'contract_multiplier', 'last_price']:
                 data[field] = self._safe_convert(getattr(long, field))
-            direction_pos_list = [(pos.direction, pos) for pos in (long, short) if pos]
-            for direction_prefix, pos in direction_pos_list:
+            direction_pos_iter = ((pos.direction, pos) for pos in (long, short) if pos)
+            for direction_prefix, pos in direction_pos_iter:
                 data[direction_prefix + "_pnl"] = self._safe_convert(getattr(pos, "pnl", None))
                 data[direction_prefix + "_margin"] = self._safe_convert(pos.margin)
                 data[direction_prefix + "_quantity"] = self._safe_convert(pos.quantity)
