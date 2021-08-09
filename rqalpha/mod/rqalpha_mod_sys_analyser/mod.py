@@ -150,7 +150,7 @@ class AnalyserMod(AbstractMod):
 
             for order_book_id, pos in pos_dict.items():
                 self._positions[account_type].append(self._to_position_record(
-                    date, order_book_id, pos[POSITION_DIRECTION.LONG], pos[POSITION_DIRECTION.SHORT]
+                    date, order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
                 ))
 
     def _symbol(self, order_book_id):
@@ -244,7 +244,8 @@ class AnalyserMod(AbstractMod):
         else:
             for field in ['margin', 'contract_multiplier', 'last_price']:
                 data[field] = self._safe_convert(getattr(long, field))
-            for direction_prefix, pos in (("buy", long), ("sell", short)):
+            direction_pos_list = [(pos.direction, pos) for pos in (long, short) if pos]
+            for direction_prefix, pos in direction_pos_list:
                 data[direction_prefix + "_pnl"] = self._safe_convert(getattr(pos, "pnl", None))
                 data[direction_prefix + "_margin"] = self._safe_convert(pos.margin)
                 data[direction_prefix + "_quantity"] = self._safe_convert(pos.quantity)
