@@ -145,8 +145,9 @@ class Account:
         获取所有持仓对象列表，
         """
         for position in self._iter_pos():
-            if position.quantity != 0 and position.equity != 0:
-                yield position
+            if position.quantity == 0 and position.equity == 0:
+                continue
+            yield position
 
     def get_position(self, order_book_id, direction):
         # type: (str, POSITION_DIRECTION) -> Position
