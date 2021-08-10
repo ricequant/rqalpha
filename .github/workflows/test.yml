@@ -27,6 +27,7 @@ jobs:
         # Install Test Deps
           pip install -U pip
           pip install "numpy>=1.15.4"
+          pip install "pandas < 1.3.0"
           pip install TA-Lib
           pip install coveralls
           pip install -U setuptools
