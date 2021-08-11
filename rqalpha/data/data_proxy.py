@@ -264,7 +264,12 @@ class DataProxy(TradingDatesMixin):
 
     def all_instruments(self, types, dt=None):
         # type: (List[INSTRUMENT_TYPE], Optional[datetime]) -> List[Instrument]
-        return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
+        li = []
+        for i in self._data_source.get_instruments(types=types):
+            if dt is None or i.listing_at(dt):
+                li.append(i)
+        return li
+        # return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
 
     def instruments(self, sym_or_ids):
         # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]

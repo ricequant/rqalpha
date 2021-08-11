@@ -22,7 +22,7 @@ from rqalpha.interface import AbstractEventSource
 from rqalpha.core.events import Event, EVENT
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, MARKET
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -34,14 +34,8 @@ class SimulationEventSource(AbstractEventSource):
         self._universe_changed = False
         self._env.event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._on_universe_changed)
 
-        if self._config.base.market == MARKET.CN:
-            self._get_day_bar_dt = lambda date: date.replace(hour=15, minute=0)
-            self._get_after_trading_dt = lambda date: date.replace(hour=15, minute=30)
-        elif self._config.base.market == MARKET.HK:
-            self._get_day_bar_dt = lambda date: date.replace(hour=16, minute=6)
-            self._get_after_trading_dt = lambda date: date.replace(hour=16, minute=30)
-        else:
-            raise NotImplementedError(_("Unsupported market {}".format(self._config.base.market)))
+        self._get_day_bar_dt = lambda date: date.replace(hour=15, minute=0)
+        self._get_after_trading_dt = lambda date: date.replace(hour=15, minute=30)
 
     def _on_universe_changed(self, _):
         self._universe_changed = True
@@ -58,18 +52,10 @@ class SimulationEventSource(AbstractEventSource):
     def _get_stock_trading_minutes(self, trading_date):
         trading_minutes = set()
 
-        if self._env.config.base.market == MARKET.CN:
-            current_dt = datetime.combine(trading_date, time(9, 31))
-            am_end_dt = current_dt.replace(hour=11, minute=30)
-            pm_start_dt = current_dt.replace(hour=13, minute=1)
-            pm_end_dt = current_dt.replace(hour=15, minute=0)
-        elif self._env.config.base.market == MARKET.HK:
-            current_dt = datetime.combine(trading_date, time(9, 31))
-            am_end_dt = current_dt.replace(hour=12, minute=0)
-            pm_start_dt = current_dt.replace(hour=13, minute=1)
-            pm_end_dt = current_dt.replace(hour=16, minute=0)
-        else:
-            raise NotImplementedError(_("Unsupported market {}".format(self._env.config.base.market)))
+        current_dt = datetime.combine(trading_date, time(9, 31))
+        am_end_dt = current_dt.replace(hour=11, minute=30)
+        pm_start_dt = current_dt.replace(hour=13, minute=1)
+        pm_end_dt = current_dt.replace(hour=15, minute=0)
 
         delta_minute = timedelta(minutes=1)
         while current_dt <= am_end_dt:

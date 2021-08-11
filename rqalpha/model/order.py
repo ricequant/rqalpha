@@ -125,6 +125,7 @@ class Order(object):
 
     @property
     def order_id(self):
+        # type: () -> int
         """
         [int] 唯一标识订单的id
         """
@@ -176,6 +177,7 @@ class Order(object):
 
     @property
     def side(self):
+        # type: () -> SIDE
         """
         [SIDE] 订单方向
         """

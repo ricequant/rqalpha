@@ -29,7 +29,7 @@ requirements = [
     'tabulate',
     'rqrisk',
     'h5py',
-    'matplotlib',
+    'matplotlib >=2.2.0',
 ]
 
 if sys.version_info < (3, 5):

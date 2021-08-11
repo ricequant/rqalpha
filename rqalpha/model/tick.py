@@ -68,7 +68,12 @@ class TickObject(object):
         """
         [float] 当前最新价
         """
-        return self._tick_dict['last']
+        try:
+            return self._tick_dict['last']
+        except KeyError:
+            # last 字段未必有（当日未发生成交），但一定有 prev_close（非新股的情况）
+            # 新股一定有 last，且 为 issue_price
+            return self.prev_close
 
     @property
     def high(self):

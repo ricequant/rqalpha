@@ -76,9 +76,10 @@ class SimulationBroker(AbstractBroker, Persistable):
 
     def get_open_orders(self, order_book_id=None):
         if order_book_id is None:
-            return [order for account, order in self._open_orders]
+            return [order for account, order in chain(self._open_orders, self._open_auction_orders)]
         else:
-            return [order for account, order in self._open_orders if order.order_book_id == order_book_id]
+            return [order for account, order in chain(self._open_orders, self._open_auction_orders) if
+                    order.order_book_id == order_book_id]
 
     def get_state(self):
         return jsonpickle.dumps({
@@ -175,4 +176,4 @@ class SimulationBroker(AbstractBroker, Persistable):
     def _check_subscribe(self, order):
         if self._env.config.base.frequency == "tick" and order.order_book_id not in self._env.get_universe():
             raise RuntimeError(_("{order_book_id} should be subscribed when frequency is tick.").format(
-                    order_book_id=order.order_book_id))
+                order_book_id=order.order_book_id))

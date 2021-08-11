@@ -39,7 +39,7 @@ NANDict = {i: np.nan for i in NAMES}
 class PartialBarObject(metaclass=PropertyReprMeta):
     # 用于 open_auction
     __repr_properties__ = (
-        "order_book_id", "datetime", "open", "limit_up", "limit_down"
+        "order_book_id", "datetime", "open", "limit_up", "limit_down", "last"
     )
 
     def __init__(self, instrument, data, dt=None):
@@ -112,10 +112,7 @@ class PartialBarObject(metaclass=PropertyReprMeta):
         """
         [float] 当前最新价
         """
-        try:
-            return self._data["last"]
-        except KeyError:
-            return self.open
+        return self._data["last"]
 
     @cached_property
     def volume(self):
