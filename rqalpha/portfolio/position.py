@@ -123,15 +123,11 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def trading_pnl(self):
         # type: () -> float
         trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
-        if trade_quantity == 0:
-            return 0
         return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
     def position_pnl(self):
         # type: () -> float
-        if self._logical_old_quantity == 0:
-            return 0
         return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
@@ -140,8 +136,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         """
         返回该持仓的累积盈亏
         """
-        if self.quantity == 0:
-            return 0
         return (self.last_price - self.avg_price) * self.quantity * self._direction_factor
 
     @property
