@@ -207,7 +207,7 @@ def run(config, source_code=None, user_funcs=None):
                 # 未能恢复init相关数据 保留当前策略初始化变量(展示当前策略初始化日志)
                 log_capture.replay()
             else:
-                user_system_log.info(_('system restored'))
+                system_log.debug(_('system restored'))
             env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_RESTORED))
 
         init_succeed = True
