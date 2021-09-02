@@ -17,7 +17,7 @@
 from __future__ import division
 
 import types
-from collections import Iterable
+from collections.abc import Iterable
 from datetime import date, datetime
 from typing import Callable, List, Optional, Union
 

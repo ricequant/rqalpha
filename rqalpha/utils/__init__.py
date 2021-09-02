@@ -28,10 +28,7 @@ from contextlib import contextmanager
 import numpy as np
 
 from rqalpha.utils.exception import CustomError, CustomException
-from rqalpha.const import (
-    EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, UNDERLYING_SYMBOL_PATTERN, SIDE, POSITION_EFFECT,
-    POSITION_DIRECTION
-)
+from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION
 from rqalpha.utils.datetime_func import TimeRange
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.functools import lru_cache
@@ -149,12 +146,6 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
     INSTRUMENT_TYPE.INDX,
     INSTRUMENT_TYPE.PUBLIC_FUND
 ]
-
-
-def get_upper_underlying_symbol(order_book_id):
-    p = re.compile(UNDERLYING_SYMBOL_PATTERN)
-    result = p.findall(order_book_id)
-    return result[0] if len(result) == 1 else None
 
 
 def is_night_trading(universe):

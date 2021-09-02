@@ -204,6 +204,3 @@ class EXCHANGE(CustomEnum):
 class TRADING_CALENDAR_TYPE(CustomEnum):
     EXCHANGE = "EXCHANGE"
     INTER_BANK = "INTERBANK"
-
-
-UNDERLYING_SYMBOL_PATTERN = "([a-zA-Z]+)\d+"
