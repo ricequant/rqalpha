@@ -44,7 +44,6 @@ else:
     LABEL_FONT_SIZE = 11
 
 # 三部分的高度
-INDICATOR_AREA_HEIGHT = 2
 PLOT_AREA_HEIGHT = 4
 USER_PLOT_AREA_HEIGHT = 2
 
@@ -54,19 +53,21 @@ Heights = namedtuple("Heights", ("label", "value"))
 Indicator = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
 
 RED = "#aa4643"
+LIGHT_CORAL = "#F08080"
 BLUE = "#4572a7"
 YELLOW = "#F3A423"
 BLACK = "#000000"
 
 # 指标的高度值
 INDICATOR_Y_POS = [
-    Heights(1.1, 0.95), # 第一行
-    Heights(0.7, 0.55),  # 第二行
-    Heights(0.3, 0.15),   # 第三行
+    Heights(1.3, 1.15),
+    Heights(0.95, 0.8),
+    Heights(0.6, 0.45),
+    Heights(0.25, 0.10),
 ]
 INDICATOR_X_POS = [0.15 * i for i in range(7)]
 
-INDICATORS = [[  # 第一行指标
+INDICATORS = [[
     Indicator("total_returns", _("TotalReturns"), RED, "{0:.3%}", 11),
     Indicator("annualized_returns", _("AnnualReturns"), RED, "{0:.3%}", 11),
     Indicator("alpha", _("Alpha"), BLACK, "{0:.4}", 11),
@@ -74,7 +75,7 @@ INDICATORS = [[  # 第一行指标
     Indicator("sharpe", _("Sharpe"), BLACK, "{0:.4}", 11),
     Indicator("sortino", _("Sortino"), BLACK, "{0:.4}", 11),
     Indicator("information_ratio", _("InformationRatio"), BLACK, "{0:.4}", 11),
-],[  # 第二行指标
+],[
     Indicator("benchmark_total_returns", _("BenchmarkReturns"), BLUE, "{0:.3%}", 11),
     Indicator("benchmark_annualized_returns", _("BenchmarkAnnual"), BLUE, "{0:.3%}", 11),
     Indicator("volatility", _("Volatility"), BLACK, "{0:.4}", 11),
@@ -82,7 +83,17 @@ INDICATORS = [[  # 第一行指标
     Indicator("tracking_error", _("TrackingError"), BLACK, "{0:.4}", 11),
     Indicator("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11),
     Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6),
-], [  # 第三行指标
+], [
+    Indicator("weekly_alpha", _("WeeklyAlpha"), BLACK, "{0:.4}", 11),
+    Indicator("weekly_beta", _("WeeklyBeta"), BLACK, "{0:.4}", 11),
+    Indicator("weekly_sharpe", _("WeeklySharpe"), BLACK, "{0:.4}", 11),
+    Indicator("weekly_sortino", _("WeeklySortino"), BLACK, "{0:.4}", 11),
+    Indicator("weekly_information_ratio", _("WeeklyInfoRatio"), BLACK, "{0:.4}", 11),
+    Indicator("weekly_tracking_error", _("WeeklyTrackingError"), BLACK, "{0:.4}", 11),
+    Indicator("weekly_max_drawdown", _("WeeklyMaxDrawdown"), BLACK, "{0:.4}", 11),
+]]
+
+excess_indicators = [
     Indicator("excess_returns", _("ExcessReturns"), RED, "{0:.3%}", 11),
     Indicator("excess_annual_returns", _("ExcessAnnual"), RED, "{0:.3%}", 11),
     Indicator("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11),
@@ -90,7 +101,7 @@ INDICATORS = [[  # 第一行指标
     Indicator("excess_annual_volatility", _("ExcessAnnualVolatility"), BLACK, "{0:.4}", 11),
     Indicator("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.4}", 11),
     Indicator("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 6),
-]]
+]
 
 
 class IndexRange(namedtuple("IndexRange", ("start", "end", "start_date", "end_date"))):
@@ -148,17 +159,26 @@ def _max_ddd(arr, index):
     return IndexRange.new(ddd_start, ddd_end, index)
 
 
-def _plot_indicators(ax, indicator_values):
+def _plot_indicators(ax, indicator_values, plot_excess_indicators):
     ax.axis("off")
-    for lineno, indicators in enumerate(INDICATORS):
+    if plot_excess_indicators:
+        all_indicators = INDICATORS + [excess_indicators]
+    else:
+        all_indicators = [[]] + INDICATORS
+
+    for lineno, indicators in enumerate(all_indicators):
         for index_in_line, i in enumerate(indicators):
             x = INDICATOR_X_POS[index_in_line]
             y = INDICATOR_Y_POS[lineno]
+            try:
+                value = i.formatter.format(indicator_values[i.key])
+            except KeyError:
+                value = "nan"
             ax.text(x, y.label, i.label, color=i.color, fontsize=LABEL_FONT_SIZE),
-            ax.text(x, y.value, i.formatter.format(indicator_values[i.key]), color=BLACK, fontsize=i.value_font_size)
+            ax.text(x, y.value, value, color=BLACK, fontsize=i.value_font_size)
 
 
-def _plot_returns(ax, portfolio_retunrs, benchmark_returns, excess_returns, max_dd, max_ddd):
+def _plot_returns(ax, portfolio_returns, benchmark_returns, excess_returns, weekly_returns, max_dd, max_ddd):
     ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
@@ -166,14 +186,16 @@ def _plot_returns(ax, portfolio_retunrs, benchmark_returns, excess_returns, max_
     ax.patch.set_alpha(0.6)
 
     # plot lines
-    ax.plot(portfolio_retunrs, label=_(u"Strategy"), alpha=1, linewidth=2, color=RED)
+    ax.plot(portfolio_returns, label=_(u"Strategy"), alpha=1, linewidth=2, color=RED)
     if benchmark_returns is not None:
         ax.plot(benchmark_returns, label=_(u"Benchmark"), alpha=1, linewidth=2, color=BLUE)
+    if excess_returns is not None:
         ax.plot(excess_returns, label=_(u"Excess"), alpha=1, linewidth=2, color=YELLOW)
+    ax.plot(weekly_returns, label=_("Weekly"), alpha=0.6, linewidth=2, color=RED)
 
     # plot MaxDD/MaxDDD
-    max_dd.plot(ax, portfolio_retunrs, "v", "Green", _("MaxDrawdown"))
-    max_ddd.plot(ax, portfolio_retunrs, "D", "Blue", _("MaxDDD"))
+    max_dd.plot(ax, portfolio_returns, "v", "Green", _("MaxDrawdown"))
+    max_ddd.plot(ax, portfolio_returns, "D", "Blue", _("MaxDDD"))
 
     # place legend
     leg = plt.legend(loc="best")
@@ -197,9 +219,11 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     summary = result_dict["summary"]
 
     if "plots" in result_dict:
-        img_height = INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT + USER_PLOT_AREA_HEIGHT + 1
+        indicator_area_height = 3
+        img_height = indicator_area_height + PLOT_AREA_HEIGHT + USER_PLOT_AREA_HEIGHT + 1
     else:
-        img_height = INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT
+        indicator_area_height = 2
+        img_height = indicator_area_height + PLOT_AREA_HEIGHT
 
     logo_file = os.path.join(
         os.path.dirname(os.path.realpath(rqalpha.__file__)),
@@ -217,30 +241,39 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     max_dd = _max_dd(portfolio.unit_net_value.values, portfolio.index)
     max_ddd = _max_ddd(portfolio.unit_net_value.values, portfolio.index)
     # 超额收益
-    ex_returns = portfolio.unit_net_value - benchmark_portfolio.unit_net_value
-    ex_max_dd = _max_dd(ex_returns + 1, portfolio.index)
-    ex_max_ddd = _max_ddd(ex_returns + 1, portfolio.index)
+    if benchmark_portfolio is not None:
+        ex_returns = portfolio.unit_net_value - benchmark_portfolio.unit_net_value
+        ex_max_dd = _max_dd(ex_returns + 1, portfolio.index)
+        ex_max_ddd = _max_ddd(ex_returns + 1, portfolio.index)
+        ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(ex_max_dd.repr, ex_max_ddd.repr)
+        plot_excess_indicators = True
+    else:
+        ex_max_dd_ddd = "nan"
+        ex_returns = None
+        plot_excess_indicators = False
 
     _plot_indicators(
-        plt.subplot(gs[:INDICATOR_AREA_HEIGHT, :-1]),
+        plt.subplot(gs[:indicator_area_height, :-1]),
         ChainMap(summary, {
             "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
-            "excess_max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(ex_max_dd.repr, ex_max_ddd.repr),
+            "excess_max_dd_ddd": ex_max_dd_ddd,
         }),
+        plot_excess_indicators
     )
 
     _plot_returns(
-        plt.subplot(gs[INDICATOR_AREA_HEIGHT: PLOT_AREA_HEIGHT + INDICATOR_AREA_HEIGHT, :]),
+        plt.subplot(gs[indicator_area_height: PLOT_AREA_HEIGHT + indicator_area_height, :]),
         portfolio["unit_net_value"] - 1,
         None if benchmark_portfolio is None else benchmark_portfolio["unit_net_value"] - 1,
         ex_returns,
+        portfolio["unit_net_value"].reset_index().resample("W", on="date").last().set_index("date").unit_net_value.dropna() - 1,
         max_dd,
         max_ddd
     )
 
     if "plots" in result_dict:
         _plot_user_plots(
-            plt.subplot(gs[INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT + 1:, :]),
+            plt.subplot(gs[indicator_area_height + PLOT_AREA_HEIGHT + 1:, :]),
             result_dict["plots"]
         )
 

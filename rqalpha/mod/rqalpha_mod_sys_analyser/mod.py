@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
+import pandas
 import pickle
 import jsonpickle
 import numbers
@@ -292,12 +293,9 @@ class AnalyserMod(AbstractMod):
         for account_type, starting_cash in self._env.config.base.accounts.items():
             summary[account_type] = starting_cash
 
+        risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
-            np.array(self._portfolio_daily_returns),
-            np.array(self._benchmark_daily_returns),
-            data_proxy.get_risk_free_rate(
-                self._env.config.base.start_date, self._env.config.base.end_date
-            )
+            np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns), risk_free_rate
         )
         summary.update({
             'alpha': self._safe_convert(risk.alpha, 3),
@@ -340,7 +338,8 @@ class AnalyserMod(AbstractMod):
         df = pd.DataFrame(self._total_portfolios)
         df['date'] = pd.to_datetime(df['date'])
         total_portfolios = df.set_index('date').sort_index()
-
+        weekly_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
+        weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
         result_dict = {
             'summary': summary,
             'trades': trades,
@@ -351,7 +350,21 @@ class AnalyserMod(AbstractMod):
             df = pd.DataFrame(self._total_benchmark_portfolios)
             df['date'] = pd.to_datetime(df['date'])
             benchmark_portfolios = df.set_index('date').sort_index()
+            weekly_b_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
+            weekly_b_returns = (weekly_b_nav / weekly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios
+        else:
+            weekly_b_returns = pandas.Series(index=weekly_returns.index)
+        weekly_risk = Risk(weekly_returns, weekly_b_returns, risk_free_rate)
+        summary.update({
+            "weekly_alpha": weekly_risk.alpha,
+            "weekly_beta": weekly_risk.beta,
+            "weekly_sharpe": weekly_risk.sharpe,
+            "weekly_sortino": weekly_risk.sortino,
+            'weekly_information_ratio': weekly_risk.information_ratio,
+            "weekly_tracking_error": weekly_risk.tracking_error,
+            "weekly_max_drawdown": weekly_risk.max_drawdown,
+        })
 
         plots = self._plot_store.get_plots()
         if plots:
