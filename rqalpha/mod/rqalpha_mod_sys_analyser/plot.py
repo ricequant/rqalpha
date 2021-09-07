@@ -14,30 +14,41 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-
+import os
 from collections import namedtuple, ChainMap
 
 import numpy as np
 import pandas as pd
+from matplotlib import rcParams, gridspec, ticker, image as mpimg, pyplot as plt
+from matplotlib.font_manager import findfont, FontProperties
 
 import rqalpha
 from rqalpha.utils.logger import system_log
-from rqalpha.utils.i18n import gettext
+from rqalpha.utils.i18n import gettext as _
+
+plt.style.use('ggplot')
+
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = [
+    'Microsoft Yahei', 'Heiti SC', 'Heiti TC', 'STHeiti', 'WenQuanYi Zen Hei',
+    'WenQuanYi Micro Hei', "文泉驿微米黑", 'SimHei',
+] + rcParams['font.sans-serif']
+rcParams['axes.unicode_minus'] = False
+
+font = findfont(FontProperties(family=['sans-serif']))
+if "/matplotlib/" in font:
+    system_log.warn("Missing Chinese fonts. Fallback to English.")
+    LABEL_FONT_SIZE = 9
+    _ = lambda txt: txt
+else:
+    LABEL_FONT_SIZE = 12
 
 Heights = namedtuple("Heights", ("label", "value"))
 Indicator = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
 
-
-
 RED = "#aa4643"
 BLUE = "#4572a7"
 BLACK = "#000000"
-CHINESE_LABEL_FONT_SIZE = 12
-ENGLISH_LABEL_FONT_SIZE = 9
-CHINESE_FONTS = [
-    'Microsoft Yahei', 'Heiti SC', 'Heiti TC', 'STHeiti', 'WenQuanYi Zen Hei',
-    'WenQuanYi Micro Hei', "文泉驿微米黑", 'SimHei',
-]
 
 # 指标的高度值
 INDICATOR_Y_POS = [
@@ -47,21 +58,21 @@ INDICATOR_Y_POS = [
 INDICATOR_X_POS = [0.15 * i for i in range(7)]
 
 INDICATORS = [[  # 第一行指标
-    Indicator("total_returns", "Total Returns", RED, "{0:.3%}", 12),
-    Indicator("annualized_returns", "Annual Returns", RED, "{0:.3%}", 12),
-    Indicator("alpha", "Alpha", BLACK, "{0:.4}", 12),
-    Indicator("beta", "Beta", BLACK, "{0:.4}", 12),
-    Indicator("sharpe", "Sharpe", BLACK, "{0:.4}", 12),
-    Indicator("sortino", "Sortino", BLACK, "{0:.4}", 12),
-    Indicator("information_ratio", "Information Ratio", BLACK, "{0:.4}", 12),
+    Indicator("total_returns", _("Total Returns"), RED, "{0:.3%}", 12),
+    Indicator("annualized_returns", _("Annual Returns"), RED, "{0:.3%}", 12),
+    Indicator("alpha", _("Alpha"), BLACK, "{0:.4}", 12),
+    Indicator("beta", _("Beta"), BLACK, "{0:.4}", 12),
+    Indicator("sharpe", _("Sharpe"), BLACK, "{0:.4}", 12),
+    Indicator("sortino", _("Sortino"), BLACK, "{0:.4}", 12),
+    Indicator("information_ratio", _("Information Ratio"), BLACK, "{0:.4}", 12),
 ],[  # 第二行指标
-    Indicator("benchmark_total_returns", "Benchmark Returns", BLUE, "{0:.4}", 12),
-    Indicator("benchmark_annualized_returns", "Benchmark Annual", BLUE, "{0:.4}", 12),
-    Indicator("volatility", "Volatility", BLACK, "{0:.4}", 12),
-    Indicator("max_drawdown", "MaxDrawdown", BLACK, "{0:.4}",12),
-    Indicator("tracking_error", "Tracking Error", BLACK, "{0:.4}", 12),
-    Indicator("downside_risk", "Downside Risk", BLACK, "{0:.4}", 12),
-    Indicator("max_dd_ddd", "MaxDD/MaxDDD", BLACK, "{0:.4}", 8),
+    Indicator("benchmark_total_returns", _("Benchmark Returns"), BLUE, "{0:.4}", 12),
+    Indicator("benchmark_annualized_returns", _("Benchmark Annual"), BLUE, "{0:.4}", 12),
+    Indicator("volatility", _("Volatility"), BLACK, "{0:.4}", 12),
+    Indicator("max_drawdown", _("MaxDrawdown"), BLACK, "{0:.4}",12),
+    Indicator("tracking_error", _("Tracking Error"), BLACK, "{0:.4}", 12),
+    Indicator("downside_risk", _("Downside Risk"), BLACK, "{0:.4}", 12),
+    Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{0:.4}", 8),
 ]]
 
 
@@ -120,25 +131,49 @@ def _max_ddd(arr, index):
     return IndexRange.new(ddd_start, ddd_end, index)
 
 
+def _plot_indicators(ax, indicator_values):
+    ax.axis("off")
+    for lineno, indicators in enumerate(INDICATORS):
+        for index_in_line, i in enumerate(indicators):
+            x = INDICATOR_X_POS[index_in_line]
+            y = INDICATOR_Y_POS[lineno]
+            ax.text(x, y.label, i.label, color=i.color, fontsize=LABEL_FONT_SIZE),
+            ax.text(x, y.value, indicator_values[i.key], color=BLACK, fontsize=i.value_font_size)
+
+
+def _plot_returns(ax, portfolio_nav, benchmark_nav, max_dd, max_ddd):
+    ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
+    ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
+    ax.grid(b=True, which='minor', linewidth=.2)
+    ax.grid(b=True, which='major', linewidth=1)
+
+    # plot two lines
+    ax.plot(portfolio_nav - 1.0, label=_(u"strategy"), alpha=1, linewidth=2, color=RED)
+    if benchmark_nav is not None:
+        ax.plot(benchmark_nav - 1.0, label=_(u"benchmark"), alpha=1, linewidth=2, color=BLUE)
+
+    # plot MaxDD/MaxDDD
+    max_dd.plot(ax, portfolio_nav.values, "v", "Green", _("MaxDrawdown"))
+    max_ddd.plot(ax, portfolio_nav.values, "D", "Blue", _("MaxDDD"))
+
+    # place legend
+    leg = plt.legend(loc="best")
+    leg.get_frame().set_alpha(0.5)
+
+    # manipulate axis
+    vals = ax.get_yticks()
+    ax.set_yticklabels(['{:3.2f}%'.format(x * 100) for x in vals])
+
+
+def _plot_user_plots(ax, plots_df):
+    for column in plots_df.columns:
+        ax.plot(plots_df[column], label=column)
+
+    leg = plt.legend(loc="best")
+    leg.get_frame().set_alpha(0.5)
+
+
 def plot_result(result_dict, show_windows=True, savefile=None):
-    import os
-    from matplotlib import rcParams, gridspec, ticker, image as mpimg, pyplot as plt
-    from matplotlib.font_manager import findfont, FontProperties
-    plt.style.use('ggplot')
-
-    rcParams['font.family'] = 'sans-serif'
-    rcParams['font.sans-serif'] = CHINESE_FONTS + rcParams['font.sans-serif']
-    rcParams['axes.unicode_minus'] = False
-
-    font = findfont(FontProperties(family=['sans-serif']))
-    if "/matplotlib/" in font:
-        system_log.warn("Missing Chinese fonts. Fallback to English.")
-        label_font_size = ENGLISH_LABEL_FONT_SIZE
-        _ = lambda txt: txt
-    else:
-        label_font_size = CHINESE_LABEL_FONT_SIZE
-        _ = gettext
-
     summary = result_dict["summary"]
 
     plots_area_size = 5 if "plots" in result_dict else 0
@@ -157,60 +192,25 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     portfolio = result_dict["portfolio"]
     benchmark_portfolio = result_dict.get("benchmark_portfolio")
-    index = portfolio.index
     portfolio_value = portfolio.unit_net_value * portfolio.units
-    max_dd = _max_dd(portfolio_value.values, index)
-    max_ddd = _max_ddd(portfolio_value.values, index)
+    max_dd = _max_dd(portfolio_value.values, portfolio.index)
+    max_ddd = _max_ddd(portfolio_value.values, portfolio.index)
 
-    # drwa indicators
-    indicator_values = ChainMap(
-        summary,
-        {"max_dd_ddd": "MaxDD {}\nMaxDDD{}".format(max_dd.repr, max_ddd.repr)}
+    _plot_indicators(
+        plt.subplot(gs[:3, :-1]),
+        ChainMap(summary, {"max_dd_ddd": "MaxDD {}\nMaxDDD{}".format(max_dd.repr, max_ddd.repr)}),
     )
-    ax = plt.subplot(gs[:3, :-1])
-    ax.axis("off")
-    for lineno, indicators in enumerate(INDICATORS):
-        for index_in_line, i in enumerate(indicators):
-            x = INDICATOR_X_POS[index_in_line]
-            y = INDICATOR_Y_POS[lineno]
-            ax.text(x, y.label, _(i.label), color=i.color, fontsize=label_font_size),
-            ax.text(x, y.value, indicator_values[i.key], color=BLACK, fontsize=i.value_font_size)
 
-    # strategy vs benchmark
-    ax = plt.subplot(gs[4:10, :])
-    ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
-    ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
-    ax.grid(b=True, which='minor', linewidth=.2)
-    ax.grid(b=True, which='major', linewidth=1)
+    _plot_returns(
+        plt.subplot(gs[4:10, :]),
+        portfolio["unit_net_value"],
+        benchmark_portfolio["unit_net_value"] if benchmark_portfolio is not None else None,
+        max_dd,
+        max_ddd
+    )
 
-    # plot two lines
-    ax.plot(portfolio["unit_net_value"] - 1.0, label=_(u"strategy"), alpha=1, linewidth=2, color=RED)
-    if benchmark_portfolio is not None:
-        ax.plot(benchmark_portfolio["unit_net_value"] - 1.0, label=_(u"benchmark"), alpha=1, linewidth=2, color=BLUE)
-
-    # plot MaxDD/MaxDDD
-    rt = portfolio.unit_net_value.values
-    max_dd.plot(ax, rt, "v", "Green", _("MaxDrawdown"))
-    max_ddd.plot(ax, rt, "D", "Blue", _("MaxDDD"))
-
-    # place legend
-    leg = plt.legend(loc="best")
-    leg.get_frame().set_alpha(0.5)
-
-    # manipulate axis
-    vals = ax.get_yticks()
-    ax.set_yticklabels(['{:3.2f}%'.format(x * 100) for x in vals])
-
-    # plot user plots
     if "plots" in result_dict:
-        plots_df = result_dict["plots"]
-
-        ax2 = plt.subplot(gs[11:, :])
-        for column in plots_df.columns:
-            ax2.plot(plots_df[column], label=column)
-
-        leg = plt.legend(loc="best")
-        leg.get_frame().set_alpha(0.5)
+        _plot_user_plots(plt.subplot(gs[11:, :]), result_dict["plots"])
 
     # logo as watermark
     fig.figimage(
