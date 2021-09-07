@@ -15,19 +15,29 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from collections import namedtuple, ChainMap
+
+import numpy as np
+import pandas as pd
 
 import rqalpha
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext
 
-from collections import namedtuple, ChainMap
+Heights = namedtuple("Heights", ("label", "value"))
+Indicator = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
+
+
 
 RED = "#aa4643"
 BLUE = "#4572a7"
 BLACK = "#000000"
-
-Heights = namedtuple("Heights", ("label", "value"))
-Indicator = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
+CHINESE_LABEL_FONT_SIZE = 12
+ENGLISH_LABEL_FONT_SIZE = 9
+CHINESE_FONTS = [
+    'Microsoft Yahei', 'Heiti SC', 'Heiti TC', 'STHeiti', 'WenQuanYi Zen Hei',
+    'WenQuanYi Micro Hei', "文泉驿微米黑", 'SimHei',
+]
 
 # 指标的高度值
 INDICATOR_Y_POS = [
@@ -55,13 +65,40 @@ INDICATORS = [[  # 第一行指标
 ]]
 
 
-def max_ddd(arr):
+class IndexRange(namedtuple("IndexRange", ("start", "end", "start_date", "end_date"))):
+    @classmethod
+    def new(cls, start, end, index):
+        return cls(start, end, index[start].date(), index[end].date())
+
+    @property
+    def repr(self):
+        return "{}~{}, {} days".format(self.start_date, self.end_date, (self.end_date - self.start_date).days)
+
+    def plot(self, ax, navs, marker, color, label):
+        ax.plot(
+            [self.start_date, self.end_date], [navs[self.start] - 1.0, navs[self.end] - 1.0],
+            marker, color=color, markersize=8, alpha=.7, label=label
+        )
+
+
+def _max_dd(arr, index):
+    # type: (np.array, pd.DatetimeIndex) -> IndexRange
+    end = np.argmax(np.maximum.accumulate(arr) / arr)
+    if end == 0:
+        end = len(arr) - 1
+    start = np.argmax(arr[:end]) if end > 0 else 0
+    return IndexRange.new(start, end, index)
+
+
+def _max_ddd(arr, index):
+    # type: (np.array, pd.DatetimeIndex) -> IndexRange
     max_seen = arr[0]
     ddd_start, ddd_end = 0, 0
     ddd = 0
     start = 0
     in_draw_down = False
 
+    i = 0
     for i in range(len(arr)):
         if arr[i] > max_seen:
             if in_draw_down:
@@ -78,65 +115,33 @@ def max_ddd(arr):
 
     if arr[i] < max_seen:
         if i - start > ddd:
-            return start, i
+            return IndexRange.new(start, i, index)
 
-    return ddd_start, ddd_end
+    return IndexRange.new(ddd_start, ddd_end, index)
 
 
 def plot_result(result_dict, show_windows=True, savefile=None):
     import os
     from matplotlib import rcParams, gridspec, ticker, image as mpimg, pyplot as plt
     from matplotlib.font_manager import findfont, FontProperties
-    import numpy as np
+    plt.style.use('ggplot')
 
     rcParams['font.family'] = 'sans-serif'
-    rcParams['font.sans-serif'] = [
-        u'Microsoft Yahei',
-        u'Heiti SC',
-        u'Heiti TC',
-        u'STHeiti',
-        u'WenQuanYi Zen Hei',
-        u'WenQuanYi Micro Hei',
-        u"文泉驿微米黑",
-        u'SimHei',
-    ] + rcParams['font.sans-serif']
+    rcParams['font.sans-serif'] = CHINESE_FONTS + rcParams['font.sans-serif']
     rcParams['axes.unicode_minus'] = False
 
-    use_chinese_fonts = True
     font = findfont(FontProperties(family=['sans-serif']))
     if "/matplotlib/" in font:
-        use_chinese_fonts = False
         system_log.warn("Missing Chinese fonts. Fallback to English.")
+        label_font_size = ENGLISH_LABEL_FONT_SIZE
+        _ = lambda txt: txt
+    else:
+        label_font_size = CHINESE_LABEL_FONT_SIZE
+        _ = gettext
 
     summary = result_dict["summary"]
 
-    title = summary['strategy_file']
-
-    portfolio = result_dict["portfolio"]
-    benchmark_portfolio = result_dict.get("benchmark_portfolio")
-
-    index = portfolio.index
-
-    # max drawdown
-    portfolio_value = portfolio.unit_net_value * portfolio.units
-    xs = portfolio_value.values
-    rt = portfolio.unit_net_value.values
-    max_dd_end = np.argmax(np.maximum.accumulate(xs) / xs)
-    if max_dd_end == 0:
-        max_dd_end = len(xs) - 1
-    max_dd_start = np.argmax(xs[:max_dd_end]) if max_dd_end > 0 else 0
-
-    max_ddd_start_day, max_ddd_end_day = max_ddd(xs)
-    max_dd_info = "MaxDD  {}~{}, {} days".format(index[max_dd_start], index[max_dd_end],
-                                                 (index[max_dd_end] - index[max_dd_start]).days)
-    max_dd_info += "\nMaxDDD {}~{}, {} days".format(index[max_ddd_start_day], index[max_ddd_end_day],
-                                                    (index[max_ddd_end_day] - index[max_ddd_start_day]).days)
-
-    plt.style.use('ggplot')
-
-    plots_area_size = 0
-    if "plots" in result_dict:
-        plots_area_size = 5
+    plots_area_size = 5 if "plots" in result_dict else 0
     img_width = 13
     img_height = 6 + int(plots_area_size * 0.9)
 
@@ -146,28 +151,33 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     logo_img = mpimg.imread(logo_file)
     dpi = logo_img.shape[1] / img_width * 1.1
 
+    title = summary['strategy_file']
     fig = plt.figure(title, figsize=(img_width, img_height), dpi=dpi)
     gs = gridspec.GridSpec(10 + plots_area_size, 8)
 
-    # draw risk and portfolio
-    font_size = 12
+    portfolio = result_dict["portfolio"]
+    benchmark_portfolio = result_dict.get("benchmark_portfolio")
+    index = portfolio.index
+    portfolio_value = portfolio.unit_net_value * portfolio.units
+    max_dd = _max_dd(portfolio_value.values, index)
+    max_ddd = _max_ddd(portfolio_value.values, index)
 
-    def _(txt):
-        return gettext(txt) if use_chinese_fonts else txt
-
-    indicator_values = ChainMap(summary, {"max_dd_ddd": max_dd_info})
+    # drwa indicators
+    indicator_values = ChainMap(
+        summary,
+        {"max_dd_ddd": "MaxDD {}\nMaxDDD{}".format(max_dd.repr, max_ddd.repr)}
+    )
     ax = plt.subplot(gs[:3, :-1])
     ax.axis("off")
     for lineno, indicators in enumerate(INDICATORS):
         for index_in_line, i in enumerate(indicators):
             x = INDICATOR_X_POS[index_in_line]
             y = INDICATOR_Y_POS[lineno]
-            ax.text(x, y.label, _(i.label), color=i.color, fontsize=font_size),
+            ax.text(x, y.label, _(i.label), color=i.color, fontsize=label_font_size),
             ax.text(x, y.value, indicator_values[i.key], color=BLACK, fontsize=i.value_font_size)
 
     # strategy vs benchmark
     ax = plt.subplot(gs[4:10, :])
-
     ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
@@ -179,11 +189,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         ax.plot(benchmark_portfolio["unit_net_value"] - 1.0, label=_(u"benchmark"), alpha=1, linewidth=2, color=BLUE)
 
     # plot MaxDD/MaxDDD
-    ax.plot([index[max_dd_end], index[max_dd_start]], [rt[max_dd_end] - 1.0, rt[max_dd_start] - 1.0],
-            'v', color='Green', markersize=8, alpha=.7, label=_(u"MaxDrawdown"))
-    ax.plot([index[max_ddd_start_day], index[max_ddd_end_day]],
-            [rt[max_ddd_start_day] - 1.0, rt[max_ddd_end_day] - 1.0], 'D', color='Blue', markersize=8, alpha=.7,
-            label=_(u"MaxDDD"))
+    rt = portfolio.unit_net_value.values
+    max_dd.plot(ax, rt, "v", "Green", _("MaxDrawdown"))
+    max_ddd.plot(ax, rt, "D", "Blue", _("MaxDDD"))
 
     # place legend
     leg = plt.legend(loc="best")
