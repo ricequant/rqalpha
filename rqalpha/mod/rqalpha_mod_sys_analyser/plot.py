@@ -218,9 +218,8 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     max_ddd = _max_ddd(portfolio.unit_net_value.values, portfolio.index)
     # 超额收益
     ex_returns = portfolio.unit_net_value - benchmark_portfolio.unit_net_value
-    ex_values = np.exp(np.log1p(ex_returns).cumsum())
-    ex_max_dd = _max_dd(ex_values, portfolio.index)
-    ex_max_ddd = _max_ddd(ex_values, portfolio.index)
+    ex_max_dd = _max_dd(ex_returns + 1, portfolio.index)
+    ex_max_ddd = _max_ddd(ex_returns + 1, portfolio.index)
 
     _plot_indicators(
         plt.subplot(gs[:INDICATOR_AREA_HEIGHT, :-1]),
@@ -261,3 +260,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     if show_windows:
         plt.show()
+
+
+if __name__ == "__main__":
+    import pickle
+    with open("result.pkl", "rb") as f:
+        plot_result(pickle.loads(f.read()))
