@@ -44,9 +44,11 @@ else:
     LABEL_FONT_SIZE = 11
 
 # 三部分的高度
-INDICATOR_AREA_HEIGHT = 4
-PLOT_AREA_HEIGHT = 6
-USER_PLOT_AREA_HEIGHT = 4
+INDICATOR_AREA_HEIGHT = 2
+PLOT_AREA_HEIGHT = 4
+USER_PLOT_AREA_HEIGHT = 2
+
+IMG_WIDTH = 13
 
 Heights = namedtuple("Heights", ("label", "value"))
 Indicator = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
@@ -79,15 +81,15 @@ INDICATORS = [[  # 第一行指标
     Indicator("max_drawdown", _("MaxDrawdown"), BLACK, "{0:.4}", 11),
     Indicator("tracking_error", _("TrackingError"), BLACK, "{0:.4}", 11),
     Indicator("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11),
-    Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 7),
+    Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6),
 ], [  # 第三行指标
     Indicator("excess_returns", _("ExcessReturns"), RED, "{0:.3%}", 11),
     Indicator("excess_annual_returns", _("ExcessAnnual"), RED, "{0:.3%}", 11),
     Indicator("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11),
     Indicator("excess_volatility", _("ExcessVolatility"), BLACK, "{0:.4}", 11),
     Indicator("excess_annual_volatility", _("ExcessAnnualVolatility"), BLACK, "{0:.4}", 11),
-    Indicator("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.4}", 12),
-    Indicator("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 7),
+    Indicator("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.4}", 11),
+    Indicator("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 6),
 ]]
 
 
@@ -161,6 +163,7 @@ def _plot_returns(ax, portfolio_retunrs, benchmark_returns, excess_returns, max_
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
     ax.grid(b=True, which='major', linewidth=1)
+    ax.patch.set_alpha(0.6)
 
     # plot lines
     ax.plot(portfolio_retunrs, label=_(u"Strategy"), alpha=1, linewidth=2, color=RED)
@@ -182,6 +185,7 @@ def _plot_returns(ax, portfolio_retunrs, benchmark_returns, excess_returns, max_
 
 
 def _plot_user_plots(ax, plots_df):
+    ax.patch.set_alpha(0.6)
     for column in plots_df.columns:
         ax.plot(plots_df[column], label=column)
 
@@ -192,21 +196,20 @@ def _plot_user_plots(ax, plots_df):
 def plot_result(result_dict, show_windows=True, savefile=None):
     summary = result_dict["summary"]
 
-    if "plot" in result_dict:
-        img_height = INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT + USER_PLOT_AREA_HEIGHT
+    if "plots" in result_dict:
+        img_height = INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT + USER_PLOT_AREA_HEIGHT + 1
     else:
         img_height = INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT
-
-    img_width = 13
 
     logo_file = os.path.join(
         os.path.dirname(os.path.realpath(rqalpha.__file__)),
         "resource", 'ricequant-logo.png')
     logo_img = mpimg.imread(logo_file)
-    dpi = logo_img.shape[1] / img_width * 1.1
+    dpi = logo_img.shape[1] / IMG_WIDTH * 1.1
 
     title = summary['strategy_file']
-    fig = plt.figure(title, figsize=(img_width, img_height), dpi=dpi)
+    fig = plt.figure(title, figsize=(IMG_WIDTH, img_height), dpi=dpi)
+
     gs = gridspec.GridSpec(img_height, 8)
 
     portfolio = result_dict["portfolio"]
@@ -238,14 +241,14 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     if "plots" in result_dict:
         _plot_user_plots(
-            plt.subplot(gs[INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT:, :]),
+            plt.subplot(gs[INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT + 1:, :]),
             result_dict["plots"]
         )
 
     # logo as watermark
     fig.figimage(
         logo_img,
-        xo=((img_width * dpi) - logo_img.shape[1]) / 2,
+        xo=((IMG_WIDTH * dpi) - logo_img.shape[1]) / 2,
         yo=(img_height * dpi - logo_img.shape[0]) / 2,
         alpha=0.4,
     )
