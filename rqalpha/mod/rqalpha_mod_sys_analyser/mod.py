@@ -303,12 +303,18 @@ class AnalyserMod(AbstractMod):
             'alpha': self._safe_convert(risk.alpha, 3),
             'beta': self._safe_convert(risk.beta, 3),
             'sharpe': self._safe_convert(risk.sharpe, 3),
+            'excess_sharpe': self._safe_convert(risk.excess_sharpe, 3),
             'information_ratio': self._safe_convert(risk.information_ratio, 3),
             'downside_risk': self._safe_convert(risk.annual_downside_risk, 3),
             'tracking_error': self._safe_convert(risk.annual_tracking_error, 3),
             'sortino': self._safe_convert(risk.sortino, 3),
             'volatility': self._safe_convert(risk.annual_volatility, 3),
+            'excess_volatility': self._safe_convert(risk.excess_volatility, 3),
+            'excess_annual_volatility': self._safe_convert(risk.excess_annual_volatility, 3),
             'max_drawdown': self._safe_convert(risk.max_drawdown, 3),
+            'excess_max_drawdown': self._safe_convert(risk.excess_max_drawdown),
+            'excess_returns': self._safe_convert(risk.excess_return_rate, 6),
+            'excess_annual_returns': self._safe_convert(risk.excess_annual_return, 6)
         })
 
         summary.update({

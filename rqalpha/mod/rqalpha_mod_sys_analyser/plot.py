@@ -38,41 +38,56 @@ rcParams['axes.unicode_minus'] = False
 font = findfont(FontProperties(family=['sans-serif']))
 if "/matplotlib/" in font:
     system_log.warn("PLOT: Missing Chinese fonts. Fallback to English.")
-    LABEL_FONT_SIZE = 9
+    LABEL_FONT_SIZE = 8
     _ = lambda txt: txt
 else:
-    LABEL_FONT_SIZE = 12
+    LABEL_FONT_SIZE = 11
+
+# 三部分的高度
+INDICATOR_AREA_HEIGHT = 4
+PLOT_AREA_HEIGHT = 6
+USER_PLOT_AREA_HEIGHT = 4
 
 Heights = namedtuple("Heights", ("label", "value"))
 Indicator = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
 
 RED = "#aa4643"
 BLUE = "#4572a7"
+YELLOW = "#F3A423"
 BLACK = "#000000"
 
 # 指标的高度值
 INDICATOR_Y_POS = [
-    Heights(0.8, 0.6),  # 第一行
-    Heights(0.35, 0.15)  # 第二行
+    Heights(1.1, 0.95), # 第一行
+    Heights(0.7, 0.55),  # 第二行
+    Heights(0.3, 0.15),   # 第三行
 ]
 INDICATOR_X_POS = [0.15 * i for i in range(7)]
 
 INDICATORS = [[  # 第一行指标
-    Indicator("total_returns", _("Total Returns"), RED, "{0:.3%}", 12),
-    Indicator("alpha", _("Alpha"), BLACK, "{0:.4}", 12),
-    Indicator("beta", _("Beta"), BLACK, "{0:.4}", 12),
-    Indicator("sharpe", _("Sharpe"), BLACK, "{0:.4}", 12),
-    Indicator("sortino", _("Sortino"), BLACK, "{0:.4}", 12),
-    Indicator("information_ratio", _("Information Ratio"), BLACK, "{0:.4}", 12),
-    Indicator("max_drawdown", _("MaxDrawdown"), BLACK, "{0:.4}", 12),
+    Indicator("total_returns", _("TotalReturns"), RED, "{0:.3%}", 11),
+    Indicator("annualized_returns", _("AnnualReturns"), RED, "{0:.3%}", 11),
+    Indicator("alpha", _("Alpha"), BLACK, "{0:.4}", 11),
+    Indicator("beta", _("Beta"), BLACK, "{0:.4}", 11),
+    Indicator("sharpe", _("Sharpe"), BLACK, "{0:.4}", 11),
+    Indicator("sortino", _("Sortino"), BLACK, "{0:.4}", 11),
+    Indicator("information_ratio", _("InformationRatio"), BLACK, "{0:.4}", 11),
 ],[  # 第二行指标
-    Indicator("annualized_returns", _("Annual Returns"), BLUE, "{0:.3%}", 12),
-    Indicator("benchmark_total_returns", _("Benchmark Returns"), BLUE, "{0:.4}", 12),
-    Indicator("benchmark_annualized_returns", _("Benchmark Annual"), BLUE, "{0:.4}", 12),
-    Indicator("volatility", _("Volatility"), BLACK, "{0:.4}", 12),
-    Indicator("tracking_error", _("Tracking Error"), BLACK, "{0:.4}", 12),
-    Indicator("downside_risk", _("Downside Risk"), BLACK, "{0:.4}", 12),
-    Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{0:.4}", 8),
+    Indicator("benchmark_total_returns", _("BenchmarkReturns"), BLUE, "{0:.3%}", 11),
+    Indicator("benchmark_annualized_returns", _("BenchmarkAnnual"), BLUE, "{0:.3%}", 11),
+    Indicator("volatility", _("Volatility"), BLACK, "{0:.4}", 11),
+    Indicator("max_drawdown", _("MaxDrawdown"), BLACK, "{0:.4}", 11),
+    Indicator("tracking_error", _("TrackingError"), BLACK, "{0:.4}", 11),
+    Indicator("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11),
+    Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 7),
+], [  # 第三行指标
+    Indicator("excess_returns", _("ExcessReturns"), RED, "{0:.3%}", 11),
+    Indicator("excess_annual_returns", _("ExcessAnnual"), RED, "{0:.3%}", 11),
+    Indicator("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11),
+    Indicator("excess_volatility", _("ExcessVolatility"), BLACK, "{0:.4}", 11),
+    Indicator("excess_annual_volatility", _("ExcessAnnualVolatility"), BLACK, "{0:.4}", 11),
+    Indicator("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.4}", 12),
+    Indicator("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 7),
 ]]
 
 
@@ -85,9 +100,9 @@ class IndexRange(namedtuple("IndexRange", ("start", "end", "start_date", "end_da
     def repr(self):
         return "{}~{}, {} days".format(self.start_date, self.end_date, (self.end_date - self.start_date).days)
 
-    def plot(self, ax, navs, marker, color, label):
+    def plot(self, ax, returns, marker, color, label):
         ax.plot(
-            [self.start_date, self.end_date], [navs[self.start] - 1.0, navs[self.end] - 1.0],
+            [self.start_date, self.end_date], [returns[self.start], returns[self.end]],
             marker, color=color, markersize=8, alpha=.7, label=label
         )
 
@@ -141,20 +156,21 @@ def _plot_indicators(ax, indicator_values):
             ax.text(x, y.value, i.formatter.format(indicator_values[i.key]), color=BLACK, fontsize=i.value_font_size)
 
 
-def _plot_returns(ax, portfolio_nav, benchmark_nav, max_dd, max_ddd):
+def _plot_returns(ax, portfolio_retunrs, benchmark_returns, excess_returns, max_dd, max_ddd):
     ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
     ax.grid(b=True, which='major', linewidth=1)
 
-    # plot two lines
-    ax.plot(portfolio_nav - 1.0, label=_(u"strategy"), alpha=1, linewidth=2, color=RED)
-    if benchmark_nav is not None:
-        ax.plot(benchmark_nav - 1.0, label=_(u"benchmark"), alpha=1, linewidth=2, color=BLUE)
+    # plot lines
+    ax.plot(portfolio_retunrs, label=_(u"Strategy"), alpha=1, linewidth=2, color=RED)
+    if benchmark_returns is not None:
+        ax.plot(benchmark_returns, label=_(u"Benchmark"), alpha=1, linewidth=2, color=BLUE)
+        ax.plot(excess_returns, label=_(u"Excess"), alpha=1, linewidth=2, color=YELLOW)
 
     # plot MaxDD/MaxDDD
-    max_dd.plot(ax, portfolio_nav.values, "v", "Green", _("MaxDrawdown"))
-    max_ddd.plot(ax, portfolio_nav.values, "D", "Blue", _("MaxDDD"))
+    max_dd.plot(ax, portfolio_retunrs, "v", "Green", _("MaxDrawdown"))
+    max_ddd.plot(ax, portfolio_retunrs, "D", "Blue", _("MaxDDD"))
 
     # place legend
     leg = plt.legend(loc="best")
@@ -176,9 +192,12 @@ def _plot_user_plots(ax, plots_df):
 def plot_result(result_dict, show_windows=True, savefile=None):
     summary = result_dict["summary"]
 
-    plots_area_size = 5 if "plots" in result_dict else 0
+    if "plot" in result_dict:
+        img_height = INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT + USER_PLOT_AREA_HEIGHT
+    else:
+        img_height = INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT
+
     img_width = 13
-    img_height = 6 + int(plots_area_size * 0.9)
 
     logo_file = os.path.join(
         os.path.dirname(os.path.realpath(rqalpha.__file__)),
@@ -188,29 +207,40 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     title = summary['strategy_file']
     fig = plt.figure(title, figsize=(img_width, img_height), dpi=dpi)
-    gs = gridspec.GridSpec(10 + plots_area_size, 8)
+    gs = gridspec.GridSpec(img_height, 8)
 
     portfolio = result_dict["portfolio"]
     benchmark_portfolio = result_dict.get("benchmark_portfolio")
-    portfolio_value = portfolio.unit_net_value * portfolio.units
-    max_dd = _max_dd(portfolio_value.values, portfolio.index)
-    max_ddd = _max_ddd(portfolio_value.values, portfolio.index)
+    max_dd = _max_dd(portfolio.unit_net_value.values, portfolio.index)
+    max_ddd = _max_ddd(portfolio.unit_net_value.values, portfolio.index)
+    # 超额收益
+    ex_returns = portfolio.unit_net_value - benchmark_portfolio.unit_net_value
+    ex_values = np.exp(np.log1p(ex_returns).cumsum())
+    ex_max_dd = _max_dd(ex_values, portfolio.index)
+    ex_max_ddd = _max_ddd(ex_values, portfolio.index)
 
     _plot_indicators(
-        plt.subplot(gs[:3, :-1]),
-        ChainMap(summary, {"max_dd_ddd": "MaxDD {}\nMaxDDD{}".format(max_dd.repr, max_ddd.repr)}),
+        plt.subplot(gs[:INDICATOR_AREA_HEIGHT, :-1]),
+        ChainMap(summary, {
+            "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
+            "excess_max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(ex_max_dd.repr, ex_max_ddd.repr),
+        }),
     )
 
     _plot_returns(
-        plt.subplot(gs[4:10, :]),
-        portfolio["unit_net_value"],
-        benchmark_portfolio["unit_net_value"] if benchmark_portfolio is not None else None,
+        plt.subplot(gs[INDICATOR_AREA_HEIGHT: PLOT_AREA_HEIGHT + INDICATOR_AREA_HEIGHT, :]),
+        portfolio["unit_net_value"] - 1,
+        None if benchmark_portfolio is None else benchmark_portfolio["unit_net_value"] - 1,
+        ex_returns,
         max_dd,
         max_ddd
     )
 
     if "plots" in result_dict:
-        _plot_user_plots(plt.subplot(gs[11:, :]), result_dict["plots"])
+        _plot_user_plots(
+            plt.subplot(gs[INDICATOR_AREA_HEIGHT + PLOT_AREA_HEIGHT:, :]),
+            result_dict["plots"]
+        )
 
     # logo as watermark
     fig.figimage(
