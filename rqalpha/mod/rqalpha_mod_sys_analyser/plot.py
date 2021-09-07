@@ -31,7 +31,7 @@ plt.style.use('ggplot')
 rcParams['font.family'] = 'sans-serif'
 rcParams['font.sans-serif'] = [
     'Microsoft Yahei', 'Heiti SC', 'Heiti TC', 'STHeiti', 'WenQuanYi Zen Hei',
-    'WenQuanYi Micro Hei', "文泉驿微米黑", 'SimHei',
+    'WenQuanYi Micro Hei', "文泉驿微米黑", 'SimHei', 'Arial Unicode MS'
 ] + rcParams['font.sans-serif']
 rcParams['axes.unicode_minus'] = False
 
@@ -41,7 +41,7 @@ if "/matplotlib/" in font:
     LABEL_FONT_SIZE = 8
     _ = lambda txt: txt
 else:
-    LABEL_FONT_SIZE = 11
+    LABEL_FONT_SIZE = 10
 
 # 三部分的高度
 PLOT_AREA_HEIGHT = 4
