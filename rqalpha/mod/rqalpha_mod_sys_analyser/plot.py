@@ -4,17 +4,55 @@
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
 #         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
-#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+
 
 import rqalpha
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext
+
+from collections import namedtuple, ChainMap
+
+RED = "#aa4643"
+BLUE = "#4572a7"
+BLACK = "#000000"
+
+Heights = namedtuple("Heights", ("label", "value"))
+Indicator = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
+
+# 指标的高度值
+INDICATOR_Y_POS = [
+    Heights(0.8, 0.6),  # 第一行
+    Heights(0.35, 0.15)  # 第二行
+]
+INDICATOR_X_POS = [0.15 * i for i in range(7)]
+
+INDICATORS = [[  # 第一行指标
+    Indicator("total_returns", "Total Returns", RED, "{0:.3%}", 12),
+    Indicator("annualized_returns", "Annual Returns", RED, "{0:.3%}", 12),
+    Indicator("alpha", "Alpha", BLACK, "{0:.4}", 12),
+    Indicator("beta", "Beta", BLACK, "{0:.4}", 12),
+    Indicator("sharpe", "Sharpe", BLACK, "{0:.4}", 12),
+    Indicator("sortino", "Sortino", BLACK, "{0:.4}", 12),
+    Indicator("information_ratio", "Information Ratio", BLACK, "{0:.4}", 12),
+],[  # 第二行指标
+    Indicator("benchmark_total_returns", "Benchmark Returns", BLUE, "{0:.4}", 12),
+    Indicator("benchmark_annualized_returns", "Benchmark Annual", BLUE, "{0:.4}", 12),
+    Indicator("volatility", "Volatility", BLACK, "{0:.4}", 12),
+    Indicator("max_drawdown", "MaxDrawdown", BLACK, "{0:.4}",12),
+    Indicator("tracking_error", "Tracking Error", BLACK, "{0:.4}", 12),
+    Indicator("downside_risk", "Downside Risk", BLACK, "{0:.4}", 12),
+    Indicator("max_dd_ddd", "MaxDD/MaxDDD", BLACK, "{0:.4}", 8),
+]]
 
 
 def max_ddd(arr):
@@ -96,10 +134,6 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     plt.style.use('ggplot')
 
-    red = "#aa4643"
-    blue = "#4572a7"
-    black = "#000000"
-
     plots_area_size = 0
     if "plots" in result_dict:
         plots_area_size = 5
@@ -117,42 +151,19 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     # draw risk and portfolio
     font_size = 12
-    value_font_size = 11
-    label_height, value_height = 0.8, 0.6
-    label_height2, value_height2 = 0.35, 0.15
 
     def _(txt):
         return gettext(txt) if use_chinese_fonts else txt
 
-    fig_data = [
-        (0.00, label_height, value_height, _(u"Total Returns"), "{0:.3%}".format(summary["total_returns"]), red, black),
-        (0.15, label_height, value_height, _(u"Annual Returns"), "{0:.3%}".format(summary["annualized_returns"]), red, black),
-        (0.00, label_height2, value_height2, _(u"Benchmark Returns"), "{0:.3%}".format(summary.get("benchmark_total_returns", 0)), blue,
-         black),
-        (0.15, label_height2, value_height2, _(u"Benchmark Annual"), "{0:.3%}".format(summary.get("benchmark_annualized_returns", 0)),
-         blue, black),
-
-        (0.30, label_height, value_height, _(u"Alpha"), "{0:.4}".format(summary["alpha"]), black, black),
-        (0.40, label_height, value_height, _(u"Beta"), "{0:.4}".format(summary["beta"]), black, black),
-        (0.55, label_height, value_height, _(u"Sharpe"), "{0:.4}".format(summary["sharpe"]), black, black),
-        (0.70, label_height, value_height, _(u"Sortino"), "{0:.4}".format(summary["sortino"]), black, black),
-        (0.85, label_height, value_height, _(u"Information Ratio"), "{0:.4}".format(summary["information_ratio"]), black, black),
-
-        (0.30, label_height2, value_height2, _(u"Volatility"), "{0:.4}".format(summary["volatility"]), black, black),
-        (0.40, label_height2, value_height2, _(u"MaxDrawdown"), "{0:.3%}".format(summary["max_drawdown"]), black, black),
-        (0.55, label_height2, value_height2, _(u"Tracking Error"), "{0:.4}".format(summary["tracking_error"]), black, black),
-        (0.70, label_height2, value_height2, _(u"Downside Risk"), "{0:.4}".format(summary["downside_risk"]), black, black),
-    ]
-
+    indicator_values = ChainMap(summary, {"max_dd_ddd": max_dd_info})
     ax = plt.subplot(gs[:3, :-1])
     ax.axis("off")
-    for x, y1, y2, label, value, label_color, value_color in fig_data:
-        ax.text(x, y1, label, color=label_color, fontsize=font_size)
-        ax.text(x, y2, value, color=value_color, fontsize=value_font_size)
-    for x, y1, y2, label, value, label_color, value_color in [
-        (0.85, label_height2, value_height2, _(u"MaxDD/MaxDDD"), max_dd_info, black, black)]:
-        ax.text(x, y1, label, color=label_color, fontsize=font_size)
-        ax.text(x, y2, value, color=value_color, fontsize=8)
+    for lineno, indicators in enumerate(INDICATORS):
+        for index_in_line, i in enumerate(indicators):
+            x = INDICATOR_X_POS[index_in_line]
+            y = INDICATOR_Y_POS[lineno]
+            ax.text(x, y.label, _(i.label), color=i.color, fontsize=font_size),
+            ax.text(x, y.value, indicator_values[i.key], color=BLACK, fontsize=i.value_font_size)
 
     # strategy vs benchmark
     ax = plt.subplot(gs[4:10, :])
@@ -163,9 +174,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     ax.grid(b=True, which='major', linewidth=1)
 
     # plot two lines
-    ax.plot(portfolio["unit_net_value"] - 1.0, label=_(u"strategy"), alpha=1, linewidth=2, color=red)
+    ax.plot(portfolio["unit_net_value"] - 1.0, label=_(u"strategy"), alpha=1, linewidth=2, color=RED)
     if benchmark_portfolio is not None:
-        ax.plot(benchmark_portfolio["unit_net_value"] - 1.0, label=_(u"benchmark"), alpha=1, linewidth=2, color=blue)
+        ax.plot(benchmark_portfolio["unit_net_value"] - 1.0, label=_(u"benchmark"), alpha=1, linewidth=2, color=BLUE)
 
     # plot MaxDD/MaxDDD
     ax.plot([index[max_dd_end], index[max_dd_start]], [rt[max_dd_end] - 1.0, rt[max_dd_start] - 1.0],
