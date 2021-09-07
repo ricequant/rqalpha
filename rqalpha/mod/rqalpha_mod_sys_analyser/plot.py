@@ -37,7 +37,7 @@ rcParams['axes.unicode_minus'] = False
 
 font = findfont(FontProperties(family=['sans-serif']))
 if "/matplotlib/" in font:
-    system_log.warn("Missing Chinese fonts. Fallback to English.")
+    system_log.warn("PLOT: Missing Chinese fonts. Fallback to English.")
     LABEL_FONT_SIZE = 9
     _ = lambda txt: txt
 else:
@@ -59,17 +59,17 @@ INDICATOR_X_POS = [0.15 * i for i in range(7)]
 
 INDICATORS = [[  # 第一行指标
     Indicator("total_returns", _("Total Returns"), RED, "{0:.3%}", 12),
-    Indicator("annualized_returns", _("Annual Returns"), RED, "{0:.3%}", 12),
     Indicator("alpha", _("Alpha"), BLACK, "{0:.4}", 12),
     Indicator("beta", _("Beta"), BLACK, "{0:.4}", 12),
     Indicator("sharpe", _("Sharpe"), BLACK, "{0:.4}", 12),
     Indicator("sortino", _("Sortino"), BLACK, "{0:.4}", 12),
     Indicator("information_ratio", _("Information Ratio"), BLACK, "{0:.4}", 12),
+    Indicator("max_drawdown", _("MaxDrawdown"), BLACK, "{0:.4}", 12),
 ],[  # 第二行指标
+    Indicator("annualized_returns", _("Annual Returns"), BLUE, "{0:.3%}", 12),
     Indicator("benchmark_total_returns", _("Benchmark Returns"), BLUE, "{0:.4}", 12),
     Indicator("benchmark_annualized_returns", _("Benchmark Annual"), BLUE, "{0:.4}", 12),
     Indicator("volatility", _("Volatility"), BLACK, "{0:.4}", 12),
-    Indicator("max_drawdown", _("MaxDrawdown"), BLACK, "{0:.4}",12),
     Indicator("tracking_error", _("Tracking Error"), BLACK, "{0:.4}", 12),
     Indicator("downside_risk", _("Downside Risk"), BLACK, "{0:.4}", 12),
     Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{0:.4}", 8),
@@ -138,7 +138,7 @@ def _plot_indicators(ax, indicator_values):
             x = INDICATOR_X_POS[index_in_line]
             y = INDICATOR_Y_POS[lineno]
             ax.text(x, y.label, i.label, color=i.color, fontsize=LABEL_FONT_SIZE),
-            ax.text(x, y.value, indicator_values[i.key], color=BLACK, fontsize=i.value_font_size)
+            ax.text(x, y.value, i.formatter.format(indicator_values[i.key]), color=BLACK, fontsize=i.value_font_size)
 
 
 def _plot_returns(ax, portfolio_nav, benchmark_nav, max_dd, max_ddd):
