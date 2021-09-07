@@ -43,12 +43,9 @@ def run_tests(file_path=None):
     )}
     error_map = {}
     for name, filename in tests.items():
-        try:
-            result_data = run_test(filename)
-            if result_data is not None:
-                error_map[name] = result_data
-        except Exception as e:
-            error_map[name] = e
+        result_data = run_test(filename)
+        if result_data is not None:
+            error_map[name] = result_data
     for filename, result_data in iteritems(error_map):
         print(u"*" * 20, u"[{}]did not pass!".format(filename), u"*" * 20)
         if isinstance(result_data, Exception):
