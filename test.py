@@ -18,16 +18,15 @@ import sys
 import os
 import csv
 from datetime import datetime
-from typing import Optional, Tuple
 
 from six import iteritems
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import numpy as np
 import coverage
 
 from rqalpha import run, run_func
 from rqalpha.utils.config import set_locale
-from rqalpha.utils.logger import system_log
 
 TEST_DIR = os.path.abspath("./tests/")
 TEST_OUT = os.path.abspath("./tests/outs/")
@@ -43,28 +42,21 @@ def run_tests(file_path=None):
     )}
     error_map = {}
     for name, filename in tests.items():
-        result_data = run_test(filename)
-        if result_data is not None:
-            error_map[name] = result_data
-    for filename, result_data in iteritems(error_map):
+        err = run_test(filename)
+        if err is not None:
+            error_map[name] = err
+    for filename, err in iteritems(error_map):
         print(u"*" * 20, u"[{}]did not pass!".format(filename), u"*" * 20)
-        if isinstance(result_data, Exception):
-            system_log.error(result_data)
-        else:
-            _, __, result = result_data
-            print(result.all())
+        print(err)
     print(u"=" * 40)
     print("[{}|{}] strategies has been passed!".format(len(tests) - len(error_map), len(tests)))
     return len(error_map)
 
 
 def run_test(filename):
-    # type: (str) -> Optional[Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]]
     config = {"base": {"strategy_file": os.path.join(TEST_DIR, filename)}}
     print(u"Start test: " + str(config["base"]["strategy_file"]))
     result_dict = run(config)["sys_analyser"]
-
-    # del df['positions']
 
     old_pickle_file = os.path.join(TEST_OUT, filename.replace(".py", ".pkl"))
 
@@ -87,7 +79,7 @@ def run_test(filename):
 
         result = df.eq(old_df)
         if not result.all().all():
-            return df, old_df, result
+            return result.all()
 
         # 比较 summary
         old_df = (
@@ -119,9 +111,10 @@ def run_test(filename):
             del df["strategy_file"]
         except:
             pass
-        result = df.eq(old_df)
-        if not result.all().all():
-            return old_result_dict, result_dict, result
+        try:
+            assert_frame_equal(df, old_df, check_less_precise=8)
+        except AssertionError as e:
+            return str(e)
 
 
 def is_enable_coverage():
