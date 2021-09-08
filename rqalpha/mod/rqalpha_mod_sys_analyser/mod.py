@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
+import pandas
 import pickle
 import jsonpickle
 import numbers
@@ -292,23 +293,26 @@ class AnalyserMod(AbstractMod):
         for account_type, starting_cash in self._env.config.base.accounts.items():
             summary[account_type] = starting_cash
 
+        risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
-            np.array(self._portfolio_daily_returns),
-            np.array(self._benchmark_daily_returns),
-            data_proxy.get_risk_free_rate(
-                self._env.config.base.start_date, self._env.config.base.end_date
-            )
+            np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns), risk_free_rate
         )
         summary.update({
             'alpha': self._safe_convert(risk.alpha, 3),
             'beta': self._safe_convert(risk.beta, 3),
             'sharpe': self._safe_convert(risk.sharpe, 3),
+            'excess_sharpe': self._safe_convert(risk.excess_sharpe, 3),
             'information_ratio': self._safe_convert(risk.information_ratio, 3),
             'downside_risk': self._safe_convert(risk.annual_downside_risk, 3),
             'tracking_error': self._safe_convert(risk.annual_tracking_error, 3),
             'sortino': self._safe_convert(risk.sortino, 3),
             'volatility': self._safe_convert(risk.annual_volatility, 3),
+            'excess_volatility': self._safe_convert(risk.excess_volatility, 3),
+            'excess_annual_volatility': self._safe_convert(risk.excess_annual_volatility, 3),
             'max_drawdown': self._safe_convert(risk.max_drawdown, 3),
+            'excess_max_drawdown': self._safe_convert(risk.excess_max_drawdown),
+            'excess_returns': self._safe_convert(risk.excess_return_rate, 6),
+            'excess_annual_returns': self._safe_convert(risk.excess_annual_return, 6)
         })
 
         summary.update({
@@ -334,7 +338,8 @@ class AnalyserMod(AbstractMod):
         df = pd.DataFrame(self._total_portfolios)
         df['date'] = pd.to_datetime(df['date'])
         total_portfolios = df.set_index('date').sort_index()
-
+        weekly_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
+        weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
         result_dict = {
             'summary': summary,
             'trades': trades,
@@ -345,7 +350,21 @@ class AnalyserMod(AbstractMod):
             df = pd.DataFrame(self._total_benchmark_portfolios)
             df['date'] = pd.to_datetime(df['date'])
             benchmark_portfolios = df.set_index('date').sort_index()
+            weekly_b_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
+            weekly_b_returns = (weekly_b_nav / weekly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios
+        else:
+            weekly_b_returns = pandas.Series(index=weekly_returns.index)
+        weekly_risk = Risk(weekly_returns, weekly_b_returns, risk_free_rate)
+        summary.update({
+            "weekly_alpha": weekly_risk.alpha,
+            "weekly_beta": weekly_risk.beta,
+            "weekly_sharpe": weekly_risk.sharpe,
+            "weekly_sortino": weekly_risk.sortino,
+            'weekly_information_ratio': weekly_risk.information_ratio,
+            "weekly_tracking_error": weekly_risk.tracking_error,
+            "weekly_max_drawdown": weekly_risk.max_drawdown,
+        })
 
         plots = self._plot_store.get_plots()
         if plots:
