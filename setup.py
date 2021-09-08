@@ -27,7 +27,7 @@ requirements = [
     'simplejson',
     'PyYAML',
     'tabulate',
-    'rqrisk',
+    'rqrisk >=0.0.14',
     'h5py',
     'matplotlib >=2.2.0',
 ]
