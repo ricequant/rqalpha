@@ -178,7 +178,7 @@ def _plot_indicators(ax, indicator_values, plot_excess_indicators):
             ax.text(x, y.value, value, color=BLACK, fontsize=i.value_font_size)
 
 
-def _plot_returns(ax, portfolio_returns, benchmark_returns, excess_returns, weekly_returns, max_dd, max_ddd):
+def _plot_returns(ax, returns, b_returns, excess_returns, weekly_returns, weekly_b_returns, max_dd, max_ddd):
     ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.grid(b=True, which='minor', linewidth=.2)
@@ -186,16 +186,18 @@ def _plot_returns(ax, portfolio_returns, benchmark_returns, excess_returns, week
     ax.patch.set_alpha(0.6)
 
     # plot lines
-    ax.plot(portfolio_returns, label=_(u"Strategy"), alpha=1, linewidth=2, color=RED)
-    if benchmark_returns is not None:
-        ax.plot(benchmark_returns, label=_(u"Benchmark"), alpha=1, linewidth=2, color=BLUE)
+    ax.plot(returns, label=_(u"Strategy"), alpha=1, linewidth=2, color=RED)
+    if b_returns is not None:
+        ax.plot(b_returns, label=_(u"Benchmark"), alpha=1, linewidth=2, color=BLUE)
     if excess_returns is not None:
         ax.plot(excess_returns, label=_(u"Excess"), alpha=1, linewidth=2, color=YELLOW)
     ax.plot(weekly_returns, label=_("Weekly"), alpha=0.6, linewidth=2, color=RED)
+    if weekly_b_returns is not None:
+        ax.plot(weekly_b_returns, label=_("BenchmarkWeekly"), alpha=0.6, linewidth=2, color=BLUE)
 
     # plot MaxDD/MaxDDD
-    max_dd.plot(ax, portfolio_returns, "v", "Green", _("MaxDrawdown"))
-    max_ddd.plot(ax, portfolio_returns, "D", "Blue", _("MaxDDD"))
+    max_dd.plot(ax, returns, "v", "Green", _("MaxDrawdown"))
+    max_ddd.plot(ax, returns, "D", "Blue", _("MaxDDD"))
 
     # place legend
     leg = plt.legend(loc="best")
@@ -247,9 +249,12 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         ex_max_ddd = _max_ddd(ex_returns + 1, portfolio.index)
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(ex_max_dd.repr, ex_max_ddd.repr)
         plot_excess_indicators = True
+        benchmark_weekly_portfolio = benchmark_portfolio.unit_net_value.reset_index().resample(
+            "W", on="date").last().set_index("date").unit_net_value.dropna() - 1
     else:
         ex_max_dd_ddd = "nan"
         ex_returns = None
+        benchmark_weekly_portfolio = None
         plot_excess_indicators = False
 
     _plot_indicators(
@@ -263,10 +268,12 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     _plot_returns(
         plt.subplot(gs[indicator_area_height: PLOT_AREA_HEIGHT + indicator_area_height, :]),
-        portfolio["unit_net_value"] - 1,
+        portfolio.unit_net_value - 1,
         None if benchmark_portfolio is None else benchmark_portfolio["unit_net_value"] - 1,
         ex_returns,
-        portfolio["unit_net_value"].reset_index().resample("W", on="date").last().set_index("date").unit_net_value.dropna() - 1,
+        portfolio.unit_net_value.reset_index().resample(
+            "W", on="date").last().set_index("date").unit_net_value.dropna() - 1,
+        benchmark_weekly_portfolio,
         max_dd,
         max_ddd
     )
