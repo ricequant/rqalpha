@@ -17,17 +17,17 @@ from rqalpha import cli
 
 
 __config__ = {
-    # 开启/关闭 股票 T+1， 默认开启
+    # 是否开启股票 T+1 限制
     "stock_t1": True,
-    # 分红再投资
+    # 是否开启自动分红再投资
     "dividend_reinvestment": False,
-    # 当持仓股票退市时，按照退市价格返还现金
+    # 当持仓股票退市时，是否按照退市价格返还现金
     "cash_return_by_stock_delisted": True,
     # 股票下单因资金不足被拒时改为使用全部剩余资金下单
     "auto_switch_order_value": False,
-    # 检查股票可平仓位是否充足
+    # 开启对股票仓位是否能满足平仓需求的检查
     "validate_stock_position": True,
-    # 检查期货可平仓位是否充足
+    # 开启对期货仓位是否能满足平仓需求的检查
     "validate_future_position": True,
 }
 
