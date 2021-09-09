@@ -27,7 +27,7 @@ from typing import Dict, Optional, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from rqrisk import Risk
+from rqrisk import Risk, WEEKLY
 
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.core.events import EVENT
@@ -355,7 +355,7 @@ class AnalyserMod(AbstractMod):
             result_dict['benchmark_portfolio'] = benchmark_portfolios
         else:
             weekly_b_returns = pandas.Series(index=weekly_returns.index)
-        weekly_risk = Risk(weekly_returns, weekly_b_returns, (risk_free_rate + 1) ** 7 - 1)
+        weekly_risk = Risk(weekly_returns, weekly_b_returns, (risk_free_rate + 1) ** 7 - 1, WEEKLY)
         summary.update({
             "weekly_alpha": weekly_risk.alpha,
             "weekly_beta": weekly_risk.beta,
