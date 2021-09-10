@@ -133,7 +133,7 @@ def run_code(code, config=None):
             ...
         \"\"\"
 
-        run_file(CODE, config=config)
+        run_code(CODE, config=config)
     """
     from rqalpha.utils.config import parse_config
     from rqalpha.utils.functools import clear_all_cached_functions
