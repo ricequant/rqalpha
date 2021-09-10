@@ -526,8 +526,9 @@ msgid "Unsupported market {}"
 msgstr "不支持的市场类型 {}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:52
-msgid "Current universe is empty. Please use subscribe function before trade"
-msgstr "当前合约池为空。请使用 subscribe 订阅合约。"
+msgid "Current universe is empty. Please use subscribe function before"
+" trade(delisted will be removed from the universe)"
+msgstr "当前合约池为空。请使用 subscribe 订阅合约(已退市的标的会从合约池移出)。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:210
 msgid "Frequency {} is not support."
