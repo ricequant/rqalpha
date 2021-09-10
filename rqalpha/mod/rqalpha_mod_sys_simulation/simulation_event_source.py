@@ -45,6 +45,7 @@ class SimulationEventSource(AbstractEventSource):
         if len(universe) == 0 and DEFAULT_ACCOUNT_TYPE.STOCK.name not in self._config.base.accounts:
             raise patch_user_exc(RuntimeError(_(
                 "Current universe is empty. Please use subscribe function before trade"
+                "(delisted will be removed from the universe)"
             )), force=True)
         return universe
 
@@ -85,6 +86,7 @@ class SimulationEventSource(AbstractEventSource):
             elif account_type == DEFAULT_ACCOUNT_TYPE.FUTURE:
                 trading_minutes = trading_minutes.union(self._get_future_trading_minutes(trading_date))
         return sorted(list(trading_minutes))
+
     # [END] minute event helper
 
     def events(self, start_date, end_date, frequency):
