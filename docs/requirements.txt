@@ -7,3 +7,4 @@ sphinx-autodoc-typehints
 astroid ==2.2.5
 nbconvert <6.0.0
 jinja2 <3.0.0
+docutils <0.17
