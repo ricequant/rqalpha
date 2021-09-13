@@ -342,7 +342,7 @@ msgstr "夏普率"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:76
 msgid "Sortino"
-msgstr "所提诺比率"
+msgstr "索提诺比率"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:77
 msgid "InformationRatio"
@@ -391,7 +391,7 @@ msgstr "周度夏普率"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:90
 msgid "WeeklySortino"
-msgstr "周度所提诺比率"
+msgstr "周度索提诺比率"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:91
 msgid "WeeklyInfoRatio"
