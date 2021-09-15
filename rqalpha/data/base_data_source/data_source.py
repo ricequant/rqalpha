@@ -192,7 +192,7 @@ class BaseDataSource(AbstractDataSource):
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
-        return self._day_bars[instrument.type].get_bars(instrument.order_book_id) 
+        return self._day_bars[instrument.type].get_bars(instrument.order_book_id)
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
@@ -219,7 +219,7 @@ class BaseDataSource(AbstractDataSource):
     def get_open_auction_bar(self, instrument, dt):
         # type: (Instrument, Union[datetime, date]) -> Dict
         day_bar = self.get_bar(instrument, dt, "1d")
-        bar = {k: day_bar[k] for k in self.OPEN_AUCTION_BAR_FIELDS}
+        bar = {k: day_bar[k] if k in day_bar.dtype.names else np.nan for k in self.OPEN_AUCTION_BAR_FIELDS}
         bar["last"] = bar["open"]
         return bar
 
