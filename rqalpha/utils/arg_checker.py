@@ -332,7 +332,7 @@ class ArgumentChecker(object):
         return self
 
     def _is_valid_frequency(self, func_name, value):
-        valid = isinstance(value, six.string_types) and value[-1] in ("d", "m")
+        valid = isinstance(value, six.string_types) and value[-1] in ("d", "m", "w")
         if valid:
             try:
                 valid = int(value[:-1]) > 0
@@ -342,7 +342,7 @@ class ArgumentChecker(object):
         if not valid:
             raise RQInvalidArgument(
                 _(u"function {}: invalid {} argument, frequency should be in form of "
-                  u"'1m', '5m', '1d', got {} (type: {})").format(
+                  u"'1m', '5m', '1d', '1w' got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))
 
