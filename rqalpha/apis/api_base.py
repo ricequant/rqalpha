@@ -373,7 +373,7 @@ def get_yield_curve(date=None, tenor=None):
 @apply_rules(
     verify_that("order_book_id", pre_check=True).is_listed_instrument(),
     verify_that("bar_count").is_instance_of(int).is_greater_than(0),
-    verify_that("frequency").is_valid_frequency(),
+    verify_that("frequency", pre_check=True).is_valid_frequency(),
     verify_that("fields").are_valid_fields(
         names.VALID_HISTORY_FIELDS, ignore_none=True
     ),
@@ -462,9 +462,6 @@ def history_bars(
     order_book_id = assure_order_book_id(order_book_id)
     env = Environment.get_instance()
     dt = env.calendar_dt
-
-    if frequency[-1] not in {"m", "d", "w"}:
-        raise RQInvalidArgument("invalid frequency {}".format(frequency))
 
     if frequency[-1] == "m" and env.config.base.frequency == "1d":
         raise RQInvalidArgument("can not get minute history in day back test")
