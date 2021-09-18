@@ -355,7 +355,7 @@ class AnalyserMod(AbstractMod):
             result_dict['benchmark_portfolio'] = benchmark_portfolios
         else:
             weekly_b_returns = pandas.Series(index=weekly_returns.index)
-        weekly_risk = Risk(weekly_returns, weekly_b_returns, (risk_free_rate + 1) ** 7 - 1, WEEKLY)
+        weekly_risk = Risk(weekly_returns, weekly_b_returns, risk_free_rate, WEEKLY)
         summary.update({
             "weekly_alpha": weekly_risk.alpha,
             "weekly_beta": weekly_risk.beta,
