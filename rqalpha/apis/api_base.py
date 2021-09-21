@@ -812,7 +812,7 @@ def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
 
     ..  code-block:: python3
 
-        [In] get_position('000014.XSHE', POSITION_DIRECTION.LONG)
+        [In] get_position('000001.XSHE', POSITION_DIRECTION.LONG)
         [Out]
         StockPosition(order_book_id=000001.XSHE, direction=LONG, quantity=268600, market_value=4995960.0, trading_pnl=0.0, position_pnl=0)
 
