@@ -63,7 +63,7 @@ cli.commands['run'].params.append(
             cli_prefix + 'cash_return_by_stock_delisted'
         ),
         default=True,
-        help="[sys_simulation] return cash when stock delisted"
+        help="[sys_accounts] return cash when stock delisted"
     )
 )
 
@@ -72,6 +72,6 @@ cli.commands['run'].params.append(
     click.Option(
         ("--no-short-stock/--short-stock", cli_prefix + "validate_stock_position"),
         is_flag=True, default=True,
-        help="[sys_simulation] enable stock shorting"
+        help="[sys_accounts] enable stock shorting"
     )
 )
