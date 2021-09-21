@@ -116,8 +116,8 @@ def dump_config(config_path, config, dumper=yaml.Dumper):
 def set_locale(lc):
     # FIXME: It should depends on the system and locale config
     try:
-        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
-        locale.setlocale(locale.LC_CTYPE, "en_US.UTF-8")
+        locale.setlocale(locale.LC_ALL, "")
+        locale.setlocale(locale.LC_CTYPE, "")
         os.environ['TZ'] = 'Asia/Shanghai'
     except Exception as e:
         if os.name != 'nt':
