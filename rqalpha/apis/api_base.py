@@ -780,7 +780,7 @@ def current_snapshot(id_or_symbol):
 def get_positions():
     # type: () -> List[Position]
     """
-    获取所有持仓对象列表，
+    获取所有持仓对象列表。
 
     :example:
 
@@ -788,8 +788,8 @@ def get_positions():
 
         [In] get_positions()
         [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0}),
-         BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
+        [StockPosition(order_book_id=000001.XSHE, direction=LONG, quantity=1000, market_value=19520.0, trading_pnl=0.0, position_pnl=0),
+        StockPosition(order_book_id=RB2112, direction=SHORT, quantity=2, market_value=-111580.0, trading_pnl=0.0, position_pnl=0)]
 
     """
     portfolio = Environment.get_instance().portfolio
@@ -803,7 +803,7 @@ def get_positions():
 def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
     # type: (str, Optional[POSITION_DIRECTION]) -> Position
     """
-    获取某个标的的持仓对象，
+    获取某个标的的持仓对象。
 
     :param order_book_id: 标的编号
     :param direction: 持仓方向
@@ -812,9 +812,9 @@ def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
 
     ..  code-block:: python3
 
-        [In] get_position('000014.XSHE','long_positions")
+        [In] get_position('000014.XSHE', POSITION_DIRECTION.LONG)
         [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
+        StockPosition(order_book_id=000001.XSHE, direction=LONG, quantity=268600, market_value=4995960.0, trading_pnl=0.0, position_pnl=0)
 
     """
     portfolio = Environment.get_instance().portfolio
