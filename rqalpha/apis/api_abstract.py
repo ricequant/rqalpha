@@ -204,7 +204,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 
     投资组合价值等于所有已有仓位的价值和剩余现金的总和。买/卖单会被下舍入一手股数（A股是100的倍数）的倍数。目标百分比应该是一个小数，并且最大值应该<=1，比如0.5表示50%。
 
-    如果position_to_adjust 计算之后是正的，那么会买入该证券，否则会卖出该证券。 需要注意，如果资金不足，该API将不会创建发送订单。
+    如果 position_to_adjust 计算之后是正的，那么会买入该证券，否则会卖出该证券。需要注意，如果需要买入证券而资金不足，该 API 将使用最大可用资金发出订单。
 
     :param id_or_ins: 下单标的物
     :param percent: 仓位最终所占投资组合总价值的目标百分比。

@@ -17,7 +17,7 @@
 from __future__ import division
 
 import types
-from collections import Iterable
+from collections.abc import Iterable
 from datetime import date, datetime
 from typing import Callable, List, Optional, Union
 
@@ -373,7 +373,7 @@ def get_yield_curve(date=None, tenor=None):
 @apply_rules(
     verify_that("order_book_id", pre_check=True).is_listed_instrument(),
     verify_that("bar_count").is_instance_of(int).is_greater_than(0),
-    verify_that("frequency").is_valid_frequency(),
+    verify_that("frequency", pre_check=True).is_valid_frequency(),
     verify_that("fields").are_valid_fields(
         names.VALID_HISTORY_FIELDS, ignore_none=True
     ),
@@ -462,9 +462,6 @@ def history_bars(
     order_book_id = assure_order_book_id(order_book_id)
     env = Environment.get_instance()
     dt = env.calendar_dt
-
-    if frequency[-1] not in {"m", "d", "w"}:
-        raise RQInvalidArgument("invalid frequency {}".format(frequency))
 
     if frequency[-1] == "m" and env.config.base.frequency == "1d":
         raise RQInvalidArgument("can not get minute history in day back test")
@@ -783,7 +780,7 @@ def current_snapshot(id_or_symbol):
 def get_positions():
     # type: () -> List[Position]
     """
-    获取所有持仓对象列表，
+    获取所有持仓对象列表。
 
     :example:
 
@@ -791,8 +788,8 @@ def get_positions():
 
         [In] get_positions()
         [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0}),
-         BookingPosition({'order_book_id': '000010.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 0.0, 'avg_price': 3.09, 'last_price': 0, 'position_pnl': 0.0})]
+        [StockPosition(order_book_id=000001.XSHE, direction=LONG, quantity=1000, market_value=19520.0, trading_pnl=0.0, position_pnl=0),
+        StockPosition(order_book_id=RB2112, direction=SHORT, quantity=2, market_value=-111580.0, trading_pnl=0.0, position_pnl=0)]
 
     """
     portfolio = Environment.get_instance().portfolio
@@ -806,7 +803,7 @@ def get_positions():
 def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
     # type: (str, Optional[POSITION_DIRECTION]) -> Position
     """
-    获取某个标的的持仓对象，
+    获取某个标的的持仓对象。
 
     :param order_book_id: 标的编号
     :param direction: 持仓方向
@@ -815,9 +812,9 @@ def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
 
     ..  code-block:: python3
 
-        [In] get_position('000014.XSHE','long_positions")
+        [In] get_position('000001.XSHE', POSITION_DIRECTION.LONG)
         [Out]
-        [BookingPosition({'order_book_id': '000014.XSHE', 'quantity': 100, 'direction': POSITION_DIRECTION.LONG, 'old_quantity': 0, 'trading_pnl': 1.0, 'avg_price': 9.56, 'last_price': 0, 'position_pnl': 0.0})]
+        StockPosition(order_book_id=000001.XSHE, direction=LONG, quantity=268600, market_value=4995960.0, trading_pnl=0.0, position_pnl=0)
 
     """
     portfolio = Environment.get_instance().portfolio

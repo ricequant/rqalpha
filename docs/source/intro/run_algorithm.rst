@@ -70,8 +70,8 @@ N/A           `- -` no-plot                   [sys_analyser]在回测结束后�
 N/A           `- -` plot-save                 [sys_analyser]将plot的收益图以指定文件路径保存
 N/A           `- -` progress                  [sys_progress]开启命令行显示回测进度条
 N/A           `- -` no-progress               [sys_progress]关闭命令行查看回测进度
-N/A           `- -` short-stock               [sys_risk]允许股票卖空
-N/A           `- -` no-short-stock            [sys_risk]不允许股票卖空
+N/A           `- -` short-stock               [sys_accounts]允许股票卖空
+N/A           `- -` no-short-stock            [sys_accounts]不允许股票卖空
 N/A           `- -` signal                    [sys_simulation]开启信号模式，不进行撮合，直接成交
 -sp           `- -` slippage                  [sys_simulation]设置滑点
 -cm           `- -` commission-multiplier     [sys_simulation]设置手续费乘数，默认为1

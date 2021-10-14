@@ -45,9 +45,18 @@ class PlotStore(object):
     def plot(self, series_name, value):
         # type: (str, float) -> None
         """
-        在生成的图标结果中，某一个根线上增加一个点。
+        在策略运行结束后的收益图中，加入自定义的曲线。
+        每次调用 plot 函数将会以当前时间为横坐标，value 为纵坐标加入一个点，series_name 相同的点将连成一条曲线。
 
-        :param series_name: 序列名称
-        :param value: 值
+        :param series_name: 曲线名称
+        :param value: 点的纵坐标值
+
+        :example:
+
+        .. code-block:: python
+
+            def handle_bar(context, bar_dict):
+                plot("OPEN", bar_dict["000001.XSHE"].open)
+
         """
         self.add_plot(self._env.trading_dt.date(), series_name, value)

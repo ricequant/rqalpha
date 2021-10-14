@@ -91,9 +91,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
 
-        event_bus = Environment.get_instance().event_bus
-        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
-
     @property
     def order_book_id(self):
         # type: () -> str
@@ -209,12 +206,10 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._transaction_cost = state.get("transaction_cost", 0)
         self._prev_close = state.get("prev_close")
 
-    def _pre_before_trading(self, _):
-        self._prev_close = self.last_price
-
     def before_trading(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量
+        self._prev_close = self.last_price
         self._transaction_cost = 0
         return 0
 

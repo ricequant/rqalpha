@@ -62,6 +62,7 @@ class DataProxy(TradingDatesMixin):
 
     def get_risk_free_rate(self, start_date, end_date):
         tenor = risk_free_helper.get_tenor_for(start_date, end_date)
+        # 为何取 start_date 当日的？表示 start_date 时借入资金、end_date 归还的成本
         yc = self._data_source.get_yield_curve(start_date, start_date, [tenor])
         if yc is None or yc.empty:
             return 0

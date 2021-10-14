@@ -31,6 +31,10 @@ class EventBus(object):
         self._user_listeners = defaultdict(list)
 
     def add_listener(self, event_type, listener, user=False):
+        """
+        为指定的事件类型注册处理函数
+            注意！对于 Order/Trade/Position 等可能随时会被回收的对象，不应注册其绑定方法为事件处理函数
+        """
         (self._user_listeners if user else self._listeners)[event_type].append(listener)
 
     def prepend_listener(self, event_type, listener, user=False):
