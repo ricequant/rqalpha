@@ -18,7 +18,7 @@ import versioneer
 requirements = [
     'requests',
     'numpy',
-    'pandas',
+    'pandas >=1.0.5',
     'python-dateutil',
     'six',
     'logbook',
