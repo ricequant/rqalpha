@@ -25,11 +25,7 @@ class CustomEnumMeta(EnumMeta):
         return enum_class
 
     def __contains__(cls, member):
-        if super(CustomEnumMeta, cls).__contains__(member):
-            return True
-        if isinstance(member, str):
-            return member in cls._member_reverse_map
-        return False
+        return member in cls.__members__ or member in cls._member_reverse_map
 
     def __getitem__(self, item):
         try:
