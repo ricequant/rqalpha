@@ -42,6 +42,14 @@ __config__ = {
 def test_price_limit():
     def handle_bar(context, bar_dict):
         stock = "000001.XSHE"
+        price = bar_dict[stock].limit_up * 0.99
+        order_shares(stock, 100, price)
+        assert get_position(stock).quantity == 100
+        assert get_position(stock).avg_price == price
+
+        # 超过涨停价拒单
         order_shares(stock, 100, bar_dict[stock].limit_up)
-        assert context.portfolio.positions[stock].quantity == 100
+        assert get_position(stock).quantity == 100
+        assert get_position(stock).avg_price == price
+
     return locals()

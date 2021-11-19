@@ -92,6 +92,7 @@ class SignalBroker(AbstractBroker):
                     self._env.event_bus.publish_event(Event(
                         EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)
                     ))
+                    return
 
                 if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
                     order.mark_rejected(_(
@@ -100,6 +101,7 @@ class SignalBroker(AbstractBroker):
                     self._env.event_bus.publish_event(Event(
                         EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)
                     ))
+                    return
 
         ct_amount = account.calc_close_today_amount(order_book_id, order.quantity, order.position_direction)
         trade_price = self._slippage_decider.get_trade_price(order, deal_price)
