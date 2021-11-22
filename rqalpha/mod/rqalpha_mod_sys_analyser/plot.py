@@ -16,7 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 from collections import namedtuple, ChainMap
-from typing import Optional, Dict
 
 import numpy as np
 import pandas as pd
@@ -60,13 +59,10 @@ YELLOW = "#F3A423"
 BLACK = "#000000"
 
 # 指标的高度值
-INDICATOR_Y_POS = [
-    Heights(1.3, 1.15),
-    Heights(0.95, 0.8),
-    Heights(0.6, 0.45),
-    Heights(0.25, 0.10),
-]
-INDICATOR_X_POS = [0.15 * i for i in range(7)]
+
+INDICATORS_WIDTH = 0.15
+INDICATOR_VALUE_HEIGHT = 0.15
+INDICATOR_LABEL_HEIGHT = 0.2
 
 INDICATORS = [[
     Indicator("total_returns", _("TotalReturns"), RED, "{0:.3%}", 11),
@@ -76,7 +72,7 @@ INDICATORS = [[
     Indicator("sharpe", _("Sharpe"), BLACK, "{0:.4}", 11),
     Indicator("sortino", _("Sortino"), BLACK, "{0:.4}", 11),
     Indicator("information_ratio", _("InformationRatio"), BLACK, "{0:.4}", 11),
-],[
+], [
     Indicator("benchmark_total_returns", _("BenchmarkReturns"), BLUE, "{0:.3%}", 11),
     Indicator("benchmark_annualized_returns", _("BenchmarkAnnual"), BLUE, "{0:.3%}", 11),
     Indicator("volatility", _("Volatility"), BLACK, "{0:.4}", 11),
@@ -84,7 +80,9 @@ INDICATORS = [[
     Indicator("tracking_error", _("TrackingError"), BLACK, "{0:.4}", 11),
     Indicator("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11),
     Indicator("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6),
-], [
+]]
+
+WEEKLY_INDICATORS = [
     Indicator("weekly_alpha", _("WeeklyAlpha"), BLACK, "{0:.4}", 11),
     Indicator("weekly_beta", _("WeeklyBeta"), BLACK, "{0:.4}", 11),
     Indicator("weekly_sharpe", _("WeeklySharpe"), BLACK, "{0:.4}", 11),
@@ -92,9 +90,9 @@ INDICATORS = [[
     Indicator("weekly_information_ratio", _("WeeklyInfoRatio"), BLACK, "{0:.4}", 11),
     Indicator("weekly_tracking_error", _("WeeklyTrackingError"), BLACK, "{0:.4}", 11),
     Indicator("weekly_max_drawdown", _("WeeklyMaxDrawdown"), BLACK, "{0:.4}", 11),
-]]
+]
 
-excess_indicators = [
+EXCESS_INDICATORS = [
     Indicator("excess_returns", _("ExcessReturns"), RED, "{0:.3%}", 11),
     Indicator("excess_annual_returns", _("ExcessAnnual"), RED, "{0:.3%}", 11),
     Indicator("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11),
@@ -160,23 +158,25 @@ def _max_ddd(arr, index):
     return IndexRange.new(ddd_start, ddd_end, index)
 
 
-def _plot_indicators(ax, indicator_values, plot_excess_indicators):
+def _plot_indicators(ax, indicator_values, plot_excess_indicators, plot_weekly_indicators):
     ax.axis("off")
+    indicators = INDICATORS
+    if plot_weekly_indicators:
+        indicators.append(WEEKLY_INDICATORS)
     if plot_excess_indicators:
-        all_indicators = INDICATORS + [excess_indicators]
-    else:
-        all_indicators = [[]] + INDICATORS
+        indicators.append(EXCESS_INDICATORS)
 
-    for lineno, indicators in enumerate(all_indicators):
+    for lineno, indicators in enumerate(indicators[::-1]):  # lineno: 自下而上的行号
         for index_in_line, i in enumerate(indicators):
-            x = INDICATOR_X_POS[index_in_line]
-            y = INDICATOR_Y_POS[lineno]
+            x = index_in_line * INDICATORS_WIDTH
+            y_value = lineno * (INDICATOR_VALUE_HEIGHT + INDICATOR_LABEL_HEIGHT)
+            y_label = y_value + INDICATOR_LABEL_HEIGHT
             try:
                 value = i.formatter.format(indicator_values[i.key])
             except KeyError:
                 value = "nan"
-            ax.text(x, y.label, i.label, color=i.color, fontsize=LABEL_FONT_SIZE),
-            ax.text(x, y.value, value, color=BLACK, fontsize=i.value_font_size)
+            ax.text(x, y_label, i.label, color=i.color, fontsize=LABEL_FONT_SIZE),
+            ax.text(x, y_value, value, color=BLACK, fontsize=i.value_font_size)
 
 
 def _plot_returns(ax, returns, b_returns, excess_returns, weekly_returns, weekly_b_returns, max_dd, max_ddd):
@@ -218,7 +218,7 @@ def _plot_user_plots(ax, plots_df):
     leg.get_frame().set_alpha(0.5)
 
 
-def plot_result(result_dict, show_windows: bool, savefile: Optional[str], config: Dict):
+def plot_result(result_dict, show_windows=True, savefile=None):
     summary = result_dict["summary"]
 
     if "plots" in result_dict:
@@ -264,7 +264,8 @@ def plot_result(result_dict, show_windows: bool, savefile: Optional[str], config
             "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
             "excess_max_dd_ddd": ex_max_dd_ddd,
         }),
-        plot_excess_indicators
+        plot_excess_indicators,
+        False
     )
 
     _plot_returns(
@@ -281,7 +282,7 @@ def plot_result(result_dict, show_windows: bool, savefile: Optional[str], config
 
     if "plots" in result_dict:
         _plot_user_plots(
-            plt.subplot(gs[indicator_area_height + PLOT_AREA_HEIGHT + 1:, :]),
+            plt.subplot(gs[indicator_area_height + PLOT_AREA_HEIGHT:, :]),
             result_dict["plots"]
         )
 
@@ -292,6 +293,8 @@ def plot_result(result_dict, show_windows: bool, savefile: Optional[str], config
         yo=(img_height * dpi - logo_img.shape[0]) / 2,
         alpha=0.4,
     )
+
+    plt.tight_layout()
 
     if savefile:
         fnmame = savefile
