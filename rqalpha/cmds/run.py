@@ -80,3 +80,7 @@ def run(**kwargs):
 
     if results is None:
         return 1
+
+
+def inject_run_param(param: click.Parameter):
+    cli.commands["run"].params.append(param)

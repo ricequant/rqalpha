@@ -20,7 +20,7 @@ RQAlpha - a Algorithm Trading System
 """
 from typing import Optional
 
-from rqalpha.cmds import cli
+from rqalpha.cmds import cli, inject_run_param
 from rqalpha.api import export_as_api
 from rqalpha.apis import subscribe_event
 from . import data

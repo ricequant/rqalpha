@@ -18,3 +18,4 @@ from . import mod
 from . import run
 from . import misc
 from .entry import cli
+from .run import inject_run_param
