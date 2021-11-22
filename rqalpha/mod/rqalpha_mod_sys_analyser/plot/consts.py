@@ -56,11 +56,11 @@ INDICATOR_WIDTH = 0.15
 INDICATOR_VALUE_HEIGHT = 0.15
 INDICATOR_LABEL_HEIGHT = 0.2
 
-LINE_STRATEGY = LineInfo(_("Strategy"), RED, 1)
-LINE_BENCHMARK = LineInfo(_("Benchmark"), BLUE, 1)
-LINE_EXCESS = LineInfo(_("Excess"), YELLOW, 1)
-LINE_WEEKLY = LineInfo(_("Weekly"), RED, 0.6)
-LINE_WEEKLY_BENCHMARK = LineInfo(_("BenchmarkWeekly"), BLUE, 0.6)
+LINE_STRATEGY = LineInfo(_("Strategy"), RED, 1, 2)
+LINE_BENCHMARK = LineInfo(_("Benchmark"), BLUE, 1, 2)
+LINE_EXCESS = LineInfo(_("Excess"), YELLOW, 1, 2)
+LINE_WEEKLY = LineInfo(_("Weekly"), RED, 0.6, 2)
+LINE_WEEKLY_BENCHMARK = LineInfo(_("BenchmarkWeekly"), BLUE, 0.6, 2)
 
 MAX_DD = MaxDDInfo(_("MaxDrawDown"), "v", "Green", 8, 0.7)
 MAX_DDD = MaxDDInfo(_("MaxDDD"), "D", "Blue", 8, 0.7)

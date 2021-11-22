@@ -22,7 +22,7 @@ from numpy import array
 from pandas import DatetimeIndex, DataFrame, Series
 
 IndicatorInfo = namedtuple("Indicator", ("key", "label", "color", "formatter", "value_font_size"))
-LineInfo = namedtuple("ReturnLine", ("label", "color", "alpha"))
+LineInfo = namedtuple("ReturnLine", ("label", "color", "alpha", "linewidth"))
 MaxDDInfo = namedtuple("MaxDD", ("label", "marker", "color", "markersize", "alpha"))
 
 

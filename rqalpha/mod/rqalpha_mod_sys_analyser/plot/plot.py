@@ -22,7 +22,7 @@ from collections import ChainMap
 import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from matplotlib import gridspec, ticker, image as mpimg, pyplot as plt
+from matplotlib import gridspec, ticker, image as mpimg, pyplot
 
 import rqalpha
 
@@ -64,7 +64,6 @@ class IndicatorArea(SubPlot):
 
 class ReturnPlot(SubPlot):
     height: int = 4
-    returns_line_width = 2
 
     def __init__(self, returns, returns_lines: List[Tuple[pd.Series, LineInfo]], max_dds: List[Tuple[IndexRange, MaxDDInfo]]):
         self._returns = returns
@@ -72,9 +71,15 @@ class ReturnPlot(SubPlot):
         self._max_dds = max_dds
 
     @classmethod
-    def _plot_returns(cls, ax, returns, label, color, alpha=1):
+    def _plot_returns(cls, ax, returns, info: LineInfo):
         if returns is not None:
-            ax.plot(returns, label=label, alpha=alpha, linewidth=cls.returns_line_width, color=color)
+            ax.plot(returns, label=info.label, alpha=info.alpha, linewidth=info.linewidth, color=info.color)
+
+    def _plot_max_dd(self, ax, max_dd: IndexRange, info: MaxDDInfo):
+        ax.plot(
+            [max_dd.start_date, max_dd.end_date], [self._returns[max_dd.start], self._returns[max_dd.end]],
+            info.marker, color=info.color, markersize=info.markersize, alpha=info.alpha, label=info.label
+        )
 
     def plot(self, ax: Axes):
         ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
@@ -82,18 +87,16 @@ class ReturnPlot(SubPlot):
         ax.grid(b=True, which='minor', linewidth=.2)
         ax.grid(b=True, which='major', linewidth=1)
         ax.patch.set_alpha(0.6)
+
         # plot lines
-        for returns, (label, color, alpha) in self._returns_lines:
-            if returns is not None:
-                ax.plot(returns, label=label, alpha=alpha, linewidth=self.returns_line_width, color=color)
+        for returns, info in self._returns_lines:
+            self._plot_returns(ax, returns, info)
         # plot MaxDD/MaxDDD
-        for max_dd, (label, marker, color, markersize, alpha) in self._max_dds:
-            ax.plot(
-                [max_dd.start_date, max_dd.end_date], [self._returns[max_dd.start], self._returns[max_dd.end]],
-                marker, color=color, markersize=markersize, alpha=alpha, label=label
-            )
+        for max_dd, info in self._max_dds:
+            self._plot_max_dd(ax, max_dd, info)
+
         # place legend
-        plt.legend(loc="best").get_frame().set_alpha(0.5)
+        pyplot.legend(loc="best").get_frame().set_alpha(0.5)
         # manipulate axis
         ax.set_yticklabels(['{:3.2f}%'.format(x * 100) for x in ax.get_yticks()])
 
@@ -108,7 +111,7 @@ class UserPlot(SubPlot):
         ax.patch.set_alpha(0.6)
         for column in self._df.columns:
             ax.plot(self._df[column], label=column)
-        plt.legend(loc="best").get_frame().set_alpha(0.5)
+        pyplot.legend(loc="best").get_frame().set_alpha(0.5)
 
 
 class WaterMark:
@@ -128,23 +131,35 @@ class WaterMark:
             yo=(self.img_height * self.dpi - self.logo_img.shape[0]) / 2,
             alpha=0.4,
         )
+        
+
+def _plot(title: str, sub_plots: List[SubPlot]):
+    img_height = sum(s.height for s in sub_plots)
+    water_mark = WaterMark(IMG_WIDTH, img_height)
+    fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi)
+
+    gs = gridspec.GridSpec(img_height, 8, figure=fig)
+    last_height = 0
+    for p in sub_plots:
+        p.plot(pyplot.subplot(gs[last_height:last_height + p.height, :-1]))
+        last_height += p.height
+
+    water_mark.plot(fig)
+    pyplot.tight_layout()
+    return fig
 
 
-def plot_result(result_dict, show_windows=True, savefile=None, weekly_indicators: bool = False):
+def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = False, open_close_points: bool = False):
     summary = result_dict["summary"]
-    title = summary['strategy_file']
     portfolio = result_dict["portfolio"]
-    benchmark_portfolio = result_dict.get("benchmark_portfolio")
-    max_dd = _max_dd(portfolio.unit_net_value.values, portfolio.index)
-    max_ddd = _max_ddd(portfolio.unit_net_value.values, portfolio.index)
-    # 超额收益
-    return_lines: List[Tuple[pd.Series, LineInfo]] = [(portfolio.unit_net_value - 1, LINE_STRATEGY)]
 
-    if benchmark_portfolio is not None:
+    return_lines: List[Tuple[pd.Series, LineInfo]] = [(portfolio.unit_net_value - 1, LINE_STRATEGY)]
+    if "benchmark_portfolio" in result_dict:
+        benchmark_portfolio = result_dict["benchmark_portfolio"]
         ex_returns = portfolio.unit_net_value - benchmark_portfolio.unit_net_value
-        ex_max_dd = _max_dd(ex_returns + 1, portfolio.index)
-        ex_max_ddd = _max_ddd(ex_returns + 1, portfolio.index)
-        ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(ex_max_dd.repr, ex_max_ddd.repr)
+        ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
+            _max_dd(ex_returns + 1, portfolio.index).repr, _max_ddd(ex_returns + 1, portfolio.index).repr
+        )
         indicators = INDICATORS + [EXCESS_INDICATORS]
         return_lines.extend([
             (benchmark_portfolio.unit_net_value - 1, LINE_BENCHMARK),
@@ -158,6 +173,8 @@ def plot_result(result_dict, show_windows=True, savefile=None, weekly_indicators
     if weekly_indicators:
         return_lines.append((weekly_returns(portfolio), LINE_WEEKLY))
         indicators.append(WEEKLY_INDICATORS)
+    max_dd = _max_dd(portfolio.unit_net_value.values, portfolio.index)
+    max_ddd = _max_ddd(portfolio.unit_net_value.values, portfolio.index)
 
     sub_plots = [IndicatorArea(indicators, ChainMap(summary, {
         "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
@@ -167,25 +184,14 @@ def plot_result(result_dict, show_windows=True, savefile=None, weekly_indicators
     )]
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))
+    
+    _plot(summary["strategy_file"], sub_plots)
 
-    img_height = sum(s.height for s in sub_plots)
-    water_mark = WaterMark(IMG_WIDTH, img_height)
-    fig = plt.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi)
-    gs = gridspec.GridSpec(img_height, 8)
-    last_height = 0
-    for p in sub_plots:
-        p.plot(plt.subplot(gs[last_height:last_height + p.height, :-1]))
-        last_height += p.height
-    water_mark.plot(fig)
-    plt.tight_layout()
+    if save:
+        file_path = save
+        if os.path.isdir(save):
+            file_path = os.path.join(save, "{}.png".format(summary["strategy_name"]))
+        pyplot.savefig(file_path, bbox_inches='tight')
 
-    if savefile:
-        file_path = savefile
-        if os.path.isdir(savefile):
-            file_path = os.path.join(savefile, "{}.png".format(summary["strategy_name"]))
-        plt.savefig(file_path, bbox_inches='tight')
-
-    if show_windows:
-        plt.show()
-
-
+    if show:
+        pyplot.show()
