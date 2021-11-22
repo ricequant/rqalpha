@@ -27,7 +27,8 @@ from matplotlib import gridspec, ticker, image as mpimg, pyplot
 import rqalpha
 
 from .utils import IndicatorInfo, LineInfo, IndexRange, max_ddd as _max_ddd, max_dd as _max_dd, weekly_returns, MaxDDInfo
-from .consts import INDICATOR_WIDTH, INDICATOR_VALUE_HEIGHT, INDICATOR_LABEL_HEIGHT, IMG_WIDTH
+from .consts import INDICATOR_WIDTH, INDICATOR_VALUE_HEIGHT, INDICATOR_LABEL_HEIGHT
+from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT
 from .consts import LABEL_FONT_SIZE, BLACK
 from .consts import INDICATORS, WEEKLY_INDICATORS, EXCESS_INDICATORS
 from .consts import LINE_BENCHMARK, LINE_STRATEGY, LINE_WEEKLY_BENCHMARK, LINE_WEEKLY, LINE_EXCESS, MAX_DD, MAX_DDD
@@ -41,7 +42,7 @@ class SubPlot:
 
 
 class IndicatorArea(SubPlot):
-    height: int = 2
+    height: int = INDICATOR_AREA_HEIGHT
 
     def __init__(self, indicators: List[List[IndicatorInfo]], indicator_values: Mapping[str, float]):
         self._indicators = indicators
@@ -63,7 +64,7 @@ class IndicatorArea(SubPlot):
 
 
 class ReturnPlot(SubPlot):
-    height: int = 4
+    height: int = PLOT_AREA_HEIGHT
 
     def __init__(self, returns, returns_lines: List[Tuple[pd.Series, LineInfo]], max_dds: List[Tuple[IndexRange, MaxDDInfo]]):
         self._returns = returns
@@ -102,7 +103,7 @@ class ReturnPlot(SubPlot):
 
 
 class UserPlot(SubPlot):
-    height: int = 2
+    height: int = USER_PLOT_AREA_HEIGHT
 
     def __init__(self, plots_df):
         self._df = plots_df
