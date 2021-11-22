@@ -8,7 +8,7 @@ from bokeh.models import DatetimeTickFormatter, NumeralTickFormatter, BoxAnnotat
 from bokeh.core.enums import RenderLevel
 
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.mod.rqalpha_mod_sys_analyser.plot import max_ddd as _max_ddd
+from rqalpha.mod.rqalpha_mod_sys_analyser.plot import _max_ddd
 
 
 class Colors:
@@ -41,16 +41,16 @@ class Plot:
         self._fig = figure(x_axis_type="datetime")
         self._fig.xaxis.formatter = DatetimeTickFormatter(months='%Y-%m')
         self._fig.yaxis.formatter = NumeralTickFormatter(format="0.00%")
-        self._divs = None
+        self._divs = []
 
     def plot(self):
         self._plot_line(self._p.index, self._p.unit_net_value - 1.0, Colors.STRATEGY_LINE, _("Strategy Returns"))
         self._plot_line(self._bp.index, self._bp.unit_net_value - 1.0, Colors.BENCHMARK_LINE, _("Benchmark Returns"))
         portfolio_value = self._p.unit_net_value * self._p.units
         max_dd = _max_dd(portfolio_value.values)
-        max_ddd = IndexRange(*_max_ddd(portfolio_value.values))
+        max_ddd = _max_ddd(portfolio_value.values, portfolio_value.index)
         self._plot_box(*max_dd, Colors.MAX_DD_BOX, _("MaxDD"))
-        self._plot_box(*max_ddd, Colors.MAX_DDD_BOX, _("MaxDDD"))
+        self._plot_box(max_ddd.start, max_ddd.end, Colors.MAX_DDD_BOX, _("MaxDDD"))
         self._fig.legend.location = "bottom_right"
 
     def show(self):
