@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 from collections import namedtuple, ChainMap
+from typing import Optional, Dict
 
 import numpy as np
 import pandas as pd
@@ -217,7 +218,7 @@ def _plot_user_plots(ax, plots_df):
     leg.get_frame().set_alpha(0.5)
 
 
-def plot_result(result_dict, show_windows=True, savefile=None):
+def plot_result(result_dict, show_windows: bool, savefile: Optional[str], config: Dict):
     summary = result_dict["summary"]
 
     if "plots" in result_dict:

@@ -34,16 +34,15 @@ __config__ = {
     "report_save_path": None,
     # 是否在回测结束后绘制收益曲线图
     'plot': False,
+    # 收益曲线图路径，若设置则将收益曲线图保存为 png 文件
+    'plot_save_file': None,
+    # 收益曲线图设置
     'plot_config': {
-        # 收益曲线图路径，若设置则将收益曲线图保存为 png 文件
-        'save_file': None,
         # 是否在收益图中展示买卖点
         'open_close_points': False,
         # 是否在收益图中展示周度指标和收益曲线
         'weekly_indicators': False
     },
-    # deprecated:
-    'plot_save_file': None,
 }
 
 
