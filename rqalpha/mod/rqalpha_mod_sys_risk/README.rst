@@ -25,13 +25,13 @@ RQAlpha 风控 Mod
 ..  code-block:: python
 
     {
-        # 检查限价单价格是否合法
+        # 开启对限价单价格合法性的检查
         "validate_price": True,
-        # 检查标的证券是否可以交易
+        # 开启对标的可交易情况对检查
         "validate_is_trading": True,
-        # 检查可用资金是否充足
+        # 开启对可用资金是否足够满足下单要求的检查
         "validate_cash": True,
-        # 检查是否存在自成交的风险
+        # 开启对存在自成交风险的检查
         "validate_self_trade": False,
     }
 

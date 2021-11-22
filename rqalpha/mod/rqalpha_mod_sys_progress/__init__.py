@@ -17,7 +17,8 @@ from rqalpha import cli
 
 
 __config__ = {
-    "show": False
+    # 是否在命令行/终端绘制进度条
+    "show": False,
 }
 
 

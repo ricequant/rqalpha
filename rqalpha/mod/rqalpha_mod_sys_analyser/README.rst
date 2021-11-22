@@ -29,18 +29,20 @@ RQAlpha 策略分析 Mod。
 ..  code-block:: python
 
    {
-        # 当不输出csv/pickle/plot 等内容时，可以通过 record 来决定是否执行该 Mod 的计算逻辑
+        # 策略基准，该基准将用于风险指标计算和收益曲线图绘制
+        #   若基准为单指数/股票，此处直接设置 order_book_id，如："000300.XSHG"
+        #   若基准为复合指数，则需传入 order_book_id 和权重构成的字典，如：{"000300.XSHG": 0.2. "000905.XSHG": 0.8}
+        "benchmark": None,
+        # 当不输出 csv/pickle/plot 等内容时，关闭该项可关闭策略运行过程中部分收集数据的逻辑，用以提升性能
         "record": True,
-        # 如果指定路径，则输出计算后的 pickle 文件
+        # 回测结果输出的文件路径，该文件为 pickle 格式，内容为每日净值、头寸、流水及风险指标等；若不设置则不输出该文件
         "output_file": None,
-        # 如果指定路径，则输出 report csv 文件
+        # 回测报告的数据目录，报告为 csv 格式；若不设置则不输出报告
         "report_save_path": None,
-        # 画图
+        # 是否在回测结束后绘制收益曲线图
         'plot': False,
-        # 如果指定路径，则输出 plot 对应的图片文件
+        # 收益曲线图路径，若设置则将收益曲线图保存为 png 文件
         'plot_save_file': None,
-        # 基准 order_book_id
-        "benchmark": None
     }
 
 您可以通过如下方式来修改模块的配置信息，比如下面的示例中介绍了如何开启显示回测收益曲线图

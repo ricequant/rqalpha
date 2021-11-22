@@ -27,24 +27,32 @@ RQAlpha 回测 Mod，启用该模块开启回测功能。
 ..  code-block:: python
 
     {
-        # 是否开启信号模式
+        # 开启信号模式：该模式下，所有通过风控的订单将不进行撮合，直接产生交易
         "signal": False,
-        # 启用的回测引擎，目前支持 `current_bar` (当前Bar收盘价撮合) 和 `next_bar` (下一个Bar开盘价撮合)
+        # 撮合方式，其中：
+        #   日回测的可选值为 "current_bar"|"vwap"（以当前 bar 收盘价｜成交量加权平均价撮合）
+        #   分钟回测的可选值有 "current_bar"|"next_bar"|"vwap"（以当前 bar 收盘价｜下一个 bar 的开盘价｜成交量加权平均价撮合)
+        #   tick 回测的可选值有 "last"|"best_own"|"best_counterparty"（以最新价｜己方最优价｜对手方最优价撮合）和 "counterparty_offer"（逐档撮合）
         "matching_type": "current_bar",
-        # price_limit: 在处于涨跌停时，无法买进/卖出，默认开启【在 Signal 模式下，不再禁止买进/卖出，如果开启，则给出警告提示。】
+        # 开启对于处于涨跌停状态的证券的撮合限制（信号模式下该限制不生效）
         "price_limit": True,
-        # liquidity_limit: 当对手盘没有流动性的时候，无法买进/卖出，默认关闭
+        # 开启对于对手盘无流动性的证券的撮合限制（仅在 tick 回测下生效）
         "liquidity_limit": False,
-        # 是否有成交量限制
+        # 开启成交量限制（仅在日和分钟回测下生效）
+        #   开启该限制意味着每个 bar 的累计成交量将不会超过该时间段内市场上总成交量的一定比值（volume_percent）
         "volume_limit": True,
-        # 按照当前成交量的百分比进行撮合
+        # 每个 bar 可成交数量占市场总成交量的比值，在 volume_limit 开启时生效
         "volume_percent": 0.25,
-        # 滑点模型，如果使用自己的定制的滑点，需要加上完整的包名
+        # 滑点模型，可选值有 "PriceRatioSlippage"（按价格比例设置滑点）和 "TickSizeSlippage"（按跳设置滑点）
+        #    亦可自己实现滑点模型，选择自己实现的滑点模型时，此处需传入包含包和模块的完整类路径
+        #    滑点模型类需继承自 rqalpha.mod.rqalpha_mod_sys_simulation.slippage.BaseSlippage
         "slippage_model": "PriceRatioSlippage",
-        # 设置滑点
+        # 设置滑点值，对于 PriceRatioSlippage 表示价格的比例，对于 TickSizeSlippage 表示跳的数量
         "slippage": 0,
-         # volume 为 0 时限制成交
+        # 开启对于当前 bar 无成交量的标的的撮合限制（仅在日和分钟回测下生效）
         "inactive_limit": True,
+        # 账户每日计提的费用，需按照(账户类型，费率)的格式传入，例如[("STOCK", 0.0001), ("FUTURE", 0.0001)]
+        "management_fee": [],
     }
 
 您可以通过如下方式来修改模块的配置信息，比如下面的示例中介绍了如何设置滑点

@@ -29,7 +29,8 @@ RQAlpha 控制台进度条 Mod
 ..  code-block:: python
 
     {
-        "show": False
+        # 是否在命令行/终端绘制进度条
+        "show": False,
     }
 
 您可以直接修改模块配置信息来选择开启/关闭对应功能

@@ -184,17 +184,18 @@ def run(config, source_code=None, user_funcs=None):
         env.user_strategy = user_strategy
 
         env.event_bus.publish_event(Event(EVENT.BEFORE_STRATEGY_RUN))
-        if persist_helper:
-            with LogCapture(user_log) as log_capture:
-                user_strategy.init()
-        else:
-            user_strategy.init()
 
         if config.extra.context_vars:
             for k, v in config.extra.context_vars.items():
                 if isinstance(v, RqAttrDict):
                     v = v.__dict__
                 setattr(ucontext, k, v)
+
+        if persist_helper:
+            with LogCapture(user_log) as log_capture:
+                user_strategy.init()
+        else:
+            user_strategy.init()
 
         if persist_helper:
             env.event_bus.publish_event(Event(EVENT.BEFORE_SYSTEM_RESTORED))
