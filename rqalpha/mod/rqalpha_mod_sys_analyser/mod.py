@@ -404,6 +404,10 @@ class AnalyserMod(AbstractMod):
 
         if self._mod_config.plot or self._mod_config.plot_save_file:
             from .plot import plot_result
-            plot_result(result_dict, self._mod_config.plot, self._mod_config.plot_save_file)
+            plot_config = self._mod_config.plot_config
+            plot_result(
+                result_dict, self._mod_config.plot, self._mod_config.plot_save_file,
+                plot_config.weekly_indicators, plot_config.open_close_points
+            )
 
         return result_dict
