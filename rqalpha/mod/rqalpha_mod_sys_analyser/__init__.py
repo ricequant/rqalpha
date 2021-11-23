@@ -98,8 +98,10 @@ inject_run_param(click.Option(
 @cli.command()
 @click.argument('result_pickle_file_path', type=click.Path(exists=True), required=True)
 @click.option('--show/--hide', 'show', default=True)
-@click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help="save plot result to file")
-def plot(result_pickle_file_path, show, plot_save_file):
+@click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help=_("save plot result to file"))
+@click.option('--plot-open-close-points', is_flag=True, help=_("show open close points on plot"))
+@click.option('--plot-weekly-indicators', is_flag=True, help=_("show weekly indicators and return curve on plot"))
+def plot(result_pickle_file_path, show, plot_save_file, plot_open_close_points, plot_weekly_indicators):
     """
     [sys_analyser] draw result DataFrame
     """
@@ -107,7 +109,8 @@ def plot(result_pickle_file_path, show, plot_save_file):
     from .plot import plot_result
 
     result_dict = pd.read_pickle(result_pickle_file_path)
-    plot_result(result_dict, show, plot_save_file)
+    print(plot_open_close_points, plot_weekly_indicators)
+    plot_result(result_dict, show, plot_save_file, plot_weekly_indicators, plot_open_close_points)
 
 
 @cli.command()
