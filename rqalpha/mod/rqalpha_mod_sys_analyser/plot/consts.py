@@ -79,7 +79,7 @@ INDICATORS = [[
     IndicatorInfo("benchmark_total_returns", _("BenchmarkReturns"), BLUE, "{0:.3%}", 11),
     IndicatorInfo("benchmark_annualized_returns", _("BenchmarkAnnual"), BLUE, "{0:.3%}", 11),
     IndicatorInfo("volatility", _("Volatility"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("max_drawdown", _("MaxDrawdown"), BLACK, "{0:.4}", 11),
+    IndicatorInfo("max_drawdown", _("MaxDrawDown"), BLACK, "{0:.4}", 11),
     IndicatorInfo("tracking_error", _("TrackingError"), BLACK, "{0:.4}", 11),
     IndicatorInfo("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11),
     IndicatorInfo("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6),

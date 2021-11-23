@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-09-08 11:05+0800\n"
+"POT-Creation-Date: 2021-11-23 15:48+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.8.0\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: rqalpha/environment.py:71
 msgid ""
@@ -46,15 +46,15 @@ msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:210
+#: rqalpha/main.py:211
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:243
+#: rqalpha/main.py:244
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:248
+#: rqalpha/main.py:249
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
@@ -306,6 +306,46 @@ msgstr "{} 的目标持仓需要在 0 到 1 之间，当前值：{}"
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:64
+msgid "[sys_analyser] save report"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:69
+msgid "[sys_analyser] output result pickle file"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:74
+msgid "[sys_analyser] plot result"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:79
+msgid "[sys_analyser] save plot to file"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:84
+msgid "[sys_analyser] order_book_id of benchmark"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:89
+msgid "[sys_analyser] show open close points on plot"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:94
+msgid "[sys_analyser] show weekly indicators and return curve on plot"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:101
+msgid "save plot result to file"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:102
+msgid "show open close points on plot"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:103
+msgid "show weekly indicators and return curve on plot"
+msgstr ""
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:100
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
@@ -320,142 +360,150 @@ msgstr ""
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:71
-msgid "TotalReturns"
-msgstr "策略收益率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:72
-msgid "AnnualReturns"
-msgstr "策略年化收益率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:73
-msgid "Alpha"
-msgstr "阿尔法"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:74
-msgid "Beta"
-msgstr "贝塔"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:75
-msgid "Sharpe"
-msgstr "夏普率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:76
-msgid "Sortino"
-msgstr "索提诺比率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:77
-msgid "InformationRatio"
-msgstr "信息比率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:79
-msgid "BenchmarkReturns"
-msgstr "基准收益率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:80
-msgid "BenchmarkAnnual"
-msgstr "基准年化收益率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:81
-msgid "Volatility"
-msgstr "波动率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:82
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:199
-msgid "MaxDrawdown"
-msgstr "最大回撤"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:83
-msgid "TrackingError"
-msgstr "跟踪误差"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:84
-msgid "DownsideRisk"
-msgstr "下行风险"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:85
-msgid "MaxDD/MaxDDD"
-msgstr "最大回撤/最长回撤持续期"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:87
-msgid "WeeklyAlpha"
-msgstr "周度阿尔法"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:88
-msgid "WeeklyBeta"
-msgstr "周度贝塔"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:89
-msgid "WeeklySharpe"
-msgstr "周度夏普率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:90
-msgid "WeeklySortino"
-msgstr "周度索提诺比率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:91
-msgid "WeeklyInfoRatio"
-msgstr "周度信息比率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:92
-msgid "WeeklyTrackingError"
-msgstr "周度跟踪误差"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:93
-msgid "WeeklyMaxDrawdown"
-msgstr "周度最大回撤"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:97
-msgid "ExcessReturns"
-msgstr "超额收益率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:98
-msgid "ExcessAnnual"
-msgstr "年化超额收益率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:99
-msgid "ExcessSharpe"
-msgstr "超额夏普率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:100
-msgid "ExcessVolatility"
-msgstr "超额收益波动率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:101
-msgid "ExcessAnnualVolatility"
-msgstr "超额收益年化波动率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:102
-msgid "ExcessMaxDD"
-msgstr "超额收益最大回撤"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:103
-msgid "ExcessMaxDD/ExcessMaxDDD"
-msgstr "超额收益最大回撤/最长回撤持续期"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:189
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:59
 msgid "Strategy"
 msgstr "策略收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:191
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:60
 msgid "Benchmark"
 msgstr "基准收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:193
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:61
 msgid "Excess"
 msgstr "超额收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:194
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:62
 msgid "Weekly"
 msgstr "策略周度收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:196
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:63
 msgid "BenchmarkWeekly"
 msgstr "基准周度收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:200
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:65
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:82
+msgid "MaxDrawDown"
+msgstr "最大回撤"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:66
 msgid "MaxDDD"
 msgstr "最长回撤持续期"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:67
+msgid "Open"
+msgstr "开仓"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:68
+msgid "Close"
+msgstr "平仓"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:71
+msgid "TotalReturns"
+msgstr "策略收益率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:72
+msgid "AnnualReturns"
+msgstr "策略年化收益率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:73
+msgid "Alpha"
+msgstr "阿尔法"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:74
+msgid "Beta"
+msgstr "贝塔"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:75
+msgid "Sharpe"
+msgstr "夏普率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:76
+msgid "Sortino"
+msgstr "索提诺比率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:77
+msgid "InformationRatio"
+msgstr "信息比率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:79
+msgid "BenchmarkReturns"
+msgstr "基准收益率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:80
+msgid "BenchmarkAnnual"
+msgstr "基准年化收益率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:81
+msgid "Volatility"
+msgstr "波动率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:83
+msgid "TrackingError"
+msgstr "跟踪误差"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:84
+msgid "DownsideRisk"
+msgstr "下行风险"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:85
+msgid "MaxDD/MaxDDD"
+msgstr "最大回撤/最长回撤持续期"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:89
+msgid "WeeklyAlpha"
+msgstr "周度阿尔法"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:90
+msgid "WeeklyBeta"
+msgstr "周度贝塔"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:91
+msgid "WeeklySharpe"
+msgstr "周度夏普率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:92
+msgid "WeeklySortino"
+msgstr "周度索提诺比率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:93
+msgid "WeeklyInfoRatio"
+msgstr "周度信息比率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:94
+msgid "WeeklyTrackingError"
+msgstr "周度跟踪误差"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:95
+msgid "WeeklyMaxDrawdown"
+msgstr "周度最大回撤"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:99
+msgid "ExcessReturns"
+msgstr "超额收益率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:100
+msgid "ExcessAnnual"
+msgstr "年化超额收益率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:101
+msgid "ExcessSharpe"
+msgstr "超额夏普率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:102
+msgid "ExcessVolatility"
+msgstr "超额收益波动率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:103
+msgid "ExcessAnnualVolatility"
+msgstr "超额收益年化波动率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:104
+msgid "ExcessMaxDD"
+msgstr "超额收益最大回撤"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:105
+msgid "ExcessMaxDD/ExcessMaxDDD"
+msgstr "超额收益最大回撤/最长回撤持续期"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:33
 msgid ""
@@ -506,10 +554,12 @@ msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:148
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:89
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
 msgstr "订单被拒单: [{order_book_id}] 已涨停。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:154
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:98
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
 msgstr "订单被拒单: [{order_book_id}] 已跌停。"
 
@@ -565,14 +615,6 @@ msgstr ""
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:53
 msgid "cancel_order function is not supported in signal mode"
 msgstr "在 Signal 模式下，不支持 cancel_order 函数"
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:90
-msgid "You have traded {order_book_id} with {quantity} lots in limit up status"
-msgstr "您在涨停状态下交易了 {quantity} 单位的 {order_book_id}"
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:97
-msgid "You have traded {order_book_id} with {quantity} lots in limit down status"
-msgstr "您在跌停状态下交易了 {quantity} 单位的 {order_book_id}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:104
 msgid "unsupported position_effect {}"
@@ -647,7 +689,7 @@ msgstr "触发强制清算，当前总权益为 0"
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
 
-#: rqalpha/portfolio/position.py:169
+#: rqalpha/portfolio/position.py:166
 msgid "last price of position {} is not supposed to be nan"
 msgstr "仓位 {} 最新价不应该为 nan"
 
@@ -738,10 +780,11 @@ msgid ""
 msgstr ""
 
 #: rqalpha/utils/arg_checker.py:344
+#, fuzzy
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
-"'5m', '1d', got {} (type: {})"
-msgstr ""
+"'5m', '1d', '1w' got {} (type: {})"
+msgstr "函数 {}：不合法的参数 {}，应传入具有 {} 类型的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
 #: rqalpha/utils/class_helper.py:23
 msgid ""
@@ -749,37 +792,37 @@ msgid ""
 "more information"
 msgstr "\"{}\" 已被弃用，请使用 \"{}\"，查询文档以获取更多信息"
 
-#: rqalpha/utils/config.py:104
+#: rqalpha/utils/config.py:106
 msgid "in parse_user_config, exception: {e}"
 msgstr "在执行 parse_user_config 时，产生异常: {e}"
 
-#: rqalpha/utils/config.py:206
+#: rqalpha/utils/config.py:196
 msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr "无效的 future info: 合约品种 {} 不合法"
 
-#: rqalpha/utils/config.py:221
+#: rqalpha/utils/config.py:211
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
 msgstr "无效的 future info: commission_type 字段应为 BY_MONEY 或 BY_VOLUME"
 
-#: rqalpha/utils/config.py:225
+#: rqalpha/utils/config.py:215
 msgid "Invalid future info: field {} is not valid"
 msgstr "无效的 future info: 字段 {} 不合法"
 
-#: rqalpha/utils/config.py:255
+#: rqalpha/utils/config.py:245
 msgid "invalid init position {}, should be in format 'order_book_id:quantity'"
 msgstr "无效的初始仓位：{}，格式应该为 'order_book_id:quantity'"
 
-#: rqalpha/utils/config.py:260
+#: rqalpha/utils/config.py:250
 msgid "invalid quantity for instrument {order_book_id}: {quantity}"
 msgstr "初始仓位中合约 {order_book_id} 的数量 {quantity} 不是有效的数字"
 
-#: rqalpha/utils/config.py:275
+#: rqalpha/utils/config.py:265
 msgid "unknown run type: {}"
 msgstr "未知的策略类型：{}"
 
-#: rqalpha/utils/config.py:288
+#: rqalpha/utils/config.py:278
 msgid "unknown persist mode: {}"
 msgstr "未知的持久化模式：{}"
 
@@ -1256,4 +1299,22 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 
 #~ msgid "unknown market type: {}"
 #~ msgstr "未知的市场类型：{}"
+
+#~ msgid "You have traded {order_book_id} with {quantity} lots in limit up status"
+#~ msgstr "您在涨停状态下交易了 {quantity} 单位的 {order_book_id}"
+
+#~ msgid ""
+#~ "You have traded {order_book_id} with "
+#~ "{quantity} lots in limit down status"
+#~ msgstr "您在跌停状态下交易了 {quantity} 单位的 {order_book_id}"
+
+#~ msgid ""
+#~ "function {}: invalid {} argument, "
+#~ "frequency should be in form of "
+#~ "'1m', '5m', '1d', got {} (type: "
+#~ "{})"
+#~ msgstr ""
+
+#~ msgid "MaxDrawdown"
+#~ msgstr "最大回撤"
 
