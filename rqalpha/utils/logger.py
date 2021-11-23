@@ -26,6 +26,7 @@ __all__ = [
     "user_log",
     "system_log",
     "user_system_log",
+    "release_print"
 ]
 
 

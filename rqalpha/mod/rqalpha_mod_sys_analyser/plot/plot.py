@@ -107,6 +107,7 @@ class ReturnPlot(SubPlot):
         # place legend
         pyplot.legend(loc="best").get_frame().set_alpha(0.5)
         # manipulate axis
+        ax.set_yticks(ax.get_yticks())  # make matplotlib happy
         ax.set_yticklabels(['{:3.2f}%'.format(x * 100) for x in ax.get_yticks()])
 
 
