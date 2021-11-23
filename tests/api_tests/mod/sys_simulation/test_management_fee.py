@@ -17,7 +17,7 @@
 
 __config__ = {
     "base": {
-        "start_date": "2015-04-10",
+        "start_date": "2015-04-13",
         "end_date": "2015-05-10",
         "frequency": "1d",
         "accounts": {
