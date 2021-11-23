@@ -17,11 +17,12 @@
 
 from matplotlib import rcParams, pyplot as plt
 from matplotlib.font_manager import findfont, FontProperties
+from matplotlib.markers import CARETUP, CARETDOWN
 
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext as _
 
-from .utils import IndicatorInfo, LineInfo, MaxDDInfo
+from .utils import IndicatorInfo, LineInfo, SpotInfo
 
 plt.style.use('ggplot')
 
@@ -62,8 +63,10 @@ LINE_EXCESS = LineInfo(_("Excess"), YELLOW, 1, 2)
 LINE_WEEKLY = LineInfo(_("Weekly"), RED, 0.6, 2)
 LINE_WEEKLY_BENCHMARK = LineInfo(_("BenchmarkWeekly"), BLUE, 0.6, 2)
 
-MAX_DD = MaxDDInfo(_("MaxDrawDown"), "v", "Green", 8, 0.7)
-MAX_DDD = MaxDDInfo(_("MaxDDD"), "D", "Blue", 8, 0.7)
+MAX_DD = SpotInfo(_("MaxDrawDown"), "v", "Green", 8, 0.7)
+MAX_DDD = SpotInfo(_("MaxDDD"), "D", "Blue", 8, 0.7)
+OPEN_POINT = SpotInfo(_("Open"), "P", "#FF7F50", 8, 0.9)
+CLOSE_POINT = SpotInfo(_("Close"), "X", "#008B8B", 8, 0.9)
 
 INDICATORS = [[
     IndicatorInfo("total_returns", _("TotalReturns"), RED, "{0:.3%}", 11),
@@ -82,7 +85,6 @@ INDICATORS = [[
     IndicatorInfo("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11),
     IndicatorInfo("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6),
 ]]
-
 
 WEEKLY_INDICATORS = [
     IndicatorInfo("weekly_alpha", _("WeeklyAlpha"), BLACK, "{0:.4}", 11),

@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
-from typing import List, Mapping, Tuple
+from typing import List, Mapping, Tuple, Sequence, Optional
 from collections import ChainMap
 
 import pandas as pd
@@ -25,17 +25,19 @@ from matplotlib.figure import Figure
 from matplotlib import gridspec, ticker, image as mpimg, pyplot
 
 import rqalpha
-
-from .utils import IndicatorInfo, LineInfo, IndexRange, max_ddd as _max_ddd, max_dd as _max_dd, weekly_returns, MaxDDInfo
+from rqalpha.const import POSITION_EFFECT
+from .utils import IndicatorInfo, LineInfo, max_ddd as _max_ddd, max_dd as _max_dd, SpotInfo
+from .utils import weekly_returns, trading_dates_index
 from .consts import INDICATOR_WIDTH, INDICATOR_VALUE_HEIGHT, INDICATOR_LABEL_HEIGHT
 from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT
 from .consts import LABEL_FONT_SIZE, BLACK
-from .consts import INDICATORS, WEEKLY_INDICATORS, EXCESS_INDICATORS
-from .consts import LINE_BENCHMARK, LINE_STRATEGY, LINE_WEEKLY_BENCHMARK, LINE_WEEKLY, LINE_EXCESS, MAX_DD, MAX_DDD
+from .consts import INDICATORS, WEEKLY_INDICATORS, EXCESS_INDICATORS, MAX_DD, MAX_DDD, OPEN_POINT, CLOSE_POINT
+from .consts import LINE_BENCHMARK, LINE_STRATEGY, LINE_WEEKLY_BENCHMARK, LINE_WEEKLY, LINE_EXCESS
 
 
 class SubPlot:
     height: int
+    right_pad: Optional[int] = None
 
     def plot(self, ax: Axes):
         raise NotImplementedError
@@ -43,6 +45,7 @@ class SubPlot:
 
 class IndicatorArea(SubPlot):
     height: int = INDICATOR_AREA_HEIGHT
+    right_pad = -1
 
     def __init__(self, indicators: List[List[IndicatorInfo]], indicator_values: Mapping[str, float]):
         self._indicators = indicators
@@ -66,19 +69,24 @@ class IndicatorArea(SubPlot):
 class ReturnPlot(SubPlot):
     height: int = PLOT_AREA_HEIGHT
 
-    def __init__(self, returns, returns_lines: List[Tuple[pd.Series, LineInfo]], max_dds: List[Tuple[IndexRange, MaxDDInfo]]):
+    def __init__(
+            self,
+            returns,
+            lines: List[Tuple[pd.Series, LineInfo]],
+            spots_on_returns: List[Tuple[Sequence[int], SpotInfo]]
+    ):
         self._returns = returns
-        self._returns_lines = returns_lines
-        self._max_dds = max_dds
+        self._lines = lines
+        self._spots_on_returns = spots_on_returns
 
     @classmethod
-    def _plot_returns(cls, ax, returns, info: LineInfo):
+    def _plot_line(cls, ax, returns, info: LineInfo):
         if returns is not None:
             ax.plot(returns, label=info.label, alpha=info.alpha, linewidth=info.linewidth, color=info.color)
 
-    def _plot_max_dd(self, ax, max_dd: IndexRange, info: MaxDDInfo):
+    def _plot_spots_on_returns(self, ax, positions: Sequence[int], info: SpotInfo):
         ax.plot(
-            [max_dd.start_date, max_dd.end_date], [self._returns[max_dd.start], self._returns[max_dd.end]],
+            self._returns.index[positions], self._returns[positions],
             info.marker, color=info.color, markersize=info.markersize, alpha=info.alpha, label=info.label
         )
 
@@ -90,11 +98,11 @@ class ReturnPlot(SubPlot):
         ax.patch.set_alpha(0.6)
 
         # plot lines
-        for returns, info in self._returns_lines:
-            self._plot_returns(ax, returns, info)
+        for returns, info in self._lines:
+            self._plot_line(ax, returns, info)
         # plot MaxDD/MaxDDD
-        for max_dd, info in self._max_dds:
-            self._plot_max_dd(ax, max_dd, info)
+        for positions, info in self._spots_on_returns:
+            self._plot_spots_on_returns(ax, positions, info)
 
         # place legend
         pyplot.legend(loc="best").get_frame().set_alpha(0.5)
@@ -138,14 +146,14 @@ def _plot(title: str, sub_plots: List[SubPlot]):
     img_height = sum(s.height for s in sub_plots)
     water_mark = WaterMark(IMG_WIDTH, img_height)
     fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi)
+    water_mark.plot(fig)
 
     gs = gridspec.GridSpec(img_height, 8, figure=fig)
     last_height = 0
     for p in sub_plots:
-        p.plot(pyplot.subplot(gs[last_height:last_height + p.height, :-1]))
+        p.plot(pyplot.subplot(gs[last_height:last_height + p.height, :p.right_pad]))
         last_height += p.height
 
-    water_mark.plot(fig)
     pyplot.tight_layout()
     return fig
 
@@ -176,12 +184,20 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
         indicators.append(WEEKLY_INDICATORS)
     max_dd = _max_dd(portfolio.unit_net_value.values, portfolio.index)
     max_ddd = _max_ddd(portfolio.unit_net_value.values, portfolio.index)
+    spots_on_returns: List[Tuple[Sequence[int], SpotInfo]] = [
+        ([max_dd.start, max_dd.end], MAX_DD),
+        ([max_ddd.start, max_ddd.end], MAX_DDD)
+    ]
+    if open_close_points:
+        trades: pd.DataFrame = result_dict["trades"]
+        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.CLOSE, portfolio.index), CLOSE_POINT))
+        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.OPEN, portfolio.index), OPEN_POINT))
 
     sub_plots = [IndicatorArea(indicators, ChainMap(summary, {
         "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
         "excess_max_dd_ddd": ex_max_dd_ddd,
     })), ReturnPlot(
-        portfolio.unit_net_value - 1, return_lines, [(max_dd, MAX_DD), (max_ddd, MAX_DDD)]
+        portfolio.unit_net_value - 1, return_lines, spots_on_returns
     )]
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))

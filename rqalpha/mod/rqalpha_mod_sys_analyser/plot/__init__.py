@@ -21,4 +21,4 @@ from rqalpha.mod.rqalpha_mod_sys_analyser.plot.plot import plot_result
 if __name__ == "__main__":
     import pickle
     with open("result.pkl", "rb") as f:
-        plot_result(pickle.loads(f.read()), weekly_indicators=True)
+        plot_result(pickle.loads(f.read()), weekly_indicators=True, open_close_points=True)
