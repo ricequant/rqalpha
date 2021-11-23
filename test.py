@@ -26,14 +26,11 @@ import numpy as np
 import coverage
 
 from rqalpha import run, run_func
-from rqalpha.utils.config import set_locale
 
 TEST_DIR = os.path.abspath("./tests/")
 TEST_OUT = os.path.abspath("./tests/outs/")
 
 pd.set_option("display.width", 160)
-
-set_locale("zh_Hans_CN")
 
 
 def run_tests(file_path=None):

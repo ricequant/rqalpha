@@ -17,7 +17,6 @@
 
 from matplotlib import rcParams, pyplot as plt
 from matplotlib.font_manager import findfont, FontProperties
-from matplotlib.markers import CARETUP, CARETDOWN
 
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext as _
