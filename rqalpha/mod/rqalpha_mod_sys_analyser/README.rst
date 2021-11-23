@@ -43,6 +43,13 @@ RQAlpha 策略分析 Mod。
         'plot': False,
         # 收益曲线图路径，若设置则将收益曲线图保存为 png 文件
         'plot_save_file': None,
+        # 收益曲线图设置
+        'plot_config': {
+            # 是否在收益图中展示买卖点
+            'open_close_points': False,
+            # 是否在收益图中展示周度指标和收益曲线
+            'weekly_indicators': False
+        },
     }
 
 您可以通过如下方式来修改模块的配置信息，比如下面的示例中介绍了如何开启显示回测收益曲线图
@@ -72,20 +79,7 @@ RQAlpha 策略分析 Mod。
 扩展命令
 ===============================
 
-在启用该 Mod 的情况下，您可以使用如下功能:
-
-*   :code:`rqalpha run` 命令增加 :code:`--report target_csv_path` 选项，您可以指定将报告以 :code:`csv` 格式输出至 :code:`target_csv_path` 路径
-*   :code:`rqalpha run` 命令增加 :code:`--output-file target_pickle_path` / :code:`-o target_pickle_path` 选项，您可以将每日  :code:`Portfolio` / :code:`Trade` 数据以 :code:`pickle` 文件格式输出到 :code:`target_pickle_path` 路径
-*   :code:`rqalpha run` 命令增加 :code:`--plot/--no-plot` / :code:`-p` 选项，您可以以图形的方式显示收益曲线图
-*   :code:`rqalpha run` 命令增加 :code:`--plot-save target_plot_img_path` 选项，您可以将收益曲线图输出至 :code:`target_plot img_path` 路径
-
-..  code-block:: bash
-
-    $ rqalpha run -f strategy.py --report target_csv_path -o target_pickle_path --plot --plot-save target_plot_img_path
-
-*   增加 :code:`rqalpha plot` 命令，根据生成的 :code:`pickle` 文件来显示收益曲线图
-    *   :code:`--show/--hide` 选项，是否显示收益曲线图
-    *   :code:`--plot-save target_plot_img_path` 选项，您可以将收益曲线图输出至 :code:`target_plot img_path` 路径
+在启用该 Mod 的情况下，您可以使用如下命令:
 
 ..  code-block:: bash
 
