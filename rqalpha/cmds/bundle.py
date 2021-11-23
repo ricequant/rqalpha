@@ -19,7 +19,6 @@ import tempfile
 import time
 import datetime
 import dateutil
-from six.moves.urllib.parse import urlparse
 
 import click
 import requests
@@ -31,14 +30,13 @@ from rqalpha.cmds.entry import cli
 from rqalpha.utils import init_rqdatac_env
 
 
-@cli.command()
+@cli.command(help=_("create bundle using RQDatac"))
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option("rqdatac_uri", '--rqdatac', '--rqdatac-uri', default=None,
               help='rqdatac uri, eg user:password or tcp://user:password@ip:port')
 @click.option('--compression', default=False, is_flag=True, help='enable compression to reduce file size')
 @click.option('-c', '--concurrency', type=click.INT, default=1)
 def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
-    """create bundle using rqdatac"""
     try:
         import rqdatac
     except ImportError:
@@ -61,14 +59,13 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
     update_bundle_(os.path.join(data_bundle_path, 'bundle'), True, compression, concurrency)
 
 
-@cli.command()
+@cli.command(help=_("Update bundle using RQDatac"))
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option("rqdatac_uri", '--rqdatac', '--rqdatac-uri', default=None,
               help='rqdatac uri, eg user:password or tcp://user:password@ip:port')
 @click.option('--compression', default=False, type=click.BOOL, help='enable compression to reduce file size')
 @click.option('-c', '--concurrency', type=click.INT, default=1)
 def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
-    """update bundle using rqdatac"""
     try:
         import rqdatac
     except ImportError:
@@ -94,11 +91,10 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
     update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
 
 
-@cli.command()
+@cli.command(help=_("Download bundle (monthly updated)"))
 @click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
 @click.option('--confirm', default=True, is_flag=True)
 def download_bundle(data_bundle_path, confirm):
-    """download bundle (monthly updated)"""
     default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
     if data_bundle_path is None:
         data_bundle_path = default_bundle_path

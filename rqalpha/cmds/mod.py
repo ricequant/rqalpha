@@ -19,13 +19,14 @@ from importlib import import_module
 import six
 import click
 
+from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.config import dump_config
 from .entry import cli
 
 
 @cli.command(context_settings=dict(
     ignore_unknown_options=True,
-))
+), help=_("Mod management command"))
 @click.help_option('-h', '--help')
 @click.argument('cmd', nargs=1, type=click.Choice(['list', 'enable', 'disable']))
 @click.argument('params', nargs=-1)

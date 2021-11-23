@@ -17,13 +17,14 @@ import os
 
 import click
 
+from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.click_helper import Date
 from rqalpha.utils.config import parse_config
 
 from .entry import cli
 
 
-@cli.command()
+@cli.command(help=_("Run a strategy"))
 @click.help_option('-h', '--help')
 # -- Base Configuration
 @click.option('-d', '--data-bundle-path', 'base__data_bundle_path', type=click.Path(exists=True))
@@ -53,9 +54,6 @@ from .entry import cli
 # for compatible
 @click.option('--resume', 'base__resume_mode', is_flag=True, help="[DEPRECATED] --resume is deprecated")
 def run(**kwargs):
-    """
-    Start to run a strategy
-    """
     config_path = kwargs.get('config_path', None)
     if config_path is not None:
         config_path = os.path.abspath(config_path)
