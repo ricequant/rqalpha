@@ -19,10 +19,9 @@ from __future__ import division
 import pprint
 import os
 import re
-import collections
 from decimal import getcontext, ROUND_FLOOR
 from datetime import time
-from typing import Optional
+from typing import Optional, Mapping
 
 from contextlib import contextmanager
 import numpy as np
@@ -72,7 +71,7 @@ class RqAttrDict(object):
         for k, v in other.items():
             if isinstance(v, RqAttrDict):
                 v = v.__dict__
-            if isinstance(v, collections.Mapping):
+            if isinstance(v, Mapping):
                 r = RqAttrDict._update_dict_recursive(target_dict.get(k, {}), v)
                 target_dict[k] = r
             else:

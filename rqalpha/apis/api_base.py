@@ -17,9 +17,8 @@
 from __future__ import division
 
 import types
-from collections.abc import Iterable
 from datetime import date, datetime
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Optional, Union, Iterable
 
 import pandas as pd
 import numpy as np
