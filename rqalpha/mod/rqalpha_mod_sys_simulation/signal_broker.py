@@ -81,9 +81,6 @@ class SignalBroker(AbstractBroker):
             deal_price = last_price
 
         if self._price_limit:
-            """
-            在 Signal 模式下，不再阻止涨跌停是否买进，price_limit 参数表示是否给出警告提示。
-            """
             if order.position_effect != POSITION_EFFECT.EXERCISE:
                 if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
                     order.mark_rejected(_(
