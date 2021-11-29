@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-11-23 16:20+0800\n"
+"POT-Creation-Date: 2021-11-29 11:41+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
+"Generated-By: Babel 2.8.0\n"
 
 #: rqalpha/environment.py:71
 msgid ""
@@ -58,26 +58,26 @@ msgstr "策略运行成功，正常退出"
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
-#: rqalpha/apis/api_base.py:68 rqalpha/apis/api_base.py:267
-#: rqalpha/apis/api_base.py:303
+#: rqalpha/apis/api_base.py:67 rqalpha/apis/api_base.py:266
+#: rqalpha/apis/api_base.py:302
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
-#: rqalpha/apis/api_base.py:88 rqalpha/apis/api_base.py:92
+#: rqalpha/apis/api_base.py:87 rqalpha/apis/api_base.py:91
 msgid "Limit order price should not be nan."
 msgstr "限价单价格不能为 nan。"
 
-#: rqalpha/apis/api_base.py:149
+#: rqalpha/apis/api_base.py:148
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:59
 msgid "Main Future contracts[88] are not supported in paper trading."
 msgstr "期货主力连续合约[88] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:153
+#: rqalpha/apis/api_base.py:152
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:61
 msgid "Index Future contracts[99] are not supported in paper trading."
 msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:159
+#: rqalpha/apis/api_base.py:158
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:66
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:90
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:137
@@ -873,8 +873,8 @@ msgid ""
 msgstr "函数 {}：不合法的参数 {}，应传入具有 {} 类型的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
 #: rqalpha/utils/functools.py:55
-msgid "function {} are not supported, please check your account or mod config"
-msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
+msgid "function {} is not supported, please check your account or mod config"
+msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启了包含该 API 实现的 Mod"
 
 #~ msgid "style should be OrderStyle"
 #~ msgstr "style 应该为 OrderStyle 类型，比如MarketOrder()"
@@ -1357,4 +1357,7 @@ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 
 #~ msgid "MaxDrawdown"
 #~ msgstr "最大回撤"
+
+#~ msgid "function {} are not supported, please check your account or mod config"
+#~ msgstr "不支持调用函数 {}，请检查 Account 设置或 mod 配置"
 

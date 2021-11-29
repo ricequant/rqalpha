@@ -53,7 +53,7 @@ def instype_singledispatch(func):
             ).format(funcname, argname, [getattr(i, "name", str(i)) for i in registry], arg, type(arg)))
         else:
             return RQApiNotSupportedError(_(
-                "function {} are not supported, please check your account or mod config"
+                "function {} is not supported, please check your account or mod config"
             ).format(funcname))
 
     @lru_cache(1024)
