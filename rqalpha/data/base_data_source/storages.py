@@ -22,6 +22,7 @@ import os
 import sys
 from copy import copy
 from itertools import chain
+from contextlib import contextmanager
 from typing import Dict, Iterable, Optional
 
 import h5py
@@ -134,7 +135,7 @@ class ShareTransformationStore(object):
         return transformation_data["successor"], transformation_data["share_conversion_ratio"]
 
 
-def open_h5(path, *args, **kwargs):
+def _file_path(path):
     # why do this? non-ascii path in windows!!
     if sys.platform == "win32":
         try:
@@ -142,13 +143,33 @@ def open_h5(path, *args, **kwargs):
         except TypeError:
             l = None
         if l and l.lower() == "utf-8":
-            path = path.encode("utf-8")
+            return path.encode("utf-8")
+    return path
+
+
+def open_h5(path, *args, **kwargs):
+    # forward compatible
     try:
-        return h5py.File(path, *args, **kwargs)
+        return h5py.File(_file_path(path), *args, **kwargs)
     except OSError as e:
         raise RuntimeError(_(
             "open data bundle failed, you can remove {} and try to regenerate bundle: {}"
         ).format(path, e))
+
+
+@contextmanager
+def h5_file(path, *args, mode="r", **kwargs):
+    try:
+        h5 = h5py.File(_file_path(path), *args, mode=mode, **kwargs)
+    except OSError as e:
+        raise RuntimeError(_(
+            "open data bundle failed, you can remove {} and try to regenerate bundle: {}"
+        ).format(path, e))
+    else:
+        try:
+            yield h5
+        finally:
+            h5.close()
 
 
 class DayBarStore(AbstractDayBarStore):
@@ -164,20 +185,22 @@ class DayBarStore(AbstractDayBarStore):
     def __init__(self, path):
         if not os.path.exists(path):
             raise FileExistsError("File {} not exist，please update bundle.".format(path))
-        self._h5 = open_h5(path, mode="r")
+        self._path = path
 
     def get_bars(self, order_book_id):
-        try:
-            return self._h5[order_book_id][:]
-        except KeyError:
-            return np.empty(0, dtype=self.DEFAULT_DTYPE)
+        with h5_file(self._path) as h5:
+            try:
+                return h5[order_book_id][:]
+            except KeyError:
+                return np.empty(0, dtype=self.DEFAULT_DTYPE)
 
     def get_date_range(self, order_book_id):
-        try:
-            data = self._h5[order_book_id]
-            return data[0]['datetime'], data[-1]['datetime']
-        except KeyError:
-            return 20050104, 20050104
+        with h5_file(self._path) as h5:
+            try:
+                data = h5[order_book_id]
+                return data[0]['datetime'], data[-1]['datetime']
+            except KeyError:
+                return 20050104, 20050104
 
 
 class FutureDayBarStore(DayBarStore):
@@ -186,18 +209,20 @@ class FutureDayBarStore(DayBarStore):
 
 class DividendStore(AbstractDividendStore):
     def __init__(self, path):
-        self._h5 = open_h5(path, mode="r")
+        self._path = path
 
     def get_dividend(self, order_book_id):
-        try:
-            return self._h5[order_book_id][:]
-        except KeyError:
-            return None
+        with h5_file(self._path) as h5:
+            try:
+                return h5[order_book_id][:]
+            except KeyError:
+                return None
 
 
 class YieldCurveStore:
     def __init__(self, path):
-        self._data = open_h5(path, mode="r")["data"][:]
+        with h5_file(path) as h5:
+            self._data = h5["data"][:]
 
     def get_yield_curve(self, start_date, end_date, tenor):
         d1 = convert_date_to_date_int(start_date)
@@ -225,26 +250,28 @@ class YieldCurveStore:
 
 class SimpleFactorStore(AbstractSimpleFactorStore):
     def __init__(self, path):
-        self._h5 = open_h5(path, mode="r")
+        self._path = path
 
     def get_factors(self, order_book_id):
-        try:
-            return self._h5[order_book_id][:]
-        except KeyError:
-            return None
+        with h5_file(self._path) as h5:
+            try:
+                return h5[order_book_id][:]
+            except KeyError:
+                return None
 
 
 class DateSet(AbstractDateSet):
     def __init__(self, f):
-        self._h5 = open_h5(f, mode="r")
+        self._f = f
 
     @lru_cache(None)
     def get_days(self, order_book_id):
-        try:
-            days = self._h5[order_book_id][:]
+        with h5_file(self._f) as h5:
+            try:
+                days = h5[order_book_id][:]
+            except KeyError:
+                return set()
             return set(days.tolist())
-        except KeyError:
-            return set()
 
     def contains(self, order_book_id, dates):
         date_set = self.get_days(order_book_id)
