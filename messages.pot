@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-09-08 11:05+0800\n"
+"POT-Creation-Date: 2021-11-29 11:41+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -43,38 +43,38 @@ msgstr ""
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 
-#: rqalpha/main.py:210
+#: rqalpha/main.py:211
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:243
+#: rqalpha/main.py:244
 msgid "strategy run successfully, normal exit"
 msgstr ""
 
-#: rqalpha/main.py:248
+#: rqalpha/main.py:249
 msgid "strategy execute exception"
 msgstr ""
 
-#: rqalpha/apis/api_base.py:68 rqalpha/apis/api_base.py:267
-#: rqalpha/apis/api_base.py:303
+#: rqalpha/apis/api_base.py:67 rqalpha/apis/api_base.py:266
+#: rqalpha/apis/api_base.py:302
 msgid "unsupported order_book_id type"
 msgstr ""
 
-#: rqalpha/apis/api_base.py:88 rqalpha/apis/api_base.py:92
+#: rqalpha/apis/api_base.py:87 rqalpha/apis/api_base.py:91
 msgid "Limit order price should not be nan."
 msgstr ""
 
-#: rqalpha/apis/api_base.py:149
+#: rqalpha/apis/api_base.py:148
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:59
 msgid "Main Future contracts[88] are not supported in paper trading."
 msgstr ""
 
-#: rqalpha/apis/api_base.py:153
+#: rqalpha/apis/api_base.py:152
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:61
 msgid "Index Future contracts[99] are not supported in paper trading."
 msgstr ""
 
-#: rqalpha/apis/api_base.py:159
+#: rqalpha/apis/api_base.py:158
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:66
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:90
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:137
@@ -125,29 +125,41 @@ msgid ""
 "got {} (type: {})"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:45
+#: rqalpha/cmds/bundle.py:33
+msgid "create bundle using RQDatac"
+msgstr ""
+
+#: rqalpha/cmds/bundle.py:43
 msgid ""
 "rqdatac is required to create bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:86
+#: rqalpha/cmds/bundle.py:54 rqalpha/cmds/bundle.py:83
 msgid "rqdatac init failed with error: {}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:75
+#: rqalpha/cmds/bundle.py:62
+msgid "Update bundle using RQDatac"
+msgstr ""
+
+#: rqalpha/cmds/bundle.py:72
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:90
+#: rqalpha/cmds/bundle.py:87
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:109
+#: rqalpha/cmds/bundle.py:94
+msgid "Download bundle (monthly updated)"
+msgstr ""
+
+#: rqalpha/cmds/bundle.py:105
 msgid ""
 "\n"
 "    [WARNING]\n"
@@ -156,22 +168,42 @@ msgid ""
 "    Are you sure to continue?"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:127
+#: rqalpha/cmds/bundle.py:123
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:138
+#: rqalpha/cmds/bundle.py:134
 msgid "try {} ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:150
+#: rqalpha/cmds/bundle.py:146
 msgid "downloading ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:164
+#: rqalpha/cmds/bundle.py:160
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
+msgstr ""
+
+#: rqalpha/cmds/misc.py:26
+msgid "Generate example strategies to target folder"
+msgstr ""
+
+#: rqalpha/cmds/misc.py:41
+msgid "Output Version Info"
+msgstr ""
+
+#: rqalpha/cmds/misc.py:48
+msgid "Generate default config file"
+msgstr ""
+
+#: rqalpha/cmds/mod.py:29
+msgid "Mod management command"
+msgstr ""
+
+#: rqalpha/cmds/run.py:27
+msgid "Run a strategy"
 msgstr ""
 
 #: rqalpha/core/execution_context.py:111
@@ -288,6 +320,54 @@ msgstr ""
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr ""
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:64
+msgid "[sys_analyser] save report"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:69
+msgid "[sys_analyser] output result pickle file"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:74
+msgid "[sys_analyser] plot result"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:79
+msgid "[sys_analyser] save plot to file"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:84
+msgid "[sys_analyser] order_book_id of benchmark"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:89
+msgid "[sys_analyser] show open close points on plot"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:94
+msgid "[sys_analyser] show weekly indicators and return curve on plot"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:98
+msgid "[sys_analyser] Plot from strategy output file"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:101
+msgid "save plot result to file"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:102
+msgid "show open close points on plot"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:103
+msgid "show weekly indicators and return curve on plot"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:113
+msgid "[sys_analyser] Generate report from strategy output file"
+msgstr ""
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:100
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
@@ -302,141 +382,149 @@ msgstr ""
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:71
-msgid "TotalReturns"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:72
-msgid "AnnualReturns"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:73
-msgid "Alpha"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:74
-msgid "Beta"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:75
-msgid "Sharpe"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:76
-msgid "Sortino"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:77
-msgid "InformationRatio"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:79
-msgid "BenchmarkReturns"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:80
-msgid "BenchmarkAnnual"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:81
-msgid "Volatility"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:82
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:199
-msgid "MaxDrawdown"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:83
-msgid "TrackingError"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:84
-msgid "DownsideRisk"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:85
-msgid "MaxDD/MaxDDD"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:87
-msgid "WeeklyAlpha"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:88
-msgid "WeeklyBeta"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:89
-msgid "WeeklySharpe"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:90
-msgid "WeeklySortino"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:91
-msgid "WeeklyInfoRatio"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:92
-msgid "WeeklyTrackingError"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:93
-msgid "WeeklyMaxDrawdown"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:97
-msgid "ExcessReturns"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:98
-msgid "ExcessAnnual"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:99
-msgid "ExcessSharpe"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:100
-msgid "ExcessVolatility"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:101
-msgid "ExcessAnnualVolatility"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:102
-msgid "ExcessMaxDD"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:103
-msgid "ExcessMaxDD/ExcessMaxDDD"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:189
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:59
 msgid "Strategy"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:191
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:60
 msgid "Benchmark"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:193
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:61
 msgid "Excess"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:194
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:62
 msgid "Weekly"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:196
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:63
 msgid "BenchmarkWeekly"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot.py:200
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:65
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:82
+msgid "MaxDrawDown"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:66
 msgid "MaxDDD"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:67
+msgid "Open"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:68
+msgid "Close"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:71
+msgid "TotalReturns"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:72
+msgid "AnnualReturns"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:73
+msgid "Alpha"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:74
+msgid "Beta"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:75
+msgid "Sharpe"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:76
+msgid "Sortino"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:77
+msgid "InformationRatio"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:79
+msgid "BenchmarkReturns"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:80
+msgid "BenchmarkAnnual"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:81
+msgid "Volatility"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:83
+msgid "TrackingError"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:84
+msgid "DownsideRisk"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:85
+msgid "MaxDD/MaxDDD"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:89
+msgid "WeeklyAlpha"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:90
+msgid "WeeklyBeta"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:91
+msgid "WeeklySharpe"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:92
+msgid "WeeklySortino"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:93
+msgid "WeeklyInfoRatio"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:94
+msgid "WeeklyTrackingError"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:95
+msgid "WeeklyMaxDrawdown"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:99
+msgid "ExcessReturns"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:100
+msgid "ExcessAnnual"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:101
+msgid "ExcessSharpe"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:102
+msgid "ExcessVolatility"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:103
+msgid "ExcessAnnualVolatility"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:104
+msgid "ExcessMaxDD"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:105
+msgid "ExcessMaxDD/ExcessMaxDDD"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:33
@@ -488,10 +576,12 @@ msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:148
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:89
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:154
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:98
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
 msgstr ""
 
@@ -544,14 +634,6 @@ msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:53
 msgid "cancel_order function is not supported in signal mode"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:90
-msgid "You have traded {order_book_id} with {quantity} lots in limit up status"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:97
-msgid "You have traded {order_book_id} with {quantity} lots in limit down status"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:104
@@ -627,7 +709,7 @@ msgstr ""
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr ""
 
-#: rqalpha/portfolio/position.py:169
+#: rqalpha/portfolio/position.py:166
 msgid "last price of position {} is not supposed to be nan"
 msgstr ""
 
@@ -720,7 +802,7 @@ msgstr ""
 #: rqalpha/utils/arg_checker.py:344
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
-"'5m', '1d', got {} (type: {})"
+"'5m', '1d', '1w' got {} (type: {})"
 msgstr ""
 
 #: rqalpha/utils/class_helper.py:23
@@ -729,37 +811,37 @@ msgid ""
 "more information"
 msgstr ""
 
-#: rqalpha/utils/config.py:104
+#: rqalpha/utils/config.py:106
 msgid "in parse_user_config, exception: {e}"
 msgstr ""
 
-#: rqalpha/utils/config.py:206
+#: rqalpha/utils/config.py:196
 msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr ""
 
-#: rqalpha/utils/config.py:221
+#: rqalpha/utils/config.py:211
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
 msgstr ""
 
-#: rqalpha/utils/config.py:225
+#: rqalpha/utils/config.py:215
 msgid "Invalid future info: field {} is not valid"
 msgstr ""
 
-#: rqalpha/utils/config.py:255
+#: rqalpha/utils/config.py:245
 msgid "invalid init position {}, should be in format 'order_book_id:quantity'"
 msgstr ""
 
-#: rqalpha/utils/config.py:260
+#: rqalpha/utils/config.py:250
 msgid "invalid quantity for instrument {order_book_id}: {quantity}"
 msgstr ""
 
-#: rqalpha/utils/config.py:275
+#: rqalpha/utils/config.py:265
 msgid "unknown run type: {}"
 msgstr ""
 
-#: rqalpha/utils/config.py:288
+#: rqalpha/utils/config.py:278
 msgid "unknown persist mode: {}"
 msgstr ""
 
@@ -770,6 +852,6 @@ msgid ""
 msgstr ""
 
 #: rqalpha/utils/functools.py:55
-msgid "function {} are not supported, please check your account or mod config"
+msgid "function {} is not supported, please check your account or mod config"
 msgstr ""
 

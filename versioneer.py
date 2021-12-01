@@ -1394,7 +1394,7 @@ def render_pep440_ricequant(pieces):
                     raise Exception("Only post release tag allowed, tag %s" % tag)
                 if pieces["distance"] > 0:
                     rendered += ".post%d" % (parsed_tag._version.post[1] + 1)
-                    rendered += ".dev%d-g%s" % (pieces["distance"], pieces["short"])
+                    rendered += ".dev%d" % (pieces["distance"])
                 elif pieces["distance"] == 0:
                     rendered += ".post%d" % parsed_tag._version.post[1]
                 if pieces["dirty"]:
@@ -1404,13 +1404,13 @@ def render_pep440_ricequant(pieces):
         # 如果最近的tag是正式版tag，那么就是在开发该系列的.post1
         elif parsed_working == parsed_tag:
             if pieces["distance"] > 0:
-                rendered += ".post1.dev%d-g%s" % (pieces["distance"], pieces["short"])
+                rendered += ".post1.dev%d" % (pieces["distance"])
             if pieces["dirty"]:
                 rendered += ".dirty"
         # 如果正在开发到是一个新的系列，那么就从该系列的.dev0开始
         else:
             if pieces["distance"] >= 0:
-                rendered += ".dev%d-g%s"  % (pieces["distance"], pieces["short"])
+                rendered += ".dev%d" % (pieces["distance"])
 
             if pieces["dirty"]:
                 rendered += ".dirty"
@@ -1428,7 +1428,6 @@ def render_pep440_ricequant(pieces):
         "distance"] == 0:
         return rendered
 
-    rendered += ".g%s" % pieces["short"]
     return rendered
 
 

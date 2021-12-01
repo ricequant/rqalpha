@@ -19,16 +19,13 @@ import shutil
 import click
 import six
 
+from rqalpha.utils.i18n import gettext as _
 from .entry import cli
 
 
-@cli.command()
+@cli.command(help=_("Generate example strategies to target folder"))
 @click.option('-d', '--directory', default="./", type=click.Path(), required=True)
 def examples(directory):
-    """
-    Generate example strategies to target folder
-    """
-
     import rqalpha
     source_dir = os.path.join(os.path.dirname(rqalpha.__file__), "examples")
 
@@ -41,22 +38,16 @@ def examples(directory):
             six.print_("Folder examples exists.")
 
 
-@cli.command()
+@cli.command(help=_("Output Version Info"))
 @click.option('-v', '--version', is_flag=True)
 def version(**kwargs):
-    """
-    Output Version Info
-    """
     from rqalpha import __version__
     six.print_("Current Version: ", __version__)
 
 
-@cli.command()
+@cli.command(help=_("Generate default config file"))
 @click.option('-d', '--directory', default="./", type=click.Path(), required=True)
 def generate_config(directory):
-    """
-    Generate default config file
-    """
     default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config.yml")
     target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
     shutil.copy(default_config, target_config_path)

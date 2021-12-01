@@ -24,7 +24,7 @@ __config__ = {
     #   分钟回测的可选值有 "current_bar"|"next_bar"|"vwap"（以当前 bar 收盘价｜下一个 bar 的开盘价｜成交量加权平均价撮合)
     #   tick 回测的可选值有 "last"|"best_own"|"best_counterparty"（以最新价｜己方最优价｜对手方最优价撮合）和 "counterparty_offer"（逐档撮合）
     "matching_type": "current_bar",
-    # 开启对于处于涨跌停状态的证券的撮合限制（信号模式下该限制不生效）
+    # 开启对于处于涨跌停状态的证券的撮合限制
     "price_limit": True,
     # 开启对于对手盘无流动性的证券的撮合限制（仅在 tick 回测下生效）
     "liquidity_limit": False,

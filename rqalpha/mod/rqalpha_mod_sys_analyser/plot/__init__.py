@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
+# 版权所有 2021 深圳米筐科技有限公司（下称“米筐科技”）
 #
 # 除非遵守当前许可，否则不得使用本软件。
 #
@@ -15,42 +15,10 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-def mod_config_value_parse(value):
-    if value in ["True", "true"]:
-        return True
-    if value in ["False", "false"]:
-        return False
-
-    if value.isdigit():
-        return int(value)
-
-    try:
-        return float(value)
-    except ValueError:
-        pass
-
-    return value
+from rqalpha.mod.rqalpha_mod_sys_analyser.plot.plot import plot_result
 
 
-def inject_mod_commands():
-    from rqalpha.utils.config import get_mod_conf
-    from rqalpha.mod import SYSTEM_MOD_LIST
-    from rqalpha.utils.package_helper import import_mod
-    mod_config = get_mod_conf()
-
-    for mod_name, config in mod_config['mod'].items():
-        if 'lib' in config:
-            lib_name = config["lib"]
-        else:
-            lib_name = "rqalpha_mod_{}".format(mod_name)
-        if not config['enabled']:
-            continue
-        try:
-            if mod_name in SYSTEM_MOD_LIST:
-                # inject system mod
-                import_mod("rqalpha.mod." + lib_name)
-            else:
-                # inject third part mod
-                import_mod(lib_name)
-        except Exception as e:
-            pass
+if __name__ == "__main__":
+    import pickle
+    with open("result.pkl", "rb") as f:
+        plot_result(pickle.loads(f.read()), weekly_indicators=True, open_close_points=True)

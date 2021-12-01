@@ -18,7 +18,7 @@ import versioneer
 requirements = [
     'requests',
     'numpy',
-    'pandas',
+    'pandas >=1.0.5',
     'python-dateutil',
     'six',
     'logbook',
@@ -77,4 +77,5 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
     ],
+    python_requires=">=3.6"
 )

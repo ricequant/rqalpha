@@ -20,7 +20,7 @@ RQAlpha - a Algorithm Trading System
 """
 from typing import Optional
 
-from rqalpha.cmds import cli
+from rqalpha.cmds import cli, inject_run_param
 from rqalpha.api import export_as_api
 from rqalpha.apis import subscribe_event
 from . import data
@@ -215,4 +215,7 @@ __version__ = get_versions()['version']
 del get_versions
 
 version_info = tuple(int(v) if v.isdigit() else v for v in __version__.split('.'))
-__main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
+try:
+    __main_version__ = "%s.%s.x" % (version_info[0], version_info[1])
+except:
+    __main_version__ = "0.0"

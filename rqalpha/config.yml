@@ -50,5 +50,5 @@ extra:
   # enable_profiler: 是否启动性能分析
   enable_profiler: false
   is_hold: false
-  locale: zh_Hans_CN
+  locale: ~
   logger: []
