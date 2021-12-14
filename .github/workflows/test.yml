@@ -23,7 +23,7 @@ jobs:
           $HOME/.cache/pip
           $HOME/.rqalpha/bundle
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-    - name: Install dependencies
+    - name: Install dependencies and download-bundle
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         # Install TA-Lib
@@ -42,9 +42,11 @@ jobs:
           pip install -U setuptools
           pip install ipython==5.3.0
           pip install --prefer-binary .
+
+        # download-bundle
+          rqalpha download-bundle
     - name: run test
       run:  |
-          rqalpha download-bundle
           coverage run --source=rqalpha test.py
           ls -al $HOME/.rqalpha/
           ls -al $HOME/.rqalpha/bundle/
