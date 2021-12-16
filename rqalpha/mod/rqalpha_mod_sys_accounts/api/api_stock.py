@@ -16,14 +16,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
-import math
 from decimal import Decimal, getcontext
 from itertools import chain
 from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-import six
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_abstract import (order, order_percent, order_shares,
                                        order_target_percent,

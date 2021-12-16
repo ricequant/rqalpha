@@ -13,3 +13,4 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from . import data_proxy
+from .data_proxy import DataProxy

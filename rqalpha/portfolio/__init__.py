@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from itertools import chain
+from datetime import date
 from typing import Callable, Dict, List, Tuple, Union
 
 import jsonpickle
@@ -24,11 +25,12 @@ import six
 
 from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
 from rqalpha.environment import Environment
-from rqalpha.core.events import EVENT
+from rqalpha.core.events import EVENT, EventBus
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.portfolio.account import Account
-from rqalpha.utils import merge_dicts
+from rqalpha.data import DataProxy
+from rqalpha.utils import merge_dicts, is_valid_price
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_log
@@ -42,24 +44,34 @@ class Portfolio(object, metaclass=PropertyReprMeta):
     投资组合，策略所有账户的集合
     """
     __repr_properties__ = (
-        "total_value", "unit_net_value", "daily_pnl", "daily_returns", "total_returns", "annualized_returns", "accounts"
+        "total_value", "unit_net_value", "daily_pnl", "daily_returns", "total_returns", "annualized_returns"
     )
 
-    def __init__(self, starting_cash, init_positions):
-        # type: (Dict[str, float], List[Tuple[str, int]]) -> Portfolio
-        self._static_unit_net_value = 1
-
+    def __init__(
+            self,
+            starting_cash: Dict[str, float],
+            init_positions: List[Tuple[str, int]],
+            start_date: date,
+            data_proxy: DataProxy,
+            event_bus: EventBus
+    ):
         account_args = {}
         for account_type, cash in starting_cash.items():
-            account_args[account_type] = {"type": account_type, "total_cash": cash, "init_positions": {}}
+            account_args[account_type] = {"account_type": account_type, "total_cash": cash, "init_positions": {}}
+        last_trading_date = data_proxy.get_previous_trading_date(start_date)
         for order_book_id, quantity in init_positions:
             account_type = self.get_account_type(order_book_id)
             if account_type in account_args:
-                account_args[account_type]["init_positions"][order_book_id] = quantity
+                price = data_proxy.get_bar(order_book_id, last_trading_date).close
+                if not is_valid_price(price):
+                    raise ValueError(_("invalid init position {order_book_id}: no valid price at {date}").format(
+                        order_book_id, last_trading_date
+                    ))
+                account_args[account_type]["init_positions"][order_book_id] = quantity, price
         self._accounts = {account_type: Account(**args) for account_type, args in account_args.items()}
+        self._static_unit_net_value = 1
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
 
-        event_bus = Environment.get_instance().event_bus
         event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
 
     def get_state(self):

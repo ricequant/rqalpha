@@ -20,5 +20,9 @@ from datetime import date, datetime
 
 import pandas
 
+from rqalpha.const import POSITION_DIRECTION
+
+
 DateLike = Union[date, datetime, pandas.Timestamp]
 StrOrIter = Union[str, Iterable[str]]
+POSITION_DIRECTION_TYPE = Union[str, POSITION_DIRECTION]

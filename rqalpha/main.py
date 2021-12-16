@@ -164,7 +164,9 @@ def run(config, source_code=None, user_funcs=None):
         assert env.event_source is not None
         if env.portfolio is None:
             from rqalpha.portfolio import Portfolio
-            env.set_portfolio(Portfolio(config.base.accounts, config.base.init_positions))
+            env.set_portfolio(Portfolio(
+                config.base.accounts, config.base.init_positions, config.base.start_date, env.data_proxy, env.event_bus
+            ))
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
 
