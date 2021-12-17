@@ -65,7 +65,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
                 price = data_proxy.get_bar(order_book_id, last_trading_date).close
                 if not is_valid_price(price):
                     raise ValueError(_("invalid init position {order_book_id}: no valid price at {date}").format(
-                        order_book_id, last_trading_date
+                        order_book_id=order_book_id, date=last_trading_date
                     ))
                 account_args[account_type]["init_positions"][order_book_id] = quantity, price
         self._accounts = {account_type: Account(**args) for account_type, args in account_args.items()}
