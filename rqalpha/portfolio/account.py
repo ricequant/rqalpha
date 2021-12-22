@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from itertools import chain
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
@@ -46,9 +46,8 @@ class Account:
         "dividend_receivable",
     ]
 
-    def __init__(self, type, total_cash, init_positions):
-        # type: (str, float, Dict[str, int]) -> None
-        self._type = type
+    def __init__(self, account_type: str, total_cash: float, init_positions: Dict[str, Tuple[int, Optional[float]]]):
+        self._type = account_type
         self._total_cash = total_cash  # 包含保证金的总资金
 
         self._positions = {}
@@ -61,9 +60,9 @@ class Account:
         self._management_fee_rate = 0.0
         self._management_fees = 0.0
 
-        for order_book_id, init_quantity in init_positions.items():
+        for order_book_id, (init_quantity, init_price) in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
-            self._get_or_create_pos(order_book_id, position_direction, init_quantity)
+            self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price)
 
     def __repr__(self):
         positions_repr = {}
@@ -355,17 +354,21 @@ class Account:
         else:
             return chain(*[six.itervalues(p) for p in six.itervalues(self._positions)])
 
-    def _get_or_create_pos(self, order_book_id, direction, init_quantity=0):
-        # type: (str, Union[str, POSITION_DIRECTION], Optional[int]) -> Position
+    def _get_or_create_pos(
+            self,
+            order_book_id: str,
+            direction: Union[POSITION_DIRECTION, str],
+            init_quantity: float = 0,
+            init_price : Optional[float] = None
+    ) -> Position:
         if order_book_id not in self._positions:
             if direction == POSITION_DIRECTION.LONG:
-                long_init_position, short_init_position = init_quantity, 0
+                long_quantity, short_quantity = init_quantity, 0
             else:
-                long_init_position, short_init_position = 0, init_quantity
-
+                long_quantity, short_quantity = 0, init_quantity
             positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: Position(order_book_id, POSITION_DIRECTION.LONG, long_init_position),
-                POSITION_DIRECTION.SHORT: Position(order_book_id, POSITION_DIRECTION.SHORT, short_init_position)
+                POSITION_DIRECTION.LONG: Position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
+                POSITION_DIRECTION.SHORT: Position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
             })
         else:
             positions = self._positions[order_book_id]

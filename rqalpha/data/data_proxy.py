@@ -158,8 +158,7 @@ class DataProxy(TradingDatesMixin):
         return self._data_source.get_settle_price(instrument, date)
 
     @lru_cache(512)
-    def get_bar(self, order_book_id, dt, frequency='1d'):
-        # type: (str, Union[datetime, date], str) -> BarObject
+    def get_bar(self, order_book_id: str, dt: date, frequency: str = '1d') -> BarObject:
         instrument = self.instruments(order_book_id)
         if dt is None:
             return BarObject(instrument, NANDict, dt)

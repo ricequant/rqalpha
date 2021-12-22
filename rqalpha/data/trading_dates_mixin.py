@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import pandas as pd
 
@@ -24,7 +24,7 @@ from rqalpha.utils.functools import lru_cache
 from rqalpha.const import TRADING_CALENDAR_TYPE
 
 
-def _to_timestamp(d):
+def _to_timestamp(d: Union[datetime.date, str, int, float]):
     return pd.Timestamp(d).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
@@ -54,7 +54,7 @@ class TradingDatesMixin(object):
         right = trading_dates.searchsorted(end_date, side='right')
         return trading_dates[left:right]
 
-    def get_previous_trading_date(self, date, n=1, trading_calendar_type=None):
+    def get_previous_trading_date(self, date, n=1, trading_calendar_type=None) -> pd.Timestamp:
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
         if pos >= n:

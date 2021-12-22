@@ -17,11 +17,10 @@
 
 from collections import UserDict
 from datetime import date
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable, Tuple, Optional
 
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
 from rqalpha.environment import Environment
-from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order
@@ -55,24 +54,24 @@ POSITION_PROXY_TYPE_MAP, PositionProxyMeta = new_position_meta()
 
 class Position(AbstractPosition, metaclass=PositionMeta):
     __repr_properties__ = (
-        "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
+        "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl", "last_price"
     )
 
     # 用于注册该 Position 类型适用的 instrument_type
     __instrument_types__ = []
 
-    def __new__(cls, order_book_id, direction, init_quantity=0):
+    def __new__(cls, order_book_id, direction, init_quantity=0, init_price=None):
         if cls == Position:
             ins_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
             try:
                 position_cls = POSITION_TYPE_MAP[ins_type]
             except KeyError:
                 raise NotImplementedError("")
-            return position_cls.__new__(position_cls, order_book_id, direction, init_quantity)
+            return position_cls.__new__(position_cls, order_book_id, direction, init_quantity, init_price)
         else:
             return object.__new__(cls)
 
-    def __init__(self, order_book_id, direction, init_quantity=0):
+    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
         self._env = Environment.get_instance()
 
         self._order_book_id = order_book_id
@@ -83,11 +82,11 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._logical_old_quantity = 0
         self._today_quantity = 0
 
-        self._avg_price = 0
-        self._trade_cost = 0
-        self._transaction_cost = 0
-        self._prev_close = None
-        self._last_price = float("NaN")
+        self._avg_price: float = init_price or 0
+        self._trade_cost: float = 0
+        self._transaction_cost: float = 0
+        self._prev_close: Optional[float] = init_price
+        self._last_price: Optional[float] = init_price
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
 
@@ -159,11 +158,13 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def last_price(self):
-        if self._last_price != self._last_price:
+        if not self._last_price:
             env = Environment.get_instance()
             self._last_price = env.data_proxy.get_last_price(self._order_book_id)
-            if self._last_price != self._last_price:
-                raise RuntimeError(_("last price of position {} is not supposed to be nan").format(self._order_book_id))
+            if not is_valid_price(self._last_price):
+                raise RuntimeError(_("invalid price of {order_book_id}: {price}").format(
+                    order_book_id=self._order_book_id, price=self._last_price
+                ))
         return self._last_price
 
     @property

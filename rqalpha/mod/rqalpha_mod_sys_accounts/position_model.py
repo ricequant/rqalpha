@@ -39,7 +39,7 @@ def _int_to_date(d):
 
 class StockPosition(Position):
     __repr_properties__ = (
-        "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl"
+        "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl", "last_price"
     )
     __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
@@ -47,8 +47,8 @@ class StockPosition(Position):
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
 
-    def __init__(self, order_book_id, direction, init_quantity=0):
-        super(StockPosition, self).__init__(order_book_id, direction, init_quantity)
+    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
+        super(StockPosition, self).__init__(order_book_id, direction, init_quantity, init_price)
         self._dividend_receivable = None
         self._pending_transform = None
         self._non_closable = 0
@@ -214,7 +214,7 @@ class StockPosition(Position):
 class FuturePosition(Position):
     __repr_properties__ = (
         "order_book_id", "direction", "old_quantity", "quantity", "margin", "market_value", "trading_pnl",
-        "position_pnl"
+        "position_pnl", "last_price"
     )
     __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
