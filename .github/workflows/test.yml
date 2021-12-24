@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     steps:
     # Checks out a copy of your repository on the ubuntu-latest machine
     - uses: actions/checkout@v2
@@ -24,7 +24,6 @@ jobs:
           $HOME/.rqalpha/bundle
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
     - name: Install dependencies and download-bundle
-      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         # Install TA-Lib
           wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
