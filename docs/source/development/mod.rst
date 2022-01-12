@@ -35,15 +35,13 @@ Mod开发环境搭建
 .. code-block:: bash
 
     rqalpha-mod-hello
-    ├── __init__.py
     ├── requirements.txt
-    ├── README.rst
     ├── setup.py
     └── rqalpha_mod_hello
         ├── __init__.py
         └── mod.py
 
-假设在新的环境中已经可以成功运行 RQAlpha ，便按照Mod的标准命名格式创建项目 :code:`rqalpha-mod-hello`。进入 :code:`rqalpha-mod-hello` 文件夹，创建 :code:`__init__.py`，填入以下代码：
+假设在新的环境中已经可以成功运行 RQAlpha ，便按照Mod的标准命名格式创建项目 :code:`rqalpha-mod-hello`。进入 :code:`rqalpha_mod_hello` 文件夹，创建 :code:`__init__.py`，填入以下代码：
 
 .. code-block:: python3
 
