@@ -371,9 +371,10 @@ class Account:
                 POSITION_DIRECTION.LONG: Position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
                 POSITION_DIRECTION.SHORT: Position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
             })
-            last_price = env.get_last_price(order_book_id)
-            for p in positions.values():
-                p.update_last_price(last_price)
+            if not init_price:
+                last_price = env.get_last_price(order_book_id)
+                for p in positions.values():
+                    p.update_last_price(last_price)
         else:
             positions = self._positions[order_book_id]
         return positions[direction]

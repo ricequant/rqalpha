@@ -15,6 +15,10 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from datetime import date
+
+from numpy.testing import assert_almost_equal
+
 from rqalpha.environment import Environment
 
 from ..utils import make_test_strategy_decorator
@@ -84,7 +88,7 @@ def test_future_info():
     return locals()
 
 
-def test_position():
+def test_init_position():
     __config__ = {
         "base": {
             "accounts": {
@@ -93,6 +97,13 @@ def test_position():
             "init_positions": "000006.XSHE:10000"
         },
    }
+
+    def before_trading(context):
+        if context.now.date() == date(2018, 4, 2):
+            # 首个交易日，持仓价格应为昨收
+            pos = get_position("000006.XSHE")  # noqa
+            assert_almost_equal(pos.last_price, 7.37)
+            assert pos.quantity == 10000
 
     def init(context):
         context.f1 = "000006.XSHE"
