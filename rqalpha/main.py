@@ -223,13 +223,11 @@ def run(config, source_code=None, user_funcs=None):
             output_profile_result(env)
         release_print(scope)
     except CustomException as e:
-        system_log.error(traceback.format_exc())
         if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
         code = _exception_handler(e)
         mod_handler.tear_down(code, e)
     except Exception as e:
-        system_log.error(traceback.format_exc())
         if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
 
