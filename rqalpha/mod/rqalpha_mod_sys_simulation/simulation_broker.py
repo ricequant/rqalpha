@@ -147,6 +147,8 @@ class SimulationBroker(AbstractBroker, Persistable):
     def pre_settlement(self, __):
         for account, order in self._open_exercise_orders:
             self._get_matcher(order.order_book_id).match(account, order, False)
+            if order.status == ORDER_STATUS.REJECTED or order.status == ORDER_STATUS.CANCELLED:
+                self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
         self._open_exercise_orders.clear()
 
     def on_bar(self, _):
