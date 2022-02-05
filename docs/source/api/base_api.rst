@@ -118,7 +118,7 @@ before_trading - 盘前
 
     ..  code-block:: python
 
-        def before_trading(context, bar_dict):
+        def before_trading(context):
             logger.info("This is before trading")
 
 
