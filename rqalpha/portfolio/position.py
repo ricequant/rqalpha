@@ -78,9 +78,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._instrument = self._env.data_proxy.instruments(order_book_id)  # type: Instrument
         self._direction = direction
 
+        self._quantity = init_quantity
         self._old_quantity = init_quantity
         self._logical_old_quantity = 0
-        self._today_quantity = 0
 
         self._avg_price: float = init_price or 0
         self._trade_cost: float = 0
@@ -103,7 +103,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def quantity(self):
         # type: () -> int
-        return self._old_quantity + self._today_quantity
+        return self._quantity
 
     @property
     def transaction_cost(self):
@@ -118,7 +118,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def trading_pnl(self):
         # type: () -> float
-        trade_quantity = self._today_quantity + (self._old_quantity - self._logical_old_quantity)
+        trade_quantity = self._quantity - self._logical_old_quantity
         return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
@@ -132,12 +132,12 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         """
         返回该持仓的累积盈亏
         """
-        return (self.last_price - self.avg_price) * self.quantity * self._direction_factor
+        return (self.last_price - self.avg_price) * self._quantity * self._direction_factor
 
     @property
     def market_value(self):
         # type: () -> float
-        return self.last_price * self.quantity if self.quantity != 0 else 0
+        return self.last_price * self._quantity
 
     @property
     def margin(self):
@@ -147,7 +147,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def equity(self):
         # type: () -> float
-        return self.last_price * self.quantity if self.quantity != 0 else 0
+        return self.last_price * self._quantity
 
     @property
     def prev_close(self):
@@ -176,12 +176,12 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         order_quantity = sum(o.unfilled_quantity for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
-        return self.quantity - order_quantity
+        return self._quantity - order_quantity
 
     @property
     def today_closable(self):
         # type: () -> int
-        return self._today_quantity - sum(
+        return self._quantity - self._old_quantity - sum(
             o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
         )
 
@@ -190,7 +190,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return {
             "old_quantity": self._old_quantity,
             "logical_old_quantity": self._logical_old_quantity,
-            "today_quantity": self._today_quantity,
+            "quantity": self._quantity,
             "avg_price": self._avg_price,
             "trade_cost": self._trade_cost,
             "transaction_cost": self._transaction_cost,
@@ -201,7 +201,11 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         """"""
         self._old_quantity = state.get("old_quantity", 0)
         self._logical_old_quantity = state.get("logical_old_quantity", self._old_quantity)
-        self._today_quantity = state.get("today_quantity", 0)
+        if "quantity" in state:
+            self._quantity = state["quantity"]
+        else:
+            # forward compatible
+            self._quantity = self._old_quantity + state.get("today_quantity", 0)
         self._avg_price = state.get("avg_price", 0)
         self._trade_cost = state.get("trade_cost", 0)
         self._transaction_cost = state.get("transaction_cost", 0)
@@ -219,17 +223,18 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         # 返回总资金的变化量
         self._transaction_cost += trade.transaction_cost
         if trade.position_effect == POSITION_EFFECT.OPEN:
-            if self.quantity < 0:
-                self._avg_price = trade.last_price if self.quantity + trade.last_quantity > 0 else 0
+            if self._quantity < 0:
+                self._avg_price = trade.last_price if self._quantity + trade.last_quantity > 0 else 0
             else:
-                cost = self.quantity * self._avg_price + trade.last_quantity * trade.last_price
-                self._avg_price = cost / (self.quantity + trade.last_quantity)
-            self._today_quantity += trade.last_quantity
+                cost = self._quantity * self._avg_price + trade.last_quantity * trade.last_price
+                self._avg_price = cost / (self._quantity + trade.last_quantity)
+            self._quantity += trade.last_quantity
             self._trade_cost += trade.last_price * trade.last_quantity
             return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost
         elif trade.position_effect == POSITION_EFFECT.CLOSE:
-            self._today_quantity -= max(trade.last_quantity - self._old_quantity, 0)
+            # 先平昨，后平今
             self._old_quantity -= min(trade.last_quantity, self._old_quantity)
+            self._quantity -= trade.last_quantity
             self._trade_cost -= trade.last_price * trade.last_quantity
             return trade.last_price * trade.last_quantity - trade.transaction_cost
         else:
@@ -240,9 +245,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def settlement(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
-        self._old_quantity += self._today_quantity
+        self._old_quantity = self._quantity
         self._logical_old_quantity = self._old_quantity
-        self._today_quantity = self._trade_cost = self._non_closable = 0
+        self._trade_cost = self._non_closable = 0
         return 0
 
     def update_last_price(self, price):

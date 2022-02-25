@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 import pickle
+from functools import lru_cache
 from datetime import date, datetime, timedelta
 from itertools import groupby
 from typing import Dict, Iterable, List, Optional, Sequence, Union
@@ -148,6 +149,7 @@ class BaseDataSource(AbstractDataSource):
         # type: (AbstractDateSet) -> None
         self._suspend_days.append(date_set)
 
+    @lru_cache(2048)
     def get_dividend(self, instrument):
         try:
             dividend_store = self._dividends[instrument.type]
@@ -330,6 +332,7 @@ class BaseDataSource(AbstractDataSource):
     def current_snapshot(self, instrument, frequency, dt):
         raise NotImplementedError
 
+    @lru_cache(2048)
     def get_split(self, instrument):
         try:
             splilt_store = self._split_factors[instrument.type]

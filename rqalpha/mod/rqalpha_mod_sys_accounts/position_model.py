@@ -76,8 +76,8 @@ class StockPosition(Position):
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
         if self.t_plus_enabled:
-            return self.quantity - order_quantity - self._non_closable
-        return self.quantity - order_quantity
+            return self._quantity - order_quantity - self._non_closable
+        return self._quantity - order_quantity
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
@@ -97,7 +97,7 @@ class StockPosition(Position):
     def before_trading(self, trading_date):
         # type: (date) -> float
         delta_cash = super(StockPosition, self).before_trading(trading_date)
-        if self.quantity == 0 and not self._dividend_receivable:
+        if self._quantity == 0 and not self._dividend_receivable:
             return delta_cash
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
@@ -119,7 +119,7 @@ class StockPosition(Position):
         # type: (date) -> float
         super(StockPosition, self).settlement(trading_date)
 
-        if self.quantity == 0:
+        if self._quantity == 0:
             return 0
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
@@ -137,7 +137,7 @@ class StockPosition(Position):
                     self._env.portfolio.get_account(successor).apply_trade(Trade.__from_create__(
                         order_id=None,
                         price=self.avg_price / conversion_ratio,
-                        amount=self.quantity * conversion_ratio,
+                        amount=self._quantity * conversion_ratio,
                         side=SIDE.BUY,
                         position_effect=POSITION_EFFECT.OPEN,
                         order_book_id=successor
@@ -149,7 +149,7 @@ class StockPosition(Position):
                     delta_cash = self.market_value
             if self.cash_return_by_stock_delisted:
                 delta_cash = self.market_value
-            self._today_quantity = self._old_quantity = 0
+            self._quantity = self._old_quantity = 0
         return delta_cash
 
     @property
@@ -173,7 +173,7 @@ class StockPosition(Position):
         except ValueError:
             payable_date = _int_to_date(dividend["ex_dividend_date"][0])
 
-        self._dividend_receivable = (payable_date, self.quantity * dividend_per_share)
+        self._dividend_receivable = (payable_date, self._quantity * dividend_per_share)
 
     def _handle_dividend_payable(self, trading_date):
         # type: (date) -> float
@@ -205,9 +205,8 @@ class StockPosition(Position):
         self._last_price /= ratio
         self._prev_close /= ratio
         ratio = Decimal(ratio)
-        self._today_quantity = int(Decimal(self._today_quantity) * ratio)
         # int(6000 * 1.15) -> 6899
-        self._old_quantity = int(Decimal(self._old_quantity) * ratio)
+        self._old_quantity = self._quantity = int(Decimal(self._quantity) * ratio)
         self._logical_old_quantity = int(Decimal(self._logical_old_quantity) * ratio)
 
 
@@ -219,7 +218,7 @@ class FuturePosition(Position):
     __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
     old_quantity = property(lambda self: self._old_quantity)
-    today_quantity = property(lambda self: self._today_quantity)
+    today_quantity = property(lambda self: self._quantity - self._old_quantity)
 
     @property
     @lru_cache()
@@ -235,7 +234,7 @@ class FuturePosition(Position):
     def equity(self):
         # type: () -> float
         """"""
-        return self.quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
+        return self._quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
     def margin(self):
@@ -269,7 +268,7 @@ class FuturePosition(Position):
     def apply_trade(self, trade):
         if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
             self._transaction_cost += trade.transaction_cost
-            self._today_quantity -= trade.last_quantity
+            self._quantity -= trade.last_quantity
             self._trade_cost -= trade.last_price * trade.last_quantity
         else:
             super(FuturePosition, self).apply_trade(trade)
@@ -284,7 +283,7 @@ class FuturePosition(Position):
     def settlement(self, trading_date):
         # type: (date) -> float
         super(FuturePosition, self).settlement(trading_date)
-        if self.quantity == 0:
+        if self._quantity == 0:
             return 0
         data_proxy = Environment.get_instance().data_proxy
         instrument = data_proxy.instruments(self._order_book_id)
@@ -294,7 +293,7 @@ class FuturePosition(Position):
             user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))
-            self._today_quantity = self._old_quantity = 0
+            self._quantity = self._old_quantity = 0
         self._avg_price = self.last_price
         return delta_cash
 
