@@ -24,8 +24,7 @@ INDEX_WEIGHTS = None
 
 
 def handle_bar(context, _):
-    for order_book_id, row in INDEX_WEIGHTS.loc[str(context.now.date())].iterrows():
-        order_target_percent(order_book_id, row["weight"])
+    order_target_portfolio(INDEX_WEIGHTS.loc[str(context.now.date())].weight)
 
 
 if __name__ == "__main__":
@@ -49,9 +48,8 @@ if __name__ == "__main__":
     pr.dump_stats(f"000905_tracking.py.perf")
 
     """
-    RQalpha 4.7.2
-
-    622s
-
     Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz
+
+    RQalpha 4.7.2: 622s
+
     """

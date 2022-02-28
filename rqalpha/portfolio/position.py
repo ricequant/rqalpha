@@ -137,7 +137,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def market_value(self):
         # type: () -> float
-        return self.last_price * self._quantity
+        return self.last_price * self._quantity if self._quantity else 0
 
     @property
     def margin(self):
@@ -147,7 +147,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def equity(self):
         # type: () -> float
-        return self.last_price * self._quantity
+        return self.last_price * self._quantity if self._quantity else 0
 
     @property
     def prev_close(self):

@@ -70,7 +70,7 @@ def _get_account_position_ins(id_or_ins):
 
 
 def _get_ksh_amount(amount):
-    return 0 if abs(amount) < KSH_MIN_AMOUNT else amount // 1
+    return 0 if abs(amount) < KSH_MIN_AMOUNT else int(amount)
 
 
 def _is_ksh(ins):
@@ -268,8 +268,7 @@ def order_lots(id_or_ins, amount, price=None, style=None):
     EXECUTION_PHASE.SCHEDULED,
     EXECUTION_PHASE.GLOBAL
 )
-def order_target_portfolio(target_portfolio):
-    # type: (Dict[Union[str, Instrument], float]) -> List[Order]
+def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], float]) -> List[Order]:
     """
     买入/卖出证券以批量调整证券的仓位，以期使其持仓市值占账户总权益的比重达到指定值。
 
@@ -293,7 +292,6 @@ def order_target_portfolio(target_portfolio):
         total_percent = sum(target_portfolio.values())
     if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
-
     env = Environment.get_instance()
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     account_value = account.total_value
