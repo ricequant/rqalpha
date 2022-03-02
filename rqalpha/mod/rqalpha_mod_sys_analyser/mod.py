@@ -190,13 +190,10 @@ class AnalyserMod(AbstractMod):
 
     @staticmethod
     def _safe_convert(value, ndigits=4):
-        if isinstance(value, Enum):
-            return value.name
-
-        if isinstance(value, numbers.Real):
+        try:
             return round(float(value), ndigits)
-
-        return value
+        except TypeError:
+            return value
 
     def _to_portfolio_record(self, date, portfolio):
         return {
@@ -261,8 +258,8 @@ class AnalyserMod(AbstractMod):
             'trading_datetime': trade.trading_datetime.strftime("%Y-%m-%d %H:%M:%S"),
             'order_book_id': trade.order_book_id,
             'symbol': self._symbol(trade.order_book_id),
-            'side': self._safe_convert(trade.side),
-            'position_effect': self._safe_convert(trade.position_effect),
+            'side': trade.side.name,
+            'position_effect': trade.position_effect.name,
             'exec_id': trade.exec_id,
             'tax': trade.tax,
             'commission': trade.commission,
