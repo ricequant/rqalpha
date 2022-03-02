@@ -272,12 +272,12 @@ class DataProxy(TradingDatesMixin):
         # return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
 
     @lru_cache(2048)
+    def instrument(self, sym_or_id):
+        return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_ids])), None)
+
     def instruments(self, sym_or_ids):
         # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
-        if isinstance(sym_or_ids, str):
-            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_ids])), None)
-        else:
-            return list(self._data_source.get_instruments(id_or_syms=sym_or_ids))
+        return list(self._data_source.get_instruments(id_or_syms=sym_or_ids))
 
     FUTURE_CONTINUOUS_CONTRACT = re.compile("^[A-Z]{1,2}(88|888|99|889)$")
 
