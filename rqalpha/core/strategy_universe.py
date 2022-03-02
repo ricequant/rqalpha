@@ -48,7 +48,7 @@ class StrategyUniverse(object):
         de_listed = set()
         env = Environment.get_instance()
         for o in self._set:
-            i = env.data_proxy.instruments(o)
+            i = env.data_proxy.instrument(o)
             if i.de_listed_date <= env.trading_dt:
                 de_listed.add(o)
         if de_listed:

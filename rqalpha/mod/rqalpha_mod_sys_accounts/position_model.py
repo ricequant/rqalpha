@@ -124,7 +124,7 @@ class StockPosition(Position):
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         next_date = self._env.data_proxy.get_next_trading_date(trading_date)
-        instrument = self._env.data_proxy.instruments(self._order_book_id)
+        instrument = self._env.data_proxy.instrument(self._order_book_id)
         delta_cash = 0
         if instrument.de_listed_at(next_date):
             try:
@@ -286,7 +286,7 @@ class FuturePosition(Position):
         if self._quantity == 0:
             return 0
         data_proxy = Environment.get_instance().data_proxy
-        instrument = data_proxy.instruments(self._order_book_id)
+        instrument = data_proxy.instrument(self._order_book_id)
         next_date = data_proxy.get_next_trading_date(trading_date)
         delta_cash = self.equity
         if instrument.de_listed_at(next_date):

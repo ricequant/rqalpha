@@ -93,7 +93,7 @@ class TickSizeSlippage(BaseSlippage):
         # type: (Order, float) -> float
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             raise NotImplementedError("TickSizeSlippage cannot handle exercise order")
-        tick_size = Environment.get_instance().data_proxy.instruments(order.order_book_id).tick_size()
+        tick_size = Environment.get_instance().data_proxy.instrument(order.order_book_id).tick_size()
 
         price = price + tick_size * self.rate * (1 if order.side == SIDE.BUY else -1)
 

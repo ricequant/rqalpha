@@ -114,7 +114,7 @@ class Environment(object):
         return chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators)
 
     def submit_order(self, order):
-        instrument_type = self.data_proxy.instruments(order.order_book_id).type
+        instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         if all(v.can_submit_order(order, account) for v in self._get_frontend_validators(instrument_type)):
             self.broker.submit_order(order)
@@ -126,7 +126,7 @@ class Environment(object):
         """
         order_map = defaultdict(list)
         for o in orders:
-            order_map[self.data_proxy.instruments(o.order_book_id).type].append(o)
+            order_map[self.data_proxy.instrument(o.order_book_id).type].append(o)
         submitted = []
         for ins_type, order_group in order_map.items():
             for v in self._get_frontend_validators(ins_type):
@@ -140,7 +140,7 @@ class Environment(object):
         return submitted
 
     def can_cancel_order(self, order):
-        instrument_type = self.data_proxy.instruments(order.order_book_id).type
+        instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
             if not v.can_cancel_order(order, account):
@@ -160,7 +160,7 @@ class Environment(object):
         return self.data_proxy.get_last_price(order_book_id)
 
     def get_instrument(self, order_book_id):
-        return self.data_proxy.instruments(order_book_id)
+        return self.data_proxy.instrument(order_book_id)
 
     def get_account_type(self, order_book_id):
         return self.portfolio.get_account_type(order_book_id)
@@ -176,7 +176,7 @@ class Environment(object):
         self._transaction_cost_decider_dict[instrument_type] = decider
 
     def _get_transaction_cost_decider(self, order_book_id):
-        instrument_type = self.data_proxy.instruments(order_book_id).type
+        instrument_type = self.data_proxy.instrument(order_book_id).type
         try:
             return self._transaction_cost_decider_dict[instrument_type]
         except KeyError:
@@ -200,7 +200,7 @@ class Environment(object):
 
     def can_submit_order(self, order):
         # forward compatible
-        instrument_type = self.data_proxy.instruments(order.order_book_id).type
+        instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in self._get_frontend_validators(instrument_type):
             if not v.can_submit_order(order, account):

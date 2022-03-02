@@ -155,7 +155,7 @@ class AnalyserMod(AbstractMod):
                 ))
 
     def _symbol(self, order_book_id):
-        return self._env.data_proxy.instruments(order_book_id).symbol
+        return self._env.data_proxy.instrument(order_book_id).symbol
 
     @staticmethod
     def _parse_benchmark(benchmarks):
@@ -230,7 +230,7 @@ class AnalyserMod(AbstractMod):
 
     def _to_position_record(self, date, order_book_id, long, short):
         # type: (datetime.date, str, AbstractPosition, AbstractPosition) -> Dict
-        instrument = self._env.data_proxy.instruments(order_book_id)
+        instrument = self._env.data_proxy.instrument(order_book_id)
         data = {
             'order_book_id': order_book_id,
             'symbol': self._symbol(order_book_id),

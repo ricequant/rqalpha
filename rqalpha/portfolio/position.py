@@ -62,7 +62,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     def __new__(cls, order_book_id, direction, init_quantity=0, init_price=None):
         if cls == Position:
-            ins_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+            ins_type = Environment.get_instance().data_proxy.instrument(order_book_id).type
             try:
                 position_cls = POSITION_TYPE_MAP[ins_type]
             except KeyError:
@@ -75,7 +75,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._env = Environment.get_instance()
 
         self._order_book_id = order_book_id
-        self._instrument = self._env.data_proxy.instruments(order_book_id)  # type: Instrument
+        self._instrument = self._env.data_proxy.instrument(order_book_id)  # type: Instrument
         self._direction = direction
 
         self._quantity = init_quantity
@@ -412,7 +412,7 @@ class PositionProxyDict(UserDict):
 
     def _get_position_types(self, order_book_id):
         # type: (str) -> Tuple[type, type]
-        instrument_type = Environment.get_instance().data_proxy.instruments(order_book_id).type
+        instrument_type = Environment.get_instance().data_proxy.instrument(order_book_id).type
         position_type = POSITION_TYPE_MAP.get(instrument_type, Position)
         position_proxy_type = POSITION_PROXY_TYPE_MAP.get(instrument_type, PositionProxy)
         return position_type, position_proxy_type

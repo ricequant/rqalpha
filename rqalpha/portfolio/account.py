@@ -390,7 +390,7 @@ class Account:
     def _frozen_cash_of_order(self, order):
         env = Environment.get_instance()
         if order.position_effect == POSITION_EFFECT.OPEN:
-            instrument = env.data_proxy.instruments(order.order_book_id)
+            instrument = env.data_proxy.instrument(order.order_book_id)
             order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
         else:
             order_cost = 0

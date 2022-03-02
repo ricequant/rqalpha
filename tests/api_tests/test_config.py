@@ -73,7 +73,7 @@ def test_future_info():
 
     def on_trade(_, event):
         trade = event.trade
-        contract_multiplier = Environment.get_instance().data_proxy.instruments("SC1809").contract_multiplier
+        contract_multiplier = Environment.get_instance().data_proxy.instrument("SC1809").contract_multiplier
         if trade.position_effect == POSITION_EFFECT.OPEN:
             assert_almost_equal(
                 trade.transaction_cost, 0.0002 * trade.last_quantity * trade.last_price * contract_multiplier

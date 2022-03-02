@@ -65,7 +65,7 @@ def instype_singledispatch(func):
             if not data_proxy:
                 from rqalpha.environment import Environment
                 data_proxy = Environment.get_instance().data_proxy
-            ins = data_proxy.instruments(id_or_ins)
+            ins = data_proxy.instrument(id_or_ins)
             if not ins:
                 raise rq_invalid_argument(id_or_ins)
             instype = ins.type

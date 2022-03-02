@@ -64,7 +64,7 @@ class SimulationBroker(AbstractBroker, Persistable):
     @lru_cache(1024)
     def _get_matcher(self, order_book_id):
         # type: (str) -> AbstractMatcher
-        instrument_type = self._env.data_proxy.instruments(order_book_id).type
+        instrument_type = self._env.data_proxy.instrument(order_book_id).type
         try:
             return self._matchers[instrument_type]
         except KeyError:

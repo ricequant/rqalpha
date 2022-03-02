@@ -349,7 +349,7 @@ class BarMap(object):
         if not isinstance(key, six.string_types):
             raise patch_user_exc(ValueError('invalid key {} (use order_book_id please)'.format(key)))
 
-        instrument = self._data_proxy.instruments(key)
+        instrument = self._data_proxy.instrument(key)
         if instrument is None:
             raise patch_user_exc(ValueError('invalid order book id or symbol: {}'.format(key)))
         order_book_id = instrument.order_book_id

@@ -62,7 +62,7 @@ def assure_instrument(id_or_ins):
     if isinstance(id_or_ins, Instrument):
         return id_or_ins
     elif isinstance(id_or_ins, six.string_types):
-        return Environment.get_instance().data_proxy.instruments(id_or_ins)
+        return Environment.get_instance().data_proxy.instrument(id_or_ins)
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 

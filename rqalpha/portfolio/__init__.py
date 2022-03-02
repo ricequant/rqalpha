@@ -101,7 +101,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     @classmethod
     def get_account_type(cls, order_book_id):
-        instrument = Environment.get_instance().data_proxy.instruments(order_book_id)
+        instrument = Environment.get_instance().data_proxy.instrument(order_book_id)
         return instrument.account_type
 
     def get_account(self, order_book_id):
