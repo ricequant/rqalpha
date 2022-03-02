@@ -107,14 +107,12 @@ def _submit_order(ins, amount, side, position_effect, style, quantity, auto_swit
         order.set_frozen_price(price)
     if side == SIDE.BUY and auto_switch_order_value:
         account, position, ins = _get_account_position_ins(ins)
-        if not is_cash_enough(env, order, account):
+        if not is_cash_enough(env, order, account.cash):
             user_system_log.warn(_(
                 "insufficient cash, use all remaining cash({}) to create order"
             ).format(account.cash))
             return _order_value(account, position, ins, account.cash, style)
-    if env.can_submit_order(order):
-        env.broker.submit_order(order)
-        return order
+    return env.submit_order(order)
 
 
 def _order_shares(ins, amount, style, quantity, auto_switch_order_value):
@@ -347,12 +345,7 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], float]
             close_order.set_frozen_price(price)
             close_orders.append(close_order)
 
-    submit_orders = []
-    for order in chain(close_orders, open_orders):
-        if env.can_submit_order(order):
-            submit_orders.append(order)
-            env.broker.submit_order(order)
-    return submit_orders
+    return list(chain(env.submit_orders(close_orders), env.submit_orders(open_orders)))
 
 
 @export_as_api

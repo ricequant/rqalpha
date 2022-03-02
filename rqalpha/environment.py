@@ -18,7 +18,7 @@
 from datetime import datetime
 from typing import Optional, Dict, List
 from itertools import chain
-
+from collections import defaultdict
 
 import rqalpha
 from rqalpha.core.events import EventBus
@@ -53,7 +53,7 @@ class Environment(object):
         self.trading_dt = None  # type: Optional[datetime]
         self.mod_dict = None
         self.user_strategy = None
-        self._frontend_validators = {}  # type: Dict[INSTRUMENT_TYPE, List]
+        self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
 
@@ -110,13 +110,34 @@ class Environment(object):
         else:
             self._default_frontend_validators.append(validator)
 
-    def can_submit_order(self, order):
+    def _get_frontend_validators(self, instrument_type):
+        return chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators)
+
+    def submit_order(self, order):
         instrument_type = self.data_proxy.instruments(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
-        for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
-            if not v.can_submit_order(order, account):
-                return False
-        return True
+        if all(v.can_submit_order(order, account) for v in self._get_frontend_validators(instrument_type)):
+            self.broker.submit_order(order)
+            return order
+
+    def submit_orders(self, orders):
+        """
+        批量提交订单。使用此 API 提交的订单将会批量通过前段风控，估存在依赖关系的订单（如先卖后买）不应同时传入此 API。
+        """
+        order_map = defaultdict(list)
+        for o in orders:
+            order_map[self.data_proxy.instruments(o.order_book_id).type].append(o)
+        submitted = []
+        for ins_type, order_group in order_map.items():
+            for v in self._get_frontend_validators(ins_type):
+                try:
+                    order_group = v.filter_valid_orders(order_group)
+                except NotImplementedError:
+                    order_group = [o for o in order_group if v.can_submit_order(o)]
+            for o in order_group:
+                self.broker.submit_order(o)
+            submitted.extend(order_group)
+        return submitted
 
     def can_cancel_order(self, order):
         instrument_type = self.data_proxy.instruments(order.order_book_id).type
@@ -176,3 +197,12 @@ class Environment(object):
         # type: (datetime, datetime) -> None
         self.calendar_dt = calendar_dt
         self.trading_dt = trading_dt
+
+    def can_submit_order(self, order):
+        # forward compatible
+        instrument_type = self.data_proxy.instruments(order.order_book_id).type
+        account = self.portfolio.get_account(order.order_book_id)
+        for v in self._get_frontend_validators(instrument_type):
+            if not v.can_submit_order(order, account):
+                return False
+        return True

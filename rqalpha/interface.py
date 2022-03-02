@@ -594,6 +594,10 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
 
     扩展模块可以通过 env.add_frontend_validator 添加自定义的前端风控逻辑
     """
+
+    def filter_valid_orders(self, orders, account=None):
+        raise NotImplementedError
+
     @abc.abstractmethod
     def can_submit_order(self, order, account=None):
         """

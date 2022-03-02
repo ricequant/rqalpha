@@ -22,11 +22,11 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 
 
-def is_cash_enough(env, order, account, warn=False):
+def is_cash_enough(env, order, cash, warn=False):
     instrument = env.data_proxy.instruments(order.order_book_id)
     cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
     cost_money += env.get_order_transaction_cost(order)
-    if cost_money <= account.cash:
+    if cost_money <= cash:
         return True
     if warn:
         user_system_log.warn(
@@ -34,21 +34,26 @@ def is_cash_enough(env, order, account, warn=False):
               " cash {cash:.2f}").format(
                 order_book_id=order.order_book_id,
                 cost_money=cost_money,
-                cash=account.cash,
+                cash=cash,
             )
         )
     return False
-
 
 
 class CashValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
+    def filter_valid_orders(self, orders, account=None):
+        if account is None:
+            return orders
+        cash = account.cash
+        return [o for o in orders if o.position_effect != POSITION_EFFECT or is_cash_enough(self._env, o, cash, True)]
+
     def can_submit_order(self, order, account=None):
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return True
-        return is_cash_enough(self._env, order, account, warn=True)
+        return is_cash_enough(self._env, order, account.cash, warn=True)
 
     def can_cancel_order(self, order, account=None):
         return True
