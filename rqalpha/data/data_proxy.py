@@ -271,6 +271,7 @@ class DataProxy(TradingDatesMixin):
         return li
         # return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
 
+    @lru_cache(2048)
     def instruments(self, sym_or_ids):
         # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
         if isinstance(sym_or_ids, str):

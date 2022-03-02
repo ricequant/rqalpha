@@ -54,6 +54,7 @@ class TradingDatesMixin(object):
         right = trading_dates.searchsorted(end_date, side='right')
         return trading_dates[left:right]
 
+    @lru_cache(64)
     def get_previous_trading_date(self, date, n=1, trading_calendar_type=None) -> pd.Timestamp:
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
@@ -62,6 +63,7 @@ class TradingDatesMixin(object):
         else:
             return trading_dates[0]
 
+    @lru_cache(64)
     def get_next_trading_date(self, date, n=1, trading_calendar_type=None):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date), side='right')
