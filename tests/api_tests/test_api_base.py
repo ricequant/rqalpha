@@ -308,7 +308,6 @@ def test_get_position():
         assert pos.direction == dir, "Direction of {} is expected to be {} instead of {}".format(
             pos.order_book_id, dir, pos.direction
         )
-        assert pos._today_quantity == today_quantity
         assert pos._old_quantity == old_quantity
         assert pos.quantity == (today_quantity + old_quantity)
 
