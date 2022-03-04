@@ -44,12 +44,6 @@ class CashValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
-    def filter_valid_orders(self, orders, account=None):
-        if account is None:
-            return orders
-        cash = account.cash
-        return [o for o in orders if o.position_effect != POSITION_EFFECT or is_cash_enough(self._env, o, cash, True)]
-
     def can_submit_order(self, order, account=None):
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return True

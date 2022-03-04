@@ -237,8 +237,11 @@ class FuturePosition(Position):
         return self._quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
-    def margin(self):
-        # type: () -> float
+    def margin(self) -> float:
+        """
+        保证金
+        保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
+        """
         return self.margin_rate * self.market_value
 
     @property

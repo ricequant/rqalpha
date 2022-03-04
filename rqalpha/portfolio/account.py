@@ -33,7 +33,15 @@ from rqalpha.portfolio.position import Position, PositionProxyDict
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
 
-class Account:
+class AccountMeta(type):
+    def __new__(mcs, *args, **kwargs):
+        cls = type.__new__(mcs, *args, **kwargs)
+        cls.__margin = cls.margin
+        cls.margin = property(lambda s: 0)  # black magic: improve performance for pure stock strategy
+        return cls
+
+
+class Account(metaclass=AccountMeta):
     """
     账户，多种持仓和现金的集合。
 
@@ -148,14 +156,12 @@ class Account:
                 continue
             yield position
 
-    def get_position(self, order_book_id, direction):
-        # type: (str, POSITION_DIRECTION) -> Position
+    def get_position(self, order_book_id: str, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> Position:
         """
         获取某个标的的持仓对象
 
         :param order_book_id: 标的编号
         :param direction: 持仓方向
-
         """
         try:
             return self._positions[order_book_id][direction]
@@ -207,12 +213,11 @@ class Account:
         return sum(p.transaction_cost for p in self._iter_pos())
 
     @property
-    def margin(self):
-        # type: () -> float
+    def margin(self) -> float:
         """
         总保证金
         """
-        return sum(p.margin for p in self._iter_pos())
+        return sum(getattr(p, "margin", 0) for p in self._iter_pos())
 
     @property
     def buy_margin(self):
@@ -220,7 +225,7 @@ class Account:
         """
         多方向保证金
         """
-        return sum(p.margin for p in self._iter_pos(POSITION_DIRECTION.LONG))
+        return sum(getattr(p, "margin", 0) for p in self._iter_pos(POSITION_DIRECTION.LONG))
 
     @property
     def sell_margin(self):
@@ -228,7 +233,7 @@ class Account:
         """
         空方向保证金
         """
-        return sum(p.margin for p in self._iter_pos(POSITION_DIRECTION.SHORT))
+        return sum(getattr(p, "margin", 0) for p in self._iter_pos(POSITION_DIRECTION.SHORT))
 
     @property
     def daily_pnl(self):
@@ -375,6 +380,10 @@ class Account:
                 last_price = env.get_last_price(order_book_id)
                 for p in positions.values():
                     p.update_last_price(last_price)
+            if hasattr(positions[direction], "margin") and hasattr(self.__class__, "__margin"):
+                # black magic: improve performance for pure stock strategy
+                setattr(self.__class__, "margin", self.__class__.__margin)
+                del self.__class__.__margin
         else:
             positions = self._positions[order_book_id]
         return positions[direction]

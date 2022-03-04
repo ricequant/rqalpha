@@ -69,15 +69,16 @@ def _get_account_position_ins(id_or_ins):
     return account, position, ins
 
 
-def _get_ksh_amount(amount):
-    return 0 if abs(amount) < KSH_MIN_AMOUNT else int(amount)
+def _round_order_quantity(ins, quantity) -> int:
+    if ins.type == "CS" and ins.board_type == "KSH":
+        # KSH can buy(sell) 201, 202 shares
+        return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
+    else:
+        round_lot = ins.round_lot
+        return int(Decimal(quantity) / Decimal(round_lot)) * round_lot
 
 
-def _is_ksh(ins):
-    return ins.type == "CS" and ins.board_type == "KSH"
-
-
-def _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value):
+def _submit_order(ins, amount, side, position_effect, style, current_quantity, auto_switch_order_value):
     env = Environment.get_instance()
     if isinstance(style, LimitOrder):
         if not is_valid_price(style.get_limit_price()):
@@ -87,15 +88,9 @@ def _submit_order(ins, amount, side, position_effect, style, quantity, auto_swit
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
         return
-    round_lot = int(ins.round_lot)
 
-    if side in [SIDE.BUY, side.SELL]:
-        if not (side == SIDE.SELL and quantity == abs(amount)):
-            if _is_ksh(ins):
-                # KSH can buy(sell) 201, 202 shares
-                amount = _get_ksh_amount(amount)
-            else:
-                amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+    if (side == SIDE.BUY) or (side == SIDE.SELL and current_quantity != abs(amount)):
+        amount = _round_order_quantity(ins, amount)
 
     if amount == 0:
         user_system_log.warn(_(
@@ -135,21 +130,16 @@ def _order_value(account, position, ins, cash_amount, style):
             return
 
     amount = int(Decimal(cash_amount) / Decimal(price))
-
-    min_round_lot = int(ins.round_lot)
+    round_lot = int(ins.round_lot)
     if cash_amount > 0:
-        if _is_ksh(ins):
-            amount = _get_ksh_amount(amount)
-            min_round_lot = 1
-        else:
-            amount = int(Decimal(amount) / Decimal(min_round_lot)) * min_round_lot
+        amount = _round_order_quantity(ins, amount)
         while amount > 0:
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
                 ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
             ))
             if amount * price + expected_transaction_cost <= cash_amount:
                 break
-            amount -= min_round_lot
+            amount -= round_lot
         else:
             user_system_log.warn(_(
                 u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
@@ -268,9 +258,11 @@ def order_lots(id_or_ins, amount, price=None, style=None):
 )
 def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], float]) -> List[Order]:
     """
-    买入/卖出证券以批量调整证券的仓位，以期使其持仓市值占账户总权益的比重达到指定值。
+    批量调整股票仓位至目标权重。注意：股票账户中未出现在 target_portfolio 中的资产将被平仓！
 
-    :param target_portfolio: 下单标的物及其目标市值占比的字典
+    该 API 将根据调用时股票账户的资产净值及每只股票的目标权重，使用股票最新价计算目标持仓数量，并执行调仓。
+
+    :param target_portfolio: 目标权重字典，key 为 order_book_id，value 为权重值。
 
     :example:
 
@@ -291,61 +283,59 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], float]
     if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
     env = Environment.get_instance()
-    account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
-    account_value = account.total_value
-    target_quantities = {}
+    target = {}
     for id_or_ins, target_percent in target_portfolio.items():
-        order_book_id = assure_order_book_id(id_or_ins)
-        if target_percent < 0:
-            raise RQInvalidArgument(_(u"target percent of {} should between 0 and 1, current: {}").format(
-                order_book_id, target_percent
-            ))
+        if target_percent == 0:
+            continue
+        elif target_percent < 0:
+            raise RQInvalidArgument(_(
+                "function order_target_portfolio: invalid values of target_portolio, "
+                "excepted float between 0 and 1, got {} (key: {})"
+            ).format(target_percent, id_or_ins))
+        ins = assure_instrument(id_or_ins)
+        if not ins:
+            raise RQInvalidArgument(_(
+                "function order_target_portfolio: invalid keys of target_portfolio, "
+                "expected order_book_ids or Instrument objects, got {} (type: {})"
+            ).format(id_or_ins, type(id_or_ins)))
+        order_book_id = ins.order_book_id
         price = env.data_proxy.get_last_price(order_book_id)
         if not is_valid_price(price):
             user_system_log.warn(
                 _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
             )
             continue
-        target_quantities[order_book_id] = (account_value * target_percent / price, price)
+        target[order_book_id] = target_percent, price
 
-    close_orders, open_orders = [], []
+    account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     current_quantities = {
         p.order_book_id: p.quantity for p in account.get_positions() if p.direction == POSITION_DIRECTION.LONG
     }
     for order_book_id, quantity in current_quantities.items():
-        if order_book_id not in target_portfolio:
-            close_orders.append(Order.__from_create__(
+        # 先把不在目标权重中的仓位平掉
+        if order_book_id not in target:
+            env.submit_order(Order.__from_create__(
                 order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             ))
 
-    for order_book_id, (target_quantity, price) in target_quantities.items():
-        ins = assure_instrument(order_book_id)
-        round_lot = 100
-        if order_book_id in current_quantities:
-            delta_quantity = target_quantity - current_quantities[order_book_id]
+    account_value = account.total_value
+    close_orders, open_orders = [], []
+    for order_book_id, (target_percent, price) in target.items():
+        delta_quantity = (account_value * target_percent / price) - current_quantities.get(order_book_id, 0)
+        delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
+        if delta_quantity == 0:
+            continue
+        elif delta_quantity > 0:
+            quantity, side, position_effect = delta_quantity, SIDE.BUY, POSITION_EFFECT.OPEN
+            order_list = open_orders
         else:
-            delta_quantity = target_quantity
+            quantity, side, position_effect = abs(delta_quantity), SIDE.SELL, POSITION_EFFECT.CLOSE
+            order_list = close_orders
+        order = Order.__from_create__(order_book_id, quantity, side, MarketOrder(), position_effect)
+        order.set_frozen_price(price)
+        order_list.append(order)
 
-        if _is_ksh(ins):
-            # KSH can buy(sell) 201, 202 shares
-            delta_quantity = _get_ksh_amount(delta_quantity)
-        else:
-            delta_quantity = int(Decimal(delta_quantity) / Decimal(round_lot)) * round_lot
-
-        if delta_quantity > 0:
-            open_order = Order.__from_create__(
-                order_book_id, delta_quantity, SIDE.BUY, MarketOrder(), POSITION_EFFECT.OPEN
-            )
-            open_order.set_frozen_price(price)
-            open_orders.append(open_order)
-        elif delta_quantity < -1:
-            close_order = Order.__from_create__(
-                order_book_id, abs(delta_quantity), SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
-            )
-            close_order.set_frozen_price(price)
-            close_orders.append(close_order)
-
-    return list(chain(env.submit_orders(close_orders), env.submit_orders(open_orders)))
+    return list(env.submit_order(o) for o in chain(close_orders, open_orders))
 
 
 @export_as_api

@@ -140,11 +140,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self.last_price * self._quantity if self._quantity else 0
 
     @property
-    def margin(self):
-        # type: () -> float
-        return 0
-
-    @property
     def equity(self):
         # type: () -> float
         return self.last_price * self._quantity if self._quantity else 0

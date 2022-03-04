@@ -82,15 +82,6 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def margin(self):
-        # type: () -> Union[int, float]
-        """
-        返回当前持仓所占的保证金
-        """
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
     def transaction_cost(self):
         # type: () -> Union[int, float]
         # 返回当前持仓的当日交易费用
@@ -594,9 +585,6 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
 
     扩展模块可以通过 env.add_frontend_validator 添加自定义的前端风控逻辑
     """
-
-    def filter_valid_orders(self, orders, account=None):
-        raise NotImplementedError
 
     @abc.abstractmethod
     def can_submit_order(self, order, account=None):

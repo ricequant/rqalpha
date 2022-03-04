@@ -77,12 +77,13 @@ class Instrument(metaclass=PropertyReprMeta):
         return self.__dict__["symbol"]
 
     @property
-    def round_lot(self):
-        # type: () -> int
+    def round_lot(self) -> int:
         """
         [int] 股票：一手对应多少股，中国A股一手是100股。期货：一律为1。
         """
-        return self.__dict__["round_lot"]
+        if self.__dict__["type"] == INSTRUMENT_TYPE.CS and self.__dict__["board_type"] == "KSH":
+            return 1
+        return int(self.__dict__["round_lot"])
 
     @property
     def listed_date(self):

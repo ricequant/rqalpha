@@ -161,7 +161,7 @@ def test_order_target_portfolio():
         total_value = context.portfolio.total_value
         for o in target_portfolio.keys():
             p = get_position(o)
-            assert 0 < target_portfolio[o] - p.market_value / total_value < 0.05
+            assert 0 < target_portfolio[o] - p.market_value / total_value < 0.002
 
     return locals()
 
@@ -221,7 +221,7 @@ def test_ksh():
             # 5 块最小手续费
             order_value(context.s1, context.amount_s1 * order_price_s1 + 5, order_price_s1)
             order_value(context.s2, context.amount_s2 * order_price_s2 + 5, order_price_s2)
-            assert context.portfolio.positions[context.s1].quantity == 401
+            assert context.portfolio.positions[context.s1].quantity == 201
             assert context.portfolio.positions[context.s2].quantity == 0
 
     return locals()
