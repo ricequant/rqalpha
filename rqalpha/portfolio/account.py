@@ -36,7 +36,7 @@ OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 class AccountMeta(type):
     def __new__(mcs, *args, **kwargs):
         cls = type.__new__(mcs, *args, **kwargs)
-        cls.__margin = cls.margin
+        cls._margin = cls.margin
         cls.margin = property(lambda s: 0)  # black magic: improve performance for pure stock strategy
         return cls
 
@@ -380,10 +380,10 @@ class Account(metaclass=AccountMeta):
                 last_price = env.get_last_price(order_book_id)
                 for p in positions.values():
                     p.update_last_price(last_price)
-            if hasattr(positions[direction], "margin") and hasattr(self.__class__, "__margin"):
+            if hasattr(positions[direction], "margin") and hasattr(self.__class__, "_margin"):
                 # black magic: improve performance for pure stock strategy
-                setattr(self.__class__, "margin", self.__class__.__margin)
-                del self.__class__.__margin
+                setattr(self.__class__, "margin", self.__class__._margin)
+                del self.__class__._margin
         else:
             positions = self._positions[order_book_id]
         return positions[direction]
