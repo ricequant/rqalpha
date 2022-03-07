@@ -144,6 +144,8 @@ def test_auto_switch_order_value():
 def test_order_target_portfolio():
     __config__ = {
         "base": {
+            "start_date": "2019-07-30",
+            "end_date": "2019-08-05",
             "accounts": {
                 "stock": 1000000
             }
@@ -155,13 +157,26 @@ def test_order_target_portfolio():
         "000004.XSHE": 0.3,
         "000005.XSHE": 0.2
     }
+    def init(context):
+        context.counter = 0
 
     def handle_bar(context, handle_bar):
-        order_target_portfolio(target_portfolio)
-        total_value = context.portfolio.total_value
-        for o in target_portfolio.keys():
-            p = get_position(o)
-            assert 0 < target_portfolio[o] - p.market_value / total_value < 0.002
+        context.counter += 1
+        if context.counter == 1:
+            order_target_portfolio({
+                "000001.XSHE": 0.1,
+                "000004.XSHE": 0.2,
+            })
+            assert get_position("000001.XSHE").quantity == 6900   # (1000000 * 0.1) / 14.37 = 6958.94
+            assert get_position("000004.XSHE").quantity == 10500  # (1000000 * 0.2) / 18.92 = 10570.82
+        elif context.counter == 2:
+            order_target_portfolio({
+                "000004.XSHE": 0.1,
+                "000005.XSHE": 0.2
+            })
+            assert get_position("000001.XSHE").quantity == 0
+            assert get_position("000004.XSHE").quantity == 5400   # (993695.7496 * 0.1) / 18.50 = 5371.33
+            assert get_position("000005.XSHE").quantity == 68000  # (993695.7496 * 0.2) / 2.92 = 68061.35
 
     return locals()
 
