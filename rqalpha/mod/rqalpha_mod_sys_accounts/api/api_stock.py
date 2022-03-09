@@ -260,9 +260,13 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
     """
     批量调整股票仓位至目标权重。注意：股票账户中未出现在 target_portfolio 中的资产将被平仓！
 
-    该 API 将根据调用时股票账户的资产净值及每只股票的目标权重，使用股票最新价计算目标持仓数量，并执行调仓。
+    该 API 的参数 target_portfolio 为字典，key 为 order_book_id 或 instrument，value 有两种数据类型可选：
 
-    :param target_portfolio: 目标权重字典，key 为 order_book_id，value 为权重值。
+      * value 为权重。此时将根据股票最新价计算目标持仓数量并发出市价单调仓。
+
+      * value 为权重和价格组成的 tuple。此时将根据该价格计算目标权重并发出限价单（Signal 模式下将使用该价格撮合）。
+
+    :param target_portfolio: 目标权重字典，key 为 order_book_id，value 为权重或权重和价格组成的 tuple。
 
     :example:
 
@@ -270,18 +274,16 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
 
         # 调整仓位，以使平安银行和万科 A 的持仓占比分别达到 10% 和 15%
         order_target_portfolio({
-            '000001.XSHE': 0.1
+            '000001.XSHE': 0.1,
             '000002.XSHE': 0.15
         })
-    """
 
-    if isinstance(target_portfolio, pd.Series):
-        # FIXME: kind of dirty
-        total_percent = sum(target_portfolio)
-    else:
-        total_percent = sum(target_portfolio.values())
-    if total_percent > 1 and not np.isclose(total_percent, 1):
-        raise RQInvalidArgument(_(u"total percent should be lower than 1, current: {}").format(total_percent))
+        # 调整仓位，分别以 14 和 26 元发出限价单，目标是使平安银行和万科 A 的持仓占比分别达到 10% 和 15%
+        order_target_portfolio({
+            '000001.XSHE': (0.1, 14),
+            '000002.XSHE': (0.15, 26)
+        })
+    """
     env = Environment.get_instance()
     target = {}
     for id_or_ins, target_quantity_price in target_portfolio.items():
@@ -312,6 +314,9 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
             ).format(target_percent, id_or_ins))
 
         target[order_book_id] = target_percent, target_price, price
+    total_percent = sum(p for p, *__ in target.values())
+    if total_percent > 1 and not np.isclose(total_percent, 1):
+        raise RQInvalidArgument(_("total percent should be lower than 1, current: {}").format(total_percent))
 
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     current_quantities = {

@@ -152,11 +152,6 @@ def test_order_target_portfolio():
         },
     }
 
-    target_portfolio = {
-        "000001.XSHE": 0.1,
-        "000004.XSHE": 0.3,
-        "000005.XSHE": 0.2
-    }
     def init(context):
         context.counter = 0
 
@@ -177,6 +172,38 @@ def test_order_target_portfolio():
             assert get_position("000001.XSHE").quantity == 0
             assert get_position("000004.XSHE").quantity == 5400   # (993695.7496 * 0.1) / 18.50 = 5371.33
             assert get_position("000005.XSHE").quantity == 68000  # (993695.7496 * 0.2) / 2.92 = 68061.35
+
+    return locals()
+
+
+def test_order_target_portfolio_in_signal_mode():
+    __config__ = {
+        "base": {
+            "start_date": "2019-07-30",
+            "end_date": "2019-08-05",
+            "accounts": {
+                "stock": 1000000
+            }
+        },
+        "mod": {
+            "sys_simulation": {
+                "signal": True
+            }
+        }
+    }
+
+    def init(context):
+        context.counter = 0
+
+    def handle_bar(context, handle_bar):
+        context.counter += 1
+        if context.counter == 1:
+            order_target_portfolio({
+                "000001.XSHE": (0.1, 14),
+                "000004.XSHE": (0.2, 10),
+            })
+            assert get_position("000001.XSHE").quantity == 7100   # (1000000 * 0.1) / 14.37 = 7142.86
+            assert get_position("000004.XSHE").quantity == 0  # 价格低过跌停价，被拒单
 
     return locals()
 
