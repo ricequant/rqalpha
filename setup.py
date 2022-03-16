@@ -30,6 +30,7 @@ requirements = [
     'rqrisk >=0.0.14',
     'h5py',
     'matplotlib >=2.2.0',
+    "openpyxl"
 ]
 
 if sys.version_info < (3, 5):
@@ -56,7 +57,9 @@ setup(
     package_data={
         'rqalpha': ['*.yml',
                     'examples/*.*', 'examples/data_source/*.*', 'examples/extend_api/*.*',
-                    'resource/*.*', 'utils/translations/zh_Hans_CN/LC_MESSAGES/*'],
+                    'resource/*.*', 'utils/translations/zh_Hans_CN/LC_MESSAGES/*',
+                    "mod/rqalpha_mod_sys_analyser/report/templates/*.xlsx",
+                    ],
     },
     url='https://github.com/ricequant/rqalpha',
     install_requires=requirements,

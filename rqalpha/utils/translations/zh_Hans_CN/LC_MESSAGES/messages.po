@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-12-16 16:44+0800\n"
+"POT-Creation-Date: 2022-03-10 10:15+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -16,15 +16,15 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.8.0\n"
+"Generated-By: Babel 2.9.1\n"
 
-#: rqalpha/environment.py:71
+#: rqalpha/environment.py:70
 msgid ""
 "Environment has not been created. Please Use `Environment.get_instance()`"
 " after RQAlpha init"
 msgstr "Environment 并没有被创建，请再 RQAlpha 初始化之后使用 `Environment.get_instance() 函数`"
 
-#: rqalpha/environment.py:162
+#: rqalpha/environment.py:163
 msgid "No such transaction cost decider, order_book_id = {}"
 msgstr ""
 
@@ -50,11 +50,11 @@ msgstr ""
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:246
+#: rqalpha/main.py:243
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:251
+#: rqalpha/main.py:248
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
@@ -79,9 +79,9 @@ msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 
 #: rqalpha/apis/api_base.py:158
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:66
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:88
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:135
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:310
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:89
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:128
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:308
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
@@ -268,7 +268,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:294
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:296
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓"
 
@@ -287,15 +287,15 @@ msgid ""
 msgstr "订单创建失败：{order_book_id} 的仓位不足，目标平仓/行权量为 {quantity}，可平仓/行权量为 {closable}"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:49
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:101
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:156
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:96
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:144
 msgid "Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
 msgstr "{order_book_id} 的订单创建失败：下单数量为 0"
 
 # msgid "Order Creation Failed: Order amount is 0."
 # msgstr "订单创建失败: 下单量为 0"
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:54
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:84
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:85
 msgid "Limit order price should be positive"
 msgstr "Limit order 价格应该为正，请检查您的下单价格"
 
@@ -323,19 +323,42 @@ msgid ""
 "again!"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:111
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:106
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr "现金不足，使用当前剩余资金({})创建订单"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:295
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:296
+#, fuzzy
+msgid ""
+"function order_target_portfolio: invalid keys of target_portfolio, "
+"expected order_book_ids or Instrument objects, got {} (type: {})"
+msgstr "函数 order_target_portfolio：不合法的参数。target_portfolio 的键应为合约代码或 Instrument 对象，实际传入了 {}（类型：{}）。"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:301
+msgid ""
+"function order_target_portfolio: invalid instrument type, excepted "
+"CS/ETF/LOF/INDX, got {}"
+msgstr "函数 order_target_portfolio：不合法的资产类型。应传入股票、ETF、LOF 或指数，实际传入了 {}。"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:318
+#, fuzzy
+msgid ""
+"function order_target_portfolio: invalid order price {target_price} of "
+"{id_or_ins}"
+msgstr "函数 order_target_portfolio：{id_or_ins} 的下单价格 {target_price} 不合法。"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:324
+#, fuzzy
+msgid ""
+"function order_target_portfolio: invalid values of target_portfolio, "
+"excepted float between 0 and 1, got {} (key: {})"
+msgstr "函数 order_target_portfolio：不合法的目标权重，应传入 0 和 1 之间的浮点数，实际传入了 {}（类型：{}）。"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:332
 msgid "total percent should be lower than 1, current: {}"
-msgstr "目标持仓总占比需要小于 1，当前值：{}"
+msgstr "目标持仓占比总和应小于 1，当前值：{}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:304
-msgid "target percent of {} should between 0 and 1, current: {}"
-msgstr "{} 的目标持仓需要在 0 到 1 之间，当前值：{}"
-
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:647
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:655
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
@@ -669,7 +692,7 @@ msgstr "订单 {order_id} 被手动取消。"
 msgid "Order Rejected: {order_book_id} can not match. Market close."
 msgstr "订单被拒单: {order_book_id} 当天交易结束，订单无法成交。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:178
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:180
 msgid "{order_book_id} should be subscribed when frequency is tick."
 msgstr "tick回测下单失败，请使用 subscribe 订阅合约 {order_book_id}。"
 
@@ -726,15 +749,15 @@ msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 msgid "Cash add {}. units {} become to {}"
 msgstr "入金{}元，份额由{}变动为{}"
 
-#: rqalpha/portfolio/account.py:308
+#: rqalpha/portfolio/account.py:313
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/account.py:434
+#: rqalpha/portfolio/account.py:448
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
 
-#: rqalpha/portfolio/position.py:165
+#: rqalpha/portfolio/position.py:160
 msgid "invalid price of {order_book_id}: {price}"
 msgstr "{order_book_id} 的价格不合法：{price}"
 
@@ -1368,4 +1391,7 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 
 #~ msgid "last price of position {} is not supposed to be nan"
 #~ msgstr "仓位 {} 最新价不应该为 nan"
+
+#~ msgid "target percent of {} should between 0 and 1, current: {}"
+#~ msgstr "{} 的目标持仓需要在 0 到 1 之间，当前值：{}"
 

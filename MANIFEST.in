@@ -5,4 +5,5 @@ include README.rst
 include CHANGELOG.rst
 include LICENSE
 include rqalpha/utils/translations/zh_Hans_CN/LC_MESSAGES/*
+include rqalpha/mod/rqalpha_mod_sys_analyser/report/templates/*.xlsx
 graft rqalpha/examples

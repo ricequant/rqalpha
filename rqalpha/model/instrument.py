@@ -81,7 +81,7 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         [int] 股票：一手对应多少股，中国A股一手是100股。期货：一律为1。
         """
-        if self.__dict__["type"] == INSTRUMENT_TYPE.CS and self.__dict__["board_type"] == "KSH":
+        if self.__dict__.get("type") == INSTRUMENT_TYPE.CS and self.__dict__["board_type"] == "KSH":
             return 1
         return int(self.__dict__["round_lot"])
 

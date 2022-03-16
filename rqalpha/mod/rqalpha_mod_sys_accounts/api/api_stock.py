@@ -248,6 +248,10 @@ def order_lots(id_or_ins, amount, price=None, style=None):
                          auto_switch_order_value)
 
 
+ORDER_TARGET_PORTFOLIO_SUPPORTED_INS_TYPES = {
+    INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX}
+
+
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.OPEN_AUCTION,
@@ -293,6 +297,10 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
                 "function order_target_portfolio: invalid keys of target_portfolio, "
                 "expected order_book_ids or Instrument objects, got {} (type: {})"
             ).format(id_or_ins, type(id_or_ins)))
+        if ins.type not in ORDER_TARGET_PORTFOLIO_SUPPORTED_INS_TYPES:
+            raise RQInvalidArgument(_(
+                "function order_target_portfolio: invalid instrument type, excepted CS/ETF/LOF/INDX, got {}"
+            ).format(ins.order_book_id))
         order_book_id = ins.order_book_id
         price = env.data_proxy.get_last_price(order_book_id)
         if not is_valid_price(price):
@@ -305,11 +313,16 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
         except TypeError:
             target_percent = target_quantity_price
             target_price = None
+        else:
+            if not is_valid_price(target_price):
+                raise RQInvalidArgument(_(
+                    "function order_target_portfolio: invalid order price {target_price} of {id_or_ins}"
+                ).format(id_or_ins=id_or_ins, target_price=target_price))
         if target_percent == 0:
             continue
         elif target_percent < 0:
             raise RQInvalidArgument(_(
-                "function order_target_portfolio: invalid values of target_portolio, "
+                "function order_target_portfolio: invalid values of target_portfolio, "
                 "excepted float between 0 and 1, got {} (key: {})"
             ).format(target_percent, id_or_ins))
 

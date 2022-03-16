@@ -19,11 +19,10 @@ import os
 import pandas
 import pickle
 import jsonpickle
-import numbers
 import datetime
+from operator import attrgetter
 from collections import defaultdict
-from enum import Enum
-from typing import Dict, Optional, List, Tuple, Union
+from typing import Dict, Optional, List, Tuple, Union, Iterable
 
 import numpy as np
 import pandas as pd
@@ -39,6 +38,15 @@ from rqalpha.const import DAYS_CNT
 from rqalpha.api import export_as_api
 
 from .plot_store import PlotStore
+
+
+def _get_yearly_risk_free_rates(
+        data_proxy, start_date: datetime.date, end_date: datetime.date
+) -> Iterable[Tuple[int, float]]:
+    while start_date <= end_date:
+        year = start_date.year
+        yield year, data_proxy.get_risk_free_rate(start_date, min(end_date, datetime.date(year, 12, 31)))
+        start_date = datetime.date(year + 1, 1, 1)
 
 
 class AnalyserMod(AbstractMod):
@@ -57,7 +65,7 @@ class AnalyserMod(AbstractMod):
         self._benchmark_daily_returns = []
         self._portfolio_daily_returns = []
 
-        self._benchmark = None  # type: Optional[List[Tuple[str, float]]]
+        self._benchmark: Optional[List[Tuple[str, float]]] = None
 
         self._plot_store = None
 
@@ -118,7 +126,7 @@ class AnalyserMod(AbstractMod):
             else:
                 daily_return_list.append((bar.close / bar.prev_close - 1.0, benchmark[1]))
             weights += benchmark[1]
-        return sum([daily[0]*daily[1]/weights for daily in daily_return_list])
+        return sum([daily[0] * daily[1] / weights for daily in daily_return_list])
 
     def _subscribe_events(self, _):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
@@ -279,58 +287,67 @@ class AnalyserMod(AbstractMod):
 
         strategy_name = os.path.basename(self._env.config.base.strategy_file).split(".")[0]
         data_proxy = self._env.data_proxy
-
+        start_date, end_date = attrgetter("start_date", "end_date")(self._env.config.base)
         summary = {
             'strategy_name': strategy_name,
-            'start_date': self._env.config.base.start_date.strftime('%Y-%m-%d'),
-            'end_date': self._env.config.base.end_date.strftime('%Y-%m-%d'),
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'end_date': end_date.strftime('%Y-%m-%d'),
             'strategy_file': self._env.config.base.strategy_file,
             'run_type': self._env.config.base.run_type.value,
+            "starting_cash": ",".join(f"{t}:{c}" for t, c in self._env.config.base.accounts.items())
         }
         for account_type, starting_cash in self._env.config.base.accounts.items():
             summary[account_type] = starting_cash
+        if self._benchmark:
+            if len(self._benchmark) == 1:
+                benchmark_obid, _ = self._benchmark[0]
+                summary["benchmark"] = benchmark_obid
+                summary["benchmark_symbol"] = self._env.data_proxy.instrument(benchmark_obid).symbol
+            else:
+                summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
 
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
             np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns), risk_free_rate
         )
         summary.update({
-            'alpha': self._safe_convert(risk.alpha, 3),
-            'beta': self._safe_convert(risk.beta, 3),
-            'sharpe': self._safe_convert(risk.sharpe, 3),
-            'excess_sharpe': self._safe_convert(risk.excess_sharpe, 3),
-            'information_ratio': self._safe_convert(risk.information_ratio, 3),
-            'downside_risk': self._safe_convert(risk.annual_downside_risk, 3),
-            'tracking_error': self._safe_convert(risk.annual_tracking_error, 3),
-            'sortino': self._safe_convert(risk.sortino, 3),
-            'volatility': self._safe_convert(risk.annual_volatility, 3),
-            'excess_volatility': self._safe_convert(risk.excess_volatility, 3),
-            'excess_annual_volatility': self._safe_convert(risk.excess_annual_volatility, 3),
-            'max_drawdown': self._safe_convert(risk.max_drawdown, 3),
-            'excess_max_drawdown': self._safe_convert(risk.excess_max_drawdown),
-            'excess_returns': self._safe_convert(risk.excess_return_rate, 6),
-            'excess_annual_returns': self._safe_convert(risk.excess_annual_return, 6)
+            'alpha': risk.alpha,
+            'beta': risk.beta,
+            'sharpe': risk.sharpe,
+            'excess_sharpe': risk.excess_sharpe,
+            'information_ratio': risk.information_ratio,
+            'downside_risk': risk.annual_downside_risk,
+            'tracking_error': risk.annual_tracking_error,
+            'sortino': risk.sortino,
+            'volatility': risk.annual_volatility,
+            'excess_volatility': risk.excess_volatility,
+            'excess_annual_volatility': risk.excess_annual_volatility,
+            'max_drawdown': risk.max_drawdown,
+            'excess_max_drawdown': risk.excess_max_drawdown,
+            'excess_returns': risk.excess_return_rate,
+            'excess_annual_returns': risk.excess_annual_return,
+            'var': risk.var,
         })
 
         summary.update({
-            'total_value': self._safe_convert(self._env.portfolio.total_value),
-            'cash': self._safe_convert(self._env.portfolio.cash),
-            'total_returns': self._safe_convert(self._env.portfolio.total_returns, 6),
-            'annualized_returns': self._safe_convert(self._env.portfolio.annualized_returns),
-            'unit_net_value': self._safe_convert(self._env.portfolio.unit_net_value),
+            'total_value': self._env.portfolio.total_value,
+            'cash': self._env.portfolio.cash,
+            'total_returns': self._env.portfolio.total_returns,
+            'annualized_returns': self._env.portfolio.annualized_returns,
+            'unit_net_value': self._env.portfolio.unit_net_value,
             'units': self._env.portfolio.units,
         })
 
         if self._benchmark:
             benchmark_total_returns = (np.array(self._benchmark_daily_returns) + 1.0).prod() - 1.0
-            summary['benchmark_total_returns'] = self._safe_convert(benchmark_total_returns, ndigits=6)
+            summary['benchmark_total_returns'] = benchmark_total_returns
             date_count = len(self._benchmark_daily_returns)
             benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
-            summary['benchmark_annualized_returns'] = self._safe_convert(benchmark_annualized_returns, ndigits=6)
+            summary['benchmark_annualized_returns'] = benchmark_annualized_returns
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
-            trades = trades.set_index('datetime')
+            trades = trades.set_index(pd.DatetimeIndex(trades['datetime']))
 
         df = pd.DataFrame(self._total_portfolios)
         df['date'] = pd.to_datetime(df['date'])
@@ -342,6 +359,19 @@ class AnalyserMod(AbstractMod):
             'trades': trades,
             'portfolio': total_portfolios,
         }
+
+        if not trades.empty and all(
+                trades.order_book_id.str.endswith(".XSHE") | trades.order_book_id.str.endswith(".XSHG")
+        ):
+            # 策略仅交易股票、指数、场内基金等品种时才计算换手率
+            trades_values = trades.last_price * trades.last_quantity
+            market_values = total_portfolios.market_value
+            summary["turnover"] = trades_values.sum() / market_values.mean() / 2
+            avg_daily_turnover = (trades_values.groupby(trades.index.date).sum() / market_values / 2)
+            with pd.option_context('mode.use_inf_as_na', True):
+                summary["avg_daily_turnover"] = avg_daily_turnover.dropna().mean()
+        else:
+            summary["turnover"] = np.nan
 
         if self._benchmark:
             df = pd.DataFrame(self._total_benchmark_portfolios)
@@ -390,6 +420,8 @@ class AnalyserMod(AbstractMod):
                 df["date"] = pd.to_datetime(df["date"])
                 df = df.set_index("date").sort_index()
             result_dict["{}_positions".format(account_name)] = df
+
+        result_dict["yearly_risk_free_rates"] = dict(_get_yearly_risk_free_rates(data_proxy, start_date, end_date))
 
         if self._mod_config.output_file:
             with open(self._mod_config.output_file, 'wb') as f:
