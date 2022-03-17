@@ -206,7 +206,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 
     如果 position_to_adjust 计算之后是正的，那么会买入该证券，否则会卖出该证券。需要注意，如果需要买入证券而资金不足，该 API 将使用最大可用资金发出订单。
 
-    另外，如果您希望大量调整股票仓位，推荐使用 order_target_portfolio 而非在循环中调取 order_taret_percent，前者将拥有更好的性能。
+    另外，如果您希望大量调整股票仓位，推荐使用 order_target_portfolio 而非在循环中调取 order_target_percent，前者将拥有更好的性能。
 
     :param id_or_ins: 下单标的物
     :param percent: 仓位最终所占投资组合总价值的目标百分比。
