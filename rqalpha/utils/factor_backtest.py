@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import datetime, time
 from typing import Optional, List, Callable, Iterable, Dict
 
 from pandas import DataFrame
@@ -52,11 +53,11 @@ class Strategy:
 
         all_cs = rqdatac.all_instruments("CS").order_book_id
         if filter_suspended:
-            suspended = rqdatac.is_suspended(all_cs)
+            suspended = rqdatac.is_suspended(all_cs, start_date, end_date)
 
             def _filter_suspended(context, order_book_ids):
-                _suspended = suspended.loc[str(context.now.date())].keys()
-                _suspended = set(suspended[suspended].keys())
+                _suspended = suspended.loc[str(context.now.date())]
+                _suspended = set(_suspended[_suspended].keys())
                 return [o for o in order_book_ids if o not in _suspended]
 
             self._filters.append(_filter_suspended)
@@ -79,13 +80,13 @@ class Strategy:
 
     def init(self, _):
         if self._rebalance_frequency == "1w":
-            scheduler.run_weekly(_rebalance, tradingday=1)  # noqa
+            scheduler.run_weekly(self._rebalance, tradingday=1)  # noqa
         else:
             raise NotImplementedError(f"unsuported rebalance frequency {self._rebalance_frequency}")
 
     def after_trading(self, context):
         obids = self._get_universe(context.now.date())
-        factor = self._factor.loc[context.now.date()][obids]
+        factor = self._factor.loc[str(context.now.date())][obids]
         context.target = set(factor.sort_values()[:int(len(factor) * self._factor_threshold)].keys())
 
 
