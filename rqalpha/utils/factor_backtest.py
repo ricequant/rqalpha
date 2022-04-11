@@ -1,5 +1,4 @@
 from copy import deepcopy
-from datetime import datetime, time
 from typing import Optional, List, Callable, Iterable, Dict
 
 from pandas import DataFrame
@@ -12,7 +11,7 @@ from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_port
 
 
 class Strategy:
-    DEFAULTG_CONFIG = {
+    DEFAULT_CONFIG = {
         "base": {
             "accounts": {
                 "STOCK": 20000000
@@ -27,17 +26,10 @@ class Strategy:
     }
 
     def __init__(
-        self,
-        factor: DataFrame,
-        rebalance_frequency: str,
-        start_date,
-        end_date,
-        universe: Optional[str] = None,
-        factor_threshold: float = 0.1,
-        filter_suspended: bool = True,
-        config: Optional[Dict] = None,
+        self, factor: DataFrame, rebalance_frequency: str, stock_proportion: float,
+        start_date, end_date, universe: Optional[str], filter_suspended: bool, config: Optional[Dict],
     ):
-        self.config = deepcopy(self.DEFAULTG_CONFIG)
+        self.config = deepcopy(self.DEFAULT_CONFIG)
         deep_update(config, self.config)
         deep_update({
             "base": {
@@ -47,7 +39,7 @@ class Strategy:
         }, self.config)
 
         self._factor = factor
-        self._factor_threshold = factor_threshold
+        self._stock_proportion = stock_proportion
         self._filters: List[Callable[[StrategyContext, Iterable[str]], List[str]]] = []
         self._rebalance_frequency = rebalance_frequency
 
@@ -87,7 +79,7 @@ class Strategy:
     def after_trading(self, context):
         obids = self._get_universe(context.now.date())
         factor = self._factor.loc[str(context.now.date())][obids]
-        context.target = set(factor.sort_values()[:int(len(factor) * self._factor_threshold)].keys())
+        context.target = set(factor.sort_values()[:int(len(factor) * self._stock_proportion)].keys())
 
 
 def run(
@@ -96,12 +88,12 @@ def run(
         start_date,
         end_date,
         universe: Optional[str] = None,
-        factor_threshold: float = 0.1,
+        stock_proportion: float = 0.2,
         filter_suspended: bool = True,
         config: Optional[Dict] = None,
 ):
     strategy = Strategy(
-        factor, rebalance_frequency, start_date, end_date, universe, factor_threshold, filter_suspended, config
+        factor, rebalance_frequency, stock_proportion, start_date, end_date, universe, filter_suspended, config
     )
     from rqalpha import run_func
     run_func(init=strategy.init, after_trading=strategy.after_trading, config=strategy.config)

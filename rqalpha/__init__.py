@@ -23,6 +23,7 @@ from typing import Optional
 from rqalpha.cmds import cli, inject_run_param
 from rqalpha.api import export_as_api
 from rqalpha.apis import subscribe_event
+from rqalpha.utils.factor_backtest import run as run_factor_backtest
 from . import data
 from . import interface
 from . import portfolio
@@ -30,6 +31,11 @@ from . import apis
 
 __all__ = [
     '__version__',
+    'run',
+    'run_func',
+    'run_code',
+    'run_file',
+    'run_factor_backtest',
 ]
 
 
