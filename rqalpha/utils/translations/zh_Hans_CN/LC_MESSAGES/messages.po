@@ -562,7 +562,7 @@ msgid "ExcessAnnualVolatility"
 msgstr "超额收益年化波动率"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:99
-msgid "ExcessIncomes"
+msgid "ExcessCumReturns"
 msgstr "超额累计收益"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:104

@@ -96,7 +96,7 @@ WEEKLY_INDICATORS = [
 ]
 
 EXCESS_INDICATORS = [
-    IndicatorInfo("excess_incomes", _("ExcessIncomes"), RED, "{0:.3%}", 11),
+    IndicatorInfo("excess_cum_returns", _("ExcessCumReturns"), RED, "{0:.3%}", 11),
     IndicatorInfo("excess_returns", _("ExcessReturns"), RED, "{0:.3%}", 11),
     IndicatorInfo("excess_annual_returns", _("ExcessAnnual"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11),

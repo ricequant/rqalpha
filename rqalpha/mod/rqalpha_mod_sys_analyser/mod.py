@@ -346,7 +346,7 @@ class AnalyserMod(AbstractMod):
             summary['benchmark_annualized_returns'] = benchmark_annualized_returns
 
             # 新增一个超额累计收益
-            summary['excess_incomes'] = summary["total_returns"] - summary["benchmark_total_returns"]
+            summary['excess_cum_returns'] = summary["total_returns"] - summary["benchmark_total_returns"]
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
