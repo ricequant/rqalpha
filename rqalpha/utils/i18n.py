@@ -33,7 +33,8 @@ class Localization(object):
             if os.name == "nt":
                 lc = locale.windows_locale[ctypes.windll.kernel32.GetUserDefaultUILanguage()]
             else:
-                lc = os.getenv("LANG")
+                # 修改虚拟环境的本地语言读取
+                lc = os.getenv("LANG") or os.getenv("LC_CTYPE")
         self.trans = self.get_trans(lc)
 
     @classmethod
