@@ -372,7 +372,7 @@ class AnalyserMod(AbstractMod):
             summary["turnover"] = trades_values.sum() / market_values.mean() / 2
             avg_daily_turnover = (trades_values.groupby(trades.index.date).sum() / market_values / 2)
             with pd.option_context('mode.use_inf_as_na', True):
-                summary["avg_daily_turnover"] = avg_daily_turnover.dropna().mean()
+                summary["avg_daily_turnover"] = avg_daily_turnover.fillna(0).mean()
         else:
             summary["turnover"] = np.nan
 
