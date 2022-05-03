@@ -27,12 +27,18 @@ class Executor(object):
     def __init__(self, env):
         self._env = env
         self._last_before_trading = None
+        self._is_end_date_settlement = False
 
     def get_state(self):
-        return convert_dict_to_json({"last_before_trading": self._last_before_trading}).encode('utf-8')
+        return convert_dict_to_json(
+            {
+                "last_before_trading": self._last_before_trading,
+                "is_end_date_settlement": self._is_end_date_settlement,
+            }).encode('utf-8')
 
     def set_state(self, state):
         self._last_before_trading = convert_json_to_dict(state.decode('utf-8')).get("last_before_trading")
+        self._is_end_date_settlement = convert_json_to_dict(state.decode('utf-8')).get("is_end_date_settlement")
 
     def run(self, bar_dict):
         conf = self._env.config.base
@@ -59,6 +65,7 @@ class Executor(object):
 
         # publish settlement after last day
         if self._env.trading_dt.date() == conf.end_date:
+            self._is_end_date_settlement = True
             self._split_and_publish(Event(EVENT.SETTLEMENT))
 
     def _ensure_before_trading(self, event):
@@ -76,7 +83,11 @@ class Executor(object):
             system_log.debug("publish settlement events with calendar_dt={}, trading_dt={}".format(
                 self._env.calendar_dt, self._env.trading_dt
             ))
-            self._split_and_publish(Event(EVENT.SETTLEMENT))
+            if not self._is_end_date_settlement:
+                # if incremental trading, this settlement has execute in the last time
+                self._split_and_publish(Event(EVENT.SETTLEMENT))
+            else:
+                self._is_end_date_settlement = False
         self._last_before_trading = event.trading_dt.date()
         self._split_and_publish(Event(EVENT.BEFORE_TRADING, calendar_dt=event.calendar_dt, trading_dt=event.trading_dt))
         return False
