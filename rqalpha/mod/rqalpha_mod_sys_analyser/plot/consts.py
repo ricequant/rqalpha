@@ -96,11 +96,12 @@ WEEKLY_INDICATORS = [
 ]
 
 EXCESS_INDICATORS = [
+    IndicatorInfo("excess_cum_returns", _("ExcessCumReturns"), RED, "{0:.3%}", 11),
     IndicatorInfo("excess_returns", _("ExcessReturns"), RED, "{0:.3%}", 11),
-    IndicatorInfo("excess_annual_returns", _("ExcessAnnual"), RED, "{0:.3%}", 11),
+    IndicatorInfo("excess_annual_returns", _("ExcessAnnual"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11),
     IndicatorInfo("excess_volatility", _("ExcessVolatility"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("excess_annual_volatility", _("ExcessAnnualVolatility"), BLACK, "{0:.4}", 11),
+    # IndicatorInfo("excess_annual_volatility", _("ExcessAnnualVolatility"), BLACK, "{0:.4}", 11),
     IndicatorInfo("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.4}", 11),
     IndicatorInfo("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 6),
 ]

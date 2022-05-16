@@ -561,6 +561,10 @@ msgstr "超额收益波动率"
 msgid "ExcessAnnualVolatility"
 msgstr "超额收益年化波动率"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:99
+msgid "ExcessCumReturns"
+msgstr "超额累计收益"
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:104
 msgid "ExcessMaxDD"
 msgstr "超额收益最大回撤"
@@ -1293,21 +1297,6 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 
 #~ msgid "The balance({balance}) is less than the withdrawal amount={amount}"
 #~ msgstr "出金数额 {amount} 不小于账户余额 {balance}"
-
-#~ msgid "Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
-#~ msgstr "订单创建失败: {order_book_id} 下单量为 0"
-
-#~ msgid ""
-#~ "Order Creation Failed: limit order price"
-#~ " {limit_price} is higher than limit "
-#~ "up {limit_up}, order_book_id={order_book_id}"
-#~ msgstr "订单创建失败: {order_book_id} 订单价格 {limit_price} 超过当天涨停板价格 {limit_up}"
-
-#~ msgid ""
-#~ "Order Creation Failed: limit order price"
-#~ " {limit_price} is lower than limit "
-#~ "down {limit_down}, order_book_id={order_book_id}"
-#~ msgstr "订单创建失败: {order_book_id} 订单价格 {limit_price} 低于当天跌停板价格 {limit_down}。"
 
 #~ msgid "Order Creation Failed: Order amount is 0."
 #~ msgstr ""

@@ -345,6 +345,9 @@ class AnalyserMod(AbstractMod):
             benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
             summary['benchmark_annualized_returns'] = benchmark_annualized_returns
 
+            # 新增一个超额累计收益
+            summary['excess_cum_returns'] = summary["total_returns"] - summary["benchmark_total_returns"]
+
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
             trades = trades.set_index(pd.DatetimeIndex(trades['datetime']))
@@ -369,7 +372,7 @@ class AnalyserMod(AbstractMod):
             summary["turnover"] = trades_values.sum() / market_values.mean() / 2
             avg_daily_turnover = (trades_values.groupby(trades.index.date).sum() / market_values / 2)
             with pd.option_context('mode.use_inf_as_na', True):
-                summary["avg_daily_turnover"] = avg_daily_turnover.dropna().mean()
+                summary["avg_daily_turnover"] = avg_daily_turnover.fillna(0).mean()
         else:
             summary["turnover"] = np.nan
 
