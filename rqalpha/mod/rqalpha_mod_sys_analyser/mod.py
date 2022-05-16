@@ -143,6 +143,10 @@ class AnalyserMod(AbstractMod):
         date = self._env.calendar_dt.date()
         portfolio = self._env.portfolio
 
+        # 在进行增量回测时，起始记录点会是上一个阶段的结束日期，导致有重复的交易日期
+        if len(self._total_portfolios) > 0 and self._total_portfolios[-1]["date"] == date:
+            return
+
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
         self._benchmark_daily_returns.append(self.get_benchmark_daily_returns())
