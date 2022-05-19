@@ -26,7 +26,7 @@ from rqalpha.const import SIDE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.environment import Environment
 from rqalpha.model.order import Order
-from rqalpha.const import POSITION_EFFECT
+from rqalpha.const import POSITION_EFFECT, ORDER_TYPE
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -103,3 +103,15 @@ class TickSizeSlippage(BaseSlippage):
             ).format(self.rate)))
 
         return price
+
+
+class LimitPriceSlippage(BaseSlippage):
+    """使用（限价单）挂单价作为成交价，模拟限价单的最坏情况"""
+    def __init__(self, _):
+        pass
+
+    def get_trade_price(self, order, price):  # type: (Order, float) -> float
+        if order.type == ORDER_TYPE.LIMIT:
+            return order.price
+        else:
+            return price
