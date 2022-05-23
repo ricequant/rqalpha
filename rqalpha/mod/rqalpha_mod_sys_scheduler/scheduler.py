@@ -43,6 +43,10 @@ def market_open(hour=0, minute=0):
     return minutes_since_midnight
 
 
+def physical_time(hour=0, minute=0):
+    return hour * 60 + minute
+
+
 def _verify_function(name, func):
     if not callable(func):
         raise patch_user_exc(ValueError('scheduler.{}: func should be callable'.format(name)))
@@ -106,11 +110,15 @@ class Scheduler(object):
             return False
 
     def _should_trigger(self, n):
-        # 非股票交易时间段不触发
-        if self._current_minute < 9*60+31 or self._current_minute > 15*60:
+        if self._stage == "before_trading" and n != "before_trading":
+            # 当前函数逻辑处理的都是交易时间段，盘前不在这
             return False
-
-        return self._last_minute < n <= self._current_minute
+        if self._frequency == "1m":
+            # 分钟回测下，自定义时间只要和交易时间相同就执行
+            return n == (self.ucontext.now.hour * 60 + self.ucontext.now.minute)
+        else:
+            # 日频
+            return True
 
     def _is_before_trading(self):
         return self._stage == 'before_trading'
