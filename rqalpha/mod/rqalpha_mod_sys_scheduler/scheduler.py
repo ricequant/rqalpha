@@ -27,9 +27,13 @@ from rqalpha.const import EXC_TYPE, EXECUTION_PHASE
 from rqalpha.core.events import EVENT
 from inspect import signature
 from rqalpha.utils.exception import patch_user_exc, ModifyExceptionFromType
+from rqalpha.utils.logger import system_log
 
 
 def market_close(hour=0, minute=0):
+    accounts = Environment.get_instance().config.base.accounts
+    if accounts.get("STOCK") is None and accounts.get("FUTURE"):
+        system_log.warning("market_close using in stock market")
     minutes_since_midnight = 15 * 60 - hour * 60 - minute
     if minutes_since_midnight < 13 * 60:
         minutes_since_midnight -= 90
@@ -37,10 +41,17 @@ def market_close(hour=0, minute=0):
 
 
 def market_open(hour=0, minute=0):
+    accounts = Environment.get_instance().config.base.accounts
+    if accounts.get("STOCK") is None and accounts.get("FUTURE"):
+        system_log.warning("market_open using in stock market")
     minutes_since_midnight = 9 * 60 + 31 + hour * 60 + minute
     if minutes_since_midnight > 11 * 60 + 30:
         minutes_since_midnight += 90
     return minutes_since_midnight
+
+
+def physical_time(hour=0, minute=0):
+    return hour * 60 + minute
 
 
 def _verify_function(name, func):
@@ -69,6 +80,7 @@ class Scheduler(object):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.next_day_)
         event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading_)
         event_bus.add_listener(EVENT.BAR, self.next_bar_)
+        event_bus.add_listener(EVENT.TICK, self.next_tick_)
 
     @property
     def trading_calendar(self):
@@ -106,11 +118,15 @@ class Scheduler(object):
             return False
 
     def _should_trigger(self, n):
-        # 非股票交易时间段不触发
-        if self._current_minute < 9*60+31 or self._current_minute > 15*60:
+        if self._stage == "before_trading" and n != "before_trading":
+            # 当前函数逻辑处理的都是交易时间段，盘前不在这
             return False
-
-        return self._last_minute < n <= self._current_minute
+        if self._frequency in ["1m", "tick"]:
+            # 分钟回测下，自定义时间只要和交易时间相同就执行
+            return n == (self.ucontext.now.hour * 60 + self.ucontext.now.minute)
+        else:
+            # 日频
+            return True
 
     def _is_before_trading(self):
         return self._stage == 'before_trading'
@@ -203,6 +219,18 @@ class Scheduler(object):
                     with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                         func(self.ucontext, bars)
         self._last_minute = self._current_minute
+
+    def next_tick_(self, event):
+        tick = event.tick
+        minute = self._minutes_since_midnight(self.ucontext.now.hour, self.ucontext.now.minute)
+        if self._current_minute < minute:
+            self._last_minute = self._current_minute
+        self._current_minute = minute
+        for day_rule, time_rule, func in self._registry:
+            if day_rule() and time_rule():
+                with ExecutionContext(EXECUTION_PHASE.SCHEDULED):
+                    with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
+                        func(self.ucontext, tick)
 
     def before_trading_(self, event):
         self._stage = 'before_trading'
