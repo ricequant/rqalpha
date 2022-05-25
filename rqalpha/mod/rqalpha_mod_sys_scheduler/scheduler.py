@@ -119,7 +119,11 @@ class Scheduler(object):
             # 日频直接触发
             return True
         if n > self.ucontext.now.hour * 60 + self.ucontext.now.minute:
-            # n > 当前minute 表示是前一个交易日的这个时刻
+            """
+            当前位置主要是针对股票账户下的 15 - 24 点设置的时间点的延后执行。
+            举例：用户设置 n 为 21:00，在当天收盘后(15:00)，下一个bar是第二天的09:31，则 dt 需要表示为当天的21:00。所以需要在日期上 - 1。
+            期货交易场景下早盘也会进入，但会被 self._last_dt < df 条件所限制
+            """
             dt = convert_date_to_int(self.ucontext.now - datetime.timedelta(days=1)) + n // 60 * 10000 + n % 60 * 100
         else:
             dt = convert_date_to_int(self.ucontext.now) + n // 60 * 10000 + n % 60 * 100
