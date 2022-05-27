@@ -83,12 +83,12 @@ class Scheduler(object):
         # 监听标的变化情况
         event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._universe_change)
 
-        # 保存交易时段，数据格式如下：{"571-690", "780-900"} 表示 09:31 - 11:30 和 13:00 - 15:00
+        # 保存交易时段，数据格式如下：{(571, 690), (780, 900)} 表示 09:31 - 11:30 和 13:00 - 15:00
         self._trading_minute_range = set()
 
         # 当账户是股票账户时或者是日频时，都给一个基准的交易时段
         if DEFAULT_ACCOUNT_TYPE.STOCK in env.config.base.accounts or frequency == "1d":
-            self._trading_minute_range = {"571-690", "780-900"}
+            self._trading_minute_range = {(571, 690), (780, 900)}
 
         # 开盘时间
         self._start_minute = 0
@@ -113,12 +113,11 @@ class Scheduler(object):
                     self._start_minute = max(time_range.start.hour * 60 + time_range.start.minute - 1, self._start_minute)
                 start_minute = time_range.start.hour * 60 + time_range.start.minute
                 end_minute = time_range.end.hour * 60 + time_range.end.minute
-                time_range_str = "{}-{}".format(start_minute, end_minute)
-                self._trading_minute_range.add(time_range_str)
+                self._trading_minute_range.add((start_minute, end_minute))
 
         if DEFAULT_ACCOUNT_TYPE.STOCK in env.config.base.accounts:
-            self._trading_minute_range.add("571-690")
-            self._trading_minute_range.add("780-900")
+            self._trading_minute_range.add((571, 690))
+            self._trading_minute_range.add((780, 900))
 
     @property
     def trading_calendar(self):
@@ -158,9 +157,8 @@ class Scheduler(object):
     def _should_trigger(self, n):
         # 非交易时间段内不触发
         flag = False
-        for time_range_str in self._trading_minute_range:
-            start_minute, end_minute = time_range_str.split("-")
-            if int(start_minute) <= n <= int(end_minute):
+        for start_minute, end_minute in self._trading_minute_range:
+            if start_minute <= n <= end_minute:
                 flag = True
 
         # 不在交易时段内
