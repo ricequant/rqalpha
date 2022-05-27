@@ -23,13 +23,16 @@ from dateutil.parser import parse
 
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
-from rqalpha.const import EXC_TYPE, EXECUTION_PHASE
+from rqalpha.const import EXC_TYPE, EXECUTION_PHASE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.core.events import EVENT
 from inspect import signature
 from rqalpha.utils.exception import patch_user_exc, ModifyExceptionFromType
+from rqalpha.utils.logger import system_log
 
 
 def market_close(hour=0, minute=0):
+    if Environment.get_instance().config.base.accounts.get("STOCK") is None:
+        system_log.warning("market_close using in stock market")
     minutes_since_midnight = 15 * 60 - hour * 60 - minute
     if minutes_since_midnight < 13 * 60:
         minutes_since_midnight -= 90
@@ -37,10 +40,16 @@ def market_close(hour=0, minute=0):
 
 
 def market_open(hour=0, minute=0):
+    if Environment.get_instance().config.base.accounts.get("STOCK") is None:
+        system_log.warning("market_open using in stock market")
     minutes_since_midnight = 9 * 60 + 31 + hour * 60 + minute
     if minutes_since_midnight > 11 * 60 + 30:
         minutes_since_midnight += 90
     return minutes_since_midnight
+
+
+def physical_time(hour=0, minute=0):
+    return hour * 60 + minute
 
 
 def _verify_function(name, func):
@@ -65,10 +74,51 @@ class Scheduler(object):
         self._trading_calendar = None
         self._ucontext = None
 
-        event_bus = Environment.get_instance().event_bus
+        env = Environment.get_instance()
+        event_bus = env.event_bus
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.next_day_)
         event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading_)
         event_bus.add_listener(EVENT.BAR, self.next_bar_)
+
+        # 监听标的变化情况
+        event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._universe_change)
+
+        # 保存交易时段，数据格式如下：{"571-690", "780-900"} 表示 09:31 - 11:30 和 13:00 - 15:00
+        self._trading_minute_range = set()
+
+        # 当账户是股票账户时或者是日频时，都给一个基准的交易时段
+        if DEFAULT_ACCOUNT_TYPE.STOCK in env.config.base.accounts or frequency == "1d":
+            self._trading_minute_range = {"571-690", "780-900"}
+
+        # 开盘时间
+        self._start_minute = 0
+
+    def _universe_change(self, event):
+        # 清空交易时段
+        self._trading_minute_range.clear()
+        env = Environment.get_instance()
+
+        # 遍历每个标的获取交易时段
+        for order_book_id in event.universe:
+            instrument = env.get_instrument(order_book_id)
+
+            # 当订阅的品种 与 账户对应不上时跳过，例如股票账户去订阅期货品种
+            if instrument.account_type not in env.config.base.accounts:
+                continue
+
+            # 遍历每个交易时段
+            for i, time_range in enumerate(instrument.trading_hours):
+                if i == 0:
+                    # 找到最大的开盘时间作为起始时间
+                    self._start_minute = max(time_range.start.hour * 60 + time_range.start.minute - 1, self._start_minute)
+                start_minute = time_range.start.hour * 60 + time_range.start.minute
+                end_minute = time_range.end.hour * 60 + time_range.end.minute
+                time_range_str = "{}-{}".format(start_minute, end_minute)
+                self._trading_minute_range.add(time_range_str)
+
+        if DEFAULT_ACCOUNT_TYPE.STOCK in env.config.base.accounts:
+            self._trading_minute_range.add("571-690")
+            self._trading_minute_range.add("780-900")
 
     @property
     def trading_calendar(self):
@@ -106,9 +156,28 @@ class Scheduler(object):
             return False
 
     def _should_trigger(self, n):
-        # 非股票交易时间段不触发
-        if self._current_minute < 9*60+31 or self._current_minute > 15*60:
+        # 非交易时间段内不触发
+        flag = False
+        for time_range_str in self._trading_minute_range:
+            start_minute, end_minute = time_range_str.split("-")
+            if int(start_minute) <= n <= int(end_minute):
+                flag = True
+
+        # 不在交易时段内
+        if not flag:
             return False
+
+        # 盘前
+        if self._stage == "before_trading":
+            return False
+
+        # 日频
+        if self._frequency == "1d":
+            return True
+
+        # 处理期货夜盘跨物理日期的0点0分
+        if n == 0 and self._current_minute == n:
+            return True
 
         return self._last_minute < n <= self._current_minute
 
@@ -124,7 +193,7 @@ class Scheduler(object):
                 'invalid time_rule, "before_trading" or int expected, got {}'.format(repr(time_rule))
             ))
 
-        time_rule = time_rule if time_rule else self._minutes_since_midnight(9, 31)
+        time_rule = time_rule if time_rule is not None else self._minutes_since_midnight(9, 31)
         return lambda: self._should_trigger(time_rule)
 
     @ExecutionContext.enforce_phase(EXECUTION_PHASE.ON_INIT)
@@ -183,7 +252,7 @@ class Scheduler(object):
             return
 
         self._today = Environment.get_instance().trading_dt.date()
-        self._last_minute = 0
+        self._last_minute = self._start_minute
         self._current_minute = 0
         if not self._this_week or self._today > self._this_week[-1]:
             self._fill_week()

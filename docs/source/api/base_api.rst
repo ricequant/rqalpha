@@ -535,16 +535,17 @@ time_rule - 定时间运行
     注意:
 
     *   market_open与market_close都跟随中国A股交易时间进行设置，即09:31~15:00。
+    *   physical_time用于设置物理时间，与market_open和market_close的相对时间不同。
+    *   physical_time更多用于交易时间不确定的品种，如商品期货。
     *   使用time_rule定时运行只会在分钟级别回测和实时模拟交易中有定义的效果，在日回测中只会默认依然在该天运行，并不能在固定的时间运行。
     *   在分钟回测中如未指定time_rule,则默认在开盘后一分钟运行,即09:31分。
-    *   如果两个schedule，分别使用market_open 与market_close规则，但规则触发时间在同一时刻，则market_open的handle一定在market_close的handle前执行。
-    *   目前暂不支持开盘交易(即 09:30分交易) ,所以time_rule(minute=0) 和time_rule(hour=0) 将不会触发任何事件。
+    *   目前暂不支持开盘交易(即 09:30分交易)。
     *   market_open(minute=120)将在11:30执行， market_open(minute=121)在13:01执行，中午休市的区间会被忽略。
     *   time_rule='before_trading'表示在开市交易前运行scheduler函数。该函数运行时间将在before_trading函数运行完毕之后handle_bar运行之前。
 
     `time_rule`: 定时具体几点几分运行某个函数。time_rule='before_trading' 表示开始交易前运行；market_open(hour=x, minute=y)表示A股市场开市后x小时y分钟运行，market_close(hour=x, minute=y)表示A股市场收市前x小时y分钟运行。如果不设置time_rule默认的值是中国A股市场开市后一分钟运行。
 
-    market_open, market_close参数如下：
+    market_open, market_close, physical_time参数如下：
 
     =========================   =========================   ==============================================================================
     参数                         类型                        注释
@@ -583,6 +584,11 @@ time_rule - 定时间运行
 
             scheduler.run_daily(function, time_rule='before_trading')
 
+    *   每天十点运行
+
+        ..  code-block:: python3
+            :linenos:
+            scheduler.run_daily(function, time_rule=physical_time(hour=10, minute=0))
 
 .. _api-base-types:
 
