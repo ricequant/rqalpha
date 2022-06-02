@@ -23,18 +23,19 @@ from dateutil.parser import parse
 
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
-from rqalpha.const import EXC_TYPE, EXECUTION_PHASE
+from rqalpha.const import EXC_TYPE, EXECUTION_PHASE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.core.events import EVENT
 from inspect import signature
 from rqalpha.utils.exception import patch_user_exc, ModifyExceptionFromType
 from rqalpha.utils.logger import system_log
-from rqalpha.utils.datetime_func import convert_dt_to_int, convert_date_to_int
 
 
 def market_close(hour=0, minute=0):
     if Environment.get_instance().config.base.accounts.get("STOCK") is None:
         system_log.warning("market_close using in stock market")
     minutes_since_midnight = 15 * 60 - hour * 60 - minute
+    if minutes_since_midnight < 13 * 60:
+        minutes_since_midnight -= 90
     return minutes_since_midnight
 
 
@@ -42,6 +43,8 @@ def market_open(hour=0, minute=0):
     if Environment.get_instance().config.base.accounts.get("STOCK") is None:
         system_log.warning("market_open using in stock market")
     minutes_since_midnight = 9 * 60 + 31 + hour * 60 + minute
+    if minutes_since_midnight > 11 * 60 + 30:
+        minutes_since_midnight += 90
     return minutes_since_midnight
 
 
@@ -64,17 +67,57 @@ class Scheduler(object):
         self._today = None        # type: Optional[datetime.date]
         self._this_week = None    # type: Optional[List[datetime.date]]
         self._this_month = None   # type: Optional[List[datetime.date]]
-        self._last_dt = 0         # type: Optional[int]
-        self._current_dt = 0      # type: Optional[int]
+        self._last_minute = 0     # type: Optional[int]
+        self._current_minute = 0  # type: Optional[int]
         self._stage = None
         self._frequency = frequency
         self._trading_calendar = None
         self._ucontext = None
 
-        event_bus = Environment.get_instance().event_bus
+        env = Environment.get_instance()
+        event_bus = env.event_bus
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.next_day_)
         event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading_)
         event_bus.add_listener(EVENT.BAR, self.next_bar_)
+
+        # 监听标的变化情况
+        event_bus.add_listener(EVENT.POST_UNIVERSE_CHANGED, self._universe_change)
+
+        # 保存交易时段，数据格式如下：{(571, 690), (780, 900)} 表示 09:31 - 11:30 和 13:00 - 15:00
+        self._trading_minute_range = set()
+
+        # 当账户是股票账户时或者是日频时，都给一个基准的交易时段
+        if DEFAULT_ACCOUNT_TYPE.STOCK in env.config.base.accounts or frequency == "1d":
+            self._trading_minute_range = {(571, 690), (780, 900)}
+
+        # 开盘时间
+        self._start_minute = 0
+
+    def _universe_change(self, event):
+        # 清空交易时段
+        self._trading_minute_range.clear()
+        env = Environment.get_instance()
+
+        # 遍历每个标的获取交易时段
+        for order_book_id in event.universe:
+            instrument = env.get_instrument(order_book_id)
+
+            # 当订阅的品种 与 账户对应不上时跳过，例如股票账户去订阅期货品种
+            if instrument.account_type not in env.config.base.accounts:
+                continue
+
+            # 遍历每个交易时段
+            for i, time_range in enumerate(instrument.trading_hours):
+                if i == 0:
+                    # 找到最大的开盘时间作为起始时间
+                    self._start_minute = max(time_range.start.hour * 60 + time_range.start.minute - 1, self._start_minute)
+                start_minute = time_range.start.hour * 60 + time_range.start.minute
+                end_minute = time_range.end.hour * 60 + time_range.end.minute
+                self._trading_minute_range.add((start_minute, end_minute))
+
+        if DEFAULT_ACCOUNT_TYPE.STOCK in env.config.base.accounts:
+            self._trading_minute_range.add((571, 690))
+            self._trading_minute_range.add((780, 900))
 
     @property
     def trading_calendar(self):
@@ -112,22 +155,29 @@ class Scheduler(object):
             return False
 
     def _should_trigger(self, n):
-        if self._stage == "before_trading":
-            # 只处理交易时间段内的定时任务
+        # 非交易时间段内不触发
+        flag = False
+        for start_minute, end_minute in self._trading_minute_range:
+            if start_minute <= n <= end_minute:
+                flag = True
+
+        # 不在交易时段内
+        if not flag:
             return False
+
+        # 盘前
+        if self._stage == "before_trading":
+            return False
+
+        # 日频
         if self._frequency == "1d":
-            # 日频直接触发
             return True
-        if n > self.ucontext.now.hour * 60 + self.ucontext.now.minute:
-            """
-            当前位置主要是针对股票账户下的 15 - 24 点设置的时间点的延后执行。
-            举例：用户设置 n 为 21:00，在当天收盘后(15:00)，下一个bar是第二天的09:31，则 dt 需要表示为当天的21:00。所以需要在日期上 - 1。
-            期货交易场景下早盘也会进入，但会被 self._last_dt < df 条件所限制
-            """
-            dt = convert_date_to_int(self.ucontext.now - datetime.timedelta(days=1)) + n // 60 * 10000 + n % 60 * 100
-        else:
-            dt = convert_date_to_int(self.ucontext.now) + n // 60 * 10000 + n % 60 * 100
-        return self._last_dt < dt <= self._current_dt
+
+        # 处理期货夜盘跨物理日期的0点0分
+        if n == 0 and self._current_minute == n:
+            return True
+
+        return self._last_minute < n <= self._current_minute
 
     def _is_before_trading(self):
         return self._stage == 'before_trading'
@@ -200,6 +250,8 @@ class Scheduler(object):
             return
 
         self._today = Environment.get_instance().trading_dt.date()
+        self._last_minute = self._start_minute
+        self._current_minute = 0
         if not self._this_week or self._today > self._this_week[-1]:
             self._fill_week()
         if not self._this_month or self._today > self._this_month[-1]:
@@ -211,13 +263,13 @@ class Scheduler(object):
 
     def next_bar_(self, event):
         bars = event.bar_dict
-        self._current_dt = convert_dt_to_int(self.ucontext.now)
+        self._current_minute = self._minutes_since_midnight(self.ucontext.now.hour, self.ucontext.now.minute)
         for day_rule, time_rule, func in self._registry:
             if day_rule() and time_rule():
                 with ExecutionContext(EXECUTION_PHASE.SCHEDULED):
                     with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                         func(self.ucontext, bars)
-        self._last_dt = self._current_dt
+        self._last_minute = self._current_minute
 
     def before_trading_(self, event):
         self._stage = 'before_trading'
@@ -227,12 +279,6 @@ class Scheduler(object):
                     with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                         func(self.ucontext, None)
         self._stage = None
-        if self._last_dt == 0:
-            # 回测刚开始时将_last_df定义为前一个交易日的收盘时间，为0时，期货夜盘会触发前一个交易日早盘的任务
-            if self._today == self.ucontext.now.date():
-                self._last_dt = convert_date_to_int(self.ucontext.now - datetime.timedelta(days=1)) + 15 * 10000 + 30 * 100
-            else:
-                self._last_dt = convert_date_to_int(self.ucontext.now) + 15 * 10000 + 30 * 100
 
     def _fill_week(self):
         weekday = self._today.isoweekday()
@@ -257,16 +303,7 @@ class Scheduler(object):
     def set_state(self, state):
         r = json.loads(state.decode('utf-8'))
         self._today = parse(r['today']).date()
-        if r.get("last_dt"):
-            self._last_dt = r['last_dt']
-        elif r.get("last_minute"):
-            # 保持向前兼容
-            if r['last_minute'] > 15 * 60:
-                # 针对期货交易夜盘
-                dt = convert_date_to_int(self._today - datetime.timedelta(days=1)) + r['last_minute'] // 60 * 10000 + r['last_minute'] % 60 * 100
-            else:
-                dt = convert_date_to_int(self._today) + r['last_minute'] // 60 * 10000 + r['last_minute'] % 60 * 100
-            self._last_dt = dt
+        self._last_minute = r['last_minute']
         self._fill_month()
         self._fill_week()
 
@@ -276,5 +313,5 @@ class Scheduler(object):
 
         return json.dumps({
             'today': self._today.strftime('%Y-%m-%d'),
-            'last_dt': self._last_dt
+            'last_minute': self._last_minute
         }).encode('utf-8')
