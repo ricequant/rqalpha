@@ -88,3 +88,7 @@ RQAlpha 回测 Mod，启用该模块开启回测功能。
 *   :code:`rqalpha run` 命令增加 :code:`--slippage` / :code:`-sp` 选项，您可以指定成交所产生的滑点，目前支持按照当前价格的百分比的方式计算滑点。
 *   :code:`rqalpha run` 命令增加 :code:`--commission-multiplier` / :code:`--cm` 选项，您可以指定手续费乘数
 *   :code:`rqalpha run` 命令增加 :code:`--matching-type` / :code:`--mt` 选项，您可以指定撮合的锚定价格及对应的方式
+
+注意事项
+===============================
+*   在tick级别回测频率下，开盘集合竞价期间的撮合将无视 matching_type 的设置，一律用last撮合。

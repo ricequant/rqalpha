@@ -61,11 +61,6 @@ class SimulationEventSourceTestCase(UniverseFixture, SimulationEventSourceFixtur
                 datetime(2018, 9, 13, 20, 29, 0, 500000), datetime(2018, 9, 14, 20, 29, 0, 500000)
             )
 
-            self.assertEvent(
-                next(events), EVENT.OPEN_AUCTION,
-                datetime(2018, 9, 13, 20, 56, 0, 500000), datetime(2018, 9, 14, 20, 56, 0, 500000)
-            )
-
             self.env.update_universe({"TF1812"})
             self.assertEvent(
                 next(events), EVENT.TICK,

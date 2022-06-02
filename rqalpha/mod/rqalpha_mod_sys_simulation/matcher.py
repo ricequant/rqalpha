@@ -17,13 +17,15 @@
 
 from collections import defaultdict
 
-from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
+from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
+from rqalpha.model.tick import TickObject
 from rqalpha.portfolio.account import Account
 from rqalpha.utils import is_valid_price
+from typing import Dict
 from rqalpha.utils.i18n import gettext as _
 from .slippage import SlippageDecider
 
@@ -353,3 +355,199 @@ class CounterPartyOfferMatcher(DefaultMatcher):
 
     def update(self):
         pass
+
+
+class TickMatcher(DefaultMatcher):
+    """ tick回测使用 """
+
+    def __init__(self, env, mod_config):
+        super(TickMatcher, self).__init__(env, mod_config)
+
+        # 每个交易日期内的上一个时刻的tick(第一个除外)
+        self._last_tick: Dict[str, TickObject] = dict()
+        # 当前的tick
+        self._cur_tick: Dict[str, TickObject] = dict()
+
+        # 订阅一些事件
+        self._env.event_bus.add_listener(EVENT.TICK, self._on_tick)
+        self._env.event_bus.add_listener(EVENT.POST_TICK, self._on_post_tick)
+        self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self._on_before_trading)
+
+    def _on_before_trading(self, event):
+        # 在每个交易日的盘前删除前一个交易日的数据
+        self._last_tick.clear()
+        self._cur_tick.clear()
+
+    def _on_tick(self, event):
+        # 保存当前时刻的tick
+        self._cur_tick[event.tick.order_book_id] = event.tick
+
+    def _on_post_tick(self, event):
+        # 保存上一时刻的tick
+        self._last_tick[event.tick.order_book_id] = event.tick
+
+    @staticmethod
+    def _is_open_auction(calendar_dt, instrument):
+        """ 当前订单是否处于开盘集合竞价时段 """
+        # 当前的分钟数
+        _minute = calendar_dt.hour * 60 + calendar_dt.minute
+
+        if instrument.type == INSTRUMENT_TYPE.CS:
+            # 股票开盘集合竞价时间为 9:15 - 9:25
+            return 9 * 60 + 15 <= _minute <= 9 * 60 + 25
+        elif instrument.type == INSTRUMENT_TYPE.FUTURE:
+            # 期货开盘时间
+            start_time = instrument.trading_hours[0].start
+
+            # -1 是因为获取到的时间都是开盘后1分钟，如 09:31
+            start_minute = start_time.hour * 60 + start_time.minute - 1
+
+            # 开盘集合竞价时间段为开盘前5分钟
+            return start_minute - 5 <= _minute < start_minute
+        else:
+            # 其他暂未处理
+            return False
+
+    def match(self, account, order, open_auction):  # type: (Account, Order, bool) -> None
+
+        # order 是否合法
+        if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
+            raise NotImplementedError
+
+        # 标的信息
+        order_book_id = order.order_book_id
+        instrument = self._env.get_instrument(order_book_id)
+
+        # 判断订单在交易时间下处于那个阶段
+        if self._is_open_auction(self._env.calendar_dt, instrument):
+            # 开盘集合竞价时段内撮合无视matching_type的设置，直接使用last进行撮合
+            deal_price = self._cur_tick[order_book_id].last
+        else:
+            deal_price = self._deal_price_decider(order_book_id, order.side)
+
+        # 确认价格是否有效
+        if not is_valid_price(deal_price):
+            listed_date = instrument.listed_date.date()
+            if listed_date == self._env.trading_dt.date():
+                reason = _(
+                    u"Order Cancelled: current security [{order_book_id}] can not be traded"
+                    u" in listed date [{listed_date}]").format(
+                    order_book_id=order.order_book_id,
+                    listed_date=listed_date,
+                )
+            else:
+                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
+                    order_book_id=order.order_book_id)
+            order.mark_rejected(reason)
+            return
+
+        price_board = self._env.price_board
+        if order.type == ORDER_TYPE.LIMIT:
+            if order.side == SIDE.BUY and order.price < deal_price:
+                return
+            if order.side == SIDE.SELL and order.price > deal_price:
+                return
+            # 是否限制涨跌停不成交
+            if self._price_limit:
+                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                    return
+                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                    return
+            if self._liquidity_limit:
+                if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
+                    return
+                if order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
+                    return
+        else:
+            if self._price_limit:
+                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                    reason = _(
+                        "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
+                    ).format(order_book_id=order.order_book_id)
+                    order.mark_rejected(reason)
+                    return
+                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                    reason = _(
+                        "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
+                    ).format(order_book_id=order.order_book_id)
+                    order.mark_rejected(reason)
+                    return
+            if self._liquidity_limit:
+                if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
+                    reason = _(
+                        "Order Cancelled: [{order_book_id}] has no liquidity."
+                    ).format(order_book_id=order.order_book_id)
+                    order.mark_rejected(reason)
+                    return
+                if order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0:
+                    reason = _(
+                        "Order Cancelled: [{order_book_id}] has no liquidity."
+                    ).format(order_book_id=order.order_book_id)
+                    order.mark_rejected(reason)
+                    return
+
+        # 是否开启成交量限制
+        if self._volume_limit:
+            # 当前的时刻的成交量 = 当前tick - 上一个时刻的tick
+            volume = self._cur_tick[order_book_id].volume - self._last_tick[order_book_id].volume
+
+            # 可以用来给order进行撮合的成交量
+            volume_limit = round(volume * self._volume_percent) - self._turnover[order.order_book_id]
+
+            # 对成交量根据 1手 : n股 的比例进行限制
+            volume_limit = (volume_limit // instrument.round_lot) * instrument.round_lot
+
+            if volume_limit <= 0:
+                if order.type == ORDER_TYPE.MARKET:
+                    reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
+                               u" due to volume limit").format(
+                        order_book_id=order.order_book_id,
+                        order_volume=order.quantity
+                    )
+                    order.mark_cancelled(reason)
+                return
+
+            # 实际成交数量
+            fill = min(order.unfilled_quantity, volume_limit)
+        else:
+            # 下单数量就是成交数量
+            fill = order.unfilled_quantity
+
+        # 平今的数量
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+
+        # 对价格进行滑点处理
+        if self._is_open_auction(self._env.calendar_dt, instrument):
+            price = deal_price
+        else:
+            price = self._slippage_decider.get_trade_price(order, deal_price)
+
+        # 成交记录
+        trade = Trade.__from_create__(
+            order_id=order.order_id,
+            price=price,
+            amount=fill,
+            side=order.side,
+            position_effect=order.position_effect,
+            order_book_id=order.order_book_id,
+            frozen_price=order.frozen_price,
+            close_today_amount=ct_amount
+        )
+        trade._commission = self._env.get_trade_commission(trade)
+        trade._tax = self._env.get_trade_tax(trade)
+        order.fill(trade)
+        self._turnover[order.order_book_id] += fill
+
+        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
+
+        if order.type == ORDER_TYPE.MARKET and order.unfilled_quantity != 0:
+            reason = _(
+                u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
+                u" larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
+            ).format(
+                order_book_id=order.order_book_id,
+                order_volume=order.quantity,
+                filled_volume=order.filled_quantity,
+                volume_percent_limit=self._volume_percent * 100.0
+            )
+            order.mark_cancelled(reason)

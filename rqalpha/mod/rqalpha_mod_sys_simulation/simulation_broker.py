@@ -30,7 +30,7 @@ from rqalpha.const import MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, EXECUTIO
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 
-from .matcher import DefaultMatcher, AbstractMatcher, CounterPartyOfferMatcher
+from .matcher import DefaultMatcher, AbstractMatcher, CounterPartyOfferMatcher, TickMatcher
 
 
 class SimulationBroker(AbstractBroker, Persistable):
@@ -47,6 +47,11 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._open_exercise_orders = []  # type: List[Tuple[Account, Order]]
 
         self._frontend_validator = {}
+
+        # tick频率更换 Tick Matcher
+        if env.config.base.frequency == "tick":
+            for instrument_type in INSTRUMENT_TYPE:
+                self.register_matcher(instrument_type, TickMatcher(self._env, self._mod_config))
 
         if self._mod_config.matching_type == MATCHING_TYPE.COUNTERPARTY_OFFER:
             for instrument_type in INSTRUMENT_TYPE:
