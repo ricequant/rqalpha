@@ -58,7 +58,7 @@ handle_tick - 快照数据更新
 ..  py:function:: handle_tick(context, tick)
 
     在 tick 级别的策略中，已订阅快照数据的更新会自动触发该方法的调用。策略具体逻辑可在该方法内实现，包括交易信号的产生、订单的创建等。
-    若订阅了多个合约，不同合约快照数据的更新会分别触发该方法。
+    若订阅了多个合约，不同合约快照数据的更新会分别触发该方法。(触发时间包括集合竞价和连续交易时段)。
 
     :param context: 策略上下文
     :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object
@@ -83,6 +83,7 @@ open_auction - 集合竞价
 ..  py:function:: open_auction(context, bar_dict)
 
     盘前集合竞价发生时会触发该函数的调用，在该函数内发出的订单会以当日开盘价被撮合。
+    tick级别回测频率不触发集合竞价事件。
 
     :param context: 策略上下文
     :type context: :class:`~rqalpha.core.strategy_context.StrategyContext` object

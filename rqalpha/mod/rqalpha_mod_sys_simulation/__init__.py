@@ -28,7 +28,7 @@ __config__ = {
     "price_limit": True,
     # 开启对于对手盘无流动性的证券的撮合限制（仅在 tick 回测下生效）
     "liquidity_limit": False,
-    # 开启成交量限制（仅在日和分钟回测下生效）
+    # 开启成交量限制
     #   开启该限制意味着每个 bar 的累计成交量将不会超过该时间段内市场上总成交量的一定比值（volume_percent）
     "volume_limit": True,
     # 每个 bar 可成交数量占市场总成交量的比值，在 volume_limit 开启时生效
