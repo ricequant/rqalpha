@@ -169,6 +169,10 @@ class SimulationEventSource(AbstractEventSource):
                         if last_tick is None:
                             last_tick = tick
 
+                            """
+                            这里区分时间主要是为了对其之前，之前对获取tick数据的时间有限制，期货的盘前时间是20:30，股票是09:00。
+                            在解除获取tick数据的限制后，股票的tick的开始时间是09:15，而期货则是20:59
+                            """
                             if self._env.get_instrument(tick.order_book_id).type == INSTRUMENT_TYPE.FUTURE:
                                 yield Event(
                                     EVENT.BEFORE_TRADING,

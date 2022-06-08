@@ -329,7 +329,7 @@ class Instrument(metaclass=PropertyReprMeta):
 
     def listed_at(self, dt):
         """
-        该合约在指定日期是否已上日
+        该合约在指定日期是否已上市
         :param dt: datetime.datetime
         :return: bool
         """
@@ -385,6 +385,27 @@ class Instrument(metaclass=PropertyReprMeta):
     @property
     def trade_at_night(self):
         return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
+
+    def open_auction_at(self, dt):
+        """ 是否处于集合竞价交易时段 """
+        # 当前的分钟数
+        _minute = dt.hour * 60 + dt.minute
+
+        if self.type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.ETF]:
+            # 股票开盘集合竞价时间为 9:15 - 9:25
+            return 9 * 60 + 15 <= _minute <= 9 * 60 + 25
+        elif self.type in [INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION]:
+            # 期货开盘时间
+            start_time = self.trading_hours[0].start
+
+            # -1 是因为获取到的时间都是开盘后1分钟，如 09:31
+            start_minute = start_time.hour * 60 + start_time.minute - 1
+
+            # 开盘集合竞价时间段为开盘前5分钟
+            return start_minute - 5 <= _minute < start_minute
+        else:
+            # 其他暂未处理
+            return False
 
     def days_from_listed(self):
         if self.listed_date == self.DEFAULT_LISTED_DATE:
