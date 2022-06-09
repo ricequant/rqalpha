@@ -14,10 +14,9 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-
+import datetime
 from collections import defaultdict
-
-from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE, INSTRUMENT_TYPE, RUN_TYPE
+from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
 from rqalpha.model.order import Order
@@ -267,20 +266,29 @@ class DefaultTickMatcher(AbstractMatcher):
         # 保存当前时刻的tick
         self._cur_tick[event.tick.order_book_id] = event.tick
 
+    def _get_today_history_ticks(self, order_book_id, count):
+        """ 获取当前交易日的历史tick数据 """
+        cal_dt = self._env.calendar_dt
+        tick_list = self._env.data_proxy.history_ticks(order_book_id, count, cal_dt)
+        start = cal_dt if cal_dt.hour >= 19 else cal_dt - datetime.timedelta(days=1)
+        start = start.replace(hour=17, minute=0, second=0, microsecond=0)
+        ticks = [tick for tick in tick_list if start <= tick.datetime <= cal_dt]
+        return ticks
+
     def _get_last_tick(self, order_book_id):
         """ 获取上一个tick """
         _last_tick = self._last_tick.get(order_book_id)
         trading_dt = self._env.trading_dt
         # 上一根tick缺失
         if not _last_tick:
-            tick_list = self._env.data_proxy.history_ticks(order_book_id, 2, self._env.calendar_dt)
+            tick_list = self._get_today_history_ticks(order_book_id, 2)
             _last_tick = tick_list[0] if len(tick_list) == 2 else None
         else:
             # 两个tick之间的时间差(秒)
             diff_time = trading_dt.timestamp() - _last_tick.datetime.timestamp()
             # 在非回测状态下，时差间隔太大时，需要重新获取tick
-            if self._env.config.base.run_type != RUN_TYPE.BACKTEST and diff_time > 60:
-                tick_list = self._env.data_proxy.history_ticks(order_book_id, 2, self._env.calendar_dt)
+            if diff_time > 5:
+                tick_list = self._get_today_history_ticks(order_book_id, 2)
                 _last_tick = tick_list[0] if len(tick_list) == 2 else None
         return _last_tick
 
@@ -295,7 +303,6 @@ class DefaultTickMatcher(AbstractMatcher):
         instrument = self._env.get_instrument(order_book_id)
 
         # 获取tick数据
-        _last_tick = self._get_last_tick(order_book_id)
         _cur_tick = self._cur_tick.get(order_book_id)
 
         # 判断订单在交易时间下处于那个阶段
@@ -368,6 +375,9 @@ class DefaultTickMatcher(AbstractMatcher):
 
         # 是否开启成交量限制
         if self._volume_limit:
+            # 获取上一个tick
+            _last_tick = self._get_last_tick(order_book_id)
+
             if _last_tick:
                 # 当前的时刻的成交量 = 当前tick - 上一个时刻的tick
                 volume = _cur_tick.volume - _last_tick.volume

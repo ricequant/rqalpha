@@ -391,10 +391,10 @@ class Instrument(metaclass=PropertyReprMeta):
         # 当前的分钟数
         _minute = dt.hour * 60 + dt.minute
 
-        if self.type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.ETF]:
+        if self.type == INSTRUMENT_TYPE.CS:
             # 股票开盘集合竞价时间为 9:15 - 9:25
             return 9 * 60 + 15 <= _minute <= 9 * 60 + 25
-        elif self.type in [INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION]:
+        elif self.type == INSTRUMENT_TYPE.FUTURE:
             # 期货开盘时间
             start_time = self.trading_hours[0].start
 
@@ -404,7 +404,7 @@ class Instrument(metaclass=PropertyReprMeta):
             # 开盘集合竞价时间段为开盘前5分钟
             return start_minute - 5 <= _minute < start_minute
         else:
-            # 其他暂未处理
+            # 其他品种由子类实现
             return False
 
     def days_from_listed(self):
