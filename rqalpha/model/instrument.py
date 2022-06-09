@@ -391,7 +391,7 @@ class Instrument(metaclass=PropertyReprMeta):
         # 当前的分钟数
         _minute = dt.hour * 60 + dt.minute
 
-        if self.type == INSTRUMENT_TYPE.CS:
+        if self.type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF]:
             # 股票开盘集合竞价时间为 9:15 - 9:25
             return 9 * 60 + 15 <= _minute <= 9 * 60 + 25
         elif self.type == INSTRUMENT_TYPE.FUTURE:
