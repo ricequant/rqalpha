@@ -28,10 +28,11 @@ __config__ = {
     "price_limit": True,
     # 开启对于对手盘无流动性的证券的撮合限制（仅在 tick 回测下生效）
     "liquidity_limit": False,
-    # 开启成交量限制（仅在日和分钟回测下生效）
+    # 开启成交量限制
     #   开启该限制意味着每个 bar 的累计成交量将不会超过该时间段内市场上总成交量的一定比值（volume_percent）
+    #   开启该限制意味着每个 tick 的累计成交量将不会超过当前tick与上一个tick的市场总成交量之差的一定比值
     "volume_limit": True,
-    # 每个 bar 可成交数量占市场总成交量的比值，在 volume_limit 开启时生效
+    # 每个 bar/tick 可成交数量占市场总成交量的比值，在 volume_limit 开启时生效
     "volume_percent": 0.25,
     # 滑点模型，可选值有 "PriceRatioSlippage"（按价格比例设置滑点）和 "TickSizeSlippage"（按跳设置滑点）
     #    亦可自己实现滑点模型，选择自己实现的滑点模型时，此处需传入包含包和模块的完整类路径

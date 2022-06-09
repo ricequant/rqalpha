@@ -621,14 +621,23 @@ msgstr "订单被撤销: [{order_book_id}] 上市首日无法交易"
 msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
+msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
+msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
+
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:148
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:86
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
 msgstr "订单被拒单: [{order_book_id}] 已涨停。"
 
+msgid "Order Cancelled: current tick [{order_book_id}] reach the limit_up price."
+msgstr "订单被拒单: [{order_book_id}] 已涨停。"
+
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:154
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:95
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
+msgstr "订单被拒单: [{order_book_id}] 已跌停。"
+
+msgid "Order Cancelled: current tick [{order_book_id}] reach the limit_down price."
 msgstr "订单被拒单: [{order_book_id}] 已跌停。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:161
@@ -653,6 +662,13 @@ msgid ""
 "{filled_volume} actually"
 msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
+"{volume_percent_limit}%，实际成交 {filled_volume}"
+
+msgid ""
+" Order Cancelled: market order {order_book_id} volume {order_volume} is "
+"larger than {volume_percent_limit} percent of current tick volume, fill {filled_volume} actually"
+msgstr ""
+"{order_book_id} 下单量 {order_volume} 超过当前 Tick 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:321
