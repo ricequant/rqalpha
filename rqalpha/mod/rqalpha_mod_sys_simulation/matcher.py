@@ -204,7 +204,10 @@ class DefaultMatcher(AbstractMatcher):
             fill = order.unfilled_quantity
 
         ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
-        price = self._slippage_decider.get_trade_price(order, deal_price)
+        if open_auction:
+            price = deal_price
+        else:
+            price = self._slippage_decider.get_trade_price(order, deal_price)
 
         trade = Trade.__from_create__(
             order_id=order.order_id,

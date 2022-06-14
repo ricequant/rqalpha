@@ -58,7 +58,7 @@ class Account(metaclass=AccountMeta):
         self._type = account_type
         self._total_cash = total_cash  # 包含保证金的总资金
 
-        self._positions = {}
+        self._positions: Dict[str, Dict[POSITION_DIRECTION, Position]] = {}
         self._backward_trade_set = set()
         self._frozen_cash = 0
 
@@ -95,8 +95,8 @@ class Account(metaclass=AccountMeta):
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
-        event_bus.prepend_listener(EVENT.BAR, self._update_last_price)
-        event_bus.prepend_listener(EVENT.TICK, self._update_last_price)
+        event_bus.prepend_listener(EVENT.BAR, self._on_bar)
+        event_bus.prepend_listener(EVENT.TICK, self._on_tick)
 
     def get_state(self):
         return {
@@ -388,7 +388,16 @@ class Account(metaclass=AccountMeta):
             positions = self._positions[order_book_id]
         return positions[direction]
 
-    def _update_last_price(self, _):
+    def _on_tick(self, event):
+        tick = event.tick
+        try:
+            positions = self._positions[tick.order_book_id]
+        except KeyError:
+            return
+        for position in positions.values():
+            position.update_last_price(tick.last)
+
+    def _on_bar(self, _):
         env = Environment.get_instance()
         for order_book_id, positions in self._positions.items():
             price = env.get_last_price(order_book_id)
