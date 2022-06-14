@@ -306,8 +306,8 @@ class DefaultTickMatcher(AbstractMatcher):
         _cur_tick = self._cur_tick.get(order_book_id)
 
         # 判断订单在交易时间下处于那个阶段
-        if instrument.open_auction_at(self._env.calendar_dt):
-            # 开盘集合竞价时段内撮合无视matching_type的设置，直接使用last进行撮合
+        if instrument.during_call_auction(self._env.calendar_dt):
+            # 集合竞价时段内撮合无视 matching_type 的设置，直接使用 last 进行撮合
             deal_price = _cur_tick.last
         else:
             deal_price = self._deal_price_decider(order_book_id, order.side)
@@ -411,7 +411,7 @@ class DefaultTickMatcher(AbstractMatcher):
         ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
 
         # 对价格进行滑点处理
-        if instrument.open_auction_at(self._env.calendar_dt):
+        if instrument.during_call_auction(self._env.calendar_dt):
             price = deal_price
         else:
             price = self._slippage_decider.get_trade_price(order, deal_price)
@@ -496,7 +496,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
                 # if order.unfilled_quantity != 0:
                 return self.match(account, order, open_auction)
 
-        if instrument.open_auction_at(self._env.trading_dt):
+        if instrument.during_call_auction(self._env.trading_dt):
             # 集合竞价期间一律使用last
             matching_price = self._cur_tick[order_book_id].last
 
@@ -534,7 +534,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             if volume_limit == 0:
                 return
 
-            if instrument.open_auction_at(self._env.trading_dt):
+            if instrument.during_call_auction(self._env.trading_dt):
                 # 集合竞价期间不看档位
                 fill = min(order.unfilled_quantity, volume_limit)
             else:
@@ -560,7 +560,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
         self._turnover[order.order_book_id] += fill
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))
 
-        if not instrument.open_auction_at(self._env.trading_dt):
+        if not instrument.during_call_auction(self._env.trading_dt):
             # 常规交易时间逐档
             if order.side == SIDE.BUY:
                 self._a_volume[order.order_book_id][0] -= fill

@@ -386,15 +386,16 @@ class Instrument(metaclass=PropertyReprMeta):
     def trade_at_night(self):
         return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
-    def open_auction_at(self, dt):
+    def during_call_auction(self, dt):
         """ 是否处于集合竞价交易时段 """
         # 当前的分钟数
         _minute = dt.hour * 60 + dt.minute
 
         if self.type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF]:
-            # 股票开盘集合竞价时间为 9:15 - 9:25
-            return 9 * 60 + 15 <= _minute <= 9 * 60 + 25
+            # 9:30 前或 14:57 之后为集合竞价
+            return _minute < 9 * 60 + 30 or _minute >= 14 * 60 + 57
         elif self.type == INSTRUMENT_TYPE.FUTURE:
+            # TODO：期货收盘集合竞价时间
             # 期货开盘时间
             start_time = self.trading_hours[0].start
 
