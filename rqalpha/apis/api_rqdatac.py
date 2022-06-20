@@ -1094,27 +1094,50 @@ def get_pit_financials(fields, quarter=None, interval=None, order_book_ids=None,
 @export_as_api
 @apply_rules(verify_that('statements').is_in(['all', 'latest'], ignore_none=True))
 def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
+    """ 获取过去n个报告期的财务数据() """
     if isinstance(order_book_ids, str):
         order_book_ids = [order_book_ids]
     env = Environment.get_instance()
-    dt = env.calendar_dt.date()
-    year = dt.year
-    mon = dt.month
-    q = (mon - 4) // 3 + 1
-    y = year
-    if q <= 0:
-        y -= 1
-        q = 4
-    end_quarter = str(y) + 'q' + str(q)
 
-    q_num = y * 4 + q - count
-    start_y = q_num // 4
-    start_q = q_num % 4 + 1
+    cal_dt = env.calendar_dt.date()
 
-    start_quarter = "{}q{}".format(start_y, start_q)
+    result_list = []
 
-    result = rqdatac.get_pit_financials_ex(fields=fields, start_quarter=start_quarter, end_quarter=end_quarter,
-        order_book_ids=order_book_ids, statements=statements, market='cn', date=dt)
+    # 需要的数量，传入的 0 代表 1个
+    count += 1
+
+    for order_book_id in order_book_ids:
+        # 获取标的信息
+        instrument = env.get_instrument(order_book_id)
+        dt = env.calendar_dt.date() if env.calendar_dt < instrument.de_listed_date else instrument.de_listed_date
+        year = dt.year
+        mon = dt.month
+        q = (mon - 4) // 3 + 1
+        y = year
+        if q <= 0:
+            y -= 1
+            q = 4
+        end_quarter = str(y) + 'q' + str(q)
+
+        # 多获取4个季度的财报，以防因为财报未发布导致数量不够
+        q_num = y * 4 + q - count - 4
+
+        start_y = q_num // 4
+        start_q = q_num % 4 + 1
+        start_quarter = "{}q{}".format(start_y, start_q)
+
+        if start_quarter > end_quarter:
+            start_quarter = end_quarter
+
+        result = rqdatac.get_pit_financials_ex(fields=fields, start_quarter=start_quarter, end_quarter=end_quarter,
+            order_book_ids=[order_book_id], statements=statements, market='cn', date=cal_dt)
+
+        if result is not None:
+            result = result.iloc[-count:]
+            result_list.append(result)
+
+    result = pd.concat(result_list) if len(result_list) else None
+
     return result
 
 
