@@ -386,6 +386,16 @@ class Instrument(metaclass=PropertyReprMeta):
     def trade_at_night(self):
         return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
+    @property
+    def call_auction_minute(self):
+        """ 集合竞价时段内的撮合时间 """
+        if self.type == INSTRUMENT_TYPE.FUTURE:
+            # 开盘前一分钟撮合，如 21:00 开盘，在 20:59 撮合，期货无收盘集合竞价
+            return [self.trading_hours[0].start.hour * 60 + self.trading_hours[0].start.minute - 2]
+        else:
+            # 在 09:25 和 15:00 撮合
+            return [9 * 60 + 25, 15 * 60]
+
     def during_call_auction(self, dt):
         """ 是否处于集合竞价交易时段 """
         # 当前的分钟数
@@ -395,14 +405,13 @@ class Instrument(metaclass=PropertyReprMeta):
             # 9:30 前或 14:57 之后为集合竞价
             return _minute < 9 * 60 + 30 or _minute >= 14 * 60 + 57
         elif self.type == INSTRUMENT_TYPE.FUTURE:
-            # TODO：期货收盘集合竞价时间
             # 期货开盘时间
             start_time = self.trading_hours[0].start
 
             # -1 是因为获取到的时间都是开盘后1分钟，如 09:31
             start_minute = start_time.hour * 60 + start_time.minute - 1
 
-            # 开盘集合竞价时间段为开盘前5分钟
+            # 开盘集合竞价时间段为开盘前5分钟，期货无收盘集合竞价
             return start_minute - 5 <= _minute < start_minute
         else:
             # 其他品种由子类实现

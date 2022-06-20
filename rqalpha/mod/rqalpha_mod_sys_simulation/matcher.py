@@ -404,8 +404,15 @@ class DefaultTickMatcher(AbstractMatcher):
             # 实际成交数量
             fill = min(order.unfilled_quantity, volume_limit)
         else:
-            # 下单数量就是成交数量
-            fill = order.unfilled_quantity
+            if instrument.during_call_auction(self._env.calendar_dt):
+                # 集合竞价时段内只在撮合时段成交
+                minute = self._env.calendar_dt.hour * 60 + self._env.calendar_dt.minute
+                if minute in instrument.call_auction_minute:
+                    fill = order.unfilled_quantity
+                else:
+                    return
+            else:
+                fill = order.unfilled_quantity
 
         # 平今的数量
         ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
