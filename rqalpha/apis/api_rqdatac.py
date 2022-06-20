@@ -1107,12 +1107,11 @@ def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
         q = 4
     end_quarter = str(y) + 'q' + str(q)
 
-    delta_year = count // 4
-    start_q = q - count % 4 + 1
-    if start_q <= 0:
-        start_q = 4
-        delta_year += 1
-    start_quarter = str(y - delta_year) + 'q' + str(start_q)
+    q_num = y * 4 + q - count
+    start_y = q_num // 4
+    start_q = q_num % 4 + 1
+
+    start_quarter = "{}q{}".format(start_y, start_q)
 
     result = rqdatac.get_pit_financials_ex(fields=fields, start_quarter=start_quarter, end_quarter=end_quarter,
         order_book_ids=order_book_ids, statements=statements, market='cn', date=dt)
