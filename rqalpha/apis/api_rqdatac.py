@@ -1097,24 +1097,66 @@ def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
     if isinstance(order_book_ids, str):
         order_book_ids = [order_book_ids]
     env = Environment.get_instance()
-    dt = env.calendar_dt.date()
-    year = dt.year
-    mon = dt.month
-    q = (mon - 4) // 3 + 1
-    y = year
-    if q <= 0:
-        y -= 1
-        q = 4
-    end_quarter = str(y) + 'q' + str(q)
 
-    q_num = y * 4 + q - count
-    start_y = q_num // 4
-    start_q = q_num % 4 + 1
+    # 退市和未退市池
+    de_listed_list, active_list = [], []
 
-    start_quarter = "{}q{}".format(start_y, start_q)
+    # 遍历每个标的划分池子
+    for order_book_id in order_book_ids:
+        instrument = env.get_instrument(order_book_id)
+        if env.calendar_dt > instrument.de_listed_date:
+            de_listed_list.append(instrument)
+        else:
+            active_list.append(order_book_id)
 
-    result = rqdatac.get_pit_financials_ex(fields=fields, start_quarter=start_quarter, end_quarter=end_quarter,
-        order_book_ids=order_book_ids, statements=statements, market='cn', date=dt)
+    # 需要的数量，传入的 0 代表 1个
+    count += 1
+
+    def _get_data(symbol_list, start_dt):
+        dt = start_dt.date()
+        year = dt.year
+        mon = dt.month
+        q = (mon - 4) // 3 + 1
+        y = year
+        if q <= 0:
+            y -= 1
+            q = 4
+        end_quarter = str(y) + 'q' + str(q)
+
+        # 多获取4个季度的财报，以防因为财报未发布导致数量不够
+        q_num = y * 4 + q - count - 4
+
+        start_y = q_num // 4
+        start_q = q_num % 4 + 1
+        start_quarter = "{}q{}".format(start_y, start_q)
+
+        if start_quarter > end_quarter:
+            start_quarter = end_quarter
+
+        result = rqdatac.get_pit_financials_ex(
+            fields=fields, start_quarter=start_quarter, end_quarter=end_quarter, order_book_ids=symbol_list,
+            statements=statements, market='cn', date=env.calendar_dt.date()
+        )
+
+        return result
+
+    # 保存结果
+    result_list = []
+
+    # 获取未退市标的的数据
+    result = _get_data(active_list, env.calendar_dt)
+
+    if isinstance(result, pd.DataFrame):
+        result_list = [group_df.iloc[-count:] for _, group_df in result.groupby("order_book_id")]
+
+    # 获取退市的数据
+    for instrument in de_listed_list:
+        result = _get_data([instrument.order_book_id], instrument.de_listed_date)
+        if isinstance(result, pd.DataFrame):
+            result_list.append(result.iloc[-count:])
+
+    result = pd.concat(result_list) if len(result_list) > 0 else None
+
     return result
 
 
