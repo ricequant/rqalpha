@@ -395,14 +395,13 @@ class Instrument(metaclass=PropertyReprMeta):
             # 9:30 前或 14:57 之后为集合竞价
             return _minute < 9 * 60 + 30 or _minute >= 14 * 60 + 57
         elif self.type == INSTRUMENT_TYPE.FUTURE:
-            # TODO：期货收盘集合竞价时间
             # 期货开盘时间
             start_time = self.trading_hours[0].start
 
             # -1 是因为获取到的时间都是开盘后1分钟，如 09:31
             start_minute = start_time.hour * 60 + start_time.minute - 1
 
-            # 开盘集合竞价时间段为开盘前5分钟
+            # 开盘集合竞价时间段为开盘前5分钟，期货无收盘集合竞价
             return start_minute - 5 <= _minute < start_minute
         else:
             # 其他品种由子类实现

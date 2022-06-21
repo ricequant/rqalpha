@@ -373,39 +373,42 @@ class DefaultTickMatcher(AbstractMatcher):
                     order.mark_rejected(reason)
                     return
 
-        # 是否开启成交量限制
-        if self._volume_limit:
-            # 获取上一个tick
-            _last_tick = self._get_last_tick(order_book_id)
+        # 获取上一个tick
+        _last_tick = self._get_last_tick(order_book_id)
 
-            if _last_tick:
-                # 当前的时刻的成交量 = 当前tick - 上一个时刻的tick
-                volume = _cur_tick.volume - _last_tick.volume
-            else:
-                # 当天第一个tick
-                volume = _cur_tick.volume
-
-            # 可以用来给order进行撮合的成交量
-            volume_limit = round(volume * self._volume_percent) - self._turnover[order.order_book_id]
-
-            # 对成交量根据 1手 : n股 的比例进行限制
-            volume_limit = (volume_limit // instrument.round_lot) * instrument.round_lot
-
-            if volume_limit <= 0:
-                if order.type == ORDER_TYPE.MARKET:
-                    reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
-                               u" due to volume limit").format(
-                        order_book_id=order.order_book_id,
-                        order_volume=order.quantity
-                    )
-                    order.mark_cancelled(reason)
-                return
-
-            # 实际成交数量
-            fill = min(order.unfilled_quantity, volume_limit)
+        if _last_tick:
+            # 当前的时刻的成交量 = 当前tick - 上一个时刻的tick
+            volume = _cur_tick.volume - _last_tick.volume
         else:
-            # 下单数量就是成交数量
-            fill = order.unfilled_quantity
+            # 当天第一个tick
+            volume = _cur_tick.volume
+
+        # 有成交量则进行撮合
+        if volume > 0:
+            # 是否开启成交量限制
+            if self._volume_limit:
+                # 可以用来给order进行撮合的成交量
+                volume_limit = round(volume * self._volume_percent) - self._turnover[order.order_book_id]
+
+                # 对成交量根据 1手 : n股 的比例进行限制
+                volume_limit = (volume_limit // instrument.round_lot) * instrument.round_lot
+
+                if volume_limit <= 0:
+                    if order.type == ORDER_TYPE.MARKET:
+                        reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
+                                   u" due to volume limit").format(
+                            order_book_id=order.order_book_id,
+                            order_volume=order.quantity
+                        )
+                        order.mark_cancelled(reason)
+                    return
+
+                # 实际成交数量
+                fill = min(order.unfilled_quantity, volume_limit)
+            else:
+                fill = order.unfilled_quantity
+        else:
+            return
 
         # 平今的数量
         ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
