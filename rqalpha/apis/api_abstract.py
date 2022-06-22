@@ -79,7 +79,8 @@ def order_shares(id_or_ins, amount, price=None, style=None):
 def order_value(id_or_ins, cash_amount, price=None, style=None):
     # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle]) -> Optional[Order]
     """
-    使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。如果资金不足，该API将不会创建发送订单。
+    使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。
+    如果资金不足，该API将会使用最大可用资金发单。
 
     需要注意：
     当您提交一个买单时，cash_amount 代表的含义是您希望买入股票消耗的金额（包含税费），最终买入的股数不仅和发单的价格有关，还和税费相关的参数设置有关。
@@ -118,7 +119,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
 def order_percent(id_or_ins, percent, price=None, style=None):
     # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle]) -> Optional[Order]
     """
-    发送一个花费价值等于目前投资组合（市场价值和目前现金的总和）一定百分比现金的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将不会创建发送订单。
+    发送一个花费价值等于目前投资组合（市场价值和目前现金的总和）一定百分比现金的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将会使用最大可用资金发单。
 
     需要注意：
 
@@ -160,7 +161,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     加仓时，cash_amount 代表现有持仓的价值加上即将花费（包含税费）的现金的总价值。
     减仓时，cash_amount 代表调整仓位的目标价至。
 
-    需要注意，如果资金不足，该API将不会创建发送订单。
+    需要注意，如果资金不足，该API将会使用最大可用资金发单。
 
     :param id_or_ins: 下单标的物
     :param cash_amount: 最终的该证券的仓位目标价值。
