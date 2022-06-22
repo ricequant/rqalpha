@@ -309,8 +309,11 @@ class DefaultTickMatcher(AbstractMatcher):
         if instrument.during_call_auction(self._env.calendar_dt):
             # 集合竞价时段内撮合无视 matching_type 的设置，直接使用 last 进行撮合
             deal_price = _cur_tick.last
+            # 集合竞价默认开启成交量限制，用来保证在集合竞价中只有一笔成交
+            _volume_limit_flag = True
         else:
             deal_price = self._deal_price_decider(order_book_id, order.side)
+            _volume_limit_flag = self._volume_limit
 
         # 确认价格是否有效
         if not is_valid_price(deal_price):
@@ -374,7 +377,7 @@ class DefaultTickMatcher(AbstractMatcher):
                     return
 
         # 是否开启成交量限制
-        if self._volume_limit:
+        if _volume_limit_flag:
             # 获取上一个tick
             _last_tick = self._get_last_tick(order_book_id)
 
@@ -392,7 +395,8 @@ class DefaultTickMatcher(AbstractMatcher):
             volume_limit = (volume_limit // instrument.round_lot) * instrument.round_lot
 
             if volume_limit <= 0:
-                if order.type == ORDER_TYPE.MARKET:
+                # 集合竞价无法撤单
+                if order.type == ORDER_TYPE.MARKET and not instrument.during_call_auction(self._env.calendar_dt):
                     reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
                                u" due to volume limit").format(
                         order_book_id=order.order_book_id,
@@ -402,7 +406,10 @@ class DefaultTickMatcher(AbstractMatcher):
                 return
 
             # 实际成交数量
-            fill = min(order.unfilled_quantity, volume_limit)
+            if self._volume_limit:
+                fill = min(order.unfilled_quantity, volume_limit)
+            else:
+                fill = order.unfilled_quantity
         else:
             # 下单数量就是成交数量
             fill = order.unfilled_quantity
@@ -499,6 +506,9 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
         if instrument.during_call_auction(self._env.trading_dt):
             # 集合竞价期间一律使用last
             matching_price = self._cur_tick[order_book_id].last
+            _volume_limit_flag = True
+        else:
+            _volume_limit_flag = self._volume_limit
 
         if matching_price != matching_price:
             return
@@ -512,7 +522,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
                 return
 
         # 成交量限制
-        if self._volume_limit:
+        if _volume_limit_flag:
             # 获取tick
             _last_tick = self._get_last_tick(order_book_id)
             _cur_tick = self._cur_tick[order_book_id]
@@ -530,15 +540,24 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             # 对成交量根据 1手 : n股 的比例进行限制
             volume_limit = (volume_limit // instrument.round_lot) * instrument.round_lot
 
-            # 没成交量
-            if volume_limit == 0:
+            if volume_limit <= 0:
+                # 集合竞价无法撤单
+                if order.type == ORDER_TYPE.MARKET and not instrument.during_call_auction(self._env.calendar_dt):
+                    reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
+                               u" due to volume limit").format(
+                        order_book_id=order.order_book_id,
+                        order_volume=order.quantity
+                    )
+                    order.mark_cancelled(reason)
                 return
 
-            if instrument.during_call_auction(self._env.trading_dt):
-                # 集合竞价期间不看档位
-                fill = min(order.unfilled_quantity, volume_limit)
+            if self._volume_limit:
+                if instrument.during_call_auction(self._env.trading_dt):
+                    fill = min(order.unfilled_quantity, volume_limit)
+                else:
+                    fill = min(order.unfilled_quantity, amount, volume_limit)
             else:
-                fill = min(order.unfilled_quantity, amount, volume_limit)
+                fill = min(order.unfilled_quantity, amount)
         else:
             fill = min(order.unfilled_quantity, amount)
 
