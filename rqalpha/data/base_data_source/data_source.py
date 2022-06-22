@@ -149,14 +149,17 @@ class BaseDataSource(AbstractDataSource):
         # type: (AbstractDateSet) -> None
         self._suspend_days.append(date_set)
 
-    @lru_cache(2048)
     def get_dividend(self, instrument):
+        return self._get_dividend(instrument.type, instrument.order_book_id)
+
+    @lru_cache(2048)
+    def _get_dividend(self, instrument_type, order_book_id):
         try:
-            dividend_store = self._dividends[instrument.type]
+            dividend_store = self._dividends[instrument_type]
         except KeyError:
             return None
 
-        return dividend_store.get_dividend(instrument.order_book_id)
+        return dividend_store.get_dividend(order_book_id)
 
     def get_trading_minutes_for(self, order_book_id, trading_dt):
         raise NotImplementedError
@@ -193,12 +196,14 @@ class BaseDataSource(AbstractDataSource):
         return result if result is not None else [False] * len(dates)
 
     @lru_cache(None)
-    def _all_day_bars_of(self, instrument):
-        return self._day_bars[instrument.type].get_bars(instrument.order_book_id)
+    def _all_day_bars_of(self, instrument_type, order_book_id):
+        return self._day_bars[instrument_type].get_bars(order_book_id)
 
-    @lru_cache(None)
-    def _filtered_day_bars(self, instrument):
-        bars = self._all_day_bars_of(instrument)
+    def all_day_bars_of(self, instrument):
+        return self._all_day_bars_of(instrument.type, instrument.order_book_id)
+
+    def filtered_day_bars(self, instrument):
+        bars = self._all_day_bars_of(instrument.type, instrument.order_book_id)
         return bars[bars['volume'] > 0]
 
     def get_bar(self, instrument, dt, frequency):
@@ -206,7 +211,7 @@ class BaseDataSource(AbstractDataSource):
         if frequency != '1d':
             raise NotImplementedError
 
-        bars = self._all_day_bars_of(instrument)
+        bars = self.all_day_bars_of(instrument)
         if len(bars) <= 0:
             return
         dt = np.uint64(convert_date_to_int(dt))
@@ -242,6 +247,7 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
+    @lru_cache(2048)
     def get_ex_cum_factor(self, order_book_id):
         return self._ex_cum_factor.get_factors(order_book_id)
 
@@ -278,9 +284,9 @@ class BaseDataSource(AbstractDataSource):
             raise NotImplementedError
 
         if skip_suspended and instrument.type == 'CS':
-            bars = self._filtered_day_bars(instrument)
+            bars = self.filtered_day_bars(instrument)
         else:
-            bars = self._all_day_bars_of(instrument)
+            bars = self.all_day_bars_of(instrument)
 
         if not self._are_fields_valid(fields, bars.dtype.names):
             raise RQInvalidArgument("invalid fields: {}".format(fields))
@@ -332,14 +338,17 @@ class BaseDataSource(AbstractDataSource):
     def current_snapshot(self, instrument, frequency, dt):
         raise NotImplementedError
 
-    @lru_cache(2048)
     def get_split(self, instrument):
+        return self._get_split(instrument.type, instrument.order_book_id)
+
+    @lru_cache(2048)
+    def _get_split(self, instrument_type, order_book_id):
         try:
-            splilt_store = self._split_factors[instrument.type]
+            splilt_store = self._split_factors[instrument_type]
         except KeyError:
             return None
 
-        return splilt_store.get_factors(instrument.order_book_id)
+        return splilt_store.get_factors(order_book_id)
 
     def available_data_range(self, frequency):
         # FIXME
