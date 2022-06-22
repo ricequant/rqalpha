@@ -196,14 +196,14 @@ class BaseDataSource(AbstractDataSource):
         return result if result is not None else [False] * len(dates)
 
     @lru_cache(None)
-    def _all_day_bars_of(self, instrument_type, order_book_id):
+    def _cached_all_day_bars_of(self, instrument_type, order_book_id):
         return self._day_bars[instrument_type].get_bars(order_book_id)
 
-    def all_day_bars_of(self, instrument):
-        return self._all_day_bars_of(instrument.type, instrument.order_book_id)
+    def _all_day_bars_of(self, instrument):
+        return self._cached_all_day_bars_of(instrument.type, instrument.order_book_id)
 
-    def filtered_day_bars(self, instrument):
-        bars = self._all_day_bars_of(instrument.type, instrument.order_book_id)
+    def _filtered_day_bars(self, instrument):
+        bars = self._cached_all_day_bars_of(instrument.type, instrument.order_book_id)
         return bars[bars['volume'] > 0]
 
     def get_bar(self, instrument, dt, frequency):
@@ -211,7 +211,7 @@ class BaseDataSource(AbstractDataSource):
         if frequency != '1d':
             raise NotImplementedError
 
-        bars = self.all_day_bars_of(instrument)
+        bars = self._all_day_bars_of(instrument)
         if len(bars) <= 0:
             return
         dt = np.uint64(convert_date_to_int(dt))
@@ -284,9 +284,9 @@ class BaseDataSource(AbstractDataSource):
             raise NotImplementedError
 
         if skip_suspended and instrument.type == 'CS':
-            bars = self.filtered_day_bars(instrument)
+            bars = self._filtered_day_bars(instrument)
         else:
-            bars = self.all_day_bars_of(instrument)
+            bars = self._all_day_bars_of(instrument)
 
         if not self._are_fields_valid(fields, bars.dtype.names):
             raise RQInvalidArgument("invalid fields: {}".format(fields))
