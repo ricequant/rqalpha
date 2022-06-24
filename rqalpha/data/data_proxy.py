@@ -15,7 +15,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import re
 from datetime import datetime, date
 from typing import Union, List, Sequence, Optional
 
@@ -282,13 +281,11 @@ class DataProxy(TradingDatesMixin):
         else:
             return list(self._data_source.get_instruments(id_or_syms=sym_or_ids))
 
-    FUTURE_CONTINUOUS_CONTRACT = re.compile("^[A-Z]{1,2}(88|888|99|889)$")
-
     def get_future_contracts(self, underlying, date):
         # type: (str, DateLike) -> List[str]
         return sorted(i.order_book_id for i in self.all_instruments(
             [INSTRUMENT_TYPE.FUTURE], date
-        ) if i.underlying_symbol == underlying and not re.match(self.FUTURE_CONTINUOUS_CONTRACT, i.order_book_id))
+        ) if i.underlying_symbol == underlying and not Instrument.is_future_continuous_contract(i.order_book_id))
 
     def get_trading_period(self, sym_or_ids, default_trading_period=None):
         # type: (StrOrIter, Optional[Sequence[TimeRange]]) -> List[TimeRange]
