@@ -17,6 +17,7 @@
 
 from itertools import chain
 from datetime import date
+from collections.abc import Mapping
 from typing import Callable, Dict, List, Tuple, Union
 
 import jsonpickle
@@ -30,7 +31,7 @@ from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.portfolio.account import Account
 from rqalpha.data import DataProxy
-from rqalpha.utils import merge_dicts, is_valid_price
+from rqalpha.utils import is_valid_price
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_log
@@ -272,21 +273,14 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._units = _units
 
 
-class MixedPositions(dict):
-
+class MixedPositions(Mapping):
     def __init__(self, accounts):
         super(MixedPositions, self).__init__()
         self._accounts = accounts
 
-    def __missing__(self, key):
-        account_type = Portfolio.get_account_type(key)
-        for a_type in self._accounts:
-            if a_type == account_type:
-                return self._accounts[a_type].positions[key]
-        return None
-
-    def __contains__(self, item):
-        return item in self.keys()
+    def __getitem__(self, item):
+        account_type = Portfolio.get_account_type(item)
+        return self._accounts[account_type].positions[item]
 
     def __repr__(self):
         keys = []
@@ -298,19 +292,5 @@ class MixedPositions(dict):
         return sum(len(account.positions) for account in six.itervalues(self._accounts))
 
     def __iter__(self):
-        keys = []
-        for account in six.itervalues(self._accounts):
-            keys += account.positions.keys()
-        for key in sorted(keys):
-            yield key
-
-    def items(self):
-        items = merge_dicts(*[account.positions.items() for account in six.itervalues(self._accounts)])
-        for k in sorted(items.keys()):
-            yield k, items[k]
-
-    def keys(self):
-        keys = []
-        for account in six.itervalues(self._accounts):
-            keys += list(account.positions.keys())
-        return sorted(keys)
+        for account in self._accounts.values():
+            yield from account.positions.keys()
