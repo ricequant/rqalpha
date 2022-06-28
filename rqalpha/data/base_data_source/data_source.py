@@ -223,7 +223,10 @@ class BaseDataSource(AbstractDataSource):
     def get_open_auction_bar(self, instrument, dt):
         # type: (Instrument, Union[datetime, date]) -> Dict
         day_bar = self.get_bar(instrument, dt, "1d")
-        bar = {k: day_bar[k] if k in day_bar.dtype.names else np.nan for k in self.OPEN_AUCTION_BAR_FIELDS}
+        if day_bar is None:
+            bar = dict.fromkeys(self.OPEN_AUCTION_BAR_FIELDS, np.nan)
+        else:
+            bar = {k: day_bar[k] if k in day_bar.dtype.names else np.nan for k in self.OPEN_AUCTION_BAR_FIELDS}
         bar["last"] = bar["open"]
         return bar
 
