@@ -2,6 +2,10 @@
 CHANGELOG
 ==================
 
+4.10.1
+==================
+- 优化回测报告及返回值输出情况，增加最大回撤持续期相关指标
+
 4.10.0
 ==================
 - 将DefaultMatcher划分DefaultBarMatcher和DefaultTickMatcher
