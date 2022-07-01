@@ -1098,6 +1098,10 @@ def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
         order_book_ids = [order_book_ids]
     env = Environment.get_instance()
 
+    if count < 0:
+        user_log.warn("function get_pit_financials_ex : count must >= 0")
+        return None
+
     # 退市和未退市池
     de_listed_list, active_list = [], []
 
