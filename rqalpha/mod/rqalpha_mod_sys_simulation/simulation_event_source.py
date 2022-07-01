@@ -22,7 +22,7 @@ from rqalpha.interface import AbstractEventSource
 from rqalpha.core.events import Event, EVENT
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils.datetime_func import convert_int_to_datetime
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -169,16 +169,22 @@ class SimulationEventSource(AbstractEventSource):
                         if last_tick is None:
                             last_tick = tick
 
-                            yield Event(
-                                EVENT.BEFORE_TRADING,
-                                calendar_dt=calendar_dt - timedelta(minutes=30),
-                                trading_dt=trading_dt - timedelta(minutes=30)
-                            )
-                            yield Event(
-                                EVENT.OPEN_AUCTION,
-                                calendar_dt=calendar_dt - timedelta(minutes=3),
-                                trading_dt=trading_dt - timedelta(minutes=3),
-                            )
+                            """
+                            这里区分时间主要是为了对其之前，之前对获取tick数据的时间有限制，期货的盘前时间是20:30，股票是09:00。
+                            在解除获取tick数据的限制后，股票的tick的开始时间是09:15，而期货则是20:59
+                            """
+                            if self._env.get_instrument(tick.order_book_id).type == INSTRUMENT_TYPE.FUTURE:
+                                yield Event(
+                                    EVENT.BEFORE_TRADING,
+                                    calendar_dt=calendar_dt - timedelta(minutes=30),
+                                    trading_dt=trading_dt - timedelta(minutes=30),
+                                )
+                            else:
+                                yield Event(
+                                    EVENT.BEFORE_TRADING,
+                                    calendar_dt=calendar_dt - timedelta(minutes=15),
+                                    trading_dt=trading_dt - timedelta(minutes=15),
+                                )
 
                         if self._universe_changed:
                             self._universe_changed = False

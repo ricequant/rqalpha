@@ -15,6 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import re
 import copy
 import datetime
 from typing import Dict, Callable, Optional
@@ -28,11 +29,10 @@ from rqalpha.utils.repr import property_repr, PropertyReprMeta
 
 
 class Instrument(metaclass=PropertyReprMeta):
-    DEFAULT_LISTED_DATE = datetime.datetime(1990, 1, 1)
     DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
 
     @staticmethod
-    def _fix_date(ds, dflt):
+    def _fix_date(ds, dflt=None):
         if isinstance(ds, datetime.datetime):
             return ds
         if ds == '0000-00-00':
@@ -48,7 +48,7 @@ class Instrument(metaclass=PropertyReprMeta):
         self._future_tick_size_getter = future_tick_size_getter
 
         if "listed_date" in dic:
-            self.__dict__["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
+            self.__dict__["listed_date"] = self._fix_date(dic["listed_date"])
         if "de_listed_date" in dic:
             self.__dict__["de_listed_date"] = self._fix_date(dic["de_listed_date"], self.DEFAULT_DE_LISTED_DATE)
         if "maturity_date" in self.__dict__:
@@ -86,8 +86,7 @@ class Instrument(metaclass=PropertyReprMeta):
         return int(self.__dict__["round_lot"])
 
     @property
-    def listed_date(self):
-        # type: () -> datetime.datetime
+    def listed_date(self) -> Optional[datetime.datetime]:
         """
         [datetime] 股票：该证券上市日期。期货：期货的上市日期，主力连续合约与指数连续合约都为 datetime(1990, 1, 1)。
         """
@@ -329,11 +328,11 @@ class Instrument(metaclass=PropertyReprMeta):
 
     def listed_at(self, dt):
         """
-        该合约在指定日期是否已上日
+        该合约在指定日期是否已上市
         :param dt: datetime.datetime
         :return: bool
         """
-        return self.listed_date <= dt
+        return self.listed_date and self.listed_date <= dt
 
     def de_listed_at(self, dt):
         """
@@ -386,8 +385,29 @@ class Instrument(metaclass=PropertyReprMeta):
     def trade_at_night(self):
         return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
+    def during_call_auction(self, dt):
+        """ 是否处于集合竞价交易时段 """
+        # 当前的分钟数
+        _minute = dt.hour * 60 + dt.minute
+
+        if self.type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF]:
+            # 9:30 前或 14:57 之后为集合竞价
+            return _minute < 9 * 60 + 30 or _minute >= 14 * 60 + 57
+        elif self.type == INSTRUMENT_TYPE.FUTURE:
+            # 期货开盘时间
+            start_time = self.trading_hours[0].start
+
+            # -1 是因为获取到的时间都是开盘后1分钟，如 09:31
+            start_minute = start_time.hour * 60 + start_time.minute - 1
+
+            # 开盘集合竞价时间段为开盘前5分钟，期货无收盘集合竞价
+            return start_minute - 5 <= _minute < start_minute
+        else:
+            # 其他品种由子类实现
+            return False
+
     def days_from_listed(self):
-        if self.listed_date == self.DEFAULT_LISTED_DATE:
+        if not self.listed_date:
             return -1
 
         date = Environment.get_instance().trading_dt.date()
@@ -426,6 +446,11 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
+    FUTURE_CONTINUOUS_CONTRACT = re.compile("^[A-Z]+(88|888|99|889)$")
+
+    @classmethod
+    def is_future_continuous_contract(cls, order_book_id):
+        return re.match(cls.FUTURE_CONTINUOUS_CONTRACT, order_book_id)
 
 class SectorCodeItem(object):
     def __init__(self, cn, en, name):

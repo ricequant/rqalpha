@@ -42,7 +42,6 @@ class SimulationMod(AbstractMod):
             raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
 
         if env.config.base.frequency == "tick":
-            mod_config.volume_limit = False
             if mod_config.matching_type not in [
                 MATCHING_TYPE.NEXT_TICK_LAST,
                 MATCHING_TYPE.NEXT_TICK_BEST_OWN,

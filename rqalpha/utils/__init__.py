@@ -127,13 +127,6 @@ def create_custom_exception(exc_type, exc_val, exc_tb, strategy_filename):
     return user_exc
 
 
-def merge_dicts(*dict_args):
-    result = {}
-    for d in dict_args:
-        result.update(d)
-    return result
-
-
 def account_type_str2enum(type_str):
     return DEFAULT_ACCOUNT_TYPE[type_str]
 

@@ -27,14 +27,8 @@ class IsTradingValidator(AbstractFrontendValidator):
 
     def can_submit_order(self, order, account=None):
         instrument = self._env.data_proxy.instrument(order.order_book_id)
-        if instrument.listed_date > self._env.trading_dt:
-            user_system_log.warn(_(u"Order Creation Failed: {order_book_id} is not listed!").format(
-                order_book_id=order.order_book_id,
-            ))
-            return False
-
-        if instrument.de_listed_date.date() < self._env.trading_dt.date():
-            user_system_log.warn(_(u"Order Creation Failed: {order_book_id} has been delisted!").format(
+        if not instrument.listing_at(self._env.trading_dt):
+            user_system_log.warn(_(u"Order Creation Failed: {order_book_id} is not listing!").format(
                 order_book_id=order.order_book_id,
             ))
             return False

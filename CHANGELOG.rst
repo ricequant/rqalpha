@@ -2,6 +2,47 @@
 CHANGELOG
 ==================
 
+4.10.0
+==================
+- 将DefaultMatcher划分DefaultBarMatcher和DefaultTickMatcher
+- Tick回测支持成交量限制，成交量限制为两个tick的成交量之差乘以volume_percent
+- Tick回测handle_bar支持盘前的tick
+- Tick回测不再支持open_auction接口，集合竞价时段内成交一律使用last
+- 修复get_open_auction_bar获取非交易日时的异常
+
+4.9.2
+==================
+- 修改get_pit_financials_ex接口中count参数的含义为当前标的已发布财报的数量
+
+4.9.1
+==================
+- 修复get_pit_financials_ex接口的bug
+
+4.9.0
+==================
+- 定时器新增期货应用场景
+- 改善tick回测性能
+
+4.8.1
+==================
+- 改善回测输出的summary和净值图，新增超额累计收益指标
+
+4.8.0
+==================
+- Position类移除了 _today_quantity 属性，新增 _quantity 属性
+- 部分接口新增了缓存
+- Environment类新增submit_order接口
+- Interface中AbstractPosition移除了margin接口
+- order_target_portfolio接口支持 limit order
+- rqalpha_mod_sys_analyser组件报表新增excel格式
+- 提升框架的整体性能
+
+4.7.1
+==================
+- 补全类型提示
+- 优化翻译和错误提示
+- 全面支持Python3.10
+
 4.7.0
 ==================
 - 重构绘制策略收益图的逻辑。增加绘制买卖点的选项，周度收益曲线和指标改为通过配置项激活

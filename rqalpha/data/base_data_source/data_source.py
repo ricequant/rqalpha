@@ -91,10 +91,12 @@ class BaseDataSource(AbstractDataSource):
 
         self._instruments_stores = {}  # type: Dict[INSTRUMENT_TYPE, AbstractInstrumentStore]
         self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
+        instruments = []
         with open(_p('instruments.pk'), 'rb') as f:
-            instruments = [Instrument(
-                i, lambda i: self._future_info_store.get_future_info(i)["tick_size"]
-            ) for i in pickle.load(f)]
+            for i in pickle.load(f):
+                if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):
+                    i["listed_date"] = datetime(1990, 1, 1)
+                instruments.append(Instrument(i, lambda i: self._future_info_store.get_future_info(i)["tick_size"]))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))
 
@@ -221,7 +223,10 @@ class BaseDataSource(AbstractDataSource):
     def get_open_auction_bar(self, instrument, dt):
         # type: (Instrument, Union[datetime, date]) -> Dict
         day_bar = self.get_bar(instrument, dt, "1d")
-        bar = {k: day_bar[k] if k in day_bar.dtype.names else np.nan for k in self.OPEN_AUCTION_BAR_FIELDS}
+        if day_bar is None:
+            bar = dict.fromkeys(self.OPEN_AUCTION_BAR_FIELDS, np.nan)
+        else:
+            bar = {k: day_bar[k] if k in day_bar.dtype.names else np.nan for k in self.OPEN_AUCTION_BAR_FIELDS}
         bar["last"] = bar["open"]
         return bar
 
