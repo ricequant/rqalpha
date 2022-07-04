@@ -36,7 +36,7 @@ from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.const import DAYS_CNT
 from rqalpha.api import export_as_api
-
+from .plot.utils import max_dd as _max_dd
 from .plot_store import PlotStore
 
 
@@ -357,6 +357,16 @@ class AnalyserMod(AbstractMod):
         total_portfolios = df.set_index('date').sort_index()
         weekly_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
         weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
+
+        # 最大回撤持续期
+        max_dd = _max_dd(total_portfolios.unit_net_value.values, total_portfolios.index)
+        summary["max_dd"] = max_dd
+        summary.update({
+            "max_drawdown_start_date": str(max_dd.start_date),
+            "max_drawdown_end_date": str(max_dd.end_date),
+            "max_drawdown_duration": (max_dd.end_date - max_dd.start_date).days,
+        })
+
         result_dict = {
             'summary': summary,
             'trades': trades,
@@ -383,6 +393,13 @@ class AnalyserMod(AbstractMod):
             weekly_b_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
             weekly_b_returns = (weekly_b_nav / weekly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios
+            # 超额最大回撤持续期
+            ex_returns = total_portfolios.unit_net_value - benchmark_portfolios.unit_net_value
+            max_dd = _max_dd(ex_returns + 1, total_portfolios.index)
+            result_dict["summary"]["ex_max_dd"] = max_dd
+            result_dict["summary"]["excess_max_drawdown_start_date"] = str(max_dd.start_date)
+            result_dict["summary"]["excess_max_drawdown_end_date"] = str(max_dd.end_date)
+            result_dict["summary"]["excess_max_drawdown_duration"] = (max_dd.end_date - max_dd.start_date).days
         else:
             weekly_b_returns = pandas.Series(index=weekly_returns.index)
         weekly_risk = Risk(weekly_returns, weekly_b_returns, risk_free_rate, WEEKLY)
