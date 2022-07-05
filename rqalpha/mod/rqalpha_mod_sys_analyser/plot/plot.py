@@ -168,7 +168,7 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
         benchmark_portfolio = result_dict["benchmark_portfolio"]
         ex_returns = portfolio.unit_net_value - benchmark_portfolio.unit_net_value
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
-            _max_dd(ex_returns + 1, portfolio.index).repr, _max_ddd(ex_returns + 1, portfolio.index).repr
+            _max_dd(ex_returns + 1, portfolio.index).repr, summary["excess_max_drawdown_duration"].repr
         )
         indicators = INDICATORS + [EXCESS_INDICATORS]
         return_lines.extend([
@@ -184,7 +184,7 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
         return_lines.append((weekly_returns(portfolio), LINE_WEEKLY))
         indicators.append(WEEKLY_INDICATORS)
     max_dd = _max_dd(portfolio.unit_net_value.values, portfolio.index)
-    max_ddd = _max_ddd(portfolio.unit_net_value.values, portfolio.index)
+    max_ddd = summary["max_drawdown_duration"]
     spots_on_returns: List[Tuple[Sequence[int], SpotInfo]] = [
         ([max_dd.start, max_dd.end], MAX_DD),
         ([max_ddd.start, max_ddd.end], MAX_DDD)
