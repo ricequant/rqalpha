@@ -278,6 +278,10 @@ class MixedPositions(Mapping):
         super(MixedPositions, self).__init__()
         self._accounts = accounts
 
+    def __contains__(self, item):
+        account_type = Portfolio.get_account_type(item)
+        return item in self._accounts[account_type].positions
+
     def __getitem__(self, item):
         account_type = Portfolio.get_account_type(item)
         return self._accounts[account_type].positions[item]
