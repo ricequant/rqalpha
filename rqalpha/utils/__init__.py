@@ -72,7 +72,7 @@ class RqAttrDict(object):
             if isinstance(v, RqAttrDict):
                 v = v.__dict__
             if isinstance(v, Mapping):
-                r = RqAttrDict._update_dict_recursive(target_dict.get(k, {}), v)
+                r = RqAttrDict._update_dict_recursive(target_dict[k] if target_dict.get(k) else {}, v)
                 target_dict[k] = r
             else:
                 target_dict[k] = other[k]

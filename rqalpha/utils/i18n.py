@@ -29,13 +29,18 @@ class Localization(object):
 
     def __init__(self, lc=None):
         if lc is None:
-            # https://stackoverflow.com/questions/3425294/how-to-detect-the-os-default-language-in-python
-            if os.name == "nt":
-                lc = locale.windows_locale[ctypes.windll.kernel32.GetUserDefaultUILanguage()]
-            else:
-                # 修改虚拟环境的本地语言读取
-                lc = os.getenv("LANG") or os.getenv("LC_CTYPE")
+            lc = self.get_sys_lc()
         self.trans = self.get_trans(lc)
+
+    @staticmethod
+    def get_sys_lc():
+        # https://stackoverflow.com/questions/3425294/how-to-detect-the-os-default-language-in-python
+        if os.name == "nt":
+            lc = locale.windows_locale[ctypes.windll.kernel32.GetUserDefaultUILanguage()]
+        else:
+            # 修改虚拟环境的本地语言读取
+            lc = os.getenv("LANG") or os.getenv("LC_CTYPE")
+        return lc
 
     @classmethod
     def get_trans(cls, lc: Optional[str], trans_dir=None):

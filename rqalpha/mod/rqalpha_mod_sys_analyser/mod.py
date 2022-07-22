@@ -305,6 +305,7 @@ class AnalyserMod(AbstractMod):
                 summary["benchmark_symbol"] = self._env.data_proxy.instrument(benchmark_obid).symbol
             else:
                 summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
+                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol}:{w}" for o, w in self._benchmark)
 
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
