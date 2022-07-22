@@ -326,6 +326,7 @@ class DefaultTickMatcher(AbstractMatcher):
                     listed_date=listed_date,
                 )
             else:
+                # TODO：这里报错信息比较模糊，可以根据撮合类型给出更明确的提示，比如是否是熔断了，是否是涨跌停了
                 reason = _(u"Order Cancelled: current tick [{order_book_id}] miss market data.").format(
                     order_book_id=order.order_book_id)
             order.mark_rejected(reason)
