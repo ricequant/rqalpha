@@ -509,7 +509,7 @@ def history_bars(
 def history_ticks(order_book_id, count):
     # type: (str, int) -> List[TickObject]
     """
-    获取指定合约历史 tick 对象，仅支持在 tick 级别的策略（回测、模拟交易、实盘）中调用
+    获取指定合约历史（不晚于当前时间的）tick 对象，仅支持在 tick 级别的策略（回测、模拟交易、实盘）中调用。
 
     :param order_book_id: 合约代码
     :param count: 获取的 tick 数量
