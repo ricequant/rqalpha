@@ -24,7 +24,7 @@ import jsonpickle
 import numpy as np
 import six
 
-from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
+from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, EventBus
 from rqalpha.interface import AbstractPosition
@@ -257,6 +257,14 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         """
         return sum(account.frozen_cash for account in six.itervalues(self._accounts))
 
+    @property
+    def cash_liabilities(self):
+        """
+        [float] 现金负债
+        :return:
+        """
+        return sum(account.cash_liabilities for account in six.itervalues(self._accounts))
+
     def _pre_before_trading(self, _):
         self._static_unit_net_value = self.unit_net_value
 
@@ -271,6 +279,15 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         _units = self.total_value / unit_net_value
         user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units ,_units)))
         self._units = _units
+
+    def finance_repay(self, amount, account_type):
+        """ 融资还款 """
+        if Environment.get_instance().config.base.run_type != RUN_TYPE.BACKTEST:
+            raise ValueError("finance and report api only support BackTest")
+
+        if account_type not in self._accounts:
+            raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
+        self._accounts[account_type].finance_repay(amount)
 
 
 class MixedPositions(Mapping):

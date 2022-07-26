@@ -29,6 +29,10 @@ __config__ = {
     "validate_stock_position": True,
     # 开启对期货仓位是否能满足平仓需求的检查
     "validate_future_position": True,
+    # 融资利率/年
+    "financing_rate": 0.00,
+    # 是否开启融资可买入股票的限制
+    "financing_stocks_restriction_enabled": False
 }
 
 
