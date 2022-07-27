@@ -17,7 +17,6 @@
 
 import datetime
 import sys
-import traceback
 from pprint import pformat
 from itertools import chain
 
@@ -116,14 +115,12 @@ def init_rqdatac(rqdatac_uri):
     except ImportError:
         return
 
-    import warnings
-
-    try:
+    if isinstance(rqdatac.client.get_client(), rqdatac.client.DummyClient):
         init_rqdatac_env(rqdatac_uri)
-        with warnings.catch_warnings(record=True):
+        try:
             rqdatac.init()
-    except Exception as e:
-        system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
+        except Exception as e:
+            system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
 
 
 def run(config, source_code=None, user_funcs=None):
