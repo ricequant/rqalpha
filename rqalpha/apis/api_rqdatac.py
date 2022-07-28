@@ -235,6 +235,69 @@ def concept(*concept_names):
 
 
 @export_as_api
+def get_margin_stocks(exchange=None, margin_type="all"):
+    # type: (str, str) -> List[str]
+    """
+    获取某个日期深证、上证融资融券股票列表。
+    :param exchange: 交易所，默认为 None，返回所有字段。可选字段包括：'XSHE', 'sz' 代表深交所；'XSHG', 'sh' 代表上交所
+    :param margin_type: 'stock' 代表融券卖出，'cash'，代表融资买入，'all'，代表包含融资和融券，默认为'all'
+    :return: 属于该概念的股票 order_book_id
+
+    :example:
+
+    获取沪深市场的融券卖出列表:
+
+    .. code-block:: python3
+        :linenos:
+
+        get_margin_stocks(date='20190819',exchange=None,margin_type='stock')
+        # [Out]
+        # ['000001.XSHE',
+        # '000002.XSHE',
+        # '000006.XSHE',
+        # ...]
+
+    获取沪深市场融资买入列表:
+
+    .. code-block::
+        :linenos:
+
+        get_margin_stocks(date='20190819',exchange='XSHE',margin_type='stock')
+        # [Out]
+        # ['000001.XSHE',
+        # '000002.XSHE',
+        # '000006.XSHE',
+        # ...]
+
+    获取上证融资买入列表:
+
+    .. code-block::
+        :linenos:
+
+        get_margin_stocks(date='20190819',exchange='XSHG',margin_type='cash')
+        # [Out]
+        # ['510050.XSHG',
+        # '510160.XSHG',
+        # '510180.XSHG',
+        # ...]
+
+    """
+    trade_dt = Environment.get_instance().trading_dt.date()
+
+    symbols = []
+
+    if margin_type == "all":
+        symbols.extend(rqdatac.get_margin_stocks(trade_dt, exchange, margin_type="stock", market="cn"))
+        symbols.extend(rqdatac.get_margin_stocks(trade_dt, exchange, margin_type="cash", market="cn"))
+    elif margin_type in ["cash", "stock"]:
+        symbols.extend(rqdatac.get_margin_stocks(trade_dt, exchange, margin_type=margin_type, market="cn"))
+    else:
+        raise ValueError("MarginComponentValidator margin_type value error, got {}".format(margin_type))
+
+    return list(set(symbols))
+
+
+@export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
     EXECUTION_PHASE.BEFORE_TRADING,

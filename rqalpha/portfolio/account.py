@@ -19,7 +19,7 @@ from itertools import chain
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
 from rqalpha.model.order import Order, OrderStyle
@@ -54,7 +54,10 @@ class Account(metaclass=AccountMeta):
         "dividend_receivable",
     ]
 
-    def __init__(self, account_type: str, total_cash: float, init_positions: Dict[str, Tuple[int, Optional[float]]]):
+    def __init__(
+            self, account_type: str, total_cash: float, init_positions: Dict[str, Tuple[int, Optional[float]]],
+            financing_rate: float
+    ):
         self._type = account_type
         self._total_cash = total_cash  # 包含保证金的总资金
 
@@ -62,11 +65,16 @@ class Account(metaclass=AccountMeta):
         self._backward_trade_set = set()
         self._frozen_cash = 0
 
+        self._cash_liabilities = 0      # 现金负债
+
         self.register_event()
 
         self._management_fee_calculator_func = lambda account, rate: account.total_value * rate
         self._management_fee_rate = 0.0
         self._management_fees = 0.0
+
+        # 融资利率/年
+        self._financing_rate = financing_rate
 
         for order_book_id, (init_quantity, init_price) in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
@@ -213,6 +221,14 @@ class Account(metaclass=AccountMeta):
         return sum(p.transaction_cost for p in self._iter_pos())
 
     @property
+    def cash_liabilities(self):
+        # type: () -> float
+        """
+        现金负债
+        """
+        return self._cash_liabilities
+
+    @property
     def margin(self) -> float:
         """
         总保证金
@@ -257,7 +273,7 @@ class Account(metaclass=AccountMeta):
         """
         账户总权益
         """
-        return self._total_cash + self.equity
+        return self._total_cash + self.equity - self.cash_liabilities
 
     @property
     def total_cash(self):
@@ -305,6 +321,10 @@ class Account(metaclass=AccountMeta):
         fee = self._management_fee()
         self._management_fees += fee
         self._total_cash -= fee
+
+        # 负债自增利息
+        if self._cash_liabilities > 0:
+            self._cash_liabilities += self._cash_liabilities * self._financing_rate / DAYS_CNT.DAYS_A_YEAR
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         forced_liquidation = Environment.get_instance().config.base.forced_liquidation
@@ -456,6 +476,29 @@ class Account(metaclass=AccountMeta):
         if (amount < 0) and (self.cash < amount * -1):
             raise ValueError(_('insufficient cash, current {}, target withdrawal {}').format(self._total_cash, amount))
         self._total_cash += amount
+
+    def finance_repay(self, amount):
+        """ 融资还款 """
+        if self.type == DEFAULT_ACCOUNT_TYPE.STOCK:
+            if amount > 0:
+                # 融资
+                self._cash_liabilities += amount
+                self._total_cash += amount
+            elif amount < 0:
+                # 还款
+                amount *= -1
+                if amount > self.cash:
+                    user_system_log.warn(_('insufficient cash, current {}, target withdrawal {}').format(self.cash, amount))
+                # 预防还多了
+                excess = min(0, self._cash_liabilities - amount)
+                if excess < 0:
+                    user_system_log.warn("repay amount is greater than cash liabilities")
+                self._cash_liabilities = max(0, self._cash_liabilities - amount)
+                self._total_cash -= amount + excess
+            else:
+                pass
+        else:
+            user_system_log.warn(f"{self.type} not support finance_repay")
 
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     realized_pnl = deprecated_property("realized_pnl", "trading_pnl")

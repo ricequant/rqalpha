@@ -897,3 +897,52 @@ def withdraw(account_type, amount):
     """
     env = Environment.get_instance()
     return env.portfolio.deposit_withdraw(account_type, amount * -1)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+    EXECUTION_PHASE.GLOBAL
+)
+@apply_rules(
+    verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
+    verify_that("amount", pre_check=True).is_instance_of((int, float)).is_greater_than(0),
+)
+def finance(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
+    """
+    融资
+
+    :param amount: 融资金额
+    :param account_type: 融资账户
+    :return: None
+    """
+    env = Environment.get_instance()
+    return env.portfolio.finance_repay(amount, account_type)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(
+    verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
+    verify_that("amount", pre_check=True).is_instance_of((int, float)).is_greater_than(0),
+)
+def repay(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
+    """
+    还款
+
+    :param amount: 还款金额
+    :param account_type: 还款账户
+    :return: None
+    """
+    env = Environment.get_instance()
+    return env.portfolio.finance_repay(amount * -1, account_type)
+
+
