@@ -54,7 +54,10 @@ class Account(metaclass=AccountMeta):
         "dividend_receivable",
     ]
 
-    def __init__(self, account_type: str, total_cash: float, init_positions: Dict[str, Tuple[int, Optional[float]]]):
+    def __init__(
+            self, account_type: str, total_cash: float, init_positions: Dict[str, Tuple[int, Optional[float]]],
+            financing_rate: float
+    ):
         self._type = account_type
         self._total_cash = total_cash  # 包含保证金的总资金
 
@@ -71,7 +74,7 @@ class Account(metaclass=AccountMeta):
         self._management_fees = 0.0
 
         # 融资利率/年
-        self._financing_rate = Environment.get_instance().config.mod.sys_accounts.financing_rate
+        self._financing_rate = financing_rate
 
         for order_book_id, (init_quantity, init_price) in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
@@ -485,9 +488,11 @@ class Account(metaclass=AccountMeta):
                 # 还款
                 amount *= -1
                 if amount > self.cash:
-                    raise ValueError(_('insufficient cash, current {}, target withdrawal {}').format(self.cash, amount))
+                    user_system_log.warn(_('insufficient cash, current {}, target withdrawal {}').format(self.cash, amount))
                 # 预防还多了
                 excess = min(0, self._cash_liabilities - amount)
+                if excess < 0:
+                    user_system_log.warn("repay amount is greater than cash liabilities")
                 self._cash_liabilities = max(0, self._cash_liabilities - amount)
                 self._total_cash -= amount + excess
             else:

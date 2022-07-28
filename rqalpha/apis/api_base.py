@@ -909,7 +909,7 @@ def withdraw(account_type, amount):
 )
 @apply_rules(
     verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
-    verify_that("amount").is_number(),
+    verify_that("amount", pre_check=True).is_instance_of((int, float)).is_greater_than(0),
 )
 def finance(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
     """
@@ -920,10 +920,7 @@ def finance(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
     :return: None
     """
     env = Environment.get_instance()
-    if amount < 0:
-        user_system_log.warn("finance amount must >= 0, amount: {}".format(amount))
-    else:
-        return env.portfolio.finance_repay(amount, account_type)
+    return env.portfolio.finance_repay(amount, account_type)
 
 
 @export_as_api
@@ -935,7 +932,7 @@ def finance(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
 )
 @apply_rules(
     verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
-    verify_that("amount").is_number(),
+    verify_that("amount", pre_check=True).is_instance_of((int, float)).is_greater_than(0),
 )
 def repay(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
     """
@@ -946,9 +943,6 @@ def repay(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
     :return: None
     """
     env = Environment.get_instance()
-    if amount < 0:
-        user_system_log.warn("repay amount must >= 0, amount: {}".format(amount))
-    else:
-        return env.portfolio.finance_repay(amount * -1, account_type)
+    return env.portfolio.finance_repay(amount * -1, account_type)
 
 

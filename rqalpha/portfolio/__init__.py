@@ -52,13 +52,16 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             self,
             starting_cash: Dict[str, float],
             init_positions: List[Tuple[str, int]],
+            financing_rate: float,
             start_date: date,
             data_proxy: DataProxy,
             event_bus: EventBus
     ):
         account_args = {}
         for account_type, cash in starting_cash.items():
-            account_args[account_type] = {"account_type": account_type, "total_cash": cash, "init_positions": {}}
+            account_args[account_type] = {
+                "account_type": account_type, "total_cash": cash, "init_positions": {}, "financing_rate": financing_rate
+            }
         last_trading_date = data_proxy.get_previous_trading_date(start_date)
         for order_book_id, quantity in init_positions:
             account_type = self.get_account_type(order_book_id)
@@ -261,7 +264,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
     def cash_liabilities(self):
         """
         [float] 现金负债
-        :return:
         """
         return sum(account.cash_liabilities for account in six.itervalues(self._accounts))
 
@@ -282,8 +284,8 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     def finance_repay(self, amount, account_type):
         """ 融资还款 """
-        if Environment.get_instance().config.base.run_type != RUN_TYPE.BACKTEST:
-            raise ValueError("finance and report api only support BackTest")
+        if Environment.get_instance().config.base.run_type == RUN_TYPE.LIVE_TRADING:
+            raise ValueError("finance and report api not support LIVE_TRADING")
 
         if account_type not in self._accounts:
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))

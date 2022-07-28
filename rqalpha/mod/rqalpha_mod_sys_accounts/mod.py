@@ -60,13 +60,16 @@ class AccountMod(AbstractMod):
 
             # 启动融资股票池限制
             if mod_config.financing_stocks_restriction_enabled:
-                import rqdatac
-                if rqdatac.initialized():
-                    validator = MarginComponentValidator(margin_type="all")
-                    env.add_frontend_validator(validator, INSTRUMENT_TYPE.CS)
-                    env.add_frontend_validator(validator, INSTRUMENT_TYPE.ETF)
-                else:
-                    user_system_log.warn("rqdatac not init, not support financing stocks restriction.")
+                try:
+                    import rqdatac
+                    if rqdatac.initialized():
+                        validator = MarginComponentValidator(margin_type="all")
+                        env.add_frontend_validator(validator, INSTRUMENT_TYPE.CS)
+                        env.add_frontend_validator(validator, INSTRUMENT_TYPE.ETF)
+                    else:
+                        user_system_log.warn("rqdatac not init, not support financing stocks restriction.")
+                except ImportError:
+                    user_system_log.warn("rqdatac not install, not support financing stocks restriction.")
 
     def tear_down(self, code, exception=None):
         pass

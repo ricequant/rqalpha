@@ -4,7 +4,6 @@ from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.utils.logger import user_system_log
 from rqalpha.model.order import Order
 from rqalpha.portfolio.account import Account
-from rqalpha.environment import Environment
 
 
 class MarginComponentValidator(AbstractFrontendValidator):
@@ -21,14 +20,17 @@ class MarginComponentValidator(AbstractFrontendValidator):
     def can_submit_order(self, order, account=None):
         # type: (Order, Optional[Account]) -> bool
 
-        trade_dt = Environment.get_instance().trading_dt
+        # 没负债等于没融资，则不需要限制股票池
+        if account.cash_liabilities == 0:
+            return True
 
-        symbols = self._get_margin_stocks(exchange=None, margin_type=self._margin_type)
+        symbols = self._get_margin_stocks(margin_type=self._margin_type)
 
+        # 是否在股票池中
         if order.order_book_id in set(symbols):
             return True
         else:
-            user_system_log.warn("Order Creation Failed: date {}, margin stock pool not contains {}.".format(
-                trade_dt.date(), order.order_book_id)
+            user_system_log.warn("Order Creation Failed: margin stock pool not contains {}.".format(
+                order.order_book_id)
             )
             return False
