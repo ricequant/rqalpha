@@ -26,6 +26,7 @@ from rqalpha.environment import Environment
 from .position_model import StockPosition
 from .position_validator import PositionValidator
 from .component_validator import MarginComponentValidator
+from .validator import MarginInstrumentValidator
 
 
 class AccountMod(AbstractMod):
@@ -63,9 +64,16 @@ class AccountMod(AbstractMod):
                 try:
                     import rqdatac
                     if rqdatac.initialized():
-                        validator = MarginComponentValidator(margin_type="all")
-                        env.add_frontend_validator(validator, INSTRUMENT_TYPE.CS)
-                        env.add_frontend_validator(validator, INSTRUMENT_TYPE.ETF)
+                        com_validator = MarginComponentValidator(margin_type="all")
+                        ins_validator = MarginInstrumentValidator()
+                        # 融资股票池验证
+                        env.add_frontend_validator(com_validator, INSTRUMENT_TYPE.CS)
+                        env.add_frontend_validator(com_validator, INSTRUMENT_TYPE.ETF)
+                        # 下单标的验证
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.LOF)
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.CONVERTIBLE)
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.INDX)
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.PUBLIC_FUND)
                     else:
                         user_system_log.warn("rqdatac not init, not support financing stocks restriction.")
                 except ImportError:
