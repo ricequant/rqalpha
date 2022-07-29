@@ -400,7 +400,7 @@ class DefaultTickMatcher(AbstractMatcher):
 
             if volume_limit <= 0:
                 # 集合竞价无法撤单
-                if order.type == ORDER_TYPE.MARKET and not instrument.during_call_auction(self._env.calendar_dt):
+                if order.type == ORDER_TYPE.MARKET:
                     reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
                                u" due to volume limit").format(
                         order_book_id=order.order_book_id,
@@ -548,7 +548,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
 
             if volume_limit <= 0:
                 # 集合竞价无法撤单
-                if order.type == ORDER_TYPE.MARKET and not instrument.during_call_auction(self._env.calendar_dt):
+                if order.type == ORDER_TYPE.MARKET:
                     reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
                                u" due to volume limit").format(
                         order_book_id=order.order_book_id,
