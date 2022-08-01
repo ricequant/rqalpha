@@ -110,6 +110,9 @@ def get_strategy_apis():
 
 
 def init_rqdatac(rqdatac_uri):
+    if rqdatac_uri in ["disabled", "DISABLED"]:
+        return
+
     try:
         import rqdatac
     except ImportError:
