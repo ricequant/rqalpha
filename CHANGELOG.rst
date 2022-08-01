@@ -2,6 +2,13 @@
 CHANGELOG
 ==================
 
+4.11.0
+==================
+- 针对股票和ETF新增融资功能，新增 finance 和 repay API
+- Account 新增 cash_liabilities(现金负债) 属性
+- sys_account 新增 financing_rate(融资利率/年) 和 financing_stocks_restriction_enabled(是否开启融资可买股票池限制) 配置项
+- 优化回测报告，在图例中显示基准的名称
+
 4.10.1
 ==================
 - 优化回测报告及返回值输出情况，增加最长回撤持续期相关指标
