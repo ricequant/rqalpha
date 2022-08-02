@@ -585,11 +585,12 @@ time_rule - 定时间运行
 
             scheduler.run_daily(function, time_rule='before_trading')
 
-    *   每天十点运行
+    *   每天十点运行:
 
-    ..  code-block:: python3
-        :linenos:
-        scheduler.run_daily(function, time_rule=physical_time(hour=10, minute=0))
+        ..  code-block:: python3
+            :linenos:
+
+            scheduler.run_daily(function, time_rule=physical_time(hour=10, minute=0))
 
 .. _api-base-types:
 
