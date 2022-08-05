@@ -311,8 +311,11 @@ class UpdateDayBarTask(DayBarTask):
                 raise OSError("File {} update failed, if it is using, please update later, "
                               "or you can delete then update again".format(path))
             try:
+                is_futures = "futures" == os.path.basename(path).split(".")[0]
                 for order_book_id in self._order_book_ids:
-                    if order_book_id in h5:
+                    # 特殊处理前复权合约，需要全量更新
+                    is_pre = is_futures and "888" in order_book_id
+                    if order_book_id in h5 and not is_pre:
                         try:
                             last_date = int(h5[order_book_id]['datetime'][-1] // 1000000)
                         except OSError:
