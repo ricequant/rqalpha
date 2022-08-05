@@ -265,7 +265,11 @@ def enable_profiler(env, scope):
     env.profile_deco = profile_deco = line_profiler.LineProfiler()
     for name in scope:
         obj = scope[name]
-        if getattr(obj, "__module__", None) != "rqalpha.user_module":
+        # 针对 run_func
+        func_cond = getattr(obj, "__globals__", None) and obj.__globals__.get("__name__", None) == "rqalpha.user_module"
+        # 针对 run_code 和 run_file
+        file_or_code_cond = getattr(obj, "__module__", None) == "rqalpha.user_module"
+        if not any([func_cond, file_or_code_cond]):
             continue
         if inspect.isfunction(obj):
             scope[name] = profile_deco(obj)
