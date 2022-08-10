@@ -326,6 +326,7 @@ class DefaultTickMatcher(AbstractMatcher):
                     listed_date=listed_date,
                 )
             else:
+                # TODO：这里报错信息比较模糊，可以根据撮合类型给出更明确的提示，比如是否是熔断了，是否是涨跌停了
                 reason = _(u"Order Cancelled: current tick [{order_book_id}] miss market data.").format(
                     order_book_id=order.order_book_id)
             order.mark_rejected(reason)
@@ -399,7 +400,7 @@ class DefaultTickMatcher(AbstractMatcher):
 
             if volume_limit <= 0:
                 # 集合竞价无法撤单
-                if order.type == ORDER_TYPE.MARKET and not instrument.during_call_auction(self._env.calendar_dt):
+                if order.type == ORDER_TYPE.MARKET:
                     reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
                                u" due to volume limit").format(
                         order_book_id=order.order_book_id,
@@ -547,7 +548,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
 
             if volume_limit <= 0:
                 # 集合竞价无法撤单
-                if order.type == ORDER_TYPE.MARKET and not instrument.during_call_auction(self._env.calendar_dt):
+                if order.type == ORDER_TYPE.MARKET:
                     reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume}"
                                u" due to volume limit").format(
                         order_book_id=order.order_book_id,

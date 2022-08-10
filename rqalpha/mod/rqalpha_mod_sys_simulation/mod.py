@@ -36,7 +36,7 @@ class SimulationMod(AbstractMod):
         if env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
             return
 
-        mod_config.matching_type = self.parse_matching_type(mod_config.matching_type)
+        mod_config.matching_type = self.parse_matching_type(mod_config.matching_type, env.config.base.frequency)
 
         if env.config.base.margin_multiplier <= 0:
             raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
@@ -77,7 +77,16 @@ class SimulationMod(AbstractMod):
         pass
 
     @staticmethod
-    def parse_matching_type(me_str):
+    def parse_matching_type(me_str, frequency):
+        if me_str is None:
+            # None 表示根据 frequency 自动选择
+            if frequency in ["1d", "1m"]:
+                me_str = "current_bar"
+            elif frequency == "tick":
+                me_str = "last"
+            else:
+                raise ValueError("frequency only support ['1d', '1m', 'tick']")
+
         assert isinstance(me_str, six.string_types)
         me_str = me_str.lower()
         if me_str == "current_bar":

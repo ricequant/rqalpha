@@ -17,7 +17,6 @@
 
 import datetime
 import sys
-import traceback
 from pprint import pformat
 from itertools import chain
 
@@ -111,19 +110,20 @@ def get_strategy_apis():
 
 
 def init_rqdatac(rqdatac_uri):
+    if rqdatac_uri in ["disabled", "DISABLED"]:
+        return
+
     try:
         import rqdatac
     except ImportError:
         return
 
-    import warnings
-
-    try:
+    if isinstance(rqdatac.client.get_client(), rqdatac.client.DummyClient):
         init_rqdatac_env(rqdatac_uri)
-        with warnings.catch_warnings(record=True):
+        try:
             rqdatac.init()
-    except Exception as e:
-        system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
+        except Exception as e:
+            system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
 
 
 def run(config, source_code=None, user_funcs=None):
@@ -165,7 +165,8 @@ def run(config, source_code=None, user_funcs=None):
         if env.portfolio is None:
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(
-                config.base.accounts, config.base.init_positions, config.base.start_date, env.data_proxy, env.event_bus
+                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate,
+                config.base.start_date, env.data_proxy, env.event_bus
             ))
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
@@ -264,7 +265,11 @@ def enable_profiler(env, scope):
     env.profile_deco = profile_deco = line_profiler.LineProfiler()
     for name in scope:
         obj = scope[name]
-        if getattr(obj, "__module__", None) != "rqalpha.user_module":
+        # 针对 run_func
+        func_cond = getattr(obj, "__globals__", None) and obj.__globals__.get("__name__", None) == "rqalpha.user_module"
+        # 针对 run_code 和 run_file
+        file_or_code_cond = getattr(obj, "__module__", None) == "rqalpha.user_module"
+        if not any([func_cond, file_or_code_cond]):
             continue
         if inspect.isfunction(obj):
             scope[name] = profile_deco(obj)

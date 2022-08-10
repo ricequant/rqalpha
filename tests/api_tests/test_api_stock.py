@@ -267,3 +267,49 @@ def test_ksh():
             assert context.portfolio.positions[context.s2].quantity == 0
 
     return locals()
+
+
+def test_finance_repay():
+    """ 测试融资还款接口 """
+
+    financing_rate = 0.1
+    money = 10000
+
+    __config__ = {
+        "base": {
+            "start_date": "2016-01-01",
+            "end_date": "2016-01-31"
+        },
+        "mod": {
+            "sys_accounts": {
+                "financing_rate": financing_rate,
+            }
+        }
+    }
+
+    def cal_interest(capital, days):
+        for i in range(days):
+            capital += capital * financing_rate / 365
+        return capital
+
+    def init(context):
+        context.fixed = True
+        context.total = 0
+
+    def handle_bar(context, bar_dict):
+        if context.fixed:
+            finance(money)
+            context.fixed = False
+
+        if context.total == 5:
+            assert context.stock_account.cash_liabilities == cal_interest(money, 5)
+        elif context.total == 10:
+            assert context.stock_account.cash_liabilities == cal_interest(money, 10)
+            repay(10100)
+        elif context.total == 11:
+            assert context.stock_account.total_value == 99999972.5689376
+            assert context.stock_account.cash_liabilities == 0
+
+        context.total += 1
+
+    return locals()

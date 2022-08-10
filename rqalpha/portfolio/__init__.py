@@ -24,7 +24,7 @@ import jsonpickle
 import numpy as np
 import six
 
-from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION
+from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, EventBus
 from rqalpha.interface import AbstractPosition
@@ -52,13 +52,16 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             self,
             starting_cash: Dict[str, float],
             init_positions: List[Tuple[str, int]],
+            financing_rate: float,
             start_date: date,
             data_proxy: DataProxy,
             event_bus: EventBus
     ):
         account_args = {}
         for account_type, cash in starting_cash.items():
-            account_args[account_type] = {"account_type": account_type, "total_cash": cash, "init_positions": {}}
+            account_args[account_type] = {
+                "account_type": account_type, "total_cash": cash, "init_positions": {}, "financing_rate": financing_rate
+            }
         last_trading_date = data_proxy.get_previous_trading_date(start_date)
         for order_book_id, quantity in init_positions:
             account_type = self.get_account_type(order_book_id)
@@ -257,6 +260,13 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         """
         return sum(account.frozen_cash for account in six.itervalues(self._accounts))
 
+    @property
+    def cash_liabilities(self):
+        """
+        [float] 现金负债
+        """
+        return sum(account.cash_liabilities for account in six.itervalues(self._accounts))
+
     def _pre_before_trading(self, _):
         self._static_unit_net_value = self.unit_net_value
 
@@ -271,6 +281,15 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         _units = self.total_value / unit_net_value
         user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units ,_units)))
         self._units = _units
+
+    def finance_repay(self, amount, account_type):
+        """ 融资还款 """
+        if Environment.get_instance().config.base.run_type == RUN_TYPE.LIVE_TRADING:
+            raise ValueError("finance and report api not support LIVE_TRADING")
+
+        if account_type not in self._accounts:
+            raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
+        self._accounts[account_type].finance_repay(amount)
 
 
 class MixedPositions(Mapping):

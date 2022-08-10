@@ -391,6 +391,15 @@ withdraw - 出金（减少账户资金）
 
 .. autofunction:: withdraw
 
+finance - 融资（增加账户资金，增加负债）
+------------------------------------------------------
+
+.. autofunction:: finance
+
+repay - 还款（减少账户资金，减少负债）
+------------------------------------------------------
+
+.. autofunction:: repay
 
 plot - 画图
 ------------------------------------------------------
@@ -585,11 +594,12 @@ time_rule - 定时间运行
 
             scheduler.run_daily(function, time_rule='before_trading')
 
-    *   每天十点运行
+    *   每天十点运行:
 
-    ..  code-block:: python3
-        :linenos:
-        scheduler.run_daily(function, time_rule=physical_time(hour=10, minute=0))
+        ..  code-block:: python3
+            :linenos:
+
+            scheduler.run_daily(function, time_rule=physical_time(hour=10, minute=0))
 
 .. _api-base-types:
 

@@ -35,7 +35,7 @@ class Instrument(metaclass=PropertyReprMeta):
     def _fix_date(ds, dflt=None):
         if isinstance(ds, datetime.datetime):
             return ds
-        if ds == '0000-00-00':
+        if ds == '0000-00-00' or ds is None:
             return dflt
         year, month, day = ds.split('-')
         return datetime.datetime(int(year), int(month), int(day))

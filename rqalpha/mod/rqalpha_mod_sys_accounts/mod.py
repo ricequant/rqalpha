@@ -18,12 +18,15 @@
 from typing import Any
 
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils.logger import user_system_log
 from rqalpha.interface import AbstractMod
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
 
 from .position_model import StockPosition
 from .position_validator import PositionValidator
+from .component_validator import MarginComponentValidator
+from .validator import MarginInstrumentValidator
 
 
 class AccountMod(AbstractMod):
@@ -42,6 +45,11 @@ class AccountMod(AbstractMod):
             for ins_type in INST_TYPE_IN_STOCK_ACCOUNT:
                 env.add_frontend_validator(pos_validator, ins_type)
 
+        if not isinstance(mod_config.financing_rate, (int, float)):
+            raise ValueError("sys_accounts financing_rate must number")
+        elif mod_config.financing_rate < 0:
+            raise ValueError("sys_accounts financing_rate must >= 0")
+
         if DEFAULT_ACCOUNT_TYPE.FUTURE in env.config.base.accounts:
             # 注入期货API
             # noinspection PyUnresolvedReferences
@@ -50,6 +58,26 @@ class AccountMod(AbstractMod):
             # 注入股票API
             # noinspection PyUnresolvedReferences
             from .api import api_stock
+
+            # 启动融资股票池限制
+            if mod_config.financing_stocks_restriction_enabled:
+                try:
+                    import rqdatac
+                    if rqdatac.initialized():
+                        com_validator = MarginComponentValidator(margin_type="all")
+                        ins_validator = MarginInstrumentValidator()
+                        # 融资股票池验证
+                        env.add_frontend_validator(com_validator, INSTRUMENT_TYPE.CS)
+                        env.add_frontend_validator(com_validator, INSTRUMENT_TYPE.ETF)
+                        # 下单标的验证
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.LOF)
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.CONVERTIBLE)
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.INDX)
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.PUBLIC_FUND)
+                    else:
+                        user_system_log.warn("rqdatac not init, not support financing stocks restriction.")
+                except ImportError:
+                    user_system_log.warn("rqdatac not install, not support financing stocks restriction.")
 
     def tear_down(self, code, exception=None):
         pass
