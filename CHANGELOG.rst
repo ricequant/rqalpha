@@ -2,6 +2,13 @@
 CHANGELOG
 ==================
 
+4.11.1
+==================
+- 新增取消rqdatac init 开关, config base rqdatac_uri 可设置为 'disabled' 或 'DISABLED'
+- 修正关于888前复权合约的数据问题
+- 调整默认撮合方式, matching_type 为 None 则表示根据回测频率自动选择。日/分钟回测下为 current_bar , tick 回测下为 last
+- 修复性能分析
+
 4.11.0
 ==================
 - 针对股票和ETF新增融资功能，新增 finance 和 repay API
