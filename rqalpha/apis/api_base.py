@@ -246,9 +246,13 @@ def subscribe(id_or_symbols):
     # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
 
     """
-    订阅合约行情。该操作会导致合约池内合约的增加，从而影响handle_bar中处理bar数据的数量。
+    订阅合约行情。
 
-    需要注意，用户在初次编写策略时候需要首先订阅合约行情，否则handle_bar不会被触发。
+    在日级别回测中不需要订阅合约。
+
+    在分钟回测中，若策略只设置了股票账户则不需要订阅合约；若设置了期货账户，则需要订阅策略关注的期货合约，框架会根据订阅的期货合约品种触发对应交易时间的 handle_bar。为了方便起见，也可以以直接订阅主力连续合约。
+
+    在 tick 回测中，策略需要订阅每一个关注的股票/期货合约，框架会根据订阅池触发对应标的的 handle_tick。
 
     :param id_or_symbols: 标的物
 
