@@ -24,11 +24,12 @@ class SchedulerMod(AbstractMod):
     def start_up(self, env, mod_config):
         if not any(t in env.config.base.accounts for t in (DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE)):
             return 
-        from .scheduler import Scheduler, market_close, market_open
+        from .scheduler import Scheduler, market_close, market_open, physical_time
         self._scheduler = Scheduler(env.config.base.frequency)
         export_as_api(self._scheduler, name='scheduler')
         export_as_api(market_open)
         export_as_api(market_close)
+        export_as_api(physical_time)
 
     def tear_down(self, code, exception=None):
         pass
