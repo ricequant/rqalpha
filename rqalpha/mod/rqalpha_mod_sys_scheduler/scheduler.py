@@ -31,8 +31,8 @@ from rqalpha.utils.logger import system_log
 
 
 def market_close(hour=0, minute=0):
-    if Environment.get_instance().config.base.accounts.get("STOCK") is None:
-        system_log.warning("market_close using in stock market")
+    if Environment.get_instance().config.base.accounts.get(DEFAULT_ACCOUNT_TYPE.FUTURE):
+        system_log.warning("using 'market_close' in futures/option strategy is not recommended")
     minutes_since_midnight = 15 * 60 - hour * 60 - minute
     if minutes_since_midnight < 13 * 60:
         minutes_since_midnight -= 90
@@ -40,8 +40,8 @@ def market_close(hour=0, minute=0):
 
 
 def market_open(hour=0, minute=0):
-    if Environment.get_instance().config.base.accounts.get("STOCK") is None:
-        system_log.warning("market_open using in stock market")
+    if Environment.get_instance().config.base.accounts.get(DEFAULT_ACCOUNT_TYPE.FUTURE):
+        system_log.warning("using 'market_open' in futures/option strategy is not recommended")
     minutes_since_midnight = 9 * 60 + 31 + hour * 60 + minute
     if minutes_since_midnight > 11 * 60 + 30:
         minutes_since_midnight += 90
