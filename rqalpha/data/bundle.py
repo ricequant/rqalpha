@@ -183,14 +183,17 @@ def gen_future_info(d):
     symbol_list = []
     param = ['close_commission_ratio', 'close_commission_today_ratio', 'commission_type', 'open_commission_ratio']
 
-    # 当修改了hard_code以后，避免用户需要手动删除future_info.json文件
-    all_futures_info.extend(filter(lambda x: x["underlying_symbol"] not in symbol_list, hard_code))
-
     for i in all_futures_info:
         if i.get('order_book_id'):
             future_list.append(i.get('order_book_id'))
         else:
             symbol_list.append(i.get('underlying_symbol'))
+
+    # 当修改了hard_code以后，避免用户需要手动删除future_info.json文件
+    for info in hard_code:
+        if info["underlying_symbol"] not in symbol_list:
+            all_futures_info.append(info)
+            symbol_list.append(info["underlying_symbol"])
 
     futures_order_book_id = rqdatac.all_instruments(type='Future')['order_book_id'].unique()
     for future in futures_order_book_id:

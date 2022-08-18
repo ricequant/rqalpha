@@ -2,6 +2,11 @@
 CHANGELOG
 ==================
 
+4.11.2
+==================
+- 修复 physical_time api接口的导出，策略编写不在需要显式导出
+- 修复 更新base数据时window系统下出现内存错误的异常
+
 4.11.1
 ==================
 - 新增取消rqdatac init 开关, config base rqdatac_uri 可设置为 'disabled' 或 'DISABLED'
