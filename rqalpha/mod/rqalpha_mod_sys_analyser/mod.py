@@ -61,6 +61,7 @@ class AnalyserMod(AbstractMod):
         self._total_benchmark_portfolios = []
         self._sub_accounts = defaultdict(list)
         self._positions = defaultdict(list)
+        self._daily_pnl = []
 
         self._benchmark_daily_returns = []
         self._portfolio_daily_returns = []
@@ -150,6 +151,7 @@ class AnalyserMod(AbstractMod):
             "date": date,
             "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod()
         })
+        self._daily_pnl.append(portfolio.daily_pnl)
 
         for account_type, account in self._env.portfolio.accounts.items():
             self._sub_accounts[account_type].append(self._to_account_record(date, account))
@@ -328,6 +330,16 @@ class AnalyserMod(AbstractMod):
             'excess_returns': risk.excess_return_rate,
             'excess_annual_returns': risk.excess_annual_return,
             'var': risk.var,
+            "win_rate": risk.win_rate,
+        })
+
+        # 盈亏比
+        daily_pnl = np.array(self._daily_pnl)
+        profit, loss = daily_pnl[daily_pnl > 0], daily_pnl[daily_pnl < 0]
+        profit, loss = profit.mean() if len(profit) else 0, loss.mean() if len(loss) else 0
+
+        summary.update({
+            "profit_loss_rate": np.abs(profit / loss) if loss else np.nan
         })
 
         summary.update({
@@ -412,6 +424,7 @@ class AnalyserMod(AbstractMod):
             'weekly_information_ratio': weekly_risk.information_ratio,
             "weekly_tracking_error": weekly_risk.tracking_error,
             "weekly_max_drawdown": weekly_risk.max_drawdown,
+            "weekly_win_rate": weekly_risk.win_rate,
         })
 
         plots = self._plot_store.get_plots()
