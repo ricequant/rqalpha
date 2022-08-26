@@ -30,11 +30,9 @@ from .utils import IndicatorInfo, LineInfo, max_dd as _max_dd, SpotInfo
 from .utils import weekly_returns, trading_dates_index
 from .consts import INDICATOR_WIDTH, INDICATOR_VALUE_HEIGHT, INDICATOR_LABEL_HEIGHT
 from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT
-from .consts import LABEL_FONT_SIZE, BLACK
+from .consts import LABEL_FONT_SIZE, BLACK, SUPPORT_CHINESE
 from .consts import INDICATORS, WEEKLY_INDICATORS, EXCESS_INDICATORS, MAX_DD, MAX_DDD, OPEN_POINT, CLOSE_POINT
 from .consts import LINE_BENCHMARK, LINE_STRATEGY, LINE_WEEKLY_BENCHMARK, LINE_WEEKLY, LINE_EXCESS
-
-from rqalpha.utils.i18n import Localization
 
 
 class SubPlot:
@@ -175,8 +173,7 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
         indicators = INDICATORS + [EXCESS_INDICATORS]
 
         # 在图例中输出基准信息
-        lc = Localization.get_sys_lc()
-        _b_str = summary["benchmark_symbol"] if lc and "cn" in lc.lower() else summary["benchmark"]
+        _b_str = summary["benchmark_symbol"] if SUPPORT_CHINESE else summary["benchmark"]
         _INFO = LineInfo(
             LINE_BENCHMARK.label + "({})".format(_b_str), LINE_BENCHMARK.color,
             LINE_BENCHMARK.alpha, LINE_BENCHMARK.linewidth

@@ -37,8 +37,10 @@ if "/matplotlib/" in font:
     system_log.warn("PLOT: Missing Chinese fonts. Fallback to English.")
     LABEL_FONT_SIZE = 8
     _ = lambda txt: txt
+    SUPPORT_CHINESE = False
 else:
     LABEL_FONT_SIZE = 10
+    SUPPORT_CHINESE = True
 
 RED = "#aa4643"
 BLUE = "#4572a7"
