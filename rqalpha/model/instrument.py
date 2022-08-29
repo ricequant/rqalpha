@@ -21,6 +21,7 @@ import datetime
 from typing import Dict, Callable, Optional
 
 import numpy as np
+from dateutil.parser import parse
 
 from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
@@ -32,13 +33,12 @@ class Instrument(metaclass=PropertyReprMeta):
     DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
 
     @staticmethod
-    def _fix_date(ds, dflt=None):
+    def _fix_date(ds, dflt=None) -> datetime:
         if isinstance(ds, datetime.datetime):
             return ds
         if ds == '0000-00-00' or ds is None:
             return dflt
-        year, month, day = ds.split('-')
-        return datetime.datetime(int(year), int(month), int(day))
+        return parse(ds)
 
     __repr__ = property_repr
 
