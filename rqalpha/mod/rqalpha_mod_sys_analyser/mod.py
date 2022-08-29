@@ -61,7 +61,6 @@ class AnalyserMod(AbstractMod):
         self._total_benchmark_portfolios = []
         self._sub_accounts = defaultdict(list)
         self._positions = defaultdict(list)
-        self._daily_pnl = []
 
         self._benchmark_daily_returns = []
         self._portfolio_daily_returns = []
@@ -151,7 +150,6 @@ class AnalyserMod(AbstractMod):
             "date": date,
             "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod()
         })
-        self._daily_pnl.append(portfolio.daily_pnl)
 
         for account_type, account in self._env.portfolio.accounts.items():
             self._sub_accounts[account_type].append(self._to_account_record(date, account))
@@ -298,8 +296,10 @@ class AnalyserMod(AbstractMod):
             'run_type': self._env.config.base.run_type.value,
             "starting_cash": ",".join(f"{t}:{c}" for t, c in self._env.config.base.accounts.items())
         }
+        starting_cash_total = 0
         for account_type, starting_cash in self._env.config.base.accounts.items():
             summary[account_type] = starting_cash
+            starting_cash_total += starting_cash
         if self._benchmark:
             if len(self._benchmark) == 1:
                 benchmark_obid, _ = self._benchmark[0]
@@ -333,15 +333,6 @@ class AnalyserMod(AbstractMod):
             "win_rate": risk.win_rate,
         })
 
-        # 盈亏比
-        daily_pnl = np.array(self._daily_pnl)
-        profit, loss = daily_pnl[daily_pnl > 0], daily_pnl[daily_pnl < 0]
-        profit, loss = profit.mean() if len(profit) else 0, loss.mean() if len(loss) else 0
-
-        summary.update({
-            "profit_loss_rate": np.abs(profit / loss) if loss else np.nan
-        })
-
         summary.update({
             'total_value': self._env.portfolio.total_value,
             'cash': self._env.portfolio.cash,
@@ -367,6 +358,16 @@ class AnalyserMod(AbstractMod):
 
         df = pd.DataFrame(self._total_portfolios)
         df['date'] = pd.to_datetime(df['date'])
+
+        # 盈亏比
+        _daily_pnl = df["total_value"].diff().fillna(value=df["total_value"] - starting_cash_total)
+        profit, loss = _daily_pnl[_daily_pnl > 0], _daily_pnl[_daily_pnl < 0]
+        profit, loss = profit.mean() if len(profit) else 0, loss.mean() if len(loss) else 0
+
+        summary.update({
+            "profit_loss_rate": np.abs(profit / loss) if loss else np.nan
+        })
+
         total_portfolios = df.set_index('date').sort_index()
         weekly_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
         weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
