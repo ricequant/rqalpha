@@ -209,6 +209,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def before_trading(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量
+        self._old_quantity = self._quantity
+        self._logical_old_quantity = self._old_quantity
+        self._trade_cost = self._non_closable = 0
         self._prev_close = self.last_price
         self._transaction_cost = 0
         return 0
@@ -240,9 +243,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def settlement(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
-        self._old_quantity = self._quantity
-        self._logical_old_quantity = self._old_quantity
-        self._trade_cost = self._non_closable = 0
         return 0
 
     def update_last_price(self, price):
