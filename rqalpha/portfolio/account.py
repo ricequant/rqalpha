@@ -229,6 +229,14 @@ class Account(metaclass=AccountMeta):
         return self._cash_liabilities
 
     @property
+    def cash_liabilities_interest(self):
+        # type: () -> float
+        """
+        现金负债当日的利息
+        """
+        return self._cash_liabilities * self._financing_rate / DAYS_CNT.DAYS_A_YEAR
+
+    @property
     def margin(self) -> float:
         """
         总保证金
@@ -257,7 +265,7 @@ class Account(metaclass=AccountMeta):
         """
         当日盈亏
         """
-        return self.trading_pnl + self.position_pnl - self.transaction_cost
+        return self.trading_pnl + self.position_pnl - self.transaction_cost - self.cash_liabilities_interest
 
     @property
     def equity(self):
@@ -324,7 +332,7 @@ class Account(metaclass=AccountMeta):
 
         # 负债自增利息
         if self._cash_liabilities > 0:
-            self._cash_liabilities += self._cash_liabilities * self._financing_rate / DAYS_CNT.DAYS_A_YEAR
+            self._cash_liabilities += self.cash_liabilities_interest
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         forced_liquidation = Environment.get_instance().config.base.forced_liquidation
