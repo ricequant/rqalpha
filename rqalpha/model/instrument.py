@@ -38,7 +38,11 @@ class Instrument(metaclass=PropertyReprMeta):
             return ds
         if ds == '0000-00-00' or ds is None:
             return dflt
-        return parse(ds)
+        try:
+            year, month, day = ds.split('-')
+            return datetime.datetime(int(year), int(month), int(day))
+        except:
+            return parse(ds)
 
     __repr__ = property_repr
 
