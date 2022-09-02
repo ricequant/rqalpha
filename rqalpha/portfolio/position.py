@@ -81,6 +81,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._quantity = init_quantity
         self._old_quantity = init_quantity
         self._logical_old_quantity = 0
+        self._cur_trading_date = None                 # 记录当前交易日
 
         self._avg_price: float = init_price or 0
         self._trade_cost: float = 0
@@ -146,16 +147,15 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def prev_close(self):
-        if not is_valid_price(self._prev_close):
-            env = Environment.get_instance()
-            self._prev_close = env.data_proxy.get_prev_close(self._order_book_id, env.trading_dt)
+        if not is_valid_price(self._prev_close) or self._cur_trading_date is None or self._cur_trading_date < self._env.trading_dt.date():
+            self._prev_close = self._env.data_proxy.get_prev_close(self._order_book_id, self._env.trading_dt)
+            self._cur_trading_date = self._env.trading_dt.date()
         return self._prev_close
 
     @property
     def last_price(self):
         if not self._last_price:
-            env = Environment.get_instance()
-            self._last_price = env.data_proxy.get_last_price(self._order_book_id)
+            self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
             if not is_valid_price(self._last_price):
                 raise RuntimeError(_("invalid price of {order_book_id}: {price}").format(
                     order_book_id=self._order_book_id, price=self._last_price
@@ -212,7 +212,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._old_quantity = self._quantity
         self._logical_old_quantity = self._old_quantity
         self._trade_cost = self._non_closable = 0
-        self._prev_close = self.last_price
         self._transaction_cost = 0
         return 0
 
@@ -254,7 +253,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def _open_orders(self):
         # type: () -> Iterable[Order]
-        for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
+        for order in self._env.broker.get_open_orders(self.order_book_id):
             if order.position_direction == self._direction:
                 yield order
 
