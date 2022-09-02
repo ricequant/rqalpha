@@ -27,7 +27,7 @@ from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
-from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils.class_helper import deprecated_property, cached_property
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -152,8 +152,7 @@ class StockPosition(Position):
             self._quantity = self._old_quantity = 0
         return delta_cash
 
-    @property
-    @lru_cache()
+    @cached_property
     def _market_tplus(self):
         return self._instrument.market_tplus
 
@@ -221,13 +220,11 @@ class FuturePosition(Position):
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._quantity - self._old_quantity)
 
-    @property
-    @lru_cache()
+    @cached_property
     def contract_multiplier(self):
         return self._instrument.contract_multiplier
 
-    @property
-    @lru_cache()
+    @cached_property
     def margin_rate(self):
         return self._instrument.margin_rate * self._env.config.base.margin_multiplier
 

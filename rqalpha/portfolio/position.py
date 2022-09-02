@@ -81,7 +81,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._quantity = init_quantity
         self._old_quantity = init_quantity
         self._logical_old_quantity = 0
-        self._cur_trading_date = None                 # 记录当前交易日
 
         self._avg_price: float = init_price or 0
         self._trade_cost: float = 0
@@ -147,9 +146,8 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def prev_close(self):
-        if not is_valid_price(self._prev_close) or self._cur_trading_date is None or self._cur_trading_date < self._env.trading_dt.date():
+        if not is_valid_price(self._prev_close):
             self._prev_close = self._env.data_proxy.get_prev_close(self._order_book_id, self._env.trading_dt)
-            self._cur_trading_date = self._env.trading_dt.date()
         return self._prev_close
 
     @property
@@ -213,6 +211,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._logical_old_quantity = self._old_quantity
         self._trade_cost = self._non_closable = 0
         self._transaction_cost = 0
+        self._prev_close = None
         return 0
 
     def apply_trade(self, trade):
