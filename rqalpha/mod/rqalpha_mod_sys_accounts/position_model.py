@@ -27,7 +27,7 @@ from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
-from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils.class_helper import deprecated_property, cached_property
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -101,7 +101,7 @@ class StockPosition(Position):
             return delta_cash
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
-        data_proxy = Environment.get_instance().data_proxy
+        data_proxy = self._env.data_proxy
         self._handle_dividend_book_closure(trading_date, data_proxy)
         delta_cash += self._handle_dividend_payable(trading_date)
         self._handle_split(trading_date, data_proxy)
@@ -152,8 +152,7 @@ class StockPosition(Position):
             self._quantity = self._old_quantity = 0
         return delta_cash
 
-    @property
-    @lru_cache()
+    @cached_property
     def _market_tplus(self):
         return self._instrument.market_tplus
 
@@ -167,6 +166,8 @@ class StockPosition(Position):
         if dividend_per_share != dividend_per_share:
             raise RuntimeError("Dividend per share of {} is not supposed to be nan.".format(self._order_book_id))
         self._avg_price -= dividend_per_share
+        # 前一天结算发生了除息, 此时 last_price 还是前一个交易日的收盘价，需要改为 除息后收盘价, 否则影响在before_trading中查看盈亏
+        self._last_price -= dividend_per_share
 
         try:
             payable_date = _int_to_date(dividend["payable_date"][0])
@@ -203,7 +204,6 @@ class StockPosition(Position):
             return
         self._avg_price /= ratio
         self._last_price /= ratio
-        self._prev_close /= ratio
         ratio = Decimal(ratio)
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = int(Decimal(self._quantity) * ratio)
@@ -220,15 +220,13 @@ class FuturePosition(Position):
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._quantity - self._old_quantity)
 
-    @property
-    @lru_cache()
+    @cached_property
     def contract_multiplier(self):
         return self._instrument.contract_multiplier
 
-    @property
-    @lru_cache()
+    @cached_property
     def margin_rate(self):
-        return self._instrument.margin_rate * Environment.get_instance().config.base.margin_multiplier
+        return self._instrument.margin_rate * self._env.config.base.margin_multiplier
 
     @property
     def equity(self):
@@ -288,7 +286,7 @@ class FuturePosition(Position):
         super(FuturePosition, self).settlement(trading_date)
         if self._quantity == 0:
             return 0
-        data_proxy = Environment.get_instance().data_proxy
+        data_proxy = self._env.data_proxy
         instrument = data_proxy.instrument(self._order_book_id)
         next_date = data_proxy.get_next_trading_date(trading_date)
         delta_cash = self.equity
