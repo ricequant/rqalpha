@@ -147,15 +147,13 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def prev_close(self):
         if not is_valid_price(self._prev_close):
-            env = Environment.get_instance()
-            self._prev_close = env.data_proxy.get_prev_close(self._order_book_id, env.trading_dt)
+            self._prev_close = self._env.data_proxy.get_prev_close(self._order_book_id, self._env.trading_dt)
         return self._prev_close
 
     @property
     def last_price(self):
         if not self._last_price:
-            env = Environment.get_instance()
-            self._last_price = env.data_proxy.get_last_price(self._order_book_id)
+            self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
             if not is_valid_price(self._last_price):
                 raise RuntimeError(_("invalid price of {order_book_id}: {price}").format(
                     order_book_id=self._order_book_id, price=self._last_price
@@ -209,8 +207,11 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def before_trading(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量
-        self._prev_close = self.last_price
+        self._old_quantity = self._quantity
+        self._logical_old_quantity = self._old_quantity
+        self._trade_cost = self._non_closable = 0
         self._transaction_cost = 0
+        self._prev_close = None
         return 0
 
     def apply_trade(self, trade):
@@ -240,9 +241,6 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def settlement(self, trading_date):
         # type: (date) -> float
         # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
-        self._old_quantity = self._quantity
-        self._logical_old_quantity = self._old_quantity
-        self._trade_cost = self._non_closable = 0
         return 0
 
     def update_last_price(self, price):
@@ -254,7 +252,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     @property
     def _open_orders(self):
         # type: () -> Iterable[Order]
-        for order in Environment.get_instance().broker.get_open_orders(self.order_book_id):
+        for order in self._env.broker.get_open_orders(self.order_book_id):
             if order.position_direction == self._direction:
                 yield order
 

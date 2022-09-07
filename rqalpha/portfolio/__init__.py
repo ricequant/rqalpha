@@ -308,7 +308,11 @@ class MixedPositions(Mapping):
     def __repr__(self):
         keys = []
         for account in six.itervalues(self._accounts):
-            keys += [order_book_id for order_book_id, position in account.positions.items() if position.quantity > 0]
+            keys += [
+                order_book_id for order_book_id, position in account.positions.items()
+                if getattr(position, "quantity", 0) > 0 or
+                getattr(position, "buy_quantity", 0) + getattr(position, "sell_quantity", 0) > 0
+            ]
         return str(sorted(keys))
 
     def __len__(self):

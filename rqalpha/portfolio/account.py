@@ -229,6 +229,14 @@ class Account(metaclass=AccountMeta):
         return self._cash_liabilities
 
     @property
+    def cash_liabilities_interest(self):
+        # type: () -> float
+        """
+        现金负债当日的利息
+        """
+        return self._cash_liabilities * self._financing_rate / DAYS_CNT.DAYS_A_YEAR
+
+    @property
     def margin(self) -> float:
         """
         总保证金
@@ -257,7 +265,7 @@ class Account(metaclass=AccountMeta):
         """
         当日盈亏
         """
-        return self.trading_pnl + self.position_pnl - self.transaction_cost
+        return self.trading_pnl + self.position_pnl - self.transaction_cost - self.cash_liabilities_interest
 
     @property
     def equity(self):
@@ -273,7 +281,7 @@ class Account(metaclass=AccountMeta):
         """
         账户总权益
         """
-        return self._total_cash + self.equity - self.cash_liabilities
+        return self._total_cash + self.equity - self.cash_liabilities - self.cash_liabilities_interest
 
     @property
     def total_cash(self):
@@ -300,9 +308,17 @@ class Account(metaclass=AccountMeta):
         return sum(p.trading_pnl for p in self._iter_pos())
 
     def _on_before_trading(self, _):
+        for order_book_id, positions in list(self._positions.items()):
+            if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
+                del self._positions[order_book_id]
+
         trading_date = Environment.get_instance().trading_dt.date()
         for position in self._iter_pos():
             self._total_cash += position.before_trading(trading_date)
+
+        # 负债自增利息
+        if self._cash_liabilities > 0:
+            self._cash_liabilities += self.cash_liabilities_interest
 
     def _on_settlement(self, event):
         trading_date = Environment.get_instance().trading_dt.date()
@@ -312,19 +328,11 @@ class Account(metaclass=AccountMeta):
                 delta_cash = position.settlement(trading_date)
                 self._total_cash += delta_cash
 
-        for order_book_id, positions in list(self._positions.items()):
-            if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
-                del self._positions[order_book_id]
-
         self._backward_trade_set.clear()
 
         fee = self._management_fee()
         self._management_fees += fee
         self._total_cash -= fee
-
-        # 负债自增利息
-        if self._cash_liabilities > 0:
-            self._cash_liabilities += self._cash_liabilities * self._financing_rate / DAYS_CNT.DAYS_A_YEAR
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         forced_liquidation = Environment.get_instance().config.base.forced_liquidation

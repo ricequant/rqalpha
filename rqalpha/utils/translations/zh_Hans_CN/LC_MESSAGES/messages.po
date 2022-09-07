@@ -426,80 +426,76 @@ msgstr ""
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:59
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:61
 msgid "Strategy"
 msgstr "策略收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:60
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:62
 msgid "Benchmark"
 msgstr "基准收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:61
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:63
 msgid "Excess"
 msgstr "超额收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:62
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:64
 msgid "Weekly"
 msgstr "策略周度收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:63
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:65
 msgid "BenchmarkWeekly"
 msgstr "基准周度收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:65
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:82
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:67
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:91
 msgid "MaxDrawDown"
 msgstr "最大回撤"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:66
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:68
 msgid "MaxDDD"
 msgstr "最长回撤持续期"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:67
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:69
 msgid "Open"
 msgstr "开仓"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:68
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:70
 msgid "Close"
 msgstr "平仓"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:71
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:73
 msgid "TotalReturns"
 msgstr "策略收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:72
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:74
 msgid "AnnualReturns"
 msgstr "策略年化收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:73
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:75
 msgid "Alpha"
 msgstr "阿尔法"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:74
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:76
 msgid "Beta"
 msgstr "贝塔"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:75
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:77
 msgid "Sharpe"
 msgstr "夏普率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:76
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:78
 msgid "Sortino"
 msgstr "索提诺比率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:77
-msgid "InformationRatio"
-msgstr "信息比率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:79
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:80
 msgid "BenchmarkReturns"
 msgstr "基准收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:80
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:81
 msgid "BenchmarkAnnual"
 msgstr "基准年化收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:81
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:82
 msgid "Volatility"
 msgstr "波动率"
 
@@ -512,62 +508,74 @@ msgid "DownsideRisk"
 msgstr "下行风险"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:85
-msgid "MaxDD/MaxDDD"
-msgstr "最大回撤/最长回撤持续期"
+msgid "InformationRatio"
+msgstr "信息比率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:89
-msgid "WeeklyAlpha"
-msgstr "周度阿尔法"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:90
-msgid "WeeklyBeta"
-msgstr "周度贝塔"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:91
-msgid "WeeklySharpe"
-msgstr "周度夏普率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:92
-msgid "WeeklySortino"
-msgstr "周度索提诺比率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:93
-msgid "WeeklyInfoRatio"
-msgstr "周度信息比率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:94
-msgid "WeeklyTrackingError"
-msgstr "周度跟踪误差"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:95
-msgid "WeeklyMaxDrawdown"
-msgstr "周度最大回撤"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:99
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:87
 msgid "ExcessCumReturns"
 msgstr "超额累计收益"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:88
+msgid "WinRate"
+msgstr "胜率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:89
+msgid "WeeklyWinRate"
+msgstr "周度胜率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:90
+msgid "ProfitLossRate"
+msgstr "盈亏比"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:92
+msgid "MaxDD/MaxDDD"
+msgstr "最大回撤/最长回撤持续期"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:96
+msgid "WeeklyAlpha"
+msgstr "周度阿尔法"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:97
+msgid "WeeklyBeta"
+msgstr "周度贝塔"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:98
+msgid "WeeklySharpe"
+msgstr "周度夏普率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:99
+msgid "WeeklyInfoRatio"
+msgstr "周度信息比率"
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:100
+msgid "WeeklyTrackingError"
+msgstr "周度跟踪误差"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:101
+msgid "WeeklyMaxDrawdown"
+msgstr "周度最大回撤"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:105
 msgid "ExcessReturns"
 msgstr "超额收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:101
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:106
 msgid "ExcessAnnual"
 msgstr "年化超额收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:102
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:107
 msgid "ExcessSharpe"
 msgstr "超额夏普率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:103
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:108
 msgid "ExcessVolatility"
 msgstr "超额收益波动率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:105
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:109
 msgid "ExcessMaxDD"
 msgstr "超额收益最大回撤"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:106
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:110
 msgid "ExcessMaxDD/ExcessMaxDDD"
 msgstr "超额收益最大回撤/最长回撤持续期"
 
