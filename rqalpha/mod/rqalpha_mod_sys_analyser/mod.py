@@ -323,7 +323,7 @@ class AnalyserMod(AbstractMod):
             'tracking_error': risk.annual_tracking_error,
             'sortino': risk.sortino,
             'volatility': risk.annual_volatility,
-            'excess_volatility': risk.excess_volatility,
+            'excess_volatility': risk.excess_annual_volatility,
             'excess_annual_volatility': risk.excess_annual_volatility,
             'max_drawdown': risk.max_drawdown,
             'excess_max_drawdown': risk.excess_max_drawdown,
@@ -368,7 +368,8 @@ class AnalyserMod(AbstractMod):
         df = pd.DataFrame(self._total_portfolios)
         df['date'] = pd.to_datetime(df['date'])
         total_portfolios = df.set_index('date').sort_index()
-        weekly_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
+        df.index = df['date']
+        weekly_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
         weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
 
         # 最长回撤持续期
@@ -403,7 +404,8 @@ class AnalyserMod(AbstractMod):
             df = pd.DataFrame(self._total_benchmark_portfolios)
             df['date'] = pd.to_datetime(df['date'])
             benchmark_portfolios = df.set_index('date').sort_index()
-            weekly_b_nav = df.resample("W", on="date").last().set_index("date").unit_net_value.dropna()
+            df.index = df['date']
+            weekly_b_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
             weekly_b_returns = (weekly_b_nav / weekly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios
             # 超额收益最长回撤持续期
