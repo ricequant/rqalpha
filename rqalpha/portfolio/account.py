@@ -16,8 +16,11 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from itertools import chain
-from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
+from datetime import date
+from collections import deque
+from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple, Deque
 
+import rqdatac
 import six
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT
 from rqalpha.environment import Environment
@@ -60,10 +63,12 @@ class Account(metaclass=AccountMeta):
     ):
         self._type = account_type
         self._total_cash = total_cash  # 包含保证金的总资金
+        self._env = Environment.get_instance()
 
         self._positions: Dict[str, Dict[POSITION_DIRECTION, Position]] = {}
         self._backward_trade_set = set()
         self._frozen_cash = 0
+        self._pending_deposit_withdraw: Deque[Tuple[date, float]] = deque()
 
         self._cash_liabilities = 0      # 现金负债
 
@@ -91,7 +96,7 @@ class Account(metaclass=AccountMeta):
         )
 
     def register_event(self):
-        event_bus = Environment.get_instance().event_bus
+        event_bus = self._env.event_bus
         event_bus.add_listener(
             EVENT.TRADE, lambda e: self.apply_trade(e.trade, e.order) if e.account == self else None
         )
@@ -276,12 +281,14 @@ class Account(metaclass=AccountMeta):
         return sum(p.equity for p in self._iter_pos())
 
     @property
-    def total_value(self):
-        # type: () -> float
+    def total_value(self) -> float:
         """
         账户总权益
         """
-        return self._total_cash + self.equity - self.cash_liabilities - self.cash_liabilities_interest
+        total_value = self._total_cash + self.equity - self.cash_liabilities - self.cash_liabilities_interest
+        if self._pending_deposit_withdraw:
+            total_value += sum(amount for _, amount in self._pending_deposit_withdraw)
+        return total_value
 
     @property
     def total_cash(self):
@@ -312,7 +319,11 @@ class Account(metaclass=AccountMeta):
             if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
                 del self._positions[order_book_id]
 
-        trading_date = Environment.get_instance().trading_dt.date()
+        trading_date = self._env.trading_dt.date()
+        while self._pending_deposit_withdraw and self._pending_deposit_withdraw[0][0] <= trading_date:
+            _, amount = self._pending_deposit_withdraw.popleft()
+            self._total_cash += amount
+
         for position in self._iter_pos():
             self._total_cash += position.before_trading(trading_date)
 
@@ -321,7 +332,7 @@ class Account(metaclass=AccountMeta):
             self._cash_liabilities += self.cash_liabilities_interest
 
     def _on_settlement(self, event):
-        trading_date = Environment.get_instance().trading_dt.date()
+        trading_date = self._env.trading_dt.date()
 
         for order_book_id, positions in list(self._positions.items()):
             for position in six.itervalues(positions):
@@ -335,7 +346,7 @@ class Account(metaclass=AccountMeta):
         self._total_cash -= fee
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
-        forced_liquidation = Environment.get_instance().config.base.forced_liquidation
+        forced_liquidation = self._env.config.base.forced_liquidation
         if self.total_value <= 0 and forced_liquidation:
             if self._positions:
                 user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
@@ -395,7 +406,6 @@ class Account(metaclass=AccountMeta):
             init_price : Optional[float] = None
     ) -> Position:
         if order_book_id not in self._positions:
-            env = Environment.get_instance()
             if direction == POSITION_DIRECTION.LONG:
                 long_quantity, short_quantity = init_quantity, 0
             else:
@@ -405,7 +415,7 @@ class Account(metaclass=AccountMeta):
                 POSITION_DIRECTION.SHORT: Position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
             })
             if not init_price:
-                last_price = env.get_last_price(order_book_id)
+                last_price = self._env.get_last_price(order_book_id)
                 for p in positions.values():
                     p.update_last_price(last_price)
             if hasattr(positions[direction], "margin") and hasattr(self.__class__, "_margin"):
@@ -426,21 +436,19 @@ class Account(metaclass=AccountMeta):
             position.update_last_price(tick.last)
 
     def _on_bar(self, _):
-        env = Environment.get_instance()
         for order_book_id, positions in self._positions.items():
-            price = env.get_last_price(order_book_id)
+            price = self._env.get_last_price(order_book_id)
             if price == price:
                 for position in six.itervalues(positions):
                     position.update_last_price(price)
 
     def _frozen_cash_of_order(self, order):
-        env = Environment.get_instance()
         if order.position_effect == POSITION_EFFECT.OPEN:
-            instrument = env.data_proxy.instrument(order.order_book_id)
+            instrument = self._env.data_proxy.instrument(order.order_book_id)
             order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
         else:
             order_cost = 0
-        return order_cost + env.get_order_transaction_cost(order)
+        return order_cost + self._env.get_order_transaction_cost(order)
 
     def _management_fee(self):
         # type: () -> float
@@ -478,12 +486,15 @@ class Account(metaclass=AccountMeta):
         """该账户的管理费用总计"""
         return self._management_fees
 
-    def deposit_withdraw(self, amount):
-        # type: (float) -> None
+    def deposit_withdraw(self, amount: float, receiving_days: int = 0):
         """出入金"""
         if (amount < 0) and (self.cash < amount * -1):
             raise ValueError(_('insufficient cash, current {}, target withdrawal {}').format(self._total_cash, amount))
-        self._total_cash += amount
+        if receiving_days >= 1:
+            receiving_date = rqdatac.get_next_trading_date(self._env.trading_dt.date(), n=receiving_days)
+            self._pending_deposit_withdraw.append((receiving_date, amount))
+        else:
+            self._total_cash += amount
 
     def finance_repay(self, amount):
         """ 融资还款 """

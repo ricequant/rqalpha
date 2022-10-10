@@ -270,14 +270,14 @@ class Portfolio(object, metaclass=PropertyReprMeta):
     def _pre_before_trading(self, _):
         self._static_unit_net_value = self.unit_net_value
 
-    def deposit_withdraw(self, account_type, amount):
+    def deposit_withdraw(self, account_type, amount, receiving_days=0):
         """出入金"""
         # 入金 现金增加，份额增加，总权益增加，单位净值不变
         # 出金 现金减少，份额减少，总权益减少，单位净值不变
         if account_type not in self._accounts:
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
         unit_net_value = self.unit_net_value
-        self._accounts[account_type].deposit_withdraw(amount)
+        self._accounts[account_type].deposit_withdraw(amount, receiving_days)
         _units = self.total_value / unit_net_value
         user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units ,_units)))
         self._units = _units
