@@ -17,8 +17,7 @@
 
 from itertools import chain
 from datetime import date
-from collections import deque
-from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple, Deque
+from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import rqdatac
 import six
@@ -68,7 +67,7 @@ class Account(metaclass=AccountMeta):
         self._positions: Dict[str, Dict[POSITION_DIRECTION, Position]] = {}
         self._backward_trade_set = set()
         self._frozen_cash = 0
-        self._pending_deposit_withdraw: Deque[Tuple[date, float]] = deque()
+        self._pending_deposit_withdraw: List[Tuple[date, float]] = []
 
         self._cash_liabilities = 0      # 现金负债
 
@@ -321,7 +320,7 @@ class Account(metaclass=AccountMeta):
 
         trading_date = self._env.trading_dt.date()
         while self._pending_deposit_withdraw and self._pending_deposit_withdraw[0][0] <= trading_date:
-            _, amount = self._pending_deposit_withdraw.popleft()
+            _, amount = self._pending_deposit_withdraw.pop(0)
             self._total_cash += amount
 
         for position in self._iter_pos():
@@ -493,6 +492,7 @@ class Account(metaclass=AccountMeta):
         if receiving_days >= 1:
             receiving_date = rqdatac.get_next_trading_date(self._env.trading_dt.date(), n=receiving_days)
             self._pending_deposit_withdraw.append((receiving_date, amount))
+            self._pending_deposit_withdraw.sort(key=lambda i: i[0])
         else:
             self._total_cash += amount
 
