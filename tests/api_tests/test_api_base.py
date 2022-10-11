@@ -447,6 +447,12 @@ def test_deposit():
         context.stock = '000001.XSHE'
         context.future = 'IF88'
 
+        try:
+            import rqdatac
+            context.import_rqdatac = True
+        except ImportError:
+            context.import_rqdatac = False
+
     def handle_bar(context, bar_dict):
         context.counter += 1
         if context.counter == 1:
@@ -481,5 +487,13 @@ def test_deposit():
                 assert True, "捕获输入异常"
             else:
                 assert False, "未报出当前账户可取出金额不足异常"
+
+            if context.import_rqdatac:
+                deposit("STOCK", 10000, 3)
+                context.cash = context.portfolio.accounts["STOCK"].cash
+            else:
+                print("rqdatac not install, not test deposit receiving_days")
+        elif context.counter == 9 and context.import_rqdatac:
+            assert int(context.portfolio.accounts["STOCK"].cash) == int(context.cash) + 10000
 
     return locals()
