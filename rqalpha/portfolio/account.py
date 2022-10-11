@@ -19,7 +19,6 @@ from itertools import chain
 from datetime import date
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
-import rqdatac
 import six
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT
 from rqalpha.environment import Environment
@@ -490,7 +489,7 @@ class Account(metaclass=AccountMeta):
         if (amount < 0) and (self.cash < amount * -1):
             raise ValueError(_('insufficient cash, current {}, target withdrawal {}').format(self._total_cash, amount))
         if receiving_days >= 1:
-            receiving_date = rqdatac.get_next_trading_date(self._env.trading_dt.date(), n=receiving_days)
+            receiving_date = self._env.data_proxy.get_next_trading_date(self._env.trading_dt.date(), n=receiving_days)
             self._pending_deposit_withdraw.append((receiving_date, amount))
             self._pending_deposit_withdraw.sort(key=lambda i: i[0])
         else:

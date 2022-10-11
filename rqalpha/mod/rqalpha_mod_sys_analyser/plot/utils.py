@@ -74,8 +74,7 @@ def max_ddd(arr: array, index: DatetimeIndex) -> IndexRange:
 
 
 def weekly_returns(portfolio: DataFrame) -> Series:
-    return portfolio.unit_net_value.reset_index().resample(
-        "W", on="date").last().set_index("date").unit_net_value.dropna() - 1
+    return portfolio.unit_net_value.resample("W").last().dropna() - 1
 
 
 def trading_dates_index(trades: DataFrame, position_effect, index: DatetimeIndex):

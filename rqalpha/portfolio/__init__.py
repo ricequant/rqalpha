@@ -279,7 +279,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         unit_net_value = self.unit_net_value
         self._accounts[account_type].deposit_withdraw(amount, receiving_days)
         _units = self.total_value / unit_net_value
-        user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units ,_units)))
+        user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units, _units)))
         self._units = _units
 
     def finance_repay(self, amount, account_type):
