@@ -79,16 +79,16 @@ INDICATORS = [[
 ], [
     IndicatorInfo("benchmark_total_returns", _("BenchmarkReturns"), BLUE, "{0:.3%}", 11),
     IndicatorInfo("benchmark_annualized_returns", _("BenchmarkAnnual"), BLUE, "{0:.3%}", 11),
-    IndicatorInfo("volatility", _("Volatility"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("tracking_error", _("TrackingError"), BLACK, "{0:.4}", 11),
+    IndicatorInfo("volatility", _("Volatility"), BLACK, "{0:.3%}", 11),
+    IndicatorInfo("tracking_error", _("TrackingError"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11),
     IndicatorInfo("information_ratio", _("InformationRatio"), BLACK, "{0:.4}", 11),
 ], [
     IndicatorInfo("excess_cum_returns", _("ExcessCumReturns"), BLACK, "{0:.3%}", 11),
-    IndicatorInfo("win_rate", _("WinRate"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("weekly_win_rate", _("WeeklyWinRate"), BLACK, "{0:.4}", 11),
+    IndicatorInfo("win_rate", _("WinRate"), BLACK, "{0:.3%}", 11),
+    IndicatorInfo("weekly_win_rate", _("WeeklyWinRate"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("profit_loss_rate", _("ProfitLossRate"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("max_drawdown", _("MaxDrawDown"), BLACK, "{0:.4}", 11),
+    IndicatorInfo("max_drawdown", _("MaxDrawDown"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6),
 ]]
 
@@ -97,15 +97,15 @@ WEEKLY_INDICATORS = [
     IndicatorInfo("weekly_beta", _("WeeklyBeta"), BLACK, "{0:.4}", 11),
     IndicatorInfo("weekly_sharpe", _("WeeklySharpe"), BLACK, "{0:.4}", 11),
     IndicatorInfo("weekly_information_ratio", _("WeeklyInfoRatio"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("weekly_tracking_error", _("WeeklyTrackingError"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("weekly_max_drawdown", _("WeeklyMaxDrawdown"), BLACK, "{0:.4}", 11),
+    IndicatorInfo("weekly_tracking_error", _("WeeklyTrackingError"), BLACK, "{0:.3%}", 11),
+    IndicatorInfo("weekly_max_drawdown", _("WeeklyMaxDrawdown"), BLACK, "{0:.3%}", 11),
 ]
 
 EXCESS_INDICATORS = [
     IndicatorInfo("excess_returns", _("ExcessReturns"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("excess_annual_returns", _("ExcessAnnual"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("excess_volatility", _("ExcessVolatility"), BLACK, "{0:.4}", 11),
-    IndicatorInfo("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.4}", 11),
+    IndicatorInfo("excess_volatility", _("ExcessVolatility"), BLACK, "{0:.3%}", 11),
+    IndicatorInfo("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.3%}", 11),
     IndicatorInfo("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 6),
 ]

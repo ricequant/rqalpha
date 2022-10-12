@@ -865,17 +865,17 @@ def symbol(order_book_id, sep=", "):
     EXECUTION_PHASE.SCHEDULED,
     EXECUTION_PHASE.GLOBAL
 )
-def deposit(account_type, amount):
-    # type: (str, float) -> None
+def deposit(account_type: str, amount: float, receiving_days: int = 0):
     """
     入金（增加账户资金）
 
     :param account_type: 账户类型
-    :param amount: 增加金额
+    :param amount: 入金金额
+    :param receiving_days: 入金到账天数，0 表示立刻到账，1 表示资金在下一个交易日盘前到账
     :return: None
     """
     env = Environment.get_instance()
-    return env.portfolio.deposit_withdraw(account_type, amount)
+    return env.portfolio.deposit_withdraw(account_type, amount, receiving_days)
 
 
 @export_as_api

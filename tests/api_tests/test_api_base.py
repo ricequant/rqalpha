@@ -482,4 +482,10 @@ def test_deposit():
             else:
                 assert False, "未报出当前账户可取出金额不足异常"
 
+            deposit("STOCK", 10000, 3)
+            context.cash = context.portfolio.accounts["STOCK"].cash
+
+        elif context.counter == 9:
+            assert int(context.portfolio.accounts["STOCK"].cash) == int(context.cash) + 10000
+
     return locals()
