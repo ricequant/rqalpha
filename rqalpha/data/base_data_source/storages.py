@@ -175,11 +175,11 @@ def h5_file(path, *args, mode="r", **kwargs):
 class DayBarStore(AbstractDayBarStore):
     DEFAULT_DTYPE = np.dtype([
         ('datetime', np.uint64),
-        ('open', np.float),
-        ('close', np.float),
-        ('high', np.float),
-        ('low', np.float),
-        ('volume', np.float),
+        ('open', np.float64),
+        ('close', np.float64),
+        ('high', np.float64),
+        ('low', np.float64),
+        ('volume', np.float64),
     ])
 
     def __init__(self, path):
