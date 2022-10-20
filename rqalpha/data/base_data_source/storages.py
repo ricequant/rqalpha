@@ -28,10 +28,11 @@ from typing import Dict, Iterable, Optional
 import h5py
 import numpy as np
 import pandas
+from methodtools import lru_cache
+
 from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import convert_date_to_date_int
-from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 
 from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
@@ -252,6 +253,7 @@ class SimpleFactorStore(AbstractSimpleFactorStore):
     def __init__(self, path):
         self._path = path
 
+    @lru_cache(1024)
     def get_factors(self, order_book_id):
         with h5_file(self._path) as h5:
             try:
