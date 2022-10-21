@@ -39,7 +39,8 @@ RQAlpha 策略分析 Mod。
         "output_file": None,
         # 回测报告的数据目录，报告为 csv 格式；若不设置则不输出报告
         "report_save_path": None,
-        # 是否在回测结束后绘制收益曲线图
+        # 是否在回测结束后绘制收益曲线图，当为True时使用默认模版展示，或设置模版名称来指定使用对应模版展示
+        # 当前模版: 'default', 'ricequant'
         'plot': False,
         # 收益曲线图路径，若设置则将收益曲线图保存为 png 文件
         'plot_save_file': None,

@@ -28,10 +28,10 @@ import rqalpha
 from rqalpha.const import POSITION_EFFECT
 from .utils import IndicatorInfo, LineInfo, max_dd as _max_dd, SpotInfo
 from .utils import weekly_returns, trading_dates_index
-from .consts import INDICATOR_WIDTH, INDICATOR_VALUE_HEIGHT, INDICATOR_LABEL_HEIGHT
+from .consts import PlotTemplate, DefaultPlot
 from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT
 from .consts import LABEL_FONT_SIZE, BLACK, SUPPORT_CHINESE
-from .consts import INDICATORS, WEEKLY_INDICATORS, EXCESS_INDICATORS, MAX_DD, MAX_DDD, OPEN_POINT, CLOSE_POINT
+from .consts import MAX_DD, MAX_DDD, OPEN_POINT, CLOSE_POINT
 from .consts import LINE_BENCHMARK, LINE_STRATEGY, LINE_WEEKLY_BENCHMARK, LINE_WEEKLY, LINE_EXCESS
 
 
@@ -47,17 +47,21 @@ class IndicatorArea(SubPlot):
     height: int = INDICATOR_AREA_HEIGHT
     right_pad = -1
 
-    def __init__(self, indicators: List[List[IndicatorInfo]], indicator_values: Mapping[str, float]):
+    def __init__(
+            self, indicators: List[List[IndicatorInfo]], indicator_values: Mapping[str, float],
+            plot_template: PlotTemplate
+    ):
         self._indicators = indicators
         self._values = indicator_values
+        self._template = plot_template
 
     def plot(self, ax: Axes):
         ax.axis("off")
         for lineno, indicators in enumerate(self._indicators[::-1]):  # lineno: 自下而上的行号
             for index_in_line, i in enumerate(indicators):
-                x = index_in_line * INDICATOR_WIDTH
-                y_value = lineno * (INDICATOR_VALUE_HEIGHT + INDICATOR_LABEL_HEIGHT)
-                y_label = y_value + INDICATOR_LABEL_HEIGHT
+                x = index_in_line * self._template.INDICATOR_WIDTH
+                y_value = lineno * (self._template.INDICATOR_VALUE_HEIGHT + self._template.INDICATOR_LABEL_HEIGHT)
+                y_label = y_value + self._template.INDICATOR_LABEL_HEIGHT
                 try:
                     value = i.formatter.format(self._values[i.key])
                 except KeyError:
@@ -159,7 +163,10 @@ def _plot(title: str, sub_plots: List[SubPlot]):
     return fig
 
 
-def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = False, open_close_points: bool = False):
+def plot_result(
+        result_dict, show=True, save=None, weekly_indicators: bool = False, open_close_points: bool = False,
+        plot_template: PlotTemplate = DefaultPlot
+):
     summary = result_dict["summary"]
     portfolio = result_dict["portfolio"]
 
@@ -170,7 +177,7 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
             _max_dd(ex_returns + 1, portfolio.index).repr, summary["excess_max_drawdown_duration"].repr
         )
-        indicators = INDICATORS + [EXCESS_INDICATORS]
+        indicators = plot_template.INDICATORS + plot_template.EXCESS_INDICATORS
 
         # 在图例中输出基准信息
         _b_str = summary["benchmark_symbol"] if SUPPORT_CHINESE else summary["benchmark"]
@@ -187,10 +194,10 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
             return_lines.append((weekly_returns(benchmark_portfolio), LINE_WEEKLY_BENCHMARK))
     else:
         ex_max_dd_ddd = "nan"
-        indicators = INDICATORS
+        indicators = plot_template.INDICATORS
     if weekly_indicators:
         return_lines.append((weekly_returns(portfolio), LINE_WEEKLY))
-        indicators.append(WEEKLY_INDICATORS)
+        indicators.extend(plot_template.WEEKLY_INDICATORS)
     max_dd = _max_dd(portfolio.unit_net_value.values, portfolio.index)
     max_ddd = summary["max_drawdown_duration"]
     spots_on_returns: List[Tuple[Sequence[int], SpotInfo]] = [
@@ -205,7 +212,7 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
     sub_plots = [IndicatorArea(indicators, ChainMap(summary, {
         "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
         "excess_max_dd_ddd": ex_max_dd_ddd,
-    })), ReturnPlot(
+    }), plot_template), ReturnPlot(
         portfolio.unit_net_value - 1, return_lines, spots_on_returns
     )]
     if "plots" in result_dict:
