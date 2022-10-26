@@ -26,7 +26,7 @@ from typing import Dict, Optional, List, Tuple, Union, Iterable
 
 import numpy as np
 import pandas as pd
-from rqrisk import Risk, WEEKLY
+from rqrisk import Risk, WEEKLY, MONTHLY
 
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.core.events import EVENT
@@ -36,6 +36,7 @@ from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.const import DAYS_CNT
 from rqalpha.api import export_as_api
+from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
 
@@ -331,6 +332,7 @@ class AnalyserMod(AbstractMod):
             'excess_annual_returns': risk.excess_annual_return,
             'var': risk.var,
             "win_rate": risk.win_rate,
+            "excess_win_rate": risk.excess_win_rate,
         })
 
         # 盈亏比
@@ -370,7 +372,9 @@ class AnalyserMod(AbstractMod):
         total_portfolios = df.set_index('date').sort_index()
         df.index = df['date']
         weekly_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
+        monthly_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()
         weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
+        monthly_returns = (monthly_nav / monthly_nav.shift(1).fillna(1)).fillna(0) - 1
 
         # 最长回撤持续期
         max_ddd = _max_ddd(total_portfolios.unit_net_value.values, total_portfolios.index)
@@ -406,7 +410,9 @@ class AnalyserMod(AbstractMod):
             benchmark_portfolios = df.set_index('date').sort_index()
             df.index = df['date']
             weekly_b_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
+            monthly_b_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()
             weekly_b_returns = (weekly_b_nav / weekly_b_nav.shift(1).fillna(1)).fillna(0) - 1
+            monthly_b_returns = (monthly_b_nav / monthly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios
             # 超额收益最长回撤持续期
             ex_returns = total_portfolios.unit_net_value - benchmark_portfolios.unit_net_value
@@ -417,16 +423,27 @@ class AnalyserMod(AbstractMod):
             result_dict["summary"]["excess_max_drawdown_duration_days"] = (max_ddd.end_date - max_ddd.start_date).days
         else:
             weekly_b_returns = pandas.Series(index=weekly_returns.index)
+            monthly_b_returns = pandas.Series(index=monthly_returns.index)
+
+        # 周度风险指标
         weekly_risk = Risk(weekly_returns, weekly_b_returns, risk_free_rate, WEEKLY)
         summary.update({
             "weekly_alpha": weekly_risk.alpha,
             "weekly_beta": weekly_risk.beta,
             "weekly_sharpe": weekly_risk.sharpe,
             "weekly_sortino": weekly_risk.sortino,
-            'weekly_information_ratio': weekly_risk.information_ratio,
+            "weekly_information_ratio": weekly_risk.information_ratio,
             "weekly_tracking_error": weekly_risk.tracking_error,
             "weekly_max_drawdown": weekly_risk.max_drawdown,
             "weekly_win_rate": weekly_risk.win_rate,
+            "weekly_volatility": weekly_risk.annual_volatility,
+        })
+
+        # 月度风险指标
+        monthly_risk = Risk(monthly_returns, monthly_b_returns, risk_free_rate, MONTHLY)
+        summary.update({
+            "monthly_sharpe": monthly_risk.sharpe,
+            "monthly_volatility": monthly_risk.annual_volatility,
         })
 
         plots = self._plot_store.get_plots()
@@ -467,12 +484,15 @@ class AnalyserMod(AbstractMod):
             from .report import generate_report
             generate_report(result_dict, self._mod_config.report_save_path)
 
-        if self._mod_config.plot or self._mod_config.plot_save_file:
+        _plot = True if self._mod_config.plot else False
+
+        if _plot or self._mod_config.plot_save_file:
             from .plot import plot_result
             plot_config = self._mod_config.plot_config
+            _plot_template = PLOT_TEMPLATE.get(self._mod_config.plot, DefaultPlot)
             plot_result(
                 result_dict, self._mod_config.plot, self._mod_config.plot_save_file,
-                plot_config.weekly_indicators, plot_config.open_close_points
+                plot_config.weekly_indicators, plot_config.open_close_points, _plot_template
             )
 
         return result_dict
