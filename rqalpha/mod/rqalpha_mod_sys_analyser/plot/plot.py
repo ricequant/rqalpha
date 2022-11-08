@@ -197,7 +197,7 @@ def plot_result(result_dict, show=True, save=None, weekly_indicators: bool = Fal
         ([max_dd.start, max_dd.end], MAX_DD),
         ([max_ddd.start, max_ddd.end], MAX_DDD)
     ]
-    if open_close_points:
+    if open_close_points and not result_dict["trades"].empty:
         trades: pd.DataFrame = result_dict["trades"]
         spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.CLOSE, portfolio.index), CLOSE_POINT))
         spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.OPEN, portfolio.index), OPEN_POINT))
