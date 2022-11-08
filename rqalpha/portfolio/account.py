@@ -271,7 +271,7 @@ class Account(metaclass=AccountMeta):
         return self.trading_pnl + self.position_pnl - self.transaction_cost - self.cash_liabilities_interest
 
     @property
-    def equity(self):
+    def position_equity(self):
         # type: () -> float
         """
         持仓总权益
@@ -283,7 +283,7 @@ class Account(metaclass=AccountMeta):
         """
         账户总权益
         """
-        total_value = self._total_cash + self.equity - self.cash_liabilities - self.cash_liabilities_interest
+        total_value = self._total_cash + self.position_equity - self.cash_liabilities - self.cash_liabilities_interest
         if self._pending_deposit_withdraw:
             total_value += sum(amount for _, amount in self._pending_deposit_withdraw)
         return total_value
@@ -520,3 +520,4 @@ class Account(metaclass=AccountMeta):
 
     holding_pnl = deprecated_property("holding_pnl", "position_pnl")
     realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
+    equity = deprecated_property("equity", "position_equity")

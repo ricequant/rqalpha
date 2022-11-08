@@ -80,6 +80,7 @@ class AnalyserMod(AbstractMod):
             'positions': self._positions,
             'orders': self._orders,
             'trades': self._trades,
+            'daily_pnl': self._daily_pnl,
         }).encode('utf-8')
 
     def set_state(self, state):
@@ -92,6 +93,7 @@ class AnalyserMod(AbstractMod):
         self._positions = value["positions"]
         self._orders = value['orders']
         self._trades = value["trades"]
+        self._daily_pnl = value.get("daily_pnl", [])
 
     def start_up(self, env, mod_config):
         self._env = env
