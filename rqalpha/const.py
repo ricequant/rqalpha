@@ -146,6 +146,7 @@ class INSTRUMENT_TYPE(CustomEnum):
     LOF = "LOF"
     INDX = "INDX"
     PUBLIC_FUND = 'PublicFund'
+    FUND = "Fund"
     BOND = "Bond"
     CONVERTIBLE = "Convertible"
     SPOT = "Spot"
