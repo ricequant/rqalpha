@@ -555,6 +555,15 @@ msgstr "周度跟踪误差"
 msgid "WeeklyMaxDrawdown"
 msgstr "周度最大回撤"
 
+msgid "WeeklyVolatility"
+msgstr "周度波动率"
+
+msgid "MonthlySharpe"
+msgstr "月度夏普率"
+
+msgid "MonthlyVolatility"
+msgstr "月度波动率"
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:105
 msgid "ExcessReturns"
 msgstr "超额收益率"
@@ -574,6 +583,9 @@ msgstr "超额收益波动率"
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:109
 msgid "ExcessMaxDD"
 msgstr "超额收益最大回撤"
+
+msgid "ExcessWinRate"
+msgstr "超额胜率"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:110
 msgid "ExcessMaxDD/ExcessMaxDDD"

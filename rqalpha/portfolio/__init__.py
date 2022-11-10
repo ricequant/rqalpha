@@ -34,7 +34,7 @@ from rqalpha.data import DataProxy
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_log
+from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.repr import PropertyReprMeta
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
@@ -279,7 +279,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         unit_net_value = self.unit_net_value
         self._accounts[account_type].deposit_withdraw(amount, receiving_days)
         _units = self.total_value / unit_net_value
-        user_log.info(_("Cash add {}. units {} become to {}".format(amount, self._units, _units)))
+        user_system_log.debug(_("Cash add {}. units {} become to {}".format(amount, self._units, _units)))
         self._units = _units
 
     def finance_repay(self, amount, account_type):

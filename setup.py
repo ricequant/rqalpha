@@ -30,7 +30,8 @@ requirements = [
     'rqrisk >=1.0.3',
     'h5py',
     'matplotlib >=2.2.0',
-    "openpyxl"
+    "openpyxl",
+    "methodtools"
 ]
 
 if sys.version_info < (3, 5):

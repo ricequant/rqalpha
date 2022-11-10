@@ -69,8 +69,8 @@ inject_run_param(click.Option(
     help=_("[sys_analyser] output result pickle file")
 ))
 inject_run_param(click.Option(
-    ('-p', '--plot/--no-plot', 'mod__sys_analyser__plot'),
-    default=None,
+    ('-p', '--plot', 'mod__sys_analyser__plot'),
+    default=None, is_flag=False, flag_value="default",
     help=_("[sys_analyser] plot result")
 ))
 inject_run_param(click.Option(
