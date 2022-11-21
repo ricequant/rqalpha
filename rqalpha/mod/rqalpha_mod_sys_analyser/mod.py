@@ -101,7 +101,7 @@ class AnalyserMod(AbstractMod):
         self._mod_config = mod_config
         self._enabled = (
             mod_config.record or mod_config.plot or mod_config.output_file or
-            mod_config.plot_save_file or mod_config.report_save_path or mod_config.bechmark
+            mod_config.plot_save_file or mod_config.report_save_path or mod_config.benchmark
         )
         if self._enabled:
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
