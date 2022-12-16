@@ -422,7 +422,7 @@ class Instrument(metaclass=PropertyReprMeta):
         return ipo_days if ipo_days >= 0 else -1
 
     def days_to_expire(self):
-        if self.type != 'Future' or self.order_book_id[-2:] in ["88", "99", "89", "A2", "A3"]:
+        if self.type != 'Future' or self.is_future_continuous_contract(self.order_book_id):
             return -1
 
         date = Environment.get_instance().trading_dt.date()
@@ -450,7 +450,7 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
-    FUTURE_CONTINUOUS_CONTRACT = re.compile("^[A-Z]+(88|88A[2-3]|888|99|889)$")
+    FUTURE_CONTINUOUS_CONTRACT = re.compile(r"^[A-Z]+(88|888|99|889)([A-Z]\d+)?$")
 
     @classmethod
     def is_future_continuous_contract(cls, order_book_id):
