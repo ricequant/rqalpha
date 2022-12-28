@@ -150,7 +150,7 @@ class WaterMark:
 def _plot(title: str, sub_plots: List[SubPlot]):
     img_height = sum(s.height for s in sub_plots)
     water_mark = WaterMark(IMG_WIDTH, img_height)
-    fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi)
+    fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi, clear=True)
     water_mark.plot(fig)
 
     gs = gridspec.GridSpec(img_height, 8, figure=fig)
