@@ -21,7 +21,9 @@ import numpy as np
 from numpy import array
 from pandas import DatetimeIndex, DataFrame, Series, to_datetime
 
-IndicatorInfo = namedtuple("IndicatorInfo", ("key", "label", "color", "formatter", "value_font_size"))
+IndicatorInfo = namedtuple(
+    "IndicatorInfo", ("key", "label", "color", "formatter", "value_font_size", "label_width_multiplier")
+)
 LineInfo = namedtuple("LineInfo", ("label", "color", "alpha", "linewidth"))
 SpotInfo = namedtuple("SpotInfo", ("label", "marker", "color", "markersize", "alpha"))
 
