@@ -439,6 +439,8 @@ class AnalyserMod(AbstractMod):
             "weekly_max_drawdown": weekly_risk.max_drawdown,
             "weekly_win_rate": weekly_risk.win_rate,
             "weekly_volatility": weekly_risk.annual_volatility,
+            "weekly_ulcer_index": weekly_risk.ulcer_index,
+            "weekly_ulcer_performance_index": weekly_risk.ulcer_performance_index,
         })
 
         # 月度风险指标
@@ -447,6 +449,12 @@ class AnalyserMod(AbstractMod):
             "monthly_sharpe": monthly_risk.sharpe,
             "monthly_volatility": monthly_risk.annual_volatility,
         })
+
+        if self._benchmark:
+            summary.update({
+                "weekly_excess_ulcer_index": weekly_risk.excess_ulcer_index,
+                "weekly_excess_ulcer_performance_index": weekly_risk.excess_ulcer_performance_index,
+            })
 
         plots = self._plot_store.get_plots()
         if plots:

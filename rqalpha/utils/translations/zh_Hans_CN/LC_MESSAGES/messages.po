@@ -487,6 +487,9 @@ msgstr "夏普率"
 msgid "Sortino"
 msgstr "索提诺比率"
 
+msgid "WeeklyUlcerIndex"
+msgstr "周度累计回撤深度"
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:80
 msgid "BenchmarkReturns"
 msgstr "基准收益率"
@@ -511,6 +514,9 @@ msgstr "下行风险"
 msgid "InformationRatio"
 msgstr "信息比率"
 
+msgid "WeeklyUlcerPerformanceIndex"
+msgstr "周度累计回撤夏普率"
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:87
 msgid "ExcessCumReturns"
 msgstr "超额累计收益"
@@ -530,6 +536,9 @@ msgstr "盈亏比"
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:92
 msgid "MaxDD/MaxDDD"
 msgstr "最大回撤/最长回撤持续期"
+
+msgid "WeeklyExcessUlcerIndex"
+msgstr "周度超额累计回撤深度"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:96
 msgid "WeeklyAlpha"
@@ -590,6 +599,9 @@ msgstr "超额胜率"
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:110
 msgid "ExcessMaxDD/ExcessMaxDDD"
 msgstr "超额收益最大回撤/最长回撤持续期"
+
+msgid "WeeklyExcessUlcerPerformanceIndex"
+msgstr "周度超额累计回撤夏普率"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:33
 msgid ""

@@ -58,8 +58,10 @@ class IndicatorArea(SubPlot):
     def plot(self, ax: Axes):
         ax.axis("off")
         for lineno, indicators in enumerate(self._indicators[::-1]):  # lineno: 自下而上的行号
+            _extra_width = 0  # 用于保存加长的部分, 原因是部分label太长出现覆盖
             for index_in_line, i in enumerate(indicators):
-                x = index_in_line * self._template.INDICATOR_WIDTH
+                _extra_width += (i.label_width_multiplier - 1) * self._template.INDICATOR_WIDTH
+                x = index_in_line * self._template.INDICATOR_WIDTH + _extra_width
                 y_value = lineno * (self._template.INDICATOR_VALUE_HEIGHT + self._template.INDICATOR_LABEL_HEIGHT)
                 y_label = y_value + self._template.INDICATOR_LABEL_HEIGHT
                 try:
@@ -150,7 +152,7 @@ class WaterMark:
 def _plot(title: str, sub_plots: List[SubPlot]):
     img_height = sum(s.height for s in sub_plots)
     water_mark = WaterMark(IMG_WIDTH, img_height)
-    fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi)
+    fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi, clear=True)
     water_mark.plot(fig)
 
     gs = gridspec.GridSpec(img_height, 8, figure=fig)
