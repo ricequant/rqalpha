@@ -167,7 +167,7 @@ def _plot(title: str, sub_plots: List[SubPlot]):
 
 def plot_result(
         result_dict, show=True, save=None, weekly_indicators: bool = False, open_close_points: bool = False,
-        plot_template: PlotTemplate = DefaultPlot
+        plot_template_cls=DefaultPlot
 ):
     summary = result_dict["summary"]
     portfolio = result_dict["portfolio"]
@@ -175,7 +175,8 @@ def plot_result(
     return_lines: List[Tuple[pd.Series, LineInfo]] = [(portfolio.unit_net_value - 1, LINE_STRATEGY)]
     if "benchmark_portfolio" in result_dict:
         benchmark_portfolio = result_dict["benchmark_portfolio"]
-        ex_returns = portfolio.unit_net_value - benchmark_portfolio.unit_net_value
+        plot_template = plot_template_cls(portfolio.unit_net_value, benchmark_portfolio.unit_net_value)
+        ex_returns = plot_template.excess_returns
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
             _max_dd(ex_returns + 1, portfolio.index).repr, summary["excess_max_drawdown_duration"].repr
         )
@@ -196,6 +197,7 @@ def plot_result(
             return_lines.append((weekly_returns(benchmark_portfolio), LINE_WEEKLY_BENCHMARK))
     else:
         ex_max_dd_ddd = "nan"
+        plot_template = plot_template_cls(portfolio.unit_net_value, None)
         indicators = plot_template.INDICATORS
     if weekly_indicators:
         return_lines.append((weekly_returns(portfolio), LINE_WEEKLY))
