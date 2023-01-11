@@ -68,6 +68,11 @@ CLOSE_POINT = SpotInfo(_("Close"), "X", "#008B8B", 8, 0.9)
 
 class PlotTemplate:
     """ 作图模版 """
+
+    def __init__(self, p_nav, b_nav):
+        self.p_nav = p_nav
+        self.b_nav = b_nav
+
     # 指标的宽高
     INDICATOR_WIDTH = 0
     INDICATOR_VALUE_HEIGHT = 0
@@ -132,6 +137,10 @@ class DefaultPlot(PlotTemplate):
         IndicatorInfo("weekly_excess_ulcer_performance_index", _("WeeklyExcessUlcerPerformanceIndex"), BLACK, "{0:.4}", 11, 1.4),
     ]]
 
+    @property
+    def excess_returns(self):
+        return self.p_nav - self.b_nav
+
 
 class RiceQuant(PlotTemplate):
     # 指标的宽高
@@ -174,6 +183,12 @@ class RiceQuant(PlotTemplate):
     ]]
 
     WEEKLY_INDICATORS = []
+
+    @property
+    def excess_returns(self):
+        p_return = (self.p_nav / self.p_nav.shift(1).fillna(1)).fillna(0) - 1
+        b_return = (self.b_nav / self.b_nav.shift(1).fillna(1)).fillna(0) - 1
+        return ((p_return - b_return) + 1).cumprod() - 1
 
 
 PLOT_TEMPLATE: dict = {

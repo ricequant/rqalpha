@@ -448,6 +448,7 @@ class AnalyserMod(AbstractMod):
         summary.update({
             "monthly_sharpe": monthly_risk.sharpe,
             "monthly_volatility": monthly_risk.annual_volatility,
+            "monthly_excess_win_rate": monthly_risk.excess_win_rate,
         })
 
         if self._benchmark:
@@ -499,10 +500,10 @@ class AnalyserMod(AbstractMod):
         if _plot or self._mod_config.plot_save_file:
             from .plot import plot_result
             plot_config = self._mod_config.plot_config
-            _plot_template = PLOT_TEMPLATE.get(self._mod_config.plot, DefaultPlot)
+            _plot_template_cls = PLOT_TEMPLATE.get(self._mod_config.plot, DefaultPlot)
             plot_result(
                 result_dict, self._mod_config.plot, self._mod_config.plot_save_file,
-                plot_config.weekly_indicators, plot_config.open_close_points, _plot_template
+                plot_config.weekly_indicators, plot_config.open_close_points, _plot_template_cls
             )
 
         return result_dict
