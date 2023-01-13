@@ -25,7 +25,7 @@ from pandas import Series, DataFrame
 from rqrisk import Risk
 from rqrisk import WEEKLY, MONTHLY
 
-from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_ddd as _max_ddd
+from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
 from rqalpha.mod.rqalpha_mod_sys_analyser.report.excel_template import generate_xlsx_reports
 
 
@@ -38,8 +38,8 @@ def _yearly_indicators(
 ):
     data = {field: [] for field in [
         "year", "returns", "benchmark_returns", "active_returns", "active_max_drawdown",
-        "active_max_drawdown_duration_days", "sharpe_ratio", "information_ratio", "weekly_excess_win_rate",
-        "monthly_excess_win_rate"
+        "active_max_drawdown_days", "sharpe_ratio", "information_ratio", "tracking_error",
+        "weekly_excess_win_rate", "monthly_excess_win_rate"
     ]}
 
     for year, p_year_returns in p_returns.groupby(p_returns.index.year):  # noqa
@@ -61,16 +61,18 @@ def _yearly_indicators(
             weekly_excess_win_rate = numpy.nan
             monthly_excess_win_rate = numpy.nan
             b_year_returns = Series(index=p_year_returns.index)
-        max_ddd = _max_ddd(p_nav[year_slice].values, p_nav[year_slice].index)
+        excess_returns = ((p_year_returns - b_year_returns) + 1).cumprod()
+        max_dd = _max_dd(excess_returns.values, excess_returns.index)
         risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year])
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
         data["benchmark_returns"].append(risk.benchmark_return)
         data["active_returns"].append(risk.excess_return_rate)
         data["active_max_drawdown"].append(risk.excess_max_drawdown)
-        data["active_max_drawdown_duration_days"].append((max_ddd.end_date - max_ddd.start_date).days)
+        data["active_max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
         data["sharpe_ratio"].append(risk.sharpe)
         data["information_ratio"].append(risk.information_ratio)
+        data["tracking_error"].append(risk.tracking_error)
         data["weekly_excess_win_rate"].append(weekly_excess_win_rate)
         data["monthly_excess_win_rate"].append(monthly_excess_win_rate)
     return data

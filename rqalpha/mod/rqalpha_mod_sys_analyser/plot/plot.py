@@ -26,7 +26,7 @@ from matplotlib import gridspec, ticker, image as mpimg, pyplot
 
 import rqalpha
 from rqalpha.const import POSITION_EFFECT
-from .utils import IndicatorInfo, LineInfo, max_dd as _max_dd, SpotInfo
+from .utils import IndicatorInfo, LineInfo, max_dd as _max_dd, SpotInfo, max_ddd as _max_ddd
 from .utils import weekly_returns, trading_dates_index
 from .consts import PlotTemplate, DefaultPlot
 from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT
@@ -178,7 +178,7 @@ def plot_result(
         plot_template = plot_template_cls(portfolio.unit_net_value, benchmark_portfolio.unit_net_value)
         ex_returns = plot_template.excess_returns
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
-            _max_dd(ex_returns + 1, portfolio.index).repr, summary["excess_max_drawdown_duration"].repr
+            _max_dd(ex_returns + 1, portfolio.index).repr, _max_ddd(ex_returns + 1, portfolio.index).repr
         )
         indicators = plot_template.INDICATORS + plot_template.EXCESS_INDICATORS
 
