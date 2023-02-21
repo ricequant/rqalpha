@@ -38,7 +38,7 @@ def _yearly_indicators(
 ):
     data = {field: [] for field in [
         "year", "returns", "benchmark_returns", "active_returns", "active_max_drawdown",
-        "active_max_drawdown_days", "sharpe_ratio", "information_ratio", "tracking_error",
+        "active_max_drawdown_days", "sharpe_ratio", "information_ratio", "annual_tracking_error",
         "weekly_excess_win_rate", "monthly_excess_win_rate"
     ]}
 
@@ -72,7 +72,7 @@ def _yearly_indicators(
         data["active_max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
         data["sharpe_ratio"].append(risk.sharpe)
         data["information_ratio"].append(risk.information_ratio)
-        data["tracking_error"].append(risk.tracking_error)
+        data["annual_tracking_error"].append(risk.annual_tracking_error)
         data["weekly_excess_win_rate"].append(weekly_excess_win_rate)
         data["monthly_excess_win_rate"].append(monthly_excess_win_rate)
     return data

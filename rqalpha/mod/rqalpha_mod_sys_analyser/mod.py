@@ -435,7 +435,7 @@ class AnalyserMod(AbstractMod):
             "weekly_sharpe": weekly_risk.sharpe,
             "weekly_sortino": weekly_risk.sortino,
             "weekly_information_ratio": weekly_risk.information_ratio,
-            "weekly_tracking_error": weekly_risk.tracking_error,
+            "weekly_tracking_error": weekly_risk.annual_tracking_error,
             "weekly_max_drawdown": weekly_risk.max_drawdown,
             "weekly_win_rate": weekly_risk.win_rate,
             "weekly_volatility": weekly_risk.annual_volatility,
