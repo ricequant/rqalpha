@@ -295,8 +295,20 @@ class FuturePosition(Position):
                 order_book_id=self._order_book_id
             ))
             self._quantity = self._old_quantity = 0
+
+        if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
+            # 逐日盯市按照结算价结算
+            self._last_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.calendar_dt)
+            self._prev_close = self._env.data_proxy.get_prev_settlement(self._order_book_id, self._env.calendar_dt)
+
         self._avg_price = self.last_price
         return delta_cash
+
+    def before_trading(self, trading_date):
+        # type: (date) -> float
+        delta = super().before_trading(trading_date)
+        self._last_price = None
+        return delta
 
 
 class StockPositionProxy(PositionProxy):
