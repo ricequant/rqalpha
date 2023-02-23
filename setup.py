@@ -29,7 +29,7 @@ requirements = [
     'tabulate',
     'rqrisk >=1.0.5',
     'h5py',
-    'matplotlib >=2.2.0',
+    'matplotlib >=3.1.0',
     "openpyxl",
     "methodtools"
 ]

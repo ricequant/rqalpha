@@ -99,8 +99,8 @@ class ReturnPlot(SubPlot):
     def plot(self, ax: Axes):
         ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
         ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
-        ax.grid(b=True, which='minor', linewidth=.2)
-        ax.grid(b=True, which='major', linewidth=1)
+        ax.grid(visible=True, which='minor', linewidth=.2)
+        ax.grid(visible=True, which='major', linewidth=1)
         ax.patch.set_alpha(0.6)
 
         # plot lines
