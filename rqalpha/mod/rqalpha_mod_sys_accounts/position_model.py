@@ -19,13 +19,12 @@ from datetime import date
 
 from decimal import Decimal
 
-from rqalpha.utils.functools import lru_cache
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
-from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property, cached_property
 from rqalpha.utils.i18n import gettext as _
@@ -281,6 +280,19 @@ class FuturePosition(Position):
                     trade.last_price - self._avg_price
             ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
 
+    @property
+    def prev_close(self):
+        if not is_valid_price(self._prev_close):
+            if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
+                self._prev_close = self._env.data_proxy.get_prev_settlement(self._order_book_id, self._env.trading_dt)
+            else:
+                self._prev_close = super().prev_close
+            if not is_valid_price(self._prev_close):
+                raise RuntimeError(_("invalid price of {order_book_id}: {price}").format(
+                    order_book_id=self._order_book_id, price=self._prev_close
+                ))
+        return self._prev_close
+
     def settlement(self, trading_date):
         # type: (date) -> float
         super(FuturePosition, self).settlement(trading_date)
@@ -295,8 +307,19 @@ class FuturePosition(Position):
                 order_book_id=self._order_book_id
             ))
             self._quantity = self._old_quantity = 0
+
+        if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
+            # 逐日盯市按照结算价结算
+            self._last_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
+
         self._avg_price = self.last_price
         return delta_cash
+
+    def before_trading(self, trading_date):
+        # type: (date) -> float
+        delta = super().before_trading(trading_date)
+        self._last_price = None
+        return delta
 
 
 class StockPositionProxy(PositionProxy):
