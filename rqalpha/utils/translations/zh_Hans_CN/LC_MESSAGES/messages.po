@@ -519,7 +519,7 @@ msgstr "周度累计回撤夏普率"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:87
 msgid "ExcessCumReturns"
-msgstr "超额累计收益率（算术）"
+msgstr "超额收益率（算术）"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:88
 msgid "WinRate"
