@@ -287,10 +287,6 @@ class FuturePosition(Position):
                 self._prev_close = self._env.data_proxy.get_prev_settlement(self._order_book_id, self._env.trading_dt)
             else:
                 self._prev_close = super().prev_close
-            if not is_valid_price(self._prev_close):
-                raise RuntimeError(_("invalid price of {order_book_id}: {price}").format(
-                    order_book_id=self._order_book_id, price=self._prev_close
-                ))
         return self._prev_close
 
     def settlement(self, trading_date):
