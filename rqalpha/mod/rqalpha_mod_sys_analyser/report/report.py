@@ -37,8 +37,8 @@ def _yearly_indicators(
         p_nav: Series, p_returns: Series, b_nav: Optional[Series], b_returns: Optional[Series], risk_free_rates: Dict
 ):
     data = {field: [] for field in [
-        "year", "returns", "benchmark_returns", "active_returns", "active_max_drawdown",
-        "active_max_drawdown_days", "sharpe_ratio", "information_ratio", "annual_tracking_error",
+        "year", "returns", "benchmark_returns", "geometric_excess_return", "excess_max_drawdown",
+        "excess_max_drawdown_days", "sharpe_ratio", "information_ratio", "annual_tracking_error",
         "weekly_excess_win_rate", "monthly_excess_win_rate"
     ]}
 
@@ -67,9 +67,9 @@ def _yearly_indicators(
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
         data["benchmark_returns"].append(risk.benchmark_return)
-        data["active_returns"].append(risk.excess_return_rate)
-        data["active_max_drawdown"].append(risk.excess_max_drawdown)
-        data["active_max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
+        data["geometric_excess_return"].append(risk.geometric_excess_return)
+        data["excess_max_drawdown"].append(risk.excess_max_drawdown)
+        data["excess_max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
         data["sharpe_ratio"].append(risk.sharpe)
         data["information_ratio"].append(risk.information_ratio)
         data["annual_tracking_error"].append(risk.annual_tracking_error)
@@ -87,10 +87,17 @@ def _monthly_returns(p_returns: Series):
     return ChainMap({str(c): data[c] for c in data.columns}, {"year": data.index})
 
 
-def _monthly_active_returns(p_returns: Series, b_returns: Optional[Series]):
+def _monthly_geometric_excess_returns(p_returns: Series, b_returns: Optional[Series]):
     if b_returns is None:
         return {}
-    return _monthly_returns(p_returns - b_returns)
+    data = DataFrame(index=p_returns.index.year.unique(), columns=list(range(1, 13)))
+    for year, p_year_returns in p_returns.groupby(p_returns.index.year):
+        for month, p_month_returns in p_year_returns.groupby(p_year_returns.index.month):
+            b_month_returns = b_returns.loc[p_month_returns.index]
+            data.loc[year, month] = (p_month_returns + 1).prod() / (b_month_returns + 1).prod() - 1
+        b_year_returns = b_returns.loc[p_year_returns.index]
+        data.loc[year, "cum"] = (p_year_returns + 1).prod() / (b_year_returns + 1).prod() - 1
+    return ChainMap({str(c): data[c] for c in data.columns}, {"year": data.index})
 
 
 def generate_report(result_dict, output_path):
@@ -115,7 +122,7 @@ def generate_report(result_dict, output_path):
         "概览": summary,
         "年度指标": _yearly_indicators(p_nav, p_returns, b_nav, b_returns, result_dict["yearly_risk_free_rates"]),
         "月度收益": _monthly_returns(p_returns),
-        "月度主动收益": _monthly_active_returns(p_returns, b_returns)
+        "月度超额收益（几何）": _monthly_geometric_excess_returns(p_returns, b_returns)
     }, output_path)
 
     for name in ["portfolio", "stock_account", "future_account",
