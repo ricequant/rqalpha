@@ -122,7 +122,7 @@ def generate_report(result_dict, output_path):
         "概览": summary,
         "年度指标": _yearly_indicators(p_nav, p_returns, b_nav, b_returns, result_dict["yearly_risk_free_rates"]),
         "月度收益": _monthly_returns(p_returns),
-        "月度超额收益": _monthly_geometric_excess_returns(p_returns, b_returns)
+        "月度超额收益（几何）": _monthly_geometric_excess_returns(p_returns, b_returns)
     }, output_path)
 
     for name in ["portfolio", "stock_account", "future_account",
