@@ -327,14 +327,14 @@ class AnalyserMod(AbstractMod):
             'sortino': risk.sortino,
             'volatility': risk.annual_volatility,
             'excess_volatility': risk.excess_annual_volatility,
-            'excess_annual_volatility': risk.excess_annual_volatility,
             'max_drawdown': risk.max_drawdown,
             'excess_max_drawdown': risk.excess_max_drawdown,
-            'excess_returns': risk.excess_return_rate,
-            'excess_annual_returns': risk.excess_annual_return,
+            'excess_returns': risk.geometric_excess_return,
+            'excess_annual_returns': risk.geometric_excess_annual_return,
             'var': risk.var,
             "win_rate": risk.win_rate,
             "excess_win_rate": risk.excess_win_rate,
+            "excess_cum_returns": risk.arithmetic_excess_return,
         })
 
         # 盈亏比
@@ -361,9 +361,6 @@ class AnalyserMod(AbstractMod):
             date_count = len(self._benchmark_daily_returns)
             benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
             summary['benchmark_annualized_returns'] = benchmark_annualized_returns
-
-            # 新增一个超额累计收益
-            summary['excess_cum_returns'] = summary["total_returns"] - summary["benchmark_total_returns"]
 
         trades = pd.DataFrame(self._trades)
         if 'datetime' in trades.columns:
@@ -417,7 +414,7 @@ class AnalyserMod(AbstractMod):
             monthly_b_returns = (monthly_b_nav / monthly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios
             # 超额收益最长回撤持续期
-            ex_returns = total_portfolios.unit_net_value - benchmark_portfolios.unit_net_value
+            ex_returns = total_portfolios.unit_net_value / benchmark_portfolios.unit_net_value - 1
             max_ddd = _max_ddd(ex_returns + 1, total_portfolios.index)
             result_dict["summary"]["excess_max_drawdown_duration"] = max_ddd
             result_dict["summary"]["excess_max_drawdown_duration_start_date"] = str(max_ddd.start_date)

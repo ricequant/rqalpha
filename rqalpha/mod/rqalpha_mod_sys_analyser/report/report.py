@@ -67,7 +67,7 @@ def _yearly_indicators(
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
         data["benchmark_returns"].append(risk.benchmark_return)
-        data["active_returns"].append(risk.excess_return_rate)
+        data["active_returns"].append(risk.geometric_excess_return)
         data["active_max_drawdown"].append(risk.excess_max_drawdown)
         data["active_max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
         data["sharpe_ratio"].append(risk.sharpe)

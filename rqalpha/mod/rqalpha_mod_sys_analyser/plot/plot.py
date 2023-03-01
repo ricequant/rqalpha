@@ -176,7 +176,7 @@ def plot_result(
     if "benchmark_portfolio" in result_dict:
         benchmark_portfolio = result_dict["benchmark_portfolio"]
         plot_template = plot_template_cls(portfolio.unit_net_value, benchmark_portfolio.unit_net_value)
-        ex_returns = plot_template.excess_returns
+        ex_returns = plot_template.geometric_excess_returns
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
             _max_dd(ex_returns + 1, portfolio.index).repr, _max_ddd(ex_returns + 1, portfolio.index).repr
         )
