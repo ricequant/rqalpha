@@ -27,7 +27,7 @@ requirements = [
     'simplejson',
     'PyYAML',
     'tabulate',
-    'rqrisk >=1.0.5',
+    'rqrisk >=1.0.6',
     'h5py',
     'matplotlib >=3.1.0',
     "openpyxl",
