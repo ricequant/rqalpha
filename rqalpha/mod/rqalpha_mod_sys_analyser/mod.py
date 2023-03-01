@@ -328,7 +328,7 @@ class AnalyserMod(AbstractMod):
             'volatility': risk.annual_volatility,
             'excess_volatility': risk.excess_annual_volatility,
             'max_drawdown': risk.max_drawdown,
-            'excess_max_drawdown': risk.excess_max_drawdown,
+            'excess_max_drawdown': risk.geometric_excess_drawdown,
             'excess_returns': risk.geometric_excess_return,
             'excess_annual_returns': risk.geometric_excess_annual_return,
             'var': risk.var,

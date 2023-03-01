@@ -37,8 +37,8 @@ def _yearly_indicators(
         p_nav: Series, p_returns: Series, b_nav: Optional[Series], b_returns: Optional[Series], risk_free_rates: Dict
 ):
     data = {field: [] for field in [
-        "year", "returns", "benchmark_returns", "geometric_excess_return", "excess_max_drawdown",
-        "excess_max_drawdown_days", "sharpe_ratio", "information_ratio", "annual_tracking_error",
+        "year", "returns", "benchmark_returns", "geometric_excess_return", "geometric_excess_drawdown",
+        "geometric_excess_drawdown_days", "sharpe_ratio", "information_ratio", "annual_tracking_error",
         "weekly_excess_win_rate", "monthly_excess_win_rate"
     ]}
 
@@ -61,15 +61,15 @@ def _yearly_indicators(
             weekly_excess_win_rate = numpy.nan
             monthly_excess_win_rate = numpy.nan
             b_year_returns = Series(index=p_year_returns.index)
-        excess_returns = ((p_year_returns - b_year_returns) + 1).cumprod()
-        max_dd = _max_dd(excess_returns.values, excess_returns.index)
+        excess_nav = (p_year_returns + 1).cumprod() / (b_year_returns + 1).cumprod()
+        max_dd = _max_dd(excess_nav.values, excess_nav.index)
         risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year])
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
         data["benchmark_returns"].append(risk.benchmark_return)
         data["geometric_excess_return"].append(risk.geometric_excess_return)
-        data["excess_max_drawdown"].append(risk.excess_max_drawdown)
-        data["excess_max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
+        data["geometric_excess_drawdown"].append(risk.geometric_excess_drawdown)
+        data["geometric_excess_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
         data["sharpe_ratio"].append(risk.sharpe)
         data["information_ratio"].append(risk.information_ratio)
         data["annual_tracking_error"].append(risk.annual_tracking_error)
