@@ -99,8 +99,8 @@ class ReturnPlot(SubPlot):
     def plot(self, ax: Axes):
         ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
         ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
-        ax.grid(b=True, which='minor', linewidth=.2)
-        ax.grid(b=True, which='major', linewidth=1)
+        ax.grid(visible=True, which='minor', linewidth=.2)
+        ax.grid(visible=True, which='major', linewidth=1)
         ax.patch.set_alpha(0.6)
 
         # plot lines
@@ -176,7 +176,7 @@ def plot_result(
     if "benchmark_portfolio" in result_dict:
         benchmark_portfolio = result_dict["benchmark_portfolio"]
         plot_template = plot_template_cls(portfolio.unit_net_value, benchmark_portfolio.unit_net_value)
-        ex_returns = plot_template.excess_returns
+        ex_returns = plot_template.geometric_excess_returns
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
             _max_dd(ex_returns + 1, portfolio.index).repr, _max_ddd(ex_returns + 1, portfolio.index).repr
         )

@@ -32,7 +32,9 @@ __config__ = {
     # 融资利率/年
     "financing_rate": 0.00,
     # 是否开启融资可买入股票的限制
-    "financing_stocks_restriction_enabled": False
+    "financing_stocks_restriction_enabled": False,
+    # 逐日盯市结算价: settlement/close
+    "futures_settlement_price_type": "close",
 }
 
 
@@ -77,5 +79,13 @@ cli.commands['run'].params.append(
         ("--no-short-stock/--short-stock", cli_prefix + "validate_stock_position"),
         is_flag=True, default=True,
         help="[sys_accounts] enable stock shorting"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('--futures-settlement-price-type', cli_prefix + 'futures_settlement_price_type'),
+        default="close",
+        help="[sys_accounts] future settlement price"
     )
 )

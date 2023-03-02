@@ -50,14 +50,16 @@ class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
     def _adjust_process_count(self):
         # noinspection PyUnresolvedReferences
         for _ in range(len(self._processes), self._max_workers):
-            # noinspection PyUnresolvedReferences
-            p = multiprocessing.Process(
-                target=_process_worker,
-                args=(self._call_queue, self._result_queue, self._progress_queue, self._initializer, self._initargs)
-            )
-            p.start()
-            # noinspection PyUnresolvedReferences
-            self._processes[p.pid] = p
+            self._spawn_process()
+
+    def _spawn_process(self):
+        p = multiprocessing.Process(
+            target=_process_worker,
+            args=(self._call_queue, self._result_queue, self._progress_queue, self._initializer, self._initargs)
+        )
+        p.start()
+        # noinspection PyUnresolvedReferences
+        self._processes[p.pid] = p
 
     def submit(self, fn, *args, **kwargs):
         if isinstance(fn, ProgressedTask):
