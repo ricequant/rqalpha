@@ -239,6 +239,7 @@ def get_margin_stocks(exchange=None, margin_type="all"):
     # type: (str, str) -> List[str]
     """
     获取某个日期深证、上证融资融券股票列表。
+
     :param exchange: 交易所，默认为 None，返回所有字段。可选字段包括：'XSHE', 'sz' 代表深交所；'XSHG', 'sh' 代表上交所
     :param margin_type: 'stock' 代表融券卖出，'cash'，代表融资买入，'all'，代表包含融资和融券，默认为'all'
     :return: 属于该概念的股票 order_book_id
@@ -1157,6 +1158,17 @@ def get_pit_financials(fields, quarter=None, interval=None, order_book_ids=None,
 @export_as_api
 @apply_rules(verify_that('statements').is_in(['all', 'latest'], ignore_none=True))
 def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
+    # type: (Union[str, List[str]], Union[str, List[str]], int, str) -> Optional[pd.DataFrame]
+    """
+    以给定一个报告期回溯的方式获取季度基础财务数据（三大表），即利润表（income_statement），资产负债表（balance_sheet），现金流量表（cash_flow_statement)。
+
+    :param order_book_ids: 合约代码，可传入order_book_id, order_book_id list，这里输入的是A股编码
+    :param fields: 需要返回的财务字段
+    :param count: 几条数据
+    :param statements: 设置 statements 为 all 时返回所有记录，statements 等于 latest 时返回最新的一条记录，默认为 latest.
+
+    :return:
+    """
     if isinstance(order_book_ids, str):
         order_book_ids = [order_book_ids]
     env = Environment.get_instance()
