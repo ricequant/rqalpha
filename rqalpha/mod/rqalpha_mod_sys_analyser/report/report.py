@@ -38,8 +38,9 @@ def _yearly_indicators(
 ):
     data = {field: [] for field in [
         "year", "returns", "benchmark_returns", "geometric_excess_return", "geometric_excess_drawdown",
-        "geometric_excess_drawdown_days", "sharpe_ratio", "information_ratio", "annual_tracking_error",
-        "weekly_excess_win_rate", "monthly_excess_win_rate"
+        "geometric_excess_drawdown_days", "excess_annual_volatility", "annual_volatility", "sharpe_ratio",
+        "information_ratio", "annual_tracking_error", "weekly_excess_win_rate", "monthly_excess_win_rate",
+        "max_drawdown", "max_drawdown_days"
     ]}
 
     for year, p_year_returns in p_returns.groupby(p_returns.index.year):  # noqa
@@ -62,19 +63,24 @@ def _yearly_indicators(
             monthly_excess_win_rate = numpy.nan
             b_year_returns = Series(index=p_year_returns.index)
         excess_nav = (p_year_returns + 1).cumprod() / (b_year_returns + 1).cumprod()
-        max_dd = _max_dd(excess_nav.values, excess_nav.index)
+        excess_max_dd = _max_dd(excess_nav.values, excess_nav.index)
+        max_dd = _max_dd(p_nav[year_slice].values, p_nav[year_slice].index)
         risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year])
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
         data["benchmark_returns"].append(risk.benchmark_return)
         data["geometric_excess_return"].append(risk.geometric_excess_return)
         data["geometric_excess_drawdown"].append(risk.geometric_excess_drawdown)
-        data["geometric_excess_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
+        data["geometric_excess_drawdown_days"].append((excess_max_dd.end_date - excess_max_dd.start_date).days)
         data["sharpe_ratio"].append(risk.sharpe)
         data["information_ratio"].append(risk.information_ratio)
         data["annual_tracking_error"].append(risk.annual_tracking_error)
         data["weekly_excess_win_rate"].append(weekly_excess_win_rate)
         data["monthly_excess_win_rate"].append(monthly_excess_win_rate)
+        data["excess_annual_volatility"].append(risk.excess_annual_volatility)
+        data["annual_volatility"].append(risk.annual_volatility)
+        data["max_drawdown"].append(risk.max_drawdown)
+        data["max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
     return data
 
 
