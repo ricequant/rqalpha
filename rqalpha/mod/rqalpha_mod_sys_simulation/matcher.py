@@ -305,6 +305,12 @@ class DefaultTickMatcher(AbstractMatcher):
         # 获取tick数据
         _cur_tick = self._cur_tick.get(order_book_id)
 
+        # 当Matcher在撮合的过程中创建时，当前品种的 on_tick 事件会丢失，导致无数据
+        if not _cur_tick:
+            history_ticks = self._get_today_history_ticks(order_book_id, 2)
+            _cur_tick = self._cur_tick[order_book_id] = history_ticks[-1]
+            self._last_tick[order_book_id] = None if len(history_ticks) == 1 else history_ticks[-2]
+
         # 判断订单在交易时间下处于那个阶段
         if instrument.during_call_auction(self._env.calendar_dt):
             # 集合竞价时段内撮合无视 matching_type 的设置，直接使用 last 进行撮合

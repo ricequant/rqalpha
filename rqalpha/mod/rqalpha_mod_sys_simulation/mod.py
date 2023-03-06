@@ -20,11 +20,12 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.interface import AbstractMod
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_user_exc
-from rqalpha.const import MATCHING_TYPE, RUN_TYPE
+from rqalpha.const import MATCHING_TYPE, RUN_TYPE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 
 from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_broker import SimulationBroker
 from rqalpha.mod.rqalpha_mod_sys_simulation.signal_broker import SignalBroker
 from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_event_source import SimulationEventSource
+from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import DefaultBarMatcher, DefaultTickMatcher
 
 
 class SimulationMod(AbstractMod):
@@ -66,6 +67,16 @@ class SimulationMod(AbstractMod):
             env.set_broker(SignalBroker(env, mod_config))
         else:
             env.set_broker(SimulationBroker(env, mod_config))
+
+            for account_type, instrument_type in zip(
+                    [DEFAULT_ACCOUNT_TYPE.STOCK, DEFAULT_ACCOUNT_TYPE.FUTURE],
+                    [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE]
+            ):
+                if account_type in env.config.base.accounts:
+                    if env.config.base.frequency in ["1d", "1m"]:
+                        env.broker.register_matcher(instrument_type, DefaultBarMatcher(env, mod_config))
+                    elif env.config.base.frequency == "tick":
+                        env.broker.register_matcher(instrument_type, DefaultTickMatcher(env, mod_config))
 
         if mod_config.management_fee:
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self.register_management_fee_calculator)
