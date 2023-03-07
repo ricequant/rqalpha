@@ -75,8 +75,10 @@ def _round_order_quantity(ins, quantity) -> int:
         return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
     else:
         round_lot = ins.round_lot
-        return int(Decimal(quantity) / Decimal(round_lot)) * round_lot
-
+        try:
+            return int(Decimal(quantity) / Decimal(round_lot)) * round_lot
+        except ValueError:
+            raise
 
 def _submit_order(ins, amount, side, position_effect, style, current_quantity, auto_switch_order_value):
     env = Environment.get_instance()
@@ -260,17 +262,23 @@ ORDER_TARGET_PORTFOLIO_SUPPORTED_INS_TYPES = {
     EXECUTION_PHASE.SCHEDULED,
     EXECUTION_PHASE.GLOBAL
 )
-def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[float, Tuple[float, float]]]) -> List[Order]:
+def order_target_portfolio(
+        target_portfolio: Dict[str, Union[float, Tuple[float, float], Tuple[float, float, float]]],
+        raise_exception_for_invalid_prices: bool = True
+) -> List[Order]:
     """
     批量调整股票仓位至目标权重。注意：股票账户中未出现在 target_portfolio 中的资产将被平仓！
 
-    该 API 的参数 target_portfolio 为字典，key 为 order_book_id 或 instrument，value 有两种数据类型可选：
+    该 API 的参数 target_portfolio 为字典，key 为 order_book_id 或 instrument，value 有三种数据类型可选：
 
       * value 为权重。此时将根据股票最新价计算目标持仓数量并发出市价单调仓。
 
-      * value 为权重和价格组成的 tuple。此时将根据该价格计算目标权重并发出限价单（Signal 模式下将使用该价格撮合）。
+      * value 为权重和价格组成的 tuple。此时将根据该价格计算目标持仓数量并发出限价单（Signal 模式下将使用该价格撮合）。
+
+      * value 为权重、平仓价和开仓价组成的 tuple。此时将根据平仓价计算目标持仓数量并分别用两种价格发出平仓和开仓单。
 
     :param target_portfolio: 目标权重字典，key 为 order_book_id，value 为权重或权重和价格组成的 tuple。
+    :param raise_exception_for_invalid_prices: 遇到无效的价格是否抛出异常。设为 False 表示遇到无效的价格时不交易该标的而不是抛出异常。
 
     :example:
 
@@ -287,9 +295,18 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
             '000001.XSHE': (0.1, 14),
             '000002.XSHE': (0.15, 26)
         })
+
+        # 调整仓位，使平安银行和万科 A 的持仓占比分别达到 10% 和 15%。
+        # 其中平安银行的平仓价为 14 元，开仓价为 15 元；万科 A 的平仓价为 26 元，开仓价为 27 元。
+        order_target_portfolio({
+            '000001.XSHE': (0.1, 14, 15),
+            '000002.XSHE': (0.15, 26, 27)
+
+
     """
     env = Environment.get_instance()
-    target = {}
+    # order_book_id -> (target_weight, close_price, open_price, last_price)
+    target: Dict[str, Tuple[float, float, float, float]] = {}
     for id_or_ins, target_quantity_price in target_portfolio.items():
         ins = assure_instrument(id_or_ins)
         if not ins:
@@ -302,41 +319,41 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
                 "function order_target_portfolio: invalid instrument type, excepted CS/ETF/LOF/INDX, got {}"
             ).format(ins.order_book_id))
         order_book_id = ins.order_book_id
-        price = env.data_proxy.get_last_price(order_book_id)
-        if not is_valid_price(price):
+        last_price = env.data_proxy.get_last_price(order_book_id)
+        if not is_valid_price(last_price):
             user_system_log.warn(
                 _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
             )
             continue
-        try:
-            target_percent, target_price = target_quantity_price
-        except TypeError:
-            target_percent = target_quantity_price
-            target_price = None
+
+        target_percent, *target_prices = target_quantity_price
+        if not target_prices:
+            open_price = close_price = None
         else:
-            if not is_valid_price(target_price):
-                raise RQInvalidArgument(_(
-                    "function order_target_portfolio: invalid order price {target_price} of {id_or_ins}"
-                ).format(id_or_ins=id_or_ins, target_price=target_price))
-        if target_percent == 0:
-            continue
-        elif target_percent < 0:
+            try:
+                close_price, open_price = target_prices
+            except ValueError:
+                close_price = open_price = target_prices[0]
+
+        if target_percent < 0:
             raise RQInvalidArgument(_(
                 "function order_target_portfolio: invalid values of target_portfolio, "
                 "excepted float between 0 and 1, got {} (key: {})"
             ).format(target_percent, id_or_ins))
 
-        target[order_book_id] = target_percent, target_price, price
+        target[order_book_id] = target_percent, close_price, open_price, last_price
+
     total_percent = sum(p for p, *__ in target.values())
     if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_("total percent should be lower than 1, current: {}").format(total_percent))
 
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
+
+    # 先把不在目标权重中的仓位平掉
     current_quantities = {
         p.order_book_id: p.quantity for p in account.get_positions() if p.direction == POSITION_DIRECTION.LONG
     }
     for order_book_id, quantity in current_quantities.items():
-        # 先把不在目标权重中的仓位平掉
         if order_book_id not in target:
             env.submit_order(Order.__from_create__(
                 order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
@@ -344,22 +361,39 @@ def order_target_portfolio(target_portfolio: Dict[Union[str, Instrument], Union[
 
     account_value = account.total_value
     close_orders, open_orders = [], []
-    for order_book_id, (target_percent, target_price, price) in target.items():
-        delta_quantity = (account_value * target_percent / (target_price or price)) - current_quantities.get(order_book_id, 0)
+    for order_book_id, (target_percent, close_price, open_price, last_price) in target.items():
+        if not (is_valid_price(close_price) and is_valid_price(open_price)):
+            if raise_exception_for_invalid_prices:
+                raise RQInvalidArgument(_(
+                    "function order_target_portfolio: "
+                    "invalid close/open price {close_price}/{open_price} of {id_or_ins}"
+                ).format(id_or_ins=order_book_id, close_price=close_price, open_price=open_price))
+            else:
+                user_system_log.warn(_(
+                    "Adjust position of {id_or_ins} Failed: "
+                    "Invalid close/open price {close_price}/{open_price}").format(
+                        id_or_ins=order_book_id, close_price=close_price, open_price=open_price
+                    )
+                )
+                continue
+        delta_quantity = (account_value * target_percent / (close_price or last_price)) \
+                         - current_quantities.get(order_book_id, 0)
         delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
         if delta_quantity == 0:
             continue
         elif delta_quantity > 0:
             quantity, side, position_effect = delta_quantity, SIDE.BUY, POSITION_EFFECT.OPEN
             order_list = open_orders
+            target_price = open_price
         else:
             quantity, side, position_effect = abs(delta_quantity), SIDE.SELL, POSITION_EFFECT.CLOSE
             order_list = close_orders
+            target_price = close_price
         if target_price:
             order = Order.__from_create__(order_book_id, quantity, side, LimitOrder(target_price), position_effect)
         else:
             order = Order.__from_create__(order_book_id, quantity, side, MarketOrder(), position_effect)
-            order.set_frozen_price(price)
+            order.set_frozen_price(last_price)
         order_list.append(order)
 
     return list(env.submit_order(o) for o in chain(close_orders, open_orders))
