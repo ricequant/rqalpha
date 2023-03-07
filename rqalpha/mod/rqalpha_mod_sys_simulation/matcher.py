@@ -34,7 +34,7 @@ class AbstractMatcher:
         # type: (Account, Order, bool) -> None
         raise NotImplementedError
 
-    def update(self):
+    def update(self, event):
         raise NotImplementedError
 
 
@@ -205,7 +205,7 @@ class DefaultBarMatcher(AbstractMatcher):
             )
             order.mark_cancelled(reason)
 
-    def update(self):
+    def update(self, event):
         self._turnover.clear()
 
 
@@ -231,7 +231,6 @@ class DefaultTickMatcher(AbstractMatcher):
         self._cur_tick: Dict[str, TickObject] = dict()
 
         # 订阅一些事件
-        self._env.event_bus.prepend_listener(EVENT.TICK, self._on_tick)
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self._on_before_trading)
 
     def _create_deal_price_decider(self, matching_type):
@@ -259,12 +258,6 @@ class DefaultTickMatcher(AbstractMatcher):
         # 在每个交易日的盘前删除前一个交易日的数据
         self._last_tick.clear()
         self._cur_tick.clear()
-
-    def _on_tick(self, event):
-        # 保存上一个时刻的tick
-        self._last_tick[event.tick.order_book_id] = self._cur_tick.get(event.tick.order_book_id)
-        # 保存当前时刻的tick
-        self._cur_tick[event.tick.order_book_id] = event.tick
 
     def _get_today_history_ticks(self, order_book_id, count):
         """ 获取当前交易日的历史tick数据 """
@@ -457,7 +450,9 @@ class DefaultTickMatcher(AbstractMatcher):
             )
             order.mark_cancelled(reason)
 
-    def update(self):
+    def update(self, event):
+        self._last_tick[event.tick.order_book_id] = self._cur_tick.get(event.tick.order_book_id)
+        self._cur_tick[event.tick.order_book_id] = event.tick
         self._turnover.clear()
 
 
