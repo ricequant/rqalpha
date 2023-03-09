@@ -186,11 +186,11 @@ msgstr "已损坏的文件尚未删除"
 msgid "input error"
 msgstr "输入异常"
 
-msgid "bundle is incomplete, please update bundle"
-msgstr "Bundle数据不完整，请及时更新bundle"
+msgid "bundle's day bar is incomplete, please update bundle"
+msgstr "Bundle日线数据不完整，请及时更新bundle"
 
-msgid "good bundle"
-msgstr "Bundle数据良好"
+msgid "good bundle's day bar"
+msgstr "Bundle日线数据良好"
 
 #: rqalpha/cmds/bundle.py:105
 msgid ""

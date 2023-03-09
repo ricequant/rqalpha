@@ -195,7 +195,7 @@ def check_bundle_data(data_bundle_path):
         else:
             click.echo(_("input error"))
     elif len(not_exists_instruments):
-        click.echo(_("bundle is incomplete, please update bundle"))
+        click.echo(_("bundle's day bar is incomplete, please update bundle"))
     else:
-        click.echo(_("good bundle"))
+        click.echo(_("good bundle's day bar"))
 
