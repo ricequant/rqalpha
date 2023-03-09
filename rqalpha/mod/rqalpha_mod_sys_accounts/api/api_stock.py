@@ -326,14 +326,18 @@ def order_target_portfolio(
             )
             continue
 
-        target_percent, *target_prices = target_quantity_price
-        if not target_prices:
-            open_price = close_price = None
+        if isinstance(target_quantity_price, (int, float)):
+            target_percent = target_quantity_price
+            open_price = close_price = last_price
         else:
-            try:
-                close_price, open_price = target_prices
-            except ValueError:
-                close_price = open_price = target_prices[0]
+            target_percent, *target_prices = target_quantity_price
+            if not target_prices:
+                open_price = close_price = last_price
+            else:
+                try:
+                    close_price, open_price = target_prices
+                except ValueError:
+                    close_price = open_price = target_prices[0]
 
         if target_percent < 0:
             raise RQInvalidArgument(_(
