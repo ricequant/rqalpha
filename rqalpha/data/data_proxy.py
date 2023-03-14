@@ -60,13 +60,19 @@ class DataProxy(TradingDatesMixin):
         return self._data_source.get_yield_curve(start_date, end_date, tenor)
 
     def get_risk_free_rate(self, start_date, end_date):
-        tenor = risk_free_helper.get_tenor_for(start_date, end_date)
+        tenors = risk_free_helper.get_tenors_for(start_date, end_date)
         # 为何取 start_date 当日的？表示 start_date 时借入资金、end_date 归还的成本
-        yc = self._data_source.get_yield_curve(start_date, start_date, [tenor])
+        _s = start_date if self.is_trading_date(start_date) else self.get_next_trading_date(start_date, n=1)
+        yc = self._data_source.get_yield_curve(_s, _s)
         if yc is None or yc.empty:
-            return 0
-        rate = yc.values[0, 0]
-        return 0 if np.isnan(rate) else rate
+            return np.nan
+        yc = yc.iloc[0]
+        for tenor in tenors[::-1]:
+            rate = yc.get(tenor)
+            if rate and not np.isnan(rate):
+                return rate
+        else:
+            return np.nan
 
     def get_dividend(self, order_book_id):
         instrument = self.instruments(order_book_id)
