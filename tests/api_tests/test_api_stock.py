@@ -155,7 +155,7 @@ def test_order_target_portfolio():
     def init(context):
         context.counter = 0
 
-    def handle_bar(context, handle_bar):
+    def handle_bar(context, bar_dict):
         context.counter += 1
         if context.counter == 1:
             order_target_portfolio({
@@ -166,12 +166,14 @@ def test_order_target_portfolio():
             assert get_position("000004.XSHE").quantity == 10500  # (1000000 * 0.2) / 18.92 = 10570.82
         elif context.counter == 2:
             order_target_portfolio({
-                "000004.XSHE": 0.1,
-                "000005.XSHE": 0.2
+                "000004.XSHE": (0.1, 18, 18.5),
+                "000005.XSHE": (0.2, 2.92),
+                "600519.XSHG": (0.6, 980, 970),
             })
-            assert get_position("000001.XSHE").quantity == 0
-            assert get_position("000004.XSHE").quantity == 5400   # (993695.7496 * 0.1) / 18.50 = 5371.33
+            assert get_position("000001.XSHE").quantity == 0  # 清仓
+            assert get_position("000004.XSHE").quantity == 5600  # (993695.7496 * 0.1) / 18 = 5520.53
             assert get_position("000005.XSHE").quantity == 68000  # (993695.7496 * 0.2) / 2.92 = 68061.35
+            assert get_position("600519.XSHG").quantity == 0  # 970 低于 收盘价 无法买进
 
     return locals()
 

@@ -85,7 +85,7 @@ cli.commands['run'].params.append(
 cli.commands['run'].params.append(
     click.Option(
         ('--futures-settlement-price-type', cli_prefix + 'futures_settlement_price_type'),
-        default="close",
+        default=None,
         help="[sys_accounts] future settlement price"
     )
 )

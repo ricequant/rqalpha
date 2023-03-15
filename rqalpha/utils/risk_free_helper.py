@@ -49,3 +49,7 @@ def get_tenor_for(start_date, end_date):
             break
 
     return YIELD_CURVE_TENORS[tenor]
+
+
+def get_tenors_for(start_date, end_date):
+    return [YIELD_CURVE_TENORS[t] for t in YIELD_CURVE_DURATION if (end_date - start_date).days >= t]

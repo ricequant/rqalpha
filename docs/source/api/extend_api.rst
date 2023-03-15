@@ -53,6 +53,11 @@ concept - 概念股列表
 
 .. autofunction:: concept
 
+get_margin_stocks - 融资融券列表
+--------------------------------------------------------
+
+.. autofunction:: get_margin_stocks
+
 get_shares - 流通股信息
 ------------------------------------------------------
 
@@ -87,6 +92,11 @@ current_performance - 财务快报数据
 
 .. autofunction:: current_performance
 
+
+get_pit_financials_ex - 季度财务信息
+------------------------------------------------------
+
+.. autofunction:: get_pit_financials_ex
 
 指数
 =================
@@ -132,7 +142,7 @@ futures.get_warehouse_stocks - 期货仓单数据
 ..  module:: rqalpha.api.econ
 
 
-econ.get_reverse_ratio - 存款准备金率
+econ.get_reserve_ratio - 存款准备金率
 ------------------------------------------------------
 
 .. autofunction:: get_reserve_ratio

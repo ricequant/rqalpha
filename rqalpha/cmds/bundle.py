@@ -23,6 +23,7 @@ import dateutil
 import click
 import requests
 import six
+import h5py
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -123,6 +124,12 @@ def download_bundle(data_bundle_path, confirm):
     six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
+@cli.command(help=_("Check bundle"))
+@click.option('-d', '--data-bundle-path', default=os.path.expanduser('~/.rqalpha'), type=click.Path(file_okay=False))
+def check_bundle(data_bundle_path):
+    check_bundle_data(os.path.join(data_bundle_path, "bundle"))
+
+
 CDN_URL = 'http://bundle.assets.ricequant.com/bundles_v4/rqbundle_%04d%02d.tar.bz2'
 
 
@@ -161,3 +168,34 @@ def download(out, total_length, url):
                     time.sleep(retry_interval)
                 else:
                     raise
+
+
+def check_bundle_data(data_bundle_path):
+    instruments = ["stocks", "indexes", "futures", "funds"]
+    corrupt_files, not_exists_instruments = [], []
+    for instrument in instruments:
+        file = os.path.join(data_bundle_path, "{}.h5".format(instrument))
+        if not os.path.exists(file):
+            not_exists_instruments.append(instrument)
+            continue
+        try:
+            with h5py.File(file, mode="r") as f:
+                for order_book_id in f.keys():
+                    __ = f[order_book_id][:1]
+        except Exception:
+            corrupt_files.append(file)
+    if len(corrupt_files):
+        click.echo("{}:\n{}".format(_("corrupted files"), corrupt_files))
+        is_ok = input("{}(yes/no):".format(_("remove files"))).lower()
+        if is_ok in ["yes", "y"]:
+            [os.remove(file) for file in corrupt_files]
+            click.echo(_("remove success"))
+        elif is_ok in ["no", "n"]:
+            click.echo(_("corrupted files not remove"))
+        else:
+            click.echo(_("input error"))
+    elif len(not_exists_instruments):
+        click.echo(_("bundle's day bar is incomplete, please update bundle"))
+    else:
+        click.echo(_("good bundle's day bar"))
+

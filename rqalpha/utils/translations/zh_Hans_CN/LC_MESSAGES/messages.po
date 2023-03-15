@@ -168,6 +168,30 @@ msgstr "bundle 不存在，执行 \"rqalpha create-bundle\" 以创建 bundle"
 msgid "Download bundle (monthly updated)"
 msgstr "下载（月度更新的）Bundle"
 
+msgid "Check bundle"
+msgstr "检测 Bundle 数据"
+
+msgid "corrupted files"
+msgstr "已损坏的文件"
+
+msgid "remove files"
+msgstr "是否删除文件"
+
+msgid "remove success"
+msgstr "文件删除完毕"
+
+msgid "corrupted files not remove"
+msgstr "已损坏的文件尚未删除"
+
+msgid "input error"
+msgstr "输入异常"
+
+msgid "bundle's day bar is incomplete, please update bundle"
+msgstr "Bundle日线数据不完整，请及时更新bundle"
+
+msgid "good bundle's day bar"
+msgstr "Bundle日线数据良好"
+
 #: rqalpha/cmds/bundle.py:105
 msgid ""
 "\n"

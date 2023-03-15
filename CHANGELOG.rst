@@ -2,6 +2,17 @@
 CHANGELOG
 ==================
 
+4.16.1
+==================
+- 修正文档
+
+4.16.0
+==================
+- 新增check-bundle检查日线bundle命令
+- report年度指标sheet新增指标
+- 修复tick回测和获取无风险收益率的异常
+- 改善order_target_portfolio并完善api文档
+
 4.15.0
 ==================
 - 修复python3.10在Ubuntu和Centos下更新数据异常

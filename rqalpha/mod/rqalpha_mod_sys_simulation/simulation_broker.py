@@ -155,14 +155,14 @@ class SimulationBroker(AbstractBroker, Persistable):
                 self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
         self._open_exercise_orders.clear()
 
-    def on_bar(self, _):
+    def on_bar(self, event):
         for matcher in self._matchers.values():
-            matcher.update()
+            matcher.update(event)
         self._match()
 
     def on_tick(self, event):
         tick = event.tick
-        self._get_matcher(tick.order_book_id).update()
+        self._get_matcher(tick.order_book_id).update(event)
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
