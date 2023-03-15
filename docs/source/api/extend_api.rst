@@ -142,7 +142,7 @@ futures.get_warehouse_stocks - 期货仓单数据
 ..  module:: rqalpha.api.econ
 
 
-econ.get_reverse_ratio - 存款准备金率
+econ.get_reserve_ratio - 存款准备金率
 ------------------------------------------------------
 
 .. autofunction:: get_reserve_ratio

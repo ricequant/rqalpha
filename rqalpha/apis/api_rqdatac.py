@@ -251,7 +251,7 @@ def get_margin_stocks(exchange=None, margin_type="all"):
     .. code-block:: python3
         :linenos:
 
-        get_margin_stocks(date='20190819',exchange=None,margin_type='stock')
+        get_margin_stocks(exchange=None,margin_type='stock')
         # [Out]
         # ['000001.XSHE',
         # '000002.XSHE',
@@ -263,7 +263,7 @@ def get_margin_stocks(exchange=None, margin_type="all"):
     .. code-block::
         :linenos:
 
-        get_margin_stocks(date='20190819',exchange='XSHE',margin_type='stock')
+        get_margin_stocks(exchange='XSHE',margin_type='stock')
         # [Out]
         # ['000001.XSHE',
         # '000002.XSHE',
@@ -275,7 +275,7 @@ def get_margin_stocks(exchange=None, margin_type="all"):
     .. code-block::
         :linenos:
 
-        get_margin_stocks(date='20190819',exchange='XSHG',margin_type='cash')
+        get_margin_stocks(exchange='XSHG',margin_type='cash')
         # [Out]
         # ['510050.XSHG',
         # '510160.XSHG',
