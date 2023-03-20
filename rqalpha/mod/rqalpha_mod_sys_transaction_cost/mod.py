@@ -20,13 +20,25 @@ from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_log
 
 from .deciders import CNStockTransactionCostDecider, CNFutureTransactionCostDecider
 
 
 class TransactionCostMod(AbstractMod):
     def start_up(self, env, mod_config):
-        if mod_config.commission_multiplier < 0 or mod_config.tax_multiplier < 0:
+        if mod_config.commission_multiplier:
+            stock_commission_multiplier = mod_config.commission_multiplier
+            futures_commission_multiplier = mod_config.commission_multiplier
+            user_log.warning(
+                "commission_multiplier is deprecated, use stock_commission_multiplier and "
+                "futures_commission_multiplier instead"
+            )
+        else:
+            stock_commission_multiplier = mod_config.stock_commission_multiplier
+            futures_commission_multiplier = mod_config.futures_commission_multiplier
+
+        if stock_commission_multiplier < 0 or mod_config.tax_multiplier < 0:
             raise patch_user_exc(ValueError(_(u"invalid commission multiplier or tax multiplier"
                                               u" value: value range is [0, +∞)")))
 
@@ -34,12 +46,12 @@ class TransactionCostMod(AbstractMod):
             if instrument_type == INSTRUMENT_TYPE.PUBLIC_FUND:
                 continue
             env.set_transaction_cost_decider(instrument_type, CNStockTransactionCostDecider(
-                mod_config.commission_multiplier, mod_config.cn_stock_min_commission,
+                stock_commission_multiplier, mod_config.cn_stock_min_commission,
                 mod_config.tax_multiplier
             ))
 
         env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(
-            mod_config.commission_multiplier
+            futures_commission_multiplier
         ))
 
     def tear_down(self, code, exception=None):
