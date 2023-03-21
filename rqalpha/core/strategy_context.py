@@ -45,6 +45,12 @@ class RunInfo(object):
             self._matching_type = config.mod.sys_simulation.matching_type
             self._slippage = config.mod.sys_simulation.slippage
             self._commission_multiplier = config.mod.sys_transaction_cost.commission_multiplier
+            if config.mod.sys_transaction_cost.commission_multiplier:
+                self._stock_commission_multiplier = self._commission_multiplier
+                self._futures_commission_multiplier = self._commission_multiplier
+            else:
+                self._stock_commission_multiplier = config.mod.sys_transaction_cost.stock_commission_multiplier
+                self._futures_commission_multiplier = config.mod.sys_transaction_cost.futures_commission_multiplier
         except:
             pass
 
@@ -111,6 +117,20 @@ class RunInfo(object):
         手续费倍率
         """
         return self._commission_multiplier
+
+    @property
+    def stock_commission_multiplier(self):
+        """
+        股票手续费倍率
+        """
+        return self._stock_commission_multiplier
+
+    @property
+    def futures_commission_multiplier(self):
+        """
+        期货手续费倍率
+        """
+        return self._futures_commission_multiplier
 
     @property
     def margin_multiplier(self):
