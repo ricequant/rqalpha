@@ -311,12 +311,6 @@ class FuturePosition(Position):
         self._avg_price = self.last_price
         return delta_cash
 
-    def before_trading(self, trading_date):
-        # type: (date) -> float
-        delta = super().before_trading(trading_date)
-        self._last_price = None
-        return delta
-
 
 class StockPositionProxy(PositionProxy):
     __repr_properties__ = (
