@@ -132,7 +132,14 @@ class AnalyserMod(AbstractMod):
             weights += benchmark[1]
         return sum([daily[0] * daily[1] / weights for daily in daily_return_list])
 
-    def _subscribe_events(self, _):
+    def _subscribe_events(self, event):
+        if self._benchmark:
+            for order_book_id, weight in self._benchmark:
+                if self._env.data_proxy.instrument(order_book_id) is None:
+                    raise RuntimeError(
+                        _("benchmark not exists, please entry correct order_book_id").format(order_book_id)
+                    )
+
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.add_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
