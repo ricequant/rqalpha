@@ -1427,8 +1427,9 @@ def render_pep440_ricequant(pieces):
     if tracking_branch in ["origin/develop", "origin/master"] or tracking_branch.startswith("origin/hotfix/") or pieces[
         "distance"] == 0:
         return rendered
-
-    return rendered
+    else:
+        rendered += "+g{}".format(pieces["short"])
+        return rendered
 
 
 def render_pep440_old(pieces):

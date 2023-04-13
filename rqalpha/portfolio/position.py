@@ -119,12 +119,15 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def trading_pnl(self):
         # type: () -> float
         trade_quantity = self._quantity - self._logical_old_quantity
-        return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
+        return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor if trade_quantity else 0
 
     @property
     def position_pnl(self):
         # type: () -> float
-        return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
+        if self._logical_old_quantity:
+            return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
+        else:
+            return 0
 
     @property
     def pnl(self):
@@ -152,12 +155,8 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def last_price(self):
-        if not self._last_price:
+        if not is_valid_price(self._last_price):
             self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
-            if not is_valid_price(self._last_price):
-                raise RuntimeError(_("invalid price of {order_book_id}: {price}").format(
-                    order_book_id=self._order_book_id, price=self._last_price
-                ))
         return self._last_price
 
     @property

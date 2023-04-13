@@ -192,6 +192,9 @@ msgstr "Bundle日线数据不完整，请及时更新bundle"
 msgid "good bundle's day bar"
 msgstr "Bundle日线数据良好"
 
+msgid "benchmark not exists, please entry correct order_book_id"
+msgstr "当前使用的基准合约信息不存在，请输入正确的合约"
+
 #: rqalpha/cmds/bundle.py:105
 msgid ""
 "\n"

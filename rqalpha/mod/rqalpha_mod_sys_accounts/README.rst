@@ -36,5 +36,11 @@ RQAlpha 扩展账户 Mod，实现了股票和期货的账户逻辑，提供了�
         "validate_stock_position": True,
         # 开启对期货仓位是否能满足平仓需求的检查
         "validate_future_position": True,
+        # 融资利率/年
+        "financing_rate": 0.00,
+        # 是否开启融资可买入股票的限制
+        "financing_stocks_restriction_enabled": False,
+        # 逐日盯市结算价: settlement/close
+        "futures_settlement_price_type": "close",
     }
 

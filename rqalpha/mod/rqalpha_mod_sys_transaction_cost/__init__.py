@@ -19,7 +19,9 @@ __config__ = {
     # 股票最小手续费，单位元
     "cn_stock_min_commission": 5,
     # 佣金倍率，即在默认的手续费率基础上按该倍数进行调整，股票的默认佣金为万八，期货默认佣金因合约而异
-    "commission_multiplier": 1,
+    "commission_multiplier": None,
+    "stock_commission_multiplier": 1,
+    "futures_commission_multiplier": 1,
     # 印花倍率，即在默认的印花税基础上按该倍数进行调整，股票默认印花税为千分之一，单边收取
     "tax_multiplier": 1,
 }
@@ -31,7 +33,25 @@ cli.commands['run'].params.append(
     click.Option(
         ('-cm', '--commission-multiplier', cli_prefix + "commission_multiplier"),
         type=click.FLOAT,
-        help="[sys_simulation] set commission multiplier"
+        help="[sys_transaction_cost][deprecated] set commission multiplier"
+    )
+)
+
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('-scm', '--stock-commission-multiplier', cli_prefix + "stock_commission_multiplier"),
+        type=click.FLOAT,
+        help="[sys_transaction_cost] set stock commission multiplier"
+    )
+)
+
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('-fcm', '--futures-commission-multiplier', cli_prefix + "futures_commission_multiplier"),
+        type=click.FLOAT,
+        help="[sys_transaction_cost] set futures commission multiplier"
     )
 )
 
@@ -40,7 +60,7 @@ cli.commands['run'].params.append(
     click.Option(
         ('-cnsmc', '--cn-stock-min-commission', cli_prefix + 'cn_stock_min_commission'),
         type=click.FLOAT,
-        help="[sys_simulation] set minimum commission in chinese stock trades."
+        help="[sys_transaction_cost] set minimum commission in chinese stock trades."
     )
 )
 
@@ -49,7 +69,7 @@ cli.commands['run'].params.append(
     click.Option(
         ('-smc', '--stock-min-commission', cli_prefix + 'cn_stock_min_commission'),
         type=click.FLOAT,
-        help="[sys_simulation][deprecated] set minimum commission in chinese stock trades."
+        help="[sys_transaction_cost][deprecated] set minimum commission in chinese stock trades."
     )
 )
 
@@ -57,7 +77,7 @@ cli.commands['run'].params.append(
     click.Option(
         ('-tm', '--tax-multiplier', cli_prefix + "tax_multiplier"),
         type=click.FLOAT,
-        help="[sys_simulation] set tax multiplier"
+        help="[sys_transaction_cost] set tax multiplier"
     )
 )
 
