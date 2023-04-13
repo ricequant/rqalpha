@@ -18,7 +18,7 @@ import versioneer
 requirements = [
     'requests',
     'numpy',
-    'pandas >=1.0.5',
+    'pandas >=1.0.5, <2.0.0',
     'python-dateutil',
     'six',
     'logbook',
@@ -54,7 +54,7 @@ setup(
     author='ricequant',
     author_email='public@ricequant.com',
     license='Apache License v2',
-    include_package_date=True,
+    include_package_data=True,
     package_data={
         'rqalpha': ['*.yml',
                     'examples/*.*', 'examples/data_source/*.*', 'examples/extend_api/*.*',
@@ -64,7 +64,7 @@ setup(
     },
     url='https://github.com/ricequant/rqalpha',
     install_requires=requirements,
-    extra_requires={
+    extras_require={
         'profiler': ["line_profiler"],
     },
     zip_safe=False,
