@@ -80,6 +80,7 @@ def gen_dividends(d):
     for f in ('book_closure_date', 'ex_dividend_date', 'payable_date', 'announcement_date'):
         dividend[f] = [convert_date_to_date_int(d) for d in dividend[f]]
     dividend.set_index(['order_book_id', 'book_closure_date'], inplace=True)
+    dividend.drop(columns=["advance_date", "quarter"], inplace=True)
     with h5py.File(os.path.join(d, 'dividends.h5'), 'w') as h5:
         for order_book_id in dividend.index.levels[0]:
             h5[order_book_id] = dividend.loc[order_book_id].to_records()
