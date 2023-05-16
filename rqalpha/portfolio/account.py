@@ -318,7 +318,7 @@ class Account(metaclass=AccountMeta):
                 del self._positions[order_book_id]
 
         trading_date = self._env.trading_dt.date()
-        while self._pending_deposit_withdraw and self._pending_deposit_withdraw[0][0] <= trading_date:
+        while self._pending_deposit_withdraw and self._pending_deposit_withdraw[0][0].date() <= trading_date:
             _, amount = self._pending_deposit_withdraw.pop(0)
             self._total_cash += amount
 
