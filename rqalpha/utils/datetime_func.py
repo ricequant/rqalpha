@@ -32,8 +32,8 @@ def convert_date_to_date_int(dt):
 
 
 def convert_date_to_int(dt):
-    t = dt.year * 10000 + dt.month * 100 + dt.day
-    t *= 1000000
+    # 原先的写法在pandas2.0下会被转化为int32类型导致精度丢失
+    t = dt.year * 10000000000 + dt.month * 100000000 + dt.day * 1000000
     return t
 
 
