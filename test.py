@@ -109,7 +109,7 @@ def run_test(filename):
         except:
             pass
         try:
-            assert_frame_equal(df, old_df, check_less_precise=8)
+            assert_frame_equal(df, old_df, atol=1e-8, rtol=1e-5)
         except AssertionError as e:
             return str(e)
 
