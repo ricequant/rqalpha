@@ -94,6 +94,12 @@ class MATCHING_TYPE(CustomEnum):
 class ORDER_TYPE(CustomEnum):
     MARKET = "MARKET"
     LIMIT = "LIMIT"
+    ALGO = "ALGO"
+
+
+class ALGO(CustomEnum):
+    TWAP = "TWAP"
+    VWAP = "VWAP"
 
 
 # noinspection PyPep8Naming

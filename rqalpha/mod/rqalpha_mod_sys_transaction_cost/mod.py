@@ -27,7 +27,7 @@ from .deciders import CNStockTransactionCostDecider, CNFutureTransactionCostDeci
 
 class TransactionCostMod(AbstractMod):
     def start_up(self, env, mod_config):
-        if mod_config.commission_multiplier:
+        if mod_config.commission_multiplier is not None:
             stock_commission_multiplier = mod_config.commission_multiplier
             futures_commission_multiplier = mod_config.commission_multiplier
             user_log.warning(

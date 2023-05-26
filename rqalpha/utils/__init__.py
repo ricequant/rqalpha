@@ -236,3 +236,8 @@ def get_trading_period(universe, accounts):
     from rqalpha.environment import Environment
     trading_period = STOCK_TRADING_PERIOD if DEFAULT_ACCOUNT_TYPE.STOCK in accounts else []
     return Environment.get_instance().data_proxy.get_trading_period(universe, trading_period)
+
+
+def safe_div(dividend, divisor):
+    return dividend / divisor if divisor else np.nan
+

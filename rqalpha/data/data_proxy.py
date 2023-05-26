@@ -303,3 +303,13 @@ class DataProxy(TradingDatesMixin):
     def is_night_trading(self, sym_or_ids):
         # type: (StrOrIter) -> bool
         return any((instrument.trade_at_night for instrument in self.instruments(sym_or_ids)))
+
+    def get_algo_bar(self, id_or_ins, order_style, dt):
+        if not isinstance(id_or_ins, Instrument):
+            id_or_ins = self.instrument(id_or_ins)
+        if id_or_ins is None:
+            return np.nan, 0
+        bar = self._data_source.get_algo_bar(id_or_ins, order_style.start_min, order_style.end_min, dt)
+        return (bar[order_style.TYPE], bar["volume"]) if bar else (np.nan, 0)
+
+

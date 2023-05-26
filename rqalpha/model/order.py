@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import numpy as np
 
-from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION
+from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION, ALGO
 from rqalpha.utils import id_gen, decimal_rounding_floor, get_position_direction
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
@@ -50,6 +50,7 @@ class Order(object):
         self._type = None
         self._avg_price = None
         self._transaction_cost = None
+        self._style = None
         self._kwargs = {}
 
     @staticmethod
@@ -109,12 +110,16 @@ class Order(object):
         order._message = ""
         order._filled_quantity = 0
         order._status = ORDER_STATUS.PENDING_NEW
+        order._style = style
         if isinstance(style, LimitOrder):
             if env.config.base.round_price:
                 tick_size = env.data_proxy.get_tick_size(order_book_id)
                 style.round_price(tick_size)
             order._frozen_price = style.get_limit_price()
             order._type = ORDER_TYPE.LIMIT
+        elif isinstance(style, ALGO_ORDER_STYLES):
+            order._frozen_price, _ = env.data_proxy.get_algo_bar(order_book_id, style, env.calendar_dt)
+            order._type = ORDER_TYPE.ALGO
         else:
             order._frozen_price = 0.
             order._type = ORDER_TYPE.MARKET
@@ -238,6 +243,13 @@ class Order(object):
         return self._type
 
     @property
+    def style(self):
+        """
+        [ORDER_STYLE] 订单类型
+        """
+        return self._style
+
+    @property
     def avg_price(self):
         """
         [float] 成交均价
@@ -338,6 +350,27 @@ class OrderStyle(object):
         raise NotImplementedError
 
 
+class AlgoOrder(OrderStyle):
+    __repr__ = ORDER_TYPE.ALGO.__repr__
+
+    def __init__(self, start_min, end_min):
+        self.start_min = start_min
+        self.end_min = end_min
+
+    def get_limit_price(self):
+        return None
+
+
+class TWAPOrder(AlgoOrder):
+    TYPE = ALGO.TWAP
+    __repr__ = ALGO.TWAP.__repr__
+
+
+class VWAPOrder(AlgoOrder):
+    TYPE = ALGO.VWAP
+    __repr__ = ALGO.VWAP.__repr__
+
+
 class MarketOrder(OrderStyle):
     __repr__ = ORDER_TYPE.MARKET.__repr__
 
@@ -362,3 +395,7 @@ class LimitOrder(OrderStyle):
                 self.limit_price = float((limit_price_decimal / tick_size_decimal).to_integral() * tick_size_decimal)
         else:
             user_system_log.warn('Invalid tick size: {}'.format(tick_size))
+
+
+ALGO_ORDER_STYLES = (VWAPOrder, TWAPOrder)
+ALL_ORDER_STYPES = (LimitOrder, MarketOrder, TWAPOrder, VWAPOrder)

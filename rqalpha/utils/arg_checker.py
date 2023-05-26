@@ -31,6 +31,7 @@ from rqalpha.const import INSTRUMENT_TYPE, EXC_TYPE
 from rqalpha.utils import unwrapper, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME
+from rqalpha.utils.logger import user_system_log
 
 
 main_contract_warning_flag = True
@@ -141,6 +142,14 @@ class ArgumentChecker(object):
         self._rules.append(self._is_number)
         return self
 
+    def deprecated(self, hint="deprecated"):
+        def inner(func_name, value):
+            if value is not None:
+                content = "{} param {} is deprecated. {}".format(func_name, self._arg_name, hint)
+                user_system_log.warning(content)
+        self._rules.append(inner)
+        return self
+
     def is_in(self, valid_values, ignore_none=True):
         def check_is_in(func_name, value):
             if ignore_none and value is None:
@@ -236,7 +245,7 @@ class ArgumentChecker(object):
 
     def is_greater_or_equal_than(self, low):
         def check_greater_or_equal_than(func_name, value):
-            if value < low:
+            if isinstance(value, (int, float)) and value < low:
                 raise RQInvalidArgument(
                     _(u"function {}: invalid {} argument, expect a value >= {}, got {} (type: {})").format(
                         func_name, self._arg_name, low, value, type(value)
@@ -246,7 +255,7 @@ class ArgumentChecker(object):
 
     def is_greater_than(self, low):
         def check_greater_than(func_name, value):
-            if value <= low:
+            if isinstance(value, (int, float)) and value <= low:
                 raise RQInvalidArgument(
                     _(u"function {}: invalid {} argument, expect a value > {}, got {} (type: {})").format(
                         func_name, self._arg_name, low, value, type(value)
@@ -256,7 +265,7 @@ class ArgumentChecker(object):
 
     def is_less_or_equal_than(self, high):
         def check_less_or_equal_than(func_name, value):
-            if value > high:
+            if isinstance(value, (int, float)) and value > high:
                 raise RQInvalidArgument(
                     _(u"function {}: invalid {} argument, expect a value <= {}, got {} (type: {})").format(
                         func_name, self._arg_name, high, value, type(value)
@@ -267,7 +276,7 @@ class ArgumentChecker(object):
 
     def is_less_than(self, high):
         def check_less_than(func_name, value):
-            if value >= high:
+            if isinstance(value, (int, float)) and value >= high:
                 raise RQInvalidArgument(
                     _(u"function {}: invalid {} argument, expect a value < {}, got {} (type: {})").format(
                         func_name, self._arg_name, high, value, type(value)

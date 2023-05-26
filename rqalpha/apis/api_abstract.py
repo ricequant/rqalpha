@@ -15,15 +15,28 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Tuple
 
 from rqalpha.api import export_as_api
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.const import EXECUTION_PHASE
 from rqalpha.model.instrument import Instrument
-from rqalpha.model.order import MarketOrder, LimitOrder, OrderStyle, Order
+from rqalpha.model.order import MarketOrder, LimitOrder, OrderStyle, Order, ALL_ORDER_STYPES
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.functools import instype_singledispatch
+
+
+common_rules = (
+    verify_that('price', pre_check=True).deprecated("please use price_or_style instead.").is_greater_than(0),
+    verify_that('style', pre_check=True).deprecated("please use price_or_style instead.").is_instance_of(
+        (*ALL_ORDER_STYPES, type(None))
+    ),
+    verify_that("price_or_style").is_instance_of((float, type(None), *ALL_ORDER_STYPES)),
+)
+
+
+PRICE_OR_STYLE_TYPE = Union[float, OrderStyle, None]
+TUPLE_PRICE_OR_STYLE_TYPE = Union[float, OrderStyle, None, Tuple[PRICE_OR_STYLE_TYPE, PRICE_OR_STYLE_TYPE]]
 
 
 @export_as_api
@@ -36,11 +49,11 @@ from rqalpha.utils.functools import instype_singledispatch
 )
 @apply_rules(
     verify_that('amount').is_number(),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def order_shares(id_or_ins, amount, price=None, style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_shares(id_or_ins, amount, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> Optional[Order]
     """
     指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
@@ -48,6 +61,7 @@ def order_shares(id_or_ins, amount, price=None, style=None):
     :param amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
 
     :example:
 
@@ -73,11 +87,11 @@ def order_shares(id_or_ins, amount, price=None, style=None):
 )
 @apply_rules(
     verify_that('cash_amount').is_number(),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def order_value(id_or_ins, cash_amount, price=None, style=None):
-    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_value(id_or_ins, cash_amount, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> Optional[Order]
     """
     使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。
     如果资金不足，该API将会使用最大可用资金发单。
@@ -90,6 +104,7 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
     :param cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
 
     :example:
 
@@ -113,11 +128,11 @@ def order_value(id_or_ins, cash_amount, price=None, style=None):
 )
 @apply_rules(
     verify_that('percent', pre_check=True).is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def order_percent(id_or_ins, percent, price=None, style=None):
-    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_percent(id_or_ins, percent, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> Optional[Order]
     """
     发送一个花费价值等于目前投资组合（市场价值和目前现金的总和）一定百分比现金的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将会使用最大可用资金发单。
 
@@ -130,6 +145,7 @@ def order_percent(id_or_ins, percent, price=None, style=None):
     :param percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
 
     :example:
 
@@ -151,11 +167,11 @@ def order_percent(id_or_ins, percent, price=None, style=None):
 )
 @apply_rules(
     verify_that('cash_amount').is_number(),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def order_target_value(id_or_ins, cash_amount, price=None, style=None):
-    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_target_value(id_or_ins, cash_amount, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], TUPLE_PRICE_OR_STYLE_TYPE) -> Optional[Order]
     """
     买入/卖出并且自动调整该证券的仓位到一个目标价值。
     加仓时，cash_amount 代表现有持仓的价值加上即将花费（包含税费）的现金的总价值。
@@ -167,6 +183,7 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
     :param cash_amount: 最终的该证券的仓位目标价值。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
 
     :example:
 
@@ -188,11 +205,11 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None):
 )
 @apply_rules(
     verify_that('percent', pre_check=True).is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def order_target_percent(id_or_ins, percent, price=None, style=None):
-    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_target_percent(id_or_ins, percent, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], TUPLE_PRICE_OR_STYLE_TYPE) -> Optional[Order]
     """
     买入/卖出证券以自动调整该证券的仓位到占有一个目标价值。
 
@@ -213,6 +230,7 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
     :param percent: 仓位最终所占投资组合总价值的目标百分比。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
 
     :example:
 
@@ -234,11 +252,11 @@ def order_target_percent(id_or_ins, percent, price=None, style=None):
 )
 @apply_rules(
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def buy_open(id_or_ins, amount, price=None, style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
+def buy_open(id_or_ins, amount, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> Union[Order, List[Order], None]
     """
     买入开仓。
 
@@ -246,6 +264,7 @@ def buy_open(id_or_ins, amount, price=None, style=None):
     :param amount: 下单手数
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
 
     :example:
 
@@ -267,11 +286,11 @@ def buy_open(id_or_ins, amount, price=None, style=None):
 )
 @apply_rules(
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
+def buy_close(id_or_ins, amount, price=None, style=None, price_or_style=None, close_today=False):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE, Optional[bool]) -> Union[Order, List[Order], None]
     """
     平卖仓
 
@@ -280,6 +299,7 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
+    :param price_or_style: 原参数price和style的整合
 
     :example:
 
@@ -301,11 +321,11 @@ def buy_close(id_or_ins, amount, price=None, style=None, close_today=False):
 )
 @apply_rules(
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def sell_open(id_or_ins, amount, price=None, style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
+def sell_open(id_or_ins, amount, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> Union[Order, List[Order], None]
     """
     卖出开仓
 
@@ -313,6 +333,7 @@ def sell_open(id_or_ins, amount, price=None, style=None):
     :param amount: 下单手数
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
     """
     raise NotImplementedError
 
@@ -327,11 +348,11 @@ def sell_open(id_or_ins, amount, price=None, style=None):
 )
 @apply_rules(
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
-    verify_that('style').is_instance_of((MarketOrder, LimitOrder, type(None)))
+    *common_rules
 )
 @instype_singledispatch
-def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
-    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
+def sell_close(id_or_ins, amount, price=None, style=None, price_or_style=None, close_today=False):
+    # type: (Union[str, Instrument], float, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE, Optional[bool]) -> Union[Order, List[Order], None]
     """
     平买仓
 
@@ -340,15 +361,16 @@ def sell_close(id_or_ins, amount, price=None, style=None, close_today=False):
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
+    :param price_or_style: 原参数price和style的整合
     """
     raise NotImplementedError
 
 
 @export_as_api
-@apply_rules(verify_that("quantity").is_number())
+@apply_rules(verify_that("quantity").is_number(), *common_rules)
 @instype_singledispatch
-def order(order_book_id, quantity, price=None, style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
+def order(order_book_id, quantity, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> List[Order]
     """
       全品种通用智能调仓函数
 
@@ -366,6 +388,7 @@ def order(order_book_id, quantity, price=None, style=None):
       :param quantity: 调仓量
       :param price: 下单价格
       :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+      :param price_or_style: 原参数price和style的整合
 
       :example:
 
@@ -384,10 +407,10 @@ def order(order_book_id, quantity, price=None, style=None):
 
 
 @export_as_api
-@apply_rules(verify_that("quantity").is_number())
+@apply_rules(verify_that("quantity").is_number(), *common_rules)
 @instype_singledispatch
-def order_to(order_book_id, quantity, price=None, style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle]) -> List[Order]
+def order_to(order_book_id, quantity, price=None, style=None, price_or_style=None):
+    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> List[Order]
     """
     全品种通用智能调仓函数
 
@@ -405,6 +428,8 @@ def order_to(order_book_id, quantity, price=None, style=None):
     :param int quantity: 调仓量
     :param float price: 下单价格
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
+    :param price_or_style: 原参数price和style的整合
+
     :example:
 
     ..  code-block:: python3
