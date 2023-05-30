@@ -38,9 +38,6 @@ class SimulationMod(AbstractMod):
 
         mod_config.matching_type = self.parse_matching_type(mod_config.matching_type, env.config.base.frequency)
 
-        if mod_config.matching_type == MATCHING_TYPE.VWAP:
-            user_system_log.warning("matching_type: vwap is deprecated")
-
         if env.config.base.margin_multiplier <= 0:
             raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
 
@@ -75,6 +72,9 @@ class SimulationMod(AbstractMod):
 
         event_source = SimulationEventSource(env)
         env.set_event_source(event_source)
+
+        from .validator import OrderStyleValidator
+        env.add_frontend_validator(OrderStyleValidator(env.config.base.frequency))
 
     def tear_down(self, code, exception=None):
         pass

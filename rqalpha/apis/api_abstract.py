@@ -31,12 +31,14 @@ common_rules = (
     verify_that('style', pre_check=True).deprecated("please use price_or_style instead.").is_instance_of(
         (*ALL_ORDER_STYPES, type(None))
     ),
-    verify_that("price_or_style").is_instance_of((float, type(None), *ALL_ORDER_STYPES)),
+    verify_that("price_or_style", pre_check=True).is_instance_of((float, type(None), tuple, *ALL_ORDER_STYPES)),
 )
 
 
 PRICE_OR_STYLE_TYPE = Union[float, OrderStyle, None]
-TUPLE_PRICE_OR_STYLE_TYPE = Union[float, OrderStyle, None, Tuple[PRICE_OR_STYLE_TYPE, PRICE_OR_STYLE_TYPE]]
+TUPLE_PRICE_OR_STYLE_TYPE = Union[
+    float, OrderStyle, None, Tuple, Tuple[PRICE_OR_STYLE_TYPE], Tuple[PRICE_OR_STYLE_TYPE, PRICE_OR_STYLE_TYPE]
+]
 
 
 @export_as_api
@@ -61,7 +63,8 @@ def order_shares(id_or_ins, amount, price=None, style=None, price_or_style=None)
     :param amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
@@ -71,8 +74,12 @@ def order_shares(id_or_ins, amount, price=None, style=None, price_or_style=None)
         order_shares('000001.XSHE', 2000)
         #卖出2000股的平安银行股票，并以市价单发送：
         order_shares('000001.XSHE', -2000)
+        #购买1000股的平安银行股票，并以限价单发送，价格为￥11：
+        order_shares('000001.XSHG', 1000, price_or_style=11)
         #购买1000股的平安银行股票，并以限价单发送，价格为￥10：
-        order_shares('000001.XSHG', 1000, style=LimitOrder(10))
+        order_shares('000001.XSHG', 1000, price_or_style=LimitOrder(10))
+        #购买1000股的平安银行股票，并以 9:31 到 9:45 的VWAP价格发送：
+        order_shares('000001.XSHG', 1000, price_or_style=VWAPOrder(931, 945))
     """
     raise NotImplementedError
 
@@ -104,7 +111,8 @@ def order_value(id_or_ins, cash_amount, price=None, style=None, price_or_style=N
     :param cash_amount: 需要花费现金购买/卖出证券的数目。正数代表买入，负数代表卖出。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
@@ -112,8 +120,8 @@ def order_value(id_or_ins, cash_amount, price=None, style=None, price_or_style=N
 
         #花费最多￥10000买入平安银行股票，并以市价单发送。具体下单的数量与您策略税费相关的配置有关。
         order_value('000001.XSHE', 10000)
-        #卖出价值￥10000的现在持有的平安银行：
-        order_value('000001.XSHE', -10000)
+        #卖出价值￥10000的现在持有的平安银行, 以10￥价格发出限价单：
+        order_value('000001.XSHE', -10000, price_or_style=10)
     """
     raise NotImplementedError
 
@@ -145,7 +153,8 @@ def order_percent(id_or_ins, percent, price=None, style=None, price_or_style=Non
     :param percent: 占有现有的投资组合价值的百分比。正数表示买入，负数表示卖出。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
@@ -153,6 +162,8 @@ def order_percent(id_or_ins, percent, price=None, style=None, price_or_style=Non
 
         #花费等于现有投资组合50%价值的现金买入平安银行股票：
         order_percent('000001.XSHG', 0.5)
+        #花费等于现有投资组合50%价值的现金买入平安银行股票, 以10￥限价单：
+        order_percent('000001.XSHG', 0.5, price_or_style=10)
     """
     raise NotImplementedError
 
@@ -183,7 +194,8 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None, price_or_
     :param cash_amount: 最终的该证券的仓位目标价值。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
@@ -191,6 +203,9 @@ def order_target_value(id_or_ins, cash_amount, price=None, style=None, price_or_
 
         #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位，以下代码范例会发送花费 ￥7000 现金的平安银行买单到市场。（向下调整到最接近每手股数即100的倍数的股数）：
         order_target_value('000001.XSHE', 10000)
+        #如果现在的投资组合中持有价值￥3000的平安银行股票的仓位，以下代码范例会发送10￥限价单共花费 ￥7000 现金的平安银行买单到市场
+        #或者如果现在的投资组合中持有价值￥13000的平安银行股票的仓位，以下代码范例会发送11￥限价单共花费 ￥3000 现金的平安银行卖单到市场
+        order_target_value('000001.XSHE', 10000, price_or_style=(10, 11)
     """
     raise NotImplementedError
 
@@ -230,7 +245,8 @@ def order_target_percent(id_or_ins, percent, price=None, style=None, price_or_st
     :param percent: 仓位最终所占投资组合总价值的目标百分比。
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
@@ -238,6 +254,9 @@ def order_target_percent(id_or_ins, percent, price=None, style=None, price_or_st
 
         #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会消耗相当于当前投资组合价值5%的现金买入平安银行股票：
         order_target_percent('000001.XSHE', 0.15)
+        #如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的10%的价值，那么以下代码会消耗相当于当前投资组合价值5%的现金以10￥限价单买入平安银行股票：
+        #或者如果投资组合中已经有了平安银行股票的仓位，并且占据目前投资组合的20%的价值，那么以下代码会消耗相当于当前投资组合价值5%的现金以11￥限价单卖出平安银行股票：
+        order_target_percent('000001.XSHE', 0.15, price_or_style=(10, 11))
     """
     raise NotImplementedError
 
@@ -264,14 +283,15 @@ def buy_open(id_or_ins, amount, price=None, style=None, price_or_style=None):
     :param amount: 下单手数
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
     .. code-block:: python
 
         #以价格为3500的限价单开仓买入2张上期所AG1607合约：
-        buy_open('AG1607', amount=2, price=3500))
+        buy_open('AG1607', amount=2, price_or_style=3500))
     """
     raise NotImplementedError
 
@@ -299,7 +319,8 @@ def buy_close(id_or_ins, amount, price=None, style=None, price_or_style=None, cl
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
@@ -333,7 +354,16 @@ def sell_open(id_or_ins, amount, price=None, style=None, price_or_style=None):
     :param amount: 下单手数
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
+
+    :example:
+
+    .. code-block:: python
+
+        # 以3100发出限价单将现有IF1603卖出开仓2张：
+        sell_open('IF1603', 2, price_or_style=3100)
+
     """
     raise NotImplementedError
 
@@ -361,7 +391,17 @@ def sell_close(id_or_ins, amount, price=None, style=None, price_or_style=None, c
     :param price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :param close_today: 是否指定发平今仓单，默认为False，发送平仓单
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
+
+    :example:
+
+    .. code-block:: python
+
+        # 以市价单单将现有IF1603买入平仓2张：
+        sell_close('IF1603', 2, price_or_style=MarketOrder())
+
+
     """
     raise NotImplementedError
 
@@ -388,7 +428,8 @@ def order(order_book_id, quantity, price=None, style=None, price_or_style=None):
       :param quantity: 调仓量
       :param price: 下单价格
       :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-      :param price_or_style: 原参数price和style的整合
+      :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
       :example:
 
@@ -428,7 +469,8 @@ def order_to(order_book_id, quantity, price=None, style=None, price_or_style=Non
     :param int quantity: 调仓量
     :param float price: 下单价格
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 

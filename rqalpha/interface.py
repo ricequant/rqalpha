@@ -446,7 +446,8 @@ class AbstractDataSource(object):
         raise NotImplementedError
 
     def get_algo_bar(self, id_or_ins, start_min, end_min, dt):
-        # type: (Union[str, Instrument], int, int, datetime) -> Optional[numpy.ndarray]
+        # type: (Union[str, Instrument], int, int, datetime) -> Optional[numpy.void]
+        # 格式: (date, VWAP, TWAP, volume) -> 案例 (20200102, 16.79877183, 16.83271429, 144356044)
         raise NotImplementedError
 
 

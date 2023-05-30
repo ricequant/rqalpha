@@ -61,8 +61,7 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
             raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
 
     price = env.get_last_price(order_book_id)
-    algo_price = env.data_proxy.get_algo_bar(instrument, style, env.calendar_dt)[0] if isinstance(style, ALGO_ORDER_STYLES) else 1
-    if not (is_valid_price(price) and is_valid_price(algo_price)):
+    if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         )
@@ -122,8 +121,6 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
         )
 
     for o in orders:
-        if o.type == ORDER_TYPE.MARKET:
-            o.set_frozen_price(price)
         if env.can_submit_order(o):
             env.broker.submit_order(o)
         else:

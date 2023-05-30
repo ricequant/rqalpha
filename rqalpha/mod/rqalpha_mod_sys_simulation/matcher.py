@@ -98,7 +98,7 @@ class DefaultBarMatcher(AbstractMatcher):
             deal_price = self._open_auction_deal_price_decider(order.order_book_id, order.side)
         else:
             if isinstance(order.style, ALGO_ORDER_STYLES):
-                deal_price = order.price
+                deal_price, v = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
             else:
                 deal_price = self._deal_price_decider(order.order_book_id, order.side)
         return deal_price
@@ -121,6 +121,8 @@ class DefaultBarMatcher(AbstractMatcher):
                     order_book_id=order.order_book_id,
                     listed_date=listed_date,
                 )
+            elif isinstance(order.style, ALGO_ORDER_STYLES):
+                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
             else:
                 reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
                     order_book_id=order.order_book_id)

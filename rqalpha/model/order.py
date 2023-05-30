@@ -118,10 +118,11 @@ class Order(object):
             order._frozen_price = style.get_limit_price()
             order._type = ORDER_TYPE.LIMIT
         elif isinstance(style, ALGO_ORDER_STYLES):
-            order._frozen_price, _ = env.data_proxy.get_algo_bar(order_book_id, style, env.calendar_dt)
+            algo_price, _ = env.data_proxy.get_algo_bar(order_book_id, style, env.calendar_dt)
+            order._frozen_price = env.get_last_price(order_book_id) if np.isnan(algo_price) else algo_price
             order._type = ORDER_TYPE.ALGO
         else:
-            order._frozen_price = 0.
+            order._frozen_price = env.get_last_price(order_book_id)
             order._type = ORDER_TYPE.MARKET
         order._avg_price = 0
         order._transaction_cost = 0

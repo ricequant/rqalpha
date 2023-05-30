@@ -99,8 +99,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
     price = env.data_proxy.get_last_price(ins.order_book_id)
-    algo_price = env.data_proxy.get_algo_bar(ins, style, env.calendar_dt)[0] if isinstance(style, ALGO_ORDER_STYLES) else 1
-    if not (is_valid_price(price) and is_valid_price(algo_price)):
+    if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
         return
@@ -114,8 +113,6 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
         ).format(order_book_id=ins.order_book_id))
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
-    if order.type == ORDER_TYPE.MARKET:
-        order.set_frozen_price(price)
     if side == SIDE.BUY and auto_switch_order_value:
         account, position, ins = _get_account_position_ins(ins)
         if not is_cash_enough(env, order, account.cash):
@@ -132,21 +129,24 @@ def _order_shares(ins, amount, style, quantity, auto_switch_order_value):
 
 
 def _order_value(account, position, ins, cash_amount, style):
+    env = Environment.get_instance()
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)
-    price = _get_order_style_price(ins.order_book_id, style)
-    if not is_valid_price(price):
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
-        )
-        return
+    if isinstance(style, LimitOrder):
+        price = style.get_limit_price()
+    else:
+        price = env.data_proxy.get_last_price(ins.order_book_id)
+        if not is_valid_price(price):
+            user_system_log.warn(
+                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+            )
+            return
 
     amount = int(Decimal(cash_amount) / Decimal(price))
     round_lot = int(ins.round_lot)
     if cash_amount > 0:
         amount = _round_order_quantity(ins, amount)
         while amount > 0:
-            env = Environment.get_instance()
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
                 ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
             ))
@@ -251,7 +251,8 @@ def order_lots(id_or_ins, amount, price=None, style=None, price_or_style=None):
     :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
     :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
     :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
-    :param price_or_style: 原参数price和style的整合
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
+                            TWAPOrder、VWAPOrder
 
     :example:
 
