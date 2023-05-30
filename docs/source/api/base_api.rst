@@ -141,6 +141,56 @@ after_trading - 盘后
 交易接口
 =================
 
+OrderStyle - 订单类型
+------------------------------------------------------
+
+该类型可供后续下单接口中 price_or_style 参数使用
+
+.. module:: rqalpha.model.order
+
+.. _order_style:
+
+.. autoclass:: MarketOrder
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=MarketOrder())
+
+市价单
+
+.. autoclass:: LimitOrder
+
+    :param float limit_price: 价格
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=LimitOrder(10))
+
+限价单
+
+.. autoclass:: TWAPOrder
+
+    :param int start_min: 分钟起始时间
+    :param int end_min: 分钟结束时间
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=TWAPOrder(931, 945))
+
+算法时间加权价格订单
+
+.. autoclass:: VWAPOrder
+
+    :param int start_min: 分钟起始时间
+    :param int end_min: 分钟结束时间
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=VWAPOrder(931, 945))
+
+
+算法成交量加权价格订单
+
 ..  module:: rqalpha.api
 
 submit_order - 自由参数下单「通用」
@@ -651,6 +701,8 @@ Order - 订单
 ------------------------------------------------------
 ..  module:: rqalpha.model.order
 
+.. _order:
+
 ..  autoclass:: Order
     :members:
     :show-inheritance:
@@ -877,6 +929,10 @@ ORDER_TYPE - 订单类型
     ..  py:attribute:: LIMIT
 
         限价单
+
+    .. py:attribute:: ALGO
+
+        算法单
 
 
 ORDER_STATUS - 订单状态
