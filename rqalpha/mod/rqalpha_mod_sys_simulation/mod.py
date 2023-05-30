@@ -73,6 +73,9 @@ class SimulationMod(AbstractMod):
         event_source = SimulationEventSource(env)
         env.set_event_source(event_source)
 
+        from .validator import OrderStyleValidator
+        env.add_frontend_validator(OrderStyleValidator(env.config.base.frequency))
+
     def tear_down(self, code, exception=None):
         pass
 

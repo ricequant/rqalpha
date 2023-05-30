@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional
+from typing import Union, List, Sequence, Optional, Tuple
 
 import six
 import numpy as np
@@ -28,6 +28,7 @@ from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
+from rqalpha.model.order import TWAPOrder, VWAPOrder, ALGO_ORDER_STYLES
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 from rqalpha.utils.typing import DateLike, StrOrIter
@@ -130,9 +131,9 @@ class DataProxy(TradingDatesMixin):
 
     @lru_cache(10240)
     def _get_prev_settlement(self, instrument, dt):
-        prev_trading_date = self.get_previous_trading_date(dt)
-        bar = self._data_source.history_bars(instrument, 1, '1d', 'settlement', prev_trading_date,
-                                             skip_suspended=False, adjust_orig=dt)
+        bar = self._data_source.history_bars(
+            instrument, 1, '1d', fields='prev_settlement', dt=dt, skip_suspended=False, adjust_orig=dt
+        )
         if bar is None or len(bar) == 0:
             return np.nan
         return bar[0]
@@ -303,3 +304,16 @@ class DataProxy(TradingDatesMixin):
     def is_night_trading(self, sym_or_ids):
         # type: (StrOrIter) -> bool
         return any((instrument.trade_at_night for instrument in self.instruments(sym_or_ids)))
+
+    def get_algo_bar(self, id_or_ins, order_style, dt):
+        # type: (Union[str, Instrument], Union[*ALGO_ORDER_STYLES], datetime) -> Tuple[float, int]
+        if not isinstance(order_style, ALGO_ORDER_STYLES):
+            raise RuntimeError("get_algo_bar only support VWAPOrder and TWAPOrder")
+        if not isinstance(id_or_ins, Instrument):
+            id_or_ins = self.instrument(id_or_ins)
+        if id_or_ins is None:
+            return np.nan, 0
+        bar = self._data_source.get_algo_bar(id_or_ins, order_style.start_min, order_style.end_min, dt)
+        return (bar[order_style.TYPE], bar["volume"]) if bar else (np.nan, 0)
+
+
