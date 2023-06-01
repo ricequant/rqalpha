@@ -39,7 +39,7 @@ from rqalpha.const import (
     EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
     DEFAULT_ACCOUNT_TYPE
 )
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle, VWAPOrder, TWAPOrder
 from rqalpha.core.events import EVENT, Event
 from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.portfolio.position import Position
@@ -48,6 +48,8 @@ export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
 export_as_api(LimitOrder, name='LimitOrder')
 export_as_api(MarketOrder, name='MarketOrder')
+export_as_api(VWAPOrder, name='VWAPOrder')
+export_as_api(TWAPOrder, name='TWAPOrder')
 export_as_api(ORDER_STATUS, name='ORDER_STATUS')
 export_as_api(SIDE, name='SIDE')
 export_as_api(POSITION_EFFECT, name='POSITION_EFFECT')
@@ -71,26 +73,40 @@ def assure_order_book_id(id_or_ins):
     return assure_instrument(id_or_ins).order_book_id
 
 
-def cal_style(price, style):
-    if price is None and style is None:
+def cal_style(price, style, price_or_style=None):
+    if price_or_style is None:
+        if price:
+            price_or_style = price
+        if style:
+            price_or_style = style
+
+    if price_or_style is None:
         return MarketOrder()
 
-    if style is not None:
-        if not isinstance(style, OrderStyle):
-            raise RuntimeError
-        return style
+    if not isinstance(price_or_style, (int, float, OrderStyle)):
+        raise RQInvalidArgument(f"price or style or price_or_style type no support. {price_or_style}")
 
-    if isinstance(price, OrderStyle):
-        # 为了 order_xxx('RB1710', 10, MarketOrder()) 这种写法
-        if isinstance(price, LimitOrder):
-            if np.isnan(price.get_limit_price()):
-                raise RQInvalidArgument(_(u"Limit order price should not be nan."))
-        return price
+    if isinstance(price_or_style, OrderStyle):
+        return price_or_style
 
-    if np.isnan(price):
-        raise RQInvalidArgument(_(u"Limit order price should not be nan."))
+    return LimitOrder(price_or_style)
 
-    return LimitOrder(price)
+
+def calc_open_close_style(price, style, price_or_style):
+    if isinstance(price_or_style, tuple):
+        _length = len(price_or_style)
+        if _length == 0:
+            o, c = None, None
+        elif _length == 1:
+            o, c = price_or_style[0], price_or_style[0]
+        else:
+            o, c = price_or_style[0], price_or_style[1]
+        open_style = cal_style(price, style, o)
+        close_style = cal_style(price, style, c)
+    else:
+        open_style = cal_style(price, style, price_or_style)
+        close_style = open_style
+    return open_style, close_style
 
 
 @export_as_api

@@ -141,6 +141,56 @@ after_trading - 盘后
 交易接口
 =================
 
+OrderStyle - 订单类型
+------------------------------------------------------
+
+该类型可供后续下单接口中 price_or_style 参数使用
+
+.. module:: rqalpha.model.order
+
+.. _order_style:
+
+.. autoclass:: MarketOrder
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=MarketOrder())
+
+市价单
+
+.. autoclass:: LimitOrder
+
+    :param float limit_price: 价格
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=LimitOrder(10))
+
+限价单
+
+.. autoclass:: TWAPOrder
+
+    :param int start_min: 分钟起始时间
+    :param int end_min: 分钟结束时间
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=TWAPOrder(931, 945))
+
+算法时间加权价格订单
+
+.. autoclass:: VWAPOrder
+
+    :param int start_min: 分钟起始时间
+    :param int end_min: 分钟结束时间
+
+    .. code-block:: python
+
+        order_shares("000001.XSHE", amount=100, price_or_style=VWAPOrder(931, 945))
+
+
+算法成交量加权价格订单
+
 ..  module:: rqalpha.api
 
 submit_order - 自由参数下单「通用」
@@ -421,13 +471,14 @@ scheduler定时器
 scheduler.run_daily - 每天运行
 ------------------------------------------------------
 
-..  py:function:: scheduler.run_daily(function)
+..  py:function:: scheduler.run_daily(function, time_rule=None)
 
     每日运行一次指定的函数，只能在init内使用。
 
-    注意，schedule一定在其对应时间点的handle_bar之后执行。
+    注意，schedule一定在其对应时间点的handle_bar之前执行, 日频则忽略time_rule设置, 在当天handle_bar之前执行。
 
     :param func function: 使传入的function每日运行。注意，function函数一定要包含（并且只能包含）context, bar_dict两个输入参数
+    :param int time_rule: 通过 market_open, market_close，physical_time 来设置当天运行的时间，为None时默认为9:31分执行
 
     :example:
 
@@ -448,7 +499,7 @@ scheduler.run_daily - 每天运行
 scheduler.run_weekly - 每周运行
 ------------------------------------------------------
 
-..  py:function:: scheduler.run_weekly(function, weekday=x, tradingday=t)
+..  py:function:: scheduler.run_weekly(function, weekday=x, tradingday=t, time_rule=None)
 
     每周运行一次指定的函数，只能在init内使用。
 
@@ -463,6 +514,8 @@ scheduler.run_weekly - 每周运行
     :param int weekday: 1~5 分别代表周一至周五，用户必须指定
 
     :param int tradingday: 范围为[-5,1],[1,5] 例如，1代表每周第一个交易日，-1代表每周倒数第一个交易日，用户可以不填写。
+
+    :param int time_rule: 通过 market_open, market_close，physical_time 来设置当天运行的时间，为None时默认为9:31分执行
 
     :example:
 
@@ -485,7 +538,7 @@ scheduler.run_weekly - 每周运行
 scheduler.run_monthly - 每月运行
 ------------------------------------------------------
 
-..  py:function:: scheduler.run_monthly(function, tradingday=t)
+..  py:function:: scheduler.run_monthly(function, tradingday=t, time_rule=None)
 
     每月运行一次指定的函数，只能在init内使用。
 
@@ -497,6 +550,8 @@ scheduler.run_monthly - 每月运行
     :param func function: 使传入的function每日交易开始前运行。注意，function函数一定要包含（并且只能包含）context, bar_dict两个输入参数。
 
     :param int tradingday: 范围为[-23,1], [1,23] ，例如，1代表每月第一个交易日，-1代表每月倒数第一个交易日，用户必须指定。
+
+    :param int time_rule: 通过 market_open, market_close，physical_time 来设置当天运行的时间，为None时默认为9:31分执行
 
     :example:
 
@@ -645,6 +700,8 @@ Tick - 快照行情
 Order - 订单
 ------------------------------------------------------
 ..  module:: rqalpha.model.order
+
+.. _order:
 
 ..  autoclass:: Order
     :members:
@@ -872,6 +929,10 @@ ORDER_TYPE - 订单类型
     ..  py:attribute:: LIMIT
 
         限价单
+
+    .. py:attribute:: ALGO
+
+        算法单
 
 
 ORDER_STATUS - 订单状态

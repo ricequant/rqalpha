@@ -367,3 +367,6 @@ class BaseDataSource(AbstractDataSource):
 
     def history_ticks(self, instrument, count, dt):
         raise NotImplementedError
+
+    def get_algo_bar(self, id_or_ins, start_min, end_min, dt):
+        raise NotImplementedError("open source rqalpha not support algo order")

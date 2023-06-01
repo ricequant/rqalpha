@@ -75,7 +75,7 @@ class TradingDatesMixin(object):
     def is_trading_date(self, date, trading_calendar_type=None):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
-        return pos < len(trading_dates) and trading_dates[pos] == date
+        return pos < len(trading_dates) and trading_dates[pos].date() == date
 
     def get_trading_dt(self, calendar_dt):
         trading_date = self.get_future_trading_date(calendar_dt)

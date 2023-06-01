@@ -19,7 +19,7 @@ from collections import defaultdict
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
-from rqalpha.model.order import Order
+from rqalpha.model.order import Order, ALGO_ORDER_STYLES
 from rqalpha.model.trade import Trade
 from rqalpha.model.tick import TickObject
 from rqalpha.portfolio.account import Account
@@ -83,6 +83,26 @@ class DefaultBarMatcher(AbstractMatcher):
     SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY)
     SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
 
+    def _get_bar_volume(self, order, open_auction=False):
+        if open_auction:
+            volume = self._env.data_proxy.get_open_auction_bar(order.order_book_id, self._env.calendar_dt).volume
+        else:
+            if isinstance(order.style, ALGO_ORDER_STYLES):
+                _, volume = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
+            else:
+                volume = self._env.get_bar(order.order_book_id).volume
+        return volume
+
+    def _get_deal_price(self, order, open_auction=False):
+        if open_auction:
+            deal_price = self._open_auction_deal_price_decider(order.order_book_id, order.side)
+        else:
+            if isinstance(order.style, ALGO_ORDER_STYLES):
+                deal_price, v = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
+            else:
+                deal_price = self._deal_price_decider(order.order_book_id, order.side)
+        return deal_price
+
     def match(self, account, order, open_auction):
         # type: (Account, Order, bool) -> None
         if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
@@ -90,10 +110,7 @@ class DefaultBarMatcher(AbstractMatcher):
         order_book_id = order.order_book_id
         instrument = self._env.get_instrument(order_book_id)
 
-        if open_auction:
-            deal_price = self._open_auction_deal_price_decider(order_book_id, order.side)
-        else:
-            deal_price = self._deal_price_decider(order_book_id, order.side)
+        deal_price = self._get_deal_price(order, open_auction)
 
         if not is_valid_price(deal_price):
             listed_date = instrument.listed_date.date()
@@ -104,6 +121,8 @@ class DefaultBarMatcher(AbstractMatcher):
                     order_book_id=order.order_book_id,
                     listed_date=listed_date,
                 )
+            elif isinstance(order.style, ALGO_ORDER_STYLES):
+                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
             else:
                 reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
                     order_book_id=order.order_book_id)
@@ -138,17 +157,14 @@ class DefaultBarMatcher(AbstractMatcher):
                     return
 
         if self._inactive_limit:
-            bar_volume = self._env.get_bar(order_book_id).volume
+            bar_volume = self._get_bar_volume(order, open_auction=open_auction)
             if bar_volume == 0:
                 reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
                 order.mark_cancelled(reason)
                 return
 
         if self._volume_limit:
-            if open_auction:
-                volume = self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).volume
-            else:
-                volume = self._env.get_bar(order_book_id).volume
+            volume = self._get_bar_volume(order, open_auction=open_auction)
             if volume == volume:
                 volume_limit = round(volume * self._volume_percent) - self._turnover[order.order_book_id]
 
@@ -171,6 +187,7 @@ class DefaultBarMatcher(AbstractMatcher):
             fill = order.unfilled_quantity
 
         ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+
         if open_auction:
             price = deal_price
         else:

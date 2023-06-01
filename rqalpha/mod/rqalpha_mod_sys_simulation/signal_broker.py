@@ -18,12 +18,15 @@
 
 from copy import copy
 
+import numpy as np
+
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import is_valid_price
 from rqalpha.core.events import EVENT, Event
 from rqalpha.model.trade import Trade
+from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT
 
 from .slippage import SlippageDecider
@@ -77,6 +80,12 @@ class SignalBroker(AbstractBroker):
 
         if order.type == ORDER_TYPE.LIMIT:
             deal_price = order.frozen_price
+        elif isinstance(order.style, ALGO_ORDER_STYLES):
+            deal_price, v = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
+            if np.isnan(deal_price):
+                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
+                order.mark_rejected(reason)
+                return
         else:
             deal_price = last_price
 
