@@ -39,7 +39,7 @@ from rqalpha.const import (
     EXECUTION_PHASE, ORDER_STATUS, SIDE, POSITION_EFFECT, ORDER_TYPE, MATCHING_TYPE, RUN_TYPE, POSITION_DIRECTION,
     DEFAULT_ACCOUNT_TYPE
 )
-from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle
+from rqalpha.model.order import Order, MarketOrder, LimitOrder, OrderStyle, VWAPOrder, TWAPOrder
 from rqalpha.core.events import EVENT, Event
 from rqalpha.core.strategy_context import StrategyContext
 from rqalpha.portfolio.position import Position
@@ -48,6 +48,8 @@ export_as_api(logger, name='logger')
 export_as_api(user_print, name='print')
 export_as_api(LimitOrder, name='LimitOrder')
 export_as_api(MarketOrder, name='MarketOrder')
+export_as_api(VWAPOrder, name='VWAPOrder')
+export_as_api(TWAPOrder, name='TWAPOrder')
 export_as_api(ORDER_STATUS, name='ORDER_STATUS')
 export_as_api(SIDE, name='SIDE')
 export_as_api(POSITION_EFFECT, name='POSITION_EFFECT')
