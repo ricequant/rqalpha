@@ -241,3 +241,10 @@ def get_trading_period(universe, accounts):
 def safe_div(dividend, divisor):
     return dividend / divisor if divisor else np.nan
 
+
+def check_items_in_container(items, should_in, name):
+    for item in items:
+        if item not in should_in:
+            raise ValueError(
+                "{}: got invalided value {}, choose any in {}".format(name, item, should_in)
+            )
