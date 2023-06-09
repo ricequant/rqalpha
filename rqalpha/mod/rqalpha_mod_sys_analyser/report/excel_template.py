@@ -81,7 +81,8 @@ class SummaryTemplate(ExcelTemplate):
         "概览": SingleCellSchema,
         "年度指标": VerticalSeriesSchema,
         "月度收益": VerticalSeriesSchema,
-        "月度超额收益（几何）": VerticalSeriesSchema
+        "月度超额收益（几何）": VerticalSeriesSchema,
+        "个股权重": VerticalSeriesSchema,
     }
 
 
