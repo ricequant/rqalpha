@@ -1039,7 +1039,7 @@ def _futures_get_dominant_price(
     """ 获取主力合约行情数据
 
     :param underlying_symbols: 期货合约品种，可传入 underlying_symbol, underlying_symbol list
-    :param start_date: 开始日期, 最小日期为 20210104
+    :param start_date: 开始日期, 最小日期为 20100104
     :param end_date: 结束日期
     :param frequency: 历史数据的频率。 支持/日/分钟/tick 级别的历史数据，默认为'1d'。
         1m- 分钟线，1d-日线，分钟可选取不同频率，例如'5m'代表 5 分钟线
