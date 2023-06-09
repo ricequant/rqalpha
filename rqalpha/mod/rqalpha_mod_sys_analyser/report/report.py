@@ -132,7 +132,7 @@ def generate_report(result_dict, output_path):
     }, output_path)
 
     for name in ["portfolio", "stock_account", "future_account",
-                 "stock_positions", "future_positions", "trades"]:
+                 "stock_positions", "future_positions", "trades", "positions_weight"]:
         try:
             df = result_dict[name]
         except KeyError:
