@@ -2,6 +2,13 @@
 CHANGELOG
 ==================
 
+5.1.0
+==================
+- 新增个股权重检测, summary报告中新增了表格
+- 新增api futures.get_dominant_price,支持动态复权
+- 修复pandas1.5.0以下无法产生report
+- 修复在日内回转交易时trading_pnl计算错误
+
 5.0.0
 ==================
 - 适配pandas2.0
