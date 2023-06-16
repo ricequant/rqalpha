@@ -268,6 +268,7 @@ class AnalyserMod(AbstractMod):
             for direction_prefix, pos in direction_pos_iter:
                 data[direction_prefix + "_pnl"] = self._safe_convert(getattr(pos, "pnl", None))
                 data[direction_prefix + "_margin"] = self._safe_convert(pos.margin)
+                data[direction_prefix + "_market_value"] = self._safe_convert(pos.market_value)
                 data[direction_prefix + "_quantity"] = self._safe_convert(pos.quantity)
                 data[direction_prefix + "_avg_open_price"] = self._safe_convert(getattr(pos, "avg_price", None))
         return data
@@ -489,6 +490,26 @@ class AnalyserMod(AbstractMod):
                 df = df.set_index("date").sort_index()
             result_dict["{}_positions".format(account_name)] = df
 
+        # 个股权重
+        df_list = []
+        need_cols = ["order_book_id", "market_value"]
+        for table_name in ["stock_positions", "future_positions"]:
+            if table_name not in result_dict:
+                continue
+            table = result_dict[table_name]
+            for field in ["market_value", "LONG_market_value", "SHORT_market_value"]:
+                if field not in table.columns:
+                    continue
+                df_list.append(table.rename(columns={field: "market_value"})[need_cols])
+        if len(df_list) > 0:
+            positions_weight_df = pd.concat(df_list).dropna()
+            positions_weight_df["total_value"] = positions_weight_df.groupby(by="date")["market_value"].sum()
+            positions_weight_df["weight"] = positions_weight_df["market_value"] / positions_weight_df["total_value"]
+            positions_weight_df = positions_weight_df.groupby(by="date")["weight"].describe()
+        else:
+            positions_weight_df = pd.DataFrame(columns=["count", "mean", "std", "min", "25%", "50%", "75%", "max"])
+        positions_weight_df = positions_weight_df.reindex(total_portfolios.index).fillna(value=0)
+        result_dict["positions_weight"] = positions_weight_df
         result_dict["yearly_risk_free_rates"] = dict(_get_yearly_risk_free_rates(data_proxy, start_date, end_date))
 
         if self._mod_config.output_file:

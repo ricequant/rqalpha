@@ -104,7 +104,8 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
         return
 
-    if (side == SIDE.BUY) or (side == SIDE.SELL and current_quantity != abs(amount)):
+    if (side == SIDE.BUY and current_quantity != -amount) or (side == SIDE.SELL and current_quantity != abs(amount)):
+        # 在融券回测中，需要用买单作为平空，对于此种情况下出现的碎股，亦允许一次性申报卖出
         amount = _round_order_quantity(ins, amount)
 
     if amount == 0:

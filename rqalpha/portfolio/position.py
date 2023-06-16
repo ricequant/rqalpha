@@ -28,6 +28,7 @@ from rqalpha.model.trade import Trade
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import PropertyReprMeta, property_repr
+from rqalpha.utils.logger import user_system_log
 
 
 def new_position_meta():
@@ -119,7 +120,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def trading_pnl(self):
         # type: () -> float
         trade_quantity = self._quantity - self._logical_old_quantity
-        return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor if trade_quantity else 0
+        return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
     def position_pnl(self):
@@ -149,14 +150,20 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     @property
     def prev_close(self):
+        # type: () -> float
         if not is_valid_price(self._prev_close):
             self._prev_close = self._env.data_proxy.get_prev_close(self._order_book_id, self._env.trading_dt)
+            if not is_valid_price(self._prev_close):
+                user_system_log.warn("invalid prev close of {}: {}".format(self._order_book_id, self._prev_close))
         return self._prev_close
 
     @property
     def last_price(self):
+        # type: () -> float
         if not is_valid_price(self._last_price):
             self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
+            if not is_valid_price(self._last_price):
+                user_system_log.warn("invalid last price of {}: {}".format(self._order_book_id, self._last_price))
         return self._last_price
 
     @property

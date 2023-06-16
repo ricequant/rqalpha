@@ -106,6 +106,11 @@ def _monthly_geometric_excess_returns(p_returns: Series, b_returns: Optional[Ser
     return ChainMap({str(c): data[c] for c in data.columns}, {"year": data.index})
 
 
+def _gen_positions_weight(df):
+    rename = {"{}%".format(i): "percent_{}".format(i) for i in [25, 50, 75]}
+    return df.reset_index().rename(columns=rename).to_dict(orient="list")
+
+
 def generate_report(result_dict, output_path):
     from six import StringIO
 
@@ -128,11 +133,12 @@ def generate_report(result_dict, output_path):
         "概览": summary,
         "年度指标": _yearly_indicators(p_nav, p_returns, b_nav, b_returns, result_dict["yearly_risk_free_rates"]),
         "月度收益": _monthly_returns(p_returns),
-        "月度超额收益（几何）": _monthly_geometric_excess_returns(p_returns, b_returns)
+        "月度超额收益（几何）": _monthly_geometric_excess_returns(p_returns, b_returns),
+        "个股权重": _gen_positions_weight(result_dict["positions_weight"]),
     }, output_path)
 
     for name in ["portfolio", "stock_account", "future_account",
-                 "stock_positions", "future_positions", "trades"]:
+                 "stock_positions", "future_positions", "trades", "positions_weight"]:
         try:
             df = result_dict[name]
         except KeyError:
@@ -145,7 +151,11 @@ def generate_report(result_dict, output_path):
             df = df.set_index("date")
 
         csv_txt = StringIO()
-        csv_txt.write(df.to_csv(encoding='utf-8', lineterminator='\n'))
+        try:
+            csv_txt.write(df.to_csv(encoding='utf-8', lineterminator='\n'))
+        except TypeError as e:
+            # pandas 1.5.0 以下是 line_terminator
+            csv_txt.write(df.to_csv(encoding='utf-8', line_terminator='\n'))
 
         with open(os.path.join(output_path, "{}.csv".format(name)), 'w') as csvfile:
             csvfile.write(csv_txt.getvalue())

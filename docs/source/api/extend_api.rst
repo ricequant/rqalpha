@@ -136,6 +136,11 @@ futures.get_warehouse_stocks - 期货仓单数据
 .. autofunction:: get_warehouse_stocks
 
 
+futures.get_dominant_price - 期货主力合约连续合约行情数据
+------------------------------------------------------
+
+.. autofunction:: get_dominant_price
+
 宏观经济
 =================
 

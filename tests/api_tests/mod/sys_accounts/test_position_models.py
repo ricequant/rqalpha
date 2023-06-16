@@ -49,3 +49,45 @@ def test_stock_sellable():
 
     return locals()
 
+
+def test_trading_pnl():
+
+    __config__ = {
+        "base": {
+            "start_date": "2020-01-02",
+            "end_date": "2020-01-02",
+            "frequency": "1d",
+            "accounts": {
+                "future": 1000000,
+            }
+        },
+        "extra": {
+            "log_level": "error",
+        },
+        "mod": {
+            "sys_progress": {
+                "enabled": True,
+                "show": True,
+            }
+        },
+    }
+
+    def init(context):
+        context.quantity = 2
+        context.open_price = None
+        context.close_price = None
+
+    def open_auction(context, bar_dict):
+        context.open_price = buy_open("IC2001", context.quantity).avg_price
+
+    def handle_bar(context, bar_dict):
+        context.close_price = sell_close("IC2001", context.quantity).avg_price
+
+    def after_trading(context):
+        pos = get_position("IC2001")
+        # 当天交易盈亏 == (卖出价 - 买入价) * 数量 * 合约乘数
+        assert pos.trading_pnl == (5361.8 - 5300.0) * context.quantity * 200
+        assert pos.trading_pnl == (context.close_price - context.open_price) * context.quantity * 200
+
+    return locals()
+
