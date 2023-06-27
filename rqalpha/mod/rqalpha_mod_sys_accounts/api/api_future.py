@@ -22,7 +22,7 @@ import numpy as np
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import assure_instrument
-from rqalpha.apis.api_abstract import order, order_to, buy_open, buy_close, sell_open, sell_close
+from rqalpha.apis.api_abstract import order, order_to, buy_open, buy_close, sell_open, sell_close, PRICE_OR_STYLE_TYPE
 from rqalpha.apis.api_base import cal_style
 from rqalpha.apis.api_rqdatac import futures
 from rqalpha.environment import Environment
@@ -174,35 +174,35 @@ def _order(order_book_id, quantity, style, target):
 
 
 @order.register(INSTRUMENT_TYPE.FUTURE)
-def future_order(order_book_id, quantity, price=None, style=None, price_or_style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], Optional[Union[float, OrderStyle]]) -> List[Order]
+def future_order(order_book_id, quantity, price_or_style=None, price=None, style=None):
+    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), False)
 
 
 @order_to.register(INSTRUMENT_TYPE.FUTURE)
-def future_order_to(order_book_id, quantity, price=None, style=None, price_or_style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], Optional[Union[float, OrderStyle]]) -> List[Order]
+def future_order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
+    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), True)
 
 
 @buy_open.register(INSTRUMENT_TYPE.FUTURE)
-def future_buy_open(id_or_ins, amount, price=None, style=None, price_or_style=None):
+def future_buy_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
     return _submit_order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
 @buy_close.register(INSTRUMENT_TYPE.FUTURE)
-def future_buy_close(id_or_ins, amount, price=None, style=None, close_today=False, price_or_style=None):
+def future_buy_close(id_or_ins, amount, price_or_style=None, price=None, style=None, close_today=False):
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style, price_or_style))
 
 
 @sell_open.register(INSTRUMENT_TYPE.FUTURE)
-def future_sell_open(id_or_ins, amount, price=None, style=None, price_or_style=None):
+def future_sell_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
     return _submit_order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
 @sell_close.register(INSTRUMENT_TYPE.FUTURE)
-def future_sell_close(id_or_ins, amount, price=None, style=None, close_today=False, price_or_style=None):
+def future_sell_close(id_or_ins, amount, price_or_style=None, price=None, style=None, close_today=False):
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style, price_or_style))
 
