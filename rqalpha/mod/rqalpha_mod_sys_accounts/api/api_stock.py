@@ -167,7 +167,7 @@ def _order_value(account, position, ins, cash_amount, style):
 
 
 @order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_shares(id_or_ins, amount, price=None, style=None, price_or_style=None):
+def stock_order_shares(id_or_ins, amount, price_or_style=None, price=None, style=None):
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_shares(
@@ -177,19 +177,19 @@ def stock_order_shares(id_or_ins, amount, price=None, style=None, price_or_style
 
 
 @order_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_value(id_or_ins, cash_amount, price=None, style=None, price_or_style=None):
+def stock_order_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, cash_amount, cal_style(price, style, price_or_style))
 
 
 @order_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_percent(id_or_ins, percent, price=None, style=None, price_or_style=None):
+def stock_order_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, account.total_value * percent, cal_style(price, style, price_or_style))
 
 
 @order_target_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None, price_or_style=None):
+def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     if cash_amount == 0:
@@ -202,7 +202,7 @@ def stock_order_target_value(id_or_ins, cash_amount, price=None, style=None, pri
 
 
 @order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_target_percent(id_or_ins, percent, price=None, style=None, price_or_style=None):
+def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     if percent == 0:
@@ -215,7 +215,7 @@ def stock_order_target_percent(id_or_ins, percent, price=None, style=None, price
 
 
 @order.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order(order_book_id, quantity, price=None, style=None, price_or_style=None):
+def stock_order(order_book_id, quantity, price_or_style=None, price=None, style=None):
     result_order = stock_order_shares(order_book_id, quantity, price, style, price_or_style)
     if result_order:
         return [result_order]
@@ -223,7 +223,7 @@ def stock_order(order_book_id, quantity, price=None, style=None, price_or_style=
 
 
 @order_to.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_to(order_book_id, quantity, price=None, style=None, price_or_style=None):
+def stock_order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
     position = Environment.get_instance().portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     quantity = quantity - position.quantity
@@ -243,15 +243,13 @@ def stock_order_to(order_book_id, quantity, price=None, style=None, price_or_sty
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(verify_that('id_or_ins').is_valid_stock(), verify_that('amount').is_number(), *common_rules)
-def order_lots(id_or_ins, amount, price=None, style=None, price_or_style=None):
-    # type: (Union[str, Instrument], int, Optional[float], Optional[OrderStyle], PRICE_OR_STYLE_TYPE) -> Optional[Order]
+def order_lots(id_or_ins, amount, price_or_style=None, price=None, style=None):
+    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
     """
     指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
     :param id_or_ins: 下单标的物
     :param int amount: 下单量, 正数代表买入，负数代表卖出。将会根据一手xx股来向下调整到一手的倍数，比如中国A股就是调整成100股的倍数。
-    :param float price: 下单价格，默认为None，表示 :class:`~MarketOrder`, 此参数主要用于简化 `style` 参数。
-    :param style: 下单类型, 默认是市价单。目前支持的订单类型有 :class:`~LimitOrder` 和 :class:`~MarketOrder`
     :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
                             TWAPOrder、VWAPOrder
 
@@ -262,7 +260,7 @@ def order_lots(id_or_ins, amount, price=None, style=None, price_or_style=None):
         #买入20手的平安银行股票，并且发送市价单：
         order_lots('000001.XSHE', 20)
         #买入10手平安银行股票，并且发送限价单，价格为￥10：
-        order_lots('000001.XSHE', 10, style=LimitOrder(10))
+        order_lots('000001.XSHE', 10, price_or_style=LimitOrder(10))
 
     """
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
