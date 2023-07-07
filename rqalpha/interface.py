@@ -132,6 +132,51 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
         """
         raise NotImplementedError
 
+    @property
+    @abc.abstractmethod
+    def avg_price(self):
+        # type: () -> Union[int, float]
+        """
+        开仓均价
+        """
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def pnl(self):
+        # type: () -> float
+        """
+        该持仓的累计盈亏
+        """
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def equity(self):
+        # type: () -> float
+        """
+        当前持仓市值
+        """
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def prev_close(self):
+        # type: () -> float
+        """
+        昨日收盘价
+        """
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def last_price(self):
+        # type: () -> float
+        """
+        当前最新价
+        """
+        raise NotImplementedError
+
 
 class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
     """
