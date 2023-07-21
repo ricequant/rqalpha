@@ -236,7 +236,6 @@ class FuturePosition(Position):
     @property
     def margin(self) -> float:
         """
-        保证金
         保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
         """
         return self.margin_rate * self.market_value
