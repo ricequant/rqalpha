@@ -166,8 +166,16 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._match(tick.order_book_id)
 
     def _match(self, order_book_id=None):
-        order_filter = lambda a_and_o: not (a_and_o[1].is_final() or (order_book_id and a_and_o[1].order_book_id != order_book_id))
-        for account, order in filter(order_filter, self._open_orders):
+        order_filter = lambda a_and_o: all([
+            not a_and_o[1].is_final(),                                                          # 订单未完成
+            True if order_book_id is None else a_and_o[1].order_book_id == order_book_id,       # 只撮合指定的订单
+        ])
+        open_order_filter = lambda a_and_o: all([
+            order_filter(a_and_o),
+            # 得在交易时段内
+            self._env.data_proxy.instrument(a_and_o[1].order_book_id).during_continuous_auction(self._env.calendar_dt)
+        ])
+        for account, order in filter(open_order_filter, self._open_orders):
             self._get_matcher(order.order_book_id).match(account, order, open_auction=False)
         for account, order in filter(order_filter, self._open_auction_orders):
             self._get_matcher(order.order_book_id).match(account, order, open_auction=True)
