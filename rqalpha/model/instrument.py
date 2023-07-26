@@ -375,6 +375,14 @@ class Instrument(metaclass=PropertyReprMeta):
                 trading_period.append(TimeRange(start, end))
         return trading_period
 
+    def during_continuous_auction(self, time):
+        # type: (datetime.time) -> bool
+        """ 是否处于连续竞价时间段内 """
+        for time_range in self.trading_hours:
+            if time_range.start <= time <= time_range.end:
+                return True
+        return False
+
     @property
     def trading_code(self):
         # type: () -> str
