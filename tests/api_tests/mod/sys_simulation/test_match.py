@@ -16,6 +16,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 
+from rqalpha.const import ORDER_STATUS
+
 __config__ = {
     "base": {
         "frequency": "1d",
@@ -38,7 +40,7 @@ def test_match():
         "base": {
             "data_bundle_path": os.path.expanduser("~/.rqalpha-plus/bundle"),
             "start_date": "2023-07-07",
-            "end_date": "2023-07-07",
+            "end_date": "2023-07-10",
             "frequency": "1m",
             "accounts": {
                 "future": 1000000,
@@ -58,9 +60,17 @@ def test_match():
 
     def handle_bar(context, bar_dict):
         dt_str = context.now.strftime("%Y%m%d%H%M%S")
+        # 当天夜盘
         if dt_str == "20230706210100":
             context.order = buy_open("RR2309", 1, price_or_style=3500)
-        if dt_str == "20230706230200":
+        elif dt_str == "20230706230200":
+            assert context.order.status == ORDER_STATUS.ACTIVE, "盘中休息也保持active"
             assert "订单被拒单: [RR2309] 当前缺失市场数据。" != context.order._message, "不能在非交易时段尝试撮合"
+        # 第二天早盘
+        elif dt_str == "20230707091000":
+            assert context.order.status == ORDER_STATUS.ACTIVE, "夜盘下的order在未成交、撤单等情况下应保持active状态"
+        # 第二天夜盘
+        elif dt_str == "20230707210100":
+            assert context.order.status == ORDER_STATUS.REJECTED, "上个交易日的订单在当天收盘后未被拒单"
 
     return locals()
