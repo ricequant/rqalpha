@@ -24,11 +24,10 @@ from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import is_valid_price
-from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.core.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.model.order import ALGO_ORDER_STYLES
-from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT, EXECUTION_PHASE
+from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT
 
 from .slippage import SlippageDecider
 
@@ -38,11 +37,9 @@ class SignalBroker(AbstractBroker):
         self._env = env
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._price_limit = mod_config.price_limit
-        self._open_orders = []
-        self._env.event_bus.add_listener(EVENT.BAR, self.on_bar)
 
     def get_open_orders(self, order_book_id=None):
-        return [order for _, order in self._open_orders]
+        return []
 
     def submit_order(self, order):
         if order.position_effect == POSITION_EFFECT.EXERCISE:
@@ -53,22 +50,11 @@ class SignalBroker(AbstractBroker):
             return
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
-        instrument = self._env.data_proxy.instrument(order.order_book_id)
-        if ExecutionContext.phase() == EXECUTION_PHASE.ON_BAR and not instrument.during_continuous_auction(self._env.calendar_dt):
-            self._open_orders.append((account, order))
-        else:
-            self._match(account, order)
+        self._match(account, order)
 
     def cancel_order(self, order):
         user_system_log.warn(_(u"cancel_order function is not supported in signal mode"))
         return None
-
-    def on_bar(self, event):
-        for account, order in self._open_orders:
-            instrument = self._env.data_proxy.instrument(order.order_book_id)
-            if not order.is_final() and instrument.during_continuous_auction(self._env.calendar_dt):
-                self._match(account, order)
-        self._open_orders = [(a, o) for a, o in self._open_orders if not o.is_final()]
 
     def _match(self, account, order):
         order_book_id = order.order_book_id
