@@ -500,7 +500,7 @@ class AnalyserMod(AbstractMod):
             for field in ["market_value", "LONG_market_value", "SHORT_market_value"]:
                 if field not in table.columns:
                     continue
-                df_list.append(table.rename(columns={field: "market_value"})[need_cols])
+                df_list.append(table[["order_book_id", field]].rename(columns={field: "market_value"})[need_cols].dropna())
         if len(df_list) > 0:
             positions_weight_df = pd.concat(df_list).dropna()
             positions_weight_df["total_value"] = positions_weight_df.groupby(by="date")["market_value"].sum()
