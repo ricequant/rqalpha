@@ -75,18 +75,22 @@ class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
         if not wait:
             return super(ProgressedProcessPoolExecutor, self).shutdown(wait)
         progress_bar = click.progressbar(length=self._total_steps, show_eta=False)
+        finish = False
         while True:
-            try:
-                step = self._progress_queue.get(timeout=0.5)
-            except queue.Empty:
-                pass
-            else:
-                progress_bar.update(step)
-
             for fut in self._futures:
                 if fut.running():
                     break
             else:
+                finish = True
+            while True:
+                try:
+                    step = self._progress_queue.get(timeout=0.5)
+                except queue.Empty:
+                    break
+                else:
+                    progress_bar.update(step)
+
+            if finish:
                 break
 
         progress_bar.render_finish()
