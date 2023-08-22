@@ -48,8 +48,8 @@ def test_match():
         },
         "mod": {
             "ricequant_data": {
-            "enabled": True
-        }
+                "enabled": True
+            }
         }
     }
 
