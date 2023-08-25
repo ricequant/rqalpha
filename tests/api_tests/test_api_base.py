@@ -15,6 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。v
 
+from datetime import date
+
 __config__ = {
     "base": {
         "start_date": "2016-12-01",
@@ -249,6 +251,21 @@ def test_get_trading_dates():
         assert sorted([item.strftime("%Y%m%d") for item in correct_dates_list]) == sorted(
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
+
+    return locals()
+
+
+def test_get_current_snapshot():
+
+    def open_auction(context, bar_dict):
+        if date(2016, 12, 12) == context.now.date():
+            bar = current_snapshot("000001.XSHE")
+            assert bar["last"] == 9.65, "早盘集合竞价的current_snapshot的last不等于当天的open"
+
+    def handle_bar(context, bar_dict):
+        if date(2016, 12, 12) == context.now.date():
+            bar = current_snapshot("000001.XSHE")
+            assert bar["last"] == 9.5, "尾盘集合竞价的current_snapshot的last不等于当天的close"
 
     return locals()
 

@@ -22,17 +22,18 @@ import six
 import numpy as np
 import pandas as pd
 
-from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, EXECUTION_PHASE
 from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
-from rqalpha.model.order import TWAPOrder, VWAPOrder, ALGO_ORDER_STYLES
+from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 from rqalpha.utils.typing import DateLike, StrOrIter
 from rqalpha.interface import AbstractDataSource, AbstractPriceBoard
+from rqalpha.core.execution_context import ExecutionContext
 
 
 class DataProxy(TradingDatesMixin):
@@ -219,7 +220,7 @@ class DataProxy(TradingDatesMixin):
             ]
             _FUTURE_FIELD_NAMES = _STOCK_FIELD_NAMES + ['open_interest', 'prev_settlement']
 
-            if ins.type == 'Future':
+            if ins.type == INSTRUMENT_TYPE.FUTURE:
                 return _STOCK_FIELD_NAMES
             else:
                 return _FUTURE_FIELD_NAMES
@@ -230,7 +231,7 @@ class DataProxy(TradingDatesMixin):
             if not bar:
                 return None
             d = {k: bar[k] for k in tick_fields_for(instrument) if k in bar.dtype.names}
-            d['last'] = bar['close']
+            d["last"] = bar["open"] if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION else bar["close"]
             d['prev_close'] = self._get_prev_close(order_book_id, dt)
             return TickObject(instrument, d)
 
