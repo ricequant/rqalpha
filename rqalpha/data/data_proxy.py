@@ -220,7 +220,7 @@ class DataProxy(TradingDatesMixin):
             ]
             _FUTURE_FIELD_NAMES = _STOCK_FIELD_NAMES + ['open_interest', 'prev_settlement']
 
-            if ins.type == INSTRUMENT_TYPE.FUTURE:
+            if ins.type not in [INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION]:
                 return _STOCK_FIELD_NAMES
             else:
                 return _FUTURE_FIELD_NAMES
