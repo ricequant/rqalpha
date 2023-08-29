@@ -2,6 +2,15 @@
 CHANGELOG
 ==================
 
+5.2.0
+==================
+- report年度指标新增超额夏普比率
+- 调整默认印花税为万5
+- order_target_portfolio支持可转债
+- 修复bundle更新时进度条跟不上任务完成进度
+- 修复合约交割时权益计算有误
+- 修复current_snapshot在open_auction中获取时last为close,应为open
+
 5.1.2
 ==================
 - 修复analyser中计算个股权重的异常
