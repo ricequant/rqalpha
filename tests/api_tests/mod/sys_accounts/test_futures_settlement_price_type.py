@@ -53,3 +53,40 @@ def test_futures_settlement_price_type():
             assert pos.position_pnl == (6468 - 6351.2) * 200
     return locals()
 
+
+def test_futures_de_listed():
+    """ 期货合约到期交割 """
+
+    __config__ = {
+        "base": {
+            "start_date": "2016-03-17",
+            "end_date": "2016-03-21",
+            "frequency": "1d",
+            "accounts": {
+                "future": 1000000,
+            }
+        },
+        "mod": {
+            "sys_transaction_cost": {
+                # 期货佣金倍率,即在默认的手续费率基础上按该倍数进行调整，期货默认佣金因合约而异
+                "futures_commission_multiplier": 0,
+            },
+            "sys_accounts": {
+                "futures_settlement_price_type": "settlement"
+            }
+        }
+    }
+
+    def init(context):
+        pass
+
+    def before_trading(context):
+        if context.now.date() == date(2016, 3, 21):
+            assert context.portfolio.total_value == context.total_value + (5944.29 - 5760.0) * 200, "合约交割后的总权益有误"
+
+    def handle_bar(context, bar_dict):
+        if context.now.date() == date(2016, 3, 17):
+            buy_open("IC1603", 1)
+            context.total_value = context.portfolio.total_value
+
+    return locals()

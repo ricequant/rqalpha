@@ -290,23 +290,22 @@ class FuturePosition(Position):
 
     def settlement(self, trading_date):
         # type: (date) -> float
-        super(FuturePosition, self).settlement(trading_date)
+        delta_cash = super(FuturePosition, self).settlement(trading_date)
         if self._quantity == 0:
-            return 0
+            return delta_cash
         data_proxy = self._env.data_proxy
         instrument = data_proxy.instrument(self._order_book_id)
         next_date = data_proxy.get_next_trading_date(trading_date)
+        if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
+            # 逐日盯市按照结算价结算
+            self._last_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
+        delta_cash += self.equity
+        self._avg_price = self.last_price
         if instrument.de_listed_at(next_date):
             user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))
             self._quantity = self._old_quantity = 0
-
-        if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
-            # 逐日盯市按照结算价结算
-            self._last_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
-        delta_cash = self.equity
-        self._avg_price = self.last_price
         return delta_cash
 
 

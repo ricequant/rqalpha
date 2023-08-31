@@ -39,6 +39,7 @@ def _yearly_indicators(
     data = {field: [] for field in [
         "year", "returns", "benchmark_returns", "geometric_excess_return", "geometric_excess_drawdown",
         "geometric_excess_drawdown_days", "excess_annual_volatility", "annual_volatility", "sharpe_ratio",
+        "excess_sharpe",
         "information_ratio", "annual_tracking_error", "weekly_excess_win_rate", "monthly_excess_win_rate",
         "max_drawdown", "max_drawdown_days"
     ]}
@@ -73,6 +74,7 @@ def _yearly_indicators(
         data["geometric_excess_drawdown"].append(risk.geometric_excess_drawdown)
         data["geometric_excess_drawdown_days"].append((excess_max_dd.end_date - excess_max_dd.start_date).days)
         data["sharpe_ratio"].append(risk.sharpe)
+        data["excess_sharpe"].append(risk.excess_sharpe)
         data["information_ratio"].append(risk.information_ratio)
         data["annual_tracking_error"].append(risk.annual_tracking_error)
         data["weekly_excess_win_rate"].append(weekly_excess_win_rate)

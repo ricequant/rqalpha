@@ -32,5 +32,10 @@ __config__ = {
             "enabled": True,
             "show": True,
         },
+        "sys_transaction_cost": {
+            # 默认印花税修改成万5，2倍才是原来的千1
+            "tax_multiplier": 2,
+        },
+
     },
 }
