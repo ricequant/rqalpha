@@ -78,14 +78,14 @@ class DefaultBarMatcher(AbstractMatcher):
             return 0
 
     def _open_auction_deal_price_decider(self, order_book_id, _):
-        return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt).open
+        return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.trading_dt).open
 
     SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY)
     SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
 
     def _get_bar_volume(self, order, open_auction=False):
         if open_auction:
-            volume = self._env.data_proxy.get_open_auction_bar(order.order_book_id, self._env.calendar_dt).volume
+            volume = self._env.data_proxy.get_open_auction_bar(order.order_book_id, self._env.trading_dt).volume
         else:
             if isinstance(order.style, ALGO_ORDER_STYLES):
                 _, volume = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)

@@ -59,3 +59,48 @@ def test_open_auction():
         assert context.open_auction_prices == (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
 
     return locals()
+
+
+def test_open_auction_1m():
+    """ 测试分钟回测下的open_auction """
+
+    try:
+        import rqalpha_plus
+    except ImportError:
+        print("非本地不执行分钟频率测试")
+        return {}
+
+    __config__ = {
+        "base": {
+            "start_date": "2023-03-17",
+            "end_date": "2023-03-17",
+            "frequency": "1m",
+            "accounts": {
+                "stock": 100000,
+                "future": 1000000,
+            }
+        },
+        "mod": {
+            "ricequant_data": {
+                "enabled": True,
+            }
+        }
+    }
+
+    def init(context):
+        subscribe("AU2306")
+        subscribe("000001.XSHE")
+
+    def open_auction(context, bar_dict):
+        buy_open("AU2306", 1)
+        order_shares("000001.XSHE", 100)
+        assert bar_dict["AU2306"].last == 432.58, "期货分钟频率open_auction价格有误"
+        assert bar_dict["000001.XSHE"].last == 12.99, "股票分钟频率open_auction价格有误"
+
+    def handle_bar(context, bar_dict):
+        pos = get_position("AU2306")
+        assert pos.avg_price == 432.58, "期货分钟频率open_auction价格有误"
+        pos = get_position("000001.XSHE")
+        assert pos.avg_price == 12.99, "股票分钟频率open_auction价格有误"
+
+    return locals()

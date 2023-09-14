@@ -361,7 +361,8 @@ class BarMap(object):
                 if not self._dt:
                     return BarObject(instrument, NANDict, self._dt)
                 if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
-                    bar = self._data_proxy.get_open_auction_bar(order_book_id, self._dt)
+                    trading_date = self._dt if self._frequency == "1d" else self._data_proxy.get_trading_dt(self._dt).date()
+                    bar = self._data_proxy.get_open_auction_bar(order_book_id, trading_date)
                 else:
                     bar = self._data_proxy.get_bar(order_book_id, self._dt, self._frequency)
             except PermissionError:
