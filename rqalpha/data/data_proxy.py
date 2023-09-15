@@ -314,6 +314,10 @@ class DataProxy(TradingDatesMixin):
             id_or_ins = self.instrument(id_or_ins)
         if id_or_ins is None:
             return np.nan, 0
+        # 存在一些有日线没分钟线的情况,如果不是缺了,通常都是因为volume为0,用日线先判断确认下
+        day_bar = self.get_bar(order_book_id=id_or_ins.order_book_id, dt=dt, frequency="1d")
+        if day_bar.volume == 0:
+            return np.nan, 0
         bar = self._data_source.get_algo_bar(id_or_ins, order_style.start_min, order_style.end_min, dt)
         return (bar[order_style.TYPE], bar["volume"]) if bar else (np.nan, 0)
 
