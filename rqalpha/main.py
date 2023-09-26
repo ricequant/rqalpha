@@ -303,3 +303,7 @@ def set_loggers(config):
 
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())
+
+    if extra_config.log_file:
+        logbook.FileHandler(filename=extra_config.log_file, mode="a").push_application()
+
