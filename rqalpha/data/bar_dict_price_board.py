@@ -26,7 +26,7 @@ class BarDictPriceBoard(AbstractPriceBoard):
 
     def _get_bar(self, order_book_id):
         if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
-            return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.calendar_dt)
+            return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.trading_dt)
         return self._env.get_bar(order_book_id)
 
     def get_last_price(self, order_book_id):
