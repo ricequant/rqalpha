@@ -15,27 +15,27 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import os
-import pandas
-import pickle
-import jsonpickle
 import datetime
-from operator import attrgetter
+import os
+import pickle
 from collections import defaultdict
+from operator import attrgetter
 from typing import Dict, Optional, List, Tuple, Union, Iterable
 
+import jsonpickle
 import numpy as np
+import pandas
 import pandas as pd
 from rqrisk import Risk, WEEKLY, MONTHLY
 
+from rqalpha.api import export_as_api
+from rqalpha.const import DAYS_CNT
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
-from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-from rqalpha.const import DAYS_CNT
-from rqalpha.api import export_as_api
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
@@ -100,8 +100,8 @@ class AnalyserMod(AbstractMod):
         self._env = env
         self._mod_config = mod_config
         self._enabled = (
-            mod_config.record or mod_config.plot or mod_config.output_file or
-            mod_config.plot_save_file or mod_config.report_save_path or mod_config.benchmark
+                mod_config.record or mod_config.plot or mod_config.output_file or
+                mod_config.plot_save_file or mod_config.report_save_path or mod_config.benchmark
         )
         if self._enabled:
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self._subscribe_events)
@@ -318,7 +318,8 @@ class AnalyserMod(AbstractMod):
                 summary["benchmark_symbol"] = self._env.data_proxy.instrument(benchmark_obid).symbol
             else:
                 summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
-                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol}:{w}" for o, w in self._benchmark)
+                summary["benchmark_symbol"] = ",".join(
+                    f"{self._env.data_proxy.instrument(o).symbol}:{w}" for o, w in self._benchmark)
 
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
@@ -367,7 +368,8 @@ class AnalyserMod(AbstractMod):
             benchmark_total_returns = (np.array(self._benchmark_daily_returns) + 1.0).prod() - 1.0
             summary['benchmark_total_returns'] = benchmark_total_returns
             date_count = len(self._benchmark_daily_returns)
-            benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
+            benchmark_annualized_returns = (benchmark_total_returns + 1) ** (
+                    DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
             summary['benchmark_annualized_returns'] = benchmark_annualized_returns
 
         trades = pd.DataFrame(self._trades)
@@ -500,7 +502,8 @@ class AnalyserMod(AbstractMod):
             for field in ["market_value", "LONG_market_value", "SHORT_market_value"]:
                 if field not in table.columns:
                     continue
-                df_list.append(table[["order_book_id", field]].rename(columns={field: "market_value"})[need_cols].dropna())
+                df_list.append(
+                    table[["order_book_id", field]].rename(columns={field: "market_value"})[need_cols].dropna())
         if len(df_list) > 0:
             positions_weight_df = pd.concat(df_list).dropna()
             positions_weight_df["total_value"] = positions_weight_df.groupby(by="date")["market_value"].sum()
@@ -513,6 +516,8 @@ class AnalyserMod(AbstractMod):
         result_dict["yearly_risk_free_rates"] = dict(_get_yearly_risk_free_rates(data_proxy, start_date, end_date))
 
         if self._mod_config.output_file:
+            output_file_path = os.path.dirname(self._mod_config.output_file)
+            os.makedirs(output_file_path, exist_ok=True)
             with open(self._mod_config.output_file, 'wb') as f:
                 pickle.dump(result_dict, f)
 
