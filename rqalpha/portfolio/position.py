@@ -252,7 +252,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def update_last_price(self, price):
         self._last_price = price
 
-    def calc_close_today_amount(self, trade_amount):
+    def calc_close_today_amount(self, trade_amount, position_effect):
         return 0
 
     @property
