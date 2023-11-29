@@ -189,7 +189,7 @@ class DefaultBarMatcher(AbstractMatcher):
         else:
             fill = order.unfilled_quantity
 
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
         if open_auction:
             price = deal_price
@@ -432,7 +432,7 @@ class DefaultTickMatcher(AbstractMatcher):
             fill = order.unfilled_quantity
 
         # 平今的数量
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
         # 对价格进行滑点处理
         if instrument.during_call_auction(self._env.calendar_dt):
@@ -582,7 +582,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
         else:
             fill = min(order.unfilled_quantity, amount)
 
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
         trade = Trade.__from_create__(
             order_id=order.order_id,
