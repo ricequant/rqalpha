@@ -119,7 +119,7 @@ class SimulationBroker(AbstractBroker, Persistable):
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
         if self._match_immediately:
-            self._match(self._env.calendar_dt)
+            self._match()
 
     def cancel_order(self, order):
         account = self._env.get_account(order.order_book_id)
@@ -158,19 +158,17 @@ class SimulationBroker(AbstractBroker, Persistable):
     def on_bar(self, event):
         for matcher in self._matchers.values():
             matcher.update(event)
-        self._match(event.calendar_dt)
+        self._match()
 
     def on_tick(self, event):
         tick = event.tick
         self._get_matcher(tick.order_book_id).update(event)
-        self._match(event.calendar_dt, tick.order_book_id)
+        self._match(tick.order_book_id)
 
-    def _match(self, dt, order_book_id=None):
+    def _match(self, order_book_id=None):
         # 撮合未完成的订单，若指定标的时只撮合指定的标的的订单
-        order_filter = lambda a_and_o: (not a_and_o[1].is_final()) and (True if order_book_id is None else a_and_o[1].order_book_id == order_book_id)
-        # + 需要在交易时段内
-        open_order_filter = lambda a_and_o: order_filter(a_and_o) and self._env.data_proxy.instrument(a_and_o[1].order_book_id).during_continuous_auction(dt.time())
-        for account, order in filter(open_order_filter, self._open_orders):
+        order_filter = lambda a_and_o: not (a_and_o[1].is_final() or (order_book_id and a_and_o[1].order_book_id != order_book_id))
+        for account, order in filter(order_filter, self._open_orders):
             self._get_matcher(order.order_book_id).match(account, order, open_auction=False)
         for account, order in filter(order_filter, self._open_auction_orders):
             self._get_matcher(order.order_book_id).match(account, order, open_auction=True)

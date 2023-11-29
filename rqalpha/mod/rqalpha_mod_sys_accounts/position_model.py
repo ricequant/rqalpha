@@ -260,9 +260,11 @@ class FuturePosition(Position):
         # type: () -> float
         return super(FuturePosition, self).pnl * self.contract_multiplier
 
-    def calc_close_today_amount(self, trade_amount):
-        close_today_amount = trade_amount - self.old_quantity
-        return max(close_today_amount, 0)
+    def calc_close_today_amount(self, trade_amount, position_effect):
+        if position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            return trade_amount if trade_amount <= self.today_quantity else self.today_quantity
+        else:
+            return max(trade_amount - self._old_quantity, 0)
 
     def apply_trade(self, trade):
         if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:

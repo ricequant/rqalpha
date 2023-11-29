@@ -192,8 +192,11 @@ msgstr "Bundle日线数据不完整，请及时更新bundle"
 msgid "good bundle's day bar"
 msgstr "Bundle日线数据良好"
 
-msgid "benchmark not exists, please entry correct order_book_id"
-msgstr "当前使用的基准合约信息不存在，请输入正确的合约"
+msgid "benchmark {} not exists, please entry correct order_book_id"
+msgstr "基准标的({})信息不存在，请输入正确的标的代码"
+
+msgid "benchmark {} listed date {} > backtest start date {} or de_listed date {} <= backtest end date {}"
+msgstr "基准标的({})上市日期({})晚于回测起始日期({})或退市日期({})早于回测结束日期({})"
 
 #: rqalpha/cmds/bundle.py:105
 msgid ""

@@ -19,6 +19,7 @@ import os
 from typing import Dict, Optional
 
 import numpy
+import pandas
 from collections import ChainMap
 from pandas import Series, DataFrame
 
@@ -152,16 +153,11 @@ def generate_report(result_dict, output_path):
             df["date"] = df["date"].apply(lambda x: x.strftime("%Y-%m-%d"))
             df = df.set_index("date")
 
-        csv_txt = StringIO()
-        try:
-            csv_txt.write(df.to_csv(encoding='utf-8', lineterminator='\n'))
-        except TypeError as e:
+        if pandas.__version__ >= '1.5.0':
+            df.to_csv("{}/{}.csv".format(output_path, name), encoding='utf-8-sig', lineterminator='\n')
+        else:
             # pandas 1.5.0 以下是 line_terminator
-            csv_txt.write(df.to_csv(encoding='utf-8', line_terminator='\n'))
-
-        with open(os.path.join(output_path, "{}.csv".format(name)), 'w') as csvfile:
-            csvfile.write(csv_txt.getvalue())
-
+            df.to_csv("{}/{}.csv".format(output_path, name), encoding='utf-8-sig', line_terminator='\n')
 
 if __name__ == "__main__":
     import pickle

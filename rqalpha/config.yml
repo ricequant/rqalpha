@@ -52,3 +52,5 @@ extra:
   is_hold: false
   locale: ~
   logger: []
+  # 日志输出文件
+  log_file: ~

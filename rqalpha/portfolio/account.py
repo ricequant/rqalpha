@@ -179,8 +179,8 @@ class Account(metaclass=AccountMeta):
         except KeyError:
             return Position(order_book_id, direction)
 
-    def calc_close_today_amount(self, order_book_id, trade_amount, position_direction):
-        return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount)
+    def calc_close_today_amount(self, order_book_id, trade_amount, position_direction, position_effect):
+        return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount, position_effect)
 
     @property
     def type(self):

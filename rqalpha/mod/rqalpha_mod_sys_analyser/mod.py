@@ -134,10 +134,18 @@ class AnalyserMod(AbstractMod):
 
     def _subscribe_events(self, event):
         if self._benchmark:
+            _s = self._env.config.base.start_date
+            _e = self._env.config.base.end_date
             for order_book_id, weight in self._benchmark:
-                if self._env.data_proxy.instrument(order_book_id) is None:
+                ins = self._env.data_proxy.instrument(order_book_id)
+                if ins is None:
                     raise RuntimeError(
-                        _("benchmark not exists, please entry correct order_book_id").format(order_book_id)
+                        _("benchmark {} not exists, please entry correct order_book_id").format(order_book_id)
+                    )
+                if ins.listed_date.date() > _s or ins.de_listed_date.date() <= _e:
+                    raise RuntimeError(
+                        _("benchmark {} listed date {} > backtest start date {} or de_listed date {} <= backtest end "
+                          "date {}").format(order_book_id, ins.listed_date.date(), _s, ins.de_listed_date.date(), _e)
                     )
 
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)

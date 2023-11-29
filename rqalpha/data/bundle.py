@@ -246,8 +246,8 @@ class GenerateFileTask(ProgressedTask):
         yield self._step
 
 
-STOCK_FIELDS = ['open', 'close', 'high', 'low', 'limit_up', 'limit_down', 'volume', 'total_turnover']
-INDEX_FIELDS = ['open', 'close', 'high', 'low', 'volume', 'total_turnover']
+STOCK_FIELDS = ['open', 'close', 'high', 'low', 'prev_close', 'limit_up', 'limit_down', 'volume', 'total_turnover']
+INDEX_FIELDS = ['open', 'close', 'high', 'low', 'prev_close', 'volume', 'total_turnover']
 FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement', 'open_interest']
 FUND_FIELDS = STOCK_FIELDS
 

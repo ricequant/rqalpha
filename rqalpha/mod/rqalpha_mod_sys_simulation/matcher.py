@@ -124,9 +124,12 @@ class DefaultBarMatcher(AbstractMatcher):
             elif isinstance(order.style, ALGO_ORDER_STYLES):
                 reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
             else:
-                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
-                    order_book_id=order.order_book_id)
-            order.mark_rejected(reason)
+                # 撮合的时候无行情数据也不需要撤单，等到有行情再撮合
+                reason = None
+                # reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
+                #     order_book_id=order.order_book_id)
+            if reason:
+                order.mark_rejected(reason)
             return
 
         price_board = self._env.price_board
@@ -186,7 +189,7 @@ class DefaultBarMatcher(AbstractMatcher):
         else:
             fill = order.unfilled_quantity
 
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
         if open_auction:
             price = deal_price
@@ -429,7 +432,7 @@ class DefaultTickMatcher(AbstractMatcher):
             fill = order.unfilled_quantity
 
         # 平今的数量
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
         # 对价格进行滑点处理
         if instrument.during_call_auction(self._env.calendar_dt):
@@ -579,7 +582,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
         else:
             fill = min(order.unfilled_quantity, amount)
 
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction)
+        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
         trade = Trade.__from_create__(
             order_id=order.order_id,
