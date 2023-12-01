@@ -28,6 +28,8 @@ __config__ = {
     "benchmark": None,
     # 当不输出 csv/pickle/plot 等内容时，关闭该项可关闭策略运行过程中部分收集数据的逻辑，用以提升性能
     "record": True,
+    # 策略名称，可在summary、回测报告，收益图中展示
+    "strategy_name": None,
     # 回测结果输出的文件路径，该文件为 pickle 格式，内容为每日净值、头寸、流水及风险指标等；若不设置则不输出该文件
     "output_file": None,
     # 回测报告的数据目录，报告为 csv 格式；若不设置则不输出报告

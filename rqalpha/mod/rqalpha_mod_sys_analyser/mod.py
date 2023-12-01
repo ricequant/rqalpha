@@ -306,7 +306,10 @@ class AnalyserMod(AbstractMod):
         if len(self._total_portfolios) == 0:
             return
 
-        strategy_name = os.path.basename(self._env.config.base.strategy_file).split(".")[0]
+        if self._mod_config.strategy_name:
+            strategy_name = self._mod_config.strategy_name
+        else:
+            strategy_name = os.path.basename(self._env.config.base.strategy_file).split(".")[0]
         data_proxy = self._env.data_proxy
         start_date, end_date = attrgetter("start_date", "end_date")(self._env.config.base)
         summary = {
@@ -536,7 +539,7 @@ class AnalyserMod(AbstractMod):
             _plot_template_cls = PLOT_TEMPLATE.get(self._mod_config.plot, DefaultPlot)
             plot_result(
                 result_dict, self._mod_config.plot, self._mod_config.plot_save_file,
-                plot_config.weekly_indicators, plot_config.open_close_points, _plot_template_cls
+                plot_config.weekly_indicators, plot_config.open_close_points, _plot_template_cls, self._mod_config.strategy_name
             )
 
         return result_dict

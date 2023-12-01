@@ -29,8 +29,8 @@ from rqalpha.const import POSITION_EFFECT
 from .utils import IndicatorInfo, LineInfo, max_dd as _max_dd, SpotInfo, max_ddd as _max_ddd
 from .utils import weekly_returns, trading_dates_index
 from .consts import PlotTemplate, DefaultPlot
-from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT
-from .consts import LABEL_FONT_SIZE, BLACK, SUPPORT_CHINESE
+from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT, PLOT_TITLE_HEIGHT
+from .consts import LABEL_FONT_SIZE, BLACK, SUPPORT_CHINESE, TITLE_FONT_SIZE
 from .consts import MAX_DD, MAX_DDD, OPEN_POINT, CLOSE_POINT
 from .consts import LINE_BENCHMARK, LINE_STRATEGY, LINE_WEEKLY_BENCHMARK, LINE_WEEKLY, LINE_EXCESS
 
@@ -130,6 +130,16 @@ class UserPlot(SubPlot):
         pyplot.legend(loc="best").get_frame().set_alpha(0.5)
 
 
+class TitlePlot(SubPlot):
+    height: int = PLOT_TITLE_HEIGHT
+
+    def __init__(self, strategy_name):
+        self._strategy_name = strategy_name
+
+    def plot(self, ax:Axes):
+        ax.axis("off")
+        ax.text(0.5, 0.5, self._strategy_name, ha='center', va='top', color=BLACK, fontsize=TITLE_FONT_SIZE)
+
 class WaterMark:
     def __init__(self, img_width, img_height):
         logo_file = os.path.join(
@@ -167,7 +177,7 @@ def _plot(title: str, sub_plots: List[SubPlot]):
 
 def plot_result(
         result_dict, show=True, save=None, weekly_indicators: bool = False, open_close_points: bool = False,
-        plot_template_cls=DefaultPlot
+        plot_template_cls=DefaultPlot, strategy_name=None
 ):
     summary = result_dict["summary"]
     portfolio = result_dict["portfolio"]
@@ -222,6 +232,9 @@ def plot_result(
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))
     
+    if strategy_name:
+        sub_plots.insert(0, TitlePlot(strategy_name))
+
     _plot(summary["strategy_file"], sub_plots)
 
     if save:
