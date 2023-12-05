@@ -173,8 +173,7 @@ def _plot(title: str, sub_plots: List[SubPlot], strategy_name):
     water_mark.plot(fig)
 
     gs = gridspec.GridSpec(img_height, 8, figure=fig)
-    if (strategy_name): last_height = 1
-    else: last_height = 0
+    last_height = 0
     for p in sub_plots:
         p.plot(pyplot.subplot(gs[last_height:last_height + p.height, :p.right_pad]))
         last_height += p.height
@@ -239,6 +238,10 @@ def plot_result(
     )]
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))
+    
+    if strategy_name:
+        for p in sub_plots:
+            if (isinstance(p, IndicatorArea)): p.height += PLOT_TITLE_HEIGHT
 
     _plot(summary["strategy_file"], sub_plots, strategy_name)
 
