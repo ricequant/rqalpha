@@ -29,8 +29,8 @@ from rqalpha.const import POSITION_EFFECT
 from .utils import IndicatorInfo, LineInfo, max_dd as _max_dd, SpotInfo, max_ddd as _max_ddd
 from .utils import weekly_returns, trading_dates_index
 from .consts import PlotTemplate, DefaultPlot
-from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT
-from .consts import LABEL_FONT_SIZE, BLACK, SUPPORT_CHINESE
+from .consts import IMG_WIDTH, INDICATOR_AREA_HEIGHT, PLOT_AREA_HEIGHT, USER_PLOT_AREA_HEIGHT, PLOT_TITLE_HEIGHT
+from .consts import LABEL_FONT_SIZE, BLACK, SUPPORT_CHINESE, TITLE_FONT_SIZE
 from .consts import MAX_DD, MAX_DDD, OPEN_POINT, CLOSE_POINT
 from .consts import LINE_BENCHMARK, LINE_STRATEGY, LINE_WEEKLY_BENCHMARK, LINE_WEEKLY, LINE_EXCESS
 
@@ -49,11 +49,12 @@ class IndicatorArea(SubPlot):
 
     def __init__(
             self, indicators: List[List[IndicatorInfo]], indicator_values: Mapping[str, float],
-            plot_template: PlotTemplate
+            plot_template: PlotTemplate, strategy_name=None
     ):
         self._indicators = indicators
         self._values = indicator_values
         self._template = plot_template
+        self._strategy_name = strategy_name
 
     def plot(self, ax: Axes):
         ax.axis("off")
@@ -70,7 +71,10 @@ class IndicatorArea(SubPlot):
                     value = "nan"
                 ax.text(x, y_label, i.label, color=i.color, fontsize=LABEL_FONT_SIZE),
                 ax.text(x, y_value, value, color=BLACK, fontsize=i.value_font_size)
-
+        if self._strategy_name:
+            p = TitlePlot(self._strategy_name, len(self._indicators), self._template)
+            p.plot(ax)
+        
 
 class ReturnPlot(SubPlot):
     height: int = PLOT_AREA_HEIGHT
@@ -130,8 +134,21 @@ class UserPlot(SubPlot):
         pyplot.legend(loc="best").get_frame().set_alpha(0.5)
 
 
+class TitlePlot(SubPlot):
+    height: int = PLOT_TITLE_HEIGHT
+
+    def __init__(self, strategy_name, indicator_area_rows, plot_template: PlotTemplate):
+        self._strategy_name = strategy_name
+        self._indicator_area_rows = indicator_area_rows
+        self._template = plot_template
+
+    def plot(self, ax:Axes):
+        x = 0.57  # title 为整图居中，而非子图居中
+        y = (self._template.INDICATOR_LABEL_HEIGHT + self._template.INDICATOR_VALUE_HEIGHT) * self._indicator_area_rows + 0.1
+        ax.text(x, y, self._strategy_name, ha='center', va='bottom', color=BLACK, fontsize=TITLE_FONT_SIZE)
+
 class WaterMark:
-    def __init__(self, img_width, img_height):
+    def __init__(self, img_width, img_height, strategy_name):
         logo_file = os.path.join(
             os.path.dirname(os.path.realpath(rqalpha.__file__)),
             "resource", 'ricequant-logo.png')
@@ -142,16 +159,16 @@ class WaterMark:
 
     def plot(self, fig: Figure):
         fig.figimage(
-            self.logo_img,
-            xo=(self.img_width * self.dpi - self.logo_img.shape[1]) / 2,
-            yo=(self.img_height * self.dpi - self.logo_img.shape[0]) / 2,
-            alpha=0.4,
-        )
-        
+            self.logo_img, 
+            xo = (self.img_width * self.dpi - self.logo_img.shape[1]) / 2,
+            yo = (PLOT_AREA_HEIGHT * self.dpi - self.logo_img.shape[0]) / 2, 
+            alpha=0.4
+            )
 
-def _plot(title: str, sub_plots: List[SubPlot]):
+
+def _plot(title: str, sub_plots: List[SubPlot], strategy_name):
     img_height = sum(s.height for s in sub_plots)
-    water_mark = WaterMark(IMG_WIDTH, img_height)
+    water_mark = WaterMark(IMG_WIDTH, img_height, strategy_name)
     fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi, clear=True)
     water_mark.plot(fig)
 
@@ -167,7 +184,7 @@ def _plot(title: str, sub_plots: List[SubPlot]):
 
 def plot_result(
         result_dict, show=True, save=None, weekly_indicators: bool = False, open_close_points: bool = False,
-        plot_template_cls=DefaultPlot
+        plot_template_cls=DefaultPlot, strategy_name=None
 ):
     summary = result_dict["summary"]
     portfolio = result_dict["portfolio"]
@@ -216,13 +233,17 @@ def plot_result(
     sub_plots = [IndicatorArea(indicators, ChainMap(summary, {
         "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
         "excess_max_dd_ddd": ex_max_dd_ddd,
-    }), plot_template), ReturnPlot(
+    }), plot_template, strategy_name), ReturnPlot(
         portfolio.unit_net_value - 1, return_lines, spots_on_returns
     )]
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))
     
-    _plot(summary["strategy_file"], sub_plots)
+    if strategy_name:
+        for p in sub_plots:
+            if (isinstance(p, IndicatorArea)): p.height += PLOT_TITLE_HEIGHT
+
+    _plot(summary["strategy_file"], sub_plots, strategy_name)
 
     if save:
         file_path = save
