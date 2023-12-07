@@ -18,8 +18,8 @@
 
 __config__ = {
     "base": {
-        "start_date": "2015-04-14",
-        "end_date": "2015-04-24",
+        "start_date": "2015-04-10",
+        "end_date": "2015-04-20",
         "frequency": "1d",
         "accounts": {
             "stock": 1000000,
