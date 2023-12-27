@@ -222,10 +222,13 @@ class FuturePosition(Position):
     @cached_property
     def contract_multiplier(self):
         return self._instrument.contract_multiplier
-
+    
     @cached_property
     def margin_rate(self):
-        return self._instrument.margin_rate * self._env.config.base.margin_multiplier
+        if self.direction == POSITION_DIRECTION.LONG:
+            return self._instrument.long_margin_ratio(self._env.trading_dt) * self._env.config.base.margin_multiplier
+        elif self.direction == POSITION_DIRECTION.SHORT:
+            return self._instrument.short_margin_ratio(self._env.trading_dt) * self._env.config.base.margin_multiplier
 
     @property
     def equity(self):

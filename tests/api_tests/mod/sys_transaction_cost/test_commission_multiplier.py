@@ -49,7 +49,7 @@ def test_commission_multiplier():
             future_commission_info = env.data_proxy.get_commission_info(context.s2)
             context.fixed = False
             assert stock_order.transaction_cost == 16.66 * 59900 * 8 / 10000 * 2
-            assert future_order.transaction_cost == 7308 * 200 * future_commission_info["open_commission_ratio"] * 3
+            assert future_order.transaction_cost == 7308 * 200 * future_commission_info.open_commission_ratio * 3
 
     return locals()
 

@@ -244,6 +244,10 @@ class DataProxy(TradingDatesMixin):
         instrument = self.instruments(order_book_id)
         return self._data_source.get_commission_info(instrument)
 
+    def get_futures_trading_parameters(self, order_book_id, dt):
+        instrument = self.instruments(order_book_id)
+        return self._data_source.get_futures_trading_parameters(instrument, dt)
+
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)
 

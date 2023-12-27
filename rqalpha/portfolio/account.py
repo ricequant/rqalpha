@@ -443,7 +443,7 @@ class Account(metaclass=AccountMeta):
     def _frozen_cash_of_order(self, order):
         if order.position_effect == POSITION_EFFECT.OPEN:
             instrument = self._env.data_proxy.instrument(order.order_book_id)
-            order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
+            order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.datetime)
         else:
             order_cost = 0
         return order_cost + self._env.get_order_transaction_cost(order)

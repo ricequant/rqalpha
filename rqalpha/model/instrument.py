@@ -46,10 +46,12 @@ class Instrument(metaclass=PropertyReprMeta):
 
     __repr__ = property_repr
 
-    def __init__(self, dic, future_tick_size_getter=None):
-        # type: (Dict, Optional[Callable[[Instrument], float]]) -> None
+    def __init__(self, dic, future_tick_size_getter=None, future_long_margin_ratio_getter=None, future_short_margin_ratio_getter=None):
+        # type: (Dict, Optional[Callable[[Instrument], float]], Optional[Callable[[Instrument], float]], Optional[Callable[[Instrument], float]]) -> None
         self.__dict__ = copy.copy(dic)
         self._future_tick_size_getter = future_tick_size_getter
+        self._future_long_margin_ratio_getter = future_long_margin_ratio_getter
+        self._future_short_margin_ratio_getter = future_short_margin_ratio_getter
 
         if "listed_date" in dic:
             self.__dict__["listed_date"] = self._fix_date(dic["listed_date"])
@@ -240,7 +242,7 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         [float] 合约最低保证金率（期货专用）
         """
-        return self.__dict__.get("margin_rate", 1)
+        return self.__dict__.get('margin_rate', 1)
 
     @property
     def underlying_order_book_id(self):
@@ -448,13 +450,31 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
-    def calc_cash_occupation(self, price, quantity, direction):
-        # type: (float, float, POSITION_DIRECTION) -> float
+    def long_margin_ratio(self, dt):
+        # type: (datetime) -> float
+        if self.type == INSTRUMENT_TYPE.FUTURE:
+            return self._future_long_margin_ratio_getter(self, dt)
+        else:
+            return 1
+        
+    def short_margin_ratio(self, dt):
+        # type: (datetime) -> float
+        if self.type == INSTRUMENT_TYPE.FUTURE:
+            return self._future_short_margin_ratio_getter(self, dt)
+        else:
+            return 1
+
+    def calc_cash_occupation(self, price, quantity, direction, dt):
+        # type: (float, float, float, POSITION_DIRECTION) -> float
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:
             margin_multiplier = Environment.get_instance().config.base.margin_multiplier
-            return price * quantity * self.contract_multiplier * self.margin_rate * margin_multiplier
+            if direction == POSITION_DIRECTION.LONG:
+                margin_rate = self.long_margin_ratio(dt)
+            elif direction == POSITION_DIRECTION.SHORT:
+                margin_rate = self.short_margin_ratio(dt)
+            return price * quantity * self.contract_multiplier * margin_rate * margin_multiplier
         else:
             raise NotImplementedError
 
