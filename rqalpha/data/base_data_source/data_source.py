@@ -372,17 +372,14 @@ class BaseDataSource(AbstractDataSource):
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
-    def get_commission_info(self, instrument):
-        return self._future_info_store.get_future_info(instrument)
-
     def get_futures_trading_parameters(self, instrument, dt):
         if self._futures_trading_parameters_store:
             trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument, dt)
             if trading_parameters == None:
-                return self.get_commission_info(instrument)
+                return self._future_info_store.get_future_info(instrument)
             return trading_parameters
         else:
-            return self.get_commission_info(instrument)
+            return self._future_info_store.get_future_info(instrument)
 
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         raise NotImplementedError

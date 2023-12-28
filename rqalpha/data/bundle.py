@@ -144,8 +144,24 @@ def gen_future_info(d):
                 all_futures_info = json.load(f)
                 if "margin_rate" not in all_futures_info[0]:
                     return True
+    
+    def update_margin_rate(file):
+        all_instruments_data = rqdatac.all_instruments("Future")
+        with open(file, "r") as f:
+            all_futures_info = json.load(f)
+            new_all_futures_info = []
+            for future_info in all_futures_info:
+                if "order_book_id" in future_info:
+                    future_info["margin_rate"] = all_instruments_data[all_instruments_data["order_book_id"] == future_info["order_book_id"]].iloc[0].margin_rate
+                elif "underlying_symbol" in future_info:
+                    dominant = rqdatac.futures.get_dominant(future_info["underlying_symbol"])[-1]
+                    future_info["margin_rate"] = all_instruments_data[all_instruments_data["order_book_id"] == dominant].iloc[0].margin_rate
+                new_all_futures_info.append(future_info)
+        os.remove(file)
+        with open(file, "w") as f:
+            json.dump(new_all_futures_info, f, separators=(',', ':'), indent=2)
 
-    if (_need_to_recreate()): os.remove(future_info_file)
+    if (_need_to_recreate()): update_margin_rate(future_info_file)
 
     # 新增 hard_code 的种类时，需要同时修改rqalpha.data.base_data_source.storages.FutureInfoStore.data_compatible中的内容
     hard_code = [
@@ -216,12 +232,13 @@ def gen_future_info(d):
             symbol_list.append(info["underlying_symbol"])
 
     futures_order_book_id = rqdatac.all_instruments(type='Future')['order_book_id'].unique()
+    commission_df = rqdatac.futures.get_commission_margin()
     for future in futures_order_book_id:
         underlying_symbol = re.match(r'^[a-zA-Z]*', future).group()
         if future in future_list:
             continue
         future_dict = {}
-        commission = rqdatac.futures.get_commission_margin(future)
+        commission = commission_df[commission_df['order_book_id'] == future]
         if not commission.empty:
             future_dict['order_book_id'] = future
             commission = commission.iloc[0]
@@ -240,7 +257,7 @@ def gen_future_info(d):
             except AttributeError:
                 # FIXME: why get_dominant return None???
                 continue
-            commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
+            commission = commission_df[commission_df['order_book_id'] == dominant].iloc[0]
 
             for p in param:
                 future_dict[p] = commission[p]
@@ -520,13 +537,14 @@ def check_rqdata_permission():
     """
     if rqdatac.__version__ < '2.11.11.4':
         from rqalpha.utils.logger import system_log
-        print("RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用")
+        system_log.info("RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用")
         return
     try:
         rqdatac.futures.get_trading_parameters("A1005")
     except Exception as e:
         if isinstance(e, rqdatac.share.errors.PermissionDenied):
-            print("您的 rqdata 账号没有权限使用期货历史保证金和费率，将使用固定的保证金和费率进行回测和计算\n可联系米筐科技开通权限：0755-26569969")
+            from rqalpha.utils.logger import system_log
+            system_log.info("您的 rqdata 账号没有权限使用期货历史保证金和费率，将使用固定的保证金和费率进行回测和计算\n可联系米筐科技开通权限：0755-26569969")
             return
     return True
 
