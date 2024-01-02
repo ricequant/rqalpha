@@ -72,7 +72,7 @@ class BaseDataSource(AbstractDataSource):
         INSTRUMENT_TYPE.PUBLIC_FUND,
     )
 
-    def __init__(self, path, custom_future_info, trading_parameters_update_args):       
+    def __init__(self, path, custom_future_info, update_parameters_end_date=None):       
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 
@@ -89,8 +89,8 @@ class BaseDataSource(AbstractDataSource):
         }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
         
         self._futures_trading_parameters_store = None
-        if trading_parameters_update_args:
-            if update_futures_trading_parameters(path, trading_parameters_update_args):
+        if update_parameters_end_date:
+            if update_futures_trading_parameters(path, update_parameters_end_date):
                 self._futures_trading_parameters_store = FuturesTradingParametersStore(_p("futures_trading_parameters.h5"))
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
         
@@ -110,9 +110,7 @@ class BaseDataSource(AbstractDataSource):
                     ))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))
-
-        if "margin_rate" not in self._future_info_store._default_data[list(self._future_info_store._default_data.keys())[0]]:
-            self._future_info_store.data_compatible(self._instruments_stores[INSTRUMENT_TYPE.FUTURE])
+        self._future_info_store.data_compatible(self._instruments_stores[INSTRUMENT_TYPE.FUTURE])
         dividend_store = DividendStore(_p('dividends.h5'))
         self._dividends = {
             INSTRUMENT_TYPE.CS: dividend_store,
@@ -373,9 +371,10 @@ class BaseDataSource(AbstractDataSource):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
     def get_futures_trading_parameters(self, instrument, dt):
+        # type: (Instrument, datetime.datetime) -> FuturesTradingParameters
         if self._futures_trading_parameters_store:
             trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument, dt)
-            if trading_parameters == None:
+            if trading_parameters is None:
                 return self._future_info_store.get_future_info(instrument)
             return trading_parameters
         else:

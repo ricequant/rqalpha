@@ -46,12 +46,12 @@ class Instrument(metaclass=PropertyReprMeta):
 
     __repr__ = property_repr
 
-    def __init__(self, dic, future_tick_size_getter=None, future_long_margin_ratio_getter=None, future_short_margin_ratio_getter=None):
+    def __init__(self, dic, futures_tick_size_getter=None, futures_long_margin_ratio_getter=None, futures_short_margin_ratio_getter=None):
         # type: (Dict, Optional[Callable[[Instrument], float]], Optional[Callable[[Instrument], float]], Optional[Callable[[Instrument], float]]) -> None
         self.__dict__ = copy.copy(dic)
-        self._future_tick_size_getter = future_tick_size_getter
-        self._future_long_margin_ratio_getter = future_long_margin_ratio_getter
-        self._future_short_margin_ratio_getter = future_short_margin_ratio_getter
+        self._futures_tick_size_getter = futures_tick_size_getter
+        self._futures_long_margin_ratio_getter = futures_long_margin_ratio_getter
+        self._futures_short_margin_ratio_getter = futures_short_margin_ratio_getter
 
         if "listed_date" in dic:
             self.__dict__["listed_date"] = self._fix_date(dic["listed_date"])
@@ -446,26 +446,20 @@ class Instrument(metaclass=PropertyReprMeta):
         elif self.type in ("ETF", "LOF"):
             return 0.001
         elif self.type == INSTRUMENT_TYPE.FUTURE:
-            return self._future_tick_size_getter(self)
+            return self._futures_tick_size_getter(self)
         else:
             raise NotImplementedError
 
     def long_margin_ratio(self, dt):
         # type: (datetime) -> float
-        if self.type == INSTRUMENT_TYPE.FUTURE:
-            return self._future_long_margin_ratio_getter(self, dt)
-        else:
-            return 1
+        return self._futures_long_margin_ratio_getter(self, dt)
         
     def short_margin_ratio(self, dt):
         # type: (datetime) -> float
-        if self.type == INSTRUMENT_TYPE.FUTURE:
-            return self._future_short_margin_ratio_getter(self, dt)
-        else:
-            return 1
+        return self._futures_short_margin_ratio_getter(self, dt)
 
     def calc_cash_occupation(self, price, quantity, direction, dt):
-        # type: (float, float, float, POSITION_DIRECTION) -> float
+        # type: (float, int, POSITION_DIRECTION, datetime.datetime) -> float
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:

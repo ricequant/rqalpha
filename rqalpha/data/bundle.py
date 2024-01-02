@@ -289,8 +289,6 @@ STOCK_FIELDS = ['open', 'close', 'high', 'low', 'prev_close', 'limit_up', 'limit
 INDEX_FIELDS = ['open', 'close', 'high', 'low', 'prev_close', 'volume', 'total_turnover']
 FUTURES_FIELDS = STOCK_FIELDS + ['settlement', 'prev_settlement', 'open_interest']
 FUND_FIELDS = STOCK_FIELDS
-FUTURES_TRADING_PARAMETERS_FIELDS = ["long_margin_ratio", "short_margin_ratio", "commission_type", "open_commission", "close_commission", "close_commission_today"]
-TRADING_PARAMETERS_START_DATE = 20100401
 
 
 class DayBarTask(ProgressedTask):
@@ -438,96 +436,108 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
             executor.submit(_DayBarTask(order_book_id), os.path.join(path, file), field, **kwargs)
 
 
-class FuturesTradingParametersTask(ProgressedTask):
+FUTURES_TRADING_PARAMETERS_FIELDS = ["long_margin_ratio", "short_margin_ratio", "commission_type", "open_commission", "close_commission", "close_commission_today"]
+TRADING_PARAMETERS_START_DATE = 20100401
+
+
+class FuturesTradingParametersTask(object):
     def __init__(self, order_book_ids):
         self._order_book_ids = order_book_ids
-
-    @property
-    def total_steps(self):
-        # type: () -> int
-        return len(self._order_book_ids)
     
-    def change_commission_type(self, commission_type):
+    def __call__(self, path, fields, end_date):
+        if not os.path.exists(path):
+            self.generate_futures_trading_parameters(path, fields, end_date)
+        else:
+            self.update_futures_trading_parameters(path, fields, end_date)
+    
+    def generate_futures_trading_parameters(self, path, fields, end_date, recreate_futures_list=None):
+        order_book_ids = self._order_book_ids
+        if recreate_futures_list:
+            order_book_ids = recreate_futures_list      
+        df = rqdatac.futures.get_trading_parameters(order_book_ids, TRADING_PARAMETERS_START_DATE, end_date, fields)
+        if not (df is None or df.empty):
+            df.dropna(axis=0, how="all")
+            df.reset_index(inplace=True)
+            df['datetime'] = df['trading_date'].map(convert_date_to_int)
+            del df["trading_date"]
+            df['commission_type'] = df['commission_type'].map(self.set_commission_type)
+            df.set_index(["order_book_id", "datetime"], inplace=True)
+            df.sort_index(inplace=True)
+            with h5py.File(path, "w") as h5:
+                for order_book_id in df.index.levels[0]:
+                    h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+
+    def update_futures_trading_parameters(self, path, fields, end_date):
+        try:
+            h5 = h5py.File(path, "a")
+            h5.close()
+        except OSError:
+            raise OSError("File {} update failed, if it is using, please update later, "
+                          "or you can delete then update again".format(path))
+        last_date = self.get_h5_last_date(path)
+        recreate_futures_list = self.get_recreate_futures_list(path, last_date)
+        if recreate_futures_list:
+            self.generate_futures_trading_parameters(path, fields, last_date, recreate_futures_list=recreate_futures_list)
+        if int(end_date) > last_date:
+            if rqdatac.get_previous_trading_date(end_date).strftime("%Y%m%d") == str(last_date):
+                return
+            else:
+                start_date = rqdatac.get_next_trading_date(str(last_date))
+                df = rqdatac.futures.get_trading_parameters(self._order_book_ids, start_date, end_date, fields)
+                if not(df is None or df.empty):
+                    df = df.dropna(axis=0, how="all")
+                    df.reset_index(inplace=True)
+                    df['datetime'] = df['trading_date'].map(convert_date_to_int)
+                    del [df['trading_date']]
+                    df['commission_type'] = df['commission_type'].map(self.set_commission_type)
+                    df.set_index(['order_book_id', 'datetime'], inplace=True)
+                    with h5py.File(path, "a") as h5:
+                        import time 
+                        start = time.time()
+                        for order_book_id in df.index.levels[0]:
+                            if order_book_id in h5:
+                                data = np.array(
+                                    [tuple(i) for i in chain(h5[order_book_id][:], df.loc[order_book_id].to_records())],
+                                    dtype=h5[order_book_id].dtype
+                                )
+                                del h5[order_book_id]
+                                h5.create_dataset(order_book_id, data=data)
+                            else:
+                                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+                        end = time.time()
+                        print(end - start)
+
+    def set_commission_type(self, commission_type):
         if commission_type == "by_money":
             commission_type = 0
         elif commission_type == "by_volume":
             commission_type = 1
         return commission_type
     
-    def __call__(self, *args, **kwargs):
-        raise NotImplementedError
-
-
-class GeneratorFuturesTradingParametersTask(FuturesTradingParametersTask):
-    def __call__(self, path, fields, end_date):
-        with h5py.File(path, "w") as h5:
-            df = rqdatac.futures.get_trading_parameters(self._order_book_ids, TRADING_PARAMETERS_START_DATE, end_date, fields)
-            if not (df is None or df.empty):
-                df.dropna(axis=0, how="all")
-                df.reset_index(inplace=True)
-                df.rename(columns={
-                    "open_commission": "open_commission_ratio",
-                    "close_commission": "close_commission_ratio",
-                    "close_commission_today": "close_commission_today_ratio"
-                }, inplace=True)
-                df["datetime"] = [convert_date_to_int(d) for d in df["trading_date"]]
-                del df["trading_date"]
-                df["commission_type"] = [self.change_commission_type(v) for v in df["commission_type"]]
-                df.set_index(["order_book_id", "datetime"], inplace=True)
-                df.sort_index(inplace=True)
-                for order_book_id in df.index.levels[0]:
-                    h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
-                
-
-class UpdateFuturesTradingParametersTask(FuturesTradingParametersTask):
-    def trading_parameters_need_to_update(self, path, end_date):
+    def get_h5_last_date(self, path):
         last_date = TRADING_PARAMETERS_START_DATE * 1000000
         with h5py.File(path, "r") as h5:
             for key in h5.keys():
                 if int(h5[key]['datetime'][-1]) > last_date:
                     last_date = h5[key]['datetime'][-1]
-            if (last_date // 1000000) >= int(end_date):
-                return False
-            else:
-                return last_date // 1000000
-    
-    def __call__(self, path, end_date, fields, **kwargs):
-        need_create_h5 = False
-        try:
-            h5py.File(path, "r")
-        except (OSError, RuntimeError):
-            need_create_h5 = True
-        if need_create_h5:
-            GeneratorFuturesTradingParametersTask(self._order_book_ids)(path, fields, end_date, **kwargs)        
-        else:
-            last_date = self.trading_parameters_need_to_update(path, end_date)
-            if last_date:
-                try:
-                    h5 = h5py.File(path, "a")
-                except OSError:
-                    raise OSError("File {} update failed, if it is using, please update later, "
-                                  "or you can delete then update again".format(path))
-                start_date = rqdatac.get_next_trading_date(str(last_date))
-                df = rqdatac.futures.get_trading_parameters(self._order_book_ids, start_date, end_date, fields)
-                if not(df is None or df.empty):
-                    df.dropna(axis=0, how="all")
-                    df.reset_index(inplace=True)
-                    df['datetime'] = [convert_date_to_int(d) for d in df['trading_date']]
-                    del [df['trading_date']]
-                    df['commission_type'] = [self.change_commission_type(v) for v in df['commission_type']]
-                    df.set_index(['order_book_id', 'datetime'], inplace=True)
-                    for order_book_id in df.index.levels[0]:
-                        if order_book_id in h5:
-                            data = np.array(
-                                [tuple(i) for i in chain(h5[order_book_id][:], df.loc[order_book_id].to_records())],
-                                dtype=h5[order_book_id].dtype
-                            )
-                            del h5[order_book_id]
-                            h5.create_dataset(order_book_id, data=data)
-                        else:
-                            h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
-                h5.close()
+        return int(last_date // 1000000)
 
+    def get_recreate_futures_list(self, path, h5_last_date):
+        """
+        用户在运行策略的过程中可能中断进程，进而可能导致在创建 h5 文件时，部分合约没有成功 download
+        通过该函数，获取在上一次更新中因为异常而没有更新的合约
+        """
+        recreate_futures_list = []
+        df = rqdatac.all_instruments("Future")
+        last_update_futures_list = df[(df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)) & (df['listed_date'] <= str(h5_last_date))].order_book_id.to_list()
+        with h5py.File(path, "r") as h5:
+            h5_order_book_ids = h5.keys()
+            for order_book_id in last_update_futures_list:
+                if order_book_id in h5_order_book_ids:
+                    continue
+                else:
+                    recreate_futures_list.append(order_book_id)
+        return recreate_futures_list
 
 def check_rqdata_permission():
     """
@@ -541,15 +551,13 @@ def check_rqdata_permission():
         return
     try:
         rqdatac.futures.get_trading_parameters("A1005")
-    except Exception as e:
-        if isinstance(e, rqdatac.share.errors.PermissionDenied):
-            from rqalpha.utils.logger import system_log
-            system_log.info("您的 rqdata 账号没有权限使用期货历史保证金和费率，将使用固定的保证金和费率进行回测和计算\n可联系米筐科技开通权限：0755-26569969")
-            return
+    except rqdatac.share.errors.PermissionDenied:
+        from rqalpha.utils.logger import system_log
+        system_log.info("您的 rqdata 账号没有权限使用期货历史保证金和费率，将使用固定的保证金和费率进行回测和计算\n可联系米筐科技开通权限：0755-26569969")
+        return
     return True
 
-
-def update_futures_trading_parameters(path, futures_trading_parameters_config):
+def update_futures_trading_parameters(path, end_date):
     update_permission = check_rqdata_permission()
     if not update_permission:
         return
@@ -560,9 +568,9 @@ def update_futures_trading_parameters(path, futures_trading_parameters_config):
         "order_book_ids": order_book_ids,
         "fields": FUTURES_TRADING_PARAMETERS_FIELDS
     }
-    UpdateFuturesTradingParametersTask(futures_trading_parameters_args['order_book_ids'])(
+    FuturesTradingParametersTask(futures_trading_parameters_args['order_book_ids'])(
         os.path.join(path, futures_trading_parameters_args['file']), 
-        futures_trading_parameters_config["end_date"].strftime("%Y%m%d"), 
-        futures_trading_parameters_args['fields']
+        futures_trading_parameters_args['fields'],
+        end_date.strftime("%Y%m%d"), 
         )
     return True
