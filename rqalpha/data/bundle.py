@@ -458,7 +458,7 @@ class FuturesTradingParametersTask(object):
         if not (df is None or df.empty):
             df.dropna(axis=0, how="all")
             df.reset_index(inplace=True)
-            df['datetime'] = df['trading_date'].map(convert_date_to_int)
+            df['datetime'] = df['trading_date'].map(convert_date_to_date_int)
             del df["trading_date"]
             df['commission_type'] = df['commission_type'].map(self.set_commission_type)
             df.set_index(["order_book_id", "datetime"], inplace=True)
@@ -487,13 +487,11 @@ class FuturesTradingParametersTask(object):
                 if not(df is None or df.empty):
                     df = df.dropna(axis=0, how="all")
                     df.reset_index(inplace=True)
-                    df['datetime'] = df['trading_date'].map(convert_date_to_int)
+                    df['datetime'] = df['trading_date'].map(convert_date_to_date_int)
                     del [df['trading_date']]
                     df['commission_type'] = df['commission_type'].map(self.set_commission_type)
                     df.set_index(['order_book_id', 'datetime'], inplace=True)
                     with h5py.File(path, "a") as h5:
-                        import time 
-                        start = time.time()
                         for order_book_id in df.index.levels[0]:
                             if order_book_id in h5:
                                 data = np.array(
@@ -504,8 +502,6 @@ class FuturesTradingParametersTask(object):
                                 h5.create_dataset(order_book_id, data=data)
                             else:
                                 h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
-                        end = time.time()
-                        print(end - start)
 
     def set_commission_type(self, commission_type):
         if commission_type == "by_money":
@@ -515,12 +511,12 @@ class FuturesTradingParametersTask(object):
         return commission_type
     
     def get_h5_last_date(self, path):
-        last_date = TRADING_PARAMETERS_START_DATE * 1000000
+        last_date = TRADING_PARAMETERS_START_DATE
         with h5py.File(path, "r") as h5:
             for key in h5.keys():
                 if int(h5[key]['datetime'][-1]) > last_date:
                     last_date = h5[key]['datetime'][-1]
-        return int(last_date // 1000000)
+        return int(last_date)
 
     def get_recreate_futures_list(self, path, h5_last_date):
         """

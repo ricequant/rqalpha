@@ -275,23 +275,15 @@ class FuturesTradingParametersStore(object):
     def __init__(self, path):
         self._path = path
 
-    def get_futures_trading_parameters(self, instrument, dt):
-        # type: (Instrument, datetime.datetime) -> FuturesTradingParameters
+    def get_futures_trading_parameters(self, order_book_id, dt):
+        # type: (str, datetime.datetime) -> FuturesTradingParameters
         dt = convert_date_to_date_int(dt)
-        if dt < self.FUTURES_TRADING_PARAMETERS_START_DATE:
-            return None
-        order_book_id = instrument.order_book_id
+        if (dt < self.FUTURES_TRADING_PARAMETERS_START_DATE): return None
         data = self.get_futures_trading_parameters_all_time(order_book_id)
-        if data is None:
-            return None
+        if (data is None): return None
         else:
-            arr = data[data['datetime'] == dt * 1000000]
-            if len(arr) == 0:
-                if str(dt) < instrument.listed_date.strftime("%Y%m%d") or str(dt) > instrument.de_listed_date.strftime("%Y%m%d"):
-                    return None
-                else:
-                    system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
-                    return None
+            arr = data[data['datetime'] == dt]
+            if (len(arr) == 0): return None
             futures_trading_parameters = self._to_namedtuple(order_book_id, arr)
         return futures_trading_parameters
     

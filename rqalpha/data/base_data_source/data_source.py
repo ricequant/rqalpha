@@ -33,6 +33,7 @@ from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.typing import DateLike
 from rqalpha.environment import Environment
 from rqalpha.data.bundle import update_futures_trading_parameters
+from rqalpha.utils.logger import user_system_log
 
 from rqalpha.data.base_data_source.adjust import FIELDS_REQUIRE_ADJUSTMENT, adjust_bars
 from rqalpha.data.base_data_source.storage_interface import (AbstractCalendarStore, AbstractDateSet,
@@ -372,13 +373,16 @@ class BaseDataSource(AbstractDataSource):
 
     def get_futures_trading_parameters(self, instrument, dt):
         # type: (Instrument, datetime.datetime) -> FuturesTradingParameters
+        order_book_id = instrument.order_book_id
         if self._futures_trading_parameters_store:
-            trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument, dt)
+            trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(order_book_id, dt)
             if trading_parameters is None:
-                return self._future_info_store.get_future_info(instrument)
+                if str(dt) >= instrument.listed_date.strftime("%Y%m%d") or str(dt) <= instrument.de_listed_date.strftime("%Y%m%d"):
+                    user_system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
+                return self._future_info_store.get_future_info(order_book_id)
             return trading_parameters
         else:
-            return self._future_info_store.get_future_info(instrument)
+            return self._future_info_store.get_future_info(order_book_id)
 
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         raise NotImplementedError
