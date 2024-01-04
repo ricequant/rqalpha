@@ -462,7 +462,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_futures_trading_parameters(self, instrument, dt):
+    def get_futures_trading_parameters(self, instrument):
         """
         获取期货合约的时序手续费信息
         """

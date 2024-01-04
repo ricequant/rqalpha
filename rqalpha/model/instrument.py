@@ -18,7 +18,9 @@
 import re
 import copy
 import datetime
+import inspect
 from typing import Dict, Callable, Optional
+from functools import lru_cache
 
 import numpy as np
 from dateutil.parser import parse
@@ -27,6 +29,17 @@ from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr, PropertyReprMeta
+from rqalpha.utils.class_helper import cached_property
+from rqalpha.core.events import EVENT
+
+
+# class MyDict(dict):
+#     def __setitem__(self, key, item) -> None:
+#         if key == "long_margin_ratio":
+#             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+#             print(inspect.stack())
+#             raise RuntimeError
+#         super().__setitem__(key, item)
 
 
 class Instrument(metaclass=PropertyReprMeta):
@@ -450,24 +463,38 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
-    def long_margin_ratio(self, dt):
-        # type: (datetime) -> float
-        return self._futures_long_margin_ratio_getter(self, dt)
-        
-    def short_margin_ratio(self, dt):
-        # type: (datetime) -> float
-        return self._futures_short_margin_ratio_getter(self, dt)
+    @property
+    def long_margin_ratio(self):
+        # type: () -> float
+        try:
+            return self.__dict__['long_margin_ratio']
+        except KeyError:
+            self.__dict__['long_margin_ratio'] = self._futures_long_margin_ratio_getter(self)
+            env = Environment.get_instance()
+            env.update_margin_rate_del_list(self.order_book_id, POSITION_DIRECTION.LONG)
+            return self.__dict__['long_margin_ratio']
+    
+    @property
+    def short_margin_ratio(self):
+        # type: () -> float
+        try:
+            return self.__dict__['short_margin_ratio']
+        except KeyError:
+            self.__dict__['short_margin_ratio'] = self._futures_long_margin_ratio_getter(self)
+            env = Environment.get_instance()
+            env.update_margin_rate_del_list(self.order_book_id, POSITION_DIRECTION.SHORT)
+            return self.__dict__['short_margin_ratio']
 
-    def calc_cash_occupation(self, price, quantity, direction, dt):
+    def calc_cash_occupation(self, price, quantity, direction):
         # type: (float, int, POSITION_DIRECTION, datetime.datetime) -> float
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:
             margin_multiplier = Environment.get_instance().config.base.margin_multiplier
             if direction == POSITION_DIRECTION.LONG:
-                margin_rate = self.long_margin_ratio(dt)
+                margin_rate = self.long_margin_ratio
             elif direction == POSITION_DIRECTION.SHORT:
-                margin_rate = self.short_margin_ratio(dt)
+                margin_rate = self.short_margin_ratio
             return price * quantity * self.contract_multiplier * margin_rate * margin_multiplier
         else:
             raise NotImplementedError
@@ -477,6 +504,18 @@ class Instrument(metaclass=PropertyReprMeta):
     @classmethod
     def is_future_continuous_contract(cls, order_book_id):
         return re.match(cls.FUTURE_CONTINUOUS_CONTRACT, order_book_id)
+    
+    def clear_long_margin_ratio(self):
+        try:
+            del self.__dict__['long_margin_ratio']
+        except KeyError:
+            pass
+    
+    def clear_short_margin_ratio(self):
+        try:
+            del self.__dict__['short_margin_ratio']
+        except KeyError:
+            pass
 
 
 class SectorCodeItem(object):

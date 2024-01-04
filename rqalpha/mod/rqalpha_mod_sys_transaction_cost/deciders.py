@@ -95,7 +95,7 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
         self.env = Environment.get_instance()
 
     def _get_commission(self, order_book_id, position_effect, price, quantity, close_today_quantity, dt):
-        info = self.env.data_proxy.get_futures_trading_parameters(order_book_id, dt)
+        info = self.env.data_proxy.get_futures_trading_parameters(order_book_id)
         commission = 0
         if info.commission_type == COMMISSION_TYPE.BY_MONEY:
             contract_multiplier = self.env.get_instrument(order_book_id).contract_multiplier

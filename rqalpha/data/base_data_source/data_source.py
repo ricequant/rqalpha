@@ -106,8 +106,8 @@ class BaseDataSource(AbstractDataSource):
                 instruments.append(Instrument(
                     i, 
                     lambda i: self._future_info_store.get_future_info(i).tick_size,
-                    lambda i, dt: self.get_futures_trading_parameters(i, dt).long_margin_ratio,
-                    lambda i, dt: self.get_futures_trading_parameters(i, dt).short_margin_ratio
+                    lambda i: self.get_futures_trading_parameters(i).long_margin_ratio,
+                    lambda i: self.get_futures_trading_parameters(i).short_margin_ratio
                     ))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))
@@ -371,18 +371,17 @@ class BaseDataSource(AbstractDataSource):
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
-    def get_futures_trading_parameters(self, instrument, dt):
-        # type: (Instrument, datetime.datetime) -> FuturesTradingParameters
-        order_book_id = instrument.order_book_id
+    def get_futures_trading_parameters(self, instrument):
+        # type: (Instrument) -> FuturesTradingParameters
         if self._futures_trading_parameters_store:
-            trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(order_book_id, dt)
+            trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument)
             if trading_parameters is None:
-                if str(dt) >= instrument.listed_date.strftime("%Y%m%d") or str(dt) <= instrument.de_listed_date.strftime("%Y%m%d"):
-                    user_system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
-                return self._future_info_store.get_future_info(order_book_id)
+                id_or_syms = instrument.order_book_id or instrument.underlying_symbol
+                return self._future_info_store.get_future_info(id_or_syms)
             return trading_parameters
         else:
-            return self._future_info_store.get_future_info(order_book_id)
+            id_or_syms = instrument.order_book_id or instrument.underlying_symbol
+            return self._future_info_store.get_future_info(id_or_syms)
 
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         raise NotImplementedError

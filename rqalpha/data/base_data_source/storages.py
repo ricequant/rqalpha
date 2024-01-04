@@ -34,7 +34,8 @@ from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import system_log
+from rqalpha.utils.logger import user_system_log
+from rqalpha.environment import Environment
 
 from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
@@ -84,6 +85,7 @@ class FutureInfoStore(object):
         """
         RQAlpha==5.3.5 后, margin_rate调整为从 future_info.json 获取，当用户的 bundle 数据未更新时，调用该函数进行兼容
         """
+        user_system_log.warn("Your bundle data is too old, please update it to lastest.")
         hard_code = {"TC": 0.05, "ER": 0.05, "WS": 0.05, "RO": 0.05, "ME": 0.06, "WT": 0.05}
         if "margin_rate" not in self._default_data[list(hard_code.keys())[0]]:
             for id_or_syms in list(self._default_data.keys()):
@@ -102,15 +104,14 @@ class FutureInfoStore(object):
         return item
 
     @lru_cache(1024)
-    def get_future_info(self, instrument):
-        order_book_id = instrument.order_book_id
-        custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(instrument.underlying_symbol)
-        info = self._default_data.get(order_book_id) or self._default_data.get(instrument.underlying_symbol)
+    def get_future_info(self, id_or_syms):
+        custom_info = self._custom_data.get(id_or_syms)
+        info = self._default_data.get(id_or_syms)
         if custom_info:
             info = copy(info) or {}
             info.update(custom_info)
         elif not info:
-            raise NotImplementedError(_("unsupported future instrument {}").format(order_book_id))
+            raise NotImplementedError(_("unsupported future instrument {}").format(id_or_syms))
         info = self._to_namedtuple(info)
         return info
     
@@ -275,15 +276,20 @@ class FuturesTradingParametersStore(object):
     def __init__(self, path):
         self._path = path
 
-    def get_futures_trading_parameters(self, order_book_id, dt):
+    def get_futures_trading_parameters(self, instrument):
         # type: (str, datetime.datetime) -> FuturesTradingParameters
-        dt = convert_date_to_date_int(dt)
+        env = Environment.get_instance()
+        order_book_id = instrument.order_book_id
+        dt = convert_date_to_date_int(env.trading_dt)
         if (dt < self.FUTURES_TRADING_PARAMETERS_START_DATE): return None
         data = self.get_futures_trading_parameters_all_time(order_book_id)
         if (data is None): return None
         else:
             arr = data[data['datetime'] == dt]
-            if (len(arr) == 0): return None
+            if len(arr) == 0:
+                if dt >= convert_date_to_date_int(instrument.listed_date) and dt <= convert_date_to_date_int(instrument.de_listed_date):
+                    user_system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
+                return None
             futures_trading_parameters = self._to_namedtuple(order_book_id, arr)
         return futures_trading_parameters
     
