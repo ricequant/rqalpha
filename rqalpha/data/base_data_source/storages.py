@@ -85,7 +85,7 @@ class FutureInfoStore(object):
         """
         RQAlpha==5.3.5 后, margin_rate调整为从 future_info.json 获取，当用户的 bundle 数据未更新时，调用该函数进行兼容
         """
-        user_system_log.warn("Your bundle data is too old, please update it to lastest.")
+        user_system_log.warn(_("Your bundle data is too old, please update it to lastest"))
         hard_code = {"TC": 0.05, "ER": 0.05, "WS": 0.05, "RO": 0.05, "ME": 0.06, "WT": 0.05}
         if "margin_rate" not in self._default_data[list(hard_code.keys())[0]]:
             for id_or_syms in list(self._default_data.keys()):
@@ -104,14 +104,14 @@ class FutureInfoStore(object):
         return item
 
     @lru_cache(1024)
-    def get_future_info(self, id_or_syms):
-        custom_info = self._custom_data.get(id_or_syms)
-        info = self._default_data.get(id_or_syms)
+    def get_future_info(self, order_book_id, underlying_symbol):
+        custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+        info = self._default_data.get(order_book_id) or self._default_data.get(underlying_symbol)
         if custom_info:
             info = copy(info) or {}
             info.update(custom_info)
         elif not info:
-            raise NotImplementedError(_("unsupported future instrument {}").format(id_or_syms))
+            raise NotImplementedError(_("unsupported future instrument {}").format(order_book_id))
         info = self._to_namedtuple(info)
         return info
     

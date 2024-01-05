@@ -26,6 +26,7 @@ from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
                                       ProgressedTask)
 from rqalpha.utils.datetime_func import (convert_date_to_date_int,
                                          convert_date_to_int)
+from rqalpha.utils.i18n import gettext as _
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -472,8 +473,7 @@ class FuturesTradingParametersTask(object):
             h5 = h5py.File(path, "a")
             h5.close()
         except OSError:
-            raise OSError("File {} update failed, if it is using, please update later, "
-                          "or you can delete then update again".format(path))
+            raise OSError(_("File {} update failed, if it is using, please update later, or you can delete then update again".format(path)))
         last_date = self.get_h5_last_date(path)
         recreate_futures_list = self.get_recreate_futures_list(path, last_date)
         if recreate_futures_list:
@@ -541,15 +541,15 @@ def check_rqdata_permission():
     1. rqdatac 版本是否为具备 futures.get_trading_parameters API 的版本
     2. 当前 rqdatac 是否具备上述 API 的使用权限
     """
-    if rqdatac.__version__ < '2.11.11.4':
+    if rqdatac.__version__ < '2.11.12':
         from rqalpha.utils.logger import system_log
-        system_log.info("RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用")
+        system_log.warn(_("RQAlpha already supports backtesting using futures historical margins and rates, please upgrade RQDatac to version 2.11.12 and above to use it"))
         return
     try:
         rqdatac.futures.get_trading_parameters("A1005")
     except rqdatac.share.errors.PermissionDenied:
         from rqalpha.utils.logger import system_log
-        system_log.info("您的 rqdata 账号没有权限使用期货历史保证金和费率，将使用固定的保证金和费率进行回测和计算\n可联系米筐科技开通权限：0755-26569969")
+        system_log.warn(_("Your RQData account does not have permission to use futures historical margin and rates, and fixed data will be used for calculations\nYou can contact RiceQuant to activate permission: 0755-26569969"))
         return
     return True
 

@@ -377,11 +377,10 @@ class BaseDataSource(AbstractDataSource):
             trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument)
             if trading_parameters is None:
                 id_or_syms = instrument.order_book_id or instrument.underlying_symbol
-                return self._future_info_store.get_future_info(id_or_syms)
+                return self._future_info_store.get_future_info(instrument.order_book_id, instrument.underlying_symbol)
             return trading_parameters
         else:
-            id_or_syms = instrument.order_book_id or instrument.underlying_symbol
-            return self._future_info_store.get_future_info(id_or_syms)
+            return self._future_info_store.get_future_info(instrument.order_book_id, instrument.underlying_symbol)
 
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         raise NotImplementedError
