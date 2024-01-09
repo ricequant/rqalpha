@@ -42,6 +42,7 @@ from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractInstrumentStore,
                                 AbstractSimpleFactorStore)
 
+
 class FuturesTradingParameters(NamedTuple):
     """
     数据类，用以存储期货交易参数数据

@@ -535,6 +535,7 @@ class FuturesTradingParametersTask(object):
                     recreate_futures_list.append(order_book_id)
         return recreate_futures_list
 
+
 def check_rqdata_permission():
     """
     检测以下内容，均符合才会更新期货交易参数：
@@ -552,6 +553,7 @@ def check_rqdata_permission():
         system_log.warn(_("Your RQData account does not have permission to use futures historical margin and rates, and fixed data will be used for calculations\nYou can contact RiceQuant to activate permission: 0755-26569969"))
         return
     return True
+
 
 def update_futures_trading_parameters(path, end_date):
     update_permission = check_rqdata_permission()
