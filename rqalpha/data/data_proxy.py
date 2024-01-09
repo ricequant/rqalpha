@@ -240,11 +240,8 @@ class DataProxy(TradingDatesMixin):
     def available_data_range(self, frequency):
         return self._data_source.available_data_range(frequency)
 
-    def get_commission_info(self, order_book_id):
-        instrument = self.instruments(order_book_id)
-        return self._data_source.get_commission_info(instrument)
-
     def get_futures_trading_parameters(self, order_book_id):
+        # type: (str) -> FuturesTradingParameters
         instrument = self.instruments(order_book_id)
         return self._data_source.get_futures_trading_parameters(instrument)
 

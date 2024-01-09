@@ -105,6 +105,7 @@ class FutureInfoStore(object):
 
     @lru_cache(1024)
     def get_future_info(self, order_book_id, underlying_symbol):
+        # type: (str, str) -> FuturesTradingParameters
         custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
         info = self._default_data.get(order_book_id) or self._default_data.get(underlying_symbol)
         if custom_info:
@@ -116,6 +117,7 @@ class FutureInfoStore(object):
         return info
     
     def _to_namedtuple(self, info):
+        # type: (dict) -> FuturesTradingParameters
         if info.get("order_book_id"):
             order_book_id = info['order_book_id']
             underlying_symbol = None
@@ -277,7 +279,7 @@ class FuturesTradingParametersStore(object):
         self._path = path
 
     def get_futures_trading_parameters(self, instrument):
-        # type: (str, datetime.datetime) -> FuturesTradingParameters
+        # type: (Instrument) -> FuturesTradingParameters or None
         env = Environment.get_instance()
         order_book_id = instrument.order_book_id
         dt = convert_date_to_date_int(env.trading_dt)
@@ -295,6 +297,7 @@ class FuturesTradingParametersStore(object):
     
     @lru_cache(1024)
     def get_futures_trading_parameters_all_time(self, order_book_id):
+        # type: (str) -> numpy.ndarray or None
         with h5_file(self._path) as h5:
             try:
                 data = h5[order_book_id][:]
@@ -303,6 +306,7 @@ class FuturesTradingParametersStore(object):
         return data
             
     def _to_namedtuple(self, order_book_id, arr):
+        # type: (str, numpy.ndarray) -> FuturesTradingParameters
         close_commission_ratio = float(arr["close_commission"][0])
         close_commission_today_ratio = float(arr['close_commission_today'][0])
         commission_type = self.COMMISSION_TYPE_MAP[int(arr['commission_type'][0])]

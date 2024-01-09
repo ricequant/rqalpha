@@ -353,6 +353,7 @@ class Account(metaclass=AccountMeta):
             self._total_cash = 0
     
     def _post_settlement(self, event):
+        # type: (EVENT) -> None
         data_proxy = self._env.data_proxy
         for dic in self._env.margin_rate_clear_list:
             (order_book_id, direction), = dic.items()

@@ -33,15 +33,6 @@ from rqalpha.utils.class_helper import cached_property
 from rqalpha.core.events import EVENT
 
 
-# class MyDict(dict):
-#     def __setitem__(self, key, item) -> None:
-#         if key == "long_margin_ratio":
-#             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-#             print(inspect.stack())
-#             raise RuntimeError
-#         super().__setitem__(key, item)
-
-
 class Instrument(metaclass=PropertyReprMeta):
     DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
 
@@ -255,7 +246,7 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         [float] 合约最低保证金率（期货专用）
         """
-        return self.__dict__.get('margin_rate', 1)
+        return self.__dict__.get("margin_rate", 1)
 
     @property
     def underlying_order_book_id(self):
@@ -506,12 +497,14 @@ class Instrument(metaclass=PropertyReprMeta):
         return re.match(cls.FUTURE_CONTINUOUS_CONTRACT, order_book_id)
     
     def clear_long_margin_ratio(self):
+        # type: () -> None
         try:
             del self.__dict__['long_margin_ratio']
         except KeyError:
             pass
     
     def clear_short_margin_ratio(self):
+        # type: () -> None
         try:
             del self.__dict__['short_margin_ratio']
         except KeyError:

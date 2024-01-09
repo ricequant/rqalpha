@@ -189,6 +189,7 @@ class Environment(object):
         return True
 
     def update_margin_rate_del_list(self, order_book_id, direction):
+        # type: (str, POSITION_DIRECTION) -> None
         data = {order_book_id: direction}
         self.margin_rate_clear_list.append(data)
     
