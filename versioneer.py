@@ -1646,39 +1646,33 @@ def render_pep440_ricequant(pieces):
                     rendered += ".dev%d" % (pieces["distance"])
                 elif pieces["distance"] == 0:
                     rendered += ".post%d" % parsed_tag._version.post[1]
-                if pieces["dirty"]:
-                    rendered += ".dirty"
             else:
                 raise Exception("Developing version can not go back in time: %s < %s" % (working, tag))
         # 如果最近的tag是正式版tag，那么就是在开发该系列的.post1
         elif parsed_working == parsed_tag:
             if pieces["distance"] > 0:
                 rendered += ".post1.dev%d" % (pieces["distance"])
-            if pieces["dirty"]:
-                rendered += ".dirty"
         # 如果正在开发到是一个新的系列，那么就从该系列的.dev0开始
         else:
             if pieces["distance"] >= 0:
                 rendered += ".dev%d" % (pieces["distance"])
-
-            if pieces["dirty"]:
-                rendered += ".dirty"
     # 没有最近的tag等价于正在开发到是一个新的系列，那么就从该系列的.dev0开始
     else:
         if pieces["distance"] >= 0:
             rendered += ".dev%d" % pieces["distance"]
 
-        if pieces["dirty"]:
-            rendered += ".dirty"
-
     tracking_branch = git_tracking_branch()
     # # 如果是dev和master分支或者hotfix分支来的，或者是一个tag，那就用pep440的版本号，否则带上git commit id
     if tracking_branch in ["origin/develop", "origin/master"] or tracking_branch.startswith("origin/hotfix/") or pieces[
         "distance"] == 0:
+        if pieces["dirty"]:
+            rendered += ".dirty"
         return rendered
-    else:
-        rendered += "+g{}".format(pieces["short"])
-        return rendered
+
+    rendered += "+%s" % format(pieces["short"])
+    if pieces["dirty"]:
+        rendered += ".dirty"
+    return rendered
 
 
 def render_pep440_old(pieces):
