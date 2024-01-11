@@ -85,6 +85,14 @@ cli.commands['run'].params.append(
     )
 )
 
+cli.commands['run'].params.append(
+    click.Option(
+        ('--pit-tax', cli_prefix + "pit_tax"),
+        is_flag=True, default=False,
+        help="[sys_transaction_cost] use historical tax"
+    )
+)
+
 
 def load_mod():
     from .mod import TransactionCostMod
