@@ -53,9 +53,6 @@ class FuturesTradingParameters(NamedTuple):
     open_commission_ratio: float
     long_margin_ratio: float
     short_margin_ratio: float
-    order_book_id: str = None
-    underlying_symbol: str = None
-    tick_size: float = None
 
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
@@ -81,24 +78,9 @@ class FutureInfoStore(object):
                 ) for item in json.load(json_file)
             }
         self._custom_data = custom_future_info
+        if "margin_rate" not in self._default_data[next(iter(self._default_data))]:
+            raise RuntimeError(_("Your bundle data is too old, please use 'rqalpha update-bundle' or 'rqalpha download-bundle' to update it to lastest before using"))
 
-    def data_compatible(self, futures_instruments_store):
-        """
-        RQAlpha==5.3.5 后, margin_rate调整为从 future_info.json 获取，当用户的 bundle 数据未更新时，调用该函数进行兼容
-        """
-        user_system_log.warn(_("Your bundle data is too old, please update it to lastest"))
-        hard_code = {"TC": 0.05, "ER": 0.05, "WS": 0.05, "RO": 0.05, "ME": 0.06, "WT": 0.05}
-        if "margin_rate" not in self._default_data[list(hard_code.keys())[0]]:
-            for id_or_syms in list(self._default_data.keys()):
-                if len(id_or_syms) <= 2: 
-                    if id_or_syms in hard_code.keys():
-                        self._default_data[id_or_syms]["margin_rate"] = hard_code[id_or_syms]
-                    else:
-                        order_book_id = futures_instruments_store._instruments[id_or_syms + "88"].trading_code
-                        self._default_data[id_or_syms]["margin_rate"] = futures_instruments_store._instruments[order_book_id].margin_rate
-                else:
-                    self._default_data[id_or_syms]["margin_rate"] = futures_instruments_store._instruments[id_or_syms].margin_rate
-                
     @classmethod
     def _process_future_info_item(cls, item):
         item["commission_type"] = cls.COMMISSION_TYPE_MAP[item["commission_type"]]
@@ -119,31 +101,29 @@ class FutureInfoStore(object):
     
     def _to_namedtuple(self, info):
         # type: (dict) -> FuturesTradingParameters
-        if info.get("order_book_id"):
-            order_book_id = info['order_book_id']
-            underlying_symbol = None
-        else:
-            order_book_id = None
-            underlying_symbol = info['underlying_symbol']
-        close_commission_ratio = info['close_commission_ratio']
-        close_commission_today_ratio = info['close_commission_today_ratio']
-        commission_type = info['commission_type']
-        open_commission_ratio = info['open_commission_ratio']
-        long_margin_ratio = info['margin_rate']
-        short_margin_ratio = info['margin_rate']
-        tick_size = info['tick_size']
-        info = FuturesTradingParameters(
-            close_commission_ratio,
-            close_commission_today_ratio,
-            commission_type,
-            open_commission_ratio,
-            long_margin_ratio,
-            short_margin_ratio,
-            order_book_id,
-            underlying_symbol,
-            tick_size
-        )
+        info['long_margin_ratio'], info['short_margin_ratio'] = info['margin_rate'], info['margin_rate']
+        del info['margin_rate'], info['tick_size']
+        try:
+            del info['order_book_id']
+        except KeyError:
+            del info['underlying_symbol']
+        info = FuturesTradingParameters(**info)
         return info
+    
+    @lru_cache(8)
+    def get_tick_size(self, instrument):
+        # type: (str, str) -> float
+        order_book_id = instrument.order_book_id
+        underlying_symbol = instrument.underlying_symbol
+        custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+        info = self._default_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+        if custom_info:
+            info = copy(info) or {}
+            info.update(custom_info)
+        elif not info:
+            raise NotImplementedError(_("unsupported future instrument {}".format(order_book_id)))
+        tick_size = info['tick_size']
+        return tick_size
 
 
 class InstrumentStore(AbstractInstrumentStore):
@@ -279,21 +259,22 @@ class FuturesTradingParametersStore(object):
     def __init__(self, path):
         self._path = path
 
-    def get_futures_trading_parameters(self, instrument):
-        # type: (Instrument) -> FuturesTradingParameters or None
-        env = Environment.get_instance()
+    def get_futures_trading_parameters(self, instrument, dt):
+        # type: (Instrument, datetime.date) -> FuturesTradingParameters or None
         order_book_id = instrument.order_book_id
-        dt = convert_date_to_date_int(env.trading_dt)
-        if (dt < self.FUTURES_TRADING_PARAMETERS_START_DATE): return None
+        dt = convert_date_to_date_int(dt)
+        if dt < self.FUTURES_TRADING_PARAMETERS_START_DATE:
+            return None
         data = self.get_futures_trading_parameters_all_time(order_book_id)
-        if (data is None): return None
+        if data is None: 
+            return None
         else:
-            arr = data[data['datetime'] == dt]
+            arr = data[data['datetime'] == dt][0]
             if len(arr) == 0:
                 if dt >= convert_date_to_date_int(instrument.listed_date) and dt <= convert_date_to_date_int(instrument.de_listed_date):
                     user_system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
                 return None
-            futures_trading_parameters = self._to_namedtuple(order_book_id, arr)
+            futures_trading_parameters = self._to_namedtuple(arr)
         return futures_trading_parameters
     
     @lru_cache(1024)
@@ -306,24 +287,12 @@ class FuturesTradingParametersStore(object):
                 return None
         return data
             
-    def _to_namedtuple(self, order_book_id, arr):
-        # type: (str, numpy.ndarray) -> FuturesTradingParameters
-        close_commission_ratio = float(arr["close_commission"][0])
-        close_commission_today_ratio = float(arr['close_commission_today'][0])
-        commission_type = self.COMMISSION_TYPE_MAP[int(arr['commission_type'][0])]
-        open_commission_ratio = float(arr['open_commission'][0])
-        long_margin_ratio = float(arr["long_margin_ratio"][0])
-        short_margin_ratio = float(arr["short_margin_ratio"][0])
-
-        futures_trading_parameters = FuturesTradingParameters(
-            close_commission_ratio,
-            close_commission_today_ratio,
-            commission_type,
-            open_commission_ratio,
-            long_margin_ratio,
-            short_margin_ratio,
-            order_book_id
-        )
+    def _to_namedtuple(self, arr):
+        # type: (numpy.void) -> FuturesTradingParameters
+        dic = dict(zip(arr.dtype.names, arr))
+        del dic['datetime']
+        dic["commission_type"] = self.COMMISSION_TYPE_MAP[dic['commission_type']]
+        futures_trading_parameters = FuturesTradingParameters(**dic)
         return futures_trading_parameters
 
 

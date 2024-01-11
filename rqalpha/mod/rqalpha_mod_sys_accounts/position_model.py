@@ -18,6 +18,7 @@
 from datetime import date
 
 from decimal import Decimal
+from functools import lru_cache
 
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
@@ -28,6 +29,7 @@ from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property, cached_property
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.core.events import EVENT, Event
 
 
 def _int_to_date(d):
@@ -223,13 +225,17 @@ class FuturePosition(Position):
     def contract_multiplier(self):
         return self._instrument.contract_multiplier
     
-    @cached_property
+    @property
     def margin_rate(self):
         # type: () -> float
-        if self.direction == POSITION_DIRECTION.LONG:
-            return self._instrument.long_margin_ratio * self._env.config.base.margin_multiplier
-        elif self.direction == POSITION_DIRECTION.SHORT:
-            return self._instrument.short_margin_ratio * self._env.config.base.margin_multiplier
+        try:
+            return self.__dict__['margin_ratio'] * self._env.config.base.margin_multiplier
+        except KeyError:
+            if self.direction == POSITION_DIRECTION.LONG:
+                self.__dict__['margin_ratio'] = self._instrument.get_long_margin_ratio(self._env.trading_dt.date())
+            elif self.direction == POSITION_DIRECTION.SHORT:
+                self.__dict__['margin_ratio'] = self._instrument.get_short_margin_ratio(self._env.trading_dt.date())
+            return self.__dict__['margin_ratio'] * self._env.config.base.margin_multiplier
 
     @property
     def equity(self):
@@ -238,7 +244,8 @@ class FuturePosition(Position):
         return self._quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
-    def margin(self) -> float:
+    def margin(self):
+        # rtpe: () -> float
         """
         保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
         """
@@ -313,6 +320,12 @@ class FuturePosition(Position):
             ))
             self._quantity = self._old_quantity = 0
         return delta_cash
+    
+    def post_settlement(self):
+        try:
+            del self.__dict__["margin_ratio"]
+        except KeyError:
+            pass
 
 
 class StockPositionProxy(PositionProxy):

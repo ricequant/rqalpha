@@ -242,13 +242,6 @@ class Instrument(metaclass=PropertyReprMeta):
         return self.__dict__.get('contract_multiplier', 1)
 
     @property
-    def margin_rate(self):
-        """
-        [float] 合约最低保证金率（期货专用）
-        """
-        return self.__dict__.get("margin_rate", 1)
-
-    @property
     def underlying_order_book_id(self):
         """
         [str] 合约标的代码，目前除股指期货(IH, IF, IC)之外的期货合约，这一字段全部为’null’（期货专用）
@@ -454,38 +447,32 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
-    @property
-    def long_margin_ratio(self):
-        # type: () -> float
-        try:
-            return self.__dict__['long_margin_ratio']
-        except KeyError:
-            self.__dict__['long_margin_ratio'] = self._futures_long_margin_ratio_getter(self)
-            env = Environment.get_instance()
-            env.update_margin_rate_del_list(self.order_book_id, POSITION_DIRECTION.LONG)
-            return self.__dict__['long_margin_ratio']
-    
-    @property
-    def short_margin_ratio(self):
-        # type: () -> float
-        try:
-            return self.__dict__['short_margin_ratio']
-        except KeyError:
-            self.__dict__['short_margin_ratio'] = self._futures_long_margin_ratio_getter(self)
-            env = Environment.get_instance()
-            env.update_margin_rate_del_list(self.order_book_id, POSITION_DIRECTION.SHORT)
-            return self.__dict__['short_margin_ratio']
+    @lru_cache(8)
+    def get_long_margin_ratio(self, dt):
+        # type: (datetime.date) -> float
+        """
+        获取多头保证金率（期货专用）
+        """
+        return self._futures_long_margin_ratio_getter(self, dt)
 
-    def calc_cash_occupation(self, price, quantity, direction):
-        # type: (float, int, POSITION_DIRECTION, datetime.datetime) -> float
+    @lru_cache(8)
+    def get_short_margin_ratio(self, dt):
+        # type: (datetime.date) -> float
+        """
+        获取空头保证金率（期货专用）
+        """
+        return self._futures_long_margin_ratio_getter(self, dt)
+
+    def calc_cash_occupation(self, price, quantity, direction, dt):
+        # type: (float, int, POSITION_DIRECTION, datetime.date) -> float
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:
             margin_multiplier = Environment.get_instance().config.base.margin_multiplier
             if direction == POSITION_DIRECTION.LONG:
-                margin_rate = self.long_margin_ratio
+                margin_rate = self.get_long_margin_ratio(dt)
             elif direction == POSITION_DIRECTION.SHORT:
-                margin_rate = self.short_margin_ratio
+                margin_rate = self.get_short_margin_ratio(dt)
             return price * quantity * self.contract_multiplier * margin_rate * margin_multiplier
         else:
             raise NotImplementedError
@@ -495,20 +482,6 @@ class Instrument(metaclass=PropertyReprMeta):
     @classmethod
     def is_future_continuous_contract(cls, order_book_id):
         return re.match(cls.FUTURE_CONTINUOUS_CONTRACT, order_book_id)
-    
-    def clear_long_margin_ratio(self):
-        # type: () -> None
-        try:
-            del self.__dict__['long_margin_ratio']
-        except KeyError:
-            pass
-    
-    def clear_short_margin_ratio(self):
-        # type: () -> None
-        try:
-            del self.__dict__['short_margin_ratio']
-        except KeyError:
-            pass
 
 
 class SectorCodeItem(object):

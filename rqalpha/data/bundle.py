@@ -452,6 +452,7 @@ class FuturesTradingParametersTask(object):
             self.update_futures_trading_parameters(path, fields, end_date)
     
     def generate_futures_trading_parameters(self, path, fields, end_date, recreate_futures_list=None):
+        # type: (str, list, datetime.date, list) -> None
         order_book_ids = self._order_book_ids
         if recreate_futures_list:
             order_book_ids = recreate_futures_list      
@@ -462,6 +463,11 @@ class FuturesTradingParametersTask(object):
             df['datetime'] = df['trading_date'].map(convert_date_to_date_int)
             del df["trading_date"]
             df['commission_type'] = df['commission_type'].map(self.set_commission_type)
+            df.rename(columns={
+                'close_commission': "close_commission_ratio",
+                'close_commission_today': "close_commission_today_ratio",
+                'open_commission': 'open_commission_ratio'
+                }, inplace=True)
             df.set_index(["order_book_id", "datetime"], inplace=True)
             df.sort_index(inplace=True)
             with h5py.File(path, "w") as h5:
@@ -469,20 +475,21 @@ class FuturesTradingParametersTask(object):
                     h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
 
     def update_futures_trading_parameters(self, path, fields, end_date):
+        # type: (str, list, datetime.date) -> None
         try:
             h5 = h5py.File(path, "a")
             h5.close()
-        except OSError:
-            raise OSError(_("File {} update failed, if it is using, please update later, or you can delete then update again".format(path)))
+        except Exception as e:
+            raise OSError(_("File {} update failed, if it is using, please update later, or you can delete then update again".format(path))) from e
         last_date = self.get_h5_last_date(path)
         recreate_futures_list = self.get_recreate_futures_list(path, last_date)
         if recreate_futures_list:
             self.generate_futures_trading_parameters(path, fields, last_date, recreate_futures_list=recreate_futures_list)
-        if int(end_date) > last_date:
-            if rqdatac.get_previous_trading_date(end_date).strftime("%Y%m%d") == str(last_date):
+        if end_date > last_date:
+            if rqdatac.get_previous_trading_date(end_date) == last_date:
                 return
             else:
-                start_date = rqdatac.get_next_trading_date(str(last_date))
+                start_date = rqdatac.get_next_trading_date(last_date)
                 df = rqdatac.futures.get_trading_parameters(self._order_book_ids, start_date, end_date, fields)
                 if not(df is None or df.empty):
                     df = df.dropna(axis=0, how="all")
@@ -490,6 +497,11 @@ class FuturesTradingParametersTask(object):
                     df['datetime'] = df['trading_date'].map(convert_date_to_date_int)
                     del [df['trading_date']]
                     df['commission_type'] = df['commission_type'].map(self.set_commission_type)
+                    df.rename(columns={
+                        'close_commission': "close_commission_ratio",
+                        'close_commission_today': "close_commission_today_ratio",
+                        'open_commission': 'open_commission_ratio'
+                        }, inplace=True)
                     df.set_index(['order_book_id', 'datetime'], inplace=True)
                     with h5py.File(path, "a") as h5:
                         for order_book_id in df.index.levels[0]:
@@ -516,16 +528,18 @@ class FuturesTradingParametersTask(object):
             for key in h5.keys():
                 if int(h5[key]['datetime'][-1]) > last_date:
                     last_date = h5[key]['datetime'][-1]
-        return int(last_date)
+        last_date = datetime.datetime.strptime(str(last_date), "%Y%m%d").date()
+        return last_date
 
     def get_recreate_futures_list(self, path, h5_last_date):
+        # type: (str, datetime.date) -> list
         """
         用户在运行策略的过程中可能中断进程，进而可能导致在创建 h5 文件时，部分合约没有成功 download
         通过该函数，获取在上一次更新中因为异常而没有更新的合约
         """
         recreate_futures_list = []
         df = rqdatac.all_instruments("Future")
-        last_update_futures_list = df[(df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)) & (df['listed_date'] <= str(h5_last_date))].order_book_id.to_list()
+        last_update_futures_list = df[(df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)) & (df['listed_date'] <= h5_last_date.strftime("%Y%m%d"))].order_book_id.to_list()
         with h5py.File(path, "r") as h5:
             h5_order_book_ids = h5.keys()
             for order_book_id in last_update_futures_list:
@@ -556,19 +570,13 @@ def check_rqdata_permission():
 
 
 def update_futures_trading_parameters(path, end_date):
+    # type: (str, datetime.date) -> Boolean
     update_permission = check_rqdata_permission()
     if not update_permission:
-        return
+        return False
     df = rqdatac.all_instruments("Future")
     order_book_ids = (df[df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)]).order_book_id.tolist()
-    futures_trading_parameters_args = {
-        "file": "futures_trading_parameters.h5",
-        "order_book_ids": order_book_ids,
-        "fields": FUTURES_TRADING_PARAMETERS_FIELDS
-    }
-    FuturesTradingParametersTask(futures_trading_parameters_args['order_book_ids'])(
-        os.path.join(path, futures_trading_parameters_args['file']), 
-        futures_trading_parameters_args['fields'],
-        end_date.strftime("%Y%m%d"), 
-        )
+    file = "futures_trading_parameters.h5"
+    fields = FUTURES_TRADING_PARAMETERS_FIELDS
+    FuturesTradingParametersTask(order_book_ids)(os.path.join(path, file), fields, end_date)
     return True

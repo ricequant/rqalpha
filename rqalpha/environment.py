@@ -55,7 +55,6 @@ class Environment(object):
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
-        self.margin_rate_clear_list = []
 
         # Environment.event_bus used in StrategyUniverse()
         from rqalpha.core.strategy_universe import StrategyUniverse
@@ -187,11 +186,3 @@ class Environment(object):
             if not v.can_submit_order(order, account):
                 return False
         return True
-
-    def update_margin_rate_del_list(self, order_book_id, direction):
-        # type: (str, POSITION_DIRECTION) -> None
-        data = {order_book_id: direction}
-        self.margin_rate_clear_list.append(data)
-    
-    def reset_margin_rate_clear_list(self):
-        self.margin_rate_del_list = []

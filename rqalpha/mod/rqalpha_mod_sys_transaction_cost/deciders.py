@@ -94,9 +94,9 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
 
         self.env = Environment.get_instance()
 
-    def _get_commission(self, order_book_id, position_effect, price, quantity, close_today_quantity):
-        # type: (str, POSITION_EFFECT, float, int, int) -> float
-        info = self.env.data_proxy.get_futures_trading_parameters(order_book_id)
+    def _get_commission(self, order_book_id, position_effect, price, quantity, close_today_quantity, dt):
+        # type: (str, POSITION_EFFECT, float, int, int, datetime.date) -> float
+        info = self.env.data_proxy.get_futures_trading_parameters(order_book_id, dt)
         commission = 0
         if info.commission_type == COMMISSION_TYPE.BY_MONEY:
             contract_multiplier = self.env.get_instrument(order_book_id).contract_multiplier
@@ -117,7 +117,7 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
 
     def get_trade_commission(self, trade):
         return self._get_commission(
-            trade.order_book_id, trade.position_effect, trade.last_price, trade.last_quantity, trade.close_today_amount
+            trade.order_book_id, trade.position_effect, trade.last_price, trade.last_quantity, trade.close_today_amount, trade.trading_datetime.date()
         )
 
     def get_trade_tax(self, trade):
@@ -127,5 +127,5 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
         close_today_quantity = order.quantity if order.position_effect == POSITION_EFFECT.CLOSE_TODAY else 0
 
         return self._get_commission(
-            order.order_book_id, order.position_effect, order.frozen_price, order.quantity, close_today_quantity
+            order.order_book_id, order.position_effect, order.frozen_price, order.quantity, close_today_quantity, order.trading_datetime.date()
         )

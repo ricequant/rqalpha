@@ -105,13 +105,12 @@ class BaseDataSource(AbstractDataSource):
                     i["listed_date"] = datetime(1990, 1, 1)
                 instruments.append(Instrument(
                     i, 
-                    lambda i: self._future_info_store.get_future_info(i).tick_size,
-                    lambda i: self.get_futures_trading_parameters(i).long_margin_ratio,
-                    lambda i: self.get_futures_trading_parameters(i).short_margin_ratio
+                    lambda i: self._future_info_store.get_tick_size(i),
+                    lambda i, dt: self.get_futures_trading_parameters(i, dt).long_margin_ratio,
+                    lambda i, dt: self.get_futures_trading_parameters(i, dt).short_margin_ratio
                     ))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))
-        self._future_info_store.data_compatible(self._instruments_stores[INSTRUMENT_TYPE.FUTURE])
         dividend_store = DividendStore(_p('dividends.h5'))
         self._dividends = {
             INSTRUMENT_TYPE.CS: dividend_store,
@@ -371,12 +370,11 @@ class BaseDataSource(AbstractDataSource):
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
-    def get_futures_trading_parameters(self, instrument):
-        # type: (Instrument) -> FuturesTradingParameters
+    def get_futures_trading_parameters(self, instrument, dt):
+        # type: (Instrument, datetime.date) -> FuturesTradingParameters
         if self._futures_trading_parameters_store:
-            trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument)
+            trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument, dt)
             if trading_parameters is None:
-                id_or_syms = instrument.order_book_id or instrument.underlying_symbol
                 return self._future_info_store.get_future_info(instrument.order_book_id, instrument.underlying_symbol)
             return trading_parameters
         else:
