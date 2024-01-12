@@ -47,7 +47,7 @@ class TransactionCostMod(AbstractMod):
                 continue
             env.set_transaction_cost_decider(instrument_type, CNStockTransactionCostDecider(
                 stock_commission_multiplier, mod_config.cn_stock_min_commission,
-                mod_config.tax_multiplier
+                mod_config.tax_multiplier, mod_config.pit_tax, env.event_bus
             ))
 
         env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(

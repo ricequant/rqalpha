@@ -13,10 +13,15 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from collections import defaultdict
+from datetime import datetime
 
 from rqalpha.interface import AbstractTransactionCostDecider
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
+from rqalpha.core.events import EVENT
+
+
+STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 23)
 
 
 class StockTransactionCostDecider(AbstractTransactionCostDecider):
@@ -75,9 +80,11 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
 
 
 class CNStockTransactionCostDecider(StockTransactionCostDecider):
-    def __init__(self, commission_multiplier, min_commission, tax_multiplier):
+    def __init__(self, commission_multiplier, min_commission, tax_multiplier, pit_tax, event_bus):
         super(CNStockTransactionCostDecider, self).__init__(0.0008, commission_multiplier, min_commission)
         self.tax_rate = 0.0005
+        if pit_tax:
+            event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.set_tax_rate)
         self.tax_multiplier = tax_multiplier
 
     def _get_tax(self, order_book_id, side, cost_money):
@@ -85,6 +92,12 @@ class CNStockTransactionCostDecider(StockTransactionCostDecider):
         if instrument.type != 'CS':
             return 0
         return cost_money * self.tax_rate * self.tax_multiplier if side == SIDE.SELL else 0
+    
+    def set_tax_rate(self, event):
+        if event.trading_dt < STOCK_PIT_TAX_CHANGE_DATE:
+            self.tax_rate = 0.001
+        else:
+            self.tax_rate = 0.0005
 
 
 class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
