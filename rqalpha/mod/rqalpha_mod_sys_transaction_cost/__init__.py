@@ -28,6 +28,8 @@ __config__ = {
     "tax_multiplier": 1,
     # 是否开启期货历史交易参数进行回测，默认为True
     "time_series_trading_parameters": True,
+    # 是否使用回测当时时间点对应的真实印花税率
+    "pit_tax": False,
 }
 
 cli_prefix = "mod__sys_transaction_cost__"
@@ -82,6 +84,14 @@ cli.commands['run'].params.append(
         ('-tm', '--tax-multiplier', cli_prefix + "tax_multiplier"),
         type=click.FLOAT,
         help="[sys_transaction_cost] set tax multiplier"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('--pit-tax', cli_prefix + "pit_tax"),
+        is_flag=True, default=False,
+        help="[sys_transaction_cost] use historical tax"
     )
 )
 
