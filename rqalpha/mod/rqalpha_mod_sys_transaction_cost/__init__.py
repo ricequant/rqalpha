@@ -26,6 +26,8 @@ __config__ = {
     "futures_commission_multiplier": 1,
     # 印花倍率，即在默认的印花税基础上按该倍数进行调整，股票默认印花税为千分之一，单边收取
     "tax_multiplier": 1,
+    # 是否使用回测当时时间点对应的真实印花税率
+    "pit_tax": False,
 }
 
 cli_prefix = "mod__sys_transaction_cost__"
@@ -80,6 +82,14 @@ cli.commands['run'].params.append(
         ('-tm', '--tax-multiplier', cli_prefix + "tax_multiplier"),
         type=click.FLOAT,
         help="[sys_transaction_cost] set tax multiplier"
+    )
+)
+
+cli.commands['run'].params.append(
+    click.Option(
+        ('--pit-tax', cli_prefix + "pit_tax"),
+        is_flag=True, default=False,
+        help="[sys_transaction_cost] use historical tax"
     )
 )
 
