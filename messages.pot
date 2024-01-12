@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-01-05 11:23+0800\n"
+"POT-Creation-Date: 2024-01-12 13:38+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,13 +17,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.13.1\n"
 
-#: rqalpha/environment.py:71
+#: rqalpha/environment.py:70
 msgid ""
 "Environment has not been created. Please Use `Environment.get_instance()`"
 " after RQAlpha init"
 msgstr ""
 
-#: rqalpha/environment.py:164
+#: rqalpha/environment.py:163
 msgid "No such transaction cost decider, order_book_id = {}"
 msgstr ""
 
@@ -247,35 +247,38 @@ msgstr ""
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr ""
 
-#: rqalpha/data/bundle.py:476
+#: rqalpha/data/bundle.py:483
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr ""
 
-#: rqalpha/data/bundle.py:546
+#: rqalpha/data/bundle.py:561
 msgid ""
 "RQAlpha already supports backtesting using futures historical margins and"
 " rates, please upgrade RQDatac to version 2.11.12 and above to use it"
 msgstr ""
 
-#: rqalpha/data/bundle.py:552
+#: rqalpha/data/bundle.py:567
 msgid ""
 "Your RQData account does not have permission to use futures historical "
 "margin and rates, and fixed data will be used for calculations\n"
 "You can contact RiceQuant to activate permission: 0755-26569969"
 msgstr ""
 
-#: rqalpha/data/base_data_source/storages.py:88
-msgid "Your bundle data is too old, please update it to lastest"
+#: rqalpha/data/base_data_source/storages.py:82
+msgid ""
+"Your bundle data is too old, please use 'rqalpha update-bundle' or "
+"'rqalpha download-bundle' to update it to lastest before using"
 msgstr ""
 
-#: rqalpha/data/base_data_source/storages.py:114
+#: rqalpha/data/base_data_source/storages.py:98
+#: rqalpha/data/base_data_source/storages.py:124
 msgid "unsupported future instrument {}"
 msgstr ""
 
-#: rqalpha/data/base_data_source/storages.py:212
-#: rqalpha/data/base_data_source/storages.py:222
+#: rqalpha/data/base_data_source/storages.py:195
+#: rqalpha/data/base_data_source/storages.py:205
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
@@ -303,7 +306,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:310
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:318
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
@@ -869,7 +872,7 @@ msgstr ""
 msgid "Cash add {}. units {} become to {}"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:351
+#: rqalpha/portfolio/account.py:352
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
