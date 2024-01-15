@@ -30,6 +30,7 @@ from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
 from rqalpha.portfolio.position import Position, PositionProxyDict
+from rqalpha.mod.rqalpha_mod_sys_accounts.position_model import FuturePosition
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
@@ -105,6 +106,7 @@ class Account(metaclass=AccountMeta):
 
         event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._on_before_trading)
         event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        event_bus.add_listener(EVENT.POST_SETTLEMENT, self._post_settlement)
 
         event_bus.prepend_listener(EVENT.BAR, self._on_bar)
         event_bus.prepend_listener(EVENT.TICK, self._on_tick)
@@ -350,6 +352,16 @@ class Account(metaclass=AccountMeta):
                 user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
             self._positions.clear()
             self._total_cash = 0
+    
+    def _post_settlement(self, event):
+        # type: (EVENT) -> None
+        """
+        该事件必须在 post_settlement 中最后执行，若有其他事件要加入到 post_settlement 中，请使用 event_bus.prepend_listener 添加
+        """
+        for order_book_id, positions in list(self._positions.items()):
+            for position in six.itervalues(positions):
+                if isinstance(position, FuturePosition):
+                    position.post_settlement()
 
     def _on_order_pending_new(self, event):
         if event.account != self:
@@ -443,7 +455,7 @@ class Account(metaclass=AccountMeta):
     def _frozen_cash_of_order(self, order):
         if order.position_effect == POSITION_EFFECT.OPEN:
             instrument = self._env.data_proxy.instrument(order.order_book_id)
-            order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
+            order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
         else:
             order_cost = 0
         return order_cost + self._env.get_order_transaction_cost(order)

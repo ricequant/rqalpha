@@ -240,9 +240,10 @@ class DataProxy(TradingDatesMixin):
     def available_data_range(self, frequency):
         return self._data_source.available_data_range(frequency)
 
-    def get_commission_info(self, order_book_id):
+    def get_futures_trading_parameters(self, order_book_id, dt):
+        # type: (str, datetime.date) -> FuturesTradingParameters
         instrument = self.instruments(order_book_id)
-        return self._data_source.get_commission_info(instrument)
+        return self._data_source.get_futures_trading_parameters(instrument, dt)
 
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)

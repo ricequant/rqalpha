@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-06-24 10:33+0800\n"
+"POT-Creation-Date: 2024-01-12 13:38+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.1\n"
+"Generated-By: Babel 2.13.1\n"
 
 #: rqalpha/environment.py:70
 msgid ""
@@ -28,113 +28,109 @@ msgstr "Environment 并没有被创建，请再 RQAlpha 初始化之后使用 `E
 msgid "No such transaction cost decider, order_book_id = {}"
 msgstr ""
 
-#: rqalpha/main.py:61
+#: rqalpha/main.py:60
 msgid ""
 "There is no data between {start_date} and {end_date}. Please check your "
 "data bundle or select other backtest period."
 msgstr "未在 {start_date} 和 {end_date} 区间内查询到数据，请检查并升级您的 data bundle 或者选择其他回测区间。"
 
-#: rqalpha/main.py:80
+#: rqalpha/main.py:79
 msgid ""
 "Missing persist provider. You need to set persist_provider before use "
 "persist"
 msgstr "Persist provider 未加载，加载 Persist provider 方可使用 persist 功能。"
 
-#: rqalpha/main.py:126
+#: rqalpha/main.py:127
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:213
+#: rqalpha/main.py:218
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:243
+#: rqalpha/main.py:248
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:248
+#: rqalpha/main.py:253
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
-#: rqalpha/apis/api_base.py:67 rqalpha/apis/api_base.py:266
-#: rqalpha/apis/api_base.py:302
+#: rqalpha/apis/api_base.py:69 rqalpha/apis/api_base.py:286
+#: rqalpha/apis/api_base.py:322
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
-#: rqalpha/apis/api_base.py:87 rqalpha/apis/api_base.py:91
-msgid "Limit order price should not be nan."
-msgstr "限价单价格不能为 nan。"
-
-#: rqalpha/apis/api_base.py:148
+#: rqalpha/apis/api_base.py:164
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:59
 msgid "Main Future contracts[88] are not supported in paper trading."
 msgstr "期货主力连续合约[88] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:152
+#: rqalpha/apis/api_base.py:168
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:61
 msgid "Index Future contracts[99] are not supported in paper trading."
 msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 
-#: rqalpha/apis/api_base.py:158
+#: rqalpha/apis/api_base.py:174
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:66
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:89
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:128
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:308
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:104
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:142
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:346
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
-#: rqalpha/apis/api_rqdatac.py:46
+#: rqalpha/apis/api_rqdatac.py:50
 msgid "rqdatac is not available, extension apis will not function properly"
 msgstr ""
 "rqdatac 不存在，扩展 API 无法使用，您可以访问 https://www.ricequant.com/welcome/rqdata 获取"
 " rqdatac"
 
-#: rqalpha/apis/api_rqdatac.py:102
+#: rqalpha/apis/api_rqdatac.py:106
 msgid "in get_split, start_date {} is no earlier than the previous test day {}"
 msgstr "get_spit 中 start_date {} 晚于策略运行前一日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:140
+#: rqalpha/apis/api_rqdatac.py:144
 msgid "in index_components, date {} is no earlier than test date {}"
 msgstr "index_compoments 中，date {} 晚于策略当前运行日期 {}"
 
-#: rqalpha/apis/api_rqdatac.py:187
+#: rqalpha/apis/api_rqdatac.py:191
 msgid "in index_weights, date {} is no earlier than previous test date {}"
 msgstr "在API index_weights 中, 参数date={} 不应晚于上一交易日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:330
+#: rqalpha/apis/api_rqdatac.py:398
 msgid "in get_price, end_date {} is no earlier than the previous test day {}"
 msgstr "在API get_price 中, 当前参数end_date={} 不应晚于上一交易日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:338
+#: rqalpha/apis/api_rqdatac.py:406
 msgid "in get_price, start_date {} is no earlier than the previous test day {}"
 msgstr "在API get_price中, 参数start_date={} 不应晚于上一交易日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:343
+#: rqalpha/apis/api_rqdatac.py:411
 msgid "in get_price, start_date {} > end_date {}"
 msgstr "在API get_price 中,当前参数 start_date={} 大于 end_date={}"
 
-#: rqalpha/apis/api_rqdatac.py:805
+#: rqalpha/apis/api_rqdatac.py:873
 msgid "'{0}' future does not exist"
 msgstr "期货品种 '{0}' 不存在"
 
-#: rqalpha/apis/api_rqdatac.py:962
+#: rqalpha/apis/api_rqdatac.py:1159
 msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
 msgstr "在API get_fundamentals 中,财务数据开始日期 {} 不应晚于上一交易日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:996 rqalpha/apis/api_rqdatac.py:1061
-#: rqalpha/utils/arg_checker.py:311
+#: rqalpha/apis/api_rqdatac.py:1193 rqalpha/apis/api_rqdatac.py:1258
+#: rqalpha/utils/arg_checker.py:320
 msgid ""
 "function {}: invalid {} argument, quarter should be in form of '2012q3', "
 "got {} (type: {})"
 msgstr "函数 {}：参数 {} 不合法，季度应为形如 '2012q3' 的字符串，传入的是 {}（类型：{}）"
 
-#: rqalpha/cmds/bundle.py:33
+#: rqalpha/cmds/bundle.py:34
 msgid "create bundle using RQDatac"
 msgstr "使用 RQDatac 创建 Bundle"
 
-#: rqalpha/cmds/bundle.py:43
+#: rqalpha/cmds/bundle.py:44
 msgid ""
 "rqdatac is required to create bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -143,15 +139,15 @@ msgstr ""
 "创建 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:54 rqalpha/cmds/bundle.py:83
+#: rqalpha/cmds/bundle.py:55 rqalpha/cmds/bundle.py:84
 msgid "rqdatac init failed with error: {}"
 msgstr "rqdatac 初始化失败：{}"
 
-#: rqalpha/cmds/bundle.py:62
+#: rqalpha/cmds/bundle.py:63
 msgid "Update bundle using RQDatac"
 msgstr "使用 RQDatac 更新 Bundle"
 
-#: rqalpha/cmds/bundle.py:72
+#: rqalpha/cmds/bundle.py:73
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -160,45 +156,15 @@ msgstr ""
 "更新 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:87
+#: rqalpha/cmds/bundle.py:88
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr "bundle 不存在，执行 \"rqalpha create-bundle\" 以创建 bundle"
 
-#: rqalpha/cmds/bundle.py:94
+#: rqalpha/cmds/bundle.py:95
 msgid "Download bundle (monthly updated)"
 msgstr "下载（月度更新的）Bundle"
 
-msgid "Check bundle"
-msgstr "检测 Bundle 数据"
-
-msgid "corrupted files"
-msgstr "已损坏的文件"
-
-msgid "remove files"
-msgstr "是否删除文件"
-
-msgid "remove success"
-msgstr "文件删除完毕"
-
-msgid "corrupted files not remove"
-msgstr "已损坏的文件尚未删除"
-
-msgid "input error"
-msgstr "输入异常"
-
-msgid "bundle's day bar is incomplete, please update bundle"
-msgstr "Bundle日线数据不完整，请及时更新bundle"
-
-msgid "good bundle's day bar"
-msgstr "Bundle日线数据良好"
-
-msgid "benchmark {} not exists, please entry correct order_book_id"
-msgstr "基准标的({})信息不存在，请输入正确的标的代码"
-
-msgid "benchmark {} listed date {} > backtest start date {} or de_listed date {} <= backtest end date {}"
-msgstr "基准标的({})上市日期({})晚于回测起始日期({})或退市日期({})早于回测结束日期({})"
-
-#: rqalpha/cmds/bundle.py:105
+#: rqalpha/cmds/bundle.py:106
 msgid ""
 "\n"
 "    [WARNING]\n"
@@ -212,25 +178,57 @@ msgstr ""
 "    该路径下的内容将会被移除.\n"
 "    确定继续吗?"
 
-#: rqalpha/cmds/bundle.py:123
+#: rqalpha/cmds/bundle.py:124
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr "数据下载成功: {bundle_path}"
 
-#: rqalpha/cmds/bundle.py:134
+#: rqalpha/cmds/bundle.py:127
+msgid "Check bundle"
+msgstr "检测 Bundle 数据"
+
+#: rqalpha/cmds/bundle.py:141
 msgid "try {} ..."
 msgstr "尝试 {} ..."
 
-#: rqalpha/cmds/bundle.py:146
+#: rqalpha/cmds/bundle.py:153
 msgid "downloading ..."
 msgstr "下载中 ..."
 
-#: rqalpha/cmds/bundle.py:160
+#: rqalpha/cmds/bundle.py:167
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
 msgstr ""
 "\n"
 "下载失败，{} 秒后重试。"
+
+#: rqalpha/cmds/bundle.py:188
+msgid "corrupted files"
+msgstr "已损坏的文件"
+
+#: rqalpha/cmds/bundle.py:189
+msgid "remove files"
+msgstr "是否删除文件"
+
+#: rqalpha/cmds/bundle.py:192
+msgid "remove success"
+msgstr "文件删除完毕"
+
+#: rqalpha/cmds/bundle.py:194
+msgid "corrupted files not remove"
+msgstr "已损坏的文件尚未删除"
+
+#: rqalpha/cmds/bundle.py:196
+msgid "input error"
+msgstr "输入异常"
+
+#: rqalpha/cmds/bundle.py:198
+msgid "bundle's day bar is incomplete, please update bundle"
+msgstr "Bundle日线数据不完整，请及时更新bundle"
+
+#: rqalpha/cmds/bundle.py:200
+msgid "good bundle's day bar"
+msgstr "Bundle日线数据良好"
 
 #: rqalpha/cmds/misc.py:26
 msgid "Generate example strategies to target folder"
@@ -265,12 +263,40 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/base_data_source/storages.py:85
+#: rqalpha/data/bundle.py:483
+msgid ""
+"File {} update failed, if it is using, please update later, or you can "
+"delete then update again"
+msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
+
+#: rqalpha/data/bundle.py:561
+msgid ""
+"RQAlpha already supports backtesting using futures historical margins and"
+" rates, please upgrade RQDatac to version 2.11.12 and above to use it"
+msgstr "RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用"
+
+#: rqalpha/data/bundle.py:567
+msgid ""
+"Your RQData account does not have permission to use futures historical "
+"margin and rates, and fixed data will be used for calculations\n"
+"You can contact RiceQuant to activate permission: 0755-26569969"
+msgstr ""
+"您的 RQData 账号没有权限使用期货历史保证金和费率，将使用固定的数据进行回测和计算\n"
+"您可联系米筐科技开通相关权限：0755-26569969"
+
+#: rqalpha/data/base_data_source/storages.py:82
+msgid ""
+"Your bundle data is too old, please use 'rqalpha update-bundle' or "
+"'rqalpha download-bundle' to update it to lastest before using"
+msgstr "您的 Bundle 数据过旧，请使用 'rqalpha update-bundle' 或 'rqalpha download-bundle' 将其更新至最新后再进行使用"
+
+#: rqalpha/data/base_data_source/storages.py:98
+#: rqalpha/data/base_data_source/storages.py:124
 msgid "unsupported future instrument {}"
 msgstr "不支持的期货标的{}"
 
-#: rqalpha/data/base_data_source/storages.py:155
-#: rqalpha/data/base_data_source/storages.py:165
+#: rqalpha/data/base_data_source/storages.py:195
+#: rqalpha/data/base_data_source/storages.py:205
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
@@ -298,7 +324,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:296
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:318
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓"
 
@@ -316,18 +342,16 @@ msgid ""
 "{closable}"
 msgstr "订单创建失败：{order_book_id} 的仓位不足，目标平仓/行权量为 {quantity}，可平仓/行权量为 {closable}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:49
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:96
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:144
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:50
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:112
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:158
 msgid "Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
 msgstr "{order_book_id} 的订单创建失败：下单数量为 0"
 
-# msgid "Order Creation Failed: Order amount is 0."
-# msgstr "订单创建失败: 下单量为 0"
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:54
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:85
-msgid "Limit order price should be positive"
-msgstr "Limit order 价格应该为正，请检查您的下单价格"
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:55
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:100
+msgid "Limit order price should not be nan."
+msgstr "限价单价格不能为 nan。"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:78
 msgid ""
@@ -347,17 +371,17 @@ msgid ""
 "[{new_orders_repr}]"
 msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_orders_repr}]"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:65
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:66
 msgid ""
 "order_book_id: {order_book_id} needs stock account, please set and try "
 "again!"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:106
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:120
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr "现金不足，使用当前剩余资金({})创建订单"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:296
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:334
 #, fuzzy
 msgid ""
 "function order_target_portfolio: invalid keys of target_portfolio, "
@@ -366,272 +390,310 @@ msgstr ""
 "函数 order_target_portfolio：不合法的参数。target_portfolio 的键应为合约代码或 Instrument "
 "对象，实际传入了 {}（类型：{}）。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:301
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:339
 msgid ""
 "function order_target_portfolio: invalid instrument type, excepted "
 "CS/ETF/LOF/INDX, got {}"
 msgstr "函数 order_target_portfolio：不合法的资产类型。应传入股票、ETF、LOF 或指数，实际传入了 {}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:318
-#, fuzzy
-msgid ""
-"function order_target_portfolio: invalid order price {target_price} of "
-"{id_or_ins}"
-msgstr "函数 order_target_portfolio：{id_or_ins} 的下单价格 {target_price} 不合法。"
-
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:324
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:354
 #, fuzzy
 msgid ""
 "function order_target_portfolio: invalid values of target_portfolio, "
 "excepted float between 0 and 1, got {} (key: {})"
 msgstr "函数 order_target_portfolio：不合法的目标权重，应传入 0 和 1 之间的浮点数，实际传入了 {}（类型：{}）。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:332
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:363
 msgid "total percent should be lower than 1, current: {}"
 msgstr "目标持仓占比总和应小于 1，当前值：{}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:655
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:383
+msgid ""
+"Adjust position of {id_or_ins} Failed: Invalid close/open price "
+"{close_price}/{open_price}"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:698
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:64
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:66
 msgid "[sys_analyser] save report"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:69
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:71
 msgid "[sys_analyser] output result pickle file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:74
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:76
 msgid "[sys_analyser] plot result"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:79
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:81
 msgid "[sys_analyser] save plot to file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:84
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:86
 msgid "[sys_analyser] order_book_id of benchmark"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:89
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:91
 msgid "[sys_analyser] show open close points on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:94
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:96
 msgid "[sys_analyser] show weekly indicators and return curve on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:98
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:100
 msgid "[sys_analyser] Plot from strategy output file"
 msgstr "【sys_analyser】使用策略输出的文件绘制收益图"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:101
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:103
 msgid "save plot result to file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:102
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:104
 msgid "show open close points on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:103
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:105
 msgid "show weekly indicators and return curve on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:113
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:115
 msgid "[sys_analyser] Generate report from strategy output file"
 msgstr "【sys_analyser】使用策略输出的文件生成报告"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:108
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:112
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
 "instead"
 msgstr "配置'base.benchmark'已被弃用，使用'mod.sys_analyser.benchmark'代替"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:190
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:143
+msgid "benchmark {} not exists, please entry correct order_book_id"
+msgstr "基准标的({})信息不存在，请输入正确的标的代码"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:147
+msgid ""
+"benchmark {} listed date {} > backtest start date {} or de_listed date {}"
+" <= backtest end date {}"
+msgstr "基准标的({})上市日期({})晚于回测起始日期({})或退市日期({})早于回测结束日期({})"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:210
 msgid "invalid init benchmark {}, should be in format 'order_book_id:weight'"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:195
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:215
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:61
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:60
 msgid "Strategy"
 msgstr "策略收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:62
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:61
 msgid "Benchmark"
 msgstr "基准收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:63
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:62
 msgid "Excess"
 msgstr "超额收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:64
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:63
 msgid "Weekly"
 msgstr "策略周度收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:65
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:64
 msgid "BenchmarkWeekly"
 msgstr "基准周度收益"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:67
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:91
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:66
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:123
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:170
 msgid "MaxDrawDown"
 msgstr "最大回撤"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:68
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:67
 msgid "MaxDDD"
 msgstr "最长回撤持续期"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:69
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:68
 msgid "Open"
 msgstr "开仓"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:70
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:69
 msgid "Close"
 msgstr "平仓"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:73
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:103
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:155
 msgid "TotalReturns"
 msgstr "策略收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:74
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:104
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:156
 msgid "AnnualReturns"
 msgstr "策略年化收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:75
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:105
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:157
 msgid "Alpha"
 msgstr "阿尔法"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:76
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:106
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:158
 msgid "Beta"
 msgstr "贝塔"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:77
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:107
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:161
 msgid "Sharpe"
 msgstr "夏普率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:78
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:108
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:165
 msgid "Sortino"
 msgstr "索提诺比率"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:109
 msgid "WeeklyUlcerIndex"
 msgstr "周度累计回撤深度"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:80
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:111
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:175
 msgid "BenchmarkReturns"
 msgstr "基准收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:81
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:112
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:176
 msgid "BenchmarkAnnual"
 msgstr "基准年化收益率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:82
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:113
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:167
 msgid "Volatility"
 msgstr "波动率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:83
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:114
 msgid "TrackingError"
 msgstr "跟踪误差"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:84
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:115
 msgid "DownsideRisk"
 msgstr "下行风险"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:85
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:116
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:164
 msgid "InformationRatio"
 msgstr "信息比率"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:117
 msgid "WeeklyUlcerPerformanceIndex"
 msgstr "周度累计回撤夏普率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:87
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:119
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:179
 msgid "ExcessCumReturns"
 msgstr "超额收益率（算术）"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:88
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:120
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:159
 msgid "WinRate"
 msgstr "胜率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:89
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:121
 msgid "WeeklyWinRate"
 msgstr "周度胜率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:90
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:122
 msgid "ProfitLossRate"
 msgstr "盈亏比"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:92
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:124
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:171
 msgid "MaxDD/MaxDDD"
 msgstr "最大回撤/最长回撤持续期"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:125
 msgid "WeeklyExcessUlcerIndex"
 msgstr "周度超额累计回撤深度"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:96
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:129
 msgid "WeeklyAlpha"
 msgstr "周度阿尔法"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:97
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:130
 msgid "WeeklyBeta"
 msgstr "周度贝塔"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:98
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:131
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:162
 msgid "WeeklySharpe"
 msgstr "周度夏普率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:99
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:132
 msgid "WeeklyInfoRatio"
 msgstr "周度信息比率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:100
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:133
 msgid "WeeklyTrackingError"
 msgstr "周度跟踪误差"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:101
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:134
 msgid "WeeklyMaxDrawdown"
 msgstr "周度最大回撤"
 
-msgid "WeeklyVolatility"
-msgstr "周度波动率"
-
-msgid "MonthlySharpe"
-msgstr "月度夏普率"
-
-msgid "MonthlyVolatility"
-msgstr "月度波动率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:105
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:138
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:177
 msgid "ExcessReturns"
 msgstr "超额收益率（几何）"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:106
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:139
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:178
 msgid "ExcessAnnual"
 msgstr "年化超额收益率（几何）"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:107
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:140
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:181
 msgid "ExcessSharpe"
 msgstr "超额夏普率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:108
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:141
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:182
 msgid "ExcessVolatility"
 msgstr "超额收益波动率"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:109
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:142
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:184
 msgid "ExcessMaxDD"
 msgstr "超额收益最大回撤（几何）"
 
-msgid "ExcessWinRate"
-msgstr "超额胜率"
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:110
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:143
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:185
 msgid "ExcessMaxDD/ExcessMaxDDD"
 msgstr "超额收益最大回撤/最长回撤持续期"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:144
 msgid "WeeklyExcessUlcerPerformanceIndex"
 msgstr "周度超额累计回撤夏普率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:163
+msgid "MonthlySharpe"
+msgstr "月度夏普率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:168
+msgid "WeeklyVolatility"
+msgstr "周度波动率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:169
+msgid "MonthlyVolatility"
+msgstr "月度波动率"
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/plot/consts.py:183
+msgid "ExcessWinRate"
+msgstr "超额胜率"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:33
 msgid ""
@@ -639,12 +701,12 @@ msgid ""
 "{cost_money:.2f}, cash {cash:.2f}"
 msgstr "订单创建失败: 可用资金不足。当前资金: {cash:.2f}，{order_book_id} 下单所需资金: {cost_money:.2f}"
 
-#: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:31
+#: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:32
 #, fuzzy
 msgid "Order Creation Failed: {order_book_id} is not listing!"
 msgstr "订单创建失败: {order_book_id} 未上市或已退市"
 
-#: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:37
+#: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:38
 msgid "Order Creation Failed: security {order_book_id} is suspended on {date}"
 msgstr "订单创建失败: {order_book_id} 在 {date} 时停牌"
 
@@ -666,41 +728,39 @@ msgid ""
 "trade: [{}...]"
 msgstr "订单创建失败，当前存在可能导致自成交的挂单：[{}...]"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:101
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:319
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:66
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:118
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:335
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:69
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
 "listed date [{listed_date}]"
 msgstr "订单被撤销: [{order_book_id}] 上市首日无法交易"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:108
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:72
-msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
-msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:128
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:125
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:165
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:86
-msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
-msgstr "订单被拒单: [{order_book_id}] 已涨停。"
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:134
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:95
-msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
-msgstr "订单被拒单: [{order_book_id}] 已跌停。"
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:143
 msgid "Order Cancelled: {order_book_id} bar no volume"
 msgstr "订单被撤销：{order_book_id} 当前无成交量"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:159
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:396
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:150
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:95
+msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
+msgstr "订单被拒单: [{order_book_id}] 已涨停。"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:156
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:104
+msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
+msgstr "订单被拒单: [{order_book_id}] 已跌停。"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:178
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:417
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:567
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} due "
 "to volume limit"
 msgstr "订单被撤销: 订单 [{order_book_id}] 的下单量 {order_volume} 超过了成交量限制。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:197
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:217
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
 "larger than {volume_percent_limit} percent of current bar volume, fill "
@@ -709,26 +769,26 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:326
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:343
 msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:351
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:368
 msgid "Order Cancelled: current tick [{order_book_id}] reach the limit_up price."
 msgstr "订单被拒单: [{order_book_id}] 已涨停。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:357
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:374
 msgid ""
 "Order Cancelled: current tick [{order_book_id}] reach the limit_down "
 "price."
 msgstr "订单被拒单: [{order_book_id}] 已跌停。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:364
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:370
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:381
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:387
 msgid "Order Cancelled: [{order_book_id}] has no liquidity."
 msgstr "合约 [{order_book_id}] 流动性不足，拒单。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:438
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:462
 #, fuzzy
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
@@ -738,7 +798,7 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Tick 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:571
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:611
 msgid ""
 "Order Cancelled: market order {order_book_id} fill {filled_volume} "
 "actually"
@@ -759,13 +819,17 @@ msgid ""
 "matching_type is 'current_bar'."
 msgstr "日回测 'next_bar' 撮合方式已废弃，当前按 'current_bar' 撮合方式成交"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:107
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:119
 msgid "NO account_type = ({}) in {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:53
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:56
 msgid "cancel_order function is not supported in signal mode"
 msgstr "在 Signal 模式下，不支持 cancel_order 函数"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:75
+msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
+msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:108
 msgid "unsupported position_effect {}"
@@ -779,7 +843,7 @@ msgstr "订单 {order_id} 被手动取消。"
 msgid "Order Rejected: {order_book_id} can not match. Market close."
 msgstr "订单被拒单: {order_book_id} 当天交易结束，订单无法成交。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:184
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:185
 msgid "{order_book_id} should be subscribed when frequency is tick."
 msgstr "tick回测下单失败，请使用 subscribe 订阅合约 {order_book_id}。"
 
@@ -807,13 +871,13 @@ msgstr "无效的 滑点 设置: 其值需为正数。"
 msgid "invalid slippage rate value {} which cause price <= 0"
 msgstr "无效的 滑点 设置: 该值导致了调整后的价格为负。"
 
-#: rqalpha/mod/rqalpha_mod_sys_transaction_cost/mod.py:30
+#: rqalpha/mod/rqalpha_mod_sys_transaction_cost/mod.py:42
 msgid ""
 "invalid commission multiplier or tax multiplier value: value range is [0,"
 " +∞)"
 msgstr ""
 
-#: rqalpha/model/bar.py:371
+#: rqalpha/model/bar.py:372
 msgid "id_or_symbols {} does not exist"
 msgstr "您选择的证券[{}]不存在。"
 
@@ -824,117 +888,113 @@ msgid ""
 " {tax}, {frozen_price}"
 msgstr ""
 
-#: rqalpha/portfolio/__init__.py:67
+#: rqalpha/portfolio/__init__.py:71
 msgid "invalid init position {order_book_id}: no valid price at {date}"
 msgstr "初始持仓 {order_book_id} 不合法：无法获取到该标 {date} 的价格"
 
-#: rqalpha/portfolio/__init__.py:267
+#: rqalpha/portfolio/__init__.py:278 rqalpha/portfolio/__init__.py:291
 msgid "invalid account type {}, choose in {}"
 msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 
-#: rqalpha/portfolio/__init__.py:271
+#: rqalpha/portfolio/__init__.py:282
 msgid "Cash add {}. units {} become to {}"
 msgstr "入金{}元，份额由{}变动为{}"
 
-#: rqalpha/portfolio/account.py:313
+#: rqalpha/portfolio/account.py:352
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/account.py:457
+#: rqalpha/portfolio/account.py:502 rqalpha/portfolio/account.py:521
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
 
-#: rqalpha/portfolio/position.py:160
-msgid "invalid price of {order_book_id}: {price}"
-msgstr "{order_book_id} 的价格不合法：{price}"
-
-#: rqalpha/utils/arg_checker.py:50
+#: rqalpha/utils/arg_checker.py:51
 msgid ""
 "function {}: invalid {} argument, expect a value of type {}, got {} "
 "(type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:58
+#: rqalpha/utils/arg_checker.py:59
 msgid "valid order_book_id/instrument"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:61
+#: rqalpha/utils/arg_checker.py:62
 msgid "valid stock order_book_id/instrument"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:64
+#: rqalpha/utils/arg_checker.py:65
 msgid "valid future order_book_id/instrument"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:67
+#: rqalpha/utils/arg_checker.py:68
 msgid "listed order_book_id/instrument"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:70
+#: rqalpha/utils/arg_checker.py:71
 msgid "function {}: invalid {} argument, expected a {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:96
+#: rqalpha/utils/arg_checker.py:97
 msgid ""
 "function {}: invalid {} argument, expected instrument with types {}, got "
 "instrument with type {}"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:136
+#: rqalpha/utils/arg_checker.py:137
 msgid "function {}: invalid {} argument, expect a number, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:151
+#: rqalpha/utils/arg_checker.py:160
 msgid "function {}: invalid {} argument, valid: {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:165
+#: rqalpha/utils/arg_checker.py:174
 msgid "function {}: invalid {} argument, valid fields are {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:177
+#: rqalpha/utils/arg_checker.py:186
 msgid "function {}: invalid field {}, valid fields are {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:183 rqalpha/utils/arg_checker.py:198
+#: rqalpha/utils/arg_checker.py:192 rqalpha/utils/arg_checker.py:207
 msgid ""
 "function {}: invalid {} argument, expect a string or a list of string, "
 "got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:225 rqalpha/utils/arg_checker.py:230
+#: rqalpha/utils/arg_checker.py:234 rqalpha/utils/arg_checker.py:239
 msgid "function {}: invalid {} argument, expect a valid date, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:241
+#: rqalpha/utils/arg_checker.py:250
 msgid "function {}: invalid {} argument, expect a value >= {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:251
+#: rqalpha/utils/arg_checker.py:260
 msgid "function {}: invalid {} argument, expect a value > {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:261
+#: rqalpha/utils/arg_checker.py:270
 msgid "function {}: invalid {} argument, expect a value <= {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:272
+#: rqalpha/utils/arg_checker.py:281
 msgid "function {}: invalid {} argument, expect a value < {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:289
+#: rqalpha/utils/arg_checker.py:298
 msgid ""
 "function {}: invalid {} argument, interval should be in form of '1d', "
 "'3m', '4q', '2y', got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:325
+#: rqalpha/utils/arg_checker.py:334
 msgid ""
 "function {}: invalid {} argument, should be entity like "
 "Fundamentals.balance_sheet.total_equity, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:344
+#: rqalpha/utils/arg_checker.py:353
 #, fuzzy
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
@@ -1472,4 +1532,17 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 
 #~ msgid "Order Creation Failed: {order_book_id} has been delisted!"
 #~ msgstr "订单创建失败: {order_book_id} 已退市"
+
+# msgid "Order Creation Failed: Order amount is 0."
+# msgstr "订单创建失败: 下单量为 0"
+#~ msgid "Limit order price should be positive"
+#~ msgstr "Limit order 价格应该为正，请检查您的下单价格"
+
+#~ msgid ""
+#~ "function order_target_portfolio: invalid order "
+#~ "price {target_price} of {id_or_ins}"
+#~ msgstr "函数 order_target_portfolio：{id_or_ins} 的下单价格 {target_price} 不合法。"
+
+#~ msgid "invalid price of {order_book_id}: {price}"
+#~ msgstr "{order_book_id} 的价格不合法：{price}"
 

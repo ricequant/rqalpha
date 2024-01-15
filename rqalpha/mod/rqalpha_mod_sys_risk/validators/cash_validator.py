@@ -24,7 +24,7 @@ from rqalpha.utils.i18n import gettext as _
 
 def is_cash_enough(env, order, cash, warn=False):
     instrument = env.data_proxy.instrument(order.order_book_id)
-    cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction)
+    cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
     cost_money += env.get_order_transaction_cost(order)
     if cost_money <= cash:
         return True
