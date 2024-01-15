@@ -20,7 +20,7 @@ import copy
 import datetime
 import inspect
 from typing import Dict, Callable, Optional
-from functools import lru_cache
+from methodtools import lru_cache
 
 import numpy as np
 from dateutil.parser import parse
@@ -29,8 +29,6 @@ from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr, PropertyReprMeta
-from rqalpha.utils.class_helper import cached_property
-from rqalpha.core.events import EVENT
 
 
 class Instrument(metaclass=PropertyReprMeta):

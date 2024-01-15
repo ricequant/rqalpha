@@ -439,6 +439,7 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
 
 FUTURES_TRADING_PARAMETERS_FIELDS = ["long_margin_ratio", "short_margin_ratio", "commission_type", "open_commission", "close_commission", "close_commission_today"]
 TRADING_PARAMETERS_START_DATE = 20100401
+FUTURES_TRADING_PARAMETERS_FILE = "futures_trading_parameters.h5"
 
 
 class FuturesTradingParametersTask(object):
@@ -479,7 +480,7 @@ class FuturesTradingParametersTask(object):
         try:
             h5 = h5py.File(path, "a")
             h5.close()
-        except Exception as e:
+        except OSError as e:
             raise OSError(_("File {} update failed, if it is using, please update later, or you can delete then update again".format(path))) from e
         last_date = self.get_h5_last_date(path)
         recreate_futures_list = self.get_recreate_futures_list(path, last_date)
@@ -576,7 +577,9 @@ def update_futures_trading_parameters(path, end_date):
         return False
     df = rqdatac.all_instruments("Future")
     order_book_ids = (df[df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)]).order_book_id.tolist()
-    file = "futures_trading_parameters.h5"
-    fields = FUTURES_TRADING_PARAMETERS_FIELDS
-    FuturesTradingParametersTask(order_book_ids)(os.path.join(path, file), fields, end_date)
+    FuturesTradingParametersTask(order_book_ids)(
+        os.path.join(path, FUTURES_TRADING_PARAMETERS_FILE), 
+        FUTURES_TRADING_PARAMETERS_FIELDS, 
+        end_date
+        )
     return True

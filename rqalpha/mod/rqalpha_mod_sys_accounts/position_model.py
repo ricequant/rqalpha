@@ -18,7 +18,6 @@
 from datetime import date
 
 from decimal import Decimal
-from functools import lru_cache
 
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
@@ -228,14 +227,11 @@ class FuturePosition(Position):
     @property
     def margin_rate(self):
         # type: () -> float
-        try:
-            return self.__dict__['margin_ratio'] * self._env.config.base.margin_multiplier
-        except KeyError:
-            if self.direction == POSITION_DIRECTION.LONG:
-                self.__dict__['margin_ratio'] = self._instrument.get_long_margin_ratio(self._env.trading_dt.date())
-            elif self.direction == POSITION_DIRECTION.SHORT:
-                self.__dict__['margin_ratio'] = self._instrument.get_short_margin_ratio(self._env.trading_dt.date())
-            return self.__dict__['margin_ratio'] * self._env.config.base.margin_multiplier
+        if self.direction == POSITION_DIRECTION.LONG:
+            margin_ratio = self._instrument.get_long_margin_ratio(self._env.trading_dt.date())
+        elif self.direction == POSITION_DIRECTION.SHORT:
+            margin_ratio = self._instrument.get_short_margin_ratio(self._env.trading_dt.date())
+        return margin_ratio * self._env.config.base.margin_multiplier
 
     @property
     def equity(self):

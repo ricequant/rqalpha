@@ -21,7 +21,7 @@ from rqalpha.const import SIDE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
 from rqalpha.core.events import EVENT
 
 
-STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 23)
+STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 28)
 
 
 class StockTransactionCostDecider(AbstractTransactionCostDecider):

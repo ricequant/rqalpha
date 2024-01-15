@@ -16,7 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 import pickle
-from functools import lru_cache
 from datetime import date, datetime, timedelta
 from itertools import groupby
 from typing import Dict, Iterable, List, Optional, Sequence, Union
@@ -370,6 +369,7 @@ class BaseDataSource(AbstractDataSource):
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
+    @lru_cache(1024)
     def get_futures_trading_parameters(self, instrument, dt):
         # type: (Instrument, datetime.date) -> FuturesTradingParameters
         if self._futures_trading_parameters_store:
