@@ -26,6 +26,7 @@ from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
                                       ProgressedTask)
 from rqalpha.utils.datetime_func import (convert_date_to_date_int,
                                          convert_date_to_int)
+from rqalpha.utils.i18n import gettext as _
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -136,42 +137,76 @@ def gen_share_transformation(d):
 def gen_future_info(d):
     future_info_file = os.path.join(d, 'future_info.json')
 
+    def _need_to_recreate():
+        if not os.path.exists(future_info_file):
+            return
+        else:
+            with open(future_info_file, "r") as f:
+                all_futures_info = json.load(f)
+                if "margin_rate" not in all_futures_info[0]:
+                    return True
+    
+    def update_margin_rate(file):
+        all_instruments_data = rqdatac.all_instruments("Future")
+        with open(file, "r") as f:
+            all_futures_info = json.load(f)
+            new_all_futures_info = []
+            for future_info in all_futures_info:
+                if "order_book_id" in future_info:
+                    future_info["margin_rate"] = all_instruments_data[all_instruments_data["order_book_id"] == future_info["order_book_id"]].iloc[0].margin_rate
+                elif "underlying_symbol" in future_info:
+                    dominant = rqdatac.futures.get_dominant(future_info["underlying_symbol"])[-1]
+                    future_info["margin_rate"] = all_instruments_data[all_instruments_data["order_book_id"] == dominant].iloc[0].margin_rate
+                new_all_futures_info.append(future_info)
+        os.remove(file)
+        with open(file, "w") as f:
+            json.dump(new_all_futures_info, f, separators=(',', ':'), indent=2)
+
+    if (_need_to_recreate()): update_margin_rate(future_info_file)
+
+    # 新增 hard_code 的种类时，需要同时修改rqalpha.data.base_data_source.storages.FutureInfoStore.data_compatible中的内容
     hard_code = [
         {'underlying_symbol': 'TC',
           'close_commission_ratio': 4.0,
           'close_commission_today_ratio': 0.0,
           'commission_type': "by_volume",
           'open_commission_ratio': 4.0,
+          'margin_rate': 0.05,
           'tick_size': 0.2},
          {'underlying_symbol': 'ER',
           'close_commission_ratio': 2.5,
           'close_commission_today_ratio': 2.5,
           'commission_type': "by_volume",
           'open_commission_ratio': 2.5,
+          'margin_rate': 0.05,
           'tick_size': 1.0},
          {'underlying_symbol': 'WS',
           'close_commission_ratio': 2.5,
           'close_commission_today_ratio': 0.0,
           'commission_type': "by_volume",
           'open_commission_ratio': 2.5,
+          'margin_rate': 0.05,
           'tick_size': 1.0},
          {'underlying_symbol': 'RO',
           'close_commission_ratio': 2.5,
           'close_commission_today_ratio': 0.0,
           'commission_type': "by_volume",
           'open_commission_ratio': 2.5,
+          'margin_rate': 0.05,
           'tick_size': 2.0},
          {'underlying_symbol': 'ME',
           'close_commission_ratio': 1.4,
           'close_commission_today_ratio': 0.0,
           'commission_type': "by_volume",
           'open_commission_ratio': 1.4,
+          'margin_rate': 0.06,
           'tick_size': 1.0},
         {'underlying_symbol': 'WT',
          'close_commission_ratio': 5.0,
          'close_commission_today_ratio': 5.0,
          'commission_type': "by_volume",
          'open_commission_ratio': 5.0,
+         'margin_rate': 0.05,
          'tick_size': 1.0},
     ]
 
@@ -198,18 +233,21 @@ def gen_future_info(d):
             symbol_list.append(info["underlying_symbol"])
 
     futures_order_book_id = rqdatac.all_instruments(type='Future')['order_book_id'].unique()
+    commission_df = rqdatac.futures.get_commission_margin()
     for future in futures_order_book_id:
         underlying_symbol = re.match(r'^[a-zA-Z]*', future).group()
         if future in future_list:
             continue
         future_dict = {}
-        commission = rqdatac.futures.get_commission_margin(future)
+        commission = commission_df[commission_df['order_book_id'] == future]
         if not commission.empty:
             future_dict['order_book_id'] = future
             commission = commission.iloc[0]
             for p in param:
                 future_dict[p] = commission[p]
-            future_dict['tick_size'] = rqdatac.instruments(future).tick_size()
+            instruemnts_data = rqdatac.instruments(future)
+            future_dict['margin_rate'] = instruemnts_data.margin_rate
+            future_dict['tick_size'] = instruemnts_data.tick_size()
         elif underlying_symbol in symbol_list:
             continue
         else:
@@ -220,11 +258,13 @@ def gen_future_info(d):
             except AttributeError:
                 # FIXME: why get_dominant return None???
                 continue
-            commission = rqdatac.futures.get_commission_margin(dominant).iloc[0]
+            commission = commission_df[commission_df['order_book_id'] == dominant].iloc[0]
 
             for p in param:
                 future_dict[p] = commission[p]
-            future_dict['tick_size'] = rqdatac.instruments(dominant).tick_size()
+            instruemnts_data = rqdatac.instruments(dominant)
+            future_dict['margin_rate'] = instruemnts_data.margin_rate
+            future_dict['tick_size'] = instruemnts_data.tick_size()
         all_futures_info.append(future_dict)
 
     with open(os.path.join(d, 'future_info.json'), 'w') as f:
@@ -395,3 +435,151 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
             executor.submit(GenerateFileTask(func), path)
         for file, order_book_id, field in day_bar_args:
             executor.submit(_DayBarTask(order_book_id), os.path.join(path, file), field, **kwargs)
+
+
+FUTURES_TRADING_PARAMETERS_FIELDS = ["long_margin_ratio", "short_margin_ratio", "commission_type", "open_commission", "close_commission", "close_commission_today"]
+TRADING_PARAMETERS_START_DATE = 20100401
+FUTURES_TRADING_PARAMETERS_FILE = "futures_trading_parameters.h5"
+
+
+class FuturesTradingParametersTask(object):
+    def __init__(self, order_book_ids):
+        self._order_book_ids = order_book_ids
+    
+    def __call__(self, path, fields, end_date):
+        if not os.path.exists(path):
+            self.generate_futures_trading_parameters(path, fields, end_date)
+        else:
+            self.update_futures_trading_parameters(path, fields, end_date)
+    
+    def generate_futures_trading_parameters(self, path, fields, end_date, recreate_futures_list=None):
+        # type: (str, list, datetime.date, list) -> None
+        order_book_ids = self._order_book_ids
+        if recreate_futures_list:
+            order_book_ids = recreate_futures_list      
+        df = rqdatac.futures.get_trading_parameters(order_book_ids, TRADING_PARAMETERS_START_DATE, end_date, fields)
+        if not (df is None or df.empty):
+            df.dropna(axis=0, how="all")
+            df.reset_index(inplace=True)
+            df['datetime'] = df['trading_date'].map(convert_date_to_date_int)
+            del df["trading_date"]
+            df['commission_type'] = df['commission_type'].map(self.set_commission_type)
+            df.rename(columns={
+                'close_commission': "close_commission_ratio",
+                'close_commission_today': "close_commission_today_ratio",
+                'open_commission': 'open_commission_ratio'
+                }, inplace=True)
+            df.set_index(["order_book_id", "datetime"], inplace=True)
+            df.sort_index(inplace=True)
+            with h5py.File(path, "w") as h5:
+                for order_book_id in df.index.levels[0]:
+                    h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+
+    def update_futures_trading_parameters(self, path, fields, end_date):
+        # type: (str, list, datetime.date) -> None
+        try:
+            h5 = h5py.File(path, "a")
+            h5.close()
+        except OSError as e:
+            raise OSError(_("File {} update failed, if it is using, please update later, or you can delete then update again".format(path))) from e
+        last_date = self.get_h5_last_date(path)
+        recreate_futures_list = self.get_recreate_futures_list(path, last_date)
+        if recreate_futures_list:
+            self.generate_futures_trading_parameters(path, fields, last_date, recreate_futures_list=recreate_futures_list)
+        if end_date > last_date:
+            if rqdatac.get_previous_trading_date(end_date) == last_date:
+                return
+            else:
+                start_date = rqdatac.get_next_trading_date(last_date)
+                df = rqdatac.futures.get_trading_parameters(self._order_book_ids, start_date, end_date, fields)
+                if not(df is None or df.empty):
+                    df = df.dropna(axis=0, how="all")
+                    df.reset_index(inplace=True)
+                    df['datetime'] = df['trading_date'].map(convert_date_to_date_int)
+                    del [df['trading_date']]
+                    df['commission_type'] = df['commission_type'].map(self.set_commission_type)
+                    df.rename(columns={
+                        'close_commission': "close_commission_ratio",
+                        'close_commission_today': "close_commission_today_ratio",
+                        'open_commission': 'open_commission_ratio'
+                        }, inplace=True)
+                    df.set_index(['order_book_id', 'datetime'], inplace=True)
+                    with h5py.File(path, "a") as h5:
+                        for order_book_id in df.index.levels[0]:
+                            if order_book_id in h5:
+                                data = np.array(
+                                    [tuple(i) for i in chain(h5[order_book_id][:], df.loc[order_book_id].to_records())],
+                                    dtype=h5[order_book_id].dtype
+                                )
+                                del h5[order_book_id]
+                                h5.create_dataset(order_book_id, data=data)
+                            else:
+                                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+
+    def set_commission_type(self, commission_type):
+        if commission_type == "by_money":
+            commission_type = 0
+        elif commission_type == "by_volume":
+            commission_type = 1
+        return commission_type
+    
+    def get_h5_last_date(self, path):
+        last_date = TRADING_PARAMETERS_START_DATE
+        with h5py.File(path, "r") as h5:
+            for key in h5.keys():
+                if int(h5[key]['datetime'][-1]) > last_date:
+                    last_date = h5[key]['datetime'][-1]
+        last_date = datetime.datetime.strptime(str(last_date), "%Y%m%d").date()
+        return last_date
+
+    def get_recreate_futures_list(self, path, h5_last_date):
+        # type: (str, datetime.date) -> list
+        """
+        用户在运行策略的过程中可能中断进程，进而可能导致在创建 h5 文件时，部分合约没有成功 download
+        通过该函数，获取在上一次更新中因为异常而没有更新的合约
+        """
+        recreate_futures_list = []
+        df = rqdatac.all_instruments("Future")
+        last_update_futures_list = df[(df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)) & (df['listed_date'] <= h5_last_date.strftime("%Y%m%d"))].order_book_id.to_list()
+        with h5py.File(path, "r") as h5:
+            h5_order_book_ids = h5.keys()
+            for order_book_id in last_update_futures_list:
+                if order_book_id in h5_order_book_ids:
+                    continue
+                else:
+                    recreate_futures_list.append(order_book_id)
+        return recreate_futures_list
+
+
+def check_rqdata_permission():
+    """
+    检测以下内容，均符合才会更新期货交易参数：
+    1. rqdatac 版本是否为具备 futures.get_trading_parameters API 的版本
+    2. 当前 rqdatac 是否具备上述 API 的使用权限
+    """
+    if rqdatac.__version__ < '2.11.12':
+        from rqalpha.utils.logger import system_log
+        system_log.warn(_("RQAlpha already supports backtesting using futures historical margins and rates, please upgrade RQDatac to version 2.11.12 and above to use it"))
+        return
+    try:
+        rqdatac.futures.get_trading_parameters("A1005")
+    except rqdatac.share.errors.PermissionDenied:
+        from rqalpha.utils.logger import system_log
+        system_log.warn(_("Your RQData account does not have permission to use futures historical margin and rates, and fixed data will be used for calculations\nYou can contact RiceQuant to activate permission: 0755-26569969"))
+        return
+    return True
+
+
+def update_futures_trading_parameters(path, end_date):
+    # type: (str, datetime.date) -> Boolean
+    update_permission = check_rqdata_permission()
+    if not update_permission:
+        return False
+    df = rqdatac.all_instruments("Future")
+    order_book_ids = (df[df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)]).order_book_id.tolist()
+    FuturesTradingParametersTask(order_book_ids)(
+        os.path.join(path, FUTURES_TRADING_PARAMETERS_FILE), 
+        FUTURES_TRADING_PARAMETERS_FIELDS, 
+        end_date
+        )
+    return True

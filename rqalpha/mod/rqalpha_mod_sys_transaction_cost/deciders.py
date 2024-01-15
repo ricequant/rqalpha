@@ -21,7 +21,7 @@ from rqalpha.const import SIDE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
 from rqalpha.core.events import EVENT
 
 
-STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 23)
+STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 28)
 
 
 class StockTransactionCostDecider(AbstractTransactionCostDecider):
@@ -107,30 +107,30 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
 
         self.env = Environment.get_instance()
 
-    def _get_commission(self, order_book_id, position_effect, price, quantity, close_today_quantity):
-        info = self.env.data_proxy.get_commission_info(order_book_id)
+    def _get_commission(self, order_book_id, position_effect, price, quantity, close_today_quantity, dt):
+        # type: (str, POSITION_EFFECT, float, int, int, datetime.date) -> float
+        info = self.env.data_proxy.get_futures_trading_parameters(order_book_id, dt)
         commission = 0
-        if info['commission_type'] == COMMISSION_TYPE.BY_MONEY:
+        if info.commission_type == COMMISSION_TYPE.BY_MONEY:
             contract_multiplier = self.env.get_instrument(order_book_id).contract_multiplier
             if position_effect == POSITION_EFFECT.OPEN:
-                commission += price * quantity * contract_multiplier * info[
-                    'open_commission_ratio']
+                commission += price * quantity * contract_multiplier * info.open_commission_ratio
             else:
                 commission += price * (
                         quantity - close_today_quantity
-                ) * contract_multiplier * info['close_commission_ratio']
-                commission += price * close_today_quantity * contract_multiplier * info['close_commission_today_ratio']
+                ) * contract_multiplier * info.close_commission_ratio
+                commission += price * close_today_quantity * contract_multiplier * info.close_commission_today_ratio
         else:
             if position_effect == POSITION_EFFECT.OPEN:
-                commission += quantity * info['open_commission_ratio']
+                commission += quantity * info.open_commission_ratio
             else:
-                commission += (quantity - close_today_quantity) * info['close_commission_ratio']
-                commission += close_today_quantity * info['close_commission_today_ratio']
+                commission += (quantity - close_today_quantity) * info.close_commission_ratio
+                commission += close_today_quantity * info.close_commission_today_ratio
         return commission * self.commission_multiplier
 
     def get_trade_commission(self, trade):
         return self._get_commission(
-            trade.order_book_id, trade.position_effect, trade.last_price, trade.last_quantity, trade.close_today_amount
+            trade.order_book_id, trade.position_effect, trade.last_price, trade.last_quantity, trade.close_today_amount, trade.trading_datetime.date()
         )
 
     def get_trade_tax(self, trade):
@@ -140,5 +140,5 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
         close_today_quantity = order.quantity if order.position_effect == POSITION_EFFECT.CLOSE_TODAY else 0
 
         return self._get_commission(
-            order.order_book_id, order.position_effect, order.frozen_price, order.quantity, close_today_quantity
+            order.order_book_id, order.position_effect, order.frozen_price, order.quantity, close_today_quantity, order.trading_datetime.date()
         )

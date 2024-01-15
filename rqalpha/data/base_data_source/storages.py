@@ -23,7 +23,7 @@ import sys
 from copy import copy
 from itertools import chain
 from contextlib import contextmanager
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, NamedTuple
 
 import h5py
 import numpy as np
@@ -34,11 +34,25 @@ from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
+from rqalpha.environment import Environment
 
 from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
                                 AbstractInstrumentStore,
                                 AbstractSimpleFactorStore)
+
+
+class FuturesTradingParameters(NamedTuple):
+    """
+    数据类，用以存储期货交易参数数据
+    """
+    close_commission_ratio: float
+    close_commission_today_ratio: float
+    commission_type: str
+    open_commission_ratio: float
+    long_margin_ratio: float
+    short_margin_ratio: float
 
 
 class ExchangeTradingCalendarStore(AbstractCalendarStore):
@@ -64,27 +78,52 @@ class FutureInfoStore(object):
                 ) for item in json.load(json_file)
             }
         self._custom_data = custom_future_info
-        self._future_info = {}
+        if "margin_rate" not in self._default_data[next(iter(self._default_data))]:
+            raise RuntimeError(_("Your bundle data is too old, please use 'rqalpha update-bundle' or 'rqalpha download-bundle' to update it to lastest before using"))
 
     @classmethod
     def _process_future_info_item(cls, item):
         item["commission_type"] = cls.COMMISSION_TYPE_MAP[item["commission_type"]]
         return item
 
-    def get_future_info(self, instrument):
-        # type: (Instrument) -> Dict[str, float]
-        order_book_id = instrument.order_book_id
+    @lru_cache(1024)
+    def get_future_info(self, order_book_id, underlying_symbol):
+        # type: (str, str) -> FuturesTradingParameters
+        custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+        info = self._default_data.get(order_book_id) or self._default_data.get(underlying_symbol)
+        if custom_info:
+            info = copy(info) or {}
+            info.update(custom_info)
+        elif not info:
+            raise NotImplementedError(_("unsupported future instrument {}").format(order_book_id))
+        info = self._to_namedtuple(info)
+        return info
+    
+    def _to_namedtuple(self, info):
+        # type: (dict) -> FuturesTradingParameters
+        info['long_margin_ratio'], info['short_margin_ratio'] = info['margin_rate'], info['margin_rate']
+        del info['margin_rate'], info['tick_size']
         try:
-            return self._future_info[order_book_id]
+            del info['order_book_id']
         except KeyError:
-            custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(instrument.underlying_symbol)
-            info = self._default_data.get(order_book_id) or self._default_data.get(instrument.underlying_symbol)
-            if custom_info:
-                info = copy(info) or {}
-                info.update(custom_info)
-            elif not info:
-                raise NotImplementedError(_("unsupported future instrument {}").format(order_book_id))
-            return self._future_info.setdefault(order_book_id, info)
+            del info['underlying_symbol']
+        info = FuturesTradingParameters(**info)
+        return info
+    
+    @lru_cache(8)
+    def get_tick_size(self, instrument):
+        # type: (str, str) -> float
+        order_book_id = instrument.order_book_id
+        underlying_symbol = instrument.underlying_symbol
+        custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+        info = self._default_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+        if custom_info:
+            info = copy(info) or {}
+            info.update(custom_info)
+        elif not info:
+            raise NotImplementedError(_("unsupported future instrument {}".format(order_book_id)))
+        tick_size = info['tick_size']
+        return tick_size
 
 
 class InstrumentStore(AbstractInstrumentStore):
@@ -206,6 +245,55 @@ class DayBarStore(AbstractDayBarStore):
 
 class FutureDayBarStore(DayBarStore):
     DEFAULT_DTYPE = np.dtype(DayBarStore.DEFAULT_DTYPE.descr + [("open_interest", '<f8')])
+
+
+class FuturesTradingParametersStore(object):
+    COMMISSION_TYPE_MAP = {
+        0: COMMISSION_TYPE.BY_MONEY,
+        1: COMMISSION_TYPE.BY_VOLUME
+    }
+
+    # 历史期货交易参数的数据在2010年4月之后才有
+    FUTURES_TRADING_PARAMETERS_START_DATE = 20100401
+
+    def __init__(self, path):
+        self._path = path
+
+    def get_futures_trading_parameters(self, instrument, dt):
+        # type: (Instrument, datetime.date) -> FuturesTradingParameters or None
+        order_book_id = instrument.order_book_id
+        dt = convert_date_to_date_int(dt)
+        if dt < self.FUTURES_TRADING_PARAMETERS_START_DATE:
+            return None
+        data = self.get_futures_trading_parameters_all_time(order_book_id)
+        if data is None: 
+            return None
+        else:
+            arr = data[data['datetime'] == dt][0]
+            if len(arr) == 0:
+                if dt >= convert_date_to_date_int(instrument.listed_date) and dt <= convert_date_to_date_int(instrument.de_listed_date):
+                    user_system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
+                return None
+            futures_trading_parameters = self._to_namedtuple(arr)
+        return futures_trading_parameters
+    
+    @lru_cache(1024)
+    def get_futures_trading_parameters_all_time(self, order_book_id):
+        # type: (str) -> numpy.ndarray or None
+        with h5_file(self._path) as h5:
+            try:
+                data = h5[order_book_id][:]
+            except KeyError:
+                return None
+        return data
+            
+    def _to_namedtuple(self, arr):
+        # type: (numpy.void) -> FuturesTradingParameters
+        dic = dict(zip(arr.dtype.names, arr))
+        del dic['datetime']
+        dic["commission_type"] = self.COMMISSION_TYPE_MAP[dic['commission_type']]
+        futures_trading_parameters = FuturesTradingParameters(**dic)
+        return futures_trading_parameters
 
 
 class DividendStore(AbstractDividendStore):
