@@ -72,7 +72,7 @@ class BaseDataSource(AbstractDataSource):
         INSTRUMENT_TYPE.PUBLIC_FUND,
     )
 
-    def __init__(self, path, custom_future_info, update_parameters_end_date=None):       
+    def __init__(self, path, custom_future_info):       
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 
@@ -89,9 +89,6 @@ class BaseDataSource(AbstractDataSource):
         }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
         
         self._futures_trading_parameters_store = None
-        if update_parameters_end_date:
-            if update_futures_trading_parameters(path, update_parameters_end_date):
-                self._futures_trading_parameters_store = FuturesTradingParametersStore(_p("futures_trading_parameters.h5"))
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
         
         self._instruments_stores = {}  # type: Dict[INSTRUMENT_TYPE, AbstractInstrumentStore]
@@ -134,6 +131,12 @@ class BaseDataSource(AbstractDataSource):
 
         self._suspend_days = [DateSet(_p('suspended_days.h5'))]  # type: List[AbstractDateSet]
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
+
+    def set_futures_trading_parameters_store(self, path, update_parameters_end_date):
+        if update_parameters_end_date:
+            if update_futures_trading_parameters(path, update_parameters_end_date):
+                file = os.path.join(path, "futures_trading_parameters.h5")
+                self._futures_trading_parameters_store = FuturesTradingParametersStore(file)
 
     def register_day_bar_store(self, instrument_type, store):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None

@@ -148,7 +148,8 @@ def run(config, source_code=None, user_funcs=None):
         if config.mod.sys_transaction_cost.time_series_trading_parameters and "FUTURE" in config.base.accounts and rqdatac_enable:
             update_parameters_end_date = config.base.end_date
         if not env.data_source:
-            env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {}), update_parameters_end_date))
+            env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {})))
+        env.data_source.set_futures_trading_parameters_store(config.base.data_bundle_path, update_parameters_end_date)
         if env.price_board is None:
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()

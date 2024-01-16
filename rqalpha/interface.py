@@ -494,6 +494,12 @@ class AbstractDataSource(object):
         # type: (Union[str, Instrument], int, int, datetime) -> Optional[numpy.void]
         # 格式: (date, VWAP, TWAP, volume) -> 案例 (20200102, 16.79877183, 16.83271429, 144356044)
         raise NotImplementedError
+    
+    def set_futures_trading_parameters_store(self, path, update_parameters_end_date):
+        """
+        设置时序期货交易参数的 DataStore
+        """
+        raise NotImplementedError
 
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):
