@@ -131,3 +131,7 @@ class RQTypeError(RQUserError):
 class RQApiNotSupportedError(RQUserError):
     pass
 
+
+class RQDatacVersionTooLow(RuntimeError):
+    pass
+
