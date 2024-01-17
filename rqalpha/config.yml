@@ -39,7 +39,7 @@ base:
   future_info: {}
   # 强平
   forced_liquidation: true
-  # 是否开启期货历史交易参数进行回测，默认为True
+  # 是否开启期货历史交易参数进行回测，默认为 False
   futures_time_series_trading_parameters: false
 
 

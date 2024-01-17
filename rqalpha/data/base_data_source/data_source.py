@@ -72,7 +72,7 @@ class BaseDataSource(AbstractDataSource):
         INSTRUMENT_TYPE.PUBLIC_FUND,
     )
 
-    def __init__(self, path, custom_future_info, futures_time_series_trading_parameters, end_date):       
+    def __init__(self, path, custom_future_info, futures_time_series_trading_parameters=False, end_date=None):       
         # type: (str, dict, bool, date) -> None
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
@@ -138,7 +138,7 @@ class BaseDataSource(AbstractDataSource):
                 import rqdatac
             except ImportError:
                 user_system_log.warn(_("RQDatac is not installed, \"config.base.futures_time_series_trading_parameters\" will be disabled."))
-            else:            
+            else:
                 try:
                     update_futures_trading_parameters(path, end_date)
                 except (rqdatac.share.errors.PermissionDenied, RQDatacVersionTooLow):
