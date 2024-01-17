@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-01-12 13:38+0800\n"
+"POT-Creation-Date: 2024-01-17 14:36+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -39,19 +39,19 @@ msgid ""
 "persist"
 msgstr ""
 
-#: rqalpha/main.py:127
+#: rqalpha/main.py:126
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 
-#: rqalpha/main.py:218
+#: rqalpha/main.py:219
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:248
+#: rqalpha/main.py:249
 msgid "strategy run successfully, normal exit"
 msgstr ""
 
-#: rqalpha/main.py:253
+#: rqalpha/main.py:254
 msgid "strategy execute exception"
 msgstr ""
 
@@ -247,24 +247,30 @@ msgstr ""
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr ""
 
-#: rqalpha/data/bundle.py:483
-msgid ""
-"File {} update failed, if it is using, please update later, or you can "
-"delete then update again"
-msgstr ""
-
-#: rqalpha/data/bundle.py:561
+#: rqalpha/data/bundle.py:452
 msgid ""
 "RQAlpha already supports backtesting using futures historical margins and"
 " rates, please upgrade RQDatac to version 2.11.12 and above to use it"
 msgstr ""
 
-#: rqalpha/data/bundle.py:567
+#: rqalpha/data/bundle.py:488
 msgid ""
-"Your RQData account does not have permission to use futures historical "
-"margin and rates, and fixed data will be used for calculations\n"
-"You can contact RiceQuant to activate permission: 0755-26569969"
+"File {} update failed, if it is using, please update later, or you can "
+"delete then update again"
 msgstr ""
+
+#: rqalpha/data/base_data_source/data_source.py:140
+msgid ""
+"RQDatac is not installed, "
+"\"config.base.futures_time_series_trading_parameters\" will be disabled."
+msgstr "未安装 RQDatac，将关闭配置 \"config.base.futures_time_series_trading_parameters\""
+
+#: rqalpha/data/base_data_source/data_source.py:145
+msgid ""
+"RQDatac does not have permission to obtain futures histrical trading "
+"parameters, \"config.base.futures_time_series_trading_parameters\" will "
+"be disabled."
+msgstr "RQDatac 缺少获取期货历史交易参数的权限，将关闭配置 \"config.base.futures_time_series_trading_parameters\""
 
 #: rqalpha/data/base_data_source/storages.py:82
 msgid ""
@@ -306,7 +312,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:318
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:314
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 

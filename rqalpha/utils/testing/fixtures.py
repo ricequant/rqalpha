@@ -83,7 +83,7 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
 
         super(BaseDataSourceFixture, self).init_fixture()
         default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
-        self.base_data_source = BaseDataSource(default_bundle_path, {}, {})
+        self.base_data_source = BaseDataSource(default_bundle_path, {})
 
 
 class BarDictPriceBoardFixture(EnvironmentFixture):
