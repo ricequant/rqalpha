@@ -279,14 +279,14 @@ msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更
 msgid ""
 "RQDatac is not installed, "
 "\"config.base.futures_time_series_trading_parameters\" will be disabled."
-msgstr ""
+msgstr "未安装 RQDatac，将关闭配置 \"config.base.futures_time_series_trading_parameters\""
 
 #: rqalpha/data/base_data_source/data_source.py:145
 msgid ""
 "RQDatac does not have permission to obtain futures histrical trading "
 "parameters, \"config.base.futures_time_series_trading_parameters\" will "
 "be disabled."
-msgstr ""
+msgstr "RQDatac 缺少获取期货历史交易参数的权限，将关闭配置 \"config.base.futures_time_series_trading_parameters\""
 
 #: rqalpha/data/base_data_source/storages.py:82
 msgid ""
