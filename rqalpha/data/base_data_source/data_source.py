@@ -142,7 +142,7 @@ class BaseDataSource(AbstractDataSource):
                 try:
                     update_futures_trading_parameters(path, end_date)
                 except (rqdatac.share.errors.PermissionDenied, RQDatacVersionTooLow):
-                    user_system_log.warn(_("RQDatac is not installed, \"config.base.futures_time_series_trading_parameters\" will be disabled."))
+                    user_system_log.warn(_("RQDatac does not have permission to obtain futures histrical trading parameters, \"config.base.futures_time_series_trading_parameters\" will be disabled."))
                 else:
                     file = os.path.join(path, "futures_trading_parameters.h5")
                     self._futures_trading_parameters_store = FuturesTradingParametersStore(file)
