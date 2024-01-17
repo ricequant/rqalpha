@@ -122,7 +122,6 @@ def init_rqdatac(rqdatac_uri):
         init_rqdatac_env(rqdatac_uri)
         try:
             rqdatac.init()
-            return True
         except Exception as e:
             system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
 
@@ -132,23 +131,25 @@ def run(config, source_code=None, user_funcs=None):
     persist_helper = None
     init_succeed = False
     mod_handler = ModHandler()
-    update_parameters_end_date = None
 
     try:
         # avoid register handlers everytime
         # when running in ipython
         set_loggers(config)
-        rqdatac_enable = init_rqdatac(getattr(config.base, 'rqdatac_uri', None))
+        init_rqdatac(getattr(config.base, 'rqdatac_uri', None))
         system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         env.set_strategy_loader(init_strategy_loader(env, source_code, user_funcs, config))
         mod_handler.set_env(env)
         mod_handler.start_up()
 
-        if config.mod.sys_transaction_cost.time_series_trading_parameters and "FUTURE" in config.base.accounts and rqdatac_enable:
-            update_parameters_end_date = config.base.end_date
         if not env.data_source:
-            env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {}), update_parameters_end_date))
+            env.set_data_source(BaseDataSource(
+                config.base.data_bundle_path, 
+                getattr(config.base, "future_info", {}),
+                const.DEFAULT_ACCOUNT_TYPE.FUTURE in config.base.accounts and config.base.futures_time_series_trading_parameters,
+                config.base.end_date
+            ))
         if env.price_board is None:
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()

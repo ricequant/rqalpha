@@ -26,6 +26,7 @@ from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
                                       ProgressedTask)
 from rqalpha.utils.datetime_func import (convert_date_to_date_int,
                                          convert_date_to_int)
+from rqalpha.utils.exception import RQDatacVersionTooLow
 from rqalpha.utils.i18n import gettext as _
 
 START_DATE = 20050104
@@ -447,6 +448,9 @@ class FuturesTradingParametersTask(object):
         self._order_book_ids = order_book_ids
     
     def __call__(self, path, fields, end_date):
+        if rqdatac.__version__ < '2.11.12':
+            raise RQDatacVersionTooLow(_("RQAlpha already supports backtesting using futures historical margins and rates, please upgrade RQDatac to version 2.11.12 and above to use it"))
+            
         if not os.path.exists(path):
             self.generate_futures_trading_parameters(path, fields, end_date)
         else:
@@ -551,35 +555,12 @@ class FuturesTradingParametersTask(object):
         return recreate_futures_list
 
 
-def check_rqdata_permission():
-    """
-    检测以下内容，均符合才会更新期货交易参数：
-    1. rqdatac 版本是否为具备 futures.get_trading_parameters API 的版本
-    2. 当前 rqdatac 是否具备上述 API 的使用权限
-    """
-    if rqdatac.__version__ < '2.11.12':
-        from rqalpha.utils.logger import system_log
-        system_log.warn(_("RQAlpha already supports backtesting using futures historical margins and rates, please upgrade RQDatac to version 2.11.12 and above to use it"))
-        return
-    try:
-        rqdatac.futures.get_trading_parameters("A1005")
-    except rqdatac.share.errors.PermissionDenied:
-        from rqalpha.utils.logger import system_log
-        system_log.warn(_("Your RQData account does not have permission to use futures historical margin and rates, and fixed data will be used for calculations\nYou can contact RiceQuant to activate permission: 0755-26569969"))
-        return
-    return True
-
-
 def update_futures_trading_parameters(path, end_date):
-    # type: (str, datetime.date) -> Boolean
-    update_permission = check_rqdata_permission()
-    if not update_permission:
-        return False
+    # type: (str, datetime.date) -> None
     df = rqdatac.all_instruments("Future")
     order_book_ids = (df[df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)]).order_book_id.tolist()
     FuturesTradingParametersTask(order_book_ids)(
         os.path.join(path, FUTURES_TRADING_PARAMETERS_FILE), 
         FUTURES_TRADING_PARAMETERS_FIELDS, 
         end_date
-        )
-    return True
+    )

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-01-12 13:38+0800\n"
+"POT-Creation-Date: 2024-01-17 14:36+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -40,21 +40,21 @@ msgid ""
 "persist"
 msgstr "Persist provider 未加载，加载 Persist provider 方可使用 persist 功能。"
 
-#: rqalpha/main.py:127
+#: rqalpha/main.py:126
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:218
+#: rqalpha/main.py:219
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:248
+#: rqalpha/main.py:249
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:253
+#: rqalpha/main.py:254
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
@@ -263,32 +263,38 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/bundle.py:483
-msgid ""
-"File {} update failed, if it is using, please update later, or you can "
-"delete then update again"
-msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
-
-#: rqalpha/data/bundle.py:561
+#: rqalpha/data/bundle.py:452
 msgid ""
 "RQAlpha already supports backtesting using futures historical margins and"
 " rates, please upgrade RQDatac to version 2.11.12 and above to use it"
 msgstr "RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用"
 
-#: rqalpha/data/bundle.py:567
+#: rqalpha/data/bundle.py:488
 msgid ""
-"Your RQData account does not have permission to use futures historical "
-"margin and rates, and fixed data will be used for calculations\n"
-"You can contact RiceQuant to activate permission: 0755-26569969"
+"File {} update failed, if it is using, please update later, or you can "
+"delete then update again"
+msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
+
+#: rqalpha/data/base_data_source/data_source.py:140
+msgid ""
+"RQDatac is not installed, "
+"\"config.base.futures_time_series_trading_parameters\" will be disabled."
 msgstr ""
-"您的 RQData 账号没有权限使用期货历史保证金和费率，将使用固定的数据进行回测和计算\n"
-"您可联系米筐科技开通相关权限：0755-26569969"
+
+#: rqalpha/data/base_data_source/data_source.py:145
+msgid ""
+"RQDatac does not have permission to obtain futures histrical trading "
+"parameters, \"config.base.futures_time_series_trading_parameters\" will "
+"be disabled."
+msgstr ""
 
 #: rqalpha/data/base_data_source/storages.py:82
 msgid ""
 "Your bundle data is too old, please use 'rqalpha update-bundle' or "
 "'rqalpha download-bundle' to update it to lastest before using"
-msgstr "您的 Bundle 数据过旧，请使用 'rqalpha update-bundle' 或 'rqalpha download-bundle' 将其更新至最新后再进行使用"
+msgstr ""
+"您的 Bundle 数据过旧，请使用 'rqalpha update-bundle' 或 'rqalpha download-bundle' "
+"将其更新至最新后再进行使用"
 
 #: rqalpha/data/base_data_source/storages.py:98
 #: rqalpha/data/base_data_source/storages.py:124
@@ -324,7 +330,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:318
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:314
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓"
 
@@ -1545,4 +1551,14 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 
 #~ msgid "invalid price of {order_book_id}: {price}"
 #~ msgstr "{order_book_id} 的价格不合法：{price}"
+
+#~ msgid ""
+#~ "Your RQData account does not have "
+#~ "permission to use futures historical "
+#~ "margin and rates, and fixed data "
+#~ "will be used for calculations\n"
+#~ "You can contact RiceQuant to activate permission: 0755-26569969"
+#~ msgstr ""
+#~ "您的 RQData 账号没有权限使用期货历史保证金和费率，将使用固定的数据进行回测和计算\n"
+#~ "您可联系米筐科技开通相关权限：0755-26569969"
 

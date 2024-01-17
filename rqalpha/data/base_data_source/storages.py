@@ -269,12 +269,12 @@ class FuturesTradingParametersStore(object):
         if data is None: 
             return None
         else:
-            arr = data[data['datetime'] == dt][0]
+            arr = data[data['datetime'] == dt]
             if len(arr) == 0:
                 if dt >= convert_date_to_date_int(instrument.listed_date) and dt <= convert_date_to_date_int(instrument.de_listed_date):
                     user_system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
                 return None
-            futures_trading_parameters = self._to_namedtuple(arr)
+            futures_trading_parameters = self._to_namedtuple(arr[0])
         return futures_trading_parameters
     
     @lru_cache(1024)
