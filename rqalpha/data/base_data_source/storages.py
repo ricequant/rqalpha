@@ -35,7 +35,6 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-from rqalpha.environment import Environment
 
 from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
@@ -256,15 +255,20 @@ class FuturesTradingParametersStore(object):
     # 历史期货交易参数的数据在2010年4月之后才有
     FUTURES_TRADING_PARAMETERS_START_DATE = 20100401
 
-    def __init__(self, path):
+    def __init__(self, path, custom_future_info):
         self._path = path
+        self._custom_data = custom_future_info
 
     def get_futures_trading_parameters(self, instrument, dt):
         # type: (Instrument, datetime.date) -> FuturesTradingParameters or None
-        order_book_id = instrument.order_book_id
         dt = convert_date_to_date_int(dt)
         if dt < self.FUTURES_TRADING_PARAMETERS_START_DATE:
             return None
+        order_book_id = instrument.order_book_id
+        underlying_symbol = instrument.underlying_symbol
+        if Instrument.is_future_continuous_contract(order_book_id):
+            from rqalpha.apis import get_dominant_future
+            order_book_id = get_dominant_future(underlying_symbol)
         data = self.get_futures_trading_parameters_all_time(order_book_id)
         if data is None: 
             return None
@@ -274,6 +278,9 @@ class FuturesTradingParametersStore(object):
                 if dt >= convert_date_to_date_int(instrument.listed_date) and dt <= convert_date_to_date_int(instrument.de_listed_date):
                     user_system_log.info("Historical futures trading parameters are abnormal, the lastst parameters will be used for calculations.\nPlease contract RiceQuant to repair: 0755-26569969")
                 return None
+            custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+            if custom_info:
+                arr[0] = self.set_custom_info(arr[0], custom_info)        
             futures_trading_parameters = self._to_namedtuple(arr[0])
         return futures_trading_parameters
     
@@ -286,6 +293,18 @@ class FuturesTradingParametersStore(object):
             except KeyError:
                 return None
         return data
+    
+    def set_custom_info(self, arr, custom_info):
+        for field in custom_info:
+            if field == "commission_type":
+                if custom_info[field] == COMMISSION_TYPE.BY_MONEY:
+                    value = 0
+                elif custom_info[field] == COMMISSION_TYPE.BY_VOLUME:
+                    value = 1
+            else:
+                value = custom_info[field]
+            arr[field] = value
+        return arr
             
     def _to_namedtuple(self, arr):
         # type: (numpy.void) -> FuturesTradingParameters
