@@ -266,9 +266,6 @@ class FuturesTradingParametersStore(object):
             return None
         order_book_id = instrument.order_book_id
         underlying_symbol = instrument.underlying_symbol
-        if Instrument.is_future_continuous_contract(order_book_id):
-            from rqalpha.apis import get_dominant_future
-            order_book_id = get_dominant_future(underlying_symbol)
         data = self.get_futures_trading_parameters_all_time(order_book_id)
         if data is None: 
             return None
