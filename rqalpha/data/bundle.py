@@ -28,6 +28,7 @@ from rqalpha.utils.datetime_func import (convert_date_to_date_int,
                                          convert_date_to_int)
 from rqalpha.utils.exception import RQDatacVersionTooLow
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import system_log, user_system_log
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -444,8 +445,9 @@ FUTURES_TRADING_PARAMETERS_FILE = "futures_trading_parameters.h5"
 
 
 class FuturesTradingParametersTask(object):
-    def __init__(self, order_book_ids):
+    def __init__(self, order_book_ids, underlying_symbols):
         self._order_book_ids = order_book_ids
+        self._underlying_symbols = underlying_symbols
     
     def __call__(self, path, fields, end_date):
         if rqdatac.__version__ < '2.11.12':
@@ -458,6 +460,8 @@ class FuturesTradingParametersTask(object):
     
     def generate_futures_trading_parameters(self, path, fields, end_date, recreate_futures_list=None):
         # type: (str, list, datetime.date, list) -> None
+        if not recreate_futures_list:
+            system_log.info(_("Futures historical trading parameters data is being updated, please wait......"))
         order_book_ids = self._order_book_ids
         if recreate_futures_list:
             order_book_ids = recreate_futures_list      
@@ -478,6 +482,30 @@ class FuturesTradingParametersTask(object):
             with h5py.File(path, "w") as h5:
                 for order_book_id in df.index.levels[0]:
                     h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+        # 更新期货连续合约的历史交易参数数据（当函数执行目的为补充上次未正常更新的数据时，不需要执行此段逻辑）
+        if recreate_futures_list is None:
+            with h5py.File(path, "a") as h5:
+                df = rqdatac.all_instruments("Future")
+                for underlying_symbol in self._underlying_symbols:
+                    futures_continuous_contract = df[(df['underlying_symbol'] == underlying_symbol) & (df["listed_date"] == '0000-00-00')].order_book_id.tolist()
+                    s = rqdatac.futures.get_dominant(underlying_symbol, TRADING_PARAMETERS_START_DATE, end_date)
+                    if (s is None or s.empty):
+                        continue
+                    s = s.to_frame().reset_index()
+                    s['date'] = s['date'].map(convert_date_to_date_int)
+                    s.set_index(['date'], inplace=True)
+                    trading_parameters_list = []
+                    for date in s.index:
+                        try:
+                            data = h5[s['dominant'][date]][:]
+                        except KeyError:
+                            continue
+                        trading_parameters = data[data['datetime'] == date]
+                        if len(trading_parameters) != 0:
+                            trading_parameters_list.append(trading_parameters[0])
+                    data = np.array(trading_parameters_list)
+                    for order_book_id in futures_continuous_contract:
+                        h5.create_dataset(order_book_id, data=data)
 
     def update_futures_trading_parameters(self, path, fields, end_date):
         # type: (str, list, datetime.date) -> None
@@ -491,6 +519,7 @@ class FuturesTradingParametersTask(object):
         if recreate_futures_list:
             self.generate_futures_trading_parameters(path, fields, last_date, recreate_futures_list=recreate_futures_list)
         if end_date > last_date:
+            system_log.info(_("Futures historical trading parameters data is being updated, please wait......"))
             if rqdatac.get_previous_trading_date(end_date) == last_date:
                 return
             else:
@@ -519,6 +548,37 @@ class FuturesTradingParametersTask(object):
                                 h5.create_dataset(order_book_id, data=data)
                             else:
                                 h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+                # 更新期货连续合约历史交易参数
+                with h5py.File(path, "a") as h5:
+                    df = rqdatac.all_instruments("Future")
+                    for underlying_symbol in self._underlying_symbols:
+                        futures_continuous_contract = df[(df['underlying_symbol'] == underlying_symbol) & (df["listed_date"] == '0000-00-00')].order_book_id.tolist()
+                        s = rqdatac.futures.get_dominant(underlying_symbol, start_date, end_date)
+                        if (s is None or s.empty):
+                            continue
+                        s = s.to_frame().reset_index()
+                        s['date'] = s['date'].map(convert_date_to_date_int)
+                        s.set_index(['date'], inplace=True)
+                        trading_parameters_list = []
+                        for date in s.index:
+                            try:
+                                data = h5[s['dominant'][date]][:]
+                            except KeyError:
+                                continue
+                            trading_parameters = data[data['datetime'] == date]
+                            if len(trading_parameters) != 0:
+                                trading_parameters_list.append(trading_parameters[0])
+                        for order_book_id in futures_continuous_contract:
+                            print(order_book_id)
+                            if order_book_id in h5:
+                                data = np.array(
+                                    [tuple(i) for i in chain(h5[order_book_id][:], trading_parameters_list)],
+                                    dtype=h5[order_book_id].dtype
+                                )
+                                del h5[order_book_id]
+                                h5.create_dataset(order_book_id, data=data)
+                            else:
+                                h5.create_dataset(order_book_id, data=np.array(trading_parameters))
 
     def set_commission_type(self, commission_type):
         if commission_type == "by_money":
@@ -559,7 +619,8 @@ def update_futures_trading_parameters(path, end_date):
     # type: (str, datetime.date) -> None
     df = rqdatac.all_instruments("Future")
     order_book_ids = (df[df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)]).order_book_id.tolist()
-    FuturesTradingParametersTask(order_book_ids)(
+    underlying_symbols = list(set((df[df['de_listed_date'] >= str(TRADING_PARAMETERS_START_DATE)]).underlying_symbol.tolist()))
+    FuturesTradingParametersTask(order_book_ids, underlying_symbols)(
         os.path.join(path, FUTURES_TRADING_PARAMETERS_FILE), 
         FUTURES_TRADING_PARAMETERS_FIELDS, 
         end_date

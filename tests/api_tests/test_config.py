@@ -50,7 +50,7 @@ def assert_almost_equal(first, second):
     assert round(abs(first - second), 10) == 0
 
 
-def test_future_info():
+def test_futures_info():
     __config__ = {
         "base": {
             "future_info": {
