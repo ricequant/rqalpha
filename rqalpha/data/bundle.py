@@ -569,7 +569,6 @@ class FuturesTradingParametersTask(object):
                             if len(trading_parameters) != 0:
                                 trading_parameters_list.append(trading_parameters[0])
                         for order_book_id in futures_continuous_contract:
-                            print(order_book_id)
                             if order_book_id in h5:
                                 data = np.array(
                                     [tuple(i) for i in chain(h5[order_book_id][:], trading_parameters_list)],
