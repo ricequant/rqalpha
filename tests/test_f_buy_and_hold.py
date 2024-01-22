@@ -26,6 +26,6 @@ __config__ = {
         "sys_progress": {
             "enabled": True,
             "show": True,
-        },
+        }
     },
 }

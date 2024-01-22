@@ -454,9 +454,9 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_commission_info(self, instrument):
+    def get_futures_trading_parameters(self, instrument):
         """
-        获取合约的手续费信息
+        获取期货合约的时序手续费信息
         :param instrument:
         :return:
         """

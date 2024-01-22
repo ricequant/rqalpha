@@ -16,7 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import os
 import pickle
-from functools import lru_cache
 from datetime import date, datetime, timedelta
 from itertools import groupby
 from typing import Dict, Iterable, List, Optional, Sequence, Union
@@ -24,22 +23,24 @@ from typing import Dict, Iterable, List, Optional, Sequence, Union
 import numpy as np
 import pandas as pd
 import six
-from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, DEFAULT_ACCOUNT_TYPE
 from rqalpha.interface import AbstractDataSource
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_date, convert_int_to_datetime)
-from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.exception import RQInvalidArgument, RQDatacVersionTooLow
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.typing import DateLike
 from rqalpha.environment import Environment
-
+from rqalpha.data.bundle import update_futures_trading_parameters
+from rqalpha.utils.logger import user_system_log
 from rqalpha.data.base_data_source.adjust import FIELDS_REQUIRE_ADJUSTMENT, adjust_bars
 from rqalpha.data.base_data_source.storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
                                 AbstractInstrumentStore)
 from rqalpha.data.base_data_source.storages import (DateSet, DayBarStore, DividendStore,
                        ExchangeTradingCalendarStore, FutureDayBarStore,
-                       FutureInfoStore, InstrumentStore,
+                       FutureInfoStore, FuturesTradingParametersStore,InstrumentStore,
                        ShareTransformationStore, SimpleFactorStore,
                        YieldCurveStore)
 
@@ -71,7 +72,8 @@ class BaseDataSource(AbstractDataSource):
         INSTRUMENT_TYPE.PUBLIC_FUND,
     )
 
-    def __init__(self, path, custom_future_info):
+    def __init__(self, path, custom_future_info, futures_time_series_trading_parameters=False, end_date=None):       
+        # type: (str, dict, bool, date) -> None
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 
@@ -86,20 +88,26 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.ETF: funds_day_bar_store,
             INSTRUMENT_TYPE.LOF: funds_day_bar_store
         }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
-
+        
+        self._futures_trading_parameters_store = None
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
-
+        
         self._instruments_stores = {}  # type: Dict[INSTRUMENT_TYPE, AbstractInstrumentStore]
         self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
         instruments = []
+        
         with open(_p('instruments.pk'), 'rb') as f:
             for i in pickle.load(f):
                 if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):
                     i["listed_date"] = datetime(1990, 1, 1)
-                instruments.append(Instrument(i, lambda i: self._future_info_store.get_future_info(i)["tick_size"]))
+                instruments.append(Instrument(
+                    i, 
+                    lambda i: self._future_info_store.get_tick_size(i),
+                    lambda i, dt: self.get_futures_trading_parameters(i, dt).long_margin_ratio,
+                    lambda i, dt: self.get_futures_trading_parameters(i, dt).short_margin_ratio
+                    ))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))
-
         dividend_store = DividendStore(_p('dividends.h5'))
         self._dividends = {
             INSTRUMENT_TYPE.CS: dividend_store,
@@ -124,6 +132,20 @@ class BaseDataSource(AbstractDataSource):
 
         self._suspend_days = [DateSet(_p('suspended_days.h5'))]  # type: List[AbstractDateSet]
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
+
+        if futures_time_series_trading_parameters:
+            try:
+                import rqdatac
+            except ImportError:
+                user_system_log.warn(_("RQDatac is not installed, \"config.base.futures_time_series_trading_parameters\" will be disabled."))
+            else:
+                try:
+                    update_futures_trading_parameters(path, end_date)
+                except (rqdatac.share.errors.PermissionDenied, RQDatacVersionTooLow):
+                    user_system_log.warn(_("RQDatac does not have permission to obtain futures histrical trading parameters, \"config.base.futures_time_series_trading_parameters\" will be disabled."))
+                else:
+                    file = os.path.join(path, "futures_trading_parameters.h5")
+                    self._futures_trading_parameters_store = FuturesTradingParametersStore(file, custom_future_info)
 
     def register_day_bar_store(self, instrument_type, store):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
@@ -359,8 +381,16 @@ class BaseDataSource(AbstractDataSource):
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
-    def get_commission_info(self, instrument):
-        return self._future_info_store.get_future_info(instrument)
+    @lru_cache(1024)
+    def get_futures_trading_parameters(self, instrument, dt):
+        # type: (Instrument, datetime.date) -> FuturesTradingParameters
+        if self._futures_trading_parameters_store:
+            trading_parameters = self._futures_trading_parameters_store.get_futures_trading_parameters(instrument, dt)
+            if trading_parameters is None:
+                return self._future_info_store.get_future_info(instrument.order_book_id, instrument.underlying_symbol)
+            return trading_parameters
+        else:
+            return self._future_info_store.get_future_info(instrument.order_book_id, instrument.underlying_symbol)
 
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         raise NotImplementedError

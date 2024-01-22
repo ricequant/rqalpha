@@ -36,7 +36,7 @@ class PropertyReprMeta(abc.ABCMeta):
         else:
             repr_properties = []
             for c in cls.mro():
-                repr_properties.extend(v for v in vars(c) if isinstance(getattr(c, v), property))
+                repr_properties.extend(v for v in list(vars(c).keys()) if isinstance(getattr(c, v), property))
         cls.__repr__ = _repr(cls.__name__, repr_properties)
         return cls
 

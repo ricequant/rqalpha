@@ -144,7 +144,12 @@ def run(config, source_code=None, user_funcs=None):
         mod_handler.start_up()
 
         if not env.data_source:
-            env.set_data_source(BaseDataSource(config.base.data_bundle_path, getattr(config.base, "future_info", {})))
+            env.set_data_source(BaseDataSource(
+                config.base.data_bundle_path, 
+                getattr(config.base, "future_info", {}),
+                const.DEFAULT_ACCOUNT_TYPE.FUTURE in config.base.accounts and config.base.futures_time_series_trading_parameters,
+                config.base.end_date
+            ))
         if env.price_board is None:
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()
