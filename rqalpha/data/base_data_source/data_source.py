@@ -145,7 +145,7 @@ class BaseDataSource(AbstractDataSource):
                     user_system_log.warn(_("RQDatac does not have permission to obtain futures histrical trading parameters, \"config.base.futures_time_series_trading_parameters\" will be disabled."))
                 else:
                     file = os.path.join(path, "futures_trading_parameters.h5")
-                    self._futures_trading_parameters_store = FuturesTradingParametersStore(file)
+                    self._futures_trading_parameters_store = FuturesTradingParametersStore(file, custom_future_info)
 
     def register_day_bar_store(self, instrument_type, store):
         #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None

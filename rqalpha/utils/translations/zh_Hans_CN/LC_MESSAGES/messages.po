@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-01-17 14:36+0800\n"
+"POT-Creation-Date: 2024-01-19 17:56+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -263,13 +263,19 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/bundle.py:452
+#: rqalpha/data/bundle.py:454
 msgid ""
 "RQAlpha already supports backtesting using futures historical margins and"
 " rates, please upgrade RQDatac to version 2.11.12 and above to use it"
 msgstr "RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用"
 
-#: rqalpha/data/bundle.py:488
+#: rqalpha/data/bundle.py:464 rqalpha/data/bundle.py:522
+msgid ""
+"Futures historical trading parameters data is being updated, please "
+"wait......"
+msgstr "正在更新期货历史交易参数，请稍后......"
+
+#: rqalpha/data/bundle.py:516
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
@@ -286,9 +292,11 @@ msgid ""
 "RQDatac does not have permission to obtain futures histrical trading "
 "parameters, \"config.base.futures_time_series_trading_parameters\" will "
 "be disabled."
-msgstr "RQDatac 缺少获取期货历史交易参数的权限，将关闭配置 \"config.base.futures_time_series_trading_parameters\""
+msgstr ""
+"RQDatac 缺少获取期货历史交易参数的权限，将关闭配置 "
+"\"config.base.futures_time_series_trading_parameters\""
 
-#: rqalpha/data/base_data_source/storages.py:82
+#: rqalpha/data/base_data_source/storages.py:81
 msgid ""
 "Your bundle data is too old, please use 'rqalpha update-bundle' or "
 "'rqalpha download-bundle' to update it to lastest before using"
@@ -296,13 +304,13 @@ msgstr ""
 "您的 Bundle 数据过旧，请使用 'rqalpha update-bundle' 或 'rqalpha download-bundle' "
 "将其更新至最新后再进行使用"
 
-#: rqalpha/data/base_data_source/storages.py:98
-#: rqalpha/data/base_data_source/storages.py:124
+#: rqalpha/data/base_data_source/storages.py:97
+#: rqalpha/data/base_data_source/storages.py:123
 msgid "unsupported future instrument {}"
 msgstr "不支持的期货标的{}"
 
-#: rqalpha/data/base_data_source/storages.py:195
-#: rqalpha/data/base_data_source/storages.py:205
+#: rqalpha/data/base_data_source/storages.py:194
+#: rqalpha/data/base_data_source/storages.py:204
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
