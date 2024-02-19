@@ -82,6 +82,7 @@ class Account(metaclass=AccountMeta):
 
         for order_book_id, (init_quantity, init_price) in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
+            init_quantity = abs(init_quantity) if init_quantity < 0 else init_quantity
             self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price)
 
     def __repr__(self):
