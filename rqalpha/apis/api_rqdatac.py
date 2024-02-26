@@ -1377,8 +1377,3 @@ def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
 def query(*entities):
     return rqdatac.query(*entities)
 
-
-export_as_api(rqdatac.financials, name='financials')
-export_as_api(rqdatac.financials, name='Financials')
-export_as_api(rqdatac.fundamentals, name='fundamentals')
-export_as_api(rqdatac.Fundamentals, name='Fundamentals')

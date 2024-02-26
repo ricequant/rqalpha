@@ -459,7 +459,7 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         获取空头保证金率（期货专用）
         """
-        return self._futures_long_margin_ratio_getter(self, dt)
+        return self._futures_short_margin_ratio_getter(self, dt)
 
     def calc_cash_occupation(self, price, quantity, direction, dt):
         # type: (float, int, POSITION_DIRECTION, datetime.date) -> float
