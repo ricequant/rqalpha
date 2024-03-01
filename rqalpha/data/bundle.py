@@ -29,6 +29,7 @@ from rqalpha.utils.datetime_func import (convert_date_to_date_int,
 from rqalpha.utils.exception import RQDatacVersionTooLow
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import system_log, user_system_log
+from rqalpha.const import INSTRUMENT_TYPE
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -624,3 +625,79 @@ def update_futures_trading_parameters(path, end_date):
         FUTURES_TRADING_PARAMETERS_FIELDS, 
         end_date
     )
+
+
+class AutomaticUpdateBundle(object):
+    UPDATE_CONTENT = {
+        "get_open_auction_info": {
+            "file": "open_auction_info.h5",
+            "fields": ['volume'],
+        },
+        "futures.get_trading_parameters": {
+            "file": "futures_trading_parameters.h5",
+            "fields": FUTURES_TRADING_PARAMETERS_FIELDS
+        },
+        "get_price": {
+            "file": {
+                INSTRUMENT_TYPE.OPTION: "options.h5",
+                INSTRUMENT_TYPE.CONVERTIBLE: "convertibles.h5",
+            },
+            "fields": {
+                INSTRUMENT_TYPE.OPTION: FUTURES_FIELDS,
+                INSTRUMENT_TYPE.CONVERTIBLE: STOCK_FIELDS,
+            }
+        }
+    }
+
+    def __init__(self, path, end_date):
+        #type: (str, str) -> None
+        self._path = path
+        self._end_date = end_date
+        self._rqdata_api = None
+    
+    def auto_update_task(self, rqdata_api, contract_type=None):
+        # type: (str, Option[str]) -> None
+        self._rqdata_api = rqdata_api
+        match rqdata_api:
+            case "get_open_auction_info":
+                self.update_open_auction_info_task()
+            case "futures.get_trading_parameters":
+                self.update_futures_trading_parameters_task()
+            case "get_price":
+                self.update_daybar_task(contract_type)
+
+    def update_open_auction_info_task(self):
+        file = os.path.join(self._path, self.UPDATE_CONTENT["get_open_auction_info"]['file'])
+        contract_type_list = [
+            INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.OPTION
+        ]
+        if not os.path.exists(file):
+            for contract_type in contract_type_list:
+                df = self._get_update_data(contract_type, START_DATE, self._end_date)
+                with h5py.File(file, "w") as h5:
+                    for order_book_id in df.index.levels[0]:
+                        h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+        if os.path.exists(file):
+            try:
+                h5 = h5py.File(file, "a")
+                h5.close()
+            except OSError as e:
+                raise OSError(_("File {} update failed, if it is using, please update later, or you can delete then update again".format(file))) from e
+            last_date = self._get_h5_last_date(file)
+            recreate_list = self._get_recreate_list(file, last_date)
+
+    def update_futures_trading_parameters_task(self):
+        pass
+
+    def update_daybar_task(self, contract_type):
+        pass
+
+    def _get_h5_last_date(self, file):
+        pass
+    
+    def _get_recreate_list(self, file, last_date):
+        pass
+
+    def _get_update_data(self, contract_type, start_date, end_date):
+        # type: (str, str, str) -> dataframe
+        pass
