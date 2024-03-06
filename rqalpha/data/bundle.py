@@ -653,18 +653,10 @@ class AutomaticUpdateBundle(object):
         #type: (str, str) -> None
         self._path = path
         self._end_date = end_date
-        self._rqdata_api = None
     
-    def auto_update_task(self, rqdata_api, contract_type=None):
-        # type: (str, Option[str]) -> None
-        self._rqdata_api = rqdata_api
-        match rqdata_api:
-            case "get_open_auction_info":
-                self.update_open_auction_info_task()
-            case "futures.get_trading_parameters":
-                self.update_futures_trading_parameters_task()
-            case "get_price":
-                self.update_daybar_task(contract_type)
+    def auto_update_task(self, rqdata_api, fields, contract_type):
+        # type: (str, List, List) -> None
+        pass
 
     def update_open_auction_info_task(self):
         file = os.path.join(self._path, self.UPDATE_CONTENT["get_open_auction_info"]['file'])
