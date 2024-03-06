@@ -100,14 +100,15 @@ class FutureInfoStore(object):
     
     def _to_namedtuple(self, info):
         # type: (dict) -> FuturesTradingParameters
-        info['long_margin_ratio'], info['short_margin_ratio'] = info['margin_rate'], info['margin_rate']
-        del info['margin_rate'], info['tick_size']
+        futures_info = copy(info)
+        futures_info['long_margin_ratio'], futures_info['short_margin_ratio'] = futures_info['margin_rate'], futures_info['margin_rate']
+        del futures_info['margin_rate'], futures_info['tick_size']
         try:
-            del info['order_book_id']
+            del futures_info['order_book_id']
         except KeyError:
-            del info['underlying_symbol']
-        info = FuturesTradingParameters(**info)
-        return info
+            del futures_info['underlying_symbol']
+        futures_info = FuturesTradingParameters(**futures_info)
+        return futures_info
     
     @lru_cache(8)
     def get_tick_size(self, instrument):
