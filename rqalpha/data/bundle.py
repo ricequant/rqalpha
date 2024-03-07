@@ -519,10 +519,10 @@ class FuturesTradingParametersTask(object):
         if recreate_futures_list:
             self.generate_futures_trading_parameters(path, fields, last_date, recreate_futures_list=recreate_futures_list)
         if end_date > last_date:
-            system_log.info(_("Futures historical trading parameters data is being updated, please wait......"))
             if rqdatac.get_previous_trading_date(end_date) == last_date:
                 return
             else:
+                system_log.info(_("Futures historical trading parameters data is being updated, please wait......"))
                 start_date = rqdatac.get_next_trading_date(last_date)
                 df = rqdatac.futures.get_trading_parameters(self._order_book_ids, start_date, end_date, fields)
                 if not(df is None or df.empty):

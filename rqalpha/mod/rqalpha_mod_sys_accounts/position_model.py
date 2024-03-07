@@ -191,9 +191,13 @@ class StockPosition(Position):
             round_lot = self._instrument.round_lot
             amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
             if amount > 0:
-                self.apply_trade(Trade.__from_create__(
+                account = self._env.get_account(self._order_book_id)
+                trade = Trade.__from_create__(
                     None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id
-                ))
+                )
+                trade._commission = self._env.get_trade_commission(trade)
+                trade._tax = self._env.get_trade_tax(trade)
+                self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             return dividend_value - amount * last_price
         else:
             return dividend_value
