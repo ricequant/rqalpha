@@ -29,6 +29,7 @@ from rqalpha.model.trade import Trade
 from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT
 
+from .validator import cash_enough
 from .slippage import SlippageDecider
 
 
@@ -123,6 +124,11 @@ class SignalBroker(AbstractBroker):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
+
+        if not cash_enough(self._env, account, order, trade):
+            self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
+            return
+
         order.fill(trade)
 
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))

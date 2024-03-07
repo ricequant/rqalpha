@@ -27,6 +27,7 @@ from rqalpha.utils import is_valid_price
 from typing import Dict
 from rqalpha.utils.i18n import gettext as _
 from .slippage import SlippageDecider
+from .validator import cash_enough
 
 
 class AbstractMatcher:
@@ -208,6 +209,10 @@ class DefaultBarMatcher(AbstractMatcher):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
+
+        if not cash_enough(self._env, account, order, trade):
+            return
+
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
 
@@ -453,6 +458,10 @@ class DefaultTickMatcher(AbstractMatcher):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
+
+        if not cash_enough(self._env, account, order, trade):
+            return
+
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
 
