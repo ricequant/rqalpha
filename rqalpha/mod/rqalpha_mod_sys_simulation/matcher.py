@@ -85,7 +85,7 @@ class DefaultBarMatcher(AbstractMatcher):
 
     def _get_bar_volume(self, order, open_auction=False):
         if open_auction:
-            volume = self._env.data_proxy.get_open_auction_bar(order.order_book_id, self._env.trading_dt).volume
+            volume = self._env.data_proxy.get_open_auction_volume(order.order_book_id, self._env.trading_dt)
         else:
             if isinstance(order.style, ALGO_ORDER_STYLES):
                 _, volume = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)

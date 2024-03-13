@@ -185,6 +185,14 @@ class DataProxy(TradingDatesMixin):
                 "datetime", "open", "limit_up", "limit_down", "volume", "total_turnover"
             ]}
         return PartialBarObject(instrument, bar)
+    
+    def get_open_auction_volume(self, order_book_id, dt):
+        instrument = self.instruments(order_book_id)
+        try:
+            volume = self._data_source.get_open_auction_volume(instrument, dt)
+        except NotImplementedError:
+            volume = self.get_open_auction_bar(order_book_id, dt).volume
+        return volume
 
     def history(self, order_book_id, bar_count, frequency, field, dt):
         data = self.history_bars(order_book_id, bar_count, frequency,
