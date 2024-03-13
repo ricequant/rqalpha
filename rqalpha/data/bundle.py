@@ -21,14 +21,15 @@ from itertools import chain
 
 import h5py
 import numpy as np
+import pandas as pd
 from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
                                       ProgressedTask)
 from rqalpha.utils.datetime_func import (convert_date_to_date_int,
-                                         convert_date_to_int)
+                                         convert_date_to_int,)
 from rqalpha.utils.exception import RQDatacVersionTooLow
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import system_log, user_system_log
+from rqalpha.utils.logger import system_log
 from rqalpha.const import INSTRUMENT_TYPE
 
 START_DATE = 20050104
@@ -628,68 +629,120 @@ def update_futures_trading_parameters(path, end_date):
 
 
 class AutomaticUpdateBundle(object):
-    UPDATE_CONTENT = {
-        "get_open_auction_info": {
-            "file": "open_auction_info.h5",
-            "fields": ['volume'],
-        },
-        "futures.get_trading_parameters": {
-            "file": "futures_trading_parameters.h5",
-            "fields": FUTURES_TRADING_PARAMETERS_FIELDS
-        },
-        "get_price": {
-            "file": {
-                INSTRUMENT_TYPE.OPTION: "options.h5",
-                INSTRUMENT_TYPE.CONVERTIBLE: "convertibles.h5",
-            },
-            "fields": {
-                INSTRUMENT_TYPE.OPTION: FUTURES_FIELDS,
-                INSTRUMENT_TYPE.CONVERTIBLE: STOCK_FIELDS,
-            }
-        }
-    }
-
-    def __init__(self, path, end_date):
-        #type: (str, str) -> None
-        self._path = path
-        self._end_date = end_date
+    def __init__(self, path):
+        # type: (str, str) -> None
+        self.path = path
+        self._trading_dates = None
+        try:
+            import rqdatac
+            self.rqdata_init = True
+        except ImportError:
+            system_log.info(_("RQData is not installed, relevant data cannot be updated automatically, and some functions will be limited."))
+            self.rqdata_init = False
     
-    def auto_update_task(self, rqdata_api, fields, contract_type):
-        # type: (str, List, List) -> None
-        pass
+    def auto_update_task(self, filename, instrument, rqdata_api, fields):
+        """
+        在 rqalpha 策略运行过程中自动更新所需的数据
 
-    def update_open_auction_info_task(self):
-        file = os.path.join(self._path, self.UPDATE_CONTENT["get_open_auction_info"]['file'])
-        contract_type_list = [
-            INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.OPTION
-        ]
+        :param filename: 存储数据的 h5 文件
+        :type filename: `str`
+
+        :param instrument: 合约对象
+        :type instrument: `Instrument`
+
+        :param rqdata_api: 更新数据所使用的 rqdatac API
+        :type rqdata_api: `str`
+
+        :param fields: 需要更新的数据字段，需与 rqdata_api 可调取的字段相匹配
+        :type fields: `List[str]`
+        """
+        file = os.path.join(self.path, filename)
+        order_book_id = instrument.order_book_id
+        start_date = START_DATE
         if not os.path.exists(file):
-            for contract_type in contract_type_list:
-                df = self._get_update_data(contract_type, START_DATE, self._end_date)
-                with h5py.File(file, "w") as h5:
-                    for order_book_id in df.index.levels[0]:
-                        h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
-        if os.path.exists(file):
+            h5 = h5py.File(file, "w")
+        else:
             try:
                 h5 = h5py.File(file, "a")
-                h5.close()
-            except OSError as e:
-                raise OSError(_("File {} update failed, if it is using, please update later, or you can delete then update again".format(file))) from e
-            last_date = self._get_h5_last_date(file)
-            recreate_list = self._get_recreate_list(file, last_date)
+            except OSError:
+                raise OSError("File {} update failed, if it is using, please update later, "
+                              "or you can delete then update again".format(file))
+            if order_book_id in h5:
+                last_date = datetime.datetime.strptime(str(h5[order_book_id][-1]['datetime']), "%Y%m%d").date()
+                if datetime.date.today() == last_date or rqdatac.get_previous_trading_date(datetime.date.today()) == last_date:
+                    h5.close()
+                    return
+                start_date = rqdatac.get_next_trading_date(last_date)
+        
+        df = self._get_df(rqdata_api, instrument, start_date, fields)
+        if not (df is None or df.empty):
+            if order_book_id in h5:
+                data = np.array(
+                    [tuple(i) for i in chain(h5[order_book_id][:], df.loc[order_book_id].to_records())],
+                    dtype=h5[order_book_id].dtype
+                )
+                del h5[order_book_id]
+                h5.create_dataset(order_book_id, data=data)
+            else:
+                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
+            h5.close()
 
-    def update_futures_trading_parameters_task(self):
-        pass
-
-    def update_daybar_task(self, contract_type):
-        pass
-
-    def _get_h5_last_date(self, file):
-        pass
+    def _get_df(self, rqdata_api, instrument, start_date, fields):
+        # type: (str, Instrument, datetime.date, List[str]) -> Dataframe
+        if instrument.type ==INSTRUMENT_TYPE.FUTURE and instrument.de_listed_date == datetime.datetime(2999, 12, 31):
+            command = "rqdatac.{}(dic['order_book_id'], dic['start_date'], dic['end_date'], {})".format(rqdata_api, fields)
+            df = self._get_dominant_df(command, instrument.underlying_symbol, start_date)
+        else:
+            command = "rqdatac.{}(instrument.order_book_id, start_date, datetime.date.today(), fields)".format(rqdata_api)
+            df = eval(command)
+        if not (df is None or df.empty):
+            df = df[fields] # rqdatac.get_open_auction_info get Futures's data will auto add 'open_interest' and 'prev_settlement'
+            df.reset_index(inplace=True)
+            df["order_book_id"] = instrument.order_book_id
+            time_parameter = list(set(['datetime', 'date', 'trading_date']).intersection(set(df.columns)))[0]
+            if time_parameter == "datetime":
+                if instrument.type in [INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION]:
+                    # 有夜盘的合约，datetime 的日期可能与所属交易日期不一致
+                    self._trading_dates = rqdatac.get_trading_dates(start_date, datetime.date.today())
+                    df['datetime'] = df[time_parameter].map(self._update_datetime)
+                else:
+                    df['datetime'] = df[time_parameter].map(convert_date_to_date_int)
+            else:
+                df['datetime'] = df[time_parameter].map(convert_date_to_date_int)
+                del df[time_parameter]
+            df.set_index(["order_book_id", "datetime"], inplace=True)
+        return df
     
-    def _get_recreate_list(self, file, last_date):
-        pass
-
-    def _get_update_data(self, contract_type, start_date, end_date):
-        # type: (str, str, str) -> dataframe
-        pass
+    def _update_datetime(self, dt):
+        if dt.hour < 17:
+            t = convert_date_to_date_int(dt)
+        else:
+            t = (dt + datetime.timedelta(days=1)).date()
+            while t not in self._trading_dates:
+                t = t + datetime.timedelta(days=1)
+            t = convert_date_to_date_int(t)
+        return t
+    
+    def _get_dominant_df(self, command, underlying_symbol, start_date):
+        
+        def slice_df(df):
+            slice_list = []
+            order_book_id = df[0]
+            start_date = df.head(1).index[0]
+            for date, donimant in df.items():
+                if donimant == order_book_id:
+                    end_date = date
+                if donimant != order_book_id or date == df.tail(1).index[0]:
+                    dic = {"order_book_id": order_book_id, "start_date": start_date, "end_date": end_date}
+                    slice_list.append(dic)
+                    order_book_id = donimant
+                    start_date = date
+            return slice_list
+        
+        dominant_df = rqdatac.futures.get_dominant(underlying_symbol, start_date, datetime.date.today())
+        slice_list = slice_df(dominant_df)
+        df = pd.DataFrame()
+        for dic in slice_list:
+            df = pd.concat([df, eval(command)])
+        return df
+    
