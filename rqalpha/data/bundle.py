@@ -631,20 +631,16 @@ def update_futures_trading_parameters(path, end_date):
 
 
 class AutomaticUpdateBundle(object):
-    def __init__(self, path, filename, rqdata_api, fields):
-        # type: (str, str, function, List[str]) -> None
+    def __init__(self, path, filename, rqdata_api, fields, end_date):
+        # type: (str, str, Callable, List[str], datetime.date) -> None
         self._file = os.path.join(path, filename)
         self._trading_dates = None
         self._filename = filename
         self._rqdata_api = rqdata_api
         self._fields = fields
-        self._env = None
-        try:
-            import rqdatac
-            self.rqdata_init = True
-        except ImportError:
-            system_log.info(_("RQData is not installed, relevant data cannot be updated automatically, and some functions will be limited."))
-            self.rqdata_init = False
+        self._end_date = end_date
+        self._updated = []
+        self._env = Environment.get_instance()
 
     def get_data(self, instrument, dt):
         # type: (Instrument, datetime.datetime) -> numpy.ndarray or None
@@ -662,11 +658,12 @@ class AutomaticUpdateBundle(object):
     @lru_cache(128)
     def _get_data_all_time(self, instrument):
         # type: (Instrument) -> numpy.ndarray or None
-        self._auto_update_task(instrument)
+        if instrument.order_book_id not in self._updated:
+            self._auto_update_task(instrument)
+            self._updated.append(instrument.order_book_id)
         with h5py.File(self._file, "r") as h5:
-            try:
-                data = h5[instrument.order_book_id][:]
-            except KeyError:
+            data = h5[instrument.order_book_id][:]
+            if len(data) == 0:
                 return None
         return data
     
@@ -677,56 +674,56 @@ class AutomaticUpdateBundle(object):
         :param instrument: 合约对象
         :type instrument: `Instrument`
         """
-        self._env = Environment.get_instance()
         order_book_id = instrument.order_book_id
         start_date = START_DATE
-        if not os.path.exists(self._file):
-            h5 = h5py.File(self._file, "w")
-            try:
-                df = self._get_df(instrument, start_date)
-                if not (df is None or df.empty):
-                    h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
-            finally:
-                h5.close()        
-        else:
-            try:
-                h5 = h5py.File(self._file, "a")
-            except OSError as e:
-                raise OSError(_("File {} update failed, if it is using, please update later, "
-                              "or you can delete then update again".format(self._file))) from e
-            try:
-                if order_book_id in h5:
+        try:
+            h5 = h5py.File(self._file, "a")
+        except OSError as e:
+            raise OSError(_("File {} update failed, if it is using, please update later, "
+                          "or you can delete then update again".format(self._file))) from e   
+        try:
+            if order_book_id in h5:
+                if len(h5[order_book_id][:]) != 0:
                     last_date = datetime.datetime.strptime(str(h5[order_book_id][-1]['trading_dt']), "%Y%m%d").date()
-                    start_date = self._env.data_proxy._data_source.get_next_trading_date(last_date).date()
-                    if start_date > datetime.date.today():
+                    if last_date >= self._end_date:
                         return
-                df = self._get_df(instrument, start_date)
-                if not (df is None or df.empty):
-                    if order_book_id in h5:
-                        data = np.array(
-                            [tuple(i) for i in chain(h5[order_book_id][:], df.loc[order_book_id].to_records())],
-                            dtype=h5[order_book_id].dtype
-                        )
-                        del h5[order_book_id]
-                        h5.create_dataset(order_book_id, data=data)
-                    else:
-                        h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records())
-            finally:
-                h5.close()
-
-    def _get_df(self, instrument, start_date):
-        # type: (Instrument, datetime.date) -> Dataframe
-        df = self._rqdata_api(instrument.order_book_id, start_date, datetime.date.today(), self._fields)
+                    start_date = self._env.data_proxy._data_source.get_next_trading_date(last_date).date()
+                    if start_date > self._end_date:
+                        return
+            arr = self._get_array(instrument, start_date)
+            if arr is None:
+                arr = np.array([])
+                if order_book_id not in h5:
+                    h5.create_dataset(order_book_id, data=arr)
+            else:
+                if order_book_id in h5:
+                    data = np.array(
+                        [tuple(i) for i in chain(h5[order_book_id][:], arr)],
+                        dtype=h5[order_book_id].dtype)
+                    del h5[order_book_id]
+                    h5.create_dataset(order_book_id, data=data)
+                else:
+                    h5.create_dataset(order_book_id, data=arr)
+        finally:
+            h5.close()
+    
+    def _get_array(self, instrument, start_date):
+        # type: (Instrument, datetime.date) -> numpy.array
+        df = self._rqdata_api(instrument.order_book_id, start_date, self._end_date, self._fields)
         if not (df is None or df.empty):
-            df = df[self._fields] # rqdatac.get_open_auction_info get Futures's data will auto add 'open_interest' and 'prev_settlement'
-            df.reset_index(inplace=True)
-            df["order_book_id"] = instrument.order_book_id
-            time_parameter = list(set(['datetime', 'date', 'trading_date']).intersection(set(df.columns)))[0]
-            if time_parameter == "datetime" and instrument.type != INSTRUMENT_TYPE.CS:
-                # 股票无夜盘，且在市时间较长，考虑省略获取交易日的操作
-                df[time_parameter] = df[time_parameter].map(self._env.data_proxy._data_source.get_future_trading_date)
-            df['trading_dt'] = df[time_parameter].map(convert_date_to_date_int)
-            del df[time_parameter]
-            df.set_index(["order_book_id", "trading_dt"], inplace=True)
-        return df
+            df = df[self._fields].loc[instrument.order_book_id] # rqdatac.get_open_auction_info get Futures's data will auto add 'open_interest' and 'prev_settlement'
+            record = df.iloc[0: 1].to_records()
+            dtype = [('trading_dt', 'int')]
+            for field in self._fields:
+                dtype.append((field, record.dtype[field]))
+            update_list = []
+            for index, row in df.iterrows():
+                values = [row[field] for field in self._fields]
+                update_data = tuple([convert_date_to_date_int(
+                    self._env.data_proxy._data_source.get_future_trading_date(index)
+                )] + values)
+                update_list.append(update_data)
+            arr = np.array(update_list, dtype=dtype)
+            return arr
+        return None
     

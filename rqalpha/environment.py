@@ -55,6 +55,7 @@ class Environment(object):
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
+        self.rqdatac_init = False
 
         # Environment.event_bus used in StrategyUniverse()
         from rqalpha.core.strategy_universe import StrategyUniverse
@@ -102,6 +103,9 @@ class Environment(object):
 
     def set_broker(self, broker):
         self.broker = broker
+
+    def set_rqdatac_init(self, result):
+        self.rqdatac_init = result
 
     def add_frontend_validator(self, validator, instrument_type=None):
         if instrument_type:
