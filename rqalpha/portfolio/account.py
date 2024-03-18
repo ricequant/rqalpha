@@ -101,7 +101,6 @@ class Account(metaclass=AccountMeta):
             EVENT.TRADE, lambda e: self.apply_trade(e.trade, e.order) if e.account == self else None
         )
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
-        event_bus.add_listener(EVENT.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
 

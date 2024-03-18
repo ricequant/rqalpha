@@ -22,6 +22,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE
 
 
+
 class IsTradingValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env

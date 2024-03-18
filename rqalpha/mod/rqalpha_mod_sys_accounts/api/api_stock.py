@@ -34,6 +34,7 @@ from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE,
                            INSTRUMENT_TYPE, ORDER_TYPE, POSITION_DIRECTION,
                            POSITION_EFFECT, SIDE)
 from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.core.events import Event, EVENT
 from rqalpha.environment import Environment
 from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import \
     is_cash_enough
@@ -102,6 +103,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     if not is_valid_price(price):
         user_system_log.warn(
             _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None))
         return
 
     if (side == SIDE.BUY and current_quantity != -amount) or (side == SIDE.SELL and current_quantity != abs(amount)):
@@ -112,6 +114,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
         user_system_log.warn(_(
             u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
         ).format(order_book_id=ins.order_book_id))
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None))
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if side == SIDE.BUY and auto_switch_order_value:
