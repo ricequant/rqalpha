@@ -116,10 +116,11 @@ class TradingDatesMixin(object):
 
         return td
     
-    def get_trading_date_for_np(self, dt_arr):
+    def batch_get_trading_date(self, dt_index):
+        # type: (DatetimeIndex) -> DatetimeIndex
         # 获取 numpy.array 中所有时间所在的交易日
         # 认为晚八点后为第二个交易日，认为晚八点至次日凌晨四点为夜盘
-        dt = dt_arr - datetime.timedelta(hours=4)
+        dt = dt_index - datetime.timedelta(hours=4)
         trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.EXCHANGE)
         pos = trading_dates.searchsorted(dt.date) + np.where(dt.hour >= 16, 1, 0)
         return trading_dates[pos]
