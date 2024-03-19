@@ -718,7 +718,6 @@ class AutomaticUpdateBundle(object):
             
             dt = np.array(df.index.tolist())
             trading_dt = self._env.data_proxy._data_source.get_trading_date_for_np(dt)
-            # trading_dt = trading_dt.year * 10000 + trading_dt.month * 100 + trading_dt.day
             trading_dt = convert_date_to_date_int(trading_dt)
             arr = np.ones((trading_dt.shape[0], ), dtype=dtype)
             arr['trading_dt'] = trading_dt
