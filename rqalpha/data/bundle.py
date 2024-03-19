@@ -716,19 +716,13 @@ class AutomaticUpdateBundle(object):
             for field in self._fields:
                 dtype.append((field, record.dtype[field]))
             
-            dt_arr = np.array(df.index.tolist()).reshape((-1, 1))
-            dt_arr = np.apply_along_axis(self._get_trading_date, 1, dt_arr)
-            dt_arr = (dt_arr.astype('datetime64[Y]').astype(int) + 1970) * 10000 + (dt_arr.astype('datetime64[M]').astype(int) % 12 + 1) * 100 + (dt_arr.astype('datetime64[D]') - dt_arr.astype('datetime64[M]') + 1)
-            dt_arr.astype(int)
-            arr = np.ones((dt_arr.shape[0], ), dtype=dtype)
-            arr['trading_dt'] = dt_arr
+            dt = np.array(df.index.tolist())
+            trading_dt = self._env.data_proxy._data_source.get_trading_date_for_np(dt)
+            # trading_dt = trading_dt.year * 10000 + trading_dt.month * 100 + trading_dt.day
+            trading_dt = convert_date_to_date_int(trading_dt)
+            arr = np.ones((trading_dt.shape[0], ), dtype=dtype)
+            arr['trading_dt'] = trading_dt
             for field in self._fields:
                 arr[field] = df[field].values
             return arr
         return None
-    
-    def _get_trading_date(self, dt):
-        # type: (numpy.ndarray) -> Timestamp
-        dt = dt[0]
-        dt = self._env.data_proxy._data_source.get_future_trading_date(dt)
-        return dt
