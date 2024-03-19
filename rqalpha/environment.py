@@ -104,9 +104,6 @@ class Environment(object):
     def set_broker(self, broker):
         self.broker = broker
 
-    def set_rqdatac_init(self, result):
-        self.rqdatac_init = result
-
     def add_frontend_validator(self, validator, instrument_type=None):
         if instrument_type:
             self._frontend_validators.setdefault(instrument_type, []).append(validator)

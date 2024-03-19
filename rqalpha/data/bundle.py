@@ -716,7 +716,7 @@ class AutomaticUpdateBundle(object):
             for field in self._fields:
                 dtype.append((field, record.dtype[field]))
             
-            dt = np.array(df.index.tolist())
+            dt = pd.DatetimeIndex(df.index.values)
             trading_dt = self._env.data_proxy._data_source.get_trading_date_for_np(dt)
             trading_dt = convert_date_to_date_int(trading_dt)
             arr = np.ones((trading_dt.shape[0], ), dtype=dtype)
