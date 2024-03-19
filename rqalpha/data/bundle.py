@@ -21,14 +21,18 @@ from itertools import chain
 
 import h5py
 import numpy as np
+import pandas as pd
 from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import (ProgressedProcessPoolExecutor,
                                       ProgressedTask)
 from rqalpha.utils.datetime_func import (convert_date_to_date_int,
-                                         convert_date_to_int)
+                                         convert_date_to_int,)
 from rqalpha.utils.exception import RQDatacVersionTooLow
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import system_log, user_system_log
+from rqalpha.utils.logger import system_log
+from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.utils.functools import lru_cache
+from rqalpha.environment import Environment
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -624,3 +628,98 @@ def update_futures_trading_parameters(path, end_date):
         FUTURES_TRADING_PARAMETERS_FIELDS, 
         end_date
     )
+
+
+class AutomaticUpdateBundle(object):
+    def __init__(self, path, filename, rqdata_api, fields, end_date):
+        # type: (str, str, Callable, List[str], datetime.date) -> None
+        self._file = os.path.join(path, filename)
+        self._trading_dates = None
+        self._filename = filename
+        self._rqdata_api = rqdata_api
+        self._fields = fields
+        self._end_date = end_date
+        self._updated = []
+        self._env = Environment.get_instance()
+
+    def get_data(self, instrument, dt):
+        # type: (Instrument, datetime.datetime) -> numpy.ndarray or None
+        dt = convert_date_to_date_int(dt)
+        data = self._get_data_all_time(instrument)
+        if data is None:
+            return data
+        else:
+            try:
+                data = data[np.searchsorted(data['trading_dt'], dt)]
+            except IndexError:
+                data = None
+            return data
+
+    @lru_cache(128)
+    def _get_data_all_time(self, instrument):
+        # type: (Instrument) -> numpy.ndarray or None
+        if instrument.order_book_id not in self._updated:
+            self._auto_update_task(instrument)
+            self._updated.append(instrument.order_book_id)
+        with h5py.File(self._file, "r") as h5:
+            data = h5[instrument.order_book_id][:]
+            if len(data) == 0:
+                return None
+        return data
+    
+    def _auto_update_task(self, instrument):
+        """
+        在 rqalpha 策略运行过程中自动更新所需的日线数据
+
+        :param instrument: 合约对象
+        :type instrument: `Instrument`
+        """
+        order_book_id = instrument.order_book_id
+        start_date = START_DATE
+        try:
+            h5 = h5py.File(self._file, "a")
+            if order_book_id in h5:
+                if len(h5[order_book_id][:]) != 0:
+                    last_date = datetime.datetime.strptime(str(h5[order_book_id][-1]['trading_dt']), "%Y%m%d").date()
+                    if last_date >= self._end_date:
+                        return
+                    start_date = self._env.data_proxy._data_source.get_next_trading_date(last_date).date()
+                    if start_date > self._end_date:
+                        return
+            arr = self._get_array(instrument, start_date)
+            if arr is None:
+                if order_book_id not in h5:
+                    arr = np.array([])
+                    h5.create_dataset(order_book_id, data=arr)
+            else:
+                if order_book_id in h5:
+                    data = np.array(
+                        [tuple(i) for i in chain(h5[order_book_id][:], arr)],
+                        dtype=h5[order_book_id].dtype)
+                    del h5[order_book_id]
+                    h5.create_dataset(order_book_id, data=data)
+                else:
+                    h5.create_dataset(order_book_id, data=arr)
+        except OSError as e:
+            raise OSError(_("File {} update failed, if it is using, please update later, "
+                          "or you can delete then update again".format(self._file))) from e 
+        finally:
+            h5.close()
+    
+    def _get_array(self, instrument, start_date):
+        # type: (Instrument, datetime.date) -> numpy.array
+        df = self._rqdata_api(instrument.order_book_id, start_date, self._end_date, self._fields)
+        if not (df is None or df.empty):
+            df = df[self._fields].loc[instrument.order_book_id] # rqdatac.get_open_auction_info get Futures's data will auto add 'open_interest' and 'prev_settlement'
+            record = df.iloc[0: 1].to_records()
+            dtype = [('trading_dt', 'int')]
+            for field in self._fields:
+                dtype.append((field, record.dtype[field]))
+            trading_dt = self._env.data_proxy._data_source.batch_get_trading_date(df.index)
+            trading_dt = convert_date_to_date_int(trading_dt)
+            arr = np.ones((trading_dt.shape[0], ), dtype=dtype)
+            arr['trading_dt'] = trading_dt
+            for field in self._fields:
+                arr[field] = df[field].values
+            return arr
+        return None

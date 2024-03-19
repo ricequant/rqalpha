@@ -43,6 +43,9 @@ __config__ = {
 
 def test_open_auction_match():
     __config__ = {
+        "base": {
+            "auto_update_bundle": False,
+        },
         "mod": {
             "sys_simulation": {
                 "volume_limit": True,
