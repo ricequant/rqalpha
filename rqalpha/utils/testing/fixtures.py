@@ -1,6 +1,7 @@
 import os
 import pickle
 from contextlib import contextmanager
+from rqalpha.main import init_rqdatac
 
 import six
 
@@ -26,7 +27,7 @@ class EnvironmentFixture(RQAlphaFixture):
         from rqalpha.environment import Environment
 
         super(EnvironmentFixture, self).init_fixture()
-        self.env = Environment(RqAttrDict(self.env_config))
+        self.env = Environment(RqAttrDict(self.env_config), False)
 
     @contextmanager
     def mock_env_method(self, name, mock_method):
