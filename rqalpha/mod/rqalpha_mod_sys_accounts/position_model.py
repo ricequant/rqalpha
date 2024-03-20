@@ -318,6 +318,13 @@ class FuturePosition(Position):
             user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))
+            account = self._env.get_account(self._order_book_id)
+            side = SIDE.SELL if self.direction == POSITION_DIRECTION.LONG else SIDE.BUY
+            expired_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
+            trade = Trade.__from_create__(
+                None, expired_price, self._quantity, side, POSITION_EFFECT.CLOSE, self._order_book_id
+            )
+            self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             self._quantity = self._old_quantity = 0
         return delta_cash
     
