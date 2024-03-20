@@ -400,3 +400,8 @@ class BaseDataSource(AbstractDataSource):
 
     def get_algo_bar(self, id_or_ins, start_min, end_min, dt):
         raise NotImplementedError("open source rqalpha not support algo order")
+
+    def get_open_auction_volume(self, instrument, dt):
+        # type: (Instrument, datetime.datetime) -> float
+        volume = self.get_open_auction_bar(instrument, dt)['volume']
+        return volume

@@ -347,6 +347,20 @@ class AbstractDataSource(object):
             datetime, open, limit_up, limit_down, volume, total_turnover
         """
         raise NotImplementedError
+    
+    def get_open_auction_volume(self, instrument, dt):
+        """
+        获取指定资产当日的集合竞价成交量
+
+        :param instrument: 合约对象
+        :type instrument: class:`~Instrument`
+
+        :param dt: 集合竞价时间
+        :type dt: datetime.datetime
+
+        :return: `float`
+        """
+        raise NotImplementedError
 
     def get_settle_price(self, instrument, date):
         """

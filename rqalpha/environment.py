@@ -30,7 +30,7 @@ from rqalpha.utils.i18n import gettext as _
 class Environment(object):
     _env = None  # type: Environment
 
-    def __init__(self, config):
+    def __init__(self, config, rqdatac_init):
         Environment._env = self
         self.config = config
         self.data_proxy = None  # type: Optional[rqalpha.data.data_proxy.DataProxy]
@@ -55,6 +55,7 @@ class Environment(object):
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
+        self.rqdatac_init = rqdatac_init # type: Boolean
 
         # Environment.event_bus used in StrategyUniverse()
         from rqalpha.core.strategy_universe import StrategyUniverse
