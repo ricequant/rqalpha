@@ -633,6 +633,8 @@ def update_futures_trading_parameters(path, end_date):
 class AutomaticUpdateBundle(object):
     def __init__(self, path, filename, rqdata_api, fields, end_date):
         # type: (str, str, Callable, List[str], datetime.date) -> None
+        if not os.path.exists(path):
+            os.makedirs(path)
         self._file = os.path.join(path, filename)
         self._trading_dates = None
         self._filename = filename
