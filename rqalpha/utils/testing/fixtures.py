@@ -1,7 +1,6 @@
 import os
 import pickle
 from contextlib import contextmanager
-from rqalpha.main import init_rqdatac
 
 import six
 

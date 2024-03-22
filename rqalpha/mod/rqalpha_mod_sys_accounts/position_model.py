@@ -321,7 +321,7 @@ class FuturePosition(Position):
             account = self._env.get_account(self._order_book_id)
             side = SIDE.SELL if self.direction == POSITION_DIRECTION.LONG else SIDE.BUY
             trade = Trade.__from_create__(
-                None, self._last_price, self._quantity, side, POSITION_EFFECT.CLOSE, self._order_book_id
+                None, self.last_price, self._quantity, side, POSITION_EFFECT.CLOSE, self._order_book_id
             )
             self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             self._quantity = self._old_quantity = 0

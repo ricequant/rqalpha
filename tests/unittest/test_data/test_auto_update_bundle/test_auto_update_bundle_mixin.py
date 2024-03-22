@@ -15,6 +15,7 @@
 import os
 import datetime
 import pickle
+import tempfile
 
 from rqalpha.utils.testing import DataProxyFixture, RQAlphaTestCase
 from rqalpha.data.bundle import AutomaticUpdateBundle
@@ -24,7 +25,7 @@ from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 class AutomaticUpdateBundleTestCase(DataProxyFixture, RQAlphaTestCase):
     def __init__(self, *args, **kwargs):
         super(AutomaticUpdateBundleTestCase, self).__init__(*args, **kwargs)
-        self._path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
+        self._path = tempfile.TemporaryDirectory().name
 
     def init_fixture(self):
         super(AutomaticUpdateBundleTestCase, self).init_fixture()
