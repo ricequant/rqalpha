@@ -101,9 +101,9 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
     price = env.data_proxy.get_last_price(ins.order_book_id)
     if not is_valid_price(price):
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
-        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None))
+        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
         return
 
     if (side == SIDE.BUY and current_quantity != -amount) or (side == SIDE.SELL and current_quantity != abs(amount)):
