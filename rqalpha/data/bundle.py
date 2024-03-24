@@ -18,6 +18,7 @@ import os
 import pickle
 import re
 from itertools import chain
+from typing import Callable, Optional, List
 
 import h5py
 import numpy as np
@@ -30,9 +31,10 @@ from rqalpha.utils.datetime_func import (convert_date_to_date_int,
 from rqalpha.utils.exception import RQDatacVersionTooLow
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import system_log
-from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.const import TRADING_CALENDAR_TYPE
 from rqalpha.utils.functools import lru_cache
 from rqalpha.environment import Environment
+from rqalpha.model.instrument import Instrument
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -631,8 +633,7 @@ def update_futures_trading_parameters(path, end_date):
 
 
 class AutomaticUpdateBundle(object):
-    def __init__(self, path, filename, rqdata_api, fields, end_date):
-        # type: (str, str, Callable, List[str], datetime.date) -> None
+    def __init__(self, path: str, filename: str, rqdata_api: Callable, fields: List[str], end_date: datetime.date, completion: bool =False) -> None:
         if not os.path.exists(path):
             os.makedirs(path)
         self._file = os.path.join(path, filename)
@@ -641,11 +642,11 @@ class AutomaticUpdateBundle(object):
         self._rqdata_api = rqdata_api
         self._fields = fields
         self._end_date = end_date
-        self._updated = []
+        self._completion = completion # 缓存 h5 文件时，是否需要对缺失数据的日期进行补 0
+        self.updated = []
         self._env = Environment.get_instance()
 
-    def get_data(self, instrument, dt):
-        # type: (Instrument, datetime.datetime) -> numpy.ndarray or None
+    def get_data(self, instrument: Instrument, dt: datetime.date) -> Optional[np.ndarray]:
         dt = convert_date_to_date_int(dt)
         data = self._get_data_all_time(instrument)
         if data is None:
@@ -658,18 +659,17 @@ class AutomaticUpdateBundle(object):
             return data
 
     @lru_cache(128)
-    def _get_data_all_time(self, instrument):
-        # type: (Instrument) -> numpy.ndarray or None
-        if instrument.order_book_id not in self._updated:
+    def _get_data_all_time(self, instrument: Instrument) -> Optional[np.ndarray]:
+        if instrument.order_book_id not in self.updated:
             self._auto_update_task(instrument)
-            self._updated.append(instrument.order_book_id)
+            self.updated.append(instrument.order_book_id)
         with h5py.File(self._file, "r") as h5:
             data = h5[instrument.order_book_id][:]
             if len(data) == 0:
                 return None
         return data
     
-    def _auto_update_task(self, instrument):
+    def _auto_update_task(self, instrument: Instrument) -> None:
         """
         在 rqalpha 策略运行过程中自动更新所需的日线数据
 
@@ -708,8 +708,7 @@ class AutomaticUpdateBundle(object):
         finally:
             h5.close()
     
-    def _get_array(self, instrument, start_date):
-        # type: (Instrument, datetime.date) -> numpy.array
+    def _get_array(self, instrument: Instrument, start_date: datetime.date) -> Optional[np.ndarray]:
         df = self._rqdata_api(instrument.order_book_id, start_date, self._end_date, self._fields)
         if not (df is None or df.empty):
             df = df[self._fields].loc[instrument.order_book_id] # rqdatac.get_open_auction_info get Futures's data will auto add 'open_interest' and 'prev_settlement'
@@ -723,5 +722,18 @@ class AutomaticUpdateBundle(object):
             arr['trading_dt'] = trading_dt
             for field in self._fields:
                 arr[field] = df[field].values
+            if self._completion:
+                arr = self._completion_zero(instrument, arr, df.index)
             return arr
         return None
+    
+    def _completion_zero(self, instrument: Instrument, arr: np.ndarray, dt_index: pd.DatetimeIndex) -> np.ndarray:
+        completion_start_date = max(instrument.listed_date.date(), datetime.date(2005, 1, 4))
+        trading_dates = self._env.data_proxy._data_source.get_trading_dates(completion_start_date, self._end_date)
+        trading_dates = convert_date_to_date_int(trading_dates)
+        completion_dt = np.array(list(set(trading_dates).difference(set(arr['trading_dt']))))
+        arr_zero = np.zeros((completion_dt.shape[0], ), dtype=arr.dtype)
+        arr_zero['trading_dt'] = completion_dt
+        arr = np.sort(np.concatenate((arr, arr_zero)), order="trading_dt")
+        return arr
+
