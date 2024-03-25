@@ -723,11 +723,11 @@ class AutomaticUpdateBundle(object):
             for field in self._fields:
                 arr[field] = df[field].values
             if self._completion:
-                arr = self._completion_zero(instrument, arr, df.index)
+                arr = self._completion_zero(instrument, arr)
             return arr
         return None
     
-    def _completion_zero(self, instrument: Instrument, arr: np.ndarray, dt_index: pd.DatetimeIndex) -> np.ndarray:
+    def _completion_zero(self, instrument: Instrument, arr: np.ndarray) -> np.ndarray:
         completion_start_date = max(instrument.listed_date.date(), datetime.date(2005, 1, 4))
         trading_dates = self._env.data_proxy._data_source.get_trading_dates(completion_start_date, self._end_date)
         trading_dates = convert_date_to_date_int(trading_dates)
