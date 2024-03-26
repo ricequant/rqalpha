@@ -116,8 +116,7 @@ class TradingDatesMixin(object):
 
         return td
     
-    def batch_get_trading_date(self, dt_index):
-        # type: (DatetimeIndex) -> DatetimeIndex
+    def batch_get_trading_date(self, dt_index: pd.DatetimeIndex):
         # 获取 numpy.array 中所有时间所在的交易日
         # 认为晚八点后为第二个交易日，认为晚八点至次日凌晨四点为夜盘
         dt = dt_index - datetime.timedelta(hours=4)

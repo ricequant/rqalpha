@@ -32,7 +32,7 @@ class AutomaticUpdateBundleTestCase(DataProxyFixture, RQAlphaTestCase):
         self._auto_update_bundle_module = AutomaticUpdateBundle(
             path=self._path,
             filename="open_auction_volume.h5",
-            rqdata_api=self._mock_get_open_auction_info,
+            api=self._mock_get_open_auction_info,
             fields=['volume'],
             end_date=datetime.date(2024, 2, 28),
         )
