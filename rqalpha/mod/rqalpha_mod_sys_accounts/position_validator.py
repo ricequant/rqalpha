@@ -48,7 +48,7 @@ class PositionValidator(AbstractFrontendValidator):
                 closable=position.today_closable,
             )
             user_system_log.warn(reason)
-            Environment.get_instance.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order._order_book_id, order=order, reason=reason))
+            Environment.get_instance().event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order._order_book_id, order=order, reason=reason))
             return False
         if order.position_effect == POSITION_EFFECT.CLOSE and order.quantity > position.closable:
             reason = _(
@@ -59,6 +59,6 @@ class PositionValidator(AbstractFrontendValidator):
                 closable=position.closable,
             )
             user_system_log.warn(reason)
-            Environment.get_instance.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order._order_book_id, order=order, reason=reason))
+            Environment.get_instance().event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, order=order, reason=reason))
             return False
         return True

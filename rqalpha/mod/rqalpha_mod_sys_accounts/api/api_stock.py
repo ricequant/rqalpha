@@ -111,10 +111,9 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
         amount = _round_order_quantity(ins, amount)
 
     if amount == 0:
-        user_system_log.warn(_(
-            u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
-        ).format(order_book_id=ins.order_book_id))
-        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None))
+        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if side == SIDE.BUY and auto_switch_order_value:
@@ -141,9 +140,9 @@ def _order_value(account, position, ins, cash_amount, style):
     else:
         price = env.data_proxy.get_last_price(ins.order_book_id)
         if not is_valid_price(price):
-            user_system_log.warn(
-                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
-            )
+            reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+            user_system_log.warn(reason)
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
             return
 
     amount = int(Decimal(cash_amount) / Decimal(price))
@@ -158,9 +157,9 @@ def _order_value(account, position, ins, cash_amount, style):
                 break
             amount -= round_lot
         else:
-            user_system_log.warn(_(
-                u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
-            ).format(order_book_id=ins.order_book_id))
+            reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+            user_system_log.warn(reason)
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
             return
 
     if amount < 0:

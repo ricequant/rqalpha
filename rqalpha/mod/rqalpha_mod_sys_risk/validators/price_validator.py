@@ -42,7 +42,7 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_up=limit_up
             )
             user_system_log.warn(reason)
-            Environment.get_instance.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order._order_book_id, order=order, reason=reason))
+            Environment.get_instance().event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, order=order, reason=reason))
             return False
 
         limit_down = round(self._env.price_board.get_limit_down(order.order_book_id), 4)
@@ -56,7 +56,7 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_down=limit_down
             )
             user_system_log.warn(reason)
-            Environment.get_instance.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order._order_book_id, order=order, reason=reason))
+            Environment.get_instance().event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order._order_book_id, order=order, reason=reason))
             return False
 
         return True
