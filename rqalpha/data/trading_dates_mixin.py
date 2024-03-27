@@ -19,6 +19,7 @@ import datetime
 from typing import Dict, Optional, Union
 
 import pandas as pd
+import numpy as np
 
 from rqalpha.utils.functools import lru_cache
 from rqalpha.const import TRADING_CALENDAR_TYPE
@@ -114,3 +115,11 @@ class TradingDatesMixin(object):
             return trading_dates[pos + 1]
 
         return td
+    
+    def batch_get_trading_date(self, dt_index: pd.DatetimeIndex):
+        # 获取 numpy.array 中所有时间所在的交易日
+        # 认为晚八点后为第二个交易日，认为晚八点至次日凌晨四点为夜盘
+        dt = dt_index - datetime.timedelta(hours=4)
+        trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.EXCHANGE)
+        pos = trading_dates.searchsorted(dt.date) + np.where(dt.hour >= 16, 1, 0)
+        return trading_dates[pos]

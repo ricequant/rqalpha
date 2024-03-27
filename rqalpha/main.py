@@ -122,12 +122,14 @@ def init_rqdatac(rqdatac_uri):
         init_rqdatac_env(rqdatac_uri)
         try:
             rqdatac.init()
+            return True
         except Exception as e:
             system_log.warn(_('rqdatac init failed, some apis will not function properly: {}').format(str(e)))
+            return
 
 
 def run(config, source_code=None, user_funcs=None):
-    env = Environment(config)
+    env = Environment(config, init_rqdatac(getattr(config.base, 'rqdatac_uri', None)))
     persist_helper = None
     init_succeed = False
     mod_handler = ModHandler()
@@ -136,7 +138,6 @@ def run(config, source_code=None, user_funcs=None):
         # avoid register handlers everytime
         # when running in ipython
         set_loggers(config)
-        init_rqdatac(getattr(config.base, 'rqdatac_uri', None))
         system_log.debug("\n" + pformat(config.convert_to_dict()))
 
         env.set_strategy_loader(init_strategy_loader(env, source_code, user_funcs, config))
