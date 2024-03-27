@@ -344,9 +344,9 @@ def order_target_portfolio(
         order_book_id = ins.order_book_id
         last_price = env.data_proxy.get_last_price(order_book_id)
         if not is_valid_price(last_price):
-            user_system_log.warn(
-                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
-            )
+            reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+            user_system_log.warn(reason)
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
             continue
 
         price_or_style = price_or_styles.get(ins.order_book_id)
@@ -382,12 +382,11 @@ def order_target_portfolio(
         open_price = _get_order_style_price(order_book_id, open_style)
         close_price = _get_order_style_price(order_book_id, close_style)
         if not (is_valid_price(close_price) and is_valid_price(open_price)):
-            user_system_log.warn(_(
-                "Adjust position of {id_or_ins} Failed: "
-                "Invalid close/open price {close_price}/{open_price}").format(
-                    id_or_ins=order_book_id, close_price=close_price, open_price=open_price
-                )
+            reason = _("Adjust position of {id_or_ins} Failed: Invalid close/open price {close_price}/{open_price}").format(
+                id_or_ins=order_book_id, close_price=close_price, open_price=open_price
             )
+            user_system_log.warn(reason)
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, order=None, reason=reason))
             continue
 
         delta_quantity = (account_value * target_percent / close_price) - current_quantities.get(order_book_id, 0)
