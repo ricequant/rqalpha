@@ -25,6 +25,7 @@ from rqalpha.utils import id_gen, decimal_rounding_floor, get_position_direction
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
 from rqalpha.environment import Environment
+from rqalpha.core.events import Event, EVENT
 
 
 class Order(object):
@@ -325,6 +326,9 @@ class Order(object):
             self._message = reject_reason
             self._status = ORDER_STATUS.REJECTED
             user_system_log.warn(reject_reason)
+            Environment.get_instance().event_bus.publish_event(
+                Event(EVENT.ORDER_CREATION_REJECT, order_book_id=self.order_book_id, order=self, reason=reject_reason)
+            )
 
     def mark_cancelled(self, cancelled_reason, user_warn=True):
         if not self.is_final():
@@ -332,6 +336,9 @@ class Order(object):
             self._status = ORDER_STATUS.CANCELLED
             if user_warn:
                 user_system_log.warn(cancelled_reason)
+                Environment.get_instance().event_bus.publish_event(
+                    Event(EVENT.ORDER_CREATION_REJECT, order_book_id=self.order_book_id, order=self, reason=cancelled_reason)
+                )
 
     def set_frozen_price(self, value):
         self._frozen_price = value

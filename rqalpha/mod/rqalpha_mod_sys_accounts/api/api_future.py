@@ -35,6 +35,7 @@ from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.core.events import Event, EVENT
 
 
 __all__ = []
@@ -47,9 +48,11 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
 
     amount = int(amount)
     if amount == 0:
-        user_system_log.warn(_(
-            u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
-        ).format(order_book_id=order_book_id))
+        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(
+            order_book_id=order_book_id
+        )
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, order=None, reason=reason))
         return None
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
@@ -62,12 +65,10 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
 
     price = env.get_last_price(order_book_id)
     if not is_valid_price(price):
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
-        )
+        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, order=None, reason=reason))
         return
-
-    env = Environment.get_instance()
 
     orders = []
     if position_effect in (POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.CLOSE):
@@ -75,10 +76,12 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
         position = env.portfolio.get_position(order_book_id, direction)  # type: Position
         if position_effect == POSITION_EFFECT.CLOSE_TODAY:
             if amount > position.today_closable:
-                user_system_log.warning(_(
+                reason = _(
                     "Order Creation Failed: "
-                    "close today amount {amount} is larger than today closable quantity {quantity}"
-                ).format(amount=amount, quantity=position.today_closable))
+                    "close today amount {amount} is larger than today closable quantity {quantity}").format(
+                        amount=amount, quantity=position.today_closable)
+                user_system_log.warning(reason)
+                env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, order=None, reason=reason))
                 return []
             orders.append(Order.__from_create__(
                 order_book_id, amount, side, style, POSITION_EFFECT.CLOSE_TODAY
@@ -86,10 +89,10 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
         else:
             quantity, old_quantity = position.quantity, position.old_quantity
             if amount > quantity:
-                user_system_log.warn(_(
-                    u"Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
-                    amount=amount, quantity=quantity
-                ))
+                reason = _(u"Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
+                    amount=amount, quantity=quantity)
+                user_system_log.warn(reason)
+                env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, order=None, reason=reason))
                 return []
             if amount > old_quantity:
                 if old_quantity != 0:

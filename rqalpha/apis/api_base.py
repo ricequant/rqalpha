@@ -170,11 +170,9 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     style = cal_style(price, None)
     market_price = env.get_last_price(order_book_id)
     if not is_valid_price(market_price):
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(
-                order_book_id=order_book_id
-            )
-        )
+        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, order=None, reason=reason))
         return
 
     amount = int(amount)
