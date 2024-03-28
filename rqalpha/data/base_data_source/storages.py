@@ -116,7 +116,7 @@ class FutureInfoStore(object):
         order_book_id = instrument.order_book_id
         underlying_symbol = instrument.underlying_symbol
         custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
-        info = self._default_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
+        info = self._default_data.get(order_book_id) or self._default_data.get(underlying_symbol)
         if custom_info:
             info = copy(info) or {}
             info.update(custom_info)
