@@ -103,7 +103,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     if not is_valid_price(price):
         reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
         user_system_log.warn(reason)
-        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, reason=reason))
         return
 
     if (side == SIDE.BUY and current_quantity != -amount) or (side == SIDE.SELL and current_quantity != abs(amount)):
@@ -113,7 +113,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     if amount == 0:
         reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
         user_system_log.warn(reason)
-        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, reason=reason))
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if side == SIDE.BUY and auto_switch_order_value:
@@ -142,7 +142,7 @@ def _order_value(account, position, ins, cash_amount, style):
         if not is_valid_price(price):
             reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
             user_system_log.warn(reason)
-            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, reason=reason))
             return
 
     amount = int(Decimal(cash_amount) / Decimal(price))
@@ -159,7 +159,7 @@ def _order_value(account, position, ins, cash_amount, style):
         else:
             reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
             user_system_log.warn(reason)
-            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, reason=reason))
             return
 
     if amount < 0:
@@ -192,6 +192,7 @@ def stock_order_percent(id_or_ins, percent, price_or_style=None, price=None, sty
 
 @order_target_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
+    env = Environment.get_instance()
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     if cash_amount == 0:
@@ -199,12 +200,21 @@ def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=
             ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, close_style, position.quantity, False
         )
     _delta = cash_amount - position.market_value
+    price = env.data_proxy.get_last_price(ins.order_book_id)
+    if not is_valid_price(price):
+        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, reason=reason))
+    amount = int(Decimal(_delta) / Decimal(price))
+    if _round_order_quantity(ins, amount) == 0:
+        return
     _style = open_style if _delta > 0 else close_style
     return _order_value(account, position, ins, _delta, _style)
 
 
 @order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
+    env = Environment.get_instance()
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     if percent == 0:
@@ -212,6 +222,14 @@ def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=No
             ins, position.closable, SIDE.SELL, POSITION_EFFECT.CLOSE, close_style, position.quantity, False
         )
     _delta = account.total_value * percent - position.market_value
+    price = env.data_proxy.get_last_price(ins.order_book_id)
+    if not is_valid_price(price):
+        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, reason=reason))
+    amount = int(Decimal(_delta) / Decimal(price))
+    if _round_order_quantity(ins, amount) == 0:
+        return
     _style = open_style if _delta > 0 else close_style
     return _order_value(account, position, ins, _delta, _style)
 
@@ -346,7 +364,7 @@ def order_target_portfolio(
         if not is_valid_price(last_price):
             reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
             user_system_log.warn(reason)
-            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, order=None, reason=reason))
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=ins.order_book_id, reason=reason))
             continue
 
         price_or_style = price_or_styles.get(ins.order_book_id)
@@ -386,7 +404,7 @@ def order_target_portfolio(
                 id_or_ins=order_book_id, close_price=close_price, open_price=open_price
             )
             user_system_log.warn(reason)
-            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, order=None, reason=reason))
+            env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, reason=reason))
             continue
 
         delta_quantity = (account_value * target_percent / close_price) - current_quantities.get(order_book_id, 0)

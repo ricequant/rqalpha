@@ -22,8 +22,6 @@ from rqalpha.const import POSITION_EFFECT
 from rqalpha.utils.logger import user_system_log
 from rqalpha.model.order import Order
 from rqalpha.portfolio.account import Account
-from rqalpha.core.events import Event, EVENT
-from rqalpha.environment import Environment
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -48,8 +46,7 @@ class PositionValidator(AbstractFrontendValidator):
                 closable=position.today_closable,
             )
             user_system_log.warn(reason)
-            Environment.get_instance().event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order._order_book_id, order=order, reason=reason))
-            return False
+            return reason
         if order.position_effect == POSITION_EFFECT.CLOSE and order.quantity > position.closable:
             reason = _(
                 "Order Creation Failed: not enough position {order_book_id} to close or exercise, target"
@@ -59,6 +56,5 @@ class PositionValidator(AbstractFrontendValidator):
                 closable=position.closable,
             )
             user_system_log.warn(reason)
-            Environment.get_instance().event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, order=order, reason=reason))
-            return False
+            return reason
         return True

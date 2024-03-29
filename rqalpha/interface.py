@@ -654,6 +654,7 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
     def can_submit_order(self, order, account=None):
         """
         判断是否可以下单
+        :return: 可以下单返回 `True`, 不可下单返回原因
         """
         raise NotImplementedError
 

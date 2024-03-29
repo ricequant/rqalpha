@@ -20,7 +20,7 @@ from typing import Optional, Dict, List
 from itertools import chain
 
 import rqalpha
-from rqalpha.core.events import EventBus
+from rqalpha.core.events import EventBus, Event, EVENT
 from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
@@ -114,9 +114,7 @@ class Environment(object):
         return chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators)
 
     def submit_order(self, order):
-        instrument_type = self.data_proxy.instrument(order.order_book_id).type
-        account = self.portfolio.get_account(order.order_book_id)
-        if all(v.can_submit_order(order, account) for v in self._get_frontend_validators(instrument_type)):
+        if self.can_submit_order(order):
             self.broker.submit_order(order)
             return order
 
@@ -184,6 +182,8 @@ class Environment(object):
         instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in self._get_frontend_validators(instrument_type):
-            if not v.can_submit_order(order, account):
+            result = v.can_submit_order(order, account)
+            if not (result is True):
+                self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, reason=result))
                 return False
         return True

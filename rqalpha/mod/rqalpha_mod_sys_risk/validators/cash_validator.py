@@ -18,7 +18,6 @@
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import POSITION_EFFECT
 from rqalpha.utils.logger import user_system_log
-from rqalpha.core.events import Event, EVENT
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -36,7 +35,7 @@ def is_cash_enough(env, order, cash, warn=False):
                 cost_money=cost_money,
                 cash=cash)
         user_system_log.warn(reason)
-        env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, order=order, reason=reason))
+        return reason
     return False
 
 
