@@ -122,8 +122,13 @@ class Environment(object):
         instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
-            if not v.can_cancel_order(order, account):
-                return False
+            try:
+                if v.validate_cancellation(order, account):
+                    return False
+            except NotImplementedError:
+                # 避免由于某些 mod 版本未更新，Validator method 未修改
+                if not v.can_cancel_order(order, account):
+                    return False
         return True
 
     def get_universe(self):
@@ -182,8 +187,13 @@ class Environment(object):
         instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in self._get_frontend_validators(instrument_type):
-            result = v.can_submit_order(order, account)
-            if not (result is True):
-                self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, reason=result))
-                return False
+            try:
+                reason = v.validate_submission(order, account)
+                if reason:
+                    self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, reason=reason))
+                    return False
+            except NotImplementedError:
+                # 避免由于某些 mod 版本未更新，Validator method 未修改
+                if not v.can_submit_order(order, account):
+                    return False
         return True

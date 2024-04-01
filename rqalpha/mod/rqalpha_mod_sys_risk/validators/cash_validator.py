@@ -17,6 +17,8 @@
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import POSITION_EFFECT
+from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
 from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
@@ -43,10 +45,14 @@ class CashValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
-    def can_submit_order(self, order, account=None):
+    def validate_cancellation(self, order: Order, account: Account | None = None) -> str | None:
+        return None
+    
+    def validate_submission(self, order: Order, account: Account | None = None) -> str | None:
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
-            return True
-        return is_cash_enough(self._env, order, account.cash, warn=True)
-
-    def can_cancel_order(self, order, account=None):
-        return True
+            return None
+        reason = is_cash_enough(self._env, order, account.cash, warn=True)
+        if reason is True:
+            return None
+        else:
+            return reason

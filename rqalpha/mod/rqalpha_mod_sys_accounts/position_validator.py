@@ -27,15 +27,14 @@ from rqalpha.utils.i18n import gettext as _
 
 
 class PositionValidator(AbstractFrontendValidator):
-    def can_cancel_order(self, order, account=None):
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         return True
-
-    def can_submit_order(self, order, account=None):
-        # type: (Order, Optional[Account]) -> bool
+    
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if account is None:
-            return True
+            return None
         if order.position_effect in (POSITION_EFFECT.OPEN, POSITION_EFFECT.EXERCISE):
-            return True
+            return None
         position = account.get_position(order.order_book_id, order.position_direction)  # type: AbstractPosition
         if order.position_effect == POSITION_EFFECT.CLOSE_TODAY and order.quantity > position.today_closable:
             reason = _(
@@ -57,4 +56,4 @@ class PositionValidator(AbstractFrontendValidator):
             )
             user_system_log.warn(reason)
             return reason
-        return True
+        return None

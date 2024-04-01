@@ -17,6 +17,8 @@
 
 from rqalpha.interface import AbstractFrontendValidator
 
+from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE
@@ -25,8 +27,8 @@ from rqalpha.const import INSTRUMENT_TYPE
 class IsTradingValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
-
-    def can_submit_order(self, order, account=None):
+    
+    def validate_submission(self, order: Order, account: Account | None = None) -> str | None:
         instrument = self._env.data_proxy.instrument(order.order_book_id)
         if instrument.type != INSTRUMENT_TYPE.INDX and not instrument.listing_at(self._env.trading_dt):
             reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(
@@ -42,7 +44,7 @@ class IsTradingValidator(AbstractFrontendValidator):
             user_system_log.warn(reason)
             return reason
 
-        return True
-
-    def can_cancel_order(self, order, account=None):
-        return True
+        return None
+    
+    def validate_cancellation(self, order: Order, account: Account | None = None) -> str | None:
+        return None

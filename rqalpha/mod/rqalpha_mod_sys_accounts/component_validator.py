@@ -13,24 +13,19 @@ class MarginComponentValidator(AbstractFrontendValidator):
         self._margin_type = margin_type
         from rqalpha.apis.api_rqdatac import get_margin_stocks
         self._get_margin_stocks = get_margin_stocks
-
-    def can_cancel_order(self, order, account=None):
-        return True
-
-    def can_submit_order(self, order, account=None):
-        # type: (Order, Optional[Account]) -> bool
-
+        
+    def validate_submission(self, order: Order, account: Account | None = None) -> str | None:
         # 没负债等于没融资，则不需要限制股票池
         if account.cash_liabilities == 0:
-            return True
-
+            return None
         symbols = self._get_margin_stocks(margin_type=self._margin_type)
-
         # 是否在股票池中
         if order.order_book_id in set(symbols):
-            return True
+            return None
         else:
-            user_system_log.warn("Order Creation Failed: margin stock pool not contains {}.".format(
-                order.order_book_id)
-            )
-            return False
+            reason = "Order Creation Failed: margin stock pool not contains {}.".format(order.order_book_id)
+            user_system_log.warn(reason)
+            return reason
+    
+    def validate_cancellation(self, order: Order, account: Account | None = None) -> str | None:
+        return None

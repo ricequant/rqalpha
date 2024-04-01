@@ -17,32 +17,34 @@ from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import ORDER_TYPE, SIDE, POSITION_EFFECT
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
 
 
 class SelfTradeValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
-    def can_submit_order(self, order, account=None):
+    def validate_submission(self, order: Order, account: Account | None = None) -> str | None:
         open_orders = [o for o in self._env.get_open_orders(order.order_book_id) if (
                 o.side != order.side and o.position_effect != POSITION_EFFECT.EXERCISE
         )]
         if len(open_orders) == 0:
-            return True
+            return None
         reason = _("Create order failed, there are active orders leading to the risk of self-trade: [{}...]")
         if order.type == ORDER_TYPE.MARKET:
             user_system_log.warn(reason.format(open_orders[0]))
-            return False
+            return reason.format(open_orders[0])
         if order.side == SIDE.BUY:
             for open_order in open_orders:
                 if order.price >= open_order.price:
                     user_system_log.warn(reason.format(open_order))
-                    return False
+                    return reason.format(open_order)
         else:
             for open_order in open_orders:
                 if order.price <= open_order.price:
                     user_system_log.warn(reason.format(open_order))
-                    return False
-
-    def can_cancel_order(self, order, account=None):
-        return True
+                    return reason.format(open_order)
+    
+    def validate_cancellation(self, order: Order, account: Account | None = None) -> str | None:
+        return None

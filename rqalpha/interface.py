@@ -649,19 +649,21 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
 
     扩展模块可以通过 env.add_frontend_validator 添加自定义的前端风控逻辑
     """
-
     @abc.abstractmethod
-    def can_submit_order(self, order, account=None):
+    def validate_submission(self, order, account=None):
         """
-        判断是否可以下单
-        :return: 可以下单返回 `True`, 不可下单返回原因
+        进行下单前的验证，若通过则返回 None
+
+        :return: `Optional[str]`
         """
         raise NotImplementedError
-
+    
     @abc.abstractmethod
-    def can_cancel_order(self, order, account=None):
+    def validate_cancellation(self, order, account=None):
         """
-        判读是否可以撤单
+        进行撤销订单前的验证，若通过则返回 None
+
+        :return: `Optional[str]`
         """
         raise NotImplementedError
 
