@@ -14,6 +14,7 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+from typing import Optional
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import POSITION_EFFECT
@@ -45,10 +46,10 @@ class CashValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
-    def validate_cancellation(self, order: Order, account: Account | None = None) -> str | None:
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         return None
     
-    def validate_submission(self, order: Order, account: Account | None = None) -> str | None:
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return None
         reason = is_cash_enough(self._env, order, account.cash, warn=True)

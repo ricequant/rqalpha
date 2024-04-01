@@ -28,7 +28,7 @@ from rqalpha.utils.i18n import gettext as _
 
 class PositionValidator(AbstractFrontendValidator):
     def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
-        return True
+        return None
     
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if account is None:

@@ -14,7 +14,7 @@ class MarginComponentValidator(AbstractFrontendValidator):
         from rqalpha.apis.api_rqdatac import get_margin_stocks
         self._get_margin_stocks = get_margin_stocks
         
-    def validate_submission(self, order: Order, account: Account | None = None) -> str | None:
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         # 没负债等于没融资，则不需要限制股票池
         if account.cash_liabilities == 0:
             return None
@@ -27,5 +27,5 @@ class MarginComponentValidator(AbstractFrontendValidator):
             user_system_log.warn(reason)
             return reason
     
-    def validate_cancellation(self, order: Order, account: Account | None = None) -> str | None:
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         return None
