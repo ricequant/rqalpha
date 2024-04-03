@@ -14,9 +14,12 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+from typing import Optional
 
 from rqalpha.interface import AbstractFrontendValidator
 
+from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE
@@ -25,23 +28,22 @@ from rqalpha.const import INSTRUMENT_TYPE
 class IsTradingValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
-
-    def can_submit_order(self, order, account=None):
+    
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         instrument = self._env.data_proxy.instrument(order.order_book_id)
         if instrument.type != INSTRUMENT_TYPE.INDX and not instrument.listing_at(self._env.trading_dt):
-            user_system_log.warn(_(u"Order Creation Failed: {order_book_id} is not listing!").format(
-                order_book_id=order.order_book_id,
-            ))
-            return False
+            reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(
+                order_book_id=order.order_book_id)
+            return reason
 
         if instrument.type == 'CS' and self._env.data_proxy.is_suspended(order.order_book_id, self._env.trading_dt):
-            user_system_log.warn(_(u"Order Creation Failed: security {order_book_id} is suspended on {date}").format(
+            reason = _(u"Order Creation Failed: security {order_book_id} is suspended on {date}").format(
                 order_book_id=order.order_book_id,
                 date=self._env.trading_dt.date()
-            ))
-            return False
+            )
+            return reason
 
-        return True
-
-    def can_cancel_order(self, order, account=None):
-        return True
+        return None
+    
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
+        return None

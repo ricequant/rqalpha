@@ -18,13 +18,16 @@
 from datetime import datetime
 from typing import Optional, Dict, List
 from itertools import chain
+from typing import TYPE_CHECKING
 
 import rqalpha
-from rqalpha.core.events import EventBus
+from rqalpha.core.events import EventBus, Event, EVENT
 from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
+if TYPE_CHECKING:
+    from rqalpha.model.order import Order
 
 
 class Environment(object):
@@ -114,9 +117,7 @@ class Environment(object):
         return chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators)
 
     def submit_order(self, order):
-        instrument_type = self.data_proxy.instrument(order.order_book_id).type
-        account = self.portfolio.get_account(order.order_book_id)
-        if all(v.can_submit_order(order, account) for v in self._get_frontend_validators(instrument_type)):
+        if self.can_submit_order(order):
             self.broker.submit_order(order)
             return order
 
@@ -124,9 +125,24 @@ class Environment(object):
         instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
-            if not v.can_cancel_order(order, account):
-                return False
+            try:
+                reason = v.validate_cancellation(order, account)
+                if reason:
+                    self.order_cancellation_failed(order_book_id=order.order_book_id, reason=reason)
+                    return False
+            except NotImplementedError:
+                # 避免由于某些 mod 版本未更新，Validator method 未修改
+                if not v.can_cancel_order(order, account):
+                    return False
         return True
+    
+    def order_creation_failed(self, order_book_id, reason):
+        user_system_log.warn(reason)
+        self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, reason=reason))
+
+    def order_cancellation_failed(self, order_book_id, reason):
+        user_system_log.warn(reason)
+        self.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))
 
     def get_universe(self):
         return self._universe.get()
@@ -179,11 +195,18 @@ class Environment(object):
         self.calendar_dt = calendar_dt
         self.trading_dt = trading_dt
 
-    def can_submit_order(self, order):
+    def can_submit_order(self, order: 'Order') -> bool:
         # forward compatible
         instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in self._get_frontend_validators(instrument_type):
-            if not v.can_submit_order(order, account):
-                return False
+            try:
+                reason = v.validate_submission(order, account)
+                if reason:
+                    self.order_creation_failed(order_book_id=order.order_book_id, reason=reason)
+                    return False
+            except NotImplementedError:
+                # 避免由于某些 mod 版本未更新，Validator method 未修改
+                if not v.can_submit_order(order, account):
+                    return False
         return True

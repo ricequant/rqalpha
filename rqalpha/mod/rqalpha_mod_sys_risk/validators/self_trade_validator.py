@@ -11,38 +11,37 @@
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-
+from typing import Optional
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import ORDER_TYPE, SIDE, POSITION_EFFECT
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
 
 
 class SelfTradeValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
-    def can_submit_order(self, order, account=None):
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         open_orders = [o for o in self._env.get_open_orders(order.order_book_id) if (
                 o.side != order.side and o.position_effect != POSITION_EFFECT.EXERCISE
         )]
         if len(open_orders) == 0:
-            return True
+            return None
         reason = _("Create order failed, there are active orders leading to the risk of self-trade: [{}...]")
         if order.type == ORDER_TYPE.MARKET:
-            user_system_log.warn(reason.format(open_orders[0]))
-            return False
+            return reason.format(open_orders[0])
         if order.side == SIDE.BUY:
             for open_order in open_orders:
                 if order.price >= open_order.price:
-                    user_system_log.warn(reason.format(open_order))
-                    return False
+                    return reason.format(open_order)
         else:
             for open_order in open_orders:
                 if order.price <= open_order.price:
-                    user_system_log.warn(reason.format(open_order))
-                    return False
-
-    def can_cancel_order(self, order, account=None):
-        return True
+                    return reason.format(open_order)
+    
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
+        return None

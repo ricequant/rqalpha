@@ -34,9 +34,9 @@ from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE,
                            INSTRUMENT_TYPE, ORDER_TYPE, POSITION_DIRECTION,
                            POSITION_EFFECT, SIDE)
 from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.core.events import Event, EVENT
 from rqalpha.environment import Environment
-from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import \
-    is_cash_enough
+from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import validate_cash
 from rqalpha.model.instrument import IndustryCode as industry_code
 from rqalpha.model.instrument import IndustryCodeItem, Instrument
 from rqalpha.model.instrument import SectorCode as sector_code
@@ -100,8 +100,8 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
     price = env.data_proxy.get_last_price(ins.order_book_id)
     if not is_valid_price(price):
-        user_system_log.warn(
-            _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id))
+        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+        env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
         return
 
     if (side == SIDE.BUY and current_quantity != -amount) or (side == SIDE.SELL and current_quantity != abs(amount)):
@@ -109,14 +109,13 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
         amount = _round_order_quantity(ins, amount)
 
     if amount == 0:
-        user_system_log.warn(_(
-            u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
-        ).format(order_book_id=ins.order_book_id))
+        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+        env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if side == SIDE.BUY and auto_switch_order_value:
         account, position, ins = _get_account_position_ins(ins)
-        if not is_cash_enough(env, order, account.cash):
+        if validate_cash(env, order, account.cash):
             user_system_log.warn(_(
                 "insufficient cash, use all remaining cash({}) to create order"
             ).format(account.cash))
@@ -129,7 +128,7 @@ def _order_shares(ins, amount, style, quantity, auto_switch_order_value):
     return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value)
 
 
-def _order_value(account, position, ins, cash_amount, style):
+def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
     env = Environment.get_instance()
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)
@@ -138,9 +137,8 @@ def _order_value(account, position, ins, cash_amount, style):
     else:
         price = env.data_proxy.get_last_price(ins.order_book_id)
         if not is_valid_price(price):
-            user_system_log.warn(
-                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
-            )
+            reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
+            env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
             return
 
     amount = int(Decimal(cash_amount) / Decimal(price))
@@ -155,9 +153,9 @@ def _order_value(account, position, ins, cash_amount, style):
                 break
             amount -= round_lot
         else:
-            user_system_log.warn(_(
-                u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
-            ).format(order_book_id=ins.order_book_id))
+            if zero_amount_as_exception:
+                reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+                env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
             return
 
     if amount < 0:
@@ -198,7 +196,7 @@ def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=
         )
     _delta = cash_amount - position.market_value
     _style = open_style if _delta > 0 else close_style
-    return _order_value(account, position, ins, _delta, _style)
+    return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False)
 
 
 @order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
@@ -211,7 +209,7 @@ def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=No
         )
     _delta = account.total_value * percent - position.market_value
     _style = open_style if _delta > 0 else close_style
-    return _order_value(account, position, ins, _delta, _style)
+    return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False)
 
 
 @order.register(INST_TYPE_IN_STOCK_ACCOUNT)
@@ -342,9 +340,8 @@ def order_target_portfolio(
         order_book_id = ins.order_book_id
         last_price = env.data_proxy.get_last_price(order_book_id)
         if not is_valid_price(last_price):
-            user_system_log.warn(
-                _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
-            )
+            reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+            env.order_creation_failed(order_book_id=order_book_id, reason=reason)
             continue
 
         price_or_style = price_or_styles.get(ins.order_book_id)
@@ -380,12 +377,10 @@ def order_target_portfolio(
         open_price = _get_order_style_price(order_book_id, open_style)
         close_price = _get_order_style_price(order_book_id, close_style)
         if not (is_valid_price(close_price) and is_valid_price(open_price)):
-            user_system_log.warn(_(
-                "Adjust position of {id_or_ins} Failed: "
-                "Invalid close/open price {close_price}/{open_price}").format(
-                    id_or_ins=order_book_id, close_price=close_price, open_price=open_price
-                )
+            reason = _("Adjust position of {id_or_ins} Failed: Invalid close/open price {close_price}/{open_price}").format(
+                id_or_ins=order_book_id, close_price=close_price, open_price=open_price
             )
+            env.order_creation_failed(order_book_id=order_book_id, reason=reason)
             continue
 
         delta_quantity = (account_value * target_percent / close_price) - current_quantities.get(order_book_id, 0)

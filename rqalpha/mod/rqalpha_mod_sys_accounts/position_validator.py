@@ -27,32 +27,31 @@ from rqalpha.utils.i18n import gettext as _
 
 
 class PositionValidator(AbstractFrontendValidator):
-    def can_cancel_order(self, order, account=None):
-        return True
-
-    def can_submit_order(self, order, account=None):
-        # type: (Order, Optional[Account]) -> bool
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
+        return None
+    
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if account is None:
-            return True
+            return None
         if order.position_effect in (POSITION_EFFECT.OPEN, POSITION_EFFECT.EXERCISE):
-            return True
+            return None
         position = account.get_position(order.order_book_id, order.position_direction)  # type: AbstractPosition
         if order.position_effect == POSITION_EFFECT.CLOSE_TODAY and order.quantity > position.today_closable:
-            user_system_log.warn(_(
+            reason = _(
                 "Order Creation Failed: not enough today position {order_book_id} to close, target"
                 " quantity is {quantity}, closable today quantity is {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
                 closable=position.today_closable,
-            ))
-            return False
+            )
+            return reason
         if order.position_effect == POSITION_EFFECT.CLOSE and order.quantity > position.closable:
-            user_system_log.warn(_(
+            reason = _(
                 "Order Creation Failed: not enough position {order_book_id} to close or exercise, target"
                 " sell quantity is {quantity}, closable quantity is {closable}").format(
                 order_book_id=order.order_book_id,
                 quantity=order.quantity,
                 closable=position.closable,
-            ))
-            return False
-        return True
+            )
+            return reason
+        return None

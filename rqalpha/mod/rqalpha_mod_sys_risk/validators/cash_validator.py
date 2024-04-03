@@ -14,40 +14,39 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+from typing import Optional
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import POSITION_EFFECT
-from rqalpha.utils.logger import user_system_log
+from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
+from rqalpha.environment import Environment
 
 from rqalpha.utils.i18n import gettext as _
 
 
-def is_cash_enough(env, order, cash, warn=False):
+def validate_cash(env: Environment, order: Order, cash: float) -> Optional[str]:
     instrument = env.data_proxy.instrument(order.order_book_id)
     cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
     cost_money += env.get_order_transaction_cost(order)
     if cost_money <= cash:
-        return True
-    if warn:
-        user_system_log.warn(
-            _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
-              " cash {cash:.2f}").format(
-                order_book_id=order.order_book_id,
-                cost_money=cost_money,
-                cash=cash,
-            )
-        )
-    return False
+        return None
+    reason = _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
+               " cash {cash:.2f}").format(
+                   order_book_id=order.order_book_id,
+                   cost_money=cost_money,
+                   cash=cash)
+    return reason
 
 
 class CashValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
 
-    def can_submit_order(self, order, account=None):
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
+        return None
+    
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
-            return True
-        return is_cash_enough(self._env, order, account.cash, warn=True)
-
-    def can_cancel_order(self, order, account=None):
-        return True
+            return None
+        return validate_cash(self._env, order, account.cash)

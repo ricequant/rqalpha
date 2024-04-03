@@ -17,7 +17,9 @@
 
 import abc
 from datetime import datetime, date
-from typing import Any, Union, Optional, Iterable, Dict, List, Sequence
+from typing import Any, Union, Optional, Iterable, Dict, List, Sequence, TYPE_CHECKING
+if TYPE_CHECKING:
+    from rqalpha.portfolio.account import Account
 
 import numpy
 from six import with_metaclass
@@ -649,18 +651,21 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
 
     扩展模块可以通过 env.add_frontend_validator 添加自定义的前端风控逻辑
     """
-
     @abc.abstractmethod
-    def can_submit_order(self, order, account=None):
+    def validate_submission(self, order: Order, account: Optional['Account'] = None) -> Optional[str]:
         """
-        判断是否可以下单
+        进行下单前的验证，若通过则返回 None
+
+        :return: `Optional[str]`
         """
         raise NotImplementedError
-
+    
     @abc.abstractmethod
-    def can_cancel_order(self, order, account=None):
+    def validate_cancellation(self, order: Order, account: Optional['Account'] = None) -> Optional[str]:
         """
-        判读是否可以撤单
+        进行撤销订单前的验证，若通过则返回 None
+
+        :return: `Optional[str]`
         """
         raise NotImplementedError
 
