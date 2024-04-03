@@ -128,7 +128,7 @@ class Environment(object):
             try:
                 reason = v.validate_cancellation(order, account)
                 if reason:
-                    self.order_cancellation_faild(order_book_id=order.order_book_id, reason=reason)
+                    self.order_cancellation_failed(order_book_id=order.order_book_id, reason=reason)
                     return False
             except NotImplementedError:
                 # 避免由于某些 mod 版本未更新，Validator method 未修改
@@ -136,11 +136,11 @@ class Environment(object):
                     return False
         return True
     
-    def order_creation_faild(self, order_book_id, reason):
+    def order_creation_failed(self, order_book_id, reason):
         user_system_log.warn(reason)
         self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, reason=reason))
 
-    def order_cancellation_faild(self, order_book_id, reason):
+    def order_cancellation_failed(self, order_book_id, reason):
         user_system_log.warn(reason)
         self.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))
 
@@ -203,7 +203,7 @@ class Environment(object):
             try:
                 reason = v.validate_submission(order, account)
                 if reason:
-                    self.order_creation_faild(order_book_id=order.order_book_id, reason=reason)
+                    self.order_creation_failed(order_book_id=order.order_book_id, reason=reason)
                     return False
             except NotImplementedError:
                 # 避免由于某些 mod 版本未更新，Validator method 未修改

@@ -50,7 +50,7 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
         reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(
             order_book_id=order_book_id
         )
-        env.order_creation_faild(order_book_id=order_book_id, reason=reason)
+        env.order_creation_failed(order_book_id=order_book_id, reason=reason)
         return None
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
@@ -64,7 +64,7 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
     price = env.get_last_price(order_book_id)
     if not is_valid_price(price):
         reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
-        env.order_creation_faild(order_book_id=order_book_id, reason=reason)
+        env.order_creation_failed(order_book_id=order_book_id, reason=reason)
         return
 
     orders = []
@@ -77,7 +77,7 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
                     "Order Creation Failed: "
                     "close today amount {amount} is larger than today closable quantity {quantity}").format(
                         amount=amount, quantity=position.today_closable)
-                env.order_creation_faild(order_book_id=order_book_id, reason=reason)
+                env.order_creation_failed(order_book_id=order_book_id, reason=reason)
                 return []
             orders.append(Order.__from_create__(
                 order_book_id, amount, side, style, POSITION_EFFECT.CLOSE_TODAY
@@ -87,7 +87,7 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
             if amount > quantity:
                 reason = _(u"Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
                     amount=amount, quantity=quantity)
-                env.order_creation_faild(order_book_id=order_book_id, reason=reason)
+                env.order_creation_failed(order_book_id=order_book_id, reason=reason)
                 return []
             if amount > old_quantity:
                 if old_quantity != 0:
