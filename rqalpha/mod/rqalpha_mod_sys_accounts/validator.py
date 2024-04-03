@@ -12,7 +12,6 @@ class MarginInstrumentValidator(AbstractFrontendValidator):
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if account.cash_liabilities > 0:
             reason = "Order Creation Failed: cash liabilities > 0, {} not support submit order".format(order.order_book_id)
-            user_system_log.warn(reason)
             return reason
         else:
             return None

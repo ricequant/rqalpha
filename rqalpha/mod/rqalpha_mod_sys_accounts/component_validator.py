@@ -24,7 +24,6 @@ class MarginComponentValidator(AbstractFrontendValidator):
             return None
         else:
             reason = "Order Creation Failed: margin stock pool not contains {}.".format(order.order_book_id)
-            user_system_log.warn(reason)
             return reason
     
     def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:

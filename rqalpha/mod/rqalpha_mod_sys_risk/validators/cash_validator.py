@@ -20,26 +20,23 @@ from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import POSITION_EFFECT
 from rqalpha.model.order import Order
 from rqalpha.portfolio.account import Account
-from rqalpha.utils.logger import user_system_log
+from rqalpha.environment import Environment
 
 from rqalpha.utils.i18n import gettext as _
 
 
-def is_cash_enough(env, order, cash, warn=False):
+def validate_cash(env: Environment, order: Order, cash: float) -> Optional[str]:
     instrument = env.data_proxy.instrument(order.order_book_id)
     cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
     cost_money += env.get_order_transaction_cost(order)
     if cost_money <= cash:
-        return True
-    if warn:
-        reason = _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
-              " cash {cash:.2f}").format(
-                order_book_id=order.order_book_id,
-                cost_money=cost_money,
-                cash=cash)
-        user_system_log.warn(reason)
-        return reason
-    return False
+        return None
+    reason = _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
+               " cash {cash:.2f}").format(
+                   order_book_id=order.order_book_id,
+                   cost_money=cost_money,
+                   cash=cash)
+    return reason
 
 
 class CashValidator(AbstractFrontendValidator):
@@ -52,8 +49,8 @@ class CashValidator(AbstractFrontendValidator):
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return None
-        reason = is_cash_enough(self._env, order, account.cash, warn=True)
-        if reason is True:
-            return None
-        else:
+        reason = validate_cash(self._env, order, account.cash)
+        if reason:
             return reason
+        else:
+            return None

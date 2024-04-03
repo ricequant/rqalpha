@@ -44,7 +44,6 @@ class PositionValidator(AbstractFrontendValidator):
                 quantity=order.quantity,
                 closable=position.today_closable,
             )
-            user_system_log.warn(reason)
             return reason
         if order.position_effect == POSITION_EFFECT.CLOSE and order.quantity > position.closable:
             reason = _(
@@ -54,6 +53,5 @@ class PositionValidator(AbstractFrontendValidator):
                 quantity=order.quantity,
                 closable=position.closable,
             )
-            user_system_log.warn(reason)
             return reason
         return None

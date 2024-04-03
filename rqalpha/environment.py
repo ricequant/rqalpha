@@ -18,6 +18,7 @@
 from datetime import datetime
 from typing import Optional, Dict, List
 from itertools import chain
+from typing import TYPE_CHECKING
 
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
@@ -25,6 +26,8 @@ from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
+if TYPE_CHECKING:
+    from rqalpha.model.order import Order
 
 
 class Environment(object):
@@ -130,6 +133,10 @@ class Environment(object):
                 if not v.can_cancel_order(order, account):
                     return False
         return True
+    
+    def order_creation_faild(self, order_book_id, reason):
+        user_system_log.warn(reason)
+        self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, reason=reason))
 
     def get_universe(self):
         return self._universe.get()
@@ -182,7 +189,7 @@ class Environment(object):
         self.calendar_dt = calendar_dt
         self.trading_dt = trading_dt
 
-    def can_submit_order(self, order):
+    def can_submit_order(self, order: 'Order') -> bool:
         # forward compatible
         instrument_type = self.data_proxy.instrument(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
@@ -190,7 +197,7 @@ class Environment(object):
             try:
                 reason = v.validate_submission(order, account)
                 if reason:
-                    self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order.order_book_id, reason=reason))
+                    self.order_creation_faild(order_book_id=order.order_book_id, reason=reason)
                     return False
             except NotImplementedError:
                 # 避免由于某些 mod 版本未更新，Validator method 未修改

@@ -34,7 +34,6 @@ class IsTradingValidator(AbstractFrontendValidator):
         if instrument.type != INSTRUMENT_TYPE.INDX and not instrument.listing_at(self._env.trading_dt):
             reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(
                 order_book_id=order.order_book_id)
-            user_system_log.warn(reason)
             return reason
 
         if instrument.type == 'CS' and self._env.data_proxy.is_suspended(order.order_book_id, self._env.trading_dt):
@@ -42,7 +41,6 @@ class IsTradingValidator(AbstractFrontendValidator):
                 order_book_id=order.order_book_id,
                 date=self._env.trading_dt.date()
             )
-            user_system_log.warn(reason)
             return reason
 
         return None

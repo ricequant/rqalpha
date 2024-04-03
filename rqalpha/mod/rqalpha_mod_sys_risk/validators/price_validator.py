@@ -41,7 +41,6 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_price=order.price,
                 limit_up=limit_up
             )
-            user_system_log.warn(reason)
             return reason
 
         limit_down = round(self._env.price_board.get_limit_down(order.order_book_id), 4)
@@ -54,7 +53,6 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_price=order.price,
                 limit_down=limit_down
             )
-            user_system_log.warn(reason)
             return reason
         return None
 
