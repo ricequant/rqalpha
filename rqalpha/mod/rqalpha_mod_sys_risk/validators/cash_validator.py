@@ -49,8 +49,4 @@ class CashValidator(AbstractFrontendValidator):
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return None
-        reason = validate_cash(self._env, order, account.cash)
-        if reason:
-            return reason
-        else:
-            return None
+        return validate_cash(self._env, order, account.cash)

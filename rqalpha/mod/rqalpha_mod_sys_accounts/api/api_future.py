@@ -35,7 +35,6 @@ from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.arg_checker import apply_rules, verify_that
-from rqalpha.core.events import Event, EVENT
 
 
 __all__ = []
