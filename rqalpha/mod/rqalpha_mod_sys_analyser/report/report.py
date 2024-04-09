@@ -21,7 +21,7 @@ import datetime
 
 import numpy
 import pandas
-from collections import ChainMap
+from collections import ChainMap, defaultdict
 from pandas import Series, DataFrame
 
 from rqrisk import Risk
@@ -32,6 +32,14 @@ from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
 from rqalpha.mod.rqalpha_mod_sys_analyser.report.excel_template import generate_xlsx_reports
 
 
+PRESSURE_TEST_PERIOD = {
+    "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
+    "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
+    "行业风格切换": (datetime.date(2021, 9, 1), datetime.date(2021, 12, 31)),
+    "小盘踩踏危机": (datetime.date(2024, 1, 5), datetime.date(2024, 2, 8)),
+}
+
+
 def _returns(unit_net_value: Series):
     return (unit_net_value / unit_net_value.shift(1).fillna(1)).fillna(0) - 1
 
@@ -39,13 +47,7 @@ def _returns(unit_net_value: Series):
 def _yearly_indicators(
         p_nav: Series, p_returns: Series, b_nav: Optional[Series], b_returns: Optional[Series], risk_free_rates: Dict
 ):
-    data = {field: [] for field in [
-        "year", "returns", "benchmark_returns", "geometric_excess_return", "geometric_excess_drawdown",
-        "geometric_excess_drawdown_days", "excess_annual_volatility", "annual_volatility", "sharpe_ratio",
-        "excess_sharpe",
-        "information_ratio", "annual_tracking_error", "weekly_excess_win_rate", "monthly_excess_win_rate",
-        "max_drawdown", "max_drawdown_days"
-    ]}
+    data = defaultdict(list)
 
     for year, p_year_returns in p_returns.groupby(p_returns.index.year):  # noqa
         year_slice = p_returns.index.year == year  # noqa
@@ -120,35 +122,28 @@ def _pressure_test(
         p_nav: Series, p_returns: Series, b_nav: Optional[Series], b_returns: Optional[Series]
     ):
     env = Environment.get_instance()
-    if env.config.base.start_date > datetime.date(2024, 2, 8) or env.config.base.end_date < datetime.date(2016, 11, 1):
-        return None
-    data = {field: [] for field in [
-        "title", "start_date", "end_date", "returns", "annual_return", "geometric_excess_return", "max_drawdown",
-        "geometric_excess_drawdown", "sharpe", "excess_sharpe"
-    ]}
+    # data = {field: [] for field in [
+    #     "title", "start_date", "end_date", "returns", "annual_return", "geometric_excess_return", "max_drawdown",
+    #     "geometric_excess_drawdown", "sharpe", "excess_sharpe"
+    # ]}
+    data = defaultdict(list)
     
-    pressure_test_period = {
-        "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
-        "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
-        "行业风格切换": (datetime.date(2021, 9, 1), datetime.date(2021, 12, 31)),
-        "小盘踩踏危机": (datetime.date(2024, 1, 5), datetime.date(2024, 2, 8)),
-    }
-    for title, period in pressure_test_period.items():
-        p_period_returns = p_returns.loc[period[0]: period[1]]
+    for title, (start, end) in PRESSURE_TEST_PERIOD.items():
+        p_period_returns = p_returns.loc[start: end]
         if (p_period_returns is None or p_period_returns.empty):
             continue
         # 当且仅当回测周期完整包含压力测试的一个区间时才展示该区间的表现
-        if len(p_period_returns) != len(env.data_proxy.get_trading_dates(period[0], period[1])):
+        if len(p_period_returns) != len(env.data_proxy.get_trading_dates(start, end)):
             continue
         if b_nav is not None:
-            b_period_returns = b_returns.loc[period[0]: period[1]]
+            b_period_returns = b_returns.loc[start: end]
         else:
             b_period_returns = Series(index=p_period_returns.index)
-        risk_free_rate = env.data_proxy.get_risk_free_rate(period[0], period[1])
+        risk_free_rate = env.data_proxy.get_risk_free_rate(start, end)
         risk = Risk(p_period_returns, b_period_returns, risk_free_rate)
         data["title"].append(title)
-        data["start_date"].append(str(period[0]))
-        data["end_date"].append(str(period[1]))
+        data["start_date"].append(str(start))
+        data["end_date"].append(str(end))
         data["returns"].append(risk.return_rate)
         data["annual_return"].append(risk.annual_return)
         data["geometric_excess_return"].append(risk.geometric_excess_return)
