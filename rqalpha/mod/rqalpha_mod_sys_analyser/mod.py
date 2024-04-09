@@ -142,11 +142,19 @@ class AnalyserMod(AbstractMod):
                     raise RuntimeError(
                         _("benchmark {} not exists, please entry correct order_book_id").format(order_book_id)
                     )
-                if ins.listed_date.date() > _s or ins.de_listed_date.date() <= _e:
-                    raise RuntimeError(
-                        _("benchmark {} listed date {} > backtest start date {} or de_listed date {} <= backtest end "
-                          "date {}").format(order_book_id, ins.listed_date.date(), _s, ins.de_listed_date.date(), _e)
-                    )
+                if ins.type == INSTRUMENT_TYPE.INDX:
+                    available_s, available_e = self._env.data_proxy.get_index_available_data_range(ins)
+                    if available_s > _s or available_e <= _e:
+                        raise RuntimeError(
+                            _("benchmark {} available data start date {} > backtest start date {} or end date {} <= backtest end "
+                          "date {}").format(order_book_id, available_s, _s, available_e, _e)
+                        )
+                else:
+                    if ins.listed_date.date() > _s or ins.de_listed_date.date() <= _e:
+                        raise RuntimeError(
+                            _("benchmark {} listed date {} > backtest start date {} or de_listed date {} <= backtest end "
+                              "date {}").format(order_book_id, ins.listed_date.date(), _s, ins.de_listed_date.date(), _e)
+                        )
 
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)

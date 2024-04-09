@@ -510,6 +510,17 @@ class AbstractDataSource(object):
         # type: (Union[str, Instrument], int, int, datetime) -> Optional[numpy.void]
         # 格式: (date, VWAP, TWAP, volume) -> 案例 (20200102, 16.79877183, 16.83271429, 144356044)
         raise NotImplementedError
+    
+    def get_index_available_data_range(self, instrument):
+        """
+        获取指数行情可用数据区间（指数上市前也可能存在行情）
+
+        :param instrument: 合约对象
+        :type instrument: :class:`~Instrument`
+
+        :return: (earliest, latest)
+        """
+        raise NotImplementedError
 
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):
