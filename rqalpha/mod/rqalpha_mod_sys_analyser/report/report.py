@@ -17,6 +17,7 @@
 
 import os
 from typing import Dict, Optional
+import datetime
 
 import numpy
 import pandas
@@ -25,6 +26,7 @@ from pandas import Series, DataFrame
 
 from rqrisk import Risk
 from rqrisk import WEEKLY, MONTHLY
+from rqalpha.environment import Environment
 
 from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
 from rqalpha.mod.rqalpha_mod_sys_analyser.report.excel_template import generate_xlsx_reports
@@ -114,6 +116,51 @@ def _gen_positions_weight(df):
     return df.reset_index().rename(columns=rename).to_dict(orient="list")
 
 
+def _pressure_test(
+        p_nav: Series, p_returns: Series, b_nav: Optional[Series], b_returns: Optional[Series]
+    ):
+    env = Environment.get_instance()
+    if env.config.base.start_date > datetime.date(2024, 2, 8) or env.config.base.end_date < datetime.date(2016, 11, 1):
+        return None
+    data = {field: [] for field in [
+        "title", "start_date", "end_date", "returns", "annual_return", "geometric_excess_return", "max_drawdown",
+        "geometric_excess_drawdown", "sharpe", "excess_sharpe"
+    ]}
+    
+    pressure_test_period = {
+        "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
+        "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
+        "行业风格切换": (datetime.date(2021, 9, 1), datetime.date(2021, 12, 31)),
+        "小盘踩踏危机": (datetime.date(2024, 1, 5), datetime.date(2024, 2, 8)),
+    }
+    for title, period in pressure_test_period.items():
+        p_period_returns = p_returns.loc[period[0]: period[1]]
+        if (p_period_returns is None or p_period_returns.empty):
+            continue
+        # 当且仅当回测周期完整包含压力测试的一个区间时才展示该区间的表现
+        if len(p_period_returns) != len(env.data_proxy.get_trading_dates(period[0], period[1])):
+            continue
+        if b_nav is not None:
+            b_period_returns = b_returns.loc[period[0]: period[1]]
+        else:
+            b_period_returns = Series(index=p_period_returns.index)
+        risk_free_rate = env.data_proxy.get_risk_free_rate(period[0], period[1])
+        risk = Risk(p_period_returns, b_period_returns, risk_free_rate)
+        data["title"].append(title)
+        data["start_date"].append(str(period[0]))
+        data["end_date"].append(str(period[1]))
+        data["returns"].append(risk.return_rate)
+        data["annual_return"].append(risk.annual_return)
+        data["geometric_excess_return"].append(risk.geometric_excess_return)
+        data["max_drawdown"].append(risk.max_drawdown)
+        data["geometric_excess_drawdown"].append(risk.geometric_excess_drawdown)
+        data["sharpe"].append(risk.sharpe)
+        data["excess_sharpe"].append(risk.excess_sharpe)
+    if not data["title"]:
+        return None
+    return data
+
+
 def generate_report(result_dict, output_path):
     from six import StringIO
 
@@ -138,6 +185,7 @@ def generate_report(result_dict, output_path):
         "月度收益": _monthly_returns(p_returns),
         "月度超额收益（几何）": _monthly_geometric_excess_returns(p_returns, b_returns),
         "个股权重": _gen_positions_weight(result_dict["positions_weight"]),
+        "压力测试": _pressure_test(p_nav, p_returns, b_nav, b_returns),
     }, output_path)
 
     for name in ["portfolio", "stock_account", "future_account",
