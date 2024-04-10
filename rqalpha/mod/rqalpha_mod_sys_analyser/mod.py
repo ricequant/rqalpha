@@ -33,6 +33,7 @@ from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils.datetime_func import convert_int_to_date
 from rqalpha.utils.logger import user_system_log
 from rqalpha.const import DAYS_CNT
 from rqalpha.api import export_as_api
@@ -131,31 +132,46 @@ class AnalyserMod(AbstractMod):
                 daily_return_list.append((bar.close / bar.prev_close - 1.0, benchmark[1]))
             weights += benchmark[1]
         return sum([daily[0] * daily[1] / weights for daily in daily_return_list])
+    
+    def get_benchmark_all_daily_returns(self, event):
+        if self._benchmark is None:
+            return np.nan
+        _s = self._env.config.base.start_date
+        _e = self._env.config.base.end_date
+        weights = 0
+        trading_dates = self._env.data_proxy.get_trading_dates(_s, _e)
+        self._benchmark_daily_returns = np.zeros(len(trading_dates))
+        for order_book_id, weight in self._benchmark:
+            ins = self._env.data_proxy.instrument(order_book_id)
+            if ins is None:
+                raise RuntimeError(
+                    _("benchmark {} not exists, please entry correct order_book_id").format(order_book_id)
+                )
+            bars = self._env.data_proxy.history_bars(
+                order_book_id = order_book_id,
+                bar_count = len(trading_dates),
+                frequency = "1d",
+                field = ["datetime", "close", "prev_close"],
+                dt = _e,
+            )
+            if len(bars) == len(trading_dates):
+                daily_returns = np.nan_to_num(bars['close'] / bars['prev_close'] - 1.0)
+                self._benchmark_daily_returns = self._benchmark_daily_returns + daily_returns * weight
+                weights += weight
+            else:
+                if len(bars) == 0:
+                    (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
+                else:
+                    (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']), convert_int_to_date(bars[-1]['datetime']))
+                raise RuntimeError(
+                    _("benchmark {} available data start date {} > backtest start date {} or end date {} <= backtest end "
+                    "date {}").format(order_book_id, available_s, _s, available_e, _e)
+                )
+        self._benchmark_daily_returns = list(self._benchmark_daily_returns / weights)
 
     def _subscribe_events(self, event):
         if self._benchmark:
-            _s = self._env.config.base.start_date
-            _e = self._env.config.base.end_date
-            for order_book_id, weight in self._benchmark:
-                ins = self._env.data_proxy.instrument(order_book_id)
-                if ins is None:
-                    raise RuntimeError(
-                        _("benchmark {} not exists, please entry correct order_book_id").format(order_book_id)
-                    )
-                if ins.type == INSTRUMENT_TYPE.INDX:
-                    available_s, available_e = self._env.data_proxy.get_index_available_data_range(ins)
-                    if available_s > _s or available_e <= _e:
-                        raise RuntimeError(
-                            _("benchmark {} available data start date {} > backtest start date {} or end date {} <= backtest end "
-                          "date {}").format(order_book_id, available_s, _s, available_e, _e)
-                        )
-                else:
-                    if ins.listed_date.date() > _s or ins.de_listed_date.date() <= _e:
-                        raise RuntimeError(
-                            _("benchmark {} listed date {} > backtest start date {} or de_listed date {} <= backtest end "
-                              "date {}").format(order_book_id, ins.listed_date.date(), _s, ins.de_listed_date.date(), _e)
-                        )
-
+            self._env.event_bus.add_listener(EVENT.BEFORE_STRATEGY_RUN, self.get_benchmark_all_daily_returns)
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
@@ -172,7 +188,6 @@ class AnalyserMod(AbstractMod):
 
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
-        self._benchmark_daily_returns.append(self.get_benchmark_daily_returns())
         self._total_benchmark_portfolios.append({
             "date": date,
             "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod()
