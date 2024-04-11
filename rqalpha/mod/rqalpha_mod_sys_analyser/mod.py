@@ -154,8 +154,14 @@ class AnalyserMod(AbstractMod):
                 frequency = "1d",
                 field = ["datetime", "close", "prev_close"],
                 dt = _e,
+                skip_suspended=False,
+                adjust_type='none',
             )
             if len(bars) == len(trading_dates):
+                if convert_int_to_date(bars[0]['datetime']).date() != _s:
+                    raise RuntimeError(_(
+                        "benchmark {} missing data between backtest start date {} and end date {}").format(order_book_id, _s, _e)
+                    )
                 daily_returns = np.nan_to_num(bars['close'] / bars['prev_close'] - 1.0)
                 self._benchmark_daily_returns = self._benchmark_daily_returns + daily_returns * weight
                 weights += weight
@@ -170,8 +176,18 @@ class AnalyserMod(AbstractMod):
                 )
         self._benchmark_daily_returns = list(self._benchmark_daily_returns / weights)
 
+    def get_total_benchmark_portfolio(self, event):
+        benchmark_daily_return = np.array(self._benchmark_daily_returns)
+        trading_dates = self._env.data_proxy.get_trading_dates(self._env.config.base.start_date, self._env.config.base.end_date)
+        for idx, date in enumerate(trading_dates):
+            self._total_benchmark_portfolios.append({
+                "date": date.date(),
+                "unit_net_value": (benchmark_daily_return[: idx + 1] + 1).prod()
+            })
+
     def _subscribe_events(self, event):
         self._env.event_bus.add_listener(EVENT.BEFORE_STRATEGY_RUN, self.get_benchmark_all_daily_returns)
+        self._env.event_bus.add_listener(EVENT.BEFORE_STRATEGY_RUN, self.get_total_benchmark_portfolio)
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
@@ -188,10 +204,6 @@ class AnalyserMod(AbstractMod):
 
         self._portfolio_daily_returns.append(portfolio.daily_returns)
         self._total_portfolios.append(self._to_portfolio_record(date, portfolio))
-        self._total_benchmark_portfolios.append({
-            "date": date,
-            "unit_net_value": (np.array(self._benchmark_daily_returns) + 1).prod()
-        })
         self._daily_pnl.append(portfolio.daily_pnl)
 
         for account_type, account in self._env.portfolio.accounts.items():
