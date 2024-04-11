@@ -133,13 +133,15 @@ class AnalyserMod(AbstractMod):
             weights += benchmark[1]
         return sum([daily[0] * daily[1] / weights for daily in daily_return_list])
     
-    def get_benchmark_all_daily_returns(self, event):
+    def generate_benchmark_daily_returns_and_portfolio(self, event):
         _s = self._env.config.base.start_date
         _e = self._env.config.base.end_date
         trading_dates = self._env.data_proxy.get_trading_dates(_s, _e)
         if self._benchmark is None:
             self._benchmark_daily_returns = list(np.full(len(trading_dates), np.nan))
             return
+        
+        # generate benchmerk daily returns
         self._benchmark_daily_returns = np.zeros(len(trading_dates))
         weights = 0
         for order_book_id, weight in self._benchmark:
@@ -150,19 +152,18 @@ class AnalyserMod(AbstractMod):
                 )
             bars = self._env.data_proxy.history_bars(
                 order_book_id = order_book_id,
-                bar_count = len(trading_dates),
+                bar_count = len(trading_dates) + 1,  # Get an extra day for calculation
                 frequency = "1d",
-                field = ["datetime", "close", "prev_close"],
+                field = ["datetime", "close"],
                 dt = _e,
                 skip_suspended=False,
-                adjust_type='none',
             )
-            if len(bars) == len(trading_dates):
-                if convert_int_to_date(bars[0]['datetime']).date() != _s:
+            if len(bars) == len(trading_dates) + 1:
+                if convert_int_to_date(bars[1]['datetime']).date() != _s:
                     raise RuntimeError(_(
                         "benchmark {} missing data between backtest start date {} and end date {}").format(order_book_id, _s, _e)
                     )
-                daily_returns = np.nan_to_num(bars['close'] / bars['prev_close'] - 1.0)
+                daily_returns = (bars['close'] / np.roll(bars['close'], 1) - 1.0)[1: ]
                 self._benchmark_daily_returns = self._benchmark_daily_returns + daily_returns * weight
                 weights += weight
             else:
@@ -174,20 +175,17 @@ class AnalyserMod(AbstractMod):
                     _("benchmark {} available data start date {} > backtest start date {} or end date {} <= backtest end "
                     "date {}").format(order_book_id, available_s, _s, available_e, _e)
                 )
-        self._benchmark_daily_returns = list(self._benchmark_daily_returns / weights)
-
-    def get_total_benchmark_portfolio(self, event):
-        benchmark_daily_return = np.array(self._benchmark_daily_returns)
-        trading_dates = self._env.data_proxy.get_trading_dates(self._env.config.base.start_date, self._env.config.base.end_date)
-        for idx, date in enumerate(trading_dates):
-            self._total_benchmark_portfolios.append({
-                "date": date.date(),
-                "unit_net_value": (benchmark_daily_return[: idx + 1] + 1).prod()
-            })
+        self._benchmark_daily_returns = self._benchmark_daily_returns / weight
+        
+        # generate benchmark portfolio
+        unit_net_value = (self._benchmark_daily_returns + 1).cumprod()
+        self._total_benchmark_portfolios = {
+            "date": trading_dates,
+            "unit_net_value": unit_net_value
+        }
 
     def _subscribe_events(self, event):
-        self._env.event_bus.add_listener(EVENT.BEFORE_STRATEGY_RUN, self.get_benchmark_all_daily_returns)
-        self._env.event_bus.add_listener(EVENT.BEFORE_STRATEGY_RUN, self.get_total_benchmark_portfolio)
+        self._env.event_bus.add_listener(EVENT.BEFORE_STRATEGY_RUN, self.generate_benchmark_daily_returns_and_portfolio)
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
