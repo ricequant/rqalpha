@@ -405,8 +405,3 @@ class BaseDataSource(AbstractDataSource):
         # type: (Instrument, datetime.datetime) -> float
         volume = self.get_open_auction_bar(instrument, dt)['volume']
         return volume
-    
-    def get_index_available_data_range(self, instrument: Instrument) -> Optional[tuple]:
-        if instrument.type == INSTRUMENT_TYPE.INDX:
-            s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range(instrument.order_book_id)
-            return convert_int_to_date(s).date(), convert_int_to_date(e).date()
