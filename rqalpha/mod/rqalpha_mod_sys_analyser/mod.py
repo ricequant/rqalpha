@@ -170,9 +170,9 @@ class AnalyserMod(AbstractMod):
                 if len(bars) == 0:
                     (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
                 else:
-                    (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']), convert_int_to_date(bars[-1]['datetime']))
+                    (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']).date(), convert_int_to_date(bars[-1]['datetime']).date())
                 raise RuntimeError(
-                    _("benchmark {} available data start date {} > backtest start date {} or end date {} <= backtest end "
+                    _("benchmark {} available data start date {} >= backtest start date {} or end date {} <= backtest end "
                     "date {}").format(order_book_id, available_s, _s, available_e, _e)
                 )
         self._benchmark_daily_returns = self._benchmark_daily_returns / weight
