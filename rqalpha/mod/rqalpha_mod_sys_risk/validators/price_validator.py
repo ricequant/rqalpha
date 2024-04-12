@@ -11,10 +11,12 @@
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-
+from typing import Optional
 
 from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import ORDER_TYPE, POSITION_EFFECT
+from rqalpha.model.order import Order
+from rqalpha.portfolio.account import Account
 from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
@@ -23,11 +25,11 @@ from rqalpha.utils.i18n import gettext as _
 class PriceValidator(AbstractFrontendValidator):
     def __init__(self, env):
         self._env = env
-
-    def can_submit_order(self, order, account=None):
+    
+    def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (order.type != ORDER_TYPE.LIMIT) or (order.position_effect == POSITION_EFFECT.EXERCISE):
-            return True
-
+            return None
+        
         # FIXME: it may be better to round price in data source
         limit_up = round(self._env.price_board.get_limit_up(order.order_book_id), 4)
         if order.price > limit_up:
@@ -39,8 +41,7 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_price=order.price,
                 limit_up=limit_up
             )
-            user_system_log.warn(reason)
-            return False
+            return reason
 
         limit_down = round(self._env.price_board.get_limit_down(order.order_book_id), 4)
         if order.price < limit_down:
@@ -52,10 +53,8 @@ class PriceValidator(AbstractFrontendValidator):
                 limit_price=order.price,
                 limit_down=limit_down
             )
-            user_system_log.warn(reason)
-            return False
+            return reason
+        return None
 
-        return True
-
-    def can_cancel_order(self, order, account=None):
-        return True
+    def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
+        return None
