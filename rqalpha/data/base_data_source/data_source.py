@@ -42,7 +42,7 @@ from rqalpha.data.base_data_source.storages import (DateSet, DayBarStore, Divide
                        ExchangeTradingCalendarStore, FutureDayBarStore,
                        FutureInfoStore, FuturesTradingParametersStore,InstrumentStore,
                        ShareTransformationStore, SimpleFactorStore,
-                       YieldCurveStore)
+                       YieldCurveStore, FuturesTradingParameters)
 
 
 BAR_RESAMPLE_FIELD_METHODS = {

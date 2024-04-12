@@ -326,5 +326,3 @@ class DataProxy(TradingDatesMixin):
             return np.nan, 0
         bar = self._data_source.get_algo_bar(id_or_ins, order_style.start_min, order_style.end_min, dt)
         return (bar[order_style.TYPE], bar["volume"]) if bar else (np.nan, 0)
-
-
