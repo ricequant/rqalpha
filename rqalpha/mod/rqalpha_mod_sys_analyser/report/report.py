@@ -88,6 +88,8 @@ def _yearly_indicators(
         data["annual_volatility"].append(risk.annual_volatility)
         data["max_drawdown"].append(risk.max_drawdown)
         data["max_drawdown_days"].append((max_dd.end_date - max_dd.start_date).days)
+        data["alpha"].append(risk.alpha)
+        data["beta"].append(risk.beta)
     return data
 
 
