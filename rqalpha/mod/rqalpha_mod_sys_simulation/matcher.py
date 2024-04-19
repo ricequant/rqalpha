@@ -193,8 +193,17 @@ class DefaultBarMatcher(AbstractMatcher):
 
         if open_auction:
             price = deal_price
+            slippage_cost_money = 0
         else:
             price = self._slippage_decider.get_trade_price(order, deal_price)
+            slippage_cost_money = (price - deal_price) * fill
+            if order.side == SIDE.BUY and slippage_cost_money > account.cash:
+                reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+                    order_book_id=order_book_id,
+                    cost_money = slippage_cost_money + order.init_frozen_cash,
+                    cash = account.cash + order.init_frozen_cash)
+                order.mark_rejected(reason)
+                return
 
         trade = Trade.__from_create__(
             order_id=order.order_id,
@@ -208,6 +217,15 @@ class DefaultBarMatcher(AbstractMatcher):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
+        if order.side == SIDE.BUY and trade.transaction_cost > account.cash - slippage_cost_money:
+            reason = _(u"Order Cancelled: insufficient cash to cover transaction cost of order:{order_id},"
+                       " needs {transaction_cost:.2f}, available cash is {cash}").format(
+                           order_id=order.order_id,
+                           transaction_cost=trade.transaction_cost,
+                           cash=account.cash - slippage_cost_money
+                       )
+            order.mark_rejected(reason)
+            return
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
 
