@@ -43,12 +43,12 @@ def test_commission_multiplier():
 
     def handle_bar(context, bar_dict):
         if context.fixed:
-            stock_order = order_percent(context.s1, 0.9)
+            stock_order = order_percent(context.s1, 1)
             future_order = buy_open(context.s2, 1)
             env = Environment.get_instance()
             future_commission_info = env.data_proxy.get_futures_trading_parameters(context.s2, bar_dict.dt.date())
             context.fixed = False
-            assert abs(stock_order.transaction_cost - 16.66 * 53900 * 8 / 10000 * 2) < 0.00000001
+            assert stock_order.transaction_cost == 16.66 * 59900 * 8 / 10000 * 2
             assert future_order.transaction_cost == 7308 * 200 * future_commission_info.open_commission_ratio * 3
 
     return locals()

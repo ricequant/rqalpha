@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import datetime
 from collections import defaultdict
+from copy import copy
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
@@ -131,6 +132,24 @@ class DefaultBarMatcher(AbstractMatcher):
             if reason:
                 order.mark_rejected(reason)
             return
+        
+        if open_auction:
+            price = deal_price
+        else:
+            price = self._slippage_decider.get_trade_price(order, deal_price)
+            if order.side == SIDE.BUY and self._slippage_decider.decider.rate != 0:
+                # 标的经过滑点处理后，账户资金可能不够买入，需要进行验证
+                validate_order = copy(order)
+                validate_order.set_frozen_price(price)
+                cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
+                cost_money += self._env.get_order_transaction_cost(validate_order)
+                if cost_money > account.cash + order.init_frozen_cash:
+                    reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+                        order_book_id=order_book_id,
+                        cost_money = cost_money,
+                        cash = account.cash + order.init_frozen_cash)
+                    order.mark_rejected(reason)
+                    return
 
         price_board = self._env.price_board
         if order.type == ORDER_TYPE.LIMIT:
@@ -191,20 +210,6 @@ class DefaultBarMatcher(AbstractMatcher):
 
         ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
-        if open_auction:
-            price = deal_price
-            slippage_cost_money = 0
-        else:
-            price = self._slippage_decider.get_trade_price(order, deal_price)
-            slippage_cost_money = (price - deal_price) * fill
-            if order.side == SIDE.BUY and slippage_cost_money > account.cash:
-                reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-                    order_book_id=order_book_id,
-                    cost_money = slippage_cost_money + order.init_frozen_cash,
-                    cash = account.cash + order.init_frozen_cash)
-                order.mark_rejected(reason)
-                return
-
         trade = Trade.__from_create__(
             order_id=order.order_id,
             price=price,
@@ -217,15 +222,6 @@ class DefaultBarMatcher(AbstractMatcher):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
-        if order.side == SIDE.BUY and trade.transaction_cost > account.cash - slippage_cost_money:
-            reason = _(u"Order Cancelled: insufficient cash to cover transaction cost of order:{order_id},"
-                       " needs {transaction_cost:.2f}, available cash is {cash}").format(
-                           order_id=order.order_id,
-                           transaction_cost=trade.transaction_cost,
-                           cash=account.cash - slippage_cost_money
-                       )
-            order.mark_rejected(reason)
-            return
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
 

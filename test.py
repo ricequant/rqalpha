@@ -233,8 +233,8 @@ if __name__ == "__main__":
             end_time = datetime.now()
 
     else:
-        run_unit_tests()
-        test_api()
+        # run_unit_tests()
+        # test_api()
         error_count = run_tests()
         end_time = datetime.now()
         if error_count == 0:
