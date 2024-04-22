@@ -133,23 +133,6 @@ class DefaultBarMatcher(AbstractMatcher):
                 order.mark_rejected(reason)
             return
         
-        if open_auction:
-            price = deal_price
-        else:
-            price = self._slippage_decider.get_trade_price(order, deal_price)
-            if order.side == SIDE.BUY and self._slippage_decider.decider.rate != 0:
-                # 标的经过滑点处理后，账户资金可能不够买入，需要进行验证
-                validate_order = copy(order)
-                validate_order.set_frozen_price(price)
-                cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
-                cost_money += self._env.get_order_transaction_cost(validate_order)
-                if cost_money > account.cash + order.init_frozen_cash:
-                    reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-                        order_book_id=order_book_id, cost_money=cost_money, cash = account.cash + order.init_frozen_cash
-                        )
-                    order.mark_rejected(reason)
-                    return
-
         price_board = self._env.price_board
         if order.type == ORDER_TYPE.LIMIT:
             if order.side == SIDE.BUY and order.price < deal_price:
@@ -209,6 +192,11 @@ class DefaultBarMatcher(AbstractMatcher):
 
         ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
 
+        if open_auction:
+            price = deal_price
+        else:
+            price = self._slippage_decider.get_trade_price(order, deal_price)
+
         trade = Trade.__from_create__(
             order_id=order.order_id,
             price=price,
@@ -221,6 +209,18 @@ class DefaultBarMatcher(AbstractMatcher):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
+
+        if order.side == SIDE.BUY and self._slippage_decider.decider.rate != 0:
+            # 标的价格经过滑点处理后，账户资金可能不够买入，需要进行验证
+            cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
+            cost_money += trade.transaction_cost
+            if cost_money > account.cash + order.init_frozen_cash:
+                reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+                        order_book_id=order_book_id, cost_money=cost_money, cash = account.cash + order.init_frozen_cash
+                        )
+                order.mark_rejected(reason)
+                return
+
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
 
@@ -363,17 +363,6 @@ class DefaultTickMatcher(AbstractMatcher):
             price = deal_price
         else:
             price = self._slippage_decider.get_trade_price(order, deal_price)
-            if order.side == SIDE.BUY and self._slippage_decider.decider.rate != 0:
-                validate_order = copy(order)
-                validate_order.set_frozen_price(price)
-                cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
-                cost_money += self._env.get_order_transaction_cost(validate_order)
-                if cost_money > account.cash + order.init_frozen_cash:
-                    reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-                        order_book_id=order_book_id, cost_money=cost_money, cash=account.cash + order.init_frozen_cash
-                    )
-                    order.mark_rejected(reason)
-                    return
 
         price_board = self._env.price_board
         if order.type == ORDER_TYPE.LIMIT:
@@ -477,6 +466,17 @@ class DefaultTickMatcher(AbstractMatcher):
         )
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
+
+        if order.side == SIDE.BUY and self._slippage_decider.decider.rate != 0:
+            cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
+            cost_money += trade.transaction_cost
+            if cost_money > account.cash + order.init_frozen_cash:
+                reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+                        order_book_id=order_book_id, cost_money=cost_money, cash=account.cash + order.init_frozen_cash
+                    )
+                order.mark_rejected(reason)
+                return
+
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
 
