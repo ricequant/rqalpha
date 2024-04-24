@@ -347,7 +347,7 @@ class Account(metaclass=AccountMeta):
 
         # 如果期货结算结束时 cash 为负数，抛出提醒给到用户
         if self._type == "FUTURE" and self.cash < 0:
-            user_system_log.warn(_("Futures account's cash turns negative after settlement, please increase cash or adjust position"))
+            user_system_log.warn(_("Futures account's cash turns negative after settlement"))
 
         # 如果 total_value <= 0 则认为已爆仓，清空仓位，资金归0
         forced_liquidation = self._env.config.base.forced_liquidation

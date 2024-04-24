@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-04-24 11:54+0800\n"
+"POT-Creation-Date: 2024-04-24 13:56+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -896,9 +896,7 @@ msgid "Cash add {}. units {} become to {}"
 msgstr ""
 
 #: rqalpha/portfolio/account.py:350
-msgid ""
-"Futures account's cash turns negative after settlement, please increase "
-"cash or adjust position"
+msgid "Futures account's cash turns negative after settlement"
 msgstr ""
 
 #: rqalpha/portfolio/account.py:356
