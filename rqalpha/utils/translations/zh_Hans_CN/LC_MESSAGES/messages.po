@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-04-22 13:48+0800\n"
+"POT-Creation-Date: 2024-04-24 11:54+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -923,11 +923,17 @@ msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 msgid "Cash add {}. units {} become to {}"
 msgstr "入金{}元，份额由{}变动为{}"
 
-#: rqalpha/portfolio/account.py:352
+#: rqalpha/portfolio/account.py:350
+msgid ""
+"Futures account's cash turns negative after settlement, please increase "
+"cash or adjust position"
+msgstr "期货账户的现金在结算后变为负数，请增加现金或调整仓位"
+
+#: rqalpha/portfolio/account.py:356
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/account.py:502 rqalpha/portfolio/account.py:521
+#: rqalpha/portfolio/account.py:506 rqalpha/portfolio/account.py:525
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
 

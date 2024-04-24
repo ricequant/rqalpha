@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-04-22 13:48+0800\n"
+"POT-Creation-Date: 2024-04-24 11:54+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -895,11 +895,17 @@ msgstr ""
 msgid "Cash add {}. units {} become to {}"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:352
+#: rqalpha/portfolio/account.py:350
+msgid ""
+"Futures account's cash turns negative after settlement, please increase "
+"cash or adjust position"
+msgstr ""
+
+#: rqalpha/portfolio/account.py:356
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:502 rqalpha/portfolio/account.py:521
+#: rqalpha/portfolio/account.py:506 rqalpha/portfolio/account.py:525
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr ""
 
