@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-04-12 15:23+0800\n"
+"POT-Creation-Date: 2024-04-24 13:56+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -494,8 +494,8 @@ msgstr "基准标的 {} 在回测起始日期 {} 结束日期 {} 间缺失数据
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:175
 msgid ""
-"benchmark {} available data start date {} >= backtest start date {} or end"
-" date {} <= backtest end date {}"
+"benchmark {} available data start date {} >= backtest start date {} or "
+"end date {} <= backtest end date {}"
 msgstr "基准标的 {} 的可用行情数据开始日期 {} >= 回测起始日期 {} 或结束日期 {} <= 回测结束日期 {}"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:243
@@ -744,39 +744,46 @@ msgid ""
 "trade: [{}...]"
 msgstr "订单创建失败，当前存在可能导致自成交的挂单：[{}...]"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:118
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:335
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:119
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:348
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:69
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
 "listed date [{listed_date}]"
 msgstr "订单被撤销: [{order_book_id}] 上市首日无法交易"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:125
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:165
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:126
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:166
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:86
 msgid "Order Cancelled: {order_book_id} bar no volume"
 msgstr "订单被撤销：{order_book_id} 当前无成交量"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:150
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:151
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:95
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
 msgstr "订单被拒单: [{order_book_id}] 已涨停。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:156
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:157
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:104
 msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
 msgstr "订单被拒单: [{order_book_id}] 已跌停。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:178
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:417
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:567
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:179
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:436
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:591
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} due "
 "to volume limit"
 msgstr "订单被撤销: 订单 [{order_book_id}] 的下单量 {order_volume} 超过了成交量限制。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:217
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:218
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:474
+msgid ""
+"Order Cancelled: not enough money to buy {order_book_id}, needs "
+"{cost_money:.2f}, cash {cash:.2f}"
+msgstr "订单创建失败: 可用资金不足。当前资金: {cash:.2f}，{order_book_id} 下单所需资金: {cost_money:.2f}"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:230
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
 "larger than {volume_percent_limit} percent of current bar volume, fill "
@@ -785,26 +792,26 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:343
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:356
 msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:368
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:387
 msgid "Order Cancelled: current tick [{order_book_id}] reach the limit_up price."
 msgstr "订单被拒单: [{order_book_id}] 已涨停。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:374
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:393
 msgid ""
 "Order Cancelled: current tick [{order_book_id}] reach the limit_down "
 "price."
 msgstr "订单被拒单: [{order_book_id}] 已跌停。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:381
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:387
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:400
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:406
 msgid "Order Cancelled: [{order_book_id}] has no liquidity."
 msgstr "合约 [{order_book_id}] 流动性不足，拒单。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:462
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:486
 #, fuzzy
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
@@ -814,7 +821,7 @@ msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Tick 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:611
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:635
 msgid ""
 "Order Cancelled: market order {order_book_id} fill {filled_volume} "
 "actually"
@@ -916,11 +923,15 @@ msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 msgid "Cash add {}. units {} become to {}"
 msgstr "入金{}元，份额由{}变动为{}"
 
-#: rqalpha/portfolio/account.py:352
+#: rqalpha/portfolio/account.py:350
+msgid "Futures account's cash turns negative after settlement"
+msgstr "期货账户的现金在结算后变为负数"
+
+#: rqalpha/portfolio/account.py:356
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/account.py:502 rqalpha/portfolio/account.py:521
+#: rqalpha/portfolio/account.py:506 rqalpha/portfolio/account.py:525
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
 
