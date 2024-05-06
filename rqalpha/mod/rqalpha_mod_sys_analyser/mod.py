@@ -82,15 +82,13 @@ class AnalyserMod(AbstractMod):
             'positions': self._positions,
             'orders': self._orders,
             'trades': self._trades,
-            'daily_pnl': self._daily_pnl,
+            'daily_pnl': self._daily_pnl
         }).encode('utf-8')
 
     def set_state(self, state):
         value = jsonpickle.loads(state.decode('utf-8'))
-        self._benchmark_daily_returns = value['benchmark_daily_returns']
         self._portfolio_daily_returns = value["portfolio_daily_returns"]
         self._total_portfolios = value['total_portfolios']
-        self._total_benchmark_portfolios = value["total_benchmark_portfolios"]
         self._sub_accounts = value['sub_accounts']
         self._positions = value["positions"]
         self._orders = value['orders']
@@ -180,7 +178,7 @@ class AnalyserMod(AbstractMod):
         # generate benchmark portfolio
         unit_net_value = (self._benchmark_daily_returns + 1).cumprod()
         self._total_benchmark_portfolios = {
-            "date": trading_dates,
+            "date": list(trading_dates.date),
             "unit_net_value": unit_net_value
         }
 
