@@ -679,7 +679,7 @@ class AutomaticUpdateBundle(object):
         start_date = START_DATE
         try:
             h5 = h5py.File(self._file, "a")
-            if order_book_id in h5:
+            if order_book_id in h5 and 'trading_dt' in h5[order_book_id].dtype.names:
                 if len(h5[order_book_id][:]) != 0:
                     last_date = datetime.datetime.strptime(str(h5[order_book_id][-1]['trading_dt']), "%Y%m%d").date()
                     if last_date >= self._end_date:
