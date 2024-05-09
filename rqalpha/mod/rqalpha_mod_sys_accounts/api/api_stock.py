@@ -94,7 +94,7 @@ def _get_order_style_price(order_book_id, style):
     raise RuntimeError(f"no support {style} order style")
 
 
-def _submit_order(ins, amount, side, position_effect, style, current_quantity, auto_switch_order_value):
+def _submit_order(ins, amount, side, position_effect, style, current_quantity, auto_switch_order_value, zero_amount_as_exception=True):
     env = Environment.get_instance()
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
@@ -109,8 +109,9 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
         amount = _round_order_quantity(ins, amount)
 
     if amount == 0:
-        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
-        env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
+        if zero_amount_as_exception:
+            reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+            env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if side == SIDE.BUY and auto_switch_order_value:
@@ -123,9 +124,9 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     return env.submit_order(order)
 
 
-def _order_shares(ins, amount, style, quantity, auto_switch_order_value):
+def _order_shares(ins, amount, style, quantity, auto_switch_order_value, zero_amount_as_exception=True):
     side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
-    return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value)
+    return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
 
 
 def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
@@ -161,7 +162,7 @@ def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exce
     if amount < 0:
         amount = max(amount, -position.closable)
 
-    return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False)
+    return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False, zero_amount_as_exception=zero_amount_as_exception)
 
 
 @order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
