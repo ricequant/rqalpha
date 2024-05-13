@@ -31,7 +31,8 @@ requirements = [
     'h5py',
     'matplotlib >=3.1.0',
     "openpyxl",
-    "methodtools"
+    "methodtools",
+    "filelock"
 ]
 
 if sys.version_info < (3, 5):
