@@ -92,6 +92,7 @@ class BaseDataSource(AbstractDataSource):
         self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
         instruments = []
         
+        env = Environment.get_instance()
         with open(_p('instruments.pk'), 'rb') as f:
             for i in pickle.load(f):
                 if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):
@@ -99,8 +100,8 @@ class BaseDataSource(AbstractDataSource):
                 instruments.append(Instrument(
                     i, 
                     lambda i: self._future_info_store.get_tick_size(i),
-                    lambda i, dt: self.get_futures_trading_parameters(i, dt).long_margin_ratio,
-                    lambda i, dt: self.get_futures_trading_parameters(i, dt).short_margin_ratio
+                    # lambda i, dt: env.data_proxy.get_futures_trading_parameters(i, dt).long_margin_ratio,
+                    # lambda i, dt: env.data_proxy.get_futures_trading_parameters(i, dt).short_margin_ratio
                     ))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))

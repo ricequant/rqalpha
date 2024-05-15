@@ -48,12 +48,9 @@ class Instrument(metaclass=PropertyReprMeta):
 
     __repr__ = property_repr
 
-    def __init__(self, dic, futures_tick_size_getter=None, futures_long_margin_ratio_getter=None, futures_short_margin_ratio_getter=None):
-        # type: (Dict, Optional[Callable[[Instrument], float]], Optional[Callable[[Instrument], float]], Optional[Callable[[Instrument], float]]) -> None
+    def __init__(self, dic: Dict, futures_tick_size_getter: Optional[Callable] = None, *args, **kwrags) -> None:
         self.__dict__ = copy.copy(dic)
         self._futures_tick_size_getter = futures_tick_size_getter
-        self._futures_long_margin_ratio_getter = futures_long_margin_ratio_getter
-        self._futures_short_margin_ratio_getter = futures_short_margin_ratio_getter
 
         if "listed_date" in dic:
             self.__dict__["listed_date"] = self._fix_date(dic["listed_date"])
@@ -446,20 +443,18 @@ class Instrument(metaclass=PropertyReprMeta):
             raise NotImplementedError
 
     @lru_cache(8)
-    def get_long_margin_ratio(self, dt):
-        # type: (datetime.date) -> float
+    def get_long_margin_ratio(self, dt: datetime.date) -> float:
         """
         获取多头保证金率（期货专用）
         """
-        return self._futures_long_margin_ratio_getter(self, dt)
+        return Environment.get_instance().data_proxy.get_futures_trading_parameters(self.order_book_id, dt).long_margin_ratio
 
     @lru_cache(8)
-    def get_short_margin_ratio(self, dt):
-        # type: (datetime.date) -> float
+    def get_short_margin_ratio(self, dt: datetime.date) -> float:
         """
         获取空头保证金率（期货专用）
         """
-        return self._futures_short_margin_ratio_getter(self, dt)
+        return Environment.get_instance().data_proxy.get_futures_trading_parameters(self.order_book_id, dt).short_margin_ratio
 
     def calc_cash_occupation(self, price, quantity, direction, dt):
         # type: (float, int, POSITION_DIRECTION, datetime.date) -> float
