@@ -490,7 +490,6 @@ class AutomaticUpdateBundle(object):
         try:
             with self._file_lock.acquire():
                 h5 = h5py.File(self._file, "a")
-<<<<<<< HEAD
                 if order_book_id in h5 and h5[order_book_id].dtype.names:
                     if 'trading_dt' in h5[order_book_id].dtype.names:
                         # 需要兼容此前的旧版数据，对字段名进行更新
@@ -504,17 +503,6 @@ class AutomaticUpdateBundle(object):
                     else:
                         del h5[order_book_id]
                 
-=======
-                if order_book_id in h5 and 'trading_dt' in h5[order_book_id].dtype.names:
-                    # 需要兼容此前的旧版数据，对字段名进行更新
-                    if len(h5[order_book_id][:]) != 0:
-                        last_date = datetime.datetime.strptime(str(h5[order_book_id][-1]['trading_dt']), "%Y%m%d").date()
-                        if last_date >= self._end_date:
-                            return
-                        start_date = self._env.data_proxy._data_source.get_next_trading_date(last_date).date()
-                        if start_date > self._end_date:
-                            return
->>>>>>> develop
                 arr = self._get_array(instrument, start_date)
                 if arr is None:
                     if order_book_id not in h5:
@@ -522,18 +510,9 @@ class AutomaticUpdateBundle(object):
                         h5.create_dataset(order_book_id, data=arr)
                 else:
                     if order_book_id in h5:
-<<<<<<< HEAD
                         data = np.array(
                             [tuple(i) for i in chain(h5[order_book_id][:], arr)],
                             dtype=h5[order_book_id].dtype)
-=======
-                        if 'trading_dt' in h5[order_book_id].dtype.names:
-                            data = np.array(
-                                [tuple(i) for i in chain(h5[order_book_id][:], arr)],
-                                dtype=h5[order_book_id].dtype)
-                        else:
-                            data = arr
->>>>>>> develop
                         del h5[order_book_id]
                         h5.create_dataset(order_book_id, data=data)
                     else:
