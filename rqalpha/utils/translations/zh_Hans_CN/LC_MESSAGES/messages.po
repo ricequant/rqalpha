@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-04-24 13:56+0800\n"
+"POT-Creation-Date: 2024-05-15 14:39+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -76,8 +76,8 @@ msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 #: rqalpha/apis/api_base.py:173
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:66
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:103
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:140
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:343
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:141
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:344
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
@@ -263,46 +263,18 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/bundle.py:460
-msgid ""
-"RQAlpha already supports backtesting using futures historical margins and"
-" rates, please upgrade RQDatac to version 2.11.12 and above to use it"
-msgstr "RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用"
-
-#: rqalpha/data/bundle.py:470 rqalpha/data/bundle.py:531
-msgid ""
-"Futures historical trading parameters data is being updated, please "
-"wait......"
-msgstr "正在更新期货历史交易参数，请稍后......"
-
-#: rqalpha/data/bundle.py:522 rqalpha/data/bundle.py:706
+#: rqalpha/data/bundle.py:522
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
 
-#: rqalpha/data/base_data_source/data_source.py:140
-msgid ""
-"RQDatac is not installed, "
-"\"config.base.futures_time_series_trading_parameters\" will be disabled."
-msgstr "未安装 RQDatac，将关闭配置 \"config.base.futures_time_series_trading_parameters\""
-
-#: rqalpha/data/base_data_source/data_source.py:145
-msgid ""
-"RQDatac does not have permission to obtain futures histrical trading "
-"parameters, \"config.base.futures_time_series_trading_parameters\" will "
-"be disabled."
-msgstr ""
-"RQDatac 缺少获取期货历史交易参数的权限，将关闭配置 "
-"\"config.base.futures_time_series_trading_parameters\""
-
 #: rqalpha/data/base_data_source/storages.py:81
 msgid ""
-"Your bundle data is too old, please use 'rqalpha update-bundle' or "
-"'rqalpha download-bundle' to update it to lastest before using"
+"The bundle data you are using is too old, please update it to lastest "
+"before using"
 msgstr ""
-"您的 Bundle 数据过旧，请使用 'rqalpha update-bundle' 或 'rqalpha download-bundle' "
-"将其更新至最新后再进行使用"
+"您所使用的 Bundle 数据过旧，请将其更新至最新后再进行使用"
 
 #: rqalpha/data/base_data_source/storages.py:97
 #: rqalpha/data/base_data_source/storages.py:124
@@ -357,8 +329,8 @@ msgid ""
 msgstr "订单创建失败：{order_book_id} 的仓位不足，目标平仓/行权量为 {quantity}，可平仓/行权量为 {closable}"
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:50
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:112
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:157
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:113
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:158
 msgid "Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
 msgstr "{order_book_id} 的订单创建失败：下单数量为 0"
 
@@ -391,11 +363,11 @@ msgid ""
 "again!"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:119
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:120
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr "现金不足，使用当前剩余资金({})创建订单"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:332
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:333
 #, fuzzy
 msgid ""
 "function order_target_portfolio: invalid keys of target_portfolio, "
@@ -404,29 +376,29 @@ msgstr ""
 "函数 order_target_portfolio：不合法的参数。target_portfolio 的键应为合约代码或 Instrument "
 "对象，实际传入了 {}（类型：{}）。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:337
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:338
 msgid ""
 "function order_target_portfolio: invalid instrument type, excepted "
 "CS/ETF/LOF/INDX, got {}"
 msgstr "函数 order_target_portfolio：不合法的资产类型。应传入股票、ETF、LOF 或指数，实际传入了 {}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:351
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:352
 msgid ""
 "function order_target_portfolio: invalid values of target_portfolio, "
 "excepted float between 0 and 1, got {} (key: {})"
 msgstr "函数 order_target_portfolio：不合法的目标权重，应传入 0 和 1 之间的浮点数，实际传入了 {}（类型：{}）。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:360
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:361
 msgid "total percent should be lower than 1, current: {}"
 msgstr "目标持仓占比总和应小于 1，当前值：{}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:380
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:381
 msgid ""
 "Adjust position of {id_or_ins} Failed: Invalid close/open price "
 "{close_price}/{open_price}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:693
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:694
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
@@ -478,31 +450,31 @@ msgstr ""
 msgid "[sys_analyser] Generate report from strategy output file"
 msgstr "【sys_analyser】使用策略输出的文件生成报告"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:113
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:111
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
 "instead"
 msgstr "配置'base.benchmark'已被弃用，使用'mod.sys_analyser.benchmark'代替"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:151
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:149
 msgid "benchmark {} not exists, please entry correct order_book_id"
 msgstr "基准标的 {} 信息不存在，请输入正确的标的代码"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:163
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:161
 msgid "benchmark {} missing data between backtest start date {} and end date {}"
 msgstr "基准标的 {} 在回测起始日期 {} 结束日期 {} 间缺失数据"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:175
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:173
 msgid ""
 "benchmark {} available data start date {} >= backtest start date {} or "
 "end date {} <= backtest end date {}"
 msgstr "基准标的 {} 的可用行情数据开始日期 {} >= 回测起始日期 {} 或结束日期 {} <= 回测结束日期 {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:243
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:241
 msgid "invalid init benchmark {}, should be in format 'order_book_id:weight'"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:248
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:246
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr ""
 
@@ -1582,4 +1554,33 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 #~ msgstr ""
 #~ "您的 RQData 账号没有权限使用期货历史保证金和费率，将使用固定的数据进行回测和计算\n"
 #~ "您可联系米筐科技开通相关权限：0755-26569969"
+
+#~ msgid ""
+#~ "RQAlpha already supports backtesting using "
+#~ "futures historical margins and rates, "
+#~ "please upgrade RQDatac to version "
+#~ "2.11.12 and above to use it"
+#~ msgstr "RQAlpha 已支持使用期货历史保证金和费率进行回测，请将 RQDatac 升级至 2.11.12 及以上版本进行使用"
+
+#~ msgid ""
+#~ "Futures historical trading parameters data "
+#~ "is being updated, please wait......"
+#~ msgstr "正在更新期货历史交易参数，请稍后......"
+
+#~ msgid ""
+#~ "RQDatac is not installed, "
+#~ "\"config.base.futures_time_series_trading_parameters\" will "
+#~ "be disabled."
+#~ msgstr ""
+#~ "未安装 RQDatac，将关闭配置 "
+#~ "\"config.base.futures_time_series_trading_parameters\""
+
+#~ msgid ""
+#~ "RQDatac does not have permission to "
+#~ "obtain futures histrical trading parameters,"
+#~ " \"config.base.futures_time_series_trading_parameters\" will"
+#~ " be disabled."
+#~ msgstr ""
+#~ "RQDatac 缺少获取期货历史交易参数的权限，将关闭配置 "
+#~ "\"config.base.futures_time_series_trading_parameters\""
 

@@ -118,7 +118,9 @@ def init_rqdatac(rqdatac_uri):
     except ImportError:
         return
 
-    if isinstance(rqdatac.client.get_client(), rqdatac.client.DummyClient):
+    if rqdatac.initialized():
+        return True
+    else:
         init_rqdatac_env(rqdatac_uri)
         try:
             rqdatac.init()
