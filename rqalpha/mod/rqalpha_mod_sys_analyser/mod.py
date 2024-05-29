@@ -570,7 +570,8 @@ class AnalyserMod(AbstractMod):
             _plot_template_cls = PLOT_TEMPLATE.get(self._mod_config.plot, DefaultPlot)
             plot_result(
                 result_dict, self._mod_config.plot, self._mod_config.plot_save_file,
-                plot_config.weekly_indicators, plot_config.open_close_points, _plot_template_cls, self._mod_config.strategy_name
+                plot_config.weekly_indicators, plot_config.open_close_points, _plot_template_cls, self._mod_config.strategy_name,
+                plot_config.log_scale
             )
 
         return result_dict

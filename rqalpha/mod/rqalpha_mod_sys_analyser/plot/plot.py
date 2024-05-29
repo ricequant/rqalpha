@@ -83,11 +83,13 @@ class ReturnPlot(SubPlot):
             self,
             returns,
             lines: List[Tuple[pd.Series, LineInfo]],
-            spots_on_returns: List[Tuple[Sequence[int], SpotInfo]]
+            spots_on_returns: List[Tuple[Sequence[int], SpotInfo]],
+            log_scale: bool
     ):
         self._returns = returns
         self._lines = lines
         self._spots_on_returns = spots_on_returns
+        self._log_scale = log_scale
 
     @classmethod
     def _plot_line(cls, ax, returns, info: LineInfo):
@@ -95,30 +97,40 @@ class ReturnPlot(SubPlot):
             ax.plot(returns, label=info.label, alpha=info.alpha, linewidth=info.linewidth, color=info.color)
 
     def _plot_spots_on_returns(self, ax, positions: Sequence[int], info: SpotInfo):
+        return_or_net_values = self._returns[positions] if not self._log_scale else 1 + self._returns[positions]
         ax.plot(
-            self._returns.index[positions], self._returns[positions],
+            self._returns.index[positions], return_or_net_values,
             info.marker, color=info.color, markersize=info.markersize, alpha=info.alpha, label=info.label
         )
 
     def plot(self, ax: Axes):
-        ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
-        ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
         ax.grid(visible=True, which='minor', linewidth=.2)
         ax.grid(visible=True, which='major', linewidth=1)
         ax.patch.set_alpha(0.6)
 
         # plot lines
         for returns, info in self._lines:
-            self._plot_line(ax, returns, info)
+            return_or_net_values = returns if not self._log_scale else 1 + returns
+            self._plot_line(ax, return_or_net_values, info)
         # plot MaxDD/MaxDDD
         for positions, info in self._spots_on_returns:
             self._plot_spots_on_returns(ax, positions, info)
 
         # place legend
         pyplot.legend(loc="best").get_frame().set_alpha(0.5)
+
         # manipulate axis
-        ax.set_yticks(ax.get_yticks())  # make matplotlib happy
-        ax.set_yticklabels(['{:3.2f}%'.format(x * 100) for x in ax.get_yticks()])
+        ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
+        ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
+        if self._log_scale:
+            ax.set_yscale('log')
+            ax.yaxis.set_major_locator(ticker.AutoLocator())
+            formatter = ticker.FuncFormatter(lambda x, _: '{:3.2f}%'.format((x - 1) * 100))
+            ax.yaxis.set_major_formatter(formatter)
+            ax.yaxis.set_minor_formatter(formatter)
+        else:
+            ax.set_yticks(ax.get_yticks())  # make matplotlib happy
+            ax.set_yticklabels(['{:3.2f}%'.format(x * 100) for x in ax.get_yticks()])
 
 
 class UserPlot(SubPlot):
@@ -184,7 +196,7 @@ def _plot(title: str, sub_plots: List[SubPlot], strategy_name):
 
 def plot_result(
         result_dict, show=True, save=None, weekly_indicators: bool = False, open_close_points: bool = False,
-        plot_template_cls=DefaultPlot, strategy_name=None
+        plot_template_cls=DefaultPlot, strategy_name=None, log_scale: bool = False
 ):
     summary = result_dict["summary"]
     portfolio = result_dict["portfolio"]
@@ -234,7 +246,7 @@ def plot_result(
         "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
         "excess_max_dd_ddd": ex_max_dd_ddd,
     }), plot_template, strategy_name), ReturnPlot(
-        portfolio.unit_net_value - 1, return_lines, spots_on_returns
+        portfolio.unit_net_value - 1, return_lines, spots_on_returns, log_scale
     )]
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))
