@@ -210,8 +210,8 @@ class StockPosition(Position):
         self._last_price /= ratio
         ratio = Decimal(ratio)
         # int(6000 * 1.15) -> 6899
-        self._old_quantity = self._quantity = int(Decimal(self._quantity) * ratio)
-        self._logical_old_quantity = int(Decimal(self._logical_old_quantity) * ratio)
+        self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio)
+        self._logical_old_quantity = round(Decimal(self._logical_old_quantity) * ratio)
 
 
 class FuturePosition(Position):
