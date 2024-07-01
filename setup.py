@@ -48,7 +48,8 @@ if sys.version_info.major == 2 and sys.version_info.minor == 7:
 
 setup(
     name='rqalpha',
-    version=versioneer.get_version(),
+    # remove .dirty in version
+    version=versioneer.get_version() if ".dirty" not in versioneer.get_version() else versioneer.get_version().split('.dirty')[0],
     cmdclass=versioneer.get_cmdclass(),
     description='Ricequant Algorithm Trading System',
     packages=find_packages(exclude=[]),
