@@ -170,14 +170,13 @@ def _plot(title: str, sub_plots: List[SubPlot], strategy_name):
     img_height = sum(s.height for s in sub_plots)
     water_mark = WaterMark(IMG_WIDTH, img_height, strategy_name)
     fig = pyplot.figure(title, figsize=(IMG_WIDTH, img_height), dpi=water_mark.dpi, clear=True)
-    water_mark.plot(fig)
 
     gs = gridspec.GridSpec(img_height, 8, figure=fig)
     last_height = 0
     for p in sub_plots:
         p.plot(pyplot.subplot(gs[last_height:last_height + p.height, :p.right_pad]))
         last_height += p.height
-
+        
     pyplot.tight_layout()
     return fig
 
@@ -253,3 +252,5 @@ def plot_result(
 
     if show:
         pyplot.show()
+    else:
+        pyplot.close()    
