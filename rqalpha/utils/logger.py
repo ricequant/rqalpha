@@ -14,7 +14,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import logbook
 from logbook import Logger, StderrHandler
-
+import logging
 logbook.set_datetime_format("local")
 
 
@@ -32,6 +32,35 @@ __all__ = [
 
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
+def configure_logger(
+    logger, 
+    level=logging.DEBUG, 
+    log_to_file=False, 
+    log_to_console=True, 
+    file_name='app_log.log'
+):
+    # Create a logger
+    logger.setLevel(level)
+    # Avoid adding handlers multiple times
+    if not logger.handlers:
+        # Create formatter
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        # Create handlers based on configuration
+        if log_to_file:
+            file_handler = logging.FileHandler(file_name)
+            file_handler.setLevel(level)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+
+        if log_to_console:
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(level)
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+
+    return logger
+
 
 def user_log_processor(record):
     from rqalpha.environment import Environment
@@ -39,30 +68,22 @@ def user_log_processor(record):
     if time is not None:
         record.time = time
 
-
-user_log_group = logbook.LoggerGroup(processor=user_log_processor)
-
-
 # loggers
 # 用户代码logger日志
-user_log = Logger("user_log")
+user_log = logging.getLogger("user_log")
 # 给用户看的系统日志
-user_system_log = Logger("user_system_log")
-
-user_log_group.add_logger(user_log)
-user_log_group.add_logger(user_system_log)
-
+user_system_log = logging.getLogger("user_system_log")
 # 系统日志
-system_log = Logger("system_log")
+system_log =  logging.getLogger("system_log")
 
 original_print = print
 
 
-def init_logger():
-    system_log.handlers = [StderrHandler(bubble=True)]
-    user_log.handlers = [StderrHandler(bubble=True)]
-    user_system_log.handlers = [StderrHandler(bubble=True)]
-
+def init_logger(level, log_to_file=False, log_to_console=True, file_name='app_log.log'):
+    _level = logging._nameToLevel[level.upper()]
+    configure_logger(logger=system_log, level = _level, log_to_file=log_to_file, log_to_console = log_to_console, file_name = file_name)
+    configure_logger(logger=user_log, level = _level, log_to_file=log_to_file, log_to_console = log_to_console, file_name = file_name)
+    configure_logger(logger=user_system_log, level = _level, log_to_file=log_to_file, log_to_console = log_to_console, file_name = file_name)
 
 def user_print(*args, **kwargs):
     sep = kwargs.get("sep", " ")
