@@ -301,14 +301,7 @@ def set_loggers(config):
     from rqalpha.utils.logger import init_logger
     from rqalpha.utils import logger
     extra_config = config.extra
-
-    init_logger()
-
-    for log in [system_log, user_system_log]:
-        log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
-
-    user_log.level = logbook.DEBUG
-
+    init_logger(level=extra_config.log_level, log_to_file = extra_config.log_to_file, log_to_console=extra_config.log_to_console, file_name = extra_config.log_file)
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())
 
