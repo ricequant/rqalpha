@@ -175,7 +175,7 @@ def order_percent(id_or_ins, percent, price_or_style=None, price=None, style=Non
     *common_rules
 )
 @instype_singledispatch
-def order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
+def order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None, allow_fraction_lot=False):
     # type: (Union[str, Instrument], float, TUPLE_PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
     """
     买入/卖出并且自动调整该证券的仓位到一个目标价值。

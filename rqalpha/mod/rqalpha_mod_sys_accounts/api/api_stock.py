@@ -56,6 +56,8 @@ export_as_api(industry_code, name='industry_code')
 export_as_api(sector_code, name='sector_code')
 
 KSH_MIN_AMOUNT = 200
+ROUND_LOT_PRECISION = 1e-10
+
 
 
 def _get_account_position_ins(id_or_ins):
@@ -70,12 +72,14 @@ def _get_account_position_ins(id_or_ins):
     return account, position, ins
 
 
-def _round_order_quantity(ins, quantity) -> int:
+def _round_order_quantity(ins, quantity, allow_fraction_lot = False) -> int:
     if ins.type == "CS" and ins.board_type == "KSH":
         # KSH can buy(sell) 201, 202 shares
         return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
     else:
         round_lot = ins.round_lot
+        if allow_fraction_lot:
+            round_lot = ROUND_LOT_PRECISION
         try:
             return int(Decimal(quantity) / Decimal(round_lot)) * round_lot
         except ValueError:
@@ -94,7 +98,7 @@ def _get_order_style_price(order_book_id, style):
     raise RuntimeError(f"no support {style} order style")
 
 
-def _submit_order(ins, amount, side, position_effect, style, current_quantity, auto_switch_order_value, zero_amount_as_exception=True):
+def _submit_order(ins, amount, side, position_effect, style, current_quantity, auto_switch_order_value, zero_amount_as_exception=True, allow_fraction_lot = False):
     env = Environment.get_instance()
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
@@ -106,7 +110,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
 
     if (side == SIDE.BUY and current_quantity != -amount) or (side == SIDE.SELL and current_quantity != abs(amount)):
         # 在融券回测中，需要用买单作为平空，对于此种情况下出现的碎股，亦允许一次性申报卖出
-        amount = _round_order_quantity(ins, amount)
+        amount = _round_order_quantity(ins, amount, allow_fraction_lot)
 
     if amount == 0:
         if zero_amount_as_exception:
@@ -124,12 +128,12 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     return env.submit_order(order)
 
 
-def _order_shares(ins, amount, style, quantity, auto_switch_order_value, zero_amount_as_exception=True):
+def _order_shares(ins, amount, style, quantity, auto_switch_order_value, zero_amount_as_exception=True, allow_fraction_lot = False):
     side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
-    return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
+    return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception, allow_fraction_lot)
 
 
-def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
+def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True, allow_fraction_lot = False):
     env = Environment.get_instance()
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)
@@ -144,8 +148,11 @@ def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exce
 
     amount = int(Decimal(cash_amount) / Decimal(price))
     round_lot = int(ins.round_lot)
+    if allow_fraction_lot:
+        amount = float(Decimal(cash_amount) / Decimal(price))
+        round_lot = ROUND_LOT_PRECISION
     if cash_amount > 0:
-        amount = _round_order_quantity(ins, amount)
+        amount = _round_order_quantity(ins, amount, allow_fraction_lot = allow_fraction_lot)
         while amount > 0:
             expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
                 ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
@@ -158,11 +165,10 @@ def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exce
                 reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
                 env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
             return
-
     if amount < 0:
         amount = max(amount, -position.closable)
 
-    return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False, zero_amount_as_exception=zero_amount_as_exception)
+    return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False, zero_amount_as_exception=zero_amount_as_exception, allow_fraction_lot = allow_fraction_lot)
 
 
 @order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
@@ -188,7 +194,7 @@ def stock_order_percent(id_or_ins, percent, price_or_style=None, price=None, sty
 
 
 @order_target_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
-def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
+def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None, allow_fraction_lot=False):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     if cash_amount == 0:
@@ -197,7 +203,7 @@ def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=
         )
     _delta = cash_amount - position.market_value
     _style = open_style if _delta > 0 else close_style
-    return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False)
+    return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False, allow_fraction_lot = allow_fraction_lot)
 
 
 @order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
