@@ -183,6 +183,10 @@ class Environment(object):
 
     def get_trade_tax(self, trade):
         return self._get_transaction_cost_decider(trade.order_book_id).get_trade_tax(trade)
+    
+    def get_stock_commission_and_tax(self) -> tuple[float, float]:
+        decider = self._transaction_cost_decider_dict[INSTRUMENT_TYPE.CS]
+        return decider.commission_rate, decider.tax_rate
 
     def get_trade_commission(self, trade):
         return self._get_transaction_cost_decider(trade.order_book_id).get_trade_commission(trade)
