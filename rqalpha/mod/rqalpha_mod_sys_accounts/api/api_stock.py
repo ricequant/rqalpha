@@ -359,15 +359,6 @@ def order_target_portfolio(
     total_percent = sum(p for p, *__ in target.values())
     if total_percent > 1 and not np.isclose(total_percent, 1):
         raise RQInvalidArgument(_("total percent should be lower than 1, current: {}").format(total_percent))
-    
-    cash_buffer = 1
-    if total_percent == 1:
-        # 在此处形成的订单不包含交易费用，需要预留一点余额以供交易费用使用
-        # 1 - (股票佣金 * 佣金倍率 + 印花税 * 印花税倍率)
-        commission_rate, tax_rate = env.get_stock_commission_and_tax()
-        commission_multiplier = env.config.mod.sys_transaction_cost.stock_commission_multiplier
-        tax_multiplier = env.config.mod.sys_transaction_cost.tax_multiplier
-        cash_buffer = 1 - (commission_rate * commission_multiplier + tax_rate * tax_multiplier)
 
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
 
@@ -381,7 +372,20 @@ def order_target_portfolio(
                 order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             ))
 
-    account_value = account.total_value * cash_buffer
+    account_value  = account.total_value
+    if total_percent == 1:
+        # 在此处形成的订单不包含交易费用，需要预留一点余额以供交易费用使用
+        commission_rate, tax_rate = env.get_stock_commission_and_tax()
+        commission_rate = env.config.mod.sys_transaction_cost.stock_commission_multiplier * commission_rate
+        tax_rate = env.config.mod.sys_transaction_cost.tax_multiplier * tax_rate
+        tax, commission = 0, 0
+        for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
+            current_value = current_quantities.get(order_book_id, 0) * last_price
+            change_value = target_percent * account_value - current_value
+            tax += abs(change_value) * tax_rate if change_value < 0 else 0
+            commission += max(change_value * commission_rate, env.config.mod.sys_transaction_cost.cn_stock_min_commission)
+        account_value = account_value - tax - commission
+
     close_orders, open_orders = [], []
     for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
         open_price = _get_order_style_price(order_book_id, open_style)
