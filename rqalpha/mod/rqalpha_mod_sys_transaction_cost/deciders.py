@@ -77,6 +77,9 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
         commission = self._get_order_commission(order.order_book_id, order.side, order.frozen_price, order.quantity)
         tax = self._get_tax(order.order_book_id, order.side, order.frozen_price * order.quantity)
         return tax + commission
+    
+    def get_transaction_cost_with_value(self, value: float, side: SIDE) -> float:
+        raise NotImplementedError
 
 
 class CNStockTransactionCostDecider(StockTransactionCostDecider):
@@ -98,6 +101,11 @@ class CNStockTransactionCostDecider(StockTransactionCostDecider):
             self.tax_rate = 0.001
         else:
             self.tax_rate = 0.0005
+
+    def get_transaction_cost_with_value(self, value: float, side: SIDE) -> float:
+        tax = value * self.tax_rate * self.tax_multiplier if side == SIDE.SELL else 0
+        commission = max(value * self.commission_rate * self.commission_multiplier, self.min_commission)
+        return tax + commission
 
 
 class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):

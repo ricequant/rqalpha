@@ -372,7 +372,16 @@ def order_target_portfolio(
                 order_book_id, quantity, SIDE.SELL, MarketOrder(), POSITION_EFFECT.CLOSE
             ))
 
-    account_value = account.total_value
+    account_value  = account.total_value
+    if total_percent == 1:
+        # 在此处形成的订单不包含交易费用，需要预留一点余额以供交易费用使用
+        estimate_transaction_cost = 0
+        for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
+            current_value = current_quantities.get(order_book_id, 0) * last_price
+            change_value = target_percent * account_value - current_value
+            estimate_transaction_cost += env.get_transaction_cost_with_value(change_value)
+        account_value = account_value - estimate_transaction_cost
+
     close_orders, open_orders = [], []
     for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
         open_price = _get_order_style_price(order_book_id, open_style)
