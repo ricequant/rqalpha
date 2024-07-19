@@ -186,7 +186,7 @@ class Environment(object):
     
     def get_stock_commission_and_tax(self):
         decider = self._transaction_cost_decider_dict[INSTRUMENT_TYPE.CS]
-        return decider.commission_rate, decider.tax_rate
+        return decider.commission_rate * decider.commission_multiplier, decider.tax_rate * decider.tax_multiplier
 
     def get_trade_commission(self, trade):
         return self._get_transaction_cost_decider(trade.order_book_id).get_trade_commission(trade)
