@@ -26,8 +26,10 @@ from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.const import SIDE
 if TYPE_CHECKING:
     from rqalpha.model.order import Order
+    
 
 
 class Environment(object):
@@ -184,9 +186,9 @@ class Environment(object):
     def get_trade_tax(self, trade):
         return self._get_transaction_cost_decider(trade.order_book_id).get_trade_tax(trade)
     
-    def get_stock_commission_and_tax(self):
-        decider = self._transaction_cost_decider_dict[INSTRUMENT_TYPE.CS]
-        return decider.commission_rate * decider.commission_multiplier, decider.tax_rate * decider.tax_multiplier
+    def get_transaction_cost_with_value(self, value: float) -> float:
+        side = SIDE.BUY if value >= 0 else SIDE.SELL
+        return self._transaction_cost_decider_dict[INSTRUMENT_TYPE.CS].get_transaction_cost_with_value(abs(value), side)
 
     def get_trade_commission(self, trade):
         return self._get_transaction_cost_decider(trade.order_book_id).get_trade_commission(trade)
