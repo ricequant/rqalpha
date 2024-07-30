@@ -18,7 +18,9 @@
 import datetime
 from decimal import Decimal, getcontext
 from itertools import chain
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple, Callable
+import math
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -70,14 +72,14 @@ def _get_account_position_ins(id_or_ins):
     return account, position, ins
 
 
-def _round_order_quantity(ins, quantity) -> int:
+def _round_order_quantity(ins, quantity, method: Callable = int) -> int:
     if ins.type == "CS" and ins.board_type == "KSH":
         # KSH can buy(sell) 201, 202 shares
         return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
     else:
         round_lot = ins.round_lot
         try:
-            return int(Decimal(quantity) / Decimal(round_lot)) * round_lot
+            return method(Decimal(quantity) / Decimal(round_lot)) * round_lot
         except ValueError:
             raise
 
@@ -383,6 +385,7 @@ def order_target_portfolio(
         account_value = account_value - estimate_transaction_cost
 
     close_orders, open_orders = [], []
+    waiting_to_buy = defaultdict()
     for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
         open_price = _get_order_style_price(order_book_id, open_style)
         close_price = _get_order_style_price(order_book_id, close_style)
@@ -392,23 +395,36 @@ def order_target_portfolio(
             )
             env.order_creation_failed(order_book_id=order_book_id, reason=reason)
             continue
-
         delta_quantity = (account_value * target_percent / close_price) - current_quantities.get(order_book_id, 0)
-        delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
+        delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity, method=round)
+        
+        # 优先生成卖单，以便计算出剩余现金，进行买单数量的计算
         if delta_quantity == 0:
             continue
         elif delta_quantity > 0:
-            quantity, side, position_effect = delta_quantity, SIDE.BUY, POSITION_EFFECT.OPEN
-            order_list = open_orders
-            target_style = open_style
+            waiting_to_buy[order_book_id] = (delta_quantity, POSITION_EFFECT.OPEN, open_style, last_price)
+            continue
         else:
             quantity, side, position_effect = abs(delta_quantity), SIDE.SELL, POSITION_EFFECT.CLOSE
-            order_list = close_orders
-            target_style = close_style
-        order = Order.__from_create__(order_book_id, quantity, side, target_style, position_effect)
-        if isinstance(target_style, MarketOrder):
+        order = Order.__from_create__(order_book_id, quantity, side, close_style, position_effect)
+        if isinstance(close_style, MarketOrder):
             order.set_frozen_price(last_price)
-        order_list.append(order)
+        close_orders.append(order)
+    
+    estimate_cash = account.cash + sum([o.quantity * o.frozen_price - env.get_order_transaction_cost(o) for o in close_orders])
+    for order_book_id, (delta_quantity, position_effect, open_style, last_price) in waiting_to_buy.items():
+        cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
+        if cost > estimate_cash:
+            delta_quantity = estimate_cash / last_price
+            delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
+            if delta_quantity == 0:
+                continue
+            cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
+        order = Order.__from_create__(order_book_id, delta_quantity, SIDE.BUY, open_style, position_effect)
+        if isinstance(open_style, MarketOrder):
+            order.set_frozen_price(last_price)
+        open_orders.append(order)
+        estimate_cash -= cost
 
     return list(env.submit_order(o) for o in chain(close_orders, open_orders))
 

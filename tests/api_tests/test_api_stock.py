@@ -162,8 +162,9 @@ def test_order_target_portfolio():
                 "000001.XSHE": 0.1,
                 "000004.XSHE": 0.2,
             })
-            assert get_position("000001.XSHE").quantity == 6900   # (1000000 * 0.1) / 14.37 = 6958.94
-            assert get_position("000004.XSHE").quantity == 10500  # (1000000 * 0.2) / 18.92 = 10570.82
+            # 开仓仓位在 rqalpha == 5.4.2 之后修改为四舍五入
+            assert get_position("000001.XSHE").quantity == 7000   # (1000000 * 0.1) / 14.37 = 6958.94
+            assert get_position("000004.XSHE").quantity == 10600  # (1000000 * 0.2) / 18.92 = 10570.82
         elif context.counter == 2:
             order_target_portfolio({
                 "000004.XSHE": 0.1,
@@ -175,7 +176,7 @@ def test_order_target_portfolio():
                 "600519.XSHG": (970, 980),
             })
             assert get_position("000001.XSHE").quantity == 0  # 清仓
-            assert get_position("000004.XSHE").quantity == 5600  # (993695.7496 * 0.1) / 18 = 5520.53
+            assert get_position("000004.XSHE").quantity == 5500  # (993695.7496 * 0.1) / 18 = 5520.53
             assert get_position("000005.XSHE").quantity == 68000  # (993695.7496 * 0.2) / 2.92 = 68061.35
             assert get_position("600519.XSHG").quantity == 0  # 970 低于 收盘价 无法买进
 
