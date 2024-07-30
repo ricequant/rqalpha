@@ -84,15 +84,14 @@ def _round_order_quantity(ins, quantity, method: str = "round_down") -> int:
     else:
         round_lot = ins.round_lot
         try:
-            match method:
-                case "round_down":
-                    return int(Decimal(quantity) / Decimal(round_lot)) * round_lot
-                case "round_up":
-                    return math.ceil(Decimal(quantity) / Decimal(round_lot)) * round_lot
-                case "round":
-                    return round(Decimal(quantity) / Decimal(round_lot)) * round_lot
-                case _:
-                    raise
+            if method == "round_down":
+                return int(Decimal(quantity) / Decimal(round_lot)) * round_lot
+            elif method == "round_up":
+                return math.ceil(Decimal(quantity) / Decimal(round_lot)) * round_lot
+            elif method == "round":
+                return round(Decimal(quantity) / Decimal(round_lot)) * round_lot
+            else:
+                raise RuntimeError("Rounding method only support 'round_down', 'round_up' and 'round'")
         except ValueError:
             raise
 
