@@ -413,20 +413,18 @@ def order_target_portfolio(
     
     estimate_cash = account.cash + sum([o.quantity * o.frozen_price - env.get_order_transaction_cost(o) for o in close_orders])
     for order_book_id, (delta_quantity, position_effect, open_style, last_price) in waiting_to_buy.items():
-        order_price = delta_quantity * last_price
-        transaction_cost = env.get_transaction_cost_with_value(order_price)
-        if order_price + transaction_cost > estimate_cash:
+        cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
+        if cost > estimate_cash:
             delta_quantity = estimate_cash / last_price
             delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
             if delta_quantity == 0:
                 continue
-            order_price = delta_quantity * last_price
-            transaction_cost = env.get_transaction_cost_with_value(order_price)
+            cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
         order = Order.__from_create__(order_book_id, delta_quantity, SIDE.BUY, open_style, position_effect)
         if isinstance(open_style, MarketOrder):
             order.set_frozen_price(last_price)
         open_orders.append(order)
-        estimate_cash -= order_price + transaction_cost
+        estimate_cash -= cost
 
     return list(env.submit_order(o) for o in chain(close_orders, open_orders))
 
