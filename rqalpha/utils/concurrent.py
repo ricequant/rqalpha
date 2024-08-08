@@ -11,6 +11,7 @@ from concurrent.futures.process import ProcessPoolExecutor, _ExceptionWithTraceb
 
 
 def _process_worker(call_queue, result_queue, progress_queue, initializer, initargs):
+    error = None
     if initializer is not None:
         try:
             initializer(*initargs)
@@ -26,7 +27,10 @@ def _process_worker(call_queue, result_queue, progress_queue, initializer, inita
             r = call_item.fn(*call_item.args, **call_item.kwargs)
             if isinstance(call_item.fn, ProgressedTask):
                 for step in r:
-                    progress_queue.put(step)
+                    if isinstance(step, int):
+                        progress_queue.put(step)
+                    elif isinstance(step, tuple): # 部分 task 报错时会返回一个 tuple
+                        error = step
                 r = None
             else:
                 progress_queue.put(1)
@@ -34,12 +38,15 @@ def _process_worker(call_queue, result_queue, progress_queue, initializer, inita
             exc = _ExceptionWithTraceback(e, e.__traceback__)
             result_queue.put(_ResultItem(call_item.work_id, exception=exc))
         else:
-            result_queue.put(_ResultItem(call_item.work_id, result=r))
+            if error:
+                result_queue.put(_ResultItem(call_item.work_id, result=error))
+                error = None
+            else:
+                result_queue.put(_ResultItem(call_item.work_id, result=r))
 
 
 class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
-    def __init__(self, max_workers=None, initializer=None, initargs=()):
-        # type: (Optional[int], Optional[Callable], Optional[Tuple]) -> None
+    def __init__(self, max_workers: Optional[int] = None, initializer: Optional[Callable] = None, initargs: Optional[tuple] = ()):
         super(ProgressedProcessPoolExecutor, self).__init__(max_workers)
         self._initializer = initializer
         self._initargs = initargs
@@ -102,10 +109,8 @@ class ProgressedProcessPoolExecutor(ProcessPoolExecutor):
 
 class ProgressedTask:
     @property
-    def total_steps(self):
-        # type: () -> int
+    def total_steps(self) -> int:
         raise NotImplementedError
 
-    def __call__(self, *args, **kwargs):
-        # type: (*Any, **Any) -> Generator
+    def __call__(self, *args: Any, **kwargs: Any) -> Generator:
         raise NotImplementedError

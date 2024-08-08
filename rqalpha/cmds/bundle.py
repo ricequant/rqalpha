@@ -66,7 +66,8 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
               help='rqdatac uri, eg user:password or tcp://user:password@ip:port')
 @click.option('--compression', default=False, type=click.BOOL, help='enable compression to reduce file size')
 @click.option('-c', '--concurrency', type=click.INT, default=1)
-def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
+@click.option("--error-log-file", "-ef", default=None, help="数据更新过程中错误信息的存储文件，默认为指定 bundle 目录下的 update_error.log")
+def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency, error_log_file):
     try:
         import rqdatac
     except ImportError:
@@ -89,7 +90,15 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
+    from rqalpha.data.bundle import push_errors_log as push_errors_log_
+    path = os.path.join(data_bundle_path, "bundle")
+    if not error_log_file:
+        error_log_file = os.path.join(path, "update_failed.log")
+    elif os.path.isdir(error_log_file):
+        error_log_file = os.path.join(error_log_file, "update_failed.log")
+    failed_msg = update_bundle_(path, False, compression, concurrency)
+    if failed_msg:
+        push_errors_log_(error_log_file, failed_msg)
 
 
 @cli.command(help=_("Download bundle (monthly updated)"))
