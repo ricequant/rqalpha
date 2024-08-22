@@ -31,6 +31,8 @@ from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.logger import init_logger, system_log
 from rqalpha.environment import Environment
 from rqalpha.model.instrument import Instrument
+import multiprocessing
+from multiprocessing.sharedctypes import Synchronized
 
 START_DATE = 20050104
 END_DATE = 29991231
@@ -354,11 +356,13 @@ class UpdateDayBarTask(DayBarTask):
         if need_recreate_h5:
             yield from GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
         else:
+            h5 = None
             try:
                 h5 = h5py.File(path, 'a')
             except OSError:
                 system_log.error("File {} update failed, if it is using, please update later, "
                                 "or you can delete then update again".format(path))
+                sval.value = 1
                 yield 1
             else:
                 is_futures = "futures" == os.path.basename(path).split(".")[0]
@@ -371,6 +375,7 @@ class UpdateDayBarTask(DayBarTask):
                         except OSError:
                             system_log.error("File {} update failed, if it is using, please update later, "
                                             "or you can delete then update again".format(path))
+                            sval.value = 1
                             yield 1
                             break
                         except ValueError:
@@ -400,19 +405,20 @@ class UpdateDayBarTask(DayBarTask):
                             h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
                     yield 1
             finally:
-                h5.close()
+                if h5:
+                    h5.close()
 
 
-def init_rqdatac_with_warnings_catch():
+def process_init(args: Optional[Synchronized] = None):
     import warnings
     with warnings.catch_warnings(record=True):
         # catch warning: rqdatac is already inited. Settings will be changed
         rqdatac.init()
-
-
-def process_init_func():
-    init_rqdatac_with_warnings_catch()
     init_logger()
+    # Initialize process shared variables
+    if args:
+        global sval
+        sval = args
 
 
 def update_bundle(path, create, enable_compression=False, concurrency=1):
@@ -440,14 +446,16 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
 
+    status_code = multiprocessing.Value("i", 0)
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=process_init_func
+            max_workers=concurrency, initializer=process_init, initargs=(status_code, )
     ) as executor:
         # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
         for func in gen_file_funcs:
             executor.submit(GenerateFileTask(func), path)
         for file, order_book_id, field in day_bar_args:
             executor.submit(_DayBarTask(order_book_id), os.path.join(path, file), field, **kwargs)
+    return status_code.value
 
 
 class AutomaticUpdateBundle(object):

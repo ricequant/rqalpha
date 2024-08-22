@@ -89,7 +89,7 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
+    return update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
 
 
 @cli.command(help=_("Download bundle (monthly updated)"))
