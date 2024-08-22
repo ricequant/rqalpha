@@ -19,6 +19,7 @@ import tempfile
 import time
 import datetime
 import dateutil
+import sys
 
 import click
 import requests
@@ -89,7 +90,9 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
+    status = update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
+    if status != 0:
+        sys.exit(status)
 
 
 @cli.command(help=_("Download bundle (monthly updated)"))
