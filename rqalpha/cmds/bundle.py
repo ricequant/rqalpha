@@ -90,9 +90,9 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
-    status = update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
-    if status != 0:
-        sys.exit(status)
+    succeed = update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
+    if not succeed:
+        sys.exit(1)
 
 
 @cli.command(help=_("Download bundle (monthly updated)"))
