@@ -210,7 +210,7 @@ class DefaultBarMatcher(AbstractMatcher):
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
 
-        if order.side == SIDE.BUY and self._slippage_decider.decider.rate != 0:
+        if order.position_effect == POSITION_EFFECT.OPEN and self._slippage_decider.decider.rate != 0:
             # 标的价格经过滑点处理后，账户资金可能不够买入，需要进行验证
             cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
             cost_money += trade.transaction_cost
@@ -467,7 +467,7 @@ class DefaultTickMatcher(AbstractMatcher):
         trade._commission = self._env.get_trade_commission(trade)
         trade._tax = self._env.get_trade_tax(trade)
 
-        if order.side == SIDE.BUY and self._slippage_decider.decider.rate != 0:
+        if order.position_effect == POSITION_EFFECT.OPEN and self._slippage_decider.decider.rate != 0:
             cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
             cost_money += trade.transaction_cost
             if cost_money > account.cash + order.init_frozen_cash:
