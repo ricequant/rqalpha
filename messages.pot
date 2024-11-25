@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-11-25 09:47+0800\n"
+"POT-Creation-Date: 2024-11-25 10:04+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -705,7 +705,7 @@ msgid ""
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:126
-msgid "Order Cancelled: {order_book_id} miss market data"
+msgid "Order Cancelled: {order_book_id} miss market data or bar no volume."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:151

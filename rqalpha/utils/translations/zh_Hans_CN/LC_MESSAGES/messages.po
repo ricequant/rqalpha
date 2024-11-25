@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-11-25 09:47+0800\n"
+"POT-Creation-Date: 2024-11-25 10:04+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -724,8 +724,8 @@ msgid ""
 msgstr "订单被撤销: [{order_book_id}] 上市首日无法交易"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:126
-msgid "Order Cancelled: {order_book_id} miss market data"
-msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
+msgid "Order Cancelled: {order_book_id} miss market data or bar no volume."
+msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据或无成交量。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:151
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:95
