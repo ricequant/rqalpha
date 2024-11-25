@@ -123,7 +123,7 @@ class DefaultBarMatcher(AbstractMatcher):
                     listed_date=listed_date,
                 )
             elif isinstance(order.style, ALGO_ORDER_STYLES):
-                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
+                reason = _(u"Order Cancelled: {order_book_id} miss market data or bar no volume.").format(order_book_id=order.order_book_id)
             else:
                 # 撮合的时候无行情数据也不需要撤单，等到有行情再撮合
                 reason = None
