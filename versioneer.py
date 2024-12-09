@@ -1665,13 +1665,9 @@ def render_pep440_ricequant(pieces):
     # # 如果是dev和master分支或者hotfix分支来的，或者是一个tag，那就用pep440的版本号，否则带上git commit id
     if tracking_branch in ["origin/develop", "origin/master"] or tracking_branch.startswith("origin/hotfix/") or pieces[
         "distance"] == 0:
-        if pieces["dirty"]:
-            rendered += ".dirty"
         return rendered
 
     rendered += "+%s" % format(pieces["short"])
-    if pieces["dirty"]:
-        rendered += ".dirty"
     return rendered
 
 
