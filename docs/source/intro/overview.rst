@@ -6,7 +6,7 @@
 
 .. _Ricequant: https://www.ricequant.com/algorithms
 .. _Ricequant 社区: https://www.ricequant.com/community
-.. _RQAlpha 文档: http://rqalpha.io
+.. _RQAlpha 文档: http://rqalpha.readthedocs.io
 .. _Ricequant 文档: https://www.ricequant.com/api/python/chn
 
 
