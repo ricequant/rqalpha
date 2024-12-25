@@ -100,8 +100,6 @@ class BaseDataSource(AbstractDataSource):
                 instruments.append(Instrument(
                     i, 
                     lambda i: self._future_info_store.get_tick_size(i),
-                    # lambda i, dt: env.data_proxy.get_futures_trading_parameters(i, dt).long_margin_ratio,
-                    # lambda i, dt: env.data_proxy.get_futures_trading_parameters(i, dt).short_margin_ratio
                     ))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))

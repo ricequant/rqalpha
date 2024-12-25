@@ -419,11 +419,11 @@ class UpdateDayBarTask(DayBarTask):
                     h5.close()
 
 
-def process_init(args: Optional[Synchronized] = None):
+def process_init(args: Optional[Synchronized] = None, enable_bjse: bool = False):
     import warnings
     with warnings.catch_warnings(record=True):
         # catch warning: rqdatac is already inited. Settings will be changed
-        rqdatac.init()
+        rqdatac.init(enable_bjse=enable_bjse)
     init_logger()
     # Initialize process shared variables
     if args:
@@ -431,7 +431,7 @@ def process_init(args: Optional[Synchronized] = None):
         sval = args
 
 
-def update_bundle(path, create, enable_compression=False, concurrency=1):
+def update_bundle(path, create, enable_compression=False, concurrency=1, enable_bjse: bool = False):
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
@@ -458,7 +458,7 @@ def update_bundle(path, create, enable_compression=False, concurrency=1):
 
     succeed = multiprocessing.Value(c_bool, True)
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=process_init, initargs=(succeed, )
+            max_workers=concurrency, initializer=process_init, initargs=(succeed, enable_bjse)
     ) as executor:
         # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
         for func in gen_file_funcs:
