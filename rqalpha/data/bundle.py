@@ -419,7 +419,8 @@ class UpdateDayBarTask(DayBarTask):
                     h5.close()
 
 
-def process_init(args: Optional[Synchronized] = None, kwargs = {}):
+def process_init(args: Optional[Synchronized] = None, kwargs = None):
+    kwargs = kwargs or {}
     import warnings
     with warnings.catch_warnings(record=True):
         # catch warning: rqdatac is already inited. Settings will be changed
