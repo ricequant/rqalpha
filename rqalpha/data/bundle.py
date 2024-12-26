@@ -419,11 +419,11 @@ class UpdateDayBarTask(DayBarTask):
                     h5.close()
 
 
-def process_init(args: Optional[Synchronized] = None, enable_bjse: bool = False):
+def process_init(args: Optional[Synchronized] = None, kwargs = {}):
     import warnings
     with warnings.catch_warnings(record=True):
         # catch warning: rqdatac is already inited. Settings will be changed
-        rqdatac.init(enable_bjse=enable_bjse)
+        rqdatac.init(**kwargs)
     init_logger()
     # Initialize process shared variables
     if args:
@@ -431,17 +431,13 @@ def process_init(args: Optional[Synchronized] = None, enable_bjse: bool = False)
         sval = args
 
 
-def update_bundle(path, create, enable_compression=False, concurrency=1, enable_bjse: bool = False):
+def update_bundle(path, create, enable_compression=False, concurrency=1, **kwargs):
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
         _DayBarTask = UpdateDayBarTask
 
     init_logger()
-    kwargs = {}
-    if enable_compression:
-        kwargs['compression'] = 9
-
     day_bar_args = (
         ("stocks.h5", rqdatac.all_instruments('CS').order_book_id.tolist(), STOCK_FIELDS),
         ("indexes.h5", rqdatac.all_instruments('INDX').order_book_id.tolist(), INDEX_FIELDS),
@@ -458,8 +454,11 @@ def update_bundle(path, create, enable_compression=False, concurrency=1, enable_
 
     succeed = multiprocessing.Value(c_bool, True)
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=process_init, initargs=(succeed, enable_bjse)
+            max_workers=concurrency, initializer=process_init, initargs=(succeed, kwargs)
     ) as executor:
+        kwargs = {}
+        if enable_compression:
+            kwargs['compression'] = 9
         # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
         for func in gen_file_funcs:
             executor.submit(GenerateFileTask(func), path)
