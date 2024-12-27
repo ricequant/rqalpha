@@ -117,7 +117,7 @@ class AnalyserMod(AbstractMod):
             self._plot_store = PlotStore(env)
             export_as_api(self._plot_store.plot)
     
-    NULL_OID = "null"
+    NULL_OID = {"null", "NULL"}
 
     def generate_benchmark_daily_returns_and_portfolio(self, event):
         _s = self._env.config.base.start_date
@@ -131,7 +131,7 @@ class AnalyserMod(AbstractMod):
         self._benchmark_daily_returns = np.zeros(len(trading_dates))
         weights = 0
         for order_book_id, weight in self._benchmark:
-            if order_book_id == self.NULL_OID:
+            if order_book_id in self.NULL_OID:
                 daily_returns = np.zeros(len(trading_dates))
             else:
                 ins = self._env.data_proxy.instrument(order_book_id)
@@ -353,7 +353,7 @@ class AnalyserMod(AbstractMod):
                 summary["benchmark_symbol"] = self._env.data_proxy.instrument(benchmark_obid).symbol
             else:
                 summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
-                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol if o != self.NULL_OID else 'null'}:{w}" for o, w in self._benchmark)
+                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol if o not in self.NULL_OID else 'null'}:{w}" for o, w in self._benchmark)
 
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
