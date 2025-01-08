@@ -201,6 +201,7 @@ class EXCHANGE(CustomEnum):
     CZCE = "CZCE"
     CFFEX = "CFFEX"
     SGEX = "SGEX"
+    BJSE = "BJSE"
 
 
 # noinspection PyPep8Naming

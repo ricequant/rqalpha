@@ -116,21 +116,9 @@ class AnalyserMod(AbstractMod):
 
             self._plot_store = PlotStore(env)
             export_as_api(self._plot_store.plot)
-
-    def get_benchmark_daily_returns(self):
-        if self._benchmark is None:
-            return np.nan
-        daily_return_list = []
-        weights = 0
-        for benchmark in self._benchmark:
-            bar = self._env.data_proxy.get_bar(benchmark[0], self._env.calendar_dt, '1d')
-            if bar.close != bar.close:
-                daily_return_list.append((0.0, benchmark[1]))
-            else:
-                daily_return_list.append((bar.close / bar.prev_close - 1.0, benchmark[1]))
-            weights += benchmark[1]
-        return sum([daily[0] * daily[1] / weights for daily in daily_return_list])
     
+    NULL_OID = {"null", "NULL"}
+
     def generate_benchmark_daily_returns_and_portfolio(self, event):
         _s = self._env.config.base.start_date
         _e = self._env.config.base.end_date
@@ -143,37 +131,41 @@ class AnalyserMod(AbstractMod):
         self._benchmark_daily_returns = np.zeros(len(trading_dates))
         weights = 0
         for order_book_id, weight in self._benchmark:
-            ins = self._env.data_proxy.instrument(order_book_id)
-            if ins is None:
-                raise RuntimeError(
-                    _("benchmark {} not exists, please entry correct order_book_id").format(order_book_id)
-                )
-            bars = self._env.data_proxy.history_bars(
-                order_book_id = order_book_id,
-                bar_count = len(trading_dates) + 1,  # Get an extra day for calculation
-                frequency = "1d",
-                field = ["datetime", "close"],
-                dt = _e,
-                skip_suspended=False,
-            )
-            if len(bars) == len(trading_dates) + 1:
-                if convert_int_to_date(bars[1]['datetime']).date() != _s:
-                    raise RuntimeError(_(
-                        "benchmark {} missing data between backtest start date {} and end date {}").format(order_book_id, _s, _e)
-                    )
-                daily_returns = (bars['close'] / np.roll(bars['close'], 1) - 1.0)[1: ]
-                self._benchmark_daily_returns = self._benchmark_daily_returns + daily_returns * weight
-                weights += weight
+            if order_book_id in self.NULL_OID:
+                daily_returns = np.zeros(len(trading_dates))
             else:
-                if len(bars) == 0:
-                    (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
-                else:
-                    (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']).date(), convert_int_to_date(bars[-1]['datetime']).date())
-                raise RuntimeError(
-                    _("benchmark {} available data start date {} >= backtest start date {} or end date {} <= backtest end "
-                    "date {}").format(order_book_id, available_s, _s, available_e, _e)
+                ins = self._env.data_proxy.instrument(order_book_id)
+                if ins is None:
+                    raise RuntimeError(
+                        _("benchmark {} not exists, please entry correct order_book_id").format(order_book_id)
+                    )
+                bars = self._env.data_proxy.history_bars(
+                    order_book_id = order_book_id,
+                    bar_count = len(trading_dates) + 1,  # Get an extra day for calculation
+                    frequency = "1d",
+                    field = ["datetime", "close"],
+                    dt = _e,
+                    skip_suspended=False,
                 )
-        self._benchmark_daily_returns = self._benchmark_daily_returns / weight
+                if len(bars) == len(trading_dates) + 1:
+                    if convert_int_to_date(bars[1]['datetime']).date() != _s:
+                        raise RuntimeError(_(
+                            "benchmark {} missing data between backtest start date {} and end date {}").format(order_book_id, _s, _e)
+                        )
+                    daily_returns = (bars['close'] / np.roll(bars['close'], 1) - 1.0)[1: ]
+                else:
+                    if len(bars) == 0:
+                        (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
+                    else:
+                        (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']).date(), convert_int_to_date(bars[-1]['datetime']).date())
+                    raise RuntimeError(
+                        _("benchmark {} available data start date {} >= backtest start date {} or end date {} <= backtest end "
+                        "date {}").format(order_book_id, available_s, _s, available_e, _e)
+                    )
+            self._benchmark_daily_returns = self._benchmark_daily_returns + daily_returns * weight
+            weights += weight
+
+        self._benchmark_daily_returns = self._benchmark_daily_returns / weights
         
         # generate benchmark portfolio
         unit_net_value = (self._benchmark_daily_returns + 1).cumprod()
@@ -229,7 +221,8 @@ class AnalyserMod(AbstractMod):
         benchmark_list = benchmarks.split(',')
         if len(benchmark_list) == 1:
             if len(benchmark_list[0].split(':')) > 1:
-                result.append((benchmark_list[0].split(':')[0], 1.0))
+                oid, weight = benchmark_list[0].split(':')
+                result.append((oid, float(weight)))
                 return result
             result.append((benchmark_list[0], 1.0))
             return result
@@ -360,7 +353,7 @@ class AnalyserMod(AbstractMod):
                 summary["benchmark_symbol"] = self._env.data_proxy.instrument(benchmark_obid).symbol
             else:
                 summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
-                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol}:{w}" for o, w in self._benchmark)
+                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol if o not in self.NULL_OID else 'null'}:{w}" for o, w in self._benchmark)
 
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
