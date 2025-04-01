@@ -236,7 +236,7 @@ def parse_accounts(accounts):
 def parse_init_positions(positions):
     # --position 000001.XSHE:1000,IF1701:-1
     result = []
-    if not isinstance(positions, str):
+    if not isinstance(positions, str) or not positions:
         return result
     for s in positions.split(','):
         try:
