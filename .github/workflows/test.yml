@@ -35,7 +35,7 @@ jobs:
           cd ..
         # Install Test Deps
           pip install -U pip
-          pip install "1.5.14<=numpy<2.0.0"
+          pip install numpy>=1.5.14,<2.0.0
           pip install TA-Lib
           pip install coveralls
           pip install -U setuptools
