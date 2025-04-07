@@ -16,7 +16,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Cache bundle
       # cache will change when runner.os or requirements.txt changed
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       id: cache
       with:
         path: |
@@ -35,8 +35,8 @@ jobs:
           cd ..
         # Install Test Deps
           pip install -U pip
-          pip install "numpy>=1.15.4"
-          pip install TA-Lib
+          pip install "numpy<2.0.0"
+          pip install "TA-Lib<=0.5.4"
           pip install coveralls
           pip install -U setuptools
           pip install ipython==5.3.0
