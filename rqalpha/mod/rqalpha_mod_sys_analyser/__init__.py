@@ -43,7 +43,9 @@ __config__ = {
         # 是否在收益图中展示买卖点
         'open_close_points': False,
         # 是否在收益图中展示周度指标和收益曲线
-        'weekly_indicators': False
+        'weekly_indicators': False,
+        # 是否对收益图使用对数坐标
+        'log_scale': False
     },
 }
 
@@ -95,6 +97,11 @@ inject_run_param(click.Option(
     is_flag=True, default=None,
     help=_("[sys_analyser] show weekly indicators and return curve on plot")
 ))
+inject_run_param(click.Option(
+    ("--plot-log-scale", cli_prefix + "plot_config__log_scale"),
+    is_flag=True, default=None,
+    help=_("[sys_analyser] show return curve at log scale")
+))
 
 
 @cli.command(help=_("[sys_analyser] Plot from strategy output file"))
@@ -103,13 +110,14 @@ inject_run_param(click.Option(
 @click.option('--plot-save', 'plot_save_file', default=None, type=click.Path(), help=_("save plot result to file"))
 @click.option('--plot-open-close-points', is_flag=True, help=_("show open close points on plot"))
 @click.option('--plot-weekly-indicators', is_flag=True, help=_("show weekly indicators and return curve on plot"))
-def plot(result_pickle_file_path, show, plot_save_file, plot_open_close_points, plot_weekly_indicators):
+@click.option('--plot-log-scale', is_flag=True, help=_("show return curve at log scale"))
+def plot(result_pickle_file_path, show, plot_save_file, plot_open_close_points, plot_weekly_indicators, plot_log_scale):
     import pandas as pd
     from .plot import plot_result
 
     result_dict = pd.read_pickle(result_pickle_file_path)
     print(plot_open_close_points, plot_weekly_indicators)
-    plot_result(result_dict, show, plot_save_file, plot_weekly_indicators, plot_open_close_points)
+    plot_result(result_dict, show, plot_save_file, plot_weekly_indicators, plot_open_close_points, plot_log_scale)
 
 
 @cli.command(help=_("[sys_analyser] Generate report from strategy output file"))
