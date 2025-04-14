@@ -147,11 +147,11 @@ RQData数据本地化服务
 关于RQAlpha的任何问题可以通过以下途径来获取帮助
 
 *  可以通过 `索引`_ 或者使用搜索功能来查找特定问题
-*  在 `Github Issues`_ 中提交issue
+*  在 `GitHub Issues`_ 中提交issue
 *  RQAlpha 交流群「487188429」
 
 
-.. _Github Issues: https://github.com/ricequant/rqalpha/issues
+.. _GitHub Issues: https://github.com/ricequant/rqalpha/issues
 .. _Ricequant: https://www.ricequant.com/algorithms
 .. _RQAlpha 文档: http://rqalpha.readthedocs.io/zh_CN/latest/
 .. _Ricequant 文档: https://www.ricequant.com/api/python/chn
