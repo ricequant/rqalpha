@@ -15,7 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, Dict, List
 from itertools import chain
 from typing import TYPE_CHECKING
@@ -53,8 +53,8 @@ class Environment(object):
         self.user_system_log = user_system_log
         self.event_bus = EventBus()
         self.portfolio = None  # type: Optional[rqalpha.portfolio.Portfolio]
-        self.calendar_dt = None  # type: Optional[datetime]
-        self.trading_dt = None  # type: Optional[datetime]
+        self.calendar_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
+        self.trading_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
         self.mod_dict = None
         self.user_strategy = None
         self._frontend_validators = {}  # type: Dict[str, List]
