@@ -312,6 +312,9 @@ def set_loggers(config):
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())
 
-    if extra_config.log_file:
-        logbook.FileHandler(filename=extra_config.log_file, mode="a").push_application()
-
+    try:
+        if extra_config.log_file:
+            logbook.FileHandler(filename=extra_config.log_file, mode="a").push_application()
+    except AttributeError:
+        # extra_config.log_file 是在 rqalpha==5.3.0 才添加的参数，需要向前兼容
+        pass
