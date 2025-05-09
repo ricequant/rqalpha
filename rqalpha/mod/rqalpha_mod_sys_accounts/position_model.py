@@ -213,7 +213,7 @@ class StockPosition(Position):
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio)
         self._logical_old_quantity = round(Decimal(self._logical_old_quantity) * ratio)
-        self._queue.handle_split(ratio)
+        self._queue.handle_split(ratio, self._quantity)
 
 class FuturePosition(Position):
     __repr_properties__ = (

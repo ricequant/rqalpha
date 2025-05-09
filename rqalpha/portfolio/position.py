@@ -326,10 +326,15 @@ class PositionQueue:
                 # 当日首次开仓
                 self._queue.append((trading_date, delta_quantity))
 
-    def handle_split(self, ratio: Decimal):
+    def handle_split(self, ratio: Decimal, expected_quantity):
         self._queue = deque(
             (d, round(Decimal(q) * ratio)) for d, q in self._queue
         )
+        diff = expected_quantity - sum(q for _, q in self._queue)
+        if diff != 0:
+            # 有可能因为 round 的原因导致差1股
+            self._queue[-1] = (self._queue[-1][0], self._queue[-1][1] + diff)
+
 
     def clear(self):
         self._queue.clear()

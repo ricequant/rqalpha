@@ -177,13 +177,18 @@ def test_stock_position_queue_split():
     """
     __config__ = {
         "base": {
-            "start_date": "2016-05-26",
-            "end_date": "2016-05-27"
+            "start_date": "2024-06-17",
+            "end_date": "2024-06-19"
+        },
+        "mod": {
+            "sys_accounts": {
+                "validate_stock_position": False  # 禁用股票仓位检查以启用卖空
+            }
         }
     }
 
     def init(context):
-        context.s = "000035.XSHE"  # 这只股票在2016-05-26到2016-05-27之间有拆分
+        context.s = "688032.XSHG"
         context.counter = 0
 
     def handle_bar(context, bar_dict):
@@ -191,26 +196,27 @@ def test_stock_position_queue_split():
 
         if context.counter == 1:
             # 第一天买入1000股
-            order_shares(context.s, 1000)
+            order_shares(context.s, -303)
             position = get_position(context.s)
-            assert_equal(position.quantity, 1000)
+            assert_equal(position.quantity, -303)
 
             # 检查 position_queue
             queue = position.position_queue
             assert_equal(len(queue), 1)
             assert_equal(queue[0][0], context.now.date())
-            assert_equal(queue[0][1], 1000)
+            assert_equal(queue[0][1], -303)
 
         elif context.counter == 2:
-            # 第二天应该已经拆分，数量变为2000
+            order_shares(context.s, -415)
+        elif context.counter == 3:
             position = get_position(context.s)
-            assert_equal(position.quantity, 2000)
+            assert_equal(position.quantity, -1070)
 
             # 检查 position_queue
             queue = position.position_queue
-            assert_equal(len(queue), 1)
-            assert_equal(queue[0][0], date(2016, 5, 26))
-            assert_equal(queue[0][1], 2000)  # 拆分后数量翻倍
+            assert_equal(len(queue), 2)
+            assert_equal(queue[0][0], date(2024, 6, 17))
+            assert_equal(queue[0][1] + queue[1][1], -1070)
 
     return locals()
 
