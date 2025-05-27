@@ -429,8 +429,8 @@ def get_securities_margin(
         order_book_ids,  # type: Union[str, Iterable[str]]
         count=1,  # type: Optional[int]
         fields=None,  # type: Optional[str]
-        expect_df=False  # type: Optional[bool]
-):  # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
+        expect_df=True  # type: Optional[bool]
+):  # type: (...) -> Union[pd.Series, pd.DataFrame]
     """
     获取融资融券信息。包括 `深证融资融券数据 <http://www.szse.cn/main/disclosure/rzrqxx/rzrqjy/>`_ 以及 `上证融资融券数据 <http://www.sse.com.cn/market/othersdata/margin/detail/>`_ 情况。既包括个股数据，也包括市场整体数据。需要注意，融资融券的开始日期为2010年3月31日。
 
@@ -524,11 +524,15 @@ def get_securities_margin(
         start_dt = dt
     else:
         start_dt = data_proxy.get_previous_trading_date(dt, count - 1)
-
+    
+    overall_code = {"XSHG", "XSHE", "sh", "sz"}
     if isinstance(order_book_ids, six.string_types):
-        order_book_ids = assure_order_book_id(order_book_ids)
+        if order_book_ids not in overall_code:
+            order_book_ids = assure_order_book_id(order_book_ids)
     else:
-        order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
+        overall_code_list = [i for i in order_book_ids if i in overall_code]
+        order_book_ids = [assure_order_book_id(i) for i in order_book_ids if i not in overall_code]
+        order_book_ids = order_book_ids + overall_code_list
 
     return rqdatac.get_securities_margin(order_book_ids, start_dt, dt, fields=fields, expect_df=expect_df)
 

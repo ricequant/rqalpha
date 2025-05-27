@@ -14,7 +14,7 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-
+from collections import deque
 from datetime import date
 
 from decimal import Decimal
@@ -150,6 +150,7 @@ class StockPosition(Position):
             if self.cash_return_by_stock_delisted:
                 delta_cash = self.market_value
             self._quantity = self._old_quantity = 0
+            self._queue.clear()
         return delta_cash
 
     @cached_property
@@ -212,7 +213,7 @@ class StockPosition(Position):
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio)
         self._logical_old_quantity = round(Decimal(self._logical_old_quantity) * ratio)
-
+        self._queue.handle_split(ratio, self._quantity)
 
 class FuturePosition(Position):
     __repr_properties__ = (
@@ -282,6 +283,7 @@ class FuturePosition(Position):
             self._transaction_cost += trade.transaction_cost
             self._quantity -= trade.last_quantity
             self._trade_cost -= trade.last_price * trade.last_quantity
+            self._queue.handle_trade(-trade.last_quantity, self._env.trading_dt.date(), close_today=True)
         else:
             super(FuturePosition, self).apply_trade(trade)
 
@@ -325,6 +327,7 @@ class FuturePosition(Position):
             )
             self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             self._quantity = self._old_quantity = 0
+            self._queue.clear()
         return delta_cash
     
     def post_settlement(self):
