@@ -35,7 +35,6 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.datetime_func import convert_int_to_date
 from rqalpha.utils.logger import user_system_log
-from rqalpha.const import DAYS_CNT
 from rqalpha.api import export_as_api
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
@@ -402,7 +401,9 @@ class AnalyserMod(AbstractMod):
             benchmark_total_returns = (np.array(self._benchmark_daily_returns) + 1.0).prod() - 1.0
             summary['benchmark_total_returns'] = benchmark_total_returns
             date_count = len(self._benchmark_daily_returns)
-            benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
+            # 获取一年交易日天数
+            trading_days_a_year = self._env.get_trading_days_a_year()
+            benchmark_annualized_returns = (benchmark_total_returns + 1) ** (trading_days_a_year / date_count) - 1
             summary['benchmark_annualized_returns'] = benchmark_annualized_returns
 
         trades = pd.DataFrame(self._trades)

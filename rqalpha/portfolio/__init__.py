@@ -24,7 +24,7 @@ import jsonpickle
 import numpy as np
 import six
 
-from rqalpha.const import DAYS_CNT, DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, EventBus
 from rqalpha.interface import AbstractPosition
@@ -194,7 +194,8 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
         env = Environment.get_instance()
         date_count = float(env.data_proxy.count_trading_dates(env.config.base.start_date, env.trading_dt.date()))
-        return self.unit_net_value ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
+        trading_days_a_year = env.get_trading_days_a_year()
+        return self.unit_net_value ** (trading_days_a_year / date_count) - 1
 
     @property
     def total_value(self):

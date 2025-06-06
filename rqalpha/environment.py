@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
-from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
@@ -216,3 +216,9 @@ class Environment(object):
                 if not v.can_submit_order(order, account):
                     return False
         return True
+    
+    def get_trading_days_a_year(self):
+        trading_days_a_year = getattr(self.config.base, 'custom_trading_days_a_year', DAYS_CNT.TRADING_DAYS_A_YEAR)
+        if trading_days_a_year is None:
+            trading_days_a_year = DAYS_CNT.TRADING_DAYS_A_YEAR
+        return trading_days_a_year
