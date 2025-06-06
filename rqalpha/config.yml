@@ -46,7 +46,8 @@ base:
   auto_update_bundle: false
   # 自动下载的 bundle 文件支持单独设置存储路径，若不设置则使用 data_bundle_path 路径
   auto_update_bundle_path: ~
-
+  # 一年交易日天数，默认使用DAYS_CNT.TRADING_DAYS_A_YEAR
+  custom_trading_days_a_year: ~
 
 extra:
   # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，
