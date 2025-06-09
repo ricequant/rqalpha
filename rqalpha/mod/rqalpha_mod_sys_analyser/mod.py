@@ -26,7 +26,7 @@ from typing import Dict, Optional, List, Tuple, Union, Iterable
 
 import numpy as np
 import pandas as pd
-from rqrisk import Risk, WEEKLY, MONTHLY
+from rqrisk import Risk, DAILY, WEEKLY, MONTHLY
 
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.core.events import EVENT
@@ -354,9 +354,10 @@ class AnalyserMod(AbstractMod):
                 summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
                 summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol if o not in self.NULL_OID else 'null'}:{w}" for o, w in self._benchmark)
 
+        trading_days_a_year = self._env.trading_days_a_year
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
-            np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns), risk_free_rate
+            np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns), risk_free_rate, period=DAILY, trading_days_a_year=trading_days_a_year
         )
         summary.update({
             'alpha': risk.alpha,
@@ -402,7 +403,7 @@ class AnalyserMod(AbstractMod):
             summary['benchmark_total_returns'] = benchmark_total_returns
             date_count = len(self._benchmark_daily_returns)
             # 获取一年交易日天数
-            trading_days_a_year = self._env.get_trading_days_a_year()
+            trading_days_a_year = self._env.trading_days_a_year
             benchmark_annualized_returns = (benchmark_total_returns + 1) ** (trading_days_a_year / date_count) - 1
             summary['benchmark_annualized_returns'] = benchmark_annualized_returns
 

@@ -1,9 +1,12 @@
+from rqalpha.environment import Environment
+
 def init(context):
     context.s1 = '600519.XSHG'
     context.fired = False
 
 def before_trading(context):
-    pass
+    assert context.config.base.custom_trading_days_a_year == 242
+    assert Environment.get_instance().trading_days_a_year == 242
 
 def handle_bar(context, bar_dict):
     if not context.fired:

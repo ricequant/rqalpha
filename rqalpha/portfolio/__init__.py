@@ -194,7 +194,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
         env = Environment.get_instance()
         date_count = float(env.data_proxy.count_trading_dates(env.config.base.start_date, env.trading_dt.date()))
-        trading_days_a_year = env.get_trading_days_a_year()
+        trading_days_a_year = env.trading_days_a_year
         return self.unit_net_value ** (trading_days_a_year / date_count) - 1
 
     @property
