@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
     # Checks out a copy of your repository on the ubuntu-latest machine
     - uses: actions/checkout@v2
@@ -33,10 +33,17 @@ jobs:
           make
           sudo make install
           cd ..
+          sudo ldconfig
+          # Set Environment Variables to ensure that found ta-lib
+          export TA_INCLUDE_PATH=$(dirname $(find /usr -name 'ta_lib.h' 2>/dev/null | head -1))
+          export TA_LIBRARY_PATH=$(dirname $(find /usr -name 'libta_lib.so*' 2>/dev/null | head -1))
         # Install Test Deps
           pip install -U pip
           pip install "numpy<2.0.0"
-          pip install "TA-Lib<=0.5.4"
+          pip install TA-Lib==0.5.4 \
+            --global-option=build_ext \
+            --global-option="-I${{ env.TA_INCLUDE_PATH }}" \
+            --global-option="-L${{ env.TA_LIBRARY_PATH }}"
           pip install coveralls
           pip install -U setuptools
           pip install ipython==5.3.0
