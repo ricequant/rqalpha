@@ -34,8 +34,18 @@ jobs:
           sudo make install
           cd ..
           rm -rf ta-lib-0.4.0-src.tar.gz
-          sudo ln -s /usr/include/ta-lib /usr/local/include/
-          sudo ln -s /usr/lib/libta_lib.so.0.0.0 /usr/lib/libta_lib.so
+          # Create symlink for ta-lib
+          if [ ! -f /usr/lib/libta_lib.so.0.0.0 ]; then
+            echo "Error: libta_lib.so not found!"
+            ls -l /usr/lib/libta_lib.so*
+            exit 1
+          fi
+          if [ ! -L /usr/lib/libta_lib.so ]; then
+            sudo ln -s /usr/lib/libta_lib.so.0.0.0 /usr/lib/libta_lib.so
+          fi
+          if [ ! -d /usr/local/include/ta-lib ]; then
+            sudo ln -s /usr/include/ta-lib /usr/local/include/
+          fi
           sudo ldconfig
         # Install Test Deps
           pip install -U pip
