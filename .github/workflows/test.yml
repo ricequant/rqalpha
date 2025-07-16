@@ -50,7 +50,7 @@ jobs:
 
         # 设置库路径
         export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "usr/local/lib" | sudo tee /etc/ld.so.conf.d/ta-lib.conf
         sudo ldconfig
 
