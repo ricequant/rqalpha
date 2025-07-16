@@ -15,6 +15,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libffi-dev libssl-dev zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libreadline-dev libsqlite3-dev
+        sudo apt-get install -y libtool automake
+
     - name: Cache dependencies
       uses: actions/cache@v4
       id: cache
@@ -27,30 +33,24 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        # 避免重复下载和编译
         if [ ! -d "/usr/local/lib/ta-lib" ]; then
           wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
           tar -xzvf ta-lib-0.4.0-src.tar.gz
           cd ta-lib
-          ./configure --prefix=/usr
-          make
+          ./configure --prefix=/usr/local
+          make -j$(nproc)
           sudo make install
           cd ..
+          rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
         fi
 
     - name: Install Python dependencies
       run: |
-        python -m pip install -U pip
+        python -m pip install -U pip wheel setuptools
         python -m pip install "numpy<2.0.0" --no-cache-dir
-        python -m pip install TA-Lib==0.4.25 --no-cache-dir
+        python -m pip install TA-Lib==0.4.25 --no-cache-dir --global-option=build_ext --global-option="-L/usr/local/lib"
         python -m pip install coveralls ipython==5.3.0 --no-cache-dir
-        python -m pip install -U setuptools
         python -m pip install --prefer-binary .
-        
-        # 验证命令是否可用
-        which rqalpha
-        rqalpha --version
-        which coverage
 
     - name: Download bundle
       run: |
