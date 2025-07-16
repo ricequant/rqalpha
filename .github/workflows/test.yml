@@ -20,6 +20,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential libffi-dev libssl-dev zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libreadline-dev libsqlite3-dev
         sudo apt-get install -y libtool automake
+        # 安装 Python 开发头文件
+        sudo apt-get install -y python${{ matrix.python-version }}-dev || sudo apt-get install -y python3-dev
 
     - name: Cache dependencies
       uses: actions/cache@v4
@@ -60,8 +62,11 @@ jobs:
         python -m pip install "setuptools<60" --no-cache-dir
         python -m pip install "numpy<2.0.0" --no-cache-dir
         # 设置环境变量用于 TA-Lib 编译
+        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
         export TA_LIBRARY_PATH=/usr/local/lib
         export TA_INCLUDE_PATH=/usr/local/include
+        export CFLAGS="-I/usr/local/include"
+        export LDFLAGS="-L/usr/local/lib"
         python -m pip install TA-Lib==0.4.25 --no-cache-dir
         python -m pip install coveralls ipython==5.3.0 --no-cache-dir
         python -m pip install --prefer-binary .
