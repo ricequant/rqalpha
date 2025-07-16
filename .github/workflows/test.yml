@@ -90,7 +90,10 @@ jobs:
           rqalpha download-bundle
     - name: run test
       run:  |
-          coverage run --source=rqalpha test.py
+          # 确保 coverage 可用
+          pip install coverage
+          # 使用 python -m coverage 而不是直接的 coverage 命令
+          python -m coverage run --source=rqalpha test.py
           ls -al $HOME/.rqalpha/
           ls -al $HOME/.rqalpha/bundle/
     - name: Upload coverage data to coveralls.io
@@ -101,7 +104,8 @@ jobs:
         COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
       run: |
-        coveralls --service=github
+        pip install coveralls
+        python -m coveralls --service=github
 
   coveralls:
     name: Indicate completion to coveralls.io
@@ -113,6 +117,6 @@ jobs:
     - name: Finished
       run: |
         pip3 install --upgrade coveralls
-        coveralls --finish
+        python -m coveralls --finish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
