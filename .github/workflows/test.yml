@@ -15,14 +15,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install build dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential libffi-dev libssl-dev zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libreadline-dev libsqlite3-dev
-        sudo apt-get install -y libtool automake
-        # 安装 Python 开发头文件
-        sudo apt-get install -y python${{ matrix.python-version }}-dev || sudo apt-get install -y python3-dev
-
     - name: Cache dependencies
       uses: actions/cache@v4
       id: cache
@@ -31,66 +23,16 @@ jobs:
           ~/.cache/pip
           ~/.local
           /usr/local/lib/ta-lib
-        key: ${{ runner.os }}-py-${{ matrix.python-version }}-deps-${{ hashFiles('**/requirements.txt') }}
-
-    - name: Install system dependencies
-      run: |
-        if [ ! -d "/usr/local/lib/ta-lib" ]; then
-          wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-          tar -xzvf ta-lib-0.4.0-src.tar.gz
-          cd ta-lib
-          autoreconf -i
-          ./configure --prefix=/usr/local --enable-shared
-          make
-          sudo make install
-          cd ..
-          rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
-
-          sudo mkdir -p /usr/local/lib/ta-lib
-          sudo touch /usr/local/lib/ta-lib/.installed
-          
-          # 确保库文件可被找到
-          echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/ta-lib.conf
-        fi
-
-        # 设置库路径
-        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-        echo "LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "usr/local/lib" | sudo tee /etc/ld.so.conf.d/ta-lib.conf
+        key: ${{ runner.os }}-py-${{ matrix.python-version }}-deps-${{ hashFiles('**/requirements.txt') }} 
 
     - name: Install Python dependencies
       run: |
         python -m pip install -U pip wheel
         python -m pip install "setuptools<60" --no-cache-dir
         python -m pip install "numpy<2.0.0" --no-cache-dir
-        
-        # 尝试多种 TA-Lib 安装方法
-        if python -c "import talib" 2>/dev/null; then
-          echo "TA-Lib 已经可用"
-        else
-          echo "安装 TA-Lib..."
-          # 方法1: 尝试从 conda-forge 安装（通过 pip）
-          if python -m pip install --index-url=https://pypi.anaconda.org/conda-forge/simple/ TA-Lib --no-cache-dir; then
-            echo "从 conda-forge 安装成功"
-          # 方法2: 尝试安装更新的版本
-          elif python -m pip install TA-Lib==0.4.28 --no-cache-dir; then
-            echo "安装 TA-Lib 0.4.28 成功"
-          # 方法3: 回退到原方法但增强环境
-          else
-            echo "回退到源码编译..."
-            export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-            export TA_LIBRARY_PATH=/usr/local/lib
-            export TA_INCLUDE_PATH=/usr/local/include
-            export CFLAGS="-I/usr/local/include -fPIC"
-            export LDFLAGS="-L/usr/local/lib"
-            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-            sudo ldconfig
-            python -m pip install TA-Lib==0.4.25 --no-cache-dir --no-binary=TA-Lib --verbose
-          fi
-        fi
-        
         python -m pip install coveralls ipython==5.3.0 --no-cache-dir
         python -m pip install --prefer-binary .
+        python -m pip install TA-Lib -i https://rquser:Ricequant8@pypi2.ricequant.com/simple/
 
     - name: Download bundle
       run: |
