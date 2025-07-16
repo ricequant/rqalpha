@@ -8,24 +8,27 @@ jobs:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-    # Checks out a copy of your repository on the ubuntu-latest machine
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Cache bundle
-      # cache will change when runner.os or requirements.txt changed
+
+    - name: Cache dependencies
       uses: actions/cache@v4
       id: cache
       with:
         path: |
-          $HOME/.cache/pip
-          $HOME/.rqalpha/bundle
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-    - name: Install dependencies and download-bundle
+          ~/.cache/pip
+          ~/.local
+          /usr/local/lib/ta-lib
+        key: ${{ runner.os }}-py-${{ matrix.python-version }}-deps-${{ hashFiles('**/requirements.txt') }}
+
+    - name: Install system dependencies
       run: |
-        # Install TA-Lib
+        # 避免重复下载和编译
+        if [ ! -d "/usr/local/lib/ta-lib" ]; then
           wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
           tar -xzvf ta-lib-0.4.0-src.tar.gz
           cd ta-lib
@@ -33,88 +36,46 @@ jobs:
           make
           sudo make install
           cd ..
-          rm -rf ta-lib-0.4.0-src.tar.gz
-          # Create symlink for ta-lib
-          if [ ! -f /usr/lib/libta_lib.so.0.0.0 ]; then
-            echo "Error: libta_lib.so not found!"
-            ls -l /usr/lib/libta_lib.so*
-            exit 1
-          fi
-          if [ ! -L /usr/lib/libta_lib.so ]; then
-            sudo ln -s /usr/lib/libta_lib.so.0.0.0 /usr/lib/libta_lib.so
-          fi
-          if [ ! -d /usr/local/include/ta-lib ]; then
-            sudo ln -s /usr/include/ta-lib /usr/local/include/
-          fi
-          sudo ldconfig
-        # Install Test Deps
-          pip install --upgrade pip wheel
-          pip install "setuptools>=59.6.0,<70.0.0"  # 明确指定版本范围
-          pip install "numpy<2.0.0"
-          
-          # 安装编译依赖和修复路径
-          sudo apt-get update && sudo apt-get install -y build-essential python3-dev pkg-config
-          
-          # 修复 TA-Lib 路径问题
-          sudo ln -sf /usr/lib/libta_lib.so.0.0.0 /usr/lib/libta_lib.so
-          sudo ln -sf /usr/include/ta-lib /usr/local/include/ta-lib
-          
-          # 创建 pkg-config 文件
-          sudo mkdir -p /usr/lib/pkgconfig
-          sudo tee /usr/lib/pkgconfig/ta-lib.pc > /dev/null << EOF
-          prefix=/usr
-          exec_prefix=\${prefix}
-          libdir=\${exec_prefix}/lib
-          includedir=\${prefix}/include
-          
-          Name: ta-lib
-          Description: Technical Analysis Library
-          Version: 0.4.0
-          Libs: -L\${libdir} -lta_lib
-          Cflags: -I\${includedir}/ta-lib
-          EOF
-          
-          # 更新库缓存
-          sudo ldconfig
-          
-          # 使用 pkg-config 安装
-          export PKG_CONFIG_PATH=/usr/lib/pkgconfig:$PKG_CONFIG_PATH
-          pip install TA-Lib==0.4.25 --no-cache-dir
-          
-          pip install coverage  # 添加 coverage 包
-          pip install coveralls
-          pip install ipython==5.3.0
-          pip install --prefer-binary .
+        fi
 
-        # download-bundle
-          rqalpha download-bundle
-    - name: run test
-      run:  |
-          # 确保 coverage 可用
-          pip install coverage
-          # 使用 python -m coverage 而不是直接的 coverage 命令
-          python -m coverage run --source=rqalpha test.py
-          ls -al $HOME/.rqalpha/
-          ls -al $HOME/.rqalpha/bundle/
-    - name: Upload coverage data to coveralls.io
-      # https://coveralls-python.readthedocs.io/en/latest/usage/configuration.html#configuration
-      # need COVERALLS_REPO_TOKEN
+    - name: Install Python dependencies
+      run: |
+        python -m pip install -U pip
+        python -m pip install "numpy<2.0.0" --no-cache-dir
+        python -m pip install TA-Lib==0.4.25 --no-cache-dir
+        python -m pip install coveralls ipython==5.3.0 --no-cache-dir
+        python -m pip install -U setuptools
+        python -m pip install --prefer-binary .
+        
+        # 验证命令是否可用
+        which rqalpha
+        rqalpha --version
+        which coverage
+
+    - name: Download bundle
+      run: |
+        rqalpha download-bundle
+        ls -al $HOME/.rqalpha/bundle/
+
+    - name: Run tests
+      run: |
+        # 显式使用 Python 模块调用
+        python -m coverage run --source=rqalpha test.py
+        ls -al $HOME/.rqalpha/
+
+    - name: Upload coverage
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
       run: |
-        pip install coveralls
         python -m coveralls --service=github
 
   coveralls:
-    name: Indicate completion to coveralls.io
-    # need secrets.GITHUB_TOKEN
+    name: Finalize coverage
     needs: test
     runs-on: ubuntu-latest
-    container: python:3-slim
     steps:
-    - name: Finished
+    - name: Finish coveralls processing
       run: |
         pip3 install --upgrade coveralls
         python -m coveralls --finish
