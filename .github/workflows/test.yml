@@ -51,13 +51,36 @@ jobs:
           pip install --upgrade pip wheel
           pip install "setuptools>=59.6.0,<70.0.0"  # 明确指定版本范围
           pip install "numpy<2.0.0"
-          # 安装编译依赖
-          sudo apt-get update && sudo apt-get install -y build-essential
-          # 验证 TA-Lib 库文件存在
-          ls -la /usr/lib/libta_lib.so* || echo "TA-Lib library files:"
-          ls -la /usr/include/ta-lib/ || echo "TA-Lib header files:"
-          # 使用环境变量安装 TA-Lib，在同一命令中设置
-          TA_LIBRARY_PATH=/usr/lib TA_INCLUDE_PATH=/usr/include/ta-lib pip install TA-Lib==0.4.25 --no-cache-dir
+          
+          # 安装编译依赖和修复路径
+          sudo apt-get update && sudo apt-get install -y build-essential python3-dev pkg-config
+          
+          # 修复 TA-Lib 路径问题
+          sudo ln -sf /usr/lib/libta_lib.so.0.0.0 /usr/lib/libta_lib.so
+          sudo ln -sf /usr/include/ta-lib /usr/local/include/ta-lib
+          
+          # 创建 pkg-config 文件
+          sudo mkdir -p /usr/lib/pkgconfig
+          sudo tee /usr/lib/pkgconfig/ta-lib.pc > /dev/null << EOF
+          prefix=/usr
+          exec_prefix=\${prefix}
+          libdir=\${exec_prefix}/lib
+          includedir=\${prefix}/include
+          
+          Name: ta-lib
+          Description: Technical Analysis Library
+          Version: 0.4.0
+          Libs: -L\${libdir} -lta_lib
+          Cflags: -I\${includedir}/ta-lib
+          EOF
+          
+          # 更新库缓存
+          sudo ldconfig
+          
+          # 使用 pkg-config 安装
+          export PKG_CONFIG_PATH=/usr/lib/pkgconfig:$PKG_CONFIG_PATH
+          pip install TA-Lib==0.4.25 --no-cache-dir
+          
           pip install coveralls
           pip install ipython==5.3.0
           pip install --prefer-binary .
