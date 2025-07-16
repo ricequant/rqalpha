@@ -51,11 +51,10 @@ jobs:
           pip install --upgrade pip wheel
           pip install "setuptools>=59.6.0,<70.0.0"  # 明确指定版本范围
           pip install "numpy<2.0.0"
-          pip install TA-Lib==0.4.28 \
-            --global-option=build_ext \
-            --global-option="-I/usr/include/ta-lib" \
-            --global-option="-L/usr/lib" \
-            --no-cache-dir
+          # 设置 TA-Lib 环境变量，避免使用已弃用的 --global-option
+          export TA_LIBRARY_PATH=/usr/lib
+          export TA_INCLUDE_PATH=/usr/include/ta-lib
+          pip install TA-Lib==0.4.28 --no-cache-dir
           pip install coveralls
           pip install ipython==5.3.0
           pip install --prefer-binary .
