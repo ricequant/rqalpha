@@ -56,9 +56,13 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        python -m pip install -U pip wheel setuptools
+        python -m pip install -U pip wheel
+        python -m pip install "setuptools<60" --no-cache-dir
         python -m pip install "numpy<2.0.0" --no-cache-dir
-        python -m pip install TA-Lib==0.4.25 --no-cache-dir --global-option=build_ext --global-option="-L/usr/local/lib"
+        # 设置环境变量用于 TA-Lib 编译
+        export TA_LIBRARY_PATH=/usr/local/lib
+        export TA_INCLUDE_PATH=/usr/local/include
+        python -m pip install TA-Lib==0.4.25 --no-cache-dir
         python -m pip install coveralls ipython==5.3.0 --no-cache-dir
         python -m pip install --prefer-binary .
 
