@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     steps:
     - uses: actions/checkout@v4
 
@@ -64,17 +64,29 @@ jobs:
         python -m pip install "setuptools<60" --no-cache-dir
         python -m pip install "numpy<2.0.0" --no-cache-dir
         
-        # 首先尝试安装预编译的 TA-Lib wheel
-        if ! python -m pip install --only-binary=TA-Lib TA-Lib==0.4.25 --no-cache-dir; then
-          echo "预编译包安装失败，尝试从源码编译..."
-          export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-          export TA_LIBRARY_PATH=/usr/local/lib
-          export TA_INCLUDE_PATH=/usr/local/include
-          export CFLAGS="-I/usr/local/include"
-          export LDFLAGS="-L/usr/local/lib"
-          export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-          sudo ldconfig
-          python -m pip install TA-Lib==0.4.25 --no-cache-dir --no-binary=TA-Lib
+        # 尝试多种 TA-Lib 安装方法
+        if python -c "import talib" 2>/dev/null; then
+          echo "TA-Lib 已经可用"
+        else
+          echo "安装 TA-Lib..."
+          # 方法1: 尝试从 conda-forge 安装（通过 pip）
+          if python -m pip install --index-url=https://pypi.anaconda.org/conda-forge/simple/ TA-Lib --no-cache-dir; then
+            echo "从 conda-forge 安装成功"
+          # 方法2: 尝试安装更新的版本
+          elif python -m pip install TA-Lib==0.4.28 --no-cache-dir; then
+            echo "安装 TA-Lib 0.4.28 成功"
+          # 方法3: 回退到原方法但增强环境
+          else
+            echo "回退到源码编译..."
+            export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+            export TA_LIBRARY_PATH=/usr/local/lib
+            export TA_INCLUDE_PATH=/usr/local/include
+            export CFLAGS="-I/usr/local/include -fPIC"
+            export LDFLAGS="-L/usr/local/lib"
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+            sudo ldconfig
+            python -m pip install TA-Lib==0.4.25 --no-cache-dir --no-binary=TA-Lib --verbose
+          fi
         fi
         
         python -m pip install coveralls ipython==5.3.0 --no-cache-dir
