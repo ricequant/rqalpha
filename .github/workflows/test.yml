@@ -81,6 +81,7 @@ jobs:
           export PKG_CONFIG_PATH=/usr/lib/pkgconfig:$PKG_CONFIG_PATH
           pip install TA-Lib==0.4.25 --no-cache-dir
           
+          pip install coverage  # 添加 coverage 包
           pip install coveralls
           pip install ipython==5.3.0
           pip install --prefer-binary .
