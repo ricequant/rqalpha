@@ -40,7 +40,7 @@ jobs:
           tar -xzvf ta-lib-0.4.0-src.tar.gz
           cd ta-lib
           autoreconf -i
-          ./configure --prefix=/usr/local
+          ./configure --prefix=/usr/local --enable-shared
           make
           sudo make install
           cd ..
@@ -48,26 +48,35 @@ jobs:
 
           sudo mkdir -p /usr/local/lib/ta-lib
           sudo touch /usr/local/lib/ta-lib/.installed
+          
+          # 确保库文件可被找到
+          echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/ta-lib.conf
         fi
 
         # 设置库路径
         export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
         echo "LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "usr/local/lib" | sudo tee /etc/ld.so.conf.d/ta-lib.conf
-        sudo ldconfig
 
     - name: Install Python dependencies
       run: |
         python -m pip install -U pip wheel
         python -m pip install "setuptools<60" --no-cache-dir
         python -m pip install "numpy<2.0.0" --no-cache-dir
-        # 设置环境变量用于 TA-Lib 编译
-        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-        export TA_LIBRARY_PATH=/usr/local/lib
-        export TA_INCLUDE_PATH=/usr/local/include
-        export CFLAGS="-I/usr/local/include"
-        export LDFLAGS="-L/usr/local/lib"
-        python -m pip install TA-Lib==0.4.25 --no-cache-dir
+        
+        # 首先尝试安装预编译的 TA-Lib wheel
+        if ! python -m pip install --only-binary=TA-Lib TA-Lib==0.4.25 --no-cache-dir; then
+          echo "预编译包安装失败，尝试从源码编译..."
+          export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+          export TA_LIBRARY_PATH=/usr/local/lib
+          export TA_INCLUDE_PATH=/usr/local/include
+          export CFLAGS="-I/usr/local/include"
+          export LDFLAGS="-L/usr/local/lib"
+          export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+          sudo ldconfig
+          python -m pip install TA-Lib==0.4.25 --no-cache-dir --no-binary=TA-Lib
+        fi
+        
         python -m pip install coveralls ipython==5.3.0 --no-cache-dir
         python -m pip install --prefer-binary .
 
