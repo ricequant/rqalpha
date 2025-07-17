@@ -29,8 +29,9 @@ jobs:
       run: |
         python -m pip install -U pip wheel
         python -m pip install "setuptools<60" --no-cache-dir
-        python -m pip install "numpy<2.0.0" --no-cache-dir
-        python -m pip install coveralls ipython==5.3.0 --no-cache-dir
+        python -m pip install "numpy<2.0.0"
+        python -m pip install distutils
+        python -m pip install coveralls ipython==5.3.0
         python -m pip install --prefer-binary .
         python -m pip install TA-Lib -i https://rquser:Ricequant8@pypi2.ricequant.com/simple/
 
