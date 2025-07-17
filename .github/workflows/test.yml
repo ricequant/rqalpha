@@ -27,6 +27,15 @@ jobs:
 
     - name: Install Python dependencies
       run: |
+        # Install TA-Lib
+        wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+        tar -xzvf ta-lib-0.4.0-src.tar.gz
+        cd ta-lib
+        ./configure --prefix=/usr
+        make
+        sudo make install
+        cd ..
+        # Install Test Deps
         pip install -U pip
         pip install -U setuptools
         pip install "numpy<2.0.0"
