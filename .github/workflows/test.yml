@@ -57,6 +57,7 @@ jobs:
 
     - name: Upload coverage
       env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
       run: |
@@ -66,8 +67,9 @@ jobs:
     name: Finalize coverage
     needs: test
     runs-on: ubuntu-latest
+    container: python:3-slim
     steps:
-    - name: Finish coveralls processing
+    - name: Finished
       run: |
         pip3 install --upgrade coveralls
         python -m coveralls --finish
