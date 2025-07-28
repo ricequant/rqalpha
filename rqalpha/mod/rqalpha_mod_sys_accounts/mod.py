@@ -78,6 +78,7 @@ class AccountMod(AbstractMod):
                         env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.CONVERTIBLE)
                         env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.INDX)
                         env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.PUBLIC_FUND)
+                        env.add_frontend_validator(ins_validator, INSTRUMENT_TYPE.REITs)
                     else:
                         user_system_log.warn("rqdatac not init, not support financing stocks restriction.")
                 except ImportError:

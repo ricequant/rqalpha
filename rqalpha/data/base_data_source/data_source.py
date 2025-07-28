@@ -67,7 +67,7 @@ BAR_RESAMPLE_FIELD_METHODS = {
 class BaseDataSource(AbstractDataSource):
     DEFAULT_INS_TYPES = (
         INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX,
-        INSTRUMENT_TYPE.PUBLIC_FUND,
+        INSTRUMENT_TYPE.PUBLIC_FUND, INSTRUMENT_TYPE.REITs
     )
 
     def __init__(self, path: str, custom_future_info: dict, *args, **kwargs) -> None:
