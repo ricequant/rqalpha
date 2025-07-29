@@ -157,6 +157,7 @@ class INSTRUMENT_TYPE(CustomEnum):
     CONVERTIBLE = "Convertible"
     SPOT = "Spot"
     REPO = "Repo"
+    REITs = "REITs"
 
 
 # noinspection PyPep8Naming
