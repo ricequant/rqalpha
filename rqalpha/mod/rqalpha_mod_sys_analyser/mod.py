@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
+import re
 import pandas
 import pickle
 import jsonpickle
@@ -49,6 +50,9 @@ def _get_yearly_risk_free_rates(
         year = start_date.year
         yield year, data_proxy.get_risk_free_rate(start_date, min(end_date, datetime.date(year, 12, 31)))
         start_date = datetime.date(year + 1, 1, 1)
+
+
+EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
 
 
 class AnalyserMod(AbstractMod):
@@ -434,7 +438,7 @@ class AnalyserMod(AbstractMod):
         }
 
         if not trades.empty and all(
-                trades.order_book_id.str.endswith(".XSHE") | trades.order_book_id.str.endswith(".XSHG")
+            EQUITIES_OID_RE.match(trade.order_book_id) for trade in trades.itertuples()  # type: ignore
         ):
             # 策略仅交易股票、指数、场内基金等品种时才计算换手率
             trades_values = trades.last_price * trades.last_quantity
