@@ -83,7 +83,8 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),
             INSTRUMENT_TYPE.FUTURE: FutureDayBarStore(_p('futures.h5')),
             INSTRUMENT_TYPE.ETF: funds_day_bar_store,
-            INSTRUMENT_TYPE.LOF: funds_day_bar_store
+            INSTRUMENT_TYPE.LOF: funds_day_bar_store,
+            INSTRUMENT_TYPE.REITs: funds_day_bar_store
         }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
         
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
