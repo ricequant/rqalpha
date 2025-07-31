@@ -25,7 +25,7 @@ from collections import ChainMap, defaultdict
 from pandas import Series, DataFrame
 
 from rqrisk import Risk
-from rqrisk import WEEKLY, MONTHLY
+from rqrisk import DAILY, WEEKLY, MONTHLY
 from rqalpha.environment import Environment
 
 from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
@@ -71,7 +71,8 @@ def _yearly_indicators(
         excess_nav = (p_year_returns + 1).cumprod() / (b_year_returns + 1).cumprod()
         excess_max_dd = _max_dd(excess_nav.values, excess_nav.index)
         max_dd = _max_dd(p_nav[year_slice].values, p_nav[year_slice].index)
-        risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year])
+        trading_days_a_year = Environment.get_instance().trading_days_a_year
+        risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year], period=DAILY, trading_days_a_year=trading_days_a_year)
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
         data["benchmark_returns"].append(risk.benchmark_return)
@@ -142,7 +143,8 @@ def _pressure_test(
         else:
             b_period_returns = Series(index=p_period_returns.index)
         risk_free_rate = env.data_proxy.get_risk_free_rate(start, end)
-        risk = Risk(p_period_returns, b_period_returns, risk_free_rate)
+        trading_days_a_year = env.trading_days_a_year
+        risk = Risk(p_period_returns, b_period_returns, risk_free_rate, period=DAILY, trading_days_a_year=trading_days_a_year)
         data["title"].append(title)
         data["start_date"].append(str(start))
         data["end_date"].append(str(end))
