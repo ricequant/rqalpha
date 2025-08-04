@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import datetime
 from collections import defaultdict
-from copy import copy
+import math
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
@@ -25,9 +25,22 @@ from rqalpha.model.trade import Trade
 from rqalpha.model.tick import TickObject
 from rqalpha.portfolio.account import Account
 from rqalpha.utils import is_valid_price
+from rqalpha.interface import AbstractPriceBoard
 from typing import Dict
 from rqalpha.utils.i18n import gettext as _
 from .slippage import SlippageDecider
+
+
+LIMIT_PRICE_VALID_THRESHOLD = 1e-7
+
+
+def _is_limit_price_valid(order_book_id: str, side: SIDE, deal_price: float, price_board: AbstractPriceBoard):
+    if side == SIDE.BUY:
+        return math.isclose(deal_price, price_board.get_limit_up(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
+    elif side == SIDE.SELL:
+        return math.isclose(deal_price, price_board.get_limit_down(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
+    else:
+        raise ValueError(f"Unsupport side: {side}")
 
 
 class AbstractMatcher:
@@ -127,8 +140,6 @@ class DefaultBarMatcher(AbstractMatcher):
             else:
                 # 撮合的时候无行情数据也不需要撤单，等到有行情再撮合
                 reason = None
-                # reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
-                #     order_book_id=order.order_book_id)
             if reason:
                 order.mark_rejected(reason)
             return
@@ -141,22 +152,14 @@ class DefaultBarMatcher(AbstractMatcher):
                 return
             # 是否限制涨跌停不成交
             if self._price_limit:
-                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-                    return
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
                     return
         else:
             if self._price_limit:
-                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
                     reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    return
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                    reason = _(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
-                    ).format(order_book_id=order.order_book_id)
+                        "Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price."
+                    ).format(order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
                     order.mark_rejected(reason)
                     return
 
@@ -372,9 +375,7 @@ class DefaultTickMatcher(AbstractMatcher):
                 return
             # 是否限制涨跌停不成交
             if self._price_limit:
-                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
-                    return
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
+                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
                     return
             if self._liquidity_limit:
                 if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
@@ -383,16 +384,10 @@ class DefaultTickMatcher(AbstractMatcher):
                     return
         else:
             if self._price_limit:
-                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
                     reason = _(
-                        "Order Cancelled: current tick [{order_book_id}] reach the limit_up price."
-                    ).format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    return
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                    reason = _(
-                        "Order Cancelled: current tick [{order_book_id}] reach the limit_down price."
-                    ).format(order_book_id=order.order_book_id)
+                        "Order Cancelled: current tick [{order_book_id}] reach the {limit_up_or_down} price."
+                    ).format(order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
                     order.mark_rejected(reason)
                     return
             if self._liquidity_limit:

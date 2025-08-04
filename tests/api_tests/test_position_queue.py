@@ -272,7 +272,7 @@ def test_future_position_queue_close_today():
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
             "accounts": {
-                "future": 1000000
+                "future": 10000000
             }
         }
     }
