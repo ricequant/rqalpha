@@ -36,11 +36,11 @@ LIMIT_PRICE_VALID_THRESHOLD = 1e-7
 
 def _price_reaches_limit(order_book_id: str, side: SIDE, deal_price: float, price_board: AbstractPriceBoard):
     if side == SIDE.BUY:
-        return deal_price >= price_board.get_limit_up(order_book_id) or \
-            math.isclose(deal_price, price_board.get_limit_up(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
+        limit_price = price_board.get_limit_up(order_book_id)
+        return deal_price >= limit_price or math.isclose(deal_price, limit_price, abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
     elif side == SIDE.SELL:
-        return deal_price <= price_board.get_limit_down(order_book_id) or \
-            math.isclose(deal_price, price_board.get_limit_down(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
+        limit_price = price_board.get_limit_down(order_book_id)
+        return deal_price <= limit_price or math.isclose(deal_price, limit_price, abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
     else:
         raise ValueError(f"Unsupport side: {side}")
 
