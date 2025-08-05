@@ -34,11 +34,13 @@ from .slippage import SlippageDecider
 LIMIT_PRICE_VALID_THRESHOLD = 1e-7
 
 
-def _is_limit_price_valid(order_book_id: str, side: SIDE, deal_price: float, price_board: AbstractPriceBoard):
+def _price_reaches_limit(order_book_id: str, side: SIDE, deal_price: float, price_board: AbstractPriceBoard):
     if side == SIDE.BUY:
-        return math.isclose(deal_price, price_board.get_limit_up(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
+        return deal_price >= price_board.get_limit_up(order_book_id) or \
+            math.isclose(deal_price, price_board.get_limit_up(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
     elif side == SIDE.SELL:
-        return math.isclose(deal_price, price_board.get_limit_down(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
+        return deal_price <= price_board.get_limit_down(order_book_id) or \
+            math.isclose(deal_price, price_board.get_limit_down(order_book_id), abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
     else:
         raise ValueError(f"Unsupport side: {side}")
 
@@ -152,11 +154,11 @@ class DefaultBarMatcher(AbstractMatcher):
                 return
             # 是否限制涨跌停不成交
             if self._price_limit:
-                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
+                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
                     return
         else:
             if self._price_limit:
-                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
+                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
                     reason = _(
                         "Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price."
                     ).format(order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
@@ -375,7 +377,7 @@ class DefaultTickMatcher(AbstractMatcher):
                 return
             # 是否限制涨跌停不成交
             if self._price_limit:
-                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
+                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
                     return
             if self._liquidity_limit:
                 if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
@@ -384,7 +386,7 @@ class DefaultTickMatcher(AbstractMatcher):
                     return
         else:
             if self._price_limit:
-                if _is_limit_price_valid(order_book_id, order.side, deal_price, price_board):
+                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
                     reason = _(
                         "Order Cancelled: current tick [{order_book_id}] reach the {limit_up_or_down} price."
                     ).format(order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
