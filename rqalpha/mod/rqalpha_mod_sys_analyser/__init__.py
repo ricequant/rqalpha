@@ -108,7 +108,6 @@ def plot(result_pickle_file_path, show, plot_save_file, plot_open_close_points, 
     from .plot import plot_result
 
     result_dict = pd.read_pickle(result_pickle_file_path)
-    print(plot_open_close_points, plot_weekly_indicators)
     plot_result(result_dict, show, plot_save_file, plot_weekly_indicators, plot_open_close_points)
 
 
