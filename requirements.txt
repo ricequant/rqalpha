@@ -1,5 +1,6 @@
 requests
-numpy < 2.0.0
+numpy < 2.0.0 ; python_version <= '3.11'
+numpy >=2.0.0 ; python_version >= '3.12'
 pandas >=0.18.1
 python-dateutil >=2.5.3
 six >=1.10.0
