@@ -27,17 +27,24 @@ jobs:
     - name: Install Python dependencies
       run: |
         # Install TA-Lib
-          wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-          tar -xzvf ta-lib-0.4.0-src.tar.gz
-          cd ta-lib
-          ./configure --prefix=/usr
-          make
-          sudo make install
-          cd ..
+          # wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+          # tar -xzvf ta-lib-0.4.0-src.tar.gz
+          # cd ta-lib
+          # ./configure --prefix=/usr
+          # make
+          # sudo make install
+          # cd ..
         # Install Test Deps
           pip install -U pip
-          pip install "numpy<2.0.0"
-          pip install TA-Lib -i https://rquser:Ricequant8@pypi2.ricequant.com/simple/
+          # Install numpy based on Python version
+          pip install build
+          if python -c "import sys; exit(0 if sys.version_info < (3, 12) else 1)"; then
+            pip install "numpy<2.0.0"
+            pip install TA-Lib==0.4.38 -i https://rquser:Ricequant8@pypi2.ricequant.com/simple/
+          else
+            pip install "numpy>=2.0.0"
+            pip install "TA-Lib>=0.6.5" -i https://rquser:Ricequant8@pypi2.ricequant.com/simple/
+          fi
           pip install coveralls
           pip install -U setuptools
           pip install ipython==5.3.0

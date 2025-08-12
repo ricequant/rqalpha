@@ -17,7 +17,8 @@ import versioneer
 
 requirements = [
     'requests',
-    'numpy < 2.0.0',
+    'numpy < 2.0.0 ; python_version <= "3.11"',
+    'numpy >=2.0.0 ; python_version >= "3.12"',
     'pandas >=1.0.5',
     'python-dateutil',
     'six',
