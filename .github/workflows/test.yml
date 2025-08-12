@@ -37,7 +37,7 @@ jobs:
         # Install Test Deps
           pip install -U pip
           # Install numpy based on Python version
-          if [[ "${{ matrix.python-version }}" < "3.12" ]]; then
+          if python -c "import sys; exit(0 if sys.version_info < (3, 12) else 1)"; then
             pip install "numpy<2.0.0"
           else
             pip install "numpy>=2.0.0"
