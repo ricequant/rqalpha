@@ -19,7 +19,7 @@ import pickle
 import re
 from itertools import chain
 from typing import Callable, Optional, Union, List
-from filelock import FileLock, Timeout
+from filelock import Timeout
 import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
 from ctypes import c_bool
@@ -32,6 +32,7 @@ from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_t
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.logger import init_logger, system_log
+from rqalpha.utils.managed_filelock import ManagedFileLock
 from rqalpha.environment import Environment
 from rqalpha.model.instrument import Instrument
 
@@ -481,7 +482,6 @@ class AutomaticUpdateBundle(object):
         self._end_date = end_date
         self.updated = []
         self._env = Environment.get_instance()
-        self._file_lock = FileLock(self._file + ".lock")
 
     def get_data(self, instrument: Instrument, dt: datetime.date) -> Optional[np.ndarray]:
         dt = convert_date_to_date_int(dt)
@@ -516,7 +516,7 @@ class AutomaticUpdateBundle(object):
         order_book_id = instrument.order_book_id
         start_date = self._start_date
         try:
-            with self._file_lock.acquire():
+            with ManagedFileLock(self._file):
                 h5 = h5py.File(self._file, "a")
                 if order_book_id in h5 and h5[order_book_id].dtype.names:
                     if 'trading_dt' in h5[order_book_id].dtype.names:
