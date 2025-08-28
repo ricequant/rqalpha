@@ -21,21 +21,23 @@ import datetime
 import inspect
 from typing import Dict, Callable, Optional
 from methodtools import lru_cache
+from functools import cached_property
 
 import numpy as np
 from dateutil.parser import parse
 
 from rqalpha.environment import Environment
-from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
+from rqalpha.const import INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr, PropertyReprMeta
 
 
+# TODO：改为 namedtuple，提升性能
 class Instrument(metaclass=PropertyReprMeta):
     DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
 
     @staticmethod
-    def _fix_date(ds, dflt=None) -> datetime:
+    def _fix_date(ds, dflt=None) -> datetime.datetime | None:
         if isinstance(ds, datetime.datetime):
             return ds
         if ds == '0000-00-00' or ds is None:
@@ -46,24 +48,25 @@ class Instrument(metaclass=PropertyReprMeta):
         except:
             return parse(ds)
 
-    __repr__ = property_repr
+    __repr__ = property_repr  # type: ignore
 
-    def __init__(self, dic: Dict, futures_tick_size_getter: Optional[Callable] = None, *args, **kwrags) -> None:
-        self.__dict__ = copy.copy(dic)
+    def __init__(self, dic: Dict, futures_tick_size_getter: Optional[Callable] = None, market: MARKET = MARKET.CN, *args, **kwrags) -> None:
+        self._dict = copy.copy(dic)
         self._futures_tick_size_getter = futures_tick_size_getter
 
         if "listed_date" in dic:
-            self.__dict__["listed_date"] = self._fix_date(dic["listed_date"])
+            self._dict["listed_date"] = self._fix_date(dic["listed_date"])
         if "de_listed_date" in dic:
-            self.__dict__["de_listed_date"] = self._fix_date(dic["de_listed_date"], self.DEFAULT_DE_LISTED_DATE)
-        if "maturity_date" in self.__dict__:
-            self.__dict__["maturity_date"] = self._fix_date(dic["maturity_date"], self.DEFAULT_DE_LISTED_DATE)
+            self._dict["de_listed_date"] = self._fix_date(dic["de_listed_date"], self.DEFAULT_DE_LISTED_DATE)
+        if "maturity_date" in self._dict:
+            self._dict["maturity_date"] = self._fix_date(dic["maturity_date"], self.DEFAULT_DE_LISTED_DATE)
 
         if 'contract_multiplier' in dic:
             if np.isnan(self.contract_multiplier):
                 raise RuntimeError("Contract multiplier of {} is not supposed to be nan".format(self.order_book_id))
+        self.market = market
 
-    @property
+    @cached_property
     def order_book_id(self):
         # type: () -> str
         """
@@ -71,215 +74,215 @@ class Instrument(metaclass=PropertyReprMeta):
         期货：期货代码，期货的独特的标识符（郑商所期货合约数字部分进行了补齐。例如原有代码’ZC609’补齐之后变为’ZC1609’）。
         主力连续合约UnderlyingSymbol+88，例如’IF88’ ；指数连续合约命名规则为UnderlyingSymbol+99
         """
-        return self.__dict__["order_book_id"]
+        return self._dict["order_book_id"]
 
-    @property
+    @cached_property
     def symbol(self):
         # type: () -> str
         """
         [str] 股票：证券的简称，例如’平安银行’。期货：期货的简称，例如’沪深1005’。
         """
-        return self.__dict__["symbol"]
+        return self._dict["symbol"]
 
-    @property
+    @cached_property
     def round_lot(self) -> int:
         """
         [int] 股票：一手对应多少股，中国A股一手是100股。期货：一律为1。
         """
-        if self.__dict__.get("type") == INSTRUMENT_TYPE.CS and self.__dict__["board_type"] == "KSH":
+        if self._dict.get("type") == INSTRUMENT_TYPE.CS and self._dict["board_type"] == "KSH":
             return 1
-        return int(self.__dict__["round_lot"])
+        return int(self._dict["round_lot"])
 
-    @property
+    @cached_property
     def listed_date(self) -> Optional[datetime.datetime]:
         """
         [datetime] 股票：该证券上市日期。期货：期货的上市日期，主力连续合约与指数连续合约都为 datetime(1990, 1, 1)。
         """
-        return self.__dict__["listed_date"]
+        return self._dict["listed_date"]
 
-    @property
+    @cached_property
     def de_listed_date(self):
         # type: () -> datetime.datetime
         """
         [datetime] 股票：退市日期。期货：交割日期。
         """
-        return self.__dict__["de_listed_date"]
+        return self._dict["de_listed_date"]
 
-    @property
+    @cached_property
     def type(self):
         # type: () -> str
         """
         [sty] 合约类型，目前支持的类型有: ‘CS’, ‘INDX’, ‘LOF’, ‘ETF’, ‘Future’
         """
-        return INSTRUMENT_TYPE[self.__dict__["type"]]
+        return INSTRUMENT_TYPE[self._dict["type"]]
 
-    @property
+    @cached_property
     def exchange(self):
         # type: () -> EXCHANGE
         """
         [str] 交易所。股票：’XSHE’ - 深交所, ‘XSHG’ - 上交所。期货：’DCE’ - 大连商品交易所, ‘SHFE’ - 上海期货交易所，
         ’CFFEX’ - 中国金融期货交易所, ‘CZCE’- 郑州商品交易所
         """
-        return self.__dict__["exchange"]
+        return self._dict["exchange"]
 
-    @property
+    @cached_property
     def market_tplus(self):
         # type: () -> int
         """
         [int] 合约卖出和买入操作需要间隔的最小交易日数，如A股为 1
         公募基金的 market_tplus 默认0
         """
-        return self.__dict__.get("market_tplus") or 0
+        return self._dict.get("market_tplus") or 0
 
-    @property
+    @cached_property
     def sector_code(self):
         """
         [str] 板块缩写代码，全球通用标准定义（股票专用）
         """
         try:
-            return self.__dict__["sector_code"]
+            return self._dict["sector_code"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'sector_code' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def sector_code_name(self):
         """
         [str] 以当地语言为标准的板块代码名（股票专用）
         """
         try:
-            return self.__dict__["sector_code_name"]
+            return self._dict["sector_code_name"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'sector_code_name' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def industry_code(self):
         """
         [str] 国民经济行业分类代码，具体可参考“Industry列表” （股票专用）
         """
         try:
-            return self.__dict__["industry_code"]
+            return self._dict["industry_code"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'industry_code' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def industry_name(self):
         """
         [str] 国民经济行业分类名称（股票专用）
         """
         try:
-            return self.__dict__["industry_name"]
+            return self._dict["industry_name"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'industry_name' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def concept_names(self):
         """
         [str] 概念股分类，例如：’铁路基建’，’基金重仓’等（股票专用）
         """
         try:
-            return self.__dict__["concept_names"]
+            return self._dict["concept_names"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'concept_names' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def board_type(self):
         """
         [str] 板块类别，’MainBoard’ - 主板,’GEM’ - 创业板（股票专用）
         """
         try:
-            return self.__dict__["board_type"]
+            return self._dict["board_type"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'board_type' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def status(self):
         """
         [str] 合约状态。’Active’ - 正常上市, ‘Delisted’ - 终止上市, ‘TemporarySuspended’ - 暂停上市,
         ‘PreIPO’ - 发行配售期间, ‘FailIPO’ - 发行失败（股票专用）
         """
         try:
-            return self.__dict__["status"]
+            return self._dict["status"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'status' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def special_type(self):
         """
         [str] 特别处理状态。’Normal’ - 正常上市, ‘ST’ - ST处理, ‘StarST’ - *ST代表该股票正在接受退市警告,
         ‘PT’ - 代表该股票连续3年收入为负，将被暂停交易, ‘Other’ - 其他（股票专用）
         """
         try:
-            return self.__dict__["special_type"]
+            return self._dict["special_type"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'special_type' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def contract_multiplier(self):
         """
         [float] 合约乘数，例如沪深300股指期货的乘数为300.0（期货专用）
         """
-        return self.__dict__.get('contract_multiplier', 1)
+        return self._dict.get('contract_multiplier', 1)
 
-    @property
+    @cached_property
     def underlying_order_book_id(self):
         """
         [str] 合约标的代码，目前除股指期货(IH, IF, IC)之外的期货合约，这一字段全部为’null’（期货专用）
         """
         try:
-            return self.__dict__["underlying_order_book_id"]
+            return self._dict["underlying_order_book_id"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'underlying_order_book_id' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def underlying_symbol(self):
         """
         [str] 合约标的代码，目前除股指期货(IH, IF, IC)之外的期货合约，这一字段全部为’null’（期货专用）
         """
         try:
-            return self.__dict__["underlying_symbol"]
+            return self._dict["underlying_symbol"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'underlying_symbol' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def maturity_date(self):
         # type: () -> datetime.datetime
         """
         [datetime] 到期日
         """
         try:
-            return self.__dict__["maturity_date"]
+            return self._dict["maturity_date"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'maturity_date' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def settlement_method(self):
         """
         [str] 交割方式，’CashSettlementRequired’ - 现金交割, ‘PhysicalSettlementRequired’ - 实物交割（期货专用）
         """
         try:
-            return self.__dict__["settlement_method"]
+            return self._dict["settlement_method"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'settlement_method' ".format(self.order_book_id)
@@ -307,7 +310,7 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         return self.de_listed_at(Environment.get_instance().trading_dt)
 
-    @property
+    @cached_property
     def account_type(self):
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return DEFAULT_ACCOUNT_TYPE.STOCK
@@ -348,11 +351,11 @@ class Instrument(metaclass=PropertyReprMeta):
         TimeRange(start=datetime.time(13, 1), end=datetime.time(15, 0)),
     ]
 
-    @property
+    @cached_property
     def trading_hours(self):
         # trading_hours='09:31-11:30,13:01-15:00'
         try:
-            trading_hours = self.__dict__["trading_hours"]
+            trading_hours = self._dict["trading_hours"]
         except KeyError:
             if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
                 return self.STOCK_TRADING_PERIOD
@@ -377,17 +380,17 @@ class Instrument(metaclass=PropertyReprMeta):
                 return True
         return False
 
-    @property
+    @cached_property
     def trading_code(self):
         # type: () -> str
         try:
-            return self.__dict__["trading_code"]
+            return self._dict["trading_code"]
         except (KeyError, ValueError):
             raise AttributeError(
                 "Instrument(order_book_id={}) has no attribute 'trading_code' ".format(self.order_book_id)
             )
 
-    @property
+    @cached_property
     def trade_at_night(self):
         return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 

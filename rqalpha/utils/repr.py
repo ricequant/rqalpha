@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
+from functools import cached_property
 
 
 def _repr(cls_name, properties):
@@ -36,7 +37,7 @@ class PropertyReprMeta(abc.ABCMeta):
         else:
             repr_properties = []
             for c in cls.mro():
-                repr_properties.extend(v for v in list(vars(c).keys()) if isinstance(getattr(c, v), property))
+                repr_properties.extend(v for v in list(vars(c).keys()) if isinstance(getattr(c, v), (property, cached_property)))
         cls.__repr__ = _repr(cls.__name__, repr_properties)
         return cls
 
@@ -91,5 +92,5 @@ def slots(inst):
 def iter_properties_of_class(cls):
     for varname in vars(cls):
         value = getattr(cls, varname)
-        if isinstance(value, property):
+        if isinstance(value, (property, cached_property)):
             yield varname

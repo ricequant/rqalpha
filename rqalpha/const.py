@@ -209,3 +209,8 @@ class EXCHANGE(CustomEnum):
 class TRADING_CALENDAR_TYPE(CustomEnum):
     EXCHANGE = "EXCHANGE"
     INTER_BANK = "INTERBANK"
+
+
+class MARKET(CustomEnum):
+    CN = "CN"
+    HK = "HK"

@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 import six
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.interface import AbstractDataSource
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_date, convert_int_to_datetime)
@@ -101,6 +101,7 @@ class BaseDataSource(AbstractDataSource):
                 instruments.append(Instrument(
                     i, 
                     lambda i: self._future_info_store.get_tick_size(i),
+                    market=MARKET.CN
                     ))
         for ins_type in self.DEFAULT_INS_TYPES:
             self.register_instruments_store(InstrumentStore(instruments, ins_type))

@@ -15,18 +15,24 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from __future__ import annotations
+
 import time
+import inspect
+from functools import cached_property
 
 from rqalpha.utils import id_gen, get_position_direction
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_EFFECT, SIDE
+from rqalpha.const import POSITION_EFFECT, SIDE, MARKET
+from rqalpha.model.instrument import Instrument
 
 
+# TODO: 改成 namedtuple，提升性能
 class Trade(object):
 
-    __repr__ = property_repr
+    __repr__ = property_repr  # type: ignore
 
     trade_id_gen = id_gen(int(time.time()) * 10000)
 
@@ -104,7 +110,15 @@ class Trade(object):
         try:
             return self.__dict__["_kwargs"][item]
         except KeyError:
-            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))  # type: ignore
 
     def __simple_object__(self):
         return properties(self)
+
+    @cached_property
+    def _ins(self) -> Instrument:
+        return self.env.data_proxy.instrument(self.order_book_id)
+    
+    @cached_property
+    def market(self) -> MARKET:
+        return self._ins.market
