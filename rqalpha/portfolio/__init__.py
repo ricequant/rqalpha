@@ -275,6 +275,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         """出入金"""
         # 入金 现金增加，份额增加，总权益增加，单位净值不变
         # 出金 现金减少，份额减少，总权益减少，单位净值不变
+        account_type = account_type.upper()
         if account_type not in self._accounts:
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
         unit_net_value = self.unit_net_value

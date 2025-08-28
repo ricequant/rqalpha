@@ -418,6 +418,9 @@ class AnalyserMod(AbstractMod):
         df = pd.DataFrame(self._total_portfolios)
         df['date'] = pd.to_datetime(df['date'])
         total_portfolios = df.set_index('date').sort_index()
+        if self._benchmark:
+            total_portfolios["benchmark_unit_net_value"] = (self._benchmark_daily_returns + 1).cumprod()
+            total_portfolios["excess_unit_net_value"] = total_portfolios["unit_net_value"] - total_portfolios["benchmark_unit_net_value"]
         df.index = df['date']
         weekly_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
         monthly_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()
