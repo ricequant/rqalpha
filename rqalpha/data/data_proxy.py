@@ -34,6 +34,7 @@ from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to
 from rqalpha.utils.typing import DateLike, StrOrIter
 from rqalpha.interface import AbstractDataSource, AbstractPriceBoard
 from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.utils.typing import DateLike
 
 
 class DataProxy(TradingDatesMixin):

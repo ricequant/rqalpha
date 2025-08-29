@@ -23,6 +23,7 @@ import numpy as np
 
 from rqalpha.utils.functools import lru_cache
 from rqalpha.const import TRADING_CALENDAR_TYPE
+from rqalpha.utils.typing import DateLike
 
 
 def _to_timestamp(d: Union[datetime.date, str, int, float]):
@@ -56,7 +57,7 @@ class TradingDatesMixin(object):
         return trading_dates[left:right]
 
     @lru_cache(64)
-    def get_previous_trading_date(self, date, n=1, trading_calendar_type=None) -> pd.Timestamp:
+    def get_previous_trading_date(self, date: DateLike, n=1, trading_calendar_type=None) -> pd.Timestamp:
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
         if pos >= n:

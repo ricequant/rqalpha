@@ -113,7 +113,7 @@ class BaseDataSource(AbstractDataSource):
         }
 
         self._calendar_providers = {
-            TRADING_CALENDAR_TYPE.EXCHANGE: ExchangeTradingCalendarStore(_p("trading_dates.npy"))
+            TRADING_CALENDAR_TYPE.CN_STOCK: ExchangeTradingCalendarStore(_p("trading_dates.npy"))
         }
 
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
