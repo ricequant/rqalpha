@@ -30,38 +30,44 @@ from rqalpha.utils.class_helper import cached_property
 from rqalpha.const import SIDE
 if TYPE_CHECKING:
     from rqalpha.model.order import Order
-    
+    from rqalpha.portfolio import Portfolio
+    from rqalpha.data.data_proxy import DataProxy
+    from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, AbstractEventSource, AbstractStrategyLoader, AbstractMod, AbstractBroker
+    from rqalpha.core.strategy import Strategy
 
 
 class Environment(object):
-    _env = None  # type: Environment
+    _env: Optional["Environment"] = None
+
+    data_proxy: "DataProxy"
+    data_source: "AbstractDataSource"
+    price_board: "AbstractPriceBoard"
+    event_source: "AbstractEventSource"
+    broker: "AbstractBroker"
+    strategy_loader: "AbstractStrategyLoader"
+    portfolio: "Portfolio"
+    mod_dict: "dict[str, AbstractMod]"
+    user_strategy: "Strategy"
 
     def __init__(self, config, rqdatac_init):
         Environment._env = self
         self.config = config
-        self.data_proxy = None  # type: Optional[rqalpha.data.data_proxy.DataProxy]
-        self.data_source = None
-        self.price_board = None
-        self.event_source = None
-        self.strategy_loader = None
+
         self.global_vars = GlobalVars()
         self.persist_provider = None
         self.persist_helper = None
-        self.broker = None
         self.profile_deco = None
         self.system_log = system_log
         self.user_log = user_log
         self.user_system_log = user_system_log
         self.event_bus = EventBus()
-        self.portfolio = None  # type: Optional[rqalpha.portfolio.Portfolio]
         self.calendar_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
         self.trading_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
-        self.mod_dict = None
-        self.user_strategy = None
+
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
-        self.rqdatac_init = rqdatac_init # type: Boolean
+        self.rqdatac_init = rqdatac_init
         self._trading_days_a_year = None
 
         # Environment.event_bus used in StrategyUniverse()
@@ -126,7 +132,7 @@ class Environment(object):
             return order
 
     def can_cancel_order(self, order):
-        instrument_type = self.data_proxy.instrument(order.order_book_id).type
+        instrument_type = self.data_proxy.instrument_not_none(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
             try:
@@ -177,7 +183,7 @@ class Environment(object):
         self._transaction_cost_decider_dict[instrument_type] = decider
 
     def _get_transaction_cost_decider(self, order_book_id):
-        instrument_type = self.data_proxy.instrument(order_book_id).type
+        instrument_type = self.data_proxy.instrument_not_none(order_book_id).type
         try:
             return self._transaction_cost_decider_dict[instrument_type]
         except KeyError:
@@ -205,7 +211,7 @@ class Environment(object):
 
     def can_submit_order(self, order: 'Order') -> bool:
         # forward compatible
-        instrument_type = self.data_proxy.instrument(order.order_book_id).type
+        instrument_type = self.data_proxy.instrument_not_none(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in self._get_frontend_validators(instrument_type):
             try:

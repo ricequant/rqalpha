@@ -146,14 +146,14 @@ def run(config, source_code=None, user_funcs=None):
         mod_handler.set_env(env)
         mod_handler.start_up()
 
-        if not env.data_source:
+        if not hasattr(env, "data_source"):
             env.set_data_source(BaseDataSource(
                 config.base.data_bundle_path, 
                 getattr(config.base, "future_info", {}),
                 const.DEFAULT_ACCOUNT_TYPE.FUTURE in config.base.accounts and config.base.futures_time_series_trading_parameters,
                 config.base.end_date
             ))
-        if env.price_board is None:
+        if not hasattr(env, "price_board"):
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))
@@ -170,7 +170,7 @@ def run(config, source_code=None, user_funcs=None):
 
         assert env.broker is not None
         assert env.event_source is not None
-        if env.portfolio is None:
+        if not hasattr(env, "portfolio"):
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(
                 config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate,

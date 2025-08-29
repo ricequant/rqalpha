@@ -258,7 +258,7 @@ class Account(metaclass=AccountMeta):
         """
         多方向保证金
         """
-        return sum(getattr(p, "margin", 0) for p in self._iter_pos(POSITION_DIRECTION.LONG))
+        return sum(getattr(p, "margin", 0) for p in self._iter_pos(direction=POSITION_DIRECTION.LONG))
 
     @property
     def sell_margin(self):
@@ -329,7 +329,7 @@ class Account(metaclass=AccountMeta):
             self._total_cash += amount
 
         # 涉及到资金变动，此处只处理中国市场的持仓
-        for position in self._iter_pos(MARKET.CN):
+        for position in self._iter_pos(market=MARKET.CN):
             self._total_cash += position.before_trading(trading_date)
 
         # 负债自增利息
@@ -340,7 +340,7 @@ class Account(metaclass=AccountMeta):
         trading_date = self._env.trading_dt.date()
 
         # 涉及到资金变动，此处只处理中国市场的持仓
-        for position in self._iter_pos(MARKET.CN):
+        for position in self._iter_pos(market=MARKET.CN):
             delta_cash = position.settlement(trading_date)
             self._total_cash += delta_cash
 
@@ -410,13 +410,16 @@ class Account(metaclass=AccountMeta):
             self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
 
-    def _iter_pos(self, direction=None, market=MARKET.CN) -> Iterable[Position]:
+    def _iter_pos(self, *, direction: Optional[POSITION_DIRECTION] = None, market: Optional[MARKET] = None) -> Iterable[Position]:
         # type: (Optional[POSITION_DIRECTION]) -> Iterable[Position]
         if direction:
-            pos_iter = (p[direction] for p in self._positions.values() if p.market == market)
+            pos_iter = (p[direction] for p in self._positions.values())
         else:
             pos_iter = chain(*[p.values() for p in self._positions.values()])
-        return (p for p in pos_iter if p.market == market)
+        if market:
+            return (p for p in pos_iter if p.market == market)
+        else:
+            return pos_iter
 
     def _get_or_create_pos(
             self,
@@ -464,8 +467,7 @@ class Account(metaclass=AccountMeta):
 
     def _frozen_cash_of_order(self, order):
         if order.position_effect == POSITION_EFFECT.OPEN:
-            instrument = self._env.data_proxy.instrument(order.order_book_id)
-            order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
+            order_cost = order.instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
         else:
             order_cost = 0
         return order_cost + self._env.get_order_transaction_cost(order)

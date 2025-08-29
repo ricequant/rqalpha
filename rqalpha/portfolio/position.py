@@ -21,7 +21,7 @@ from decimal import Decimal
 from typing import Dict, Iterable, Tuple, Optional, Deque, List
 from functools import cached_property
 
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.instrument import Instrument

@@ -288,6 +288,10 @@ class DataProxy(TradingDatesMixin):
     def instrument(self, sym_or_id):
         return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])), None)
 
+    @lru_cache(2048)
+    def instrument_not_none(self, sym_or_id) -> Instrument:
+        return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])))
+
     def instruments(self, sym_or_ids):
         # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
         if isinstance(sym_or_ids, str):

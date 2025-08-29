@@ -194,7 +194,7 @@ def is_valid_price(price):
 
 
 def get_position_direction(side, position_effect):
-    # type: (SIDE, Optional[POSITION_EFFECT]) -> Optional[POSITION_DIRECTION]
+    # type: (SIDE, Optional[POSITION_EFFECT]) -> POSITION_DIRECTION
     if position_effect is None:
         return POSITION_DIRECTION.LONG
     if side == SIDE.CONVERT_STOCK:
