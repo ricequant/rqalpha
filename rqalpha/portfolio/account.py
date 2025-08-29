@@ -20,7 +20,7 @@ from datetime import date
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
 from rqalpha.model.order import Order, OrderStyle
@@ -57,19 +57,23 @@ class Account(metaclass=AccountMeta):
     ]
 
     def __init__(
-            self, account_type: str, total_cash: float, init_positions: Dict[str, Tuple[int, Optional[float]]],
+            self, 
+            account_type: str, 
+            total_cash: float, 
+            init_positions: Dict[str, Tuple[int, Optional[float]]],
             financing_rate: float
     ):
         self._type = account_type
-        self._total_cash = total_cash  # 包含保证金的总资金
         self._env = Environment.get_instance()
+
+        # 现金项币种均为人民币
+        self._total_cash = total_cash  # 包含保证金的总资金
+        self._frozen_cash = 0
+        self._cash_liabilities = 0      # 现金负债
 
         self._positions: Dict[str, Dict[POSITION_DIRECTION, Position]] = {}
         self._backward_trade_set = set()
-        self._frozen_cash = 0
         self._pending_deposit_withdraw: List[Tuple[date, float]] = []
-
-        self._cash_liabilities = 0      # 现金负债
 
         self.register_event()
 
@@ -324,7 +328,8 @@ class Account(metaclass=AccountMeta):
             _, amount = self._pending_deposit_withdraw.pop(0)
             self._total_cash += amount
 
-        for position in self._iter_pos():
+        # 涉及到资金变动，此处只处理中国市场的持仓
+        for position in self._iter_pos(MARKET.CN):
             self._total_cash += position.before_trading(trading_date)
 
         # 负债自增利息
@@ -334,10 +339,10 @@ class Account(metaclass=AccountMeta):
     def _on_settlement(self, event):
         trading_date = self._env.trading_dt.date()
 
-        for order_book_id, positions in list(self._positions.items()):
-            for position in six.itervalues(positions):
-                delta_cash = position.settlement(trading_date)
-                self._total_cash += delta_cash
+        # 涉及到资金变动，此处只处理中国市场的持仓
+        for position in self._iter_pos(MARKET.CN):
+            delta_cash = position.settlement(trading_date)
+            self._total_cash += delta_cash
 
         self._backward_trade_set.clear()
 
@@ -405,12 +410,13 @@ class Account(metaclass=AccountMeta):
             self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
 
-    def _iter_pos(self, direction=None):
+    def _iter_pos(self, direction=None, market=MARKET.CN) -> Iterable[Position]:
         # type: (Optional[POSITION_DIRECTION]) -> Iterable[Position]
         if direction:
-            return (p[direction] for p in six.itervalues(self._positions))
+            pos_iter = (p[direction] for p in self._positions.values() if p.market == market)
         else:
-            return chain(*[six.itervalues(p) for p in six.itervalues(self._positions)])
+            pos_iter = chain(*[p.values() for p in self._positions.values()])
+        return (p for p in pos_iter if p.market == market)
 
     def _get_or_create_pos(
             self,

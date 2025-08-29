@@ -19,6 +19,7 @@ from collections import UserDict, deque
 from datetime import date
 from decimal import Decimal
 from typing import Dict, Iterable, Tuple, Optional, Deque, List
+from functools import cached_property
 
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT
 from rqalpha.environment import Environment
@@ -188,6 +189,10 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self._quantity - self._old_quantity - sum(
             o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
         )
+
+    @cached_property
+    def market(self) -> MARKET:
+        return self._instrument.market
 
     def get_state(self):
         """"""
