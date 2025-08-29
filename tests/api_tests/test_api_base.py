@@ -448,7 +448,7 @@ def test_order_to():
     return locals()
 
 
-def test_deposit():
+def test_deposit_and_withdraw():
     __config__ = {
         "base": {
             "accounts": {
@@ -504,5 +504,74 @@ def test_deposit():
 
         elif context.counter == 9:
             assert int(context.portfolio.accounts["STOCK"].cash) == int(context.cash) + 10000
+
+    return locals()
+
+
+def test_deposit_withdraw_before_and_after_trading():
+    __config__ = {
+        "base": {
+            "accounts": {
+                "stock": 100000000,
+                "future": 100000000,
+            }
+        },
+    }
+
+    def init(context):
+        context.counter = 0
+
+        context.stock = '000001.XSHE'
+        context.future = 'IF88'
+
+    def before_trading(context):
+        context.counter += 1
+        if context.counter == 2:
+            unit_net_value = context.portfolio.unit_net_value
+            units = context.portfolio.units
+            total_value = context.portfolio.total_value
+            cash = context.portfolio.accounts["STOCK"].cash
+            deposit("STOCK", 50000000)
+            assert int(context.portfolio.accounts["STOCK"].cash) == int(cash) + 50000000
+            assert context.portfolio.units > units
+            assert context.portfolio.total_value > total_value
+            assert context.portfolio.unit_net_value == unit_net_value
+        elif context.counter == 3:
+            unit_net_value = context.portfolio.unit_net_value
+            units = context.portfolio.units
+            total_value = context.portfolio.total_value
+            cash = context.portfolio.accounts["FUTURE"].cash
+            flag = withdraw("FUTURE", 50000000)
+            assert context.portfolio.accounts["FUTURE"].cash == cash - 50000000
+            assert context.portfolio.units < units
+            assert context.portfolio.total_value < total_value
+            assert context.portfolio.unit_net_value == unit_net_value
+
+    def handle_bar(context, bar_dict):
+        if context.counter == 1:
+            order(context.stock, 200)
+            order(context.future, -100)
+
+    def after_trading(context):
+        if context.counter == 4:
+            unit_net_value = context.portfolio.unit_net_value
+            units = context.portfolio.units
+            total_value = context.portfolio.total_value
+            cash = context.portfolio.accounts["STOCK"].cash
+            withdraw("STOCK", 50000000)
+            assert context.portfolio.accounts["STOCK"].cash == cash - 50000000
+            assert context.portfolio.units < units
+            assert context.portfolio.total_value < total_value
+            assert context.portfolio.unit_net_value == unit_net_value
+        elif context.counter == 5:
+            unit_net_value = context.portfolio.unit_net_value
+            units = context.portfolio.units
+            total_value = context.portfolio.total_value
+            cash = context.portfolio.accounts["FUTURE"].cash
+            deposit("FUTURE", 50000000)
+            assert context.portfolio.accounts["FUTURE"].cash == cash + 50000000
+            assert context.portfolio.units > units
+            assert context.portfolio.total_value > total_value
+            assert context.portfolio.unit_net_value == unit_net_value
 
     return locals()

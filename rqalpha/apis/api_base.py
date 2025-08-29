@@ -876,7 +876,9 @@ def symbol(order_book_id, sep=", "):
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.SCHEDULED,
-    EXECUTION_PHASE.GLOBAL
+    EXECUTION_PHASE.GLOBAL,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.AFTER_TRADING,
 )
 def deposit(account_type: str, amount: float, receiving_days: int = 0):
     """
@@ -897,7 +899,9 @@ def deposit(account_type: str, amount: float, receiving_days: int = 0):
     EXECUTION_PHASE.ON_BAR,
     EXECUTION_PHASE.ON_TICK,
     EXECUTION_PHASE.SCHEDULED,
-    EXECUTION_PHASE.GLOBAL
+    EXECUTION_PHASE.GLOBAL,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.AFTER_TRADING,
 )
 @apply_rules(
     verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
