@@ -16,8 +16,10 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from collections import deque
 from datetime import date
+from functools import cached_property
 
 from decimal import Decimal
+from numpy import ndarray
 
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
@@ -25,8 +27,9 @@ from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
+from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.logger import user_system_log
-from rqalpha.utils.class_helper import deprecated_property, cached_property
+from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.core.events import EVENT, Event
 
@@ -38,6 +41,10 @@ def _int_to_date(d):
 
 
 class StockPosition(Position):
+    # 注意，涉及到非人民币的持仓：
+    #   1. before_trading 和 settlement 返回的资金变化为本币
+    #   2. 命名带 local 后缀的 property 返回的值为本币计价
+    #   3. 其他 property 返回的值应为结算货币计价
     __repr_properties__ = (
         "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl", "last_price"
     )
@@ -66,8 +73,14 @@ class StockPosition(Position):
     @property
     def equity(self):
         # type: () -> float
-        """"""
+        """
+        持仓权益
+        """
         return super(StockPosition, self).equity + self.dividend_receivable
+
+    @property
+    def market_value_local(self):
+        return self.market_value
 
     @property
     def closable(self):
@@ -111,7 +124,7 @@ class StockPosition(Position):
         # type: (Trade) -> float
         # 返回总资金的变化量
         delta_cash = super(StockPosition, self).apply_trade(trade)
-        if trade.position_effect == POSITION_EFFECT.OPEN and self._market_tplus >= 1:
+        if trade.position_effect == POSITION_EFFECT.OPEN and self._market_tplus >= 1:  # type: ignore
             self._non_closable += trade.last_quantity
         return delta_cash
 
@@ -124,7 +137,7 @@ class StockPosition(Position):
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         next_date = self._env.data_proxy.get_next_trading_date(trading_date)
-        instrument = self._env.data_proxy.instrument(self._order_book_id)
+        instrument = self._env.data_proxy.instrument_not_none(self._order_book_id)
         delta_cash = 0
         if instrument.de_listed_at(next_date):
             try:
@@ -146,9 +159,9 @@ class StockPosition(Position):
                         successor_position = self._env.portfolio.get_position(successor, direction)
                         successor_position.update_last_price(self._last_price / conversion_ratio)
                     # 把购买 successor 消耗的 cash 补充回来
-                    delta_cash = self.market_value
+                    delta_cash = self.market_value_local
             if self.cash_return_by_stock_delisted:
-                delta_cash = self.market_value
+                delta_cash = self.market_value_local
             self._quantity = self._old_quantity = 0
             self._queue.clear()
         return delta_cash
@@ -157,24 +170,44 @@ class StockPosition(Position):
     def _market_tplus(self):
         return self._instrument.market_tplus
 
+    @cached_property
+    def _all_dividends(self) -> ndarray | None:
+        dividends = self._env.data_proxy.get_dividend(self._order_book_id)
+        return dividends
+
+    @cached_property
+    def _all_splits(self) -> ndarray | None:
+        splits = self._env.data_proxy.get_split(self._order_book_id)
+        if splits is None:
+            return None
+        splits = splits.copy()
+        splits["ex_date"] = splits["ex_date"] // 1000000
+        return splits
+
+    def _get_dividends_or_splits(self, events: ndarray | None, trading_date: date, date_field: str):
+        if events is None:
+            return None
+        last_date = self._env.data_proxy.get_previous_trading_date(trading_date)
+        last_date_int = convert_date_to_date_int(last_date)
+        today_int = convert_date_to_date_int(trading_date)
+        events_dates = events[date_field]
+        left_pos = events_dates.searchsorted(last_date_int, side="right")
+        right_pos = events_dates.searchsorted(today_int, side="right")
+        events = events[left_pos: right_pos]
+        return events
+        
     def _handle_dividend_book_closure(self, trading_date, data_proxy):
         # type: (date, DataProxy) -> None
-        last_date = data_proxy.get_previous_trading_date(trading_date)
-        dividend = data_proxy.get_dividend_by_book_date(self._order_book_id, last_date)
-        if dividend is None:
+        dividends = self._get_dividends_or_splits(self._all_dividends, trading_date, "ex_dividend_date")  # type: ignore[reportIncompatibleVariableOverride]
+        if dividends is None or len(dividends) == 0:
             return
-        dividend_per_share = sum(dividend['dividend_cash_before_tax'] / dividend['round_lot'])
-        if dividend_per_share != dividend_per_share:
-            raise RuntimeError("Dividend per share of {} is not supposed to be nan.".format(self._order_book_id))
+        dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum()
         self._avg_price -= dividend_per_share
         # 前一天结算发生了除息, 此时 last_price 还是前一个交易日的收盘价，需要改为 除息后收盘价, 否则影响在before_trading中查看盈亏
-        self._last_price -= dividend_per_share
-
-        try:
-            payable_date = _int_to_date(dividend["payable_date"][0])
-        except ValueError:
-            payable_date = _int_to_date(dividend["ex_dividend_date"][0])
-
+        self._last_price -= dividend_per_share  # type: ignore
+        
+        # FIXME: 这里隐含了获取的多条 dividend 的 payable_date 都相同的假设
+        payable_date = _int_to_date(dividends["payable_date"][-1])
         self._dividend_receivable = (payable_date, self._quantity * dividend_per_share)
 
     def _handle_dividend_payable(self, trading_date):
@@ -204,16 +237,18 @@ class StockPosition(Position):
             return dividend_value
 
     def _handle_split(self, trading_date, data_proxy):
-        ratio = data_proxy.get_split_by_ex_date(self._order_book_id, trading_date)
-        if ratio is None:
+        splits = self._get_dividends_or_splits(self._all_splits, trading_date, "ex_date")  # type: ignore[reportIncompatibleVariableOverride]
+        if splits is None or len(splits) == 0:
             return
+        ratio: float = splits["split_factor"].cumprod()[-1]
         self._avg_price /= ratio
         self._last_price /= ratio
-        ratio = Decimal(ratio)
+        ratio_decimal = Decimal(ratio)
         # int(6000 * 1.15) -> 6899
-        self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio)
-        self._logical_old_quantity = round(Decimal(self._logical_old_quantity) * ratio)
-        self._queue.handle_split(ratio, self._quantity)
+        self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio_decimal)
+        self._logical_old_quantity = round(Decimal(self._logical_old_quantity) * ratio_decimal)
+        self._queue.handle_split(ratio_decimal, self._quantity)
+
 
 class FuturePosition(Position):
     __repr_properties__ = (

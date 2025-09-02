@@ -77,50 +77,55 @@ class DataProxy(TradingDatesMixin):
         else:
             return np.nan
 
-    def get_dividend(self, order_book_id):
-        instrument = self.instruments(order_book_id)
+    def get_dividend(self, order_book_id: str) -> np.ndarray | None:
+        """
+        获取股票/基金分红信息
+
+        :param str order_book_id: 合约代码
+        
+        :return: `numpy.ndarray` | `None`
+            返回分红信息的结构化数组，包含以下字段:
+            
+            =========================   ===================================================
+            字段名                       描述  
+            =========================   ===================================================
+            book_closure_date           股权登记日，格式为 YYYYMMDD 的整数
+            announcement_date           公告日期，格式为 YYYYMMDD 的整数  
+            dividend_cash_before_tax    税前现金分红，单位为元
+            ex_dividend_date            除权除息日，格式为 YYYYMMDD 的整数
+            payable_date                分红派息日，格式为 YYYYMMDD 的整数
+            round_lot                   分红最小单位，例如：10 代表每 10 股派发
+            =========================   ===================================================
+            
+            如果该合约没有分红记录，则返回 None
+        """
+        instrument = self.instrument_not_none(order_book_id)
         return self._data_source.get_dividend(instrument)
 
-    def get_split(self, order_book_id):
-        instrument = self.instruments(order_book_id)
+    def get_split(self, order_book_id: str) -> np.ndarray | None:
+        """
+        获取股票拆股信息
+
+        :param str order_book_id: 合约代码
+        
+        :return: `numpy.ndarray` | `None`
+            返回拆股信息的结构化数组，包含以下字段:
+            
+            =========================   ===================================================
+            字段名                       描述  
+            =========================   ===================================================
+            ex_date                     除权日，格式为 YYYYMMDDHHMMSS 的整数（时分秒通常为000000）
+            split_factor                拆股比例，例如：1.5 表示每股拆为 1.5 股
+            =========================   ===================================================
+            
+            如果该合约没有拆股记录，则返回 None
+        """
+        instrument = self.instrument_not_none(order_book_id)
         return self._data_source.get_split(instrument)
-
-    def get_dividend_by_book_date(self, order_book_id, date):
-        table = self._data_source.get_dividend(self.instruments(order_book_id))
-        if table is None or len(table) == 0:
-            return
-
-        try:
-            dates = table['book_closure_date']
-        except ValueError:
-            dates = table['ex_dividend_date']
-            date = self.get_next_trading_date(date)
-
-        dt = date.year * 10000 + date.month * 100 + date.day
-
-        left_pos = dates.searchsorted(dt)
-        right_pos = dates.searchsorted(dt, side="right")
-
-        if left_pos >= right_pos:
-            return None
-
-        return table[left_pos: right_pos]
-
-    def get_split_by_ex_date(self, order_book_id, date):
-        df = self.get_split(order_book_id)
-        if df is None or len(df) == 0:
-            return
-
-        dt = convert_date_to_int(date)
-        pos = df['ex_date'].searchsorted(dt)
-        if pos == len(df) or df['ex_date'][pos] != dt:
-            return None
-
-        return df['split_factor'][pos]
 
     @lru_cache(10240)
     def _get_prev_close(self, order_book_id, dt):
-        instrument = self.instruments(order_book_id)
+        instrument = self.instrument_not_none(order_book_id)
         prev_trading_date = self.get_previous_trading_date(dt)
         bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date,
                                              skip_suspended=False, include_now=False, adjust_orig=dt)
