@@ -77,8 +77,7 @@ class Instrument(metaclass=PropertyReprMeta):
         return self._dict["order_book_id"]
 
     @cached_property
-    def symbol(self):
-        # type: () -> str
+    def symbol(self) -> str:
         """
         [str] 股票：证券的简称，例如’平安银行’。期货：期货的简称，例如’沪深1005’。
         """
