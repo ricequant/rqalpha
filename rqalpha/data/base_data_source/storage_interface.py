@@ -25,24 +25,7 @@ from rqalpha.model.instrument import Instrument
 from rqalpha.utils.typing import DateLike
 from rqalpha.const import INSTRUMENT_TYPE
 
-
-class AbstractInstrumentStore:
-    @property
-    @abc.abstractmethod
-    def instrument_type(self):
-        # type: () -> INSTRUMENT_TYPE
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def all_id_and_syms(self):
-        # type: () -> Iterable[str]
-        raise NotImplementedError
-
-    def get_instruments(self, id_or_syms):
-        # type: (Optional[Iterable[str]]) -> Iterable[Instrument]
-        raise NotImplementedError
-
+from .deprecated import AbstractInstrumentStore
 
 class AbstractDayBarStore:
     @abc.abstractmethod

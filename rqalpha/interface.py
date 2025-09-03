@@ -30,7 +30,7 @@ from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
 from rqalpha.model.instrument import Instrument
-from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE, SIDE
+from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE, SIDE, MARKET
 
 
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
@@ -285,8 +285,7 @@ class AbstractDataSource(object):
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
     """
 
-    def get_instruments(self, id_or_syms=None, types=None):
-        # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
+    def get_instruments(self, id_or_syms: Optional[Iterable[str]] = None, types: Optional[Iterable[INSTRUMENT_TYPE]] = None) -> Iterable[Instrument]:
         """
         获取 instrument，
         可指定 order_book_id 或 symbol 或 instrument type，id_or_syms 优先级高于 types，
@@ -314,7 +313,7 @@ class AbstractDataSource(object):
         raise NotImplementedError
 
     def get_dividend(self, instrument):
-        # type: (Instrument) -> numpy.ndarray
+        # type: (Instrument) -> numpy.ndarray | None
         """
         获取股票/基金分红信息
 
@@ -348,8 +347,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_split(self, instrument):
-        # type: (Instrument) -> numpy.ndarray
+    def get_split(self, instrument) -> Optional[numpy.ndarray]:
         """
         获取股票拆股信息
 

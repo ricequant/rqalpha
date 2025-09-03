@@ -14,11 +14,11 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+from collections import defaultdict, ChainMap
 import os
-import pickle
 from datetime import date, datetime, timedelta
-from itertools import groupby
-from typing import Dict, Iterable, List, Optional, Sequence, Union
+from itertools import chain, repeat
+from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -31,16 +31,16 @@ from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_dat
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.typing import DateLike
+from rqalpha.utils.logger import system_log
 from rqalpha.environment import Environment
 from rqalpha.data.base_data_source.adjust import FIELDS_REQUIRE_ADJUSTMENT, adjust_bars
 from rqalpha.data.base_data_source.storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
-                                AbstractInstrumentStore)
+                                AbstractInstrumentStore, AbstractSimpleFactorStore)
 from rqalpha.data.base_data_source.storages import (DateSet, DayBarStore, DividendStore,
                        ExchangeTradingCalendarStore, FutureDayBarStore,
-                       FutureInfoStore,InstrumentStore,
-                       ShareTransformationStore, SimpleFactorStore,
-                       YieldCurveStore, FuturesTradingParameters)
+                       FutureInfoStore, ShareTransformationStore, SimpleFactorStore,
+                       YieldCurveStore, FuturesTradingParameters, load_instruments_from_pkl)
 
 
 BAR_RESAMPLE_FIELD_METHODS = {
@@ -76,81 +76,68 @@ class BaseDataSource(AbstractDataSource):
 
         def _p(name):
             return os.path.join(path, name)
-
-        funds_day_bar_store = DayBarStore(_p('funds.h5'))
-        self._day_bars = {
-            INSTRUMENT_TYPE.CS: DayBarStore(_p('stocks.h5')),
-            INSTRUMENT_TYPE.INDX: DayBarStore(_p('indexes.h5')),
-            INSTRUMENT_TYPE.FUTURE: FutureDayBarStore(_p('futures.h5')),
-            INSTRUMENT_TYPE.ETF: funds_day_bar_store,
-            INSTRUMENT_TYPE.LOF: funds_day_bar_store,
-            INSTRUMENT_TYPE.REITs: funds_day_bar_store
-        }  # type: Dict[INSTRUMENT_TYPE, AbstractDayBarStore]
         
+        # static registered storages
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
-        
-        self._instruments_stores = {}  # type: Dict[INSTRUMENT_TYPE, AbstractInstrumentStore]
-        self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
-        instruments = []
-        
-        env = Environment.get_instance()
-        with open(_p('instruments.pk'), 'rb') as f:
-            for i in pickle.load(f):
-                if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):
-                    i["listed_date"] = datetime(1990, 1, 1)
-                instruments.append(Instrument(
-                    i, 
-                    lambda i: self._future_info_store.get_tick_size(i),
-                    market=MARKET.CN
-                    ))
-        for ins_type in self.DEFAULT_INS_TYPES:
-            self.register_instruments_store(InstrumentStore(instruments, ins_type))
-        dividend_store = DividendStore(_p('dividends.h5'))
-        self._dividends = {
-            INSTRUMENT_TYPE.CS: dividend_store,
-            INSTRUMENT_TYPE.ETF: dividend_store,
-            INSTRUMENT_TYPE.LOF: dividend_store,
-        }
-
-        self._calendar_providers = {
-            TRADING_CALENDAR_TYPE.CN_STOCK: ExchangeTradingCalendarStore(_p("trading_dates.npy"))
-        }
-
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
-
-        split_store = SimpleFactorStore(_p('split_factor.h5'))
-        self._split_factors = {
-            INSTRUMENT_TYPE.CS: split_store,
-            INSTRUMENT_TYPE.ETF: split_store,
-            INSTRUMENT_TYPE.LOF: split_store,
-        }
         self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.h5'))
         self._share_transformation = ShareTransformationStore(_p('share_transformation.json'))
-
         self._suspend_days = [DateSet(_p('suspended_days.h5'))]  # type: List[AbstractDateSet]
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
 
-    def register_day_bar_store(self, instrument_type, store):
-        #  type: (INSTRUMENT_TYPE, AbstractDayBarStore) -> None
-        self._day_bars[instrument_type] = store
+        # dynamic registered storages
+        self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
+        self._instrument_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractInstrumentStore] = {}
+        self._day_bar_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDayBarStore] = {}
+        self._dividend_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
+        self._split_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
+        self._calendar_stores: dict[TRADING_CALENDAR_TYPE, AbstractCalendarStore] = {}
 
-    def register_instruments_store(self, instruments_store):
-        # type: (AbstractInstrumentStore) -> None
-        instrument_type = instruments_store.instrument_type
-        for id_or_sym in instruments_store.all_id_and_syms:
-            self._ins_id_or_sym_type_map[id_or_sym] = instrument_type
-        self._instruments_stores[instrument_type] = instruments_store
+        # instruments
+        self._id_instrument_map: dict[str, Instrument] = {}
+        self._sym_instrument_map: dict[str, Instrument] = {}
+        self._id_or_sym_instrument_map: Mapping[str, Instrument] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
+        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, list[Instrument]] = defaultdict(list)
 
-    def register_dividend_store(self, instrument_type, dividend_store):
-        # type: (INSTRUMENT_TYPE, AbstractDividendStore) -> None
-        self._dividends[instrument_type] = dividend_store
+        # register instruments
+        self.register_instruments(load_instruments_from_pkl(_p('instruments.pk'), self._future_info_store))
 
-    def register_split_store(self, instrument_type, split_store):
-        self._split_factors[instrument_type] = split_store
+        # register day bar stores
+        funds_day_bar_store = DayBarStore(_p('funds.h5'))
+        for ins_type, store in chain([
+            (INSTRUMENT_TYPE.CS, DayBarStore(_p('stocks.h5'))),
+            (INSTRUMENT_TYPE.INDX, DayBarStore(_p('indexes.h5'))),
+            (INSTRUMENT_TYPE.FUTURE, FutureDayBarStore(_p('futures.h5'))),
+        ], zip([INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.REITs], repeat(funds_day_bar_store))):
+            self.register_day_bar_store(ins_type, store)
 
-    def register_calendar_store(self, calendar_type, calendar_store):
-        # type: (TRADING_CALENDAR_TYPE, AbstractCalendarStore) -> None
-        self._calendar_providers[calendar_type] = calendar_store
+        # register dividends and split factors stores
+        dividend_store = DividendStore(_p('dividends.h5'))
+        split_store = SimpleFactorStore(_p('split_factor.h5'))
+        for ins_type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF]:
+            self.register_dividend_store(ins_type, dividend_store)
+            self.register_split_store(ins_type, split_store)
+
+        # register calendar stores
+        self.register_calendar_store(TRADING_CALENDAR_TYPE.CN_STOCK, ExchangeTradingCalendarStore(_p("trading_dates.npy")))
+
+    def register_day_bar_store(self, instrument_type: INSTRUMENT_TYPE, store: AbstractDayBarStore, market: MARKET = MARKET.CN):
+        self._day_bar_stores[instrument_type, market] = store
+
+    def register_instruments(self, instruments: Iterable[Instrument]):
+        for ins in instruments:
+            self._id_instrument_map[ins.order_book_id] = ins
+            self._sym_instrument_map[ins.symbol] = ins
+            self._grouped_instruments[ins.type].append(ins)
+    
+    def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN):
+        self._dividend_stores[instrument_type, market] = dividend_store
+
+    def register_split_store(self, instrument_type: INSTRUMENT_TYPE, split_store: AbstractSimpleFactorStore, market: MARKET = MARKET.CN):
+        self._split_stores[instrument_type, market] = split_store
+
+    def register_calendar_store(self, calendar_type: TRADING_CALENDAR_TYPE, calendar_store: AbstractCalendarStore):
+        self._calendar_stores[calendar_type] = calendar_store
 
     def append_suspend_date_set(self, date_set):
         # type: (AbstractDateSet) -> None
@@ -159,29 +146,29 @@ class BaseDataSource(AbstractDataSource):
     @lru_cache(2048)
     def get_dividend(self, instrument):
         try:
-            dividend_store = self._dividends[instrument.type]
+            dividend_store = self._dividend_stores[instrument.type, instrument.market]
         except KeyError:
             return None
 
         return dividend_store.get_dividend(instrument.order_book_id)
 
-    def get_trading_minutes_for(self, order_book_id, trading_dt):
+    def get_trading_minutes_for(self, instrument, trading_dt):
         raise NotImplementedError
 
     def get_trading_calendars(self):
         # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
-        return {t: store.get_trading_calendar() for t, store in self._calendar_providers.items()}
+        return {t: store.get_trading_calendar() for t, store in self._calendar_stores.items()}
 
-    def get_instruments(self, id_or_syms=None, types=None):
-        # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
+    def get_instruments(self, id_or_syms: Optional[Iterable[str]] = None, types: Optional[Iterable[INSTRUMENT_TYPE]] = None) -> Iterable[Instrument]:
         if id_or_syms is not None:
-            ins_type_getter = lambda i: self._ins_id_or_sym_type_map.get(i)
-            type_id_iter = groupby(sorted(id_or_syms, key=ins_type_getter), key=ins_type_getter)
+            for i in id_or_syms:
+                try:
+                    yield self._id_or_sym_instrument_map[i]
+                except KeyError:
+                    pass
         else:
-            type_id_iter = ((t, None) for t in types or self._instruments_stores.keys())
-        for ins_type, id_or_syms in type_id_iter:
-            if ins_type is not None and ins_type in self._instruments_stores:
-                yield from self._instruments_stores[ins_type].get_instruments(id_or_syms)
+            for t in types or self._grouped_instruments.keys():
+                yield from self._grouped_instruments[t]
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
@@ -201,7 +188,7 @@ class BaseDataSource(AbstractDataSource):
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
-        return self._day_bars[instrument.type].get_bars(instrument.order_book_id)
+        return self._day_bar_stores[instrument.type, instrument.market].get_bars(instrument.order_book_id)
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
@@ -216,9 +203,9 @@ class BaseDataSource(AbstractDataSource):
         bars = self._all_day_bars_of(instrument)
         if len(bars) <= 0:
             return
-        dt = np.uint64(convert_date_to_int(dt))
-        pos = bars['datetime'].searchsorted(dt)
-        if pos >= len(bars) or bars['datetime'][pos] != dt:
+        dt_int = np.uint64(convert_date_to_int(dt))
+        pos = bars['datetime'].searchsorted(dt_int)
+        if pos >= len(bars) or bars['datetime'][pos] != dt_int:
             return None
 
         return bars[pos]
@@ -232,7 +219,7 @@ class BaseDataSource(AbstractDataSource):
             bar = dict.fromkeys(self.OPEN_AUCTION_BAR_FIELDS, np.nan)
         else:
             bar = {k: day_bar[k] if k in day_bar.dtype.names else np.nan for k in self.OPEN_AUCTION_BAR_FIELDS}
-        bar["last"] = bar["open"]
+        bar["last"] = bar["open"]  # type: ignore
         return bar
 
     def get_settle_price(self, instrument, date):
@@ -261,7 +248,7 @@ class BaseDataSource(AbstractDataSource):
             return idx
         return env.data_proxy.get_previous_trading_date(idx)
 
-    def resample_week_bars(self, bars, bar_count, fields):
+    def resample_week_bars(self, bars, bar_count, fields: str | list[str]):
         df_bars = pd.DataFrame(bars)
         df_bars['datetime'] = df_bars.apply(lambda x: convert_int_to_datetime(x['datetime']), axis=1)
         df_bars = df_bars.set_index('datetime')
@@ -269,13 +256,13 @@ class BaseDataSource(AbstractDataSource):
         if isinstance(nead_fields, str):
             nead_fields = [nead_fields]
         hows = {field: BAR_RESAMPLE_FIELD_METHODS[field] for field in nead_fields if field in BAR_RESAMPLE_FIELD_METHODS}
-        df_bars = df_bars.resample('W-Fri').agg(hows)
+        df_bars = df_bars.resample('W-Fri').agg(hows)  # type: ignore
         df_bars.index = df_bars.index.map(self._update_weekly_trading_date_index)
         df_bars = df_bars[~df_bars.index.duplicated(keep='first')]
         df_bars.sort_index(inplace=True)
         df_bars = df_bars[-bar_count:]
         df_bars = df_bars.reset_index()
-        df_bars['datetime'] = df_bars.apply(lambda x: np.uint64(convert_date_to_int(x['datetime'].date())), axis=1)
+        df_bars['datetime'] = df_bars.apply(lambda x: np.uint64(convert_date_to_int(x['datetime'].date())), axis=1)  # type: ignore
         df_bars = df_bars.set_index('datetime')
         bars = df_bars.to_records()
         return bars
@@ -345,7 +332,7 @@ class BaseDataSource(AbstractDataSource):
     @lru_cache(2048)
     def get_split(self, instrument):
         try:
-            splilt_store = self._split_factors[instrument.type]
+            splilt_store = self._split_stores[instrument.type, instrument.market]
         except KeyError:
             return None
 
@@ -358,14 +345,14 @@ class BaseDataSource(AbstractDataSource):
         if not (DEFAULT_ACCOUNT_TYPE.STOCK in accounts or DEFAULT_ACCOUNT_TYPE.FUTURE in accounts):
             return date.min, date.max
         if frequency in ['tick', '1d']:
-            s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
+            s, e = self._day_bar_stores[INSTRUMENT_TYPE.INDX, MARKET.CN].get_date_range('000001.XSHG')
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
         return self._yield_curve.get_yield_curve(start_date, end_date, tenor=tenor)
 
     @lru_cache(1024)
-    def get_futures_trading_parameters(self, instrument: Instrument, dt: datetime.date) -> FuturesTradingParameters:
+    def get_futures_trading_parameters(self, instrument: Instrument, dt: datetime) -> FuturesTradingParameters:
         return self._future_info_store.get_future_info(instrument.order_book_id, instrument.underlying_symbol)
 
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
@@ -377,7 +364,11 @@ class BaseDataSource(AbstractDataSource):
     def get_algo_bar(self, id_or_ins, start_min, end_min, dt):
         raise NotImplementedError("open source rqalpha not support algo order")
 
-    def get_open_auction_volume(self, instrument, dt):
-        # type: (Instrument, datetime.datetime) -> float
+    def get_open_auction_volume(self, instrument: Instrument, dt: datetime):
         volume = self.get_open_auction_bar(instrument, dt)['volume']
         return volume
+
+    # deprecated
+    def register_instruments_store(self, instruments_store, market: MARKET = MARKET.CN):
+        system_log.warn("register_instruments_store is deprecated, please use register_instruments instead")
+        self.register_instruments(instruments_store.get_instruments(None))
