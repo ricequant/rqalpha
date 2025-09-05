@@ -27,7 +27,7 @@ from typing import Dict, Optional, List, Tuple, Union, Iterable
 
 import numpy as np
 import pandas as pd
-from rqrisk import Risk, WEEKLY, MONTHLY
+from rqrisk import Risk, DAILY, WEEKLY, MONTHLY
 
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.core.events import EVENT
@@ -36,7 +36,6 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.datetime_func import convert_int_to_date
 from rqalpha.utils.logger import user_system_log
-from rqalpha.const import DAYS_CNT
 from rqalpha.api import export_as_api
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
@@ -359,9 +358,10 @@ class AnalyserMod(AbstractMod):
                 summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
                 summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol if o not in self.NULL_OID else 'null'}:{w}" for o, w in self._benchmark)
 
+        trading_days_a_year = self._env.trading_days_a_year
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
         risk = Risk(
-            np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns), risk_free_rate
+            np.array(self._portfolio_daily_returns), np.array(self._benchmark_daily_returns), risk_free_rate, period=DAILY, trading_days_a_year=trading_days_a_year
         )
         summary.update({
             'alpha': risk.alpha,
@@ -406,7 +406,9 @@ class AnalyserMod(AbstractMod):
             benchmark_total_returns = (np.array(self._benchmark_daily_returns) + 1.0).prod() - 1.0
             summary['benchmark_total_returns'] = benchmark_total_returns
             date_count = len(self._benchmark_daily_returns)
-            benchmark_annualized_returns = (benchmark_total_returns + 1) ** (DAYS_CNT.TRADING_DAYS_A_YEAR / date_count) - 1
+            # 获取一年交易日天数
+            trading_days_a_year = self._env.trading_days_a_year
+            benchmark_annualized_returns = (benchmark_total_returns + 1) ** (trading_days_a_year / date_count) - 1
             summary['benchmark_annualized_returns'] = benchmark_annualized_returns
 
         trades = pd.DataFrame(self._trades)
@@ -416,6 +418,9 @@ class AnalyserMod(AbstractMod):
         df = pd.DataFrame(self._total_portfolios)
         df['date'] = pd.to_datetime(df['date'])
         total_portfolios = df.set_index('date').sort_index()
+        if self._benchmark:
+            total_portfolios["benchmark_unit_net_value"] = (self._benchmark_daily_returns + 1).cumprod()
+            total_portfolios["excess_unit_net_value"] = total_portfolios["unit_net_value"] - total_portfolios["benchmark_unit_net_value"]
         df.index = df['date']
         weekly_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
         monthly_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()

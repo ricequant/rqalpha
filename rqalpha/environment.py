@@ -22,10 +22,11 @@ from typing import TYPE_CHECKING
 
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
-from rqalpha.const import INSTRUMENT_TYPE
+from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.class_helper import cached_property
 from rqalpha.const import SIDE
 if TYPE_CHECKING:
     from rqalpha.model.order import Order
@@ -61,6 +62,7 @@ class Environment(object):
         self._default_frontend_validators = []
         self._transaction_cost_decider_dict = {}
         self.rqdatac_init = rqdatac_init # type: Boolean
+        self._trading_days_a_year = None
 
         # Environment.event_bus used in StrategyUniverse()
         from rqalpha.core.strategy_universe import StrategyUniverse
@@ -216,3 +218,10 @@ class Environment(object):
                 if not v.can_submit_order(order, account):
                     return False
         return True
+    
+    @cached_property
+    def trading_days_a_year(self):
+        self._trading_days_a_year = getattr(self.config.base, 'custom_trading_days_a_year', DAYS_CNT.TRADING_DAYS_A_YEAR)
+        if self._trading_days_a_year is None:
+            self._trading_days_a_year = DAYS_CNT.TRADING_DAYS_A_YEAR
+        return self._trading_days_a_year
