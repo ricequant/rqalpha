@@ -400,7 +400,7 @@ class UpdateDayBarTask(DayBarTask):
         except (OSError, RuntimeError):
             need_recreate_h5 = True
         if need_recreate_h5:
-            yield from GenerateDayBarTask(self._order_book_ids, self._file_path, self._fields, **self._h5_kwargs)()
+            yield from GenerateDayBarTask(self._order_book_ids, self._file_path, self._fields, self._market, **self._h5_kwargs)()
         else:
             h5 = None
             try:
