@@ -236,6 +236,7 @@ def run(config, source_code=None, user_funcs=None):
             persist_helper.persist()
         code = _exception_handler(e)
         mod_handler.tear_down(code, e)
+        raise e
     except Exception as e:
         if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
@@ -245,6 +246,7 @@ def run(config, source_code=None, user_funcs=None):
 
         code = _exception_handler(user_exc)
         mod_handler.tear_down(code, user_exc)
+        raise user_exc
     else:
         if persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT:
             persist_helper.persist()

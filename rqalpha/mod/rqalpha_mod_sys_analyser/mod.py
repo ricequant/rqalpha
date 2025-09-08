@@ -470,8 +470,8 @@ class AnalyserMod(AbstractMod):
             result_dict["summary"]["excess_max_drawdown_duration_end_date"] = str(max_ddd.end_date)
             result_dict["summary"]["excess_max_drawdown_duration_days"] = (max_ddd.end_date - max_ddd.start_date).days
         else:
-            weekly_b_returns = pandas.Series(index=weekly_returns.index)
-            monthly_b_returns = pandas.Series(index=monthly_returns.index)
+            weekly_b_returns = pandas.Series(index=weekly_returns.index, dtype=float)
+            monthly_b_returns = pandas.Series(index=monthly_returns.index, dtype=float)
 
         # 周度风险指标
         weekly_risk = Risk(weekly_returns, weekly_b_returns, risk_free_rate, WEEKLY)
