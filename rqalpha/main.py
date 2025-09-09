@@ -173,8 +173,7 @@ def run(config, source_code=None, user_funcs=None):
         if not hasattr(env, "portfolio"):
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(
-                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate,
-                config.base.start_date, env.data_proxy, env.event_bus
+                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate, env                
             ))
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))

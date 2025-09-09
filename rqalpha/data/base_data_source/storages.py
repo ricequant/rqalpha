@@ -24,7 +24,7 @@ import pickle
 from copy import copy
 from datetime import datetime
 from contextlib import contextmanager
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, List
 
 import h5py
 import numpy as np
@@ -126,9 +126,9 @@ class FutureInfoStore(object):
 
 
 
-def load_instruments_from_pkl(pkl_path: str, future_info_store: FutureInfoStore) -> list[Instrument]:
+def load_instruments_from_pkl(pkl_path: str, future_info_store: FutureInfoStore) -> List[Instrument]:
     with open(pkl_path, "rb") as f:
-        instruments: list[Instrument] = []
+        instruments: List[Instrument] = []
         with open(pkl_path, 'rb') as f:
             for i in pickle.load(f):
                 if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):

@@ -87,17 +87,17 @@ class BaseDataSource(AbstractDataSource):
 
         # dynamic registered storages
         self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
-        self._instrument_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractInstrumentStore] = {}
-        self._day_bar_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDayBarStore] = {}
-        self._dividend_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
-        self._split_stores: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
-        self._calendar_stores: dict[TRADING_CALENDAR_TYPE, AbstractCalendarStore] = {}
+        self._instrument_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractInstrumentStore] = {}
+        self._day_bar_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDayBarStore] = {}
+        self._dividend_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
+        self._split_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
+        self._calendar_stores: Dict[TRADING_CALENDAR_TYPE, AbstractCalendarStore] = {}
 
         # instruments
-        self._id_instrument_map: dict[str, Instrument] = {}
-        self._sym_instrument_map: dict[str, Instrument] = {}
+        self._id_instrument_map: Dict[str, Instrument] = {}
+        self._sym_instrument_map: Dict[str, Instrument] = {}
         self._id_or_sym_instrument_map: Mapping[str, Instrument] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
-        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, list[Instrument]] = defaultdict(list)
+        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, List[Instrument]] = defaultdict(list)
 
         # register instruments
         self.register_instruments(load_instruments_from_pkl(_p('instruments.pk'), self._future_info_store))
@@ -248,7 +248,7 @@ class BaseDataSource(AbstractDataSource):
             return idx
         return env.data_proxy.get_previous_trading_date(idx)
 
-    def resample_week_bars(self, bars, bar_count, fields: str | list[str]):
+    def resample_week_bars(self, bars, bar_count, fields: str | List[str]):
         df_bars = pd.DataFrame(bars)
         df_bars['datetime'] = df_bars.apply(lambda x: convert_int_to_datetime(x['datetime']), axis=1)
         df_bars = df_bars.set_index('datetime')

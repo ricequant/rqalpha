@@ -333,7 +333,7 @@ FUND_FIELDS = STOCK_FIELDS
 
 
 class DayBarTask(ProgressedTask):
-    def __init__(self, order_book_ids, file_path: str, fields: list[str], market="cn", **h5_kwargs):
+    def __init__(self, order_book_ids, file_path: str, fields: List[str], market="cn", **h5_kwargs):
         self._order_book_ids = order_book_ids
         self._file_path = file_path
         self._fields = fields
@@ -468,7 +468,7 @@ def process_init(args: Optional[Synchronized] = None, kwargs = None):
         sval = args
 
 
-def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs) -> list[ProgressedTask]:
+def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs) -> List[ProgressedTask]:
     tasks = []
     if create:
         _DayBarTask = GenerateDayBarTask
@@ -500,7 +500,7 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
     return tasks
 
 
-def run_tasks(tasks: list[ProgressedTask], concurrency: int = 1, **rqdatac_kwargs):
+def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwargs):
     succeed = multiprocessing.Value(c_bool, True)
     with ProgressedProcessPoolExecutor(
             max_workers=concurrency, initializer=process_init, initargs=(succeed, rqdatac_kwargs)

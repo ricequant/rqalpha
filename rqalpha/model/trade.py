@@ -36,7 +36,8 @@ class Trade(object):
 
     trade_id_gen = id_gen(int(time.time()) * 10000)
 
-    def __init__(self):
+    def __init__(self, env: Environment):
+        self._env = env
         self._calendar_dt = None
         self._trading_dt = None
         self._price = None
@@ -57,8 +58,9 @@ class Trade(object):
             trade_id=None, close_today_amount=0, frozen_price=0., calendar_dt=None, trading_dt=None, **kwargs
     ):
         from rqalpha.interface import TransactionCostArgs
+        env = Environment.get_instance()
 
-        trade = cls()
+        trade = cls(env)
         trade_id = trade_id or next(trade.trade_id_gen)
 
         for value in (price, amount, frozen_price):
@@ -71,7 +73,6 @@ class Trade(object):
                     frozen_price=frozen_price
                 ))
 
-        env = Environment.get_instance()
         ins = env.data_proxy.instrument_not_none(order_book_id)
         if transaction_cost is None:
             transaction_cost = env.calc_transaction_cost(TransactionCostArgs(
@@ -122,7 +123,7 @@ class Trade(object):
 
     @cached_property
     def _ins(self) -> Instrument:
-        return self.env.data_proxy.instrument_not_none(self.order_book_id)
+        return self._env.data_proxy.instrument_not_none(self.order_book_id)
     
     @cached_property
     def market(self) -> MARKET:

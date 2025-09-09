@@ -340,7 +340,7 @@ class Order(object):
         quantity = trade.last_quantity
         assert self.filled_quantity + quantity <= self.quantity
         new_quantity = self._filled_quantity + quantity
-        self._transaction_cost += trade.commission + trade.tax
+        self._transaction_cost += trade.transaction_cost
         if trade.position_effect != POSITION_EFFECT.MATCH:
             self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
         self._filled_quantity = new_quantity

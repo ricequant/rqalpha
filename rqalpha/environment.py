@@ -48,7 +48,7 @@ class Environment(object):
     broker: "AbstractBroker"
     strategy_loader: "AbstractStrategyLoader"
     portfolio: "Portfolio"
-    mod_dict: "dict[str, AbstractMod]"
+    mod_dict: "Dict[str, AbstractMod]"
     user_strategy: "Strategy"
 
     def __init__(self, config, rqdatac_init):
@@ -68,7 +68,7 @@ class Environment(object):
 
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
-        self._transaction_cost_deciders: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractTransactionCostDecider] = {}
+        self._transaction_cost_deciders: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractTransactionCostDecider] = {}
         self.rqdatac_init = rqdatac_init
         self._trading_days_a_year = None
 

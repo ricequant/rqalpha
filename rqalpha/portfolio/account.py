@@ -17,6 +17,7 @@
 
 from itertools import chain
 from datetime import date
+from tokenize import Floatnumber
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
@@ -26,6 +27,7 @@ from rqalpha.core.events import EVENT
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.model.trade import Trade
 from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils import is_valid_price
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
@@ -60,11 +62,12 @@ class Account(metaclass=AccountMeta):
             self, 
             account_type: str, 
             total_cash: float, 
-            init_positions: Dict[str, Tuple[int, Optional[float]]],
-            financing_rate: float
+            init_positions: Dict[str, int],
+            financing_rate: float,
+            env: Environment
     ):
         self._type = account_type
-        self._env = Environment.get_instance()
+        self._env = env
 
         # 现金项币种均为人民币
         self._total_cash = total_cash  # 包含保证金的总资金
@@ -84,10 +87,16 @@ class Account(metaclass=AccountMeta):
         # 融资利率/年
         self._financing_rate = financing_rate
 
-        for order_book_id, (init_quantity, init_price) in init_positions.items():
+        prev_date = self._env.data_proxy.get_previous_trading_date(self._env.trading_dt)
+        for order_book_id, init_quantity in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
             init_quantity = abs(init_quantity) if init_quantity < 0 else init_quantity
-            self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price)
+            init_price: float = self._env.data_proxy.get_bar(order_book_id, prev_date).close  # type: ignore
+            if not is_valid_price(init_price):
+                raise ValueError(_("invalid init position {order_book_id}: no valid price at {date}").format(
+                    order_book_id=order_book_id, date=prev_date
+                ))
+            self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price=init_price)
 
     def __repr__(self):
         positions_repr = {}
@@ -411,7 +420,6 @@ class Account(metaclass=AccountMeta):
         self._backward_trade_set.add(trade.exec_id)
 
     def _iter_pos(self, *, direction: Optional[POSITION_DIRECTION] = None, market: Optional[MARKET] = None) -> Iterable[Position]:
-        # type: (Optional[POSITION_DIRECTION]) -> Iterable[Position]
         if direction:
             pos_iter = (p[direction] for p in self._positions.values())
         else:
