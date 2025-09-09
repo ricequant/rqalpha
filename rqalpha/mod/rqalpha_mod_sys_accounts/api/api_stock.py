@@ -44,6 +44,7 @@ from rqalpha.model.instrument import IndustryCodeItem, Instrument
 from rqalpha.model.instrument import SectorCode as sector_code
 from rqalpha.model.instrument import SectorCodeItem
 from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle, ALGO_ORDER_STYLES
+from rqalpha.interface import TransactionCostArgs, AbstractTransactionCostDecider, TransactionCostArgs
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.datetime_func import to_date
@@ -131,6 +132,17 @@ def _order_shares(ins, amount, style, quantity, auto_switch_order_value, zero_am
     return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
 
 
+def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity: int | float, price: float):
+    if delta_quantity > 0:
+        side, position_effect = SIDE.BUY, POSITION_EFFECT.OPEN
+    else:
+        side, position_effect = SIDE.SELL, POSITION_EFFECT.CLOSE
+    comission, tax = env.calc_transaction_cost(TransactionCostArgs(
+        ins, price, abs(delta_quantity), side, position_effect,  # type: ignore
+    ))
+    return comission + tax
+    
+
 def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
     env = Environment.get_instance()
     if cash_amount > 0:
@@ -149,9 +161,7 @@ def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exce
     if cash_amount > 0:
         amount = _round_order_quantity(ins, amount)
         while amount > 0:
-            expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
-                ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
-            ))
+            expected_transaction_cost = _estimate_transaction_cost(env, ins, amount, price)
             if amount * price + expected_transaction_cost <= cash_amount:
                 break
             amount -= round_lot
@@ -328,7 +338,7 @@ def order_target_portfolio(
 
     """
     env = Environment.get_instance()
-    target: Dict[str, Tuple[float, float, float, float]] = {}
+    target: Dict[str, Tuple[float, OrderStyle, OrderStyle, float, Instrument]] = {}
     for id_or_ins, percent in target_portfolio.items():
         ins = assure_instrument(id_or_ins)
         if not ins:
@@ -356,7 +366,7 @@ def order_target_portfolio(
                 "excepted float between 0 and 1, got {} (key: {})"
             ).format(percent, id_or_ins))
 
-        target[order_book_id] = percent, open_style, close_style, last_price
+        target[ins.order_book_id] = percent, open_style, close_style, last_price, ins
 
     total_percent = sum(p for p, *__ in target.values())
     if total_percent > 1 and not np.isclose(total_percent, 1):
@@ -378,15 +388,15 @@ def order_target_portfolio(
     if total_percent == 1:
         # 在此处形成的订单不包含交易费用，需要预留一点余额以供交易费用使用
         estimate_transaction_cost = 0
-        for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
+        for order_book_id, (target_percent, open_style, close_style, last_price, ins) in target.items():
             current_value = current_quantities.get(order_book_id, 0) * last_price
             change_value = target_percent * account_value - current_value
-            estimate_transaction_cost += env.get_transaction_cost_with_value(change_value)
+            estimate_transaction_cost += _estimate_transaction_cost(env, ins, change_value / last_price, last_price)
         account_value = account_value - estimate_transaction_cost
 
     close_orders, open_orders = [], []
     waiting_to_buy = defaultdict()
-    for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
+    for order_book_id, (target_percent, open_style, close_style, last_price, ins) in target.items():
         open_price = _get_order_style_price(order_book_id, open_style)
         close_price = _get_order_style_price(order_book_id, close_style)
         if not (is_valid_price(close_price) and is_valid_price(open_price)):
@@ -402,7 +412,7 @@ def order_target_portfolio(
         if delta_quantity == 0:
             continue
         elif delta_quantity > 0:
-            waiting_to_buy[order_book_id] = (delta_quantity, POSITION_EFFECT.OPEN, open_style, last_price)
+            waiting_to_buy[order_book_id] = (delta_quantity, POSITION_EFFECT.OPEN, open_style, last_price, ins)
             continue
         else:
             quantity, side, position_effect = abs(delta_quantity), SIDE.SELL, POSITION_EFFECT.CLOSE
@@ -410,16 +420,16 @@ def order_target_portfolio(
         if isinstance(close_style, MarketOrder):
             order.set_frozen_price(last_price)
         close_orders.append(order)
-    
-    estimate_cash = account.cash + sum([o.quantity * o.frozen_price - env.get_order_transaction_cost(o) for o in close_orders])
-    for order_book_id, (delta_quantity, position_effect, open_style, last_price) in waiting_to_buy.items():
-        cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
+
+    estimate_cash = account.cash + sum([o.quantity * o.frozen_price - o.estimated_transaction_cost for o in close_orders])
+    for order_book_id, (delta_quantity, position_effect, open_style, last_price, ins) in waiting_to_buy.items():
+        cost = delta_quantity * last_price + _estimate_transaction_cost(env, ins, delta_quantity, last_price)
         if cost > estimate_cash:
             delta_quantity = estimate_cash / last_price
             delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
             if delta_quantity == 0:
                 continue
-            cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
+            cost = delta_quantity * last_price + _estimate_transaction_cost(env, ins, delta_quantity, last_price)
         order = Order.__from_create__(order_book_id, delta_quantity, SIDE.BUY, open_style, position_effect)
         if isinstance(open_style, MarketOrder):
             order.set_frozen_price(last_price)

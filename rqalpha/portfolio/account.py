@@ -470,7 +470,7 @@ class Account(metaclass=AccountMeta):
             order_cost = order.instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
         else:
             order_cost = 0
-        return order_cost + self._env.get_order_transaction_cost(order)
+        return order_cost + order.estimated_transaction_cost
 
     def _management_fee(self):
         # type: () -> float

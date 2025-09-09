@@ -15,14 +15,14 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import Optional, Dict, List
 from itertools import chain
 from typing import TYPE_CHECKING
 
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
-from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT
+from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT, MARKET
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
@@ -32,8 +32,10 @@ if TYPE_CHECKING:
     from rqalpha.model.order import Order
     from rqalpha.portfolio import Portfolio
     from rqalpha.data.data_proxy import DataProxy
-    from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, AbstractEventSource, AbstractStrategyLoader, AbstractMod, AbstractBroker
+    from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, AbstractEventSource, \
+        AbstractStrategyLoader, AbstractMod, AbstractBroker, AbstractTransactionCostDecider, TransactionCostArgs, TransactionCost
     from rqalpha.core.strategy import Strategy
+    from rqalpha.model.instrument import Instrument
 
 
 class Environment(object):
@@ -66,7 +68,7 @@ class Environment(object):
 
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
-        self._transaction_cost_decider_dict = {}
+        self._transaction_cost_deciders: dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractTransactionCostDecider] = {}
         self.rqdatac_init = rqdatac_init
         self._trading_days_a_year = None
 
@@ -178,31 +180,18 @@ class Environment(object):
     def get_open_orders(self, order_book_id=None):
         return self.broker.get_open_orders(order_book_id)
 
-    def set_transaction_cost_decider(self, instrument_type, decider):
-        # type: (INSTRUMENT_TYPE, rqalpha.interface.AbstractTransactionCostDecider) -> None
-        self._transaction_cost_decider_dict[instrument_type] = decider
+    def set_transaction_cost_decider(self, instrument_type: INSTRUMENT_TYPE, decider: "AbstractTransactionCostDecider", market: MARKET = MARKET.CN):
+        self._transaction_cost_deciders[(instrument_type, market)] = decider
 
-    def _get_transaction_cost_decider(self, order_book_id):
-        instrument_type = self.data_proxy.instrument_not_none(order_book_id).type
+    def calc_transaction_cost(self, args: "TransactionCostArgs") -> "TransactionCost":
+        ins = args.instrument
         try:
-            return self._transaction_cost_decider_dict[instrument_type]
+            decider = self._transaction_cost_deciders[(ins.type, ins.market)]
         except KeyError:
             raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}".format(
-                order_book_id
+                ins.order_book_id
             )))
-
-    def get_trade_tax(self, trade):
-        return self._get_transaction_cost_decider(trade.order_book_id).get_trade_tax(trade)
-    
-    def get_transaction_cost_with_value(self, value: float) -> float:
-        side = SIDE.BUY if value >= 0 else SIDE.SELL
-        return self._transaction_cost_decider_dict[INSTRUMENT_TYPE.CS].get_transaction_cost_with_value(abs(value), side)
-
-    def get_trade_commission(self, trade):
-        return self._get_transaction_cost_decider(trade.order_book_id).get_trade_commission(trade)
-
-    def get_order_transaction_cost(self, order):
-        return self._get_transaction_cost_decider(order.order_book_id).get_order_transaction_cost(order)
+        return decider.calc(args)
 
     def update_time(self, calendar_dt, trading_dt):
         # type: (datetime, datetime) -> None

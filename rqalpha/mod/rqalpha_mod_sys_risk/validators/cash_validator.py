@@ -26,9 +26,9 @@ from rqalpha.utils.i18n import gettext as _
 
 
 def validate_cash(env: Environment, order: Order, cash: float) -> Optional[str]:
-    instrument = env.data_proxy.instrument(order.order_book_id)
+    instrument = env.data_proxy.instrument_not_none(order.order_book_id)
     cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
-    cost_money += env.get_order_transaction_cost(order)
+    cost_money += order.estimated_transaction_cost
     if cost_money <= cash:
         return None
     reason = _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f},"

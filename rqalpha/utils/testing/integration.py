@@ -171,7 +171,7 @@ class StructuredTextFormat:
                 metadata = {}
                 section_lines.append(object_type)
                 section_lines.append(json.dumps(metadata, separators=(',', ':')))
-                section_lines.append(json.dumps(section_data, separators=(',', ':'), default=str))
+                section_lines.append(json.dumps(section_data, separators=(',', ':'), default=str, indent=4))
             
             sections.append('\n'.join(section_lines))
         
@@ -280,6 +280,8 @@ def _filter_integration_result(result: dict) -> dict:
                     'strategy_name', 'start_date', 'end_date', 'starting_cash', 'total_value', 'cash',
                     # Returns
                     'total_returns', 'annualized_returns', 'unit_net_value',
+                    # Excess
+                    'excess_returns', 'excess_annual_returns', 'excess_max_drawdown', 'excess_sharpe',
                     # Risk metrics
                     'volatility', 'max_drawdown', 'sharpe', 'sortino',
                     # Other important metrics

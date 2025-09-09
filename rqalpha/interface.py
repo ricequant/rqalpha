@@ -17,9 +17,7 @@
 
 import abc
 from datetime import datetime, date
-from typing import Any, Union, Optional, Iterable, Dict, List, Sequence, TYPE_CHECKING
-if TYPE_CHECKING:
-    from rqalpha.portfolio.account import Account
+from typing import Any, Union, Optional, Iterable, Dict, List, Sequence, TYPE_CHECKING, NamedTuple
 
 import numpy
 from six import with_metaclass
@@ -28,9 +26,12 @@ import pandas
 from rqalpha.utils.typing import DateLike
 from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
-from rqalpha.model.trade import Trade
 from rqalpha.model.instrument import Instrument
-from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE, SIDE, MARKET
+from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE, SIDE, \
+    MARKET, POSITION_EFFECT
+if TYPE_CHECKING:
+    from rqalpha.portfolio.account import Account
+
 
 
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
@@ -726,33 +727,28 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
+class TransactionCostArgs(NamedTuple):
+    instrument: Instrument
+    price: float
+    quantity: int
+    side: SIDE
+    position_effect: POSITION_EFFECT
+    order_id: Optional[int] = None
+    close_today_quantity: int = 0
+
+
+class TransactionCost(NamedTuple):
+    commission: float
+    tax: float
+
 class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
     """
     订单税费计算接口，通过实现次接口可以定义不同市场、不同合约的个性化税费计算逻辑。
     """
     @abc.abstractmethod
-    def get_trade_tax(self, trade: Trade) -> float:
+    def calc(self, args: TransactionCostArgs) -> TransactionCost:
         """
         计算指定交易应付的印花税
         """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_trade_commission(self, trade: Trade) -> float:
-        """
-        计算指定交易应付的佣金
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_order_transaction_cost(self, order: Order) -> float:
-        """
-        计算指定订单应付的交易成本（税 + 费）
-        """
-        raise NotImplementedError
-    
-    def get_transaction_cost_with_value(self, value: float, side: SIDE) -> float:
-        """
-        计算指定价格交易应付的交易成本（税 + 费）
-        """
+        # TODO: 兼容旧的 API
         raise NotImplementedError

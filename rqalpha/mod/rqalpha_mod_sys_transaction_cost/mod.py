@@ -22,7 +22,7 @@ from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_log
 
-from .deciders import CNStockTransactionCostDecider, CNFutureTransactionCostDecider
+from .deciders import StockTransactionCostDecider, FuturesTransactionCostDecider
 
 
 class TransactionCostMod(AbstractMod):
@@ -45,12 +45,12 @@ class TransactionCostMod(AbstractMod):
         for instrument_type in INST_TYPE_IN_STOCK_ACCOUNT:
             if instrument_type == INSTRUMENT_TYPE.PUBLIC_FUND:
                 continue
-            env.set_transaction_cost_decider(instrument_type, CNStockTransactionCostDecider(
+            env.set_transaction_cost_decider(instrument_type, StockTransactionCostDecider(
                 stock_commission_multiplier, mod_config.cn_stock_min_commission,
                 mod_config.tax_multiplier, mod_config.pit_tax, env.event_bus
             ))
 
-        env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(
+        env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, FuturesTransactionCostDecider(
             futures_commission_multiplier
         ))
 

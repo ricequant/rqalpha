@@ -15,10 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from __future__ import annotations
-
 import time
-import inspect
+from typing import TYPE_CHECKING, Optional
 from functools import cached_property
 
 from rqalpha.utils import id_gen, get_position_direction
@@ -28,6 +26,8 @@ from rqalpha.environment import Environment
 from rqalpha.const import POSITION_EFFECT, SIDE, MARKET
 from rqalpha.model.instrument import Instrument
 
+if TYPE_CHECKING:
+    from rqalpha.interface import TransactionCost
 
 # TODO: 改成 namedtuple，提升性能
 class Trade(object):
@@ -54,24 +54,32 @@ class Trade(object):
 
     @classmethod
     def __from_create__(
-            cls, order_id, price, amount, side, position_effect, order_book_id, commission=0., tax=0.,
-            trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None, **kwargs
+            cls, order_id, price, amount, side, position_effect, order_book_id, transaction_cost: "Optional[TransactionCost]" = None,
+            trade_id=None, close_today_amount=0, frozen_price=0., calendar_dt=None, trading_dt=None, **kwargs
     ):
+        from rqalpha.interface import TransactionCostArgs
 
         trade = cls()
         trade_id = trade_id or next(trade.trade_id_gen)
 
-        for value in (price, amount, commission, tax, frozen_price):
+        for value in (price, amount, frozen_price):
             if value != value:
                 raise RuntimeError(_(
-                    "price, amount, commission, tax and frozen_price of trade {trade_id} is not supposed to be nan, "
+                    "price, amount, and frozen_price of trade {trade_id} is not supposed to be nan, "
                     "current_value is {price}, {amount}, {commission}, {tax}, {frozen_price}"
                 ).format(
-                    trade_id=trade_id, price=price, amount=amount, commission=commission, tax=tax,
+                    trade_id=trade_id, price=price, amount=amount,
                     frozen_price=frozen_price
                 ))
 
         env = Environment.get_instance()
+        ins = env.data_proxy.instrument_not_none(order_book_id)
+        if transaction_cost is None:
+            transaction_cost = env.calc_transaction_cost(TransactionCostArgs(
+                ins, price, amount, side, position_effect, order_id=order_id, close_today_quantity=close_today_amount,
+            ))
+        commission, tax = transaction_cost
+
         trade._calendar_dt = calendar_dt or env.calendar_dt
         trade._trading_dt = trading_dt or env.trading_dt
         trade._price = price
@@ -117,7 +125,7 @@ class Trade(object):
 
     @cached_property
     def _ins(self) -> Instrument:
-        return self.env.data_proxy.instrument(self.order_book_id)
+        return self.env.data_proxy.instrument_not_none(self.order_book_id)
     
     @cached_property
     def market(self) -> MARKET:

@@ -14,13 +14,13 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from collections import deque
 from datetime import date
 from functools import cached_property
 
 from decimal import Decimal
 from numpy import ndarray
 
+from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
@@ -153,7 +153,8 @@ class StockPosition(Position):
                         amount=self._quantity * conversion_ratio,
                         side=SIDE.BUY,
                         position_effect=POSITION_EFFECT.OPEN,
-                        order_book_id=successor
+                        order_book_id=successor,
+                        transaction_cost=TransactionCost(commission=0, tax=0)
                     ))
                     for direction in POSITION_DIRECTION:
                         successor_position = self._env.portfolio.get_position(successor, direction)
@@ -227,10 +228,8 @@ class StockPosition(Position):
             if amount > 0:
                 account = self._env.get_account(self._order_book_id)
                 trade = Trade.__from_create__(
-                    None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id
+                    None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id,
                 )
-                trade._commission = self._env.get_trade_commission(trade)
-                trade._tax = self._env.get_trade_tax(trade)
                 self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             return dividend_value - amount * last_price
         else:
@@ -358,7 +357,8 @@ class FuturePosition(Position):
             account = self._env.get_account(self._order_book_id)
             side = SIDE.SELL if self.direction == POSITION_DIRECTION.LONG else SIDE.BUY
             trade = Trade.__from_create__(
-                None, self.last_price, self._quantity, side, POSITION_EFFECT.CLOSE, self._order_book_id
+                None, self.last_price, self._quantity, side, POSITION_EFFECT.CLOSE, self._order_book_id,
+                transaction_cost=TransactionCost(commission=0, tax=0)
             )
             self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             self._quantity = self._old_quantity = 0

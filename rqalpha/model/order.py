@@ -300,6 +300,20 @@ class Order(object):
     def market(self) -> MARKET:
         return self.instrument.market
 
+    @property
+    def estimated_transaction_cost(self):
+        from rqalpha.interface import TransactionCostArgs
+
+        if self.position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            close_today_quantity = self.quantity
+        else:
+            close_today_quantity = 0
+        comission, tax = self._env.calc_transaction_cost(TransactionCostArgs(
+            self.instrument, self.frozen_price, self.quantity, self.side, self.position_effect,
+            close_today_quantity=close_today_quantity,
+        ))
+        return comission + tax
+
     def __getattr__(self, item):
         try:
             return self.__dict__["_kwargs"][item]
