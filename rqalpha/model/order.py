@@ -301,18 +301,17 @@ class Order(object):
         return self.instrument.market
 
     @property
-    def estimated_transaction_cost(self):
+    def estimated_transaction_cost(self) -> float:
         from rqalpha.interface import TransactionCostArgs
 
         if self.position_effect == POSITION_EFFECT.CLOSE_TODAY:
             close_today_quantity = self.quantity
         else:
             close_today_quantity = 0
-        comission, tax = self._env.calc_transaction_cost(TransactionCostArgs(
+        return self._env.calc_transaction_cost(TransactionCostArgs(
             self.instrument, self.frozen_price, self.quantity, self.side, self.position_effect,
             close_today_quantity=close_today_quantity,
-        ))
-        return comission + tax
+        )).total
 
     def __getattr__(self, item):
         try:

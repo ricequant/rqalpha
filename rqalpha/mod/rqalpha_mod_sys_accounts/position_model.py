@@ -154,7 +154,7 @@ class StockPosition(Position):
                         side=SIDE.BUY,
                         position_effect=POSITION_EFFECT.OPEN,
                         order_book_id=successor,
-                        transaction_cost=TransactionCost(commission=0, tax=0)
+                        transaction_cost=TransactionCost.zero()
                     ))
                     for direction in POSITION_DIRECTION:
                         successor_position = self._env.portfolio.get_position(successor, direction)
@@ -358,7 +358,7 @@ class FuturePosition(Position):
             side = SIDE.SELL if self.direction == POSITION_DIRECTION.LONG else SIDE.BUY
             trade = Trade.__from_create__(
                 None, self.last_price, self._quantity, side, POSITION_EFFECT.CLOSE, self._order_book_id,
-                transaction_cost=TransactionCost(commission=0, tax=0)
+                transaction_cost=TransactionCost.zero()
             )
             self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             self._quantity = self._old_quantity = 0

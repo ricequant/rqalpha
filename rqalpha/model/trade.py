@@ -42,8 +42,7 @@ class Trade(object):
         self._price = None
         self._amount = None
         self._order_id = None
-        self._commission = None
-        self._tax = None
+        self._transaction_cost = None
         self._trade_id = None
         self._close_today_amount = None
         self._side = None
@@ -78,15 +77,13 @@ class Trade(object):
             transaction_cost = env.calc_transaction_cost(TransactionCostArgs(
                 ins, price, amount, side, position_effect, order_id=order_id, close_today_quantity=close_today_amount,
             ))
-        commission, tax = transaction_cost
 
         trade._calendar_dt = calendar_dt or env.calendar_dt
         trade._trading_dt = trading_dt or env.trading_dt
         trade._price = price
         trade._amount = amount
         trade._order_id = order_id
-        trade._commission = commission
-        trade._tax = tax
+        trade._transaction_cost = transaction_cost
         trade._trade_id = trade_id
         trade._close_today_amount = close_today_amount
         trade._side = side
@@ -102,9 +99,9 @@ class Trade(object):
     order_id = property(lambda self: self._order_id)
     last_price = property(lambda self: self._price)
     last_quantity = property(lambda self: self._amount)
-    commission = property(lambda self: self._commission)
-    tax = property(lambda self: self._tax)
-    transaction_cost = property(lambda self: self.commission + self.tax)
+    commission = property(lambda self: self._transaction_cost.commission)
+    tax = property(lambda self: self._transaction_cost.tax)
+    transaction_cost = property(lambda self: self._transaction_cost.total)
     side = property(lambda self: self._side)
     position_effect = property(lambda self: self._position_effect or (
         POSITION_EFFECT.OPEN if self._side == SIDE.BUY else POSITION_EFFECT.CLOSE

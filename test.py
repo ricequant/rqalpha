@@ -24,6 +24,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 import numpy as np
 import coverage
+import pytest
 
 from rqalpha import run, run_func
 
@@ -182,14 +183,13 @@ def write_csv(path, fields):
                 writer.writerow({"date_time": end_time, "time_spend": time_spend})
 
 
-def run_unit_tests():
-    from unittest import TextTestRunner
-
-    from tests.unittest import load_tests
-
-    result = TextTestRunner(verbosity=2).run(load_tests())
-    if not result.wasSuccessful():
-        raise RuntimeError("Unittest failed.")
+def run_pytest_tests(args):
+    retcode = pytest.main(args + [
+        os.path.join(TEST_DIR, "unittest"),
+        os.path.join(TEST_DIR, "integration_tests"),
+    ])
+    if retcode != 0:
+        raise RuntimeError("Pytest failed.")
 
 
 if __name__ == "__main__":
@@ -223,8 +223,8 @@ if __name__ == "__main__":
             time_spend = (end_time - start_time).total_seconds()
             write_csv(performance_path, field_names)
 
-        elif sys.argv[1] == "unittest":
-            run_unit_tests()
+        elif sys.argv[1] == "pytest":
+            run_pytest_tests(sys.argv[2:])
             end_time = datetime.now()
 
         else:
@@ -233,7 +233,8 @@ if __name__ == "__main__":
             end_time = datetime.now()
 
     else:
-        run_unit_tests()
+        # TODO: 逐步迁移至 pytest，弃用自定义框架
+        run_pytest_tests([])
         test_api()
         error_count = run_tests()
         end_time = datetime.now()

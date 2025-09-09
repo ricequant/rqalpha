@@ -241,38 +241,33 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
     因此抽离出 `AbstractPriceBoard`, 您可以自行进行扩展并替换默认 PriceBoard
     """
     @abc.abstractmethod
-    def get_last_price(self, order_book_id):
-        # type: (str) -> float
+    def get_last_price(self, order_book_id: str) -> float:
         """
         获取合约的最新价
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_limit_up(self, order_book_id):
-        # type: (str) -> float
+    def get_limit_up(self, order_book_id: str) -> float:
         """
         获取合约的涨停价
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_limit_down(self, order_book_id):
-        # type: (str) -> float
+    def get_limit_down(self, order_book_id: str) -> float:
         """
         获取合约的跌停价
         """
         raise NotImplementedError
 
-    def get_a1(self, order_book_id):
-        # type: (str) -> Union[float, numpy.nan]
+    def get_a1(self, order_book_id: str) -> float:
         """
         获取合约的卖一价
         """
         raise NotImplementedError
 
-    def get_b1(self, order_book_id):
-        # type: (str) -> Union[float, numpy.nan]
+    def get_b1(self, order_book_id: str) -> float:
         """
         获取合约的买一价
         """
@@ -740,6 +735,16 @@ class TransactionCostArgs(NamedTuple):
 class TransactionCost(NamedTuple):
     commission: float
     tax: float
+    other_fees: float
+
+    @property
+    def total(self) -> float:
+        return self.commission + self.tax + self.other_fees
+
+    @classmethod
+    def zero(cls) -> 'TransactionCost':
+        return cls(commission=0, tax=0, other_fees=0)
+
 
 class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
     """

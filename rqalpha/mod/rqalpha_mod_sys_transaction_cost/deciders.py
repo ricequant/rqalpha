@@ -83,7 +83,7 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
         return cost_money * self.tax_rate * self.tax_multiplier
 
     def calc(self, args: TransactionCostArgs) -> TransactionCost:
-        return TransactionCost(commission=self._calc_commission(args), tax=self._calc_tax(args))
+        return TransactionCost(commission=self._calc_commission(args), tax=self._calc_tax(args), other_fees=0)
 
 class FuturesTransactionCostDecider(AbstractTransactionCostDecider):
     def __init__(self, commission_multiplier):
@@ -114,4 +114,4 @@ class FuturesTransactionCostDecider(AbstractTransactionCostDecider):
         return commission * self.commission_multiplier
 
     def calc(self, args: TransactionCostArgs) -> TransactionCost:
-        return TransactionCost(commission=self._calc_commission(args), tax=0)
+        return TransactionCost(commission=self._calc_commission(args), tax=0, other_fees=0)

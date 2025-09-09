@@ -132,15 +132,14 @@ def _order_shares(ins, amount, style, quantity, auto_switch_order_value, zero_am
     return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
 
 
-def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity: int | float, price: float):
+def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity: int | float, price: float) -> float:
     if delta_quantity > 0:
         side, position_effect = SIDE.BUY, POSITION_EFFECT.OPEN
     else:
         side, position_effect = SIDE.SELL, POSITION_EFFECT.CLOSE
-    comission, tax = env.calc_transaction_cost(TransactionCostArgs(
+    return env.calc_transaction_cost(TransactionCostArgs(
         ins, price, abs(delta_quantity), side, position_effect,  # type: ignore
-    ))
-    return comission + tax
+    )).total
     
 
 def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
