@@ -1,0 +1,71 @@
+[trades]
+DataFrame
+{"shape":[4,13],"dtypes":{"datetime":"object","trading_datetime":"object","order_book_id":"object","symbol":"object","side":"object","position_effect":"object","exec_id":"int64","tax":"int64","commission":"float64","last_quantity":"int64","last_price":"float64","order_id":"float64","transaction_cost":"float64"},"index_dtype":"datetime64[ns]","index_name":"datetime","columns":["datetime","trading_datetime","order_book_id","symbol","side","position_effect","exec_id","tax","commission","last_quantity","last_price","order_id","transaction_cost"]}
+,datetime,trading_datetime,order_book_id,symbol,side,position_effect,exec_id,tax,commission,last_quantity,last_price,order_id,transaction_cost
+2024-02-05 15:00:00,2024-02-05 15:00:00,2024-02-05 15:00:00,IH2402,上证50期货2402,BUY,OPEN,17574897030000,0,51.0048,3,2240.0,17574897030000.0,51.0048
+2024-02-05 15:00:00,2024-02-05 15:00:00,2024-02-05 15:00:00,IC2402,中证500期货2402,SELL,OPEN,17574897030001,0,66.4884,3,4380.0,17574897030001.0,66.4884
+2024-02-19 15:30:00,2024-02-19 15:30:00,2024-02-19 15:30:00,IH2402,上证50期货2402,SELL,CLOSE,17574897030002,0,0.0,3,2363.0,,0.0
+2024-02-19 15:30:00,2024-02-19 15:30:00,2024-02-19 15:30:00,IC2402,中证500期货2402,BUY,CLOSE,17574897030003,0,0.0,3,5105.6,,0.0
+
+[future_positions]
+DataFrame
+{"shape":[8,15],"dtypes":{"order_book_id":"object","symbol":"object","margin":"float64","contract_multiplier":"float64","last_price":"float64","LONG_pnl":"float64","LONG_margin":"float64","LONG_market_value":"float64","LONG_quantity":"float64","LONG_avg_open_price":"float64","SHORT_pnl":"float64","SHORT_margin":"float64","SHORT_market_value":"float64","SHORT_quantity":"float64","SHORT_avg_open_price":"float64"},"index_dtype":"datetime64[ns]","index_name":"date","columns":["order_book_id","symbol","margin","contract_multiplier","last_price","LONG_pnl","LONG_margin","LONG_market_value","LONG_quantity","LONG_avg_open_price","SHORT_pnl","SHORT_margin","SHORT_market_value","SHORT_quantity","SHORT_avg_open_price"]}
+,order_book_id,symbol,margin,contract_multiplier,last_price,LONG_pnl,LONG_margin,LONG_market_value,LONG_quantity,LONG_avg_open_price,SHORT_pnl,SHORT_margin,SHORT_market_value,SHORT_quantity,SHORT_avg_open_price
+2024-02-05 00:00:00,IH2402,上证50期货2402,241920.0,300.0,2240.0,0.0,241920.0,2016000.0,3.0,2240.0,,,,,
+2024-02-05 00:00:00,IC2402,中证500期货2402,315360.0,200.0,4380.0,,,,,,-0.0,315360.0,2628000.0,3.0,4380.0
+2024-02-06 00:00:00,IH2402,上证50期货2402,249372.0,300.0,2309.0,0.0,249372.0,2078100.0,3.0,2309.0,,,,,
+2024-02-06 00:00:00,IC2402,中证500期货2402,347227.2,200.0,4822.6,,,,,,-0.0,347227.2,2893560.0,3.0,4822.6
+2024-02-07 00:00:00,IH2402,上证50期货2402,253432.8,300.0,2346.6,0.0,253432.8,2111940.0,3.0,2346.6,,,,,
+2024-02-07 00:00:00,IC2402,中证500期货2402,370094.4,200.0,5140.2,,,,,,-0.0,370094.4,3084120.0,3.0,5140.2
+2024-02-08 00:00:00,IH2402,上证50期货2402,252936.0,300.0,2342.0,0.0,252936.0,2107800.0,3.0,2342.0,,,,,
+2024-02-08 00:00:00,IC2402,中证500期货2402,371116.8,200.0,5154.4,,,,,,-0.0,371116.8,3092640.0,3.0,5154.4
+
+[future_account]
+DataFrame
+{"shape":[6,8],"dtypes":{"cash":"float64","transaction_cost":"float64","market_value":"float64","total_value":"float64","position_pnl":"float64","trading_pnl":"float64","daily_pnl":"float64","margin":"float64"},"index_dtype":"datetime64[ns]","index_name":"date","columns":["cash","transaction_cost","market_value","total_value","position_pnl","trading_pnl","daily_pnl","margin"]}
+,cash,transaction_cost,market_value,total_value,position_pnl,trading_pnl,daily_pnl,margin
+2024-02-05 00:00:00,9442602.5068,117.4932,-612000.0,9999882.5068,0.0,0.0,-117.4932,557280.0
+2024-02-06 00:00:00,9199823.3068,0.0,-815460.0,9796422.5068,-203460.0,0.0,-203460.0,596599.2
+2024-02-07 00:00:00,9016175.3068,0.0,-972180.0,9639702.5068,-156720.0,0.0,-156720.0,623527.2
+2024-02-08 00:00:00,9002989.7068,0.0,-984840.0,9627042.5068,-12660.0,0.0,-12660.0,624052.8
+2024-02-19 00:00:00,9675222.5068,0.0,0.0,9675222.5068,48180.0,0.0,48180.0,0.0
+2024-02-20 00:00:00,9675222.5068,0.0,0.0,9675222.5068,0.0,0.0,0.0,0.0
+
+[portfolio]
+DataFrame
+{"shape":[6,6],"dtypes":{"cash":"float64","total_value":"float64","market_value":"float64","unit_net_value":"float64","units":"float64","static_unit_net_value":"float64"},"index_dtype":"datetime64[ns]","index_name":"date","columns":["cash","total_value","market_value","unit_net_value","units","static_unit_net_value"]}
+,cash,total_value,market_value,unit_net_value,units,static_unit_net_value
+2024-02-05 00:00:00,9442602.5068,9999882.5068,-612000.0,0.999988,10000000.0,1.0
+2024-02-06 00:00:00,9199823.3068,9796422.5068,-815460.0,0.979642,10000000.0,1.0
+2024-02-07 00:00:00,9016175.3068,9639702.5068,-972180.0,0.96397,10000000.0,0.9796
+2024-02-08 00:00:00,9002989.7068,9627042.5068,-984840.0,0.962704,10000000.0,0.964
+2024-02-19 00:00:00,9675222.5068,9675222.5068,0.0,0.967522,10000000.0,0.9627
+2024-02-20 00:00:00,9675222.5068,9675222.5068,0.0,0.967522,10000000.0,0.9675
+
+[summary]
+dict
+{}
+{
+    "strategy_name":"strategy",
+    "start_date":"2024-02-05",
+    "end_date":"2024-02-20",
+    "starting_cash":"FUTURE:10000000.0",
+    "alpha":NaN,
+    "beta":NaN,
+    "sharpe":-8.587450678034518,
+    "excess_sharpe":NaN,
+    "information_ratio":NaN,
+    "tracking_error":NaN,
+    "sortino":-10.711815394034202,
+    "volatility":0.1617082076815067,
+    "max_drawdown":0.037295749319999905,
+    "excess_max_drawdown":NaN,
+    "excess_returns":NaN,
+    "excess_annual_returns":NaN,
+    "win_rate":0.16666666666666666,
+    "total_value":9675222.506800001,
+    "cash":9675222.506800001,
+    "total_returns":-0.032477749319999805,
+    "annualized_returns":-0.7501033786896171,
+    "unit_net_value":0.9675222506800002
+}

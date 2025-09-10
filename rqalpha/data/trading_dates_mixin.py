@@ -68,9 +68,9 @@ class TradingDatesMixin(object):
         else:
             return trading_dates[pos + n - 1]
 
-    def is_trading_date(self, date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
+    def is_trading_date(self, date: datetime.date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
-        pos = trading_dates.searchsorted(_to_timestamp(date))
+        pos = trading_dates.searchsorted(pd.Timestamp(date))
         return pos < len(trading_dates) and trading_dates[pos].date() == date
 
     def get_trading_dt(self, calendar_dt):

@@ -192,7 +192,7 @@ class Account(metaclass=AccountMeta):
         try:
             return self._positions[order_book_id][direction]
         except KeyError:
-            return Position(order_book_id, direction)
+            return self._init_position(order_book_id, direction, 0, None)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction, position_effect):
         return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount, position_effect)
@@ -204,6 +204,7 @@ class Account(metaclass=AccountMeta):
     @property
     @lru_cache(None)
     def positions(self):
+        user_system_log.warn(_("account.positions is deprecated, please use get_position/get_positions API instead"))
         return PositionProxyDict(self._positions)
 
     @property
@@ -429,11 +430,14 @@ class Account(metaclass=AccountMeta):
         else:
             return pos_iter
 
+    def _init_position(self, order_book_id: str, direction: POSITION_DIRECTION, init_quantity: int, init_price: Optional[float] = None) -> Position:
+        return Position(order_book_id, direction, init_quantity, init_price)
+
     def _get_or_create_pos(
             self,
             order_book_id: str,
             direction: Union[POSITION_DIRECTION, str],
-            init_quantity: float = 0,
+            init_quantity: int = 0,
             init_price : Optional[float] = None
     ) -> Position:
         if order_book_id not in self._positions:
@@ -441,14 +445,12 @@ class Account(metaclass=AccountMeta):
                 long_quantity, short_quantity = init_quantity, 0
             else:
                 long_quantity, short_quantity = 0, init_quantity
-            positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: Position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
-                POSITION_DIRECTION.SHORT: Position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
-            })
             if not init_price:
-                last_price = self._env.get_last_price(order_book_id)
-                for p in positions.values():
-                    p.update_last_price(last_price)
+                init_price = self._env.get_last_price(order_book_id)
+            positions = self._positions.setdefault(order_book_id, {
+                POSITION_DIRECTION.LONG: self._init_position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
+                POSITION_DIRECTION.SHORT: self._init_position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
+            })
             if hasattr(positions[direction], "margin") and hasattr(self.__class__, "_margin"):
                 # black magic: improve performance for pure stock strategy
                 setattr(self.__class__, "margin", self.__class__._margin)
