@@ -22,7 +22,7 @@ from numpy import ndarray
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, MARKET
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
@@ -40,7 +40,7 @@ def _int_to_date(d):
     return date(year=y, month=m, day=d)
 
 
-class StockPosition(Position):
+class StockPosition(Position, instrument_market_pairs=[(i, MARKET.CN) for i in INST_TYPE_IN_STOCK_ACCOUNT]):
     # 注意，涉及到非人民币的持仓：
     #   1. before_trading 和 settlement 返回的资金变化为本币
     #   2. 命名带 local 后缀的 property 返回的值为本币计价
@@ -48,7 +48,6 @@ class StockPosition(Position):
     __repr_properties__ = (
         "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl", "last_price"
     )
-    __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     dividend_reinvestment = False
     cash_return_by_stock_delisted = True
@@ -249,12 +248,11 @@ class StockPosition(Position):
         self._queue.handle_split(ratio_decimal, self._quantity)
 
 
-class FuturePosition(Position):
+class FuturePosition(Position, instrument_market_pairs=[(INSTRUMENT_TYPE.FUTURE, MARKET.CN)]):
     __repr_properties__ = (
         "order_book_id", "direction", "old_quantity", "quantity", "margin", "market_value", "trading_pnl",
         "position_pnl", "last_price"
     )
-    __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._quantity - self._old_quantity)
@@ -372,11 +370,10 @@ class FuturePosition(Position):
             pass
 
 
-class StockPositionProxy(PositionProxy):
+class StockPositionProxy(PositionProxy, instrument_market_pairs=[(i, MARKET.CN) for i in INST_TYPE_IN_STOCK_ACCOUNT]):
     __repr_properties__ = (
         "order_book_id", "quantity", "avg_price", "market_value"
     )
-    __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     @property
     def type(self):
@@ -412,12 +409,11 @@ class StockPositionProxy(PositionProxy):
         return 0 if total_value == 0 else self.market_value / total_value
 
 
-class FuturePositionProxy(PositionProxy):
+class FuturePositionProxy(PositionProxy, instrument_market_pairs=[(INSTRUMENT_TYPE.FUTURE, MARKET.CN)]):
     __repr_properties__ = (
         "order_book_id", "buy_quantity", "sell_quantity", "buy_market_value", "sell_market_value",
         "buy_margin", "sell_margin"
     )
-    __instrument_types__ = [INSTRUMENT_TYPE.FUTURE]
 
     @property
     def type(self):

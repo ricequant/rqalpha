@@ -21,7 +21,7 @@ from decimal import Decimal
 from typing import Dict, Iterable, Tuple, Optional, Deque, List
 from functools import cached_property
 
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET
+from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, POSITION_EFFECT, MARKET
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.instrument import Instrument
@@ -29,67 +29,51 @@ from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.repr import PropertyReprMeta, property_repr
+from rqalpha.utils.repr import property_repr
 from rqalpha.utils.logger import user_system_log
 
 
-def new_position_meta():
-    type_map = {}
-
-    class Meta(PropertyReprMeta):
-        def __new__(mcs, *args, **kwargs):
-            cls = super(Meta, mcs).__new__(mcs, *args, **kwargs)
-            try:
-                instrument_types = cls.__instrument_types__
-            except AttributeError:
-                pass
-            else:
-                for instrument_type in instrument_types:
-                    type_map[instrument_type] = cls
-            return cls
-
-    return type_map, Meta
-
-
-POSITION_TYPE_MAP, PositionMeta = new_position_meta()
-POSITION_PROXY_TYPE_MAP, PositionProxyMeta = new_position_meta()
-
-
-class Position(AbstractPosition, metaclass=PositionMeta):
+class Position(AbstractPosition):
     __repr_properties__ = (
         "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl", "last_price"
     )
+    __position_types__: "Dict[Tuple[INSTRUMENT_TYPE, MARKET], type[Position]]" = {}
 
-    # 用于注册该 Position 类型适用的 instrument_type
-    __instrument_types__ = []
+    def __init_subclass__(cls, instrument_market_pairs: List[Tuple[INSTRUMENT_TYPE, MARKET]]):
+        for ins_type, market in instrument_market_pairs:
+            cls.__position_types__[(ins_type, market)] = cls
 
-    def __new__(cls, order_book_id, direction, init_quantity=0, init_price=None):
-        if cls == Position:
-            ins_type = Environment.get_instance().data_proxy.instrument(order_book_id).type
+    def __new__(cls, instrument: Instrument, *args, **kwargs):
+        if cls is Position:
             try:
-                position_cls = POSITION_TYPE_MAP[ins_type]
+                position_type = cls.__position_types__[(instrument.type, instrument.market)]
             except KeyError:
-                raise NotImplementedError("")
-            return position_cls.__new__(position_cls, order_book_id, direction, init_quantity, init_price)
+                raise NotImplementedError(_("No position type found for instrument {instryment_type} at {market}").format(
+                    instryment_type=instrument.type, market=instrument.market
+                ))
+            return position_type(instrument, *args, **kwargs)
         else:
-            return object.__new__(cls)
+            return super(Position, cls).__new__(cls)
 
-    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
+    def __init__(self, instrument: Instrument, direction: POSITION_DIRECTION, init_quantity: int = 0, init_price: Optional[float] = None):
         self._env = Environment.get_instance()
 
-        self._order_book_id = order_book_id
-        self._instrument = self._env.data_proxy.instrument(order_book_id)  # type: Instrument
+        if not init_price:
+            init_price = self._env.get_last_price(instrument.order_book_id)
+
+        self._order_book_id = instrument.order_book_id
+        self._instrument = instrument
         self._direction = direction
 
         self._quantity = init_quantity
         self._old_quantity = init_quantity
         self._logical_old_quantity = 0
 
-        self._avg_price: float = init_price or 0
+        self._avg_price: float = init_price
         self._trade_cost: float = 0
         self._transaction_cost: float = 0
         self._prev_close: Optional[float] = init_price
-        self._last_price: Optional[float] = init_price
+        self._last_price: float = init_price
 
         self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
 
@@ -349,12 +333,16 @@ class PositionQueue:
         return self._queue.copy()
 
 
-class PositionProxy(metaclass=PositionProxyMeta):
+class PositionProxy:
     __repr_properties__ = (
         "order_book_id", "positions"
     )
     # 用于注册该 Position 类型适用的 instrument_type
-    __instrument_types__ = []
+    __position_types__: "Dict[Tuple[INSTRUMENT_TYPE, MARKET], type[PositionProxy]]" = {}
+
+    def __init_subclass__(cls, instrument_market_pairs: List[Tuple[INSTRUMENT_TYPE, MARKET]]):
+        for ins_type, market in instrument_market_pairs:
+            cls.__position_types__[(ins_type, market)] = cls
 
     def __init__(self, long, short):
         # type: (Position, Position) -> PositionProxy
@@ -467,10 +455,18 @@ class PositionProxyDict(UserDict):
         return self._positions.keys()
 
     def __getitem__(self, order_book_id):
-        position_type, position_proxy_type = self._get_position_types(order_book_id)
+        instrument = Environment.get_instance().data_proxy.instrument_not_none(order_book_id)
+        try:
+            position_proxy_type = PositionProxy.__position_types__[(instrument.type, instrument.market)]
+        except KeyError:
+            raise NotImplementedError(_(
+                "account.positions is not supported by such instrument, "
+                "use get_position/get_positions instead: {ins_type}, {market}").format(
+                    ins_type=instrument.type, market=instrument.market
+            ))
         if order_book_id not in self._positions:
-            long = position_type(order_book_id, POSITION_DIRECTION.LONG)
-            short = position_type(order_book_id, POSITION_DIRECTION.SHORT)
+            long = Position(instrument, POSITION_DIRECTION.LONG)
+            short = Position(instrument, POSITION_DIRECTION.SHORT)
         else:
             positions = self._positions[order_book_id]
             long = positions[POSITION_DIRECTION.LONG]
