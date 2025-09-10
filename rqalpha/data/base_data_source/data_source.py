@@ -70,7 +70,9 @@ class BaseDataSource(AbstractDataSource):
         INSTRUMENT_TYPE.PUBLIC_FUND, INSTRUMENT_TYPE.REITs
     )
 
-    def __init__(self, path: str, custom_future_info: dict, *args, **kwargs) -> None:
+    def __init__(self, base_config) -> None:
+        path = base_config.data_bundle_path
+        custom_future_info = getattr(base_config, "future_info", {})
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 

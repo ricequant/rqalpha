@@ -38,16 +38,10 @@ from rqalpha.utils.typing import DateLike
 
 
 class DataProxy(TradingDatesMixin):
-    def __init__(self, data_source, price_board):
-        # type: (AbstractDataSource, AbstractPriceBoard) -> None
+    def __init__(self, data_source: AbstractDataSource, price_board: AbstractPriceBoard):
         self._data_source = data_source
         self._price_board = price_board
-        try:
-            trading_calendars = data_source.get_trading_calendars()
-        except NotImplementedError:
-            # forward compatible
-            trading_calendars = {TRADING_CALENDAR_TYPE.EXCHANGE: data_source.get_trading_calendar()}
-        TradingDatesMixin.__init__(self, trading_calendars)
+        TradingDatesMixin.__init__(self, data_source)
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)
@@ -58,7 +52,7 @@ class DataProxy(TradingDatesMixin):
         return [] if minutes is None else minutes
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
-        if isinstance(tenor, six.string_types):
+        if isinstance(tenor, str):
             tenor = [tenor]
         return self._data_source.get_yield_curve(start_date, end_date, tenor)
 

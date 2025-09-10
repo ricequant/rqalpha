@@ -36,7 +36,7 @@ class AutomaticUpdateBundleTestCase(DataProxyFixture, RQAlphaTestCase):
             fields=['volume'],
             end_date=datetime.date(2024, 2, 28),
         )
-        trading_dates_mixin = TradingDatesMixin(self.base_data_source.get_trading_calendars())
+        trading_dates_mixin = TradingDatesMixin(self.base_data_source)
         self.base_data_source.batch_get_trading_date = trading_dates_mixin.batch_get_trading_date
         self.base_data_source.get_next_trading_date = trading_dates_mixin.get_next_trading_date
 
