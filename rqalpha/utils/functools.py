@@ -20,18 +20,13 @@ from typing import Callable, Union, Iterable
 from functools import wraps, lru_cache as origin_lru_cache
 
 try:
-    from typing import Protocol
+    from typing import Protocol, cast
 except ImportError:
-    from typing_extensions import Protocol
+    from typing_extensions import Protocol, cast
 
 from rqalpha.const import INSTRUMENT_TYPE
 
 cached_functions = []
-
-
-class SingleDispatchProtocol(Protocol):
-    def register(self, instypes: Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable:
-        ...
 
 
 def lru_cache(*args, **kwargs):
@@ -48,7 +43,17 @@ def clear_all_cached_functions():
         func.cache_clear()
 
 
-def instype_singledispatch(func) -> SingleDispatchProtocol:
+class SingleDispatchProtocol(Protocol):
+    def register(self, instypes: Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable:
+        ...
+
+
+def cast_singledispatch(func: Callable) -> SingleDispatchProtocol:
+    # make IDE happy
+    return cast(SingleDispatchProtocol, func)
+
+
+def instype_singledispatch(func):
     from rqalpha.model.instrument import Instrument
     from rqalpha.const import INSTRUMENT_TYPE
     from rqalpha.utils.exception import RQInvalidArgument, RQApiNotSupportedError
