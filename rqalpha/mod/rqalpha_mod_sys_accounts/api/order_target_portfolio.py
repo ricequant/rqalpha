@@ -1,4 +1,5 @@
 from typing import Mapping, NamedTuple, cast, Optional, Union
+from collections import defaultdict
 from operator import itemgetter
 
 from pandas import Series, Index, DataFrame
@@ -6,12 +7,12 @@ from numpy import sign, round as np_round, inf
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_base import assure_instrument
-from rqalpha.model.order import AlgoOrder, MarketOrder
+from rqalpha.model.order import AlgoOrder, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 from rqalpha.const import EXECUTION_PHASE, POSITION_DIRECTION, INSTRUMENT_TYPE, MARKET, DEFAULT_ACCOUNT_TYPE, SIDE, POSITION_EFFECT
 from rqalpha.core.execution_context import ExecutionContext
-from rqalpha.utils.exception import RQApiNotSupportedError
+from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 
@@ -34,12 +35,15 @@ class OrderTargetPortfolio:
         target_weights: Series,
         current_quantities: Series,
         current_closable: Series,
+        last_prices: Series | None,
         env: Environment,
     ):
-        if target_weights[target_weights < 0].any():
-            raise ValueError("target_weights contains negative value: {}".format(target_weights[target_weights < 0]))
-
         index = Index(target_weights.index.union(current_quantities.index).union(current_closable.index))
+        if last_prices is not None:
+            last_prices = last_prices.reindex(index)
+            if last_prices.isna().any():
+                raise RQInvalidArgument(_("prices of {} is not provided").format(last_prices.isna().index[last_prices.isna()]))
+
         self._target_weights = target_weights.reindex(index, fill_value=0)
         self._current_quantities = current_quantities.reindex(index, fill_value=0)
         self._current_closable = current_closable.reindex(index, fill_value=0)
@@ -74,17 +78,22 @@ class OrderTargetPortfolio:
         self._prices = DataFrame(index=index, columns=["last", "limit_up", "limit_down"], dtype=float)   # type: ignore
         if phase == EXECUTION_PHASE.OPEN_AUCTION:
             # 集合竞价阶段，最近的价格是昨收
-            prev_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
-            for order_book_id in index:
-                bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["close"], prev_date)
-                self._prices.loc[order_book_id, "last"] = bars["close"][0]
+            if last_prices is not None:
+                self._prices["last"] = last_prices
+            else:
+                prev_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
+                for order_book_id in index:
+                    bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["close"], prev_date)
+                    self._prices.loc[order_book_id, "last"] = bars["close"][0]
         elif phase == EXECUTION_PHASE.ON_BAR:
             if env.config.base.frequency == "1d":
                 # TODO：根据算法时间选择最近的分钟线作为估值
                 # 当前先选择开盘价
                 for order_book_id in index:
                     bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["open", "limit_up", "limit_down"], env.trading_dt)
-                    self._prices.loc[order_book_id] = bars[0]
+                    self._prices.loc[order_book_id] = list(bars[0])
+                if last_prices is not None:
+                    self._prices["last"] = last_prices
             elif env.config.base.frequency == "1m":
                 raise NotImplementedError
             else:
@@ -148,8 +157,12 @@ class OrderTargetPortfolio:
         
         if self._current_quantities.empty and self._target_weights.empty:
             return Series()
-     
-        safety = self.SAFETY
+
+        if self._target_weights.sum() > 0.95:
+            # 如果目标是满仓或者接近满仓，则使用一个较高的 safety 开始下降
+            safety = self.SAFETY
+        else:
+            safety = 1.
         last_proportion_diff = inf
         last_diff = None
         prices = self._prices_settle_ccy
@@ -175,7 +188,7 @@ class OrderTargetPortfolio:
             proportion_diff = abs(total_proportion - self._target_weights.sum())
             if cash_consumed < cash_available:
                 # TODO: 分别计算 A H 股的可用资金
-                if proportion_diff >= last_proportion_diff and last_diff is not None:
+                if proportion_diff > last_proportion_diff and last_diff is not None:
                     return last_diff
                 last_diff = diff
             last_proportion_diff = proportion_diff
@@ -187,22 +200,47 @@ class OrderTargetPortfolio:
     EXECUTION_PHASE.OPEN_AUCTION,
     EXECUTION_PHASE.ON_BAR,
 )
-def order_target_portfolio_smart(target_portfolio: Union[Mapping[str, float], Series], algo: Optional[AlgoOrder] = None):
+def order_target_portfolio_smart(
+    target_portfolio: Union[Mapping[str, float], Series], 
+    algo_or_prices: Union[AlgoOrder, dict[str, float], None] = None
+):
     from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import _order_value
 
     env = Environment.get_instance()
-    target_weights = {
+    target_weights = Series({
         assure_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
-    }
+    })
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     quantities, closable = {},  {}
     for position in account.get_positions():
         quantities[position.order_book_id] = position.quantity
         closable[position.order_book_id] = position.closable
+    if isinstance(algo_or_prices, dict):
+        style_map: dict[str, OrderStyle] = {
+            order_book_id: LimitOrder(price) for order_book_id, price in algo_or_prices.items()
+        }
+        def _get_style(order_book_id) -> OrderStyle:
+            try:
+                return style_map[order_book_id]
+            except KeyError:
+                raise RQInvalidArgument(_("price of {} is needed, which is not provided in the algo_or_prices").format(order_book_id))
+        prices = Series(algo_or_prices)
+    else:
+        style = algo_or_prices or MarketOrder()
+        _get_style = lambda order_book_id: style
+        prices = None
+
+    if target_weights[target_weights < 0].any():
+        raise ValueError("target_weights contains negative value: {}".format(target_weights[target_weights < 0]))
+    current_quantities = Series(quantities)
+    current_quantities = cast(Series, current_quantities[current_quantities != 0])
+    current_closable = Series(closable).reindex(current_quantities.index, fill_value=0)
+
     adjusting = OrderTargetPortfolio(
         target_weights=Series(target_weights),
-        current_quantities=Series(quantities),
-        current_closable=Series(closable),
+        current_quantities=current_quantities,
+        current_closable=current_closable,
+        last_prices=prices,
         env=env
     )(
         target_value = env.portfolio.total_value,
@@ -210,15 +248,11 @@ def order_target_portfolio_smart(target_portfolio: Union[Mapping[str, float], Se
     )
 
     orders = []
-    style = algo or MarketOrder()
+
     # 先平
     for order_book_id, delta_quantity in cast(Series, (adjusting[adjusting < 0])).items():
         order = env.submit_order(Order.__from_create__(
-            order_book_id,
-            abs(delta_quantity),
-            SIDE.SELL,
-            style,
-            POSITION_EFFECT.CLOSE
+            order_book_id, abs(delta_quantity), SIDE.SELL, _get_style(order_book_id), POSITION_EFFECT.CLOSE
         ))
         if order is not None:
             orders.append(order)
@@ -226,11 +260,7 @@ def order_target_portfolio_smart(target_portfolio: Union[Mapping[str, float], Se
     for order_book_id, delta_quantity in cast(Series, (adjusting[adjusting > 0])).items():
         order_book_id = cast(str, order_book_id)
         order_to_be_submitted = Order.__from_create__(
-            order_book_id,
-            delta_quantity,
-            SIDE.BUY,
-            style,
-            POSITION_EFFECT.OPEN
+            order_book_id, delta_quantity, SIDE.BUY, _get_style(order_book_id), POSITION_EFFECT.OPEN
         )
         order = env.submit_order(order_to_be_submitted)
         if order is None:
@@ -241,7 +271,7 @@ def order_target_portfolio_smart(target_portfolio: Union[Mapping[str, float], Se
                     account.get_position(order_book_id), 
                     env.data_proxy.instrument_not_none(order_book_id), 
                     account.cash, 
-                    style, 
+                    _get_style(order_book_id), 
                     zero_amount_as_exception=False
                 )
         if order is not None:

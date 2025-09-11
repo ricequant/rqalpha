@@ -52,11 +52,6 @@ def test_order_target_portfolio_smart(resources_path, run_and_assert_result):
         },
         "extra": {
             "log_level": "error",
-        },
-        "mod": {
-            "sys_analyser": {
-                "plot": True
-            }
         }
     }
 
