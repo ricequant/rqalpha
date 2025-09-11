@@ -183,10 +183,13 @@ class Environment(object):
     def set_transaction_cost_decider(self, instrument_type: INSTRUMENT_TYPE, decider: "AbstractTransactionCostDecider", market: MARKET = MARKET.CN):
         self._transaction_cost_deciders[(instrument_type, market)] = decider
 
+    def get_transaction_cost_decider(self, instrument_type: INSTRUMENT_TYPE, market: MARKET = MARKET.CN) -> "AbstractTransactionCostDecider":
+        return self._transaction_cost_deciders[(instrument_type, market)]
+
     def calc_transaction_cost(self, args: "TransactionCostArgs") -> "TransactionCost":
         ins = args.instrument
         try:
-            decider = self._transaction_cost_deciders[(ins.type, ins.market)]
+            decider = self.get_transaction_cost_decider(ins.type, ins.market)
         except KeyError:
             raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}".format(
                 ins.order_book_id

@@ -1,9 +1,7 @@
-from rqalpha.utils.testing import integration_test
-
 from rqalpha.apis import subscribe, buy_open, logger
 
 
-def test_f_buy_and_hold(result_file):
+def test_f_buy_and_hold(run_and_assert_result):
     def init(context):
         context.s1 = "IF88"
         subscribe(context.s1)
@@ -28,4 +26,4 @@ def test_f_buy_and_hold(result_file):
         }
     }
 
-    integration_test(result_file, config=config, init=init, handle_bar=handle_bar)
+    run_and_assert_result(config=config, init=init, handle_bar=handle_bar)

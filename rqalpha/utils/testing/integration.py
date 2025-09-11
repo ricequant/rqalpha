@@ -9,7 +9,7 @@ from pandas.testing import assert_frame_equal
 
 from rqalpha import run_func
 
-__all__ = ['StructuredTextFormat', 'integration_test']
+__all__ = ['StructuredTextFormat', 'assert_result']
 
 
 class StructuredTextFormat:
@@ -331,17 +331,16 @@ def _assert_result(result: dict, expected_result: dict):
         assert actual_val == expected_val
 
 
-def integration_test(result_file: str, **kwargs):
-    result = run_func(**kwargs)
-    if not os.path.exists(result_file):
-        warn(f"Result file {result_file} not found, creating it")
+def assert_result(result: dict, expected_result_file: str):
+    if not os.path.exists(expected_result_file):
+        warn(f"Result file {expected_result_file} not found, creating it")
         # Filter result using business logic before serialization
         filtered_result = _filter_integration_result(result)
-        with open(result_file, "w", encoding='utf-8') as f:
+        with open(expected_result_file, "w", encoding='utf-8') as f:
             StructuredTextFormat.dump(filtered_result, f)
         return
     
-    with open(result_file, "r", encoding='utf-8') as f:
+    with open(expected_result_file, "r", encoding='utf-8') as f:
         expected_result = StructuredTextFormat.load(f)
     
     _assert_result(result, expected_result)    

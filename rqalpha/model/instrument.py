@@ -392,6 +392,18 @@ class Instrument(metaclass=PropertyReprMeta):
     def trade_at_night(self):
         return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
 
+    @cached_property
+    def min_order_quantity(self):
+        # 最小下单股数
+        return self._dict["round_lot"]
+
+    @cached_property
+    def order_step_size(self):
+        # 下单递进股数
+        if self.board_type == "KSH" or self.board_type == "BJS":
+            return 1
+        return self.round_lot
+
     def during_call_auction(self, dt):
         """ 是否处于集合竞价交易时段 """
         # 当前的分钟数

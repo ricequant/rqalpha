@@ -25,7 +25,7 @@ import pandas as pd
 import six
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE, MARKET, TRADING_CALENDAR_TYPE
-from rqalpha.interface import AbstractDataSource
+from rqalpha.interface import AbstractDataSource, ExchangeRate
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_date, convert_int_to_datetime)
 from rqalpha.utils.exception import RQInvalidArgument
@@ -374,3 +374,18 @@ class BaseDataSource(AbstractDataSource):
     def register_instruments_store(self, instruments_store, market: MARKET = MARKET.CN):
         system_log.warn("register_instruments_store is deprecated, please use register_instruments instead")
         self.register_instruments(instruments_store.get_instruments(None))
+
+    exchange_rate_1 = ExchangeRate(
+        bid_reference=1,
+        ask_reference=1,
+        bid_settlement_sh=1,
+        ask_settlement_sh=1,
+        bid_settlement_sz=1,
+        ask_settlement_sz=1
+    )
+
+    def get_exchange_rate(self, date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+        if local == settlement:
+            return self.exchange_rate_1
+        else:
+            raise NotImplementedError

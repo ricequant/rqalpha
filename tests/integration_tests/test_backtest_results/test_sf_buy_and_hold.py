@@ -1,8 +1,7 @@
-from rqalpha.utils.testing import integration_test
 from rqalpha.apis import subscribe, order_shares, sell_open
 
 
-def test_sf_buy_and_hold(result_file):
+def test_sf_buy_and_hold(run_and_assert_result):
     def init(context):
         context.counter = 0
         subscribe('IH88')
@@ -32,4 +31,4 @@ def test_sf_buy_and_hold(result_file):
         }
     }
 
-    integration_test(result_file, config=config, init=init, handle_bar=handle_bar)
+    run_and_assert_result(config=config, init=init, handle_bar=handle_bar)

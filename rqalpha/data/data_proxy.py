@@ -16,13 +16,13 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Tuple
+from typing import Union, List, Sequence, Optional, Tuple, Iterable
 
 import six
 import numpy as np
 import pandas as pd
 
-from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, EXECUTION_PHASE
+from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, EXECUTION_PHASE, MARKET
 from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
@@ -32,7 +32,7 @@ from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 from rqalpha.utils.typing import DateLike, StrOrIter
-from rqalpha.interface import AbstractDataSource, AbstractPriceBoard
+from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, ExchangeRate
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils.typing import DateLike
 
@@ -292,6 +292,9 @@ class DataProxy(TradingDatesMixin):
     def instrument_not_none(self, sym_or_id) -> Instrument:
         return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])))
 
+    def multi_instruments(self, order_book_ids: Iterable[str]) -> dict[str, Instrument]:
+        return {i.order_book_id: i for i in self._data_source.get_instruments(id_or_syms=order_book_ids)}
+
     def instruments(self, sym_or_ids):
         # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
         if isinstance(sym_or_ids, str):
@@ -321,12 +324,13 @@ class DataProxy(TradingDatesMixin):
         if not isinstance(order_style, ALGO_ORDER_STYLES):
             raise RuntimeError("get_algo_bar only support VWAPOrder and TWAPOrder")
         if not isinstance(id_or_ins, Instrument):
-            id_or_ins = self.instrument(id_or_ins)
-        if id_or_ins is None:
-            return np.nan, 0
+            id_or_ins = self.instrument_not_none(id_or_ins)
         # 存在一些有日线没分钟线的情况,如果不是缺了,通常都是因为volume为0,用日线先判断确认下
         day_bar = self.get_bar(order_book_id=id_or_ins.order_book_id, dt=dt, frequency="1d")
         if day_bar.volume == 0:
             return np.nan, 0
         bar = self._data_source.get_algo_bar(id_or_ins, order_style.start_min, order_style.end_min, dt)
         return (bar[order_style.TYPE], bar["volume"]) if bar else (np.nan, 0)
+
+    def get_exchange_rate(self, date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+        return self._data_source.get_exchange_rate(date, local, settlement)

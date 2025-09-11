@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from .integration import integration_test
 from .mocking import mock_instrument, mock_bar, mock_tick
 from .fixtures import (
     MagicMock,

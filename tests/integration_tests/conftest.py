@@ -10,8 +10,3 @@ def testcase_name(request):
         casename = request.node.name
 
     return f"{os.path.split(request.path)[-1][:-3]}#{casename}"  # type: ignore
-
-
-@pytest.fixture
-def result_file(request, testcase_name):
-    return os.path.join(os.path.dirname(request.path), "outs", f"{testcase_name}.txt")

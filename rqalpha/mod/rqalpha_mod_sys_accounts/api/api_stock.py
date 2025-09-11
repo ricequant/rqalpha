@@ -41,6 +41,7 @@ from rqalpha.model.instrument import IndustryCode as industry_code
 from rqalpha.model.instrument import IndustryCodeItem, Instrument
 from rqalpha.model.instrument import SectorCode as sector_code
 from rqalpha.model.instrument import SectorCodeItem
+from rqalpha.portfolio import Account, AbstractPosition
 from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle, ALGO_ORDER_STYLES
 from rqalpha.interface import TransactionCostArgs, AbstractTransactionCostDecider, TransactionCostArgs
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
@@ -50,6 +51,7 @@ from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from .order_target_portfolio import order_target_portfolio_smart
 
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
@@ -141,9 +143,7 @@ def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity
     )).total
     
 
-def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
-    if ins.market != MARKET.CN:
-        raise RQInvalidArgument(_("Such API only supports instrument in CN market, please use order_shares instead"))
+def _order_value(account: Account, position: AbstractPosition, ins: Instrument, cash_amount: float, style: OrderStyle, zero_amount_as_exception=True):
     env = Environment.get_instance()
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)
@@ -155,8 +155,11 @@ def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exce
             reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
             env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
             return
-
-    amount = int(Decimal(cash_amount) / Decimal(price))
+    exchange_rates = env.data_proxy.get_exchange_rate(env.trading_dt.date(), ins.market)
+    exchange_rate_middle = (exchange_rates.bid_reference + exchange_rates.ask_reference) / 2
+    amount = int(Decimal(cash_amount) / Decimal(price * exchange_rate_middle))
+    if cash_amount > 0:
+        amount = min(amount, int(Decimal(account.cash) / Decimal(price * exchange_rates.ask_reference)))
     round_lot = int(ins.round_lot)
     if cash_amount > 0:
         amount = _round_order_quantity(ins, amount)

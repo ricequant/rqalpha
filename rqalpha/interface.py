@@ -274,6 +274,15 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
+class ExchangeRate(NamedTuple):
+    bid_reference: float  # 参考汇率买入价，如 0.88，卖出港股时按此价格收到人民币
+    ask_reference: float  # 参考汇率卖出价，如 0.94，买入港股时按此价格冻结人民币
+    bid_settlement_sh: float
+    ask_settlement_sh: float
+    bid_settlement_sz: float
+    ask_settlement_sz: float
+
+
 class AbstractDataSource(object):
     """
     数据源接口。RQAlpha 中通过 :class:`DataProxy` 进一步进行了封装，向上层提供更易用的接口。
@@ -563,6 +572,8 @@ class AbstractDataSource(object):
         # 格式: (date, VWAP, TWAP, volume) -> 案例 (20200102, 16.79877183, 16.83271429, 144356044)
         raise NotImplementedError
 
+    def get_exchange_rate(self, date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+        raise NotImplementedError
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):
     """

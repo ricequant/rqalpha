@@ -15,6 +15,9 @@
 from collections import defaultdict
 from datetime import datetime
 
+from pandas import Series
+from numpy import maximum
+
 from rqalpha.interface import AbstractTransactionCostDecider, TransactionCostArgs, TransactionCost
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT, INSTRUMENT_TYPE
@@ -24,7 +27,12 @@ from rqalpha.core.events import EVENT
 STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 28)
 
 
-class StockTransactionCostDecider(AbstractTransactionCostDecider):
+class AbstractStockTransactionCostDecider(AbstractTransactionCostDecider):
+    def batch_estimate(self, delta_quantities: Series, prices: Series) -> Series:
+        raise NotImplementedError
+
+
+class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
     def __init__(self, commission_multiplier, min_commission, tax_multiplier, pit_tax, event_bus):
         self.commission_rate = 0.0008
         self.commission_multiplier = commission_multiplier
@@ -84,6 +92,12 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
 
     def calc(self, args: TransactionCostArgs) -> TransactionCost:
         return TransactionCost(commission=self._calc_commission(args), tax=self._calc_tax(args), other_fees=0)
+
+    def batch_estimate(self, delta_quantities: Series, prices: Series) -> Series:
+        commission = maximum(delta_quantities.abs() * prices * self.commission_rate * self.commission_multiplier, self.min_commission)
+        tax = delta_quantities.abs() * prices * self.tax_rate * (delta_quantities < 0)
+        return commission + tax
+        
 
 class FuturesTransactionCostDecider(AbstractTransactionCostDecider):
     def __init__(self, commission_multiplier):

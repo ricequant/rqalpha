@@ -1,9 +1,7 @@
 from rqalpha.apis import order_shares
 
-from rqalpha.utils.testing import integration_test
 
-
-def test_s_buy_and_hold(result_file):
+def test_s_buy_and_hold(run_and_assert_result):
     def init(context):
         context.s1 = "000001.XSHE"
 
@@ -26,4 +24,4 @@ def test_s_buy_and_hold(result_file):
         },
     }
 
-    integration_test(result_file, config=config, init=init, handle_bar=handle_bar)
+    run_and_assert_result(config=config, init=init, handle_bar=handle_bar)

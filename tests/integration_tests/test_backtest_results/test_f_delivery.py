@@ -1,9 +1,9 @@
 import datetime
 
 from rqalpha.apis import buy_open, sell_open, get_position
-from rqalpha.utils.testing import integration_test
 
-def test_f_delivery(result_file):
+
+def test_f_delivery(run_and_assert_result):
     def init(context):
         context.f1 = "IH2402"
         context.f2 = "IC2402"
@@ -45,4 +45,4 @@ def test_f_delivery(result_file):
         },
     }
 
-    integration_test(result_file, config=config, init=init, handle_bar=handle_bar)
+    run_and_assert_result(config=config, init=init, handle_bar=handle_bar)
