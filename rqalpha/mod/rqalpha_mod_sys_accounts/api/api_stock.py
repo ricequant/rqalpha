@@ -33,10 +33,9 @@ from rqalpha.apis.api_abstract import (order, order_percent, order_shares,
 from rqalpha.apis.api_base import (assure_instrument, assure_order_book_id,
                                    cal_style, calc_open_close_style)
 from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE,
-                           INSTRUMENT_TYPE, ORDER_TYPE, POSITION_DIRECTION,
+                           INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION,
                            POSITION_EFFECT, SIDE)
 from rqalpha.core.execution_context import ExecutionContext
-from rqalpha.core.events import Event, EVENT
 from rqalpha.environment import Environment
 from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import validate_cash
 from rqalpha.model.instrument import IndustryCode as industry_code
@@ -143,6 +142,8 @@ def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity
     
 
 def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
+    if ins.market != MARKET.CN:
+        raise RQInvalidArgument(_("Such API only supports instrument in CN market, please use order_shares instead"))
     env = Environment.get_instance()
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)

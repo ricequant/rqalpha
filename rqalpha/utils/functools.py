@@ -19,7 +19,19 @@ from inspect import signature
 from typing import Callable, Union, Iterable
 from functools import wraps, lru_cache as origin_lru_cache
 
+try:
+    from typing import Protocol
+except ImportError:
+    from typing_extensions import Protocol
+
+from rqalpha.const import INSTRUMENT_TYPE
+
 cached_functions = []
+
+
+class SingleDispatchProtocol(Protocol):
+    def register(self, instypes: Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable:
+        ...
 
 
 def lru_cache(*args, **kwargs):
@@ -36,7 +48,7 @@ def clear_all_cached_functions():
         func.cache_clear()
 
 
-def instype_singledispatch(func):
+def instype_singledispatch(func) -> SingleDispatchProtocol:
     from rqalpha.model.instrument import Instrument
     from rqalpha.const import INSTRUMENT_TYPE
     from rqalpha.utils.exception import RQInvalidArgument, RQApiNotSupportedError
@@ -103,8 +115,9 @@ def instype_singledispatch(func):
             raise rq_invalid_argument(arg)
         return impl(*args, **kwargs)
 
+
     funcname = getattr(func, '__name__', 'instype_singledispatch function')
     argname = next(iter(signature(func).parameters))
-    wrapper.register = register
+    wrapper.register = register  # type: ignore
 
-    return wrapper
+    return wrapper  # type: ignore

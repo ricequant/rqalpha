@@ -60,11 +60,16 @@ export_as_api(MATCHING_TYPE, name='MATCHING_TYPE')
 export_as_api(EVENT, name='EVENT')
 
 
-def assure_instrument(id_or_ins):
+def assure_instrument(id_or_ins) -> Instrument:
     if isinstance(id_or_ins, Instrument):
         return id_or_ins
     elif isinstance(id_or_ins, six.string_types):
-        return Environment.get_instance().data_proxy.instrument(id_or_ins)
+        ins = Environment.get_instance().data_proxy.instrument(id_or_ins)
+        if not ins:
+            raise RQInvalidArgument(_(
+                "invalid argument, expected order_book_ids or Instrument objects, got {} (type: {})"
+            ).format(id_or_ins, type(id_or_ins)))
+        return ins
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
