@@ -48,16 +48,25 @@ def test_order_target_portfolio():
             assert get_position("000001.XSHE").quantity == 7000   # (1000000 * 0.1) / 14.31 = 6988.12
             assert get_position("000004.XSHE").quantity == 10800  # (1000000 * 0.2) / 18.5 = 10810.81
         elif context.counter == 2:
-            order_target_portfolio_smart({
-                "000004.XSHE": 0.1,
-                "000005.XSHE": 0.2,
-                "600519.XSHG": 0.6,
-            }, {
-                "000001.XSHE": 14,
-                "000004.XSHE": 18,
-                "000005.XSHE": 2.92,
-                "600519.XSHG": 970,
-            })
+            order_target_portfolio_smart(
+                {
+                    "000004.XSHE": 0.1,
+                    "000005.XSHE": 0.2,
+                    "600519.XSHG": 0.6,
+                }, 
+                order_prices={
+                    "000001.XSHE": 14,
+                    "000004.XSHE": 18,
+                    "000005.XSHE": 2.92,
+                    "600519.XSHG": 970,
+                },
+                valuation_prices={
+                    "000001.XSHE": 14,
+                    "000004.XSHE": 18,
+                    "000005.XSHE": 2.92,
+                    "600519.XSHG": 970,
+                },
+            )
             assert get_position("000001.XSHE").quantity == 0  # 清仓
             assert get_position("000004.XSHE").quantity == 5500  # (993695.7496 * 0.1) / 18 = 5520.53
             assert get_position("000005.XSHE").quantity == 68100  # (993695.7496 * 0.2) / 2.92 = 68061.35
@@ -95,7 +104,7 @@ def test_order_target_portfolio_in_signal_mode():
                 "000001.XSHE": 14,
                 "000004.XSHE": 10,
             })
-            assert get_position("000001.XSHE").quantity == 7100   # (1000000 * 0.1) / 14= 7142.86
+            assert get_position("000001.XSHE").quantity == 7000   # (1000000 * 0.1) / 14.31 = 6988
             assert get_position("000001.XSHE").avg_price == 14
             assert get_position("000004.XSHE").quantity == 0  # 价格低过跌停价，被拒单
 

@@ -35,14 +35,14 @@ class OrderTargetPortfolio:
         target_weights: Series,
         current_quantities: Series,
         current_closable: Series,
-        last_prices: Series | None,
+        valuation_prices: Series | None,
         env: Environment,
     ):
         index = Index(target_weights.index.union(current_quantities.index).union(current_closable.index))
-        if last_prices is not None:
-            last_prices = last_prices.reindex(index)
-            if last_prices.isna().any():
-                raise RQInvalidArgument(_("prices of {} is not provided").format(last_prices.isna().index[last_prices.isna()]))
+        if valuation_prices is not None:
+            valuation_prices = valuation_prices.reindex(index)
+            if valuation_prices.isna().any():
+                raise RQInvalidArgument(_("prices of {} is not provided").format(valuation_prices.isna().index[valuation_prices.isna()]))
 
         self._target_weights = target_weights.reindex(index, fill_value=0)
         self._current_quantities = current_quantities.reindex(index, fill_value=0)
@@ -78,8 +78,8 @@ class OrderTargetPortfolio:
         self._prices = DataFrame(index=index, columns=["last", "limit_up", "limit_down"], dtype=float)   # type: ignore
         if phase == EXECUTION_PHASE.OPEN_AUCTION:
             # 集合竞价阶段，最近的价格是昨收
-            if last_prices is not None:
-                self._prices["last"] = last_prices
+            if valuation_prices is not None:
+                self._prices["last"] = valuation_prices
             else:
                 prev_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
                 for order_book_id in index:
@@ -92,8 +92,8 @@ class OrderTargetPortfolio:
                 for order_book_id in index:
                     bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["open", "limit_up", "limit_down"], env.trading_dt)
                     self._prices.loc[order_book_id] = list(bars[0])
-                if last_prices is not None:
-                    self._prices["last"] = last_prices
+                if valuation_prices is not None:
+                    self._prices["last"] = valuation_prices
             elif env.config.base.frequency == "1m":
                 raise NotImplementedError
             else:
@@ -202,7 +202,8 @@ class OrderTargetPortfolio:
 )
 def order_target_portfolio_smart(
     target_portfolio: Union[Mapping[str, float], Series], 
-    algo_or_prices: Union[AlgoOrder, dict[str, float], None] = None
+    order_prices: Union[AlgoOrder, Mapping[str, float] | Series, None] = None,
+    valuation_prices: Union[Mapping[str, float] | Series, None] = None,
 ):
     from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import _order_value
 
@@ -215,19 +216,22 @@ def order_target_portfolio_smart(
     for position in account.get_positions():
         quantities[position.order_book_id] = position.quantity
         closable[position.order_book_id] = position.closable
-    if isinstance(algo_or_prices, dict):
+    if isinstance(order_prices, (Mapping, Series)):
         style_map: dict[str, OrderStyle] = {
-            order_book_id: LimitOrder(price) for order_book_id, price in algo_or_prices.items()
+            cast(str, order_book_id): LimitOrder(price) for order_book_id, price in order_prices.items()
         }
         def _get_style(order_book_id) -> OrderStyle:
             try:
                 return style_map[order_book_id]
             except KeyError:
                 raise RQInvalidArgument(_("price of {} is needed, which is not provided in the algo_or_prices").format(order_book_id))
-        prices = Series(algo_or_prices)
     else:
-        style = algo_or_prices or MarketOrder()
+        style = order_prices or MarketOrder()
         _get_style = lambda order_book_id: style
+
+    if valuation_prices is not None:
+        prices = Series(valuation_prices)
+    else:
         prices = None
 
     if target_weights[target_weights < 0].any():
@@ -240,7 +244,7 @@ def order_target_portfolio_smart(
         target_weights=Series(target_weights),
         current_quantities=current_quantities,
         current_closable=current_closable,
-        last_prices=prices,
+        valuation_prices=prices,
         env=env
     )(
         target_value = env.portfolio.total_value,
