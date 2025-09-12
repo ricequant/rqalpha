@@ -384,7 +384,7 @@ class BaseDataSource(AbstractDataSource):
         ask_settlement_sz=1
     )
 
-    def get_exchange_rate(self, date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
         if local == settlement:
             return self.exchange_rate_1
         else:

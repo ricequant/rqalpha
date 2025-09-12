@@ -165,7 +165,7 @@ def _order_value(account: Account, position: AbstractPosition, ins: Instrument, 
         amount = _round_order_quantity(ins, amount)
         while amount > 0:
             expected_transaction_cost = _estimate_transaction_cost(env, ins, amount, price)
-            if amount * price + expected_transaction_cost <= cash_amount:
+            if amount * price * exchange_rates.ask_reference + expected_transaction_cost <= cash_amount:
                 break
             amount -= round_lot
         else:

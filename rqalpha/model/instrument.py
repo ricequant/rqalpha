@@ -471,6 +471,9 @@ class Instrument(metaclass=PropertyReprMeta):
 
     def calc_cash_occupation(self, price, quantity, direction, dt):
         # type: (float, int, POSITION_DIRECTION, datetime.date) -> float
+        if self.market != MARKET.CN:
+            exchagne_rate = Environment.get_instance().data_proxy.get_exchange_rate(dt, self.market)
+            price = price * exchagne_rate.ask_reference
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:
