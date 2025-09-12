@@ -35,6 +35,7 @@ class AccountMod(AbstractMod):
         # type: (Environment, Any) -> None
 
         StockPosition.dividend_reinvestment = mod_config.dividend_reinvestment
+        StockPosition.dividend_tax_rate = mod_config.dividend_tax_rate
         StockPosition.cash_return_by_stock_delisted = mod_config.cash_return_by_stock_delisted
         StockPosition.t_plus_enabled = mod_config.stock_t1
 

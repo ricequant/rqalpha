@@ -51,6 +51,7 @@ class StockPosition(Position):
     __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     dividend_reinvestment = False
+    dividend_tax_rate: float = 0.
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
 
@@ -202,7 +203,7 @@ class StockPosition(Position):
         dividends = self._get_dividends_or_splits(self._all_dividends, trading_date, "ex_dividend_date")  # type: ignore[reportIncompatibleVariableOverride]
         if dividends is None or len(dividends) == 0:
             return
-        dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum()
+        dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum() * (1 - self.dividend_tax_rate)
         self._avg_price -= dividend_per_share
         # 前一天结算发生了除息, 此时 last_price 还是前一个交易日的收盘价，需要改为 除息后收盘价, 否则影响在before_trading中查看盈亏
         self._last_price -= dividend_per_share  # type: ignore
