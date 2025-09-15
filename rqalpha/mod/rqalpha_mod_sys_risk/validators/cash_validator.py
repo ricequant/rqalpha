@@ -50,4 +50,4 @@ class CashValidator(AbstractFrontendValidator):
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return None
         # TODO：分别计算 A H 股的可用资金
-        return validate_cash(self._env, order, account.cash)
+        return validate_cash(self._env, order, account.available_cash_for(order.instrument))

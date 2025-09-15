@@ -24,8 +24,7 @@ import six
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
-from rqalpha.model.order import Order, OrderStyle
-from rqalpha.model.trade import Trade
+from rqalpha.model import Order, OrderStyle, Trade, Instrument
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.functools import lru_cache
@@ -327,6 +326,12 @@ class Account(metaclass=AccountMeta):
         交易盈亏
         """
         return sum(p.trading_pnl for p in self._iter_pos())
+
+    def available_cash_for(self, instrument: Instrument) -> float:
+        """
+        可用于交易指定标的的资金，用于风控
+        """
+        return self.cash
 
     def _on_before_trading(self, _):
         for order_book_id, positions in list(self._positions.items()):

@@ -18,7 +18,6 @@
 from datetime import datetime, date
 from typing import Union, List, Sequence, Optional, Tuple, Iterable
 
-import six
 import numpy as np
 import pandas as pd
 
@@ -32,6 +31,7 @@ from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 from rqalpha.utils.typing import DateLike, StrOrIter
+from rqalpha.utils.i18n import gettext as _
 from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, ExchangeRate
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils.typing import DateLike
@@ -290,7 +290,10 @@ class DataProxy(TradingDatesMixin):
 
     @lru_cache(2048)
     def instrument_not_none(self, sym_or_id) -> Instrument:
-        return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])))
+        try:
+            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])))
+        except StopIteration:
+            raise LookupError(_("Instrument not found: {}").format(sym_or_id))
 
     def multi_instruments(self, order_book_ids: Iterable[str]) -> dict[str, Instrument]:
         return {i.order_book_id: i for i in self._data_source.get_instruments(id_or_syms=order_book_ids)}

@@ -120,7 +120,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if side == SIDE.BUY and auto_switch_order_value:
         account, position, ins = _get_account_position_ins(ins)
-        if validate_cash(env, order, account.cash):
+        if validate_cash(env, order, account.available_cash_for(ins)):
             user_system_log.warn(_(
                 "insufficient cash, use all remaining cash({}) to create order"
             ).format(account.cash))
