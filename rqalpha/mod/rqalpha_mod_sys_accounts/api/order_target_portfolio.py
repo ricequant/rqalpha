@@ -12,6 +12,7 @@ from rqalpha.model.order import Order
 from rqalpha.environment import Environment
 from rqalpha.const import EXECUTION_PHASE, POSITION_DIRECTION, INSTRUMENT_TYPE, MARKET, DEFAULT_ACCOUNT_TYPE, SIDE, POSITION_EFFECT
 from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.portfolio.account import Account
 from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
@@ -32,18 +33,22 @@ class ExchangeRatePair(NamedTuple):
 class OrderTargetPortfolio:
     def __init__(
         self,
+        account: Account,
         target_weights: Series,
-        current_quantities: Series,
-        current_closable: Series,
         valuation_prices: Series | None,
         env: Environment,
     ):
+        quantities, closable = {},  {}
+        for position in account.get_positions():
+            quantities[position.order_book_id] = position.quantity
+            closable[position.order_book_id] = position.closable
+        current_quantities = Series(quantities)
+        current_closable = Series(closable)
         index = Index(target_weights.index.union(current_quantities.index).union(current_closable.index))
         if valuation_prices is not None:
             valuation_prices = valuation_prices.reindex(index)
             if valuation_prices.isna().any():
                 raise RQInvalidArgument(_("prices of {} is not provided").format(valuation_prices.isna().index[valuation_prices.isna()]))
-
         self._target_weights = target_weights.reindex(index, fill_value=0)
         self._current_quantities = current_quantities.reindex(index, fill_value=0)
         self._current_closable = current_closable.reindex(index, fill_value=0)
@@ -101,6 +106,10 @@ class OrderTargetPortfolio:
         else:
             raise RQApiNotSupportedError(_("not supported to be called in {} phase").format(phase))
         self._prices_settle_ccy = self._prices["last"] * exchange_rate_middle
+        # 排除未来数据影响，使用 valuation_prices 重新计算估值
+        self._total_value = account.total_value - account.market_value + current_quantities.mul(self._prices_settle_ccy, fill_value=0).sum()
+         # TODO: 分别计算 A H 股的可用资金
+        self._cash_available = account.cash
 
     def _round_adjusting_odd_lots(self, adjusting: Series) -> Series:
         # 调仓量不足最小挂单量一半的设为0
@@ -151,10 +160,7 @@ class OrderTargetPortfolio:
 
     SAFETY: float = 1.2
 
-    def __call__(
-        self, target_value: float, cash_available: float, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG, 
-    ) -> Series:
-        
+    def __call__(self, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> Series:
         if self._current_quantities.empty and self._target_weights.empty:
             return Series()
 
@@ -170,7 +176,7 @@ class OrderTargetPortfolio:
             if safety < 0:
                 # 防止 bug 导致的死循环
                 raise RuntimeError("safety < 0: {}".format(safety))
-            target_quantities: Series = (target_value * safety * self._target_weights / prices).round(0)
+            target_quantities: Series = (self._total_value * safety * self._target_weights / prices).round(0)
             diff = self._calc_adjusting(target_quantities, direction)
 
             delta_mv = diff * prices
@@ -184,9 +190,9 @@ class OrderTargetPortfolio:
                     cash_consumed += delta_mv[(diff > 0) & (diff.index.isin(group.index))].sum() * (exchange_rate.ask / exchange_rate.middle - 1)
                     cash_consumed += delta_mv[(diff < 0) & (diff.index.isin(group.index))].sum() * (exchange_rate.middle / exchange_rate.bid - 1)
 
-            total_proportion = ((self._current_quantities.add(diff, fill_value=0)) * prices).sum() / target_value
+            total_proportion = ((self._current_quantities.add(diff, fill_value=0)) * prices).sum() / self._total_value
             proportion_diff = abs(total_proportion - self._target_weights.sum())
-            if cash_consumed < cash_available:
+            if cash_consumed < self._cash_available:
                 # TODO: 分别计算 A H 股的可用资金
                 if proportion_diff > last_proportion_diff and last_diff is not None:
                     return last_diff
@@ -212,10 +218,6 @@ def order_target_portfolio_smart(
         assure_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
     })
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
-    quantities, closable = {},  {}
-    for position in account.get_positions():
-        quantities[position.order_book_id] = position.quantity
-        closable[position.order_book_id] = position.closable
     if isinstance(order_prices, (Mapping, Series)):
         style_map: dict[str, OrderStyle] = {
             cast(str, order_book_id): LimitOrder(price) for order_book_id, price in order_prices.items()
@@ -236,19 +238,13 @@ def order_target_portfolio_smart(
 
     if target_weights[target_weights < 0].any():
         raise ValueError("target_weights contains negative value: {}".format(target_weights[target_weights < 0]))
-    current_quantities = Series(quantities)
-    current_quantities = cast(Series, current_quantities[current_quantities != 0])
-    current_closable = Series(closable).reindex(current_quantities.index, fill_value=0)
 
     adjusting = OrderTargetPortfolio(
+        account=account,
         target_weights=Series(target_weights),
-        current_quantities=current_quantities,
-        current_closable=current_closable,
         valuation_prices=prices,
         env=env
     )(
-        target_value = env.portfolio.total_value,
-        cash_available = account.cash,
     )
 
     orders = []

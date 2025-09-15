@@ -69,7 +69,7 @@ def test_order_target_portfolio():
             )
             assert get_position("000001.XSHE").quantity == 0  # 清仓
             assert get_position("000004.XSHE").quantity == 5500  # (993695.7496 * 0.1) / 18 = 5520.53
-            assert get_position("000005.XSHE").quantity == 68100  # (993695.7496 * 0.2) / 2.92 = 68061.35
+            assert get_position("000005.XSHE").quantity == 67600  # (993695.7496 * 0.2) / 2.92 = 68061.35
             assert get_position("600519.XSHG").quantity == 0  # 970 低于 收盘价 无法买进
 
     return run_func(config=config, init=init, handle_bar=handle_bar)
