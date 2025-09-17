@@ -18,6 +18,7 @@
 
 import click
 
+
 from rqalpha.utils.i18n import gettext as _
 from rqalpha import cli, inject_run_param
 

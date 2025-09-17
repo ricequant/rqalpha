@@ -434,15 +434,25 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True,
-                     include_now=False, adjust_type='pre', adjust_orig=None):
+    def history_bars(
+        self, 
+        instrument: Instrument, 
+        bar_count: Optional[int], 
+        frequency: str, 
+        fields: Union[str, List[str], None], 
+        dt: datetime, 
+        skip_suspended: bool = True,
+        include_now: bool = False, 
+        adjust_type: str = 'pre', 
+        adjust_orig: Optional[datetime] = None
+    ) -> Optional[numpy.ndarray]:
         """
         获取历史数据
 
         :param instrument: 合约对象
         :type instrument: :class:`~Instrument`
 
-        :param int bar_count: 获取的历史数据数量
+        :param int bar_count: 获取的历史数据数量，None 表示获取尽可能多的历史数据
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
         :param str fields: 返回数据字段
 

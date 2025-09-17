@@ -18,7 +18,7 @@ from collections import defaultdict, ChainMap
 import os
 from datetime import date, datetime, timedelta
 from itertools import chain, repeat
-from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -250,8 +250,8 @@ class BaseDataSource(AbstractDataSource):
             return idx
         return env.data_proxy.get_previous_trading_date(idx)
 
-    def resample_week_bars(self, bars, bar_count, fields: str | List[str]):
-        df_bars = pd.DataFrame(bars)
+    def resample_week_bars(self, bars, bar_count: Optional[int], fields: Union[str, List[str]]):
+        df_bars: pd.DataFrame = pd.DataFrame(bars)
         df_bars['datetime'] = df_bars.apply(lambda x: convert_int_to_datetime(x['datetime']), axis=1)
         df_bars = df_bars.set_index('datetime')
         nead_fields = fields
@@ -260,18 +260,28 @@ class BaseDataSource(AbstractDataSource):
         hows = {field: BAR_RESAMPLE_FIELD_METHODS[field] for field in nead_fields if field in BAR_RESAMPLE_FIELD_METHODS}
         df_bars = df_bars.resample('W-Fri').agg(hows)  # type: ignore
         df_bars.index = df_bars.index.map(self._update_weekly_trading_date_index)
-        df_bars = df_bars[~df_bars.index.duplicated(keep='first')]
+        df_bars = cast(pd.DataFrame, df_bars[~df_bars.index.duplicated(keep='first')])
         df_bars.sort_index(inplace=True)
-        df_bars = df_bars[-bar_count:]
+        if bar_count is not None:
+            df_bars = cast(pd.DataFrame, df_bars[-bar_count:])
         df_bars = df_bars.reset_index()
         df_bars['datetime'] = df_bars.apply(lambda x: np.uint64(convert_date_to_int(x['datetime'].date())), axis=1)  # type: ignore
         df_bars = df_bars.set_index('datetime')
         bars = df_bars.to_records()
         return bars
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt,
-                     skip_suspended=True, include_now=False,
-                     adjust_type='pre', adjust_orig=None):
+    def history_bars(
+        self, 
+        instrument: Instrument, 
+        bar_count: Optional[int], 
+        frequency: str, 
+        fields: Union[str, List[str], None], 
+        dt: datetime, 
+        skip_suspended: bool = True,
+        include_now: bool = False, 
+        adjust_type: str = 'pre', 
+        adjust_orig: Optional[datetime] = None
+    ) -> Optional[np.ndarray]:
 
         if frequency != '1d' and frequency != '1w':
             raise NotImplementedError
@@ -289,14 +299,16 @@ class BaseDataSource(AbstractDataSource):
 
         if frequency == '1w':
             if include_now:
-                dt = np.uint64(convert_date_to_int(dt))
-                i = bars['datetime'].searchsorted(dt, side='right')
+                i = bars['datetime'].searchsorted(np.uint64(convert_date_to_int(dt)), side='right')
             else:
                 monday = dt - timedelta(days=dt.weekday())
                 monday = np.uint64(convert_date_to_int(monday))
                 i = bars['datetime'].searchsorted(monday, side='left')
-
-            left = i - bar_count * 5 if i >= bar_count * 5 else 0
+            
+            if bar_count is None:
+                left = 0
+            else:
+                left = i - bar_count * 5 if i >= bar_count * 5 else 0
             bars = bars[left:i]
 
             if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
@@ -312,9 +324,11 @@ class BaseDataSource(AbstractDataSource):
                                            fields, adjust_type, adjust_orig)
             adjust_week_bars = self.resample_week_bars(adjust_bars_date, bar_count, fields)
             return adjust_week_bars if fields is None else adjust_week_bars[fields]
-        dt = np.uint64(convert_date_to_int(dt))
-        i = bars['datetime'].searchsorted(dt, side='right')
-        left = i - bar_count if i >= bar_count else 0
+        i = bars['datetime'].searchsorted(np.uint64(convert_date_to_int(dt)), side='right')
+        if bar_count is None:
+            left = 0
+        else:
+            left = i - bar_count if i >= bar_count else 0
         bars = bars[left:i]
         if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
             # 期货及指数无需复权

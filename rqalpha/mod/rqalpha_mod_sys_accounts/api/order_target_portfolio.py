@@ -106,6 +106,9 @@ class OrderTargetPortfolio:
         else:
             raise RQApiNotSupportedError(_("not supported to be called in {} phase").format(phase))
         self._prices_settle_ccy = self._prices["last"] * exchange_rate_middle
+        if self._prices_settle_ccy.isna().any():
+            missing_prices = self._prices_settle_ccy[self._prices_settle_ccy.isna()]
+            raise RecursionError("missing valuation prices: {}".format(missing_prices.index.to_list()))
         # 排除未来数据影响，使用 valuation_prices 重新计算估值
         self._total_value = account.total_value - account.market_value + current_quantities.mul(self._prices_settle_ccy, fill_value=0).sum()
          # TODO: 分别计算 A H 股的可用资金

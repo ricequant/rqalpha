@@ -202,10 +202,19 @@ class DataProxy(TradingDatesMixin):
         return self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended=False,
                                  adjust_type='pre', adjust_orig=dt)
 
-    def history_bars(self, order_book_id, bar_count, frequency, field, dt,
-                     skip_suspended=True, include_now=False,
-                     adjust_type='pre', adjust_orig=None):
-        instrument = self.instruments(order_book_id)
+    def history_bars(
+        self,
+        order_book_id: str,
+        bar_count: Optional[int],
+        frequency: str, 
+        field: Union[str, List[str], None], 
+        dt: datetime,
+        skip_suspended: bool = True, 
+        include_now: bool = False, 
+        adjust_type: str = 'pre', 
+        adjust_orig: Optional[datetime] = None
+    ):
+        instrument = self.instrument_not_none(order_book_id)
         if adjust_orig is None:
             adjust_orig = dt
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
@@ -213,7 +222,7 @@ class DataProxy(TradingDatesMixin):
                                               adjust_type=adjust_type, adjust_orig=adjust_orig)
 
     def history_ticks(self, order_book_id, count, dt):
-        instrument = self.instruments(order_book_id)
+        instrument = self.instrument_not_none(order_book_id)
         return self._data_source.history_ticks(instrument, count, dt)
 
     def current_snapshot(self, order_book_id, frequency, dt):

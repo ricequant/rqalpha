@@ -96,4 +96,3 @@ def to_date(date):
         return date.date()
     else:
         raise RQInvalidArgument("unknown date value: {}".format(date))
-
