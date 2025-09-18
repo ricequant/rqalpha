@@ -197,8 +197,8 @@ class AnalyserMod(AbstractMod):
                     _("benchmark {} missing data between backtest start date {} and end date {}").format(
                         ins.order_book_id, returns_s, e)
                 )
-            
-            return close_series.reindex(merged_calendar).fillna(method="ffill").loc[trading_dates].pct_change().iloc[1: ].values
+            close_series[close_series == 0] = np.nan  # 针对脏数据的处理，这部分本来应当在 rqdata 做
+            return close_series.reindex(merged_calendar).ffill().loc[trading_dates].pct_change().iloc[1: ].values
 
     def generate_benchmark_daily_returns_and_portfolio(self, event):
         _s = self._env.config.base.start_date
