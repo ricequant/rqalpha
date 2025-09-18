@@ -149,6 +149,13 @@ def _order_value(account: Account, position: AbstractPosition, ins: Instrument, 
         cash_amount = min(cash_amount, account.cash)
     if isinstance(style, LimitOrder):
         price = style.get_limit_price()
+    elif isinstance(style, ALGO_ORDER_STYLES):
+        # FIXME: 这里提前用了成交价计算数量，不太合理。可以考虑改成针对算法单不做验资风控，而是在撮合的时候成交尽量多的数量。
+        price, __ = env.data_proxy.get_algo_bar(ins.order_book_id, style, env.calendar_dt)
+        if not is_valid_price(price):
+            reason = _(u"Order Creation Failed: [{order_book_id}] has no valid algo price").format(order_book_id=ins.order_book_id)
+            env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
+            return
     else:
         price = env.data_proxy.get_last_price(ins.order_book_id)
         if not is_valid_price(price):

@@ -556,7 +556,3 @@ class Account(metaclass=AccountMeta):
                 pass
         else:
             user_system_log.warn(f"{self.type} not support finance_repay")
-
-    holding_pnl = deprecated_property("holding_pnl", "position_pnl")
-    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
-    equity = deprecated_property("equity", "position_equity")

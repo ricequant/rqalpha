@@ -128,7 +128,7 @@ class Environment(object):
     def _get_frontend_validators(self, instrument_type):
         return chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators)
 
-    def submit_order(self, order):
+    def submit_order(self, order: "Order") -> "Optional[Order]":
         if self.can_submit_order(order):
             self.broker.submit_order(order)
             return order

@@ -265,18 +265,18 @@ def order_target_portfolio_smart(
         order_to_be_submitted = Order.__from_create__(
             order_book_id, delta_quantity, SIDE.BUY, _get_style(order_book_id), POSITION_EFFECT.OPEN
         )
-        order = env.submit_order(order_to_be_submitted)
-        if order is None:
-            if validate_cash(env, order_to_be_submitted, account.cash) is not None:
-                # 因为资金不够而下单失败，使用剩余资金下单
-                order = _order_value(
-                    account, 
-                    account.get_position(order_book_id), 
-                    env.data_proxy.instrument_not_none(order_book_id), 
-                    account.cash, 
-                    _get_style(order_book_id), 
-                    zero_amount_as_exception=False
-                )
+        if validate_cash(env, order_to_be_submitted, account.cash) is not None:
+            # 因为资金不够而下单失败，使用剩余资金下单
+            order = _order_value(
+                account, 
+                account.get_position(order_book_id), 
+                env.data_proxy.instrument_not_none(order_book_id), 
+                account.cash, 
+                _get_style(order_book_id), 
+                zero_amount_as_exception=False
+            )
+        else:
+            order = env.submit_order(order_to_be_submitted)
         if order is not None:
             orders.append(order)
     return orders
