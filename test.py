@@ -13,110 +13,19 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 
-import pickle
 import sys
 import os
-import csv
 from datetime import datetime
 
-from six import iteritems
 import pandas as pd
-from pandas.testing import assert_frame_equal
-import numpy as np
-import coverage
 import pytest
 
-from rqalpha import run, run_func
+from rqalpha import run_func
 
 TEST_DIR = os.path.abspath("./tests/")
 TEST_OUT = os.path.abspath("./tests/outs/")
 
 pd.set_option("display.width", 160)
-
-
-def run_tests(file_path=None):
-    tests = {f.replace(".py", ""): f for f in (
-        (file_path, ) if file_path else (f for f in os.listdir(TEST_DIR) if f.find("test") == 0)
-    )}
-    error_map = {}
-    for name, filename in tests.items():
-        err = run_test(filename)
-        if err is not None:
-            error_map[name] = err
-    for filename, err in iteritems(error_map):
-        print(u"*" * 20, u"[{}]did not pass!".format(filename), u"*" * 20)
-        print(err)
-    print(u"=" * 40)
-    print("[{}|{}] strategies has been passed!".format(len(tests) - len(error_map), len(tests)))
-    return len(error_map)
-
-
-def run_test(filename):
-    config = {"base": {"strategy_file": os.path.join(TEST_DIR, filename)}}
-    print(u"Start test: " + str(config["base"]["strategy_file"]))
-    result_dict = run(config)["sys_analyser"]
-
-    old_pickle_file = os.path.join(TEST_OUT, filename.replace(".py", ".pkl"))
-
-    if not os.path.exists(old_pickle_file):
-        if not os.path.exists(TEST_OUT):
-            os.makedirs(TEST_OUT)
-        pickle.dump(result_dict, open(old_pickle_file, "wb"), protocol=2)
-        return
-    else:
-        old_result_dict = pd.read_pickle(old_pickle_file)
-
-        # 比较 portfolios
-        old_df = old_result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(0)
-        df = result_dict["portfolio"].replace([np.nan, np.inf, -np.inf], 0).round(0)
-        try:
-            del old_df["dividend_receivable"]
-            del df["dividend_receivable"]
-        except:
-            pass
-
-        result = df.eq(old_df)
-        if not result.all().all():
-            return result.all()
-
-        # 比较 summary
-        old_df = (
-            pd.DataFrame(
-                data=[{"val": val} for val in old_result_dict["summary"].values()],
-                index=old_result_dict["summary"].keys(),
-            )
-            .sort_index()
-            .T.fillna(0)
-        )
-        df = (
-            pd.DataFrame(
-                data=[{"val": val} for val in result_dict["summary"].values()],
-                index=result_dict["summary"].keys(),
-            )
-            .sort_index()
-            .T.fillna(0)
-        )
-        try:
-            del old_df["daily_pnl"]
-            del old_df["daily_returns"]
-            del old_df["dividend_receivable"]
-            del old_df["strategy_file"]
-            del df["strategy_file"]
-        except:
-            pass
-        try:
-            del old_df["strategy_file"]
-            del df["strategy_file"]
-        except:
-            pass
-        try:
-            assert_frame_equal(df, old_df, atol=1e-8, rtol=1e-5)
-        except AssertionError as e:
-            return str(e)
-
-
-def is_enable_coverage():
-    return os.environ.get("COVERAGE") == "enabled"
 
 
 def test_api(specific_test=None):
@@ -136,53 +45,6 @@ def test_api(specific_test=None):
     print(u"API test ends.")
 
 
-def test_strategy():
-    run_tests()
-
-
-def write_csv(path, fields):
-    old_test_times = []
-    if not os.path.exists(path):
-        with open(path, "w") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=fields)
-            writer.writeheader()
-    with open(path) as csv_file:
-        reader = csv.DictReader(csv_file)
-        for row in reader:
-            old_test_times.append(row)
-
-    if performance_path is not None:
-        if (
-            0 < len(old_test_times) < 5
-            and time_spend
-            > float(sum(float(i["time_spend"]) for i in old_test_times))
-            / len(old_test_times)
-            * 1.1
-        ):
-            print(
-                "Average time of last 5 runs:",
-                float(sum(float(i["time_spend"]) for i in old_test_times))
-                / len(old_test_times),
-            )
-            print("Now time spend:", time_spend)
-            raise RuntimeError("Performance regresses!")
-        elif (
-            len(old_test_times) >= 5
-            and time_spend
-            > float(sum(float(i["time_spend"]) for i in old_test_times[-5:])) / 5 * 1.1
-        ):
-            print(
-                "Average time of last 5 runs:",
-                float(sum(float(i["time_spend"]) for i in old_test_times[-5:])) / 5,
-            )
-            print("Now time spend:", time_spend)
-            raise RuntimeError("Performance regresses!")
-        else:
-            with open(path, "a") as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=fields)
-                writer.writerow({"date_time": end_time, "time_spend": time_spend})
-
-
 def run_pytest_tests(args):
     retcode = pytest.main(args + [
         os.path.join(TEST_DIR, "unittest"),
@@ -193,10 +55,6 @@ def run_pytest_tests(args):
 
 
 if __name__ == "__main__":
-    if is_enable_coverage():
-        print("enable coverage")
-        cov = coverage.Coverage()
-        cov.start()
 
     performance_path = None
     field_names = ["date_time", "time_spend"]
@@ -210,45 +68,17 @@ if __name__ == "__main__":
             except IndexError:
                 test_api()
             end_time = datetime.now()
-
-        elif sys.argv[1] == "strategy":
-            test_strategy()
-            end_time = datetime.now()
-
-        elif sys.argv[1] == "performance":
-            # test_api()
-            test_strategy()
-            end_time = datetime.now()
-            performance_path = sys.argv[2]
-            time_spend = (end_time - start_time).total_seconds()
-            write_csv(performance_path, field_names)
-
         elif sys.argv[1] == "pytest":
             run_pytest_tests(sys.argv[2:])
             end_time = datetime.now()
-
         else:
-            target_file = sys.argv[1]
-            run_tests(target_file)
-            end_time = datetime.now()
+            raise ValueError("Invalid argument: {}".format(sys.argv[1]))
 
     else:
         # TODO: 逐步迁移至 pytest，弃用自定义框架
         run_pytest_tests([])
         test_api()
-        error_count = run_tests()
         end_time = datetime.now()
-        if error_count == 0:
-            time_csv_file_path = os.path.join(TEST_OUT, "time.csv")
-            time_spend = (end_time - start_time).total_seconds()
-            write_csv(time_csv_file_path, field_names)
 
-        else:
-            print("Failed!")
-            sys.exit(-1)
-    if is_enable_coverage():
-        cov.stop()
-        cov.save()
-        cov.html_report()
 
     print("Total Spend: ", end_time - start_time)
