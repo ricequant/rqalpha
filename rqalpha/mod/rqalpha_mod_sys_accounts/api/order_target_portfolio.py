@@ -236,19 +236,19 @@ def order_target_portfolio_smart(
         # 基础用法：默认价格调仓
         order_target_portfolio_smart({
             '000001.XSHE': 0.3,   # 平安银行 30%
-            '00700.XHKG': 0.2     # 腾讯控股 20%
+            '600000.XSHG': 0.2    # 浦发银行 20%
         })
 
         # 使用算法单调仓
         order_target_portfolio_smart({
             '000001.XSHE': 0.3,
-            '00700.XHKG': 0.2
+            '600000.XSHG': 0.2
         }, order_prices=VWAPOrder(930, 940))  # 9:30-9:40 VWAP
 
         # 指定价格挂单/撮合
         order_target_portfolio_smart({
             '000001.XSHE': 0.3,
-            '00700.XHKG': 0.2
+            '600000.XSHG': 0.2
         }, order_prices={
             '000001.XSHE': 14.5,  # 限价 14.5 元
             '00700.XHKG': 400     # 限价 400 港元
@@ -257,12 +257,12 @@ def order_target_portfolio_smart(
         # 使用自定义估值价格
         order_target_portfolio_smart({
             '000001.XSHE': 0.3,
-            '00700.XHKG': 0.2
+            '600000.XSHG': 0.2
         }, 
         order_prices=VWAPOrder(930, 940),
         valuation_prices={
             '000001.XSHE': 14.8,  # 使用模型估值
-            '00700.XHKG': 405     # 使用模型估值
+            '600000.XSHG': 405    # 使用模型估值
         })
 
     """
