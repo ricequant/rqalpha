@@ -214,6 +214,58 @@ def order_target_portfolio_smart(
     order_prices: Union[AlgoOrder, Mapping[str, float] | Series, None] = None,
     valuation_prices: Union[Mapping[str, float] | Series, None] = None,
 ):
+    """
+    智能批量调整股票仓位至目标权重。
+
+    :param target_portfolio: 目标权重字典或 Series，key 为 order_book_id，value 为权重
+    :param order_prices: 挂单/撮合价格设置，支持以下格式：
+                        - None: 使用开盘价（open_auction 中）或收盘价（handle_bar 中）撮合
+                        - AlgoOrder: 使用算法单价格撮合（如 VWAPOrder、TWAPOrder）
+                        - Dict/Series: 自定义价格挂单/撮合
+    :param valuation_prices: 估值价格设置，即交易前调仓算法所能获取到的最新价格，算法将基于该价格计算目标下单量。
+                        - None：使用 prev_close（open_auction 中）或 open（handle_bar 中）计算估值
+                        - Dict/Series: 自定义算法可获取到的最新价格
+
+    :return: 提交的订单列表
+    :rtype: List[Order]
+
+    :example:
+
+    .. code-block:: python
+
+        # 基础用法：默认价格调仓
+        order_target_portfolio_smart({
+            '000001.XSHE': 0.3,   # 平安银行 30%
+            '00700.XHKG': 0.2     # 腾讯控股 20%
+        })
+
+        # 使用算法单调仓
+        order_target_portfolio_smart({
+            '000001.XSHE': 0.3,
+            '00700.XHKG': 0.2
+        }, order_prices=VWAPOrder(930, 940))  # 9:30-9:40 VWAP
+
+        # 指定价格挂单/撮合
+        order_target_portfolio_smart({
+            '000001.XSHE': 0.3,
+            '00700.XHKG': 0.2
+        }, order_prices={
+            '000001.XSHE': 14.5,  # 限价 14.5 元
+            '00700.XHKG': 400     # 限价 400 港元
+        })
+
+        # 使用自定义估值价格
+        order_target_portfolio_smart({
+            '000001.XSHE': 0.3,
+            '00700.XHKG': 0.2
+        }, 
+        order_prices=VWAPOrder(930, 940),
+        valuation_prices={
+            '000001.XSHE': 14.8,  # 使用模型估值
+            '00700.XHKG': 405     # 使用模型估值
+        })
+
+    """
     from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import _order_value
 
     env = Environment.get_instance()
