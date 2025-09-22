@@ -82,7 +82,6 @@ class BaseDataSource(AbstractDataSource):
         # static registered storages
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
-        self._ex_cum_factor = SimpleFactorStore(_p('ex_cum_factor.h5'))
         self._share_transformation = ShareTransformationStore(_p('share_transformation.json'))
         self._suspend_days = [DateSet(_p('suspended_days.h5'))]  # type: List[AbstractDateSet]
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
@@ -94,6 +93,7 @@ class BaseDataSource(AbstractDataSource):
         self._dividend_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
         self._split_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
         self._calendar_stores: Dict[TRADING_CALENDAR_TYPE, AbstractCalendarStore] = {}
+        self._ex_factor_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
 
         # instruments
         self._id_instrument_map: Dict[str, Instrument] = {}
@@ -116,9 +116,11 @@ class BaseDataSource(AbstractDataSource):
         # register dividends and split factors stores
         dividend_store = DividendStore(_p('dividends.h5'))
         split_store = SimpleFactorStore(_p('split_factor.h5'))
+        ex_factor_store = SimpleFactorStore(_p('ex_cum_factor.h5'))
         for ins_type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF]:
             self.register_dividend_store(ins_type, dividend_store)
             self.register_split_store(ins_type, split_store)
+            self.register_ex_factor_store(ins_type, ex_factor_store)
 
         # register calendar stores
         self.register_calendar_store(TRADING_CALENDAR_TYPE.CN_STOCK, ExchangeTradingCalendarStore(_p("trading_dates.npy")))
@@ -140,6 +142,9 @@ class BaseDataSource(AbstractDataSource):
 
     def register_calendar_store(self, calendar_type: TRADING_CALENDAR_TYPE, calendar_store: AbstractCalendarStore):
         self._calendar_stores[calendar_type] = calendar_store
+
+    def register_ex_factor_store(self, instrument_type: INSTRUMENT_TYPE, ex_factor_store: AbstractSimpleFactorStore, market: MARKET = MARKET.CN):
+        self._ex_factor_stores[instrument_type, market] = ex_factor_store
 
     def append_suspend_date_set(self, date_set):
         # type: (AbstractDateSet) -> None
@@ -241,8 +246,13 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
-    def get_ex_cum_factor(self, order_book_id):
-        return self._ex_cum_factor.get_factors(order_book_id)
+    def get_ex_cum_factor(self, instrument: Instrument):
+        try:
+            ex_factor_store = self._ex_factor_stores[instrument.type, instrument.market]
+        except KeyError:
+            return None
+
+        return ex_factor_store.get_factors(instrument.order_book_id)
 
     def _update_weekly_trading_date_index(self, idx):
         env = Environment.get_instance()
@@ -320,7 +330,7 @@ class BaseDataSource(AbstractDataSource):
                 week_bars = self.resample_week_bars(bars, bar_count, fields)
                 return week_bars if fields is None else week_bars[fields]
 
-            adjust_bars_date = adjust_bars(bars, self.get_ex_cum_factor(instrument.order_book_id),
+            adjust_bars_date = adjust_bars(bars, self.get_ex_cum_factor(instrument),
                                            fields, adjust_type, adjust_orig)
             adjust_week_bars = self.resample_week_bars(adjust_bars_date, bar_count, fields)
             return adjust_week_bars if fields is None else adjust_week_bars[fields]
@@ -337,7 +347,7 @@ class BaseDataSource(AbstractDataSource):
         if isinstance(fields, str) and fields not in FIELDS_REQUIRE_ADJUSTMENT:
             return bars if fields is None else bars[fields]
 
-        bars = adjust_bars(bars, self.get_ex_cum_factor(instrument.order_book_id),
+        bars = adjust_bars(bars, self.get_ex_cum_factor(instrument),
                            fields, adjust_type, adjust_orig)
 
         return bars if fields is None else bars[fields]

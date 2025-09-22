@@ -118,16 +118,17 @@ class DataProxy(TradingDatesMixin):
         return self._data_source.get_split(instrument)
 
     @lru_cache(10240)
-    def _get_prev_close(self, order_book_id, dt):
+    def _get_prev_close(self, order_book_id, dt, adjust_type: str = "pre"):
         instrument = self.instrument_not_none(order_book_id)
         prev_trading_date = self.get_previous_trading_date(dt)
         bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date,
-                                             skip_suspended=False, include_now=False, adjust_orig=dt)
+                                             skip_suspended=False, include_now=False, adjust_type=adjust_type, adjust_orig=dt)
         if bar is None or len(bar) < 1:
             return np.nan
         return bar[0]
 
-    def get_prev_close(self, order_book_id, dt):
+    def get_prev_close(self, order_book_id, dt, adjust_type: str = "pre"):
+        # 获取（基于当日前复权过的）昨收价
         return self._get_prev_close(order_book_id, dt.replace(hour=0, minute=0, second=0))
 
     @lru_cache(10240)

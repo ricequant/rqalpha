@@ -119,7 +119,7 @@ class GenerateSplitBundle:
         return rqdatac.get_split(stocks)
     
     def _write(self, data_iter: Iterable[tuple[str, np.ndarray]]):
-        with h5py.File(os.path.join(self.d, 'split_factors.h5'), "w") as h5:
+        with h5py.File(os.path.join(self.d, 'split_factor.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
     
@@ -130,7 +130,7 @@ class GenerateSplitBundle:
         split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
         split = split[['split_factor']]
         split.reset_index(inplace=True)
-        split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)
+        split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)  # type: ignore
         split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]
         split.set_index(['order_book_id', 'ex_date'], inplace=True)
         self._write([(
@@ -138,24 +138,37 @@ class GenerateSplitBundle:
         ) for order_book_id in split.index.levels[0]])  # type: ignore
 
     
+class GenerateExFactorBundle:
+    def __init__(self, d: str):
+        self.d = d
+    
+    def _get_ex_factor(self):
+        stocks = rqdatac.all_instruments().order_book_id.tolist()
+        return rqdatac.get_ex_factor(stocks)
 
-def gen_ex_factor(d):
-    stocks = rqdatac.all_instruments().order_book_id.tolist()
-    ex_factor = rqdatac.get_ex_factor(stocks)
-    ex_factor.reset_index(inplace=True)
-    ex_factor['ex_date'] = [convert_date_to_int(d) for d in ex_factor['ex_date']]
-    ex_factor.rename(columns={'ex_date': 'start_date'}, inplace=True)
-    ex_factor.set_index(['order_book_id', 'start_date'], inplace=True)
-    ex_factor = ex_factor[['ex_cum_factor']]
+    def _write(self, data_iter: Iterable[tuple[str, np.ndarray]]):
+        with h5py.File(os.path.join(self.d, 'ex_cum_factor.h5'), "w") as h5:
+            for order_book_id, data in data_iter:
+                h5.create_dataset(order_book_id, data=data)
+    
+    def __call__(self):
+        ex_factor = self._get_ex_factor()
+        if ex_factor is None:
+            raise RuntimeError("Got no ex factor data")
+        ex_factor.reset_index(inplace=True)
+        ex_factor['ex_date'] = [convert_date_to_int(d) for d in ex_factor['ex_date']]
+        ex_factor.rename(columns={'ex_date': 'start_date'}, inplace=True)
+        ex_factor.set_index(['order_book_id', 'start_date'], inplace=True)
+        ex_factor = ex_factor[['ex_cum_factor']]
 
-    dtype = ex_factor.loc[ex_factor.index.levels[0][0]].to_records().dtype
-    initial = np.empty((1,), dtype=dtype)
-    initial['start_date'] = 0
-    initial['ex_cum_factor'] = 1.0
+        dtype = ex_factor.loc[ex_factor.index.levels[0][0]].to_records().dtype  # type: ignore
+        initial = np.empty((1,), dtype=dtype)
+        initial['start_date'] = 0
+        initial['ex_cum_factor'] = 1.0
 
-    with h5py.File(os.path.join(d, 'ex_cum_factor.h5'), 'w') as h5:
-        for order_book_id in ex_factor.index.levels[0]:
-            h5[order_book_id] = np.concatenate([initial, ex_factor.loc[order_book_id].to_records()])
+        self._write(((
+            order_book_id, np.concatenate([initial, ex_factor.loc[order_book_id].to_records()])
+        ) for order_book_id in ex_factor.index.levels[0]))  # type: ignore
 
 
 def gen_share_transformation(d):
@@ -484,7 +497,7 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
     )
 
     gen_file_funcs = (
-        gen_instruments, gen_trading_dates, gen_ex_factor, gen_st_days,
+        gen_instruments, gen_trading_dates, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
     kwargs = {}
@@ -497,6 +510,7 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
         tasks.append(GenerateFileTask(func, path))
     tasks.append(GenerateFileTask(GenerateDividendBundle(path)))
     tasks.append(GenerateFileTask(GenerateSplitBundle(path)))
+    tasks.append(GenerateFileTask(GenerateExFactorBundle(path)))
     return tasks
 
 

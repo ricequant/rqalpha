@@ -15,6 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from datetime import date
+from typing import Optional
 from functools import cached_property
 
 from decimal import Decimal
@@ -61,6 +62,17 @@ class StockPosition(Position):
         self._pending_transform = None
         self._non_closable = 0
 
+        # 当日发生的拆分和分红，用于 position_pnl 的计算
+        self._daily_dividend: float = 0.
+        self._daily_split: float = 1.
+        self._unadjusted_prev_close = None
+
+    @property
+    def unadjusted_prev_close(self) -> float:
+        if self._unadjusted_prev_close is None:
+            self._unadjusted_prev_close = self._env.data_proxy.get_prev_close(self._order_book_id, self._env.trading_dt, "none")
+        return self._unadjusted_prev_close
+
     @property
     def dividend_receivable(self):
         # type: () -> float
@@ -82,6 +94,15 @@ class StockPosition(Position):
     @property
     def market_value_local(self):
         return self.market_value
+
+    @property
+    def position_pnl(self) -> float:
+        if not self._logical_old_quantity:
+            # 新股第一天，没有 prev_close
+            return 0
+        return (self._logical_old_quantity * self._daily_split * (
+            self.last_price - self.unadjusted_prev_close
+        ) + self._daily_dividend) * self._direction_factor
 
     @property
     def closable(self):
@@ -111,14 +132,15 @@ class StockPosition(Position):
     def before_trading(self, trading_date):
         # type: (date) -> float
         delta_cash = super(StockPosition, self).before_trading(trading_date)
+        self._unadjusted_prev_close = self.last_price
         if self._quantity == 0 and not self._dividend_receivable:
             return delta_cash
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         data_proxy = self._env.data_proxy
-        self._handle_dividend_book_closure(trading_date, data_proxy)
+        self._daily_dividend = self._handle_dividend_book_closure(trading_date, data_proxy)
         delta_cash += self._handle_dividend_payable(trading_date)
-        self._handle_split(trading_date, data_proxy)
+        self._daily_split = self._handle_split(trading_date, data_proxy)
         return delta_cash
 
     def apply_trade(self, trade):
@@ -198,11 +220,10 @@ class StockPosition(Position):
         events = events[left_pos: right_pos]
         return events
         
-    def _handle_dividend_book_closure(self, trading_date, data_proxy):
-        # type: (date, DataProxy) -> None
+    def _handle_dividend_book_closure(self, trading_date: date, data_proxy: DataProxy) -> float:
         dividends = self._get_dividends_or_splits(self._all_dividends, trading_date, "ex_dividend_date")  # type: ignore[reportIncompatibleVariableOverride]
         if dividends is None or len(dividends) == 0:
-            return
+            return 0
         dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum() * (1 - self.dividend_tax_rate)
         self._avg_price -= dividend_per_share
         # 前一天结算发生了除息, 此时 last_price 还是前一个交易日的收盘价，需要改为 除息后收盘价, 否则影响在before_trading中查看盈亏
@@ -211,6 +232,7 @@ class StockPosition(Position):
         # FIXME: 这里隐含了获取的多条 dividend 的 payable_date 都相同的假设
         payable_date = _int_to_date(dividends["payable_date"][-1])
         self._dividend_receivable = (payable_date, self._quantity * dividend_per_share)
+        return self._quantity * dividend_per_share
 
     def _handle_dividend_payable(self, trading_date):
         # type: (date) -> float
@@ -236,18 +258,18 @@ class StockPosition(Position):
         else:
             return dividend_value
 
-    def _handle_split(self, trading_date, data_proxy):
+    def _handle_split(self, trading_date, data_proxy) -> float:
         splits = self._get_dividends_or_splits(self._all_splits, trading_date, "ex_date")  # type: ignore[reportIncompatibleVariableOverride]
         if splits is None or len(splits) == 0:
-            return
+            return 1.
         ratio: float = splits["split_factor"].cumprod()[-1]
         self._avg_price /= ratio
         self._last_price /= ratio
         ratio_decimal = Decimal(ratio)
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio_decimal)
-        self._logical_old_quantity = round(Decimal(self._logical_old_quantity) * ratio_decimal)
         self._queue.handle_split(ratio_decimal, self._quantity)
+        return ratio
 
 
 class FuturePosition(Position):

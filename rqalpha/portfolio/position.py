@@ -21,7 +21,7 @@ from decimal import Decimal
 from typing import Dict, Iterable, Tuple, Optional, Deque, List
 from functools import cached_property
 
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET, SIDE
 from rqalpha.environment import Environment
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.instrument import Instrument
@@ -123,14 +123,28 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self._avg_price
 
     @property
-    def trading_pnl(self):
-        # type: () -> float
+    def trading_pnl(self) -> float:
+        """
+        交易盈亏
+        即当日所做的交易相比使用最新价交易产生的盈亏
+
+        买方向：sum(t.quantity * (last_price - t.price) for t in trades)
+        卖方向：sum(t.quantity * (t.price - last_price) for t in trades)
+
+        direction = 1 if buy else -1
+        trading_pnl 
+            = sum(t.quantity * (last_price - t.price) * direction for t in trades)
+            = sum(t.quantity * last_price * direction for t in trades) - sum(t.quantity * t.price * direction for t in trades)
+            = net_trade_quantity * last_price * direction - sum(t.quantity * t.price * direction for t in trades)
+        
+        trade_cost = sum(t.quantity * t.price * direction for t in trades)
+        trading_pnl = net_trade_quantity * last_price * direction - trade_cost
+        """
         trade_quantity = self._quantity - self._logical_old_quantity
         return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
 
     @property
-    def position_pnl(self):
-        # type: () -> float
+    def position_pnl(self) -> float:
         if self._logical_old_quantity:
             return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
         else:
@@ -155,8 +169,8 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self.last_price * self._quantity if self._quantity else 0
 
     @property
-    def prev_close(self):
-        # type: () -> float
+    def prev_close(self) -> float:
+        # （前复权过的）昨收价
         if not is_valid_price(self._prev_close):
             self._prev_close = self._env.data_proxy.get_prev_close(self._order_book_id, self._env.trading_dt)
             if not is_valid_price(self._prev_close):
@@ -232,10 +246,17 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._prev_close = None
         return 0
 
+    def _update_costs(self, trade: Trade):
+        self._transaction_cost += trade.transaction_cost
+        if trade.side == SIDE.BUY:
+            self._trade_cost += trade.last_price * trade.last_quantity
+        else:
+            self._trade_cost -= trade.last_price * trade.last_quantity
+
     def apply_trade(self, trade):
         # type: (Trade) -> float
         # 返回总资金的变化量
-        self._transaction_cost += trade.transaction_cost
+        self._update_costs(trade)
         if trade.position_effect == POSITION_EFFECT.OPEN:
             self._queue.handle_trade(trade.last_quantity, self._env.trading_dt.date())
             if self._quantity < 0:
@@ -244,14 +265,12 @@ class Position(AbstractPosition, metaclass=PositionMeta):
                 cost = self._quantity * self._avg_price + trade.last_quantity * trade.last_price
                 self._avg_price = cost / (self._quantity + trade.last_quantity)
             self._quantity += trade.last_quantity
-            self._trade_cost += trade.last_price * trade.last_quantity
             return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost
         elif trade.position_effect == POSITION_EFFECT.CLOSE:
             # 先平昨，后平今
             self._queue.handle_trade(-trade.last_quantity, self._env.trading_dt.date())
             self._old_quantity -= min(trade.last_quantity, self._old_quantity)
             self._quantity -= trade.last_quantity
-            self._trade_cost -= trade.last_price * trade.last_quantity
             return trade.last_price * trade.last_quantity - trade.transaction_cost
         else:
             raise NotImplementedError("{} does not support position effect {}".format(
