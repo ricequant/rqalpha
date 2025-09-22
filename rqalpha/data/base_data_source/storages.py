@@ -132,17 +132,10 @@ class InstrumentStore(AbstractInstrumentStore):
         self._instrument_type = instrument_type
         self._instruments = {}
         self._sym_id_map = {}
-        self._missing_type = set()
 
         for ins in instruments:
-            try:
-                if ins.type != instrument_type:
+            if ins.type != instrument_type:
                     continue
-            except KeyError as e:
-                if e.__str__() not in self._missing_type:
-                    self._missing_type.add(e.__str__())
-                    user_system_log.warning(f"Missing type of {e.__str__()}")
-                continue
             self._instruments[ins.order_book_id] = ins
             self._sym_id_map[ins.symbol] = ins.order_book_id
 
