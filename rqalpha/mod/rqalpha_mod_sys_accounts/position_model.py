@@ -15,7 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from datetime import date
-from typing import Optional
+from typing import Optional, Deque
+from collections import deque
 from functools import cached_property
 
 from decimal import Decimal
@@ -58,7 +59,7 @@ class StockPosition(Position):
 
     def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
         super(StockPosition, self).__init__(order_book_id, direction, init_quantity, init_price)
-        self._dividend_receivable = None
+        self._dividend_receivable: Deque[tuple[date, float]] = deque()
         self._pending_transform = None
         self._non_closable = 0
 
@@ -79,9 +80,7 @@ class StockPosition(Position):
         """
         应收分红
         """
-        if self._dividend_receivable:
-            return self._dividend_receivable[1]
-        return 0
+        return sum(v for _, v in self._dividend_receivable)
 
     @property
     def equity(self):
@@ -231,21 +230,20 @@ class StockPosition(Position):
         
         # FIXME: 这里隐含了获取的多条 dividend 的 payable_date 都相同的假设
         payable_date = _int_to_date(dividends["payable_date"][-1])
-        self._dividend_receivable = (payable_date, self._quantity * dividend_per_share)
+        self._dividend_receivable.append((payable_date, self._quantity * dividend_per_share))
         return self._quantity * dividend_per_share
 
-    def _handle_dividend_payable(self, trading_date):
-        # type: (date) -> float
+    def _handle_dividend_payable(self, trading_date: date) -> float:
         # 返回总资金的变化量
         if not self._dividend_receivable:
             return 0
-        payable_date, dividend_value = self._dividend_receivable
-        if payable_date != trading_date:
-            return 0
-        self._dividend_receivable = None
-        if self.dividend_reinvestment:
+        payable_value = 0.
+        while self._dividend_receivable and self._dividend_receivable[0][0] <= trading_date:
+            _, dividend_value = self._dividend_receivable.popleft()            
+            payable_value += dividend_value
+        if payable_value and self.dividend_reinvestment:
             last_price = self.last_price
-            amount = int(Decimal(dividend_value) / Decimal(last_price))
+            amount = int(Decimal(payable_value) / Decimal(last_price))
             round_lot = self._instrument.round_lot
             amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
             if amount > 0:
@@ -254,9 +252,9 @@ class StockPosition(Position):
                     None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id,
                 )
                 self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
-            return dividend_value - amount * last_price
+            return payable_value - amount * last_price
         else:
-            return dividend_value
+            return payable_value
 
     def _handle_split(self, trading_date, data_proxy) -> float:
         splits = self._get_dividends_or_splits(self._all_splits, trading_date, "ex_date")  # type: ignore[reportIncompatibleVariableOverride]
@@ -264,7 +262,7 @@ class StockPosition(Position):
             return 1.
         ratio: float = splits["split_factor"].cumprod()[-1]
         self._avg_price /= ratio
-        self._last_price /= ratio
+        self._last_price /= ratio  # type: ignore
         ratio_decimal = Decimal(ratio)
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio_decimal)
