@@ -248,7 +248,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 
     def _update_costs(self, trade: Trade):
         self._transaction_cost += trade.transaction_cost
-        if trade.side == SIDE.BUY:
+        if trade.position_effect == POSITION_EFFECT.OPEN:
             self._trade_cost += trade.last_price * trade.last_quantity
         else:
             self._trade_cost -= trade.last_price * trade.last_quantity
