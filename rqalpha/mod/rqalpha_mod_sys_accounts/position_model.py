@@ -95,12 +95,17 @@ class StockPosition(Position):
         return self.market_value
 
     @property
+    def trading_pnl(self) -> float:
+        trade_quantity = self._quantity - self._logical_old_quantity * self._daily_split
+        return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
+
+    @property
     def position_pnl(self) -> float:
         if not self._logical_old_quantity:
             # 新股第一天，没有 prev_close
             return 0
         return (self._logical_old_quantity * self._daily_split * (
-            self.last_price - self.unadjusted_prev_close
+            self.last_price - self.unadjusted_prev_close / self._daily_split
         ) + self._daily_dividend) * self._direction_factor
 
     @property
