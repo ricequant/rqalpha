@@ -10,3 +10,11 @@ def testcase_name(request):
         casename = request.node.name
 
     return f"{os.path.split(request.path)[-1][:-3]}#{casename}"  # type: ignore
+
+
+@pytest.fixture
+def assert_order():
+    def _assert_order(order, **kwargs):
+        for field, value in kwargs.items():
+            assert getattr(order, field) == value, "order.{} is wrong, {} != {}".format(field, getattr(order, field), value)
+    return _assert_order

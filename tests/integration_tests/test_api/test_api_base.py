@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
-# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
+# 版权所有 2019 深圳米筐科技有限公司（下称"米筐科技"）
 #
 # 除非遵守当前许可，否则不得使用本软件。
 #
 #     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
-#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         遵守 Apache License 2.0（下称"Apache 2.0 许可"），
 #         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
-#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可"原样"不变，且不得附加任何条件。
 #
 #     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
 #         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
 #         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
-#         详细的授权流程，请联系 public@ricequant.com 获取。v
+#         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import date
+from math import isclose
+
+from rqalpha import run_func
+from rqalpha.apis import *
 
 __config__ = {
     "base": {
@@ -56,7 +60,7 @@ def test_get_open_order():
             assert order.order_id in get_open_orders()
         context.counter = 0
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_submit_order():
@@ -72,7 +76,7 @@ def test_submit_order():
         if context.fired:
             assert context.portfolio.positions[context.s1].quantity == context.amount
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_cancel_order():
@@ -88,7 +92,7 @@ def test_cancel_order():
         assert order.price == bar_dict[context.s1].limit_down
         assert order.status == ORDER_STATUS.CANCELLED
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_update_universe():
@@ -105,7 +109,7 @@ def test_update_universe():
             his = history_bars(context.s2, 5, '1d', 'close')
             assert sorted(his.tolist()) == sorted([26.06, 26.13, 26.54, 26.6, 26.86])
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_subscribe():
@@ -117,7 +121,7 @@ def test_subscribe():
     def handle_bar(context, _):
         assert context.f1 in context.universe
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_unsubscribe():
@@ -130,7 +134,7 @@ def test_unsubscribe():
     def handle_bar(context, _):
         assert context.f1 not in context.universe
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_get_yield_curve():
@@ -139,7 +143,7 @@ def test_get_yield_curve():
         assert df.iloc[0, 0] == 0.019923
         assert df.iloc[0, 6] == 0.021741
 
-    return locals()
+    run_func(config=__config__, handle_bar=handle_bar)
 
 
 def test_history_bars():
@@ -147,7 +151,7 @@ def test_history_bars():
 
     from rqalpha.utils.exception import RQInvalidArgument
 
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2005-01-04",
             "end_date": "2005-01-31",
@@ -169,11 +173,11 @@ def test_history_bars():
         assert len(return_list) == 0
         assert isinstance(return_list, numpy.ndarray)
 
-    return locals()
+    run_func(config=config, handle_bar=handle_bar)
 
 
 def test_all_instruments():
-    __config__ = {"base": {
+    config = {"base": {
         "start_date": "2017-01-01",
         "end_date": "2017-01-31",
     }}
@@ -198,7 +202,7 @@ def test_all_instruments():
         df3 = all_instruments(['Future', 'Stock'])
         assert sorted(list(df['order_book_id']) + list(df2['order_book_id'])) == sorted(df3['order_book_id'])
 
-    return locals()
+    run_func(config=config, handle_bar=handle_bar)
 
 
 def test_instruments_code():
@@ -212,14 +216,14 @@ def test_instruments_code():
         assert ins.order_book_id == context.s1
         assert ins.type == 'CS'
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_sector():
     def handle_bar(_, __):
         assert len(sector('金融')) >= 80, "sector('金融') 返回结果少于 80 个"
 
-    return locals()
+    run_func(config=__config__, handle_bar=handle_bar)
 
 
 def test_industry():
@@ -235,7 +239,7 @@ def test_industry():
         assert context.s1 in industry_list_1
         assert context.s2 in industry_list_2
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_get_trading_dates():
@@ -252,7 +256,7 @@ def test_get_trading_dates():
             [item.strftime("%Y%m%d") for item
              in trading_dates_list])
 
-    return locals()
+    run_func(config=__config__, init=init)
 
 
 def test_get_current_snapshot():
@@ -267,7 +271,7 @@ def test_get_current_snapshot():
             bar = current_snapshot("000001.XSHE")
             assert bar["last"] == 9.5, "尾盘集合竞价的current_snapshot的last不等于当天的close"
 
-    return locals()
+    run_func(config=__config__, open_auction=open_auction, handle_bar=handle_bar)
 
 
 def test_get_previous_trading_date():
@@ -280,7 +284,7 @@ def test_get_previous_trading_date():
         assert str(get_previous_trading_date('2009-01-03').date()) == '2008-12-31'
         assert str(get_previous_trading_date('2005-01-05').date()) == '2005-01-04'
 
-    return locals()
+    run_func(config=__config__, init=init)
 
 
 def test_get_next_trading_date():
@@ -288,7 +292,7 @@ def test_get_next_trading_date():
         assert str(get_next_trading_date('2017-01-03').date()) == '2017-01-04'
         assert str(get_next_trading_date('2007-01-03').date()) == '2007-01-04'
 
-    return locals()
+    run_func(config=__config__, init=init)
 
 
 def test_get_dividend():
@@ -299,7 +303,7 @@ def test_get_dividend():
         assert df_to_assert[0]['dividend_cash_before_tax'] == 1.7
         assert df_to_assert[0]['payable_date'] == 20130620
 
-    return locals()
+    run_func(config=__config__, handle_bar=handle_bar)
 
 
 def test_current_snapshot():
@@ -316,7 +320,7 @@ def test_current_snapshot():
                 field, getattr(snapshot, field), field, getattr(bar, field)
             )
 
-    return locals()
+    run_func(config=__config__, handle_bar=handle_bar)
 
 
 def test_get_position():
@@ -363,7 +367,7 @@ def test_get_position():
             pos = get_position("RB1701", POSITION_DIRECTION.SHORT)
             assert_position(pos, "RB1701", POSITION_DIRECTION.SHORT, 0, 3)
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_subscribe_event():
@@ -377,11 +381,11 @@ def test_subscribe_event():
         assert context.before_trading_ran
         context.before_trading_ran = False
 
-    return locals()
+    run_func(config=__config__, init=init, before_trading=before_trading, on_before_trading=on_before_trading)
 
 
 def test_order():
-    __config__ = {
+    config = {
         "base": {
             "accounts": {
                 "stock": 100000000,
@@ -411,11 +415,11 @@ def test_order():
             assert get_position(context.future, POSITION_DIRECTION.LONG).quantity == 100
             assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 0
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_order_to():
-    __config__ = {
+    config = {
         "base": {
             "accounts": {
                 "stock": 100000000,
@@ -445,11 +449,11 @@ def test_order_to():
             assert get_position(context.future, POSITION_DIRECTION.LONG).quantity == 100
             assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 0
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_deposit():
-    __config__ = {
+    config = {
         "base": {
             "accounts": {
                 "stock": 100000000,
@@ -487,7 +491,7 @@ def test_deposit():
             total_value = context.portfolio.total_value
             cash = context.portfolio.accounts["FUTURE"].cash
             flag = withdraw("FUTURE", 50000000)
-            assert context.portfolio.accounts["FUTURE"].cash == cash - 50000000
+            assert isclose(context.portfolio.accounts["FUTURE"].cash, cash - 50000000)
             assert context.portfolio.units < units
             assert context.portfolio.total_value < total_value
             assert context.portfolio.unit_net_value == unit_net_value
@@ -505,4 +509,4 @@ def test_deposit():
         elif context.counter == 9:
             assert int(context.portfolio.accounts["STOCK"].cash) == int(context.cash) + 10000
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)

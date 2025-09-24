@@ -15,37 +15,74 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from copy import deepcopy
+
+from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
 
 __config__ = {
     "base": {
-        "start_date": "2015-01-01",
-        "end_date": "2015-12-31",
+        "start_date": "2015-04-10",
+        "end_date": "2015-04-10",
         "frequency": "1d",
         "accounts": {
             "stock": 1000000,
+            "future": 1000000
         }
     },
     "extra": {
         "log_level": "error",
     },
     "mod": {
+        "sys_progress": {
+            "enabled": True,
+            "show": True,
+        },
         "sys_simulation": {
-            "volume_limit": True,
-            "volume_percent": 0.000002
+            "signal": True,
         }
     },
 }
 
 
-def test_run_monthly():
-    def _monthly(context, bar_dict):
-        context.counter += 1
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
+
+
+def test_price_limit():
+    def handle_bar(context, bar_dict):
+        stock = "000001.XSHE"
+        price = bar_dict[stock].limit_up * 0.99
+        order_shares(stock, 100, price)
+        assert get_position(stock).quantity == 100
+        assert get_position(stock).avg_price == price
+
+        # 超过涨停价拒单
+        order_shares(stock, 100, bar_dict[stock].limit_up)
+        assert get_position(stock).quantity == 100
+        assert get_position(stock).avg_price == price
+
+    run_func(config=__config__, handle_bar=handle_bar)
+
+
+def test_signal_open_auction():
 
     def init(context):
-        context.counter = 0
-        scheduler.run_monthly(_monthly, tradingday=1)
+        context.fixed = True
 
-    def handle_bar(context, bar_dict):
-        assert context.counter == context.now.month
+    def open_auction(context, bar_dict):
+        if context.fixed:
+            order_shares("000001.XSHE", 1000)
+            buy_open("AU1512", 1)
+            pos = get_position("000001.XSHE")
+            assert pos.quantity == 1000
+            assert pos.avg_price == 18.0
+            pos = get_position("AU1512")
+            assert pos.quantity == 1
+            assert pos.avg_price == 242.2
+            context.fixed = False
 
-    return locals()
+    run_func(config=__config__, init=init, open_auction=open_auction)

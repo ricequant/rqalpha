@@ -16,9 +16,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import date
+from copy import deepcopy
 
 from numpy.testing import assert_equal, assert_almost_equal
 from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
 
 
 __config__ = {
@@ -42,15 +45,21 @@ __config__ = {
 }
 
 
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
+
+
 def test_stock_delist():
     import datetime
 
-    __config__ = {
+    config = _config({
         "base": {
             "start_date": "2018-12-25",
             "end_date": "2019-01-05"
         }
-    }
+    })
 
     def init(context):
         context.s = "000979.XSHE"
@@ -65,11 +74,12 @@ def test_stock_delist():
             context.total_value_before_delisted = context.portfolio.total_value
         if context.now.date() > datetime.date(2018, 12, 28):
             assert context.portfolio.total_value == context.total_value_before_delisted
-    return locals()
+    
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_stock_dividend():
-    __config__ = {
+    config = _config({
         "base": {
             "start_date": "2012-06-04",
             "end_date": "2018-07-9"
@@ -77,7 +87,7 @@ def test_stock_dividend():
         "extra": {
             "log_level": "info"
         }
-    }
+    })
 
     def init(context):
         context.s = "601088.XSHG"
@@ -96,16 +106,16 @@ def test_stock_dividend():
         elif context.now.date() == date(2018, 7, 9):
             assert context.portfolio.cash == context.last_cash + 910
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_stock_transform():
-    __config__ = {
+    config = _config({
         "base": {
             "start_date": "2015-05-06",
             "end_date": "2015-05-20"
         }
-    }
+    })
 
     def init(context):
         context.s1 = "601299.XSHG"
@@ -120,16 +130,16 @@ def test_stock_transform():
             assert int(context.portfolio.positions[context.s2].quantity) == 220
             assert context.portfolio.cash == context.cash_before_transform
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_stock_split():
-    __config__ = {
+    config = _config({
         "base": {
             "start_date": "2016-05-26",
             "end_date": "2016-05-27"
         }
-    }
+    })
 
     def init(context):
         context.s = "000035.XSHE"
@@ -149,4 +159,4 @@ def test_stock_split():
             assert_almost_equal(position.position_pnl, -140)
             assert_equal(context.portfolio.cash, context.cash_before_split)
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)

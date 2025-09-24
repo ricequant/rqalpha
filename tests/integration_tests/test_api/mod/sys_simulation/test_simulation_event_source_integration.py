@@ -14,6 +14,10 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+from rqalpha.utils.dict_func import deep_update
+from rqalpha import run_func
+from rqalpha.apis import *
+from copy import deepcopy
 
 
 __config__ = {
@@ -37,6 +41,12 @@ __config__ = {
 }
 
 
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
+
+
 def test_open_auction():
     def init(context):
         context.s = "000001.XSHE"
@@ -58,4 +68,4 @@ def test_open_auction():
         assert hasattr(bar, "close")
         assert context.open_auction_prices == (bar.open, bar.limit_up, bar.limit_down, bar.prev_close)
 
-    return locals()
+    run_func(config=__config__, init=init, open_auction=open_auction, handle_bar=handle_bar)

@@ -14,8 +14,11 @@
 
 import pandas as pd
 from numpy import isclose, array
+from copy import deepcopy
 
 from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
 
 
 __config__ = {
@@ -38,6 +41,12 @@ __config__ = {
 }
 
 
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
+
+
 def test_negative_benchmark():
     def handle_bar(context, _):
         from rqalpha.environment import Environment
@@ -52,4 +61,4 @@ def test_negative_benchmark():
             array([-0.01407232, -0.02530206,  0.00501645, -0.03016987,  0.01004613])
         ).all()
 
-    return locals()
+    run_func(config=__config__, handle_bar=handle_bar)

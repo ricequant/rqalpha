@@ -16,7 +16,9 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 
-from ..utils import assert_order
+from copy import deepcopy
+from rqalpha import run_func
+from rqalpha.apis import *
 
 __config__ = {
     "base": {
@@ -39,13 +41,12 @@ __config__ = {
 }
 
 
-def test_order_shares():
-    __config__ = {
-        "base": {
-            "start_date": "2016-06-14",
-            "end_date": "2016-06-19",
-        },
-    }
+def test_order_shares(assert_order):
+    config = deepcopy(__config__)
+    config["base"].update({
+        "start_date": "2016-06-14",
+        "end_date": "2016-06-19",
+    })
 
     # FIXME: supposed to check portfolio
     def init(context):
@@ -70,10 +71,10 @@ def test_order_shares():
             assert_order(o, quantity=1280, status=ORDER_STATUS.FILLED)
             assert context.portfolio.positions[context.s1].quantity == 0
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
-def test_order_lots():
+def test_order_lots(assert_order):
     def init(context):
         context.s1 = "000001.XSHE"
 
@@ -81,10 +82,11 @@ def test_order_lots():
         order_price = bar_dict[context.s1].limit_up
         o = order_lots(context.s1, 1, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=100, price=order_price)
-    return locals()
+    
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
-def test_order_value():
+def test_order_value(assert_order):
     def init(context):
         context.s1 = "000001.XSHE"
         context.amount = 100
@@ -94,20 +96,22 @@ def test_order_value():
         # 5 块最小手续费
         o = order_value(context.s1, context.amount * order_price + 5, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=context.amount, price=order_price)
-    return locals()
+    
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
-def test_order_percent():
+def test_order_percent(assert_order):
     def init(context):
         context.s1 = "000001.XSHE"
 
     def handle_bar(context, bar_dict):
         o = order_percent(context.s1, 0.0001, bar_dict[context.s1].limit_up)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
-    return locals()
+    
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
-def test_order_target_value():
+def test_order_target_value(assert_order):
     def init(context):
         context.order_count = 0
         context.s1 = "000001.XSHE"
@@ -116,11 +120,12 @@ def test_order_target_value():
     def handle_bar(context, bar_dict):
         o = order_target_percent(context.s1, 0.02, style=LimitOrder(bar_dict[context.s1].limit_up))
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
-    return locals()
+    
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_auto_switch_order_value():
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2016-03-07",
             "end_date": "2016-03-07",
@@ -138,11 +143,12 @@ def test_auto_switch_order_value():
     def handle_bar(context, _):
         order_shares("000001.XSHE", 200)
         assert context.portfolio.positions["000001.XSHE"].quantity == 100
-    return locals()
+    
+    run_func(config=config, handle_bar=handle_bar)
 
 
 def test_order_target_portfolio():
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2019-07-30",
             "end_date": "2019-08-05",
@@ -180,11 +186,11 @@ def test_order_target_portfolio():
             assert get_position("000005.XSHE").quantity == 68000  # (993695.7496 * 0.2) / 2.92 = 68061.35
             assert get_position("600519.XSHG").quantity == 0  # 970 低于 收盘价 无法买进
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_order_target_portfolio_in_signal_mode():
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2019-07-30",
             "end_date": "2019-08-05",
@@ -202,7 +208,7 @@ def test_order_target_portfolio_in_signal_mode():
     def init(context):
         context.counter = 0
 
-    def handle_bar(context, handle_bar):
+    def handle_bar(context, bar_dict):
         context.counter += 1
         if context.counter == 1:
             order_target_portfolio({
@@ -215,11 +221,11 @@ def test_order_target_portfolio_in_signal_mode():
             assert get_position("000001.XSHE").quantity == 7100   # (1000000 * 0.1) / 14.37 = 7142.86
             assert get_position("000004.XSHE").quantity == 0  # 价格低过跌停价，被拒单
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_is_st_stock():
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2016-03-07",
             "end_date": "2016-03-07",
@@ -234,12 +240,12 @@ def test_is_st_stock():
             result = is_st_stock(order_book_id, 2)
             assert result == expected_result
 
-    return locals()
+    run_func(config=config, handle_bar=handle_bar)
 
 
 def test_ksh():
     """科创版买卖最低200股，大于就可以201，202股买卖"""
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2019-07-30",
             "end_date": "2019-08-05",
@@ -276,7 +282,7 @@ def test_ksh():
             assert context.portfolio.positions[context.s1].quantity == 201
             assert context.portfolio.positions[context.s2].quantity == 0
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_finance_repay():
@@ -285,17 +291,16 @@ def test_finance_repay():
     financing_rate = 0.1
     money = 10000
 
-    __config__ = {
-        "base": {
-            "start_date": "2016-01-01",
-            "end_date": "2016-01-31"
-        },
-        "mod": {
-            "sys_accounts": {
-                "financing_rate": financing_rate,
-            }
+    config = deepcopy(__config__)
+    config["base"].update({
+        "start_date": "2016-01-01",
+        "end_date": "2016-01-31",
+    })
+    config["mod"].update({
+        "sys_accounts": {
+            "financing_rate": financing_rate,
         }
-    }
+    })
 
     def cal_interest(capital, days):
         for i in range(days):
@@ -322,4 +327,4 @@ def test_finance_repay():
 
         context.total += 1
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)

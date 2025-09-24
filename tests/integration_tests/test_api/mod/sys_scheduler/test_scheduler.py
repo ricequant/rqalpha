@@ -15,10 +15,16 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from copy import deepcopy
+
+from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
+
 __config__ = {
     "base": {
-        "start_date": "2015-04-13",
-        "end_date": "2015-05-10",
+        "start_date": "2015-01-01",
+        "end_date": "2015-12-31",
         "frequency": "1d",
         "accounts": {
             "stock": 1000000,
@@ -28,53 +34,29 @@ __config__ = {
         "log_level": "error",
     },
     "mod": {
-        "sys_progress": {
-            "enabled": True,
-            "show": True,
-        },
         "sys_simulation": {
-            "signal": True,
-            "management_fee": [("stock", 0.05)]
+            "volume_limit": True,
+            "volume_percent": 0.000002
         }
     },
 }
 
 
-def test_set_management_fee_rate():
-    def init(context):
-        context.day_count = 0
-        context.equity = 0
-
-    def handle_bar(context, bar_dict):
-        context.day_count += 1
-        if context.day_count == 1:
-            stock = "000001.XSHE"
-            order_shares(stock, 100)
-            assert context.portfolio.positions[stock].quantity == 100
-            context.fired = True
-            context.total_value = context.portfolio.accounts["STOCK"].total_value
-        if context.day_count == 2:
-            assert context.portfolio.accounts["STOCK"]._management_fees == context.total_value * 0.05
-
-    return locals()
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
 
 
-def test_set_management_function():
-    def management_fee_calculator(account, rate):
-        return len(account.positions) * 100
+def test_run_monthly():
+    def _monthly(context, bar_dict):
+        context.counter += 1
 
     def init(context):
-        context.day_count = 0
-        context.portfolio.accounts["STOCK"].register_management_fee_calculator(management_fee_calculator)
+        context.counter = 0
+        scheduler.run_monthly(_monthly, tradingday=1)
 
     def handle_bar(context, bar_dict):
-        context.day_count += 1
-        if context.day_count == 1:
-            stock = "000001.XSHE"
-            order_shares(stock, 100)
-            assert context.portfolio.positions[stock].quantity == 100
-            context.fired = True
-        if context.day_count == 4:
-            assert context.portfolio.accounts["STOCK"].management_fees == 300
+        assert context.counter == context.now.month
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)

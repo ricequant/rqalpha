@@ -12,7 +12,12 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from copy import deepcopy
+from datetime import date
+
 from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
 
 __config__ = {
     "base": {
@@ -29,6 +34,12 @@ __config__ = {
         }
     }
 }
+
+
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
 
 
 def test_futures_settlement_price_type():
@@ -51,13 +62,14 @@ def test_futures_settlement_price_type():
             assert pos.position_pnl == (6364.6 - 6657.0) * 200
         elif context.total == 3:
             assert pos.position_pnl == (6468 - 6351.2) * 200
-    return locals()
+    
+    run_func(config=__config__, init=init, handle_bar=handle_bar, after_trading=after_trading)
 
 
 def test_futures_de_listed():
     """ 期货合约到期交割 """
 
-    __config__ = {
+    config = _config({
         "base": {
             "start_date": "2016-03-17",
             "end_date": "2016-03-21",
@@ -75,7 +87,7 @@ def test_futures_de_listed():
                 "futures_settlement_price_type": "settlement"
             }
         }
-    }
+    })
 
     def init(context):
         pass
@@ -89,4 +101,4 @@ def test_futures_de_listed():
             buy_open("IC1603", 1)
             context.total_value = context.portfolio.total_value
 
-    return locals()
+    run_func(config=config, init=init, before_trading=before_trading, handle_bar=handle_bar)

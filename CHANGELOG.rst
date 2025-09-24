@@ -17,7 +17,7 @@ CHANGELOG
 
 **[重构和改善]**
 
-- 重构测试框架，从自定义框架迁移到 pytest（仍然在迁移中），提升测试灵活性和功能性
+- 重构测试框架，从自定义框架迁移到 pytest，提升测试灵活性和功能性，更好地与 IDE 集成
 - 重构 `BaseDataSource`，改善代码质量和性能；废弃 `InstrumentStore` 和 `AbstractInstrumentStore`
 - 重构更新 bundle 的部分代码，提升扩展性
 - 修改 `DataProxy` 的部分接口，改进代码质量和类型安全性

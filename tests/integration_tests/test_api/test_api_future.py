@@ -15,8 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-
-from ..utils import assert_order
+from rqalpha import run_func
+from rqalpha.apis import buy_open, sell_open, buy_close, sell_close, get_position, subscribe, order_to, ORDER_STATUS, SIDE, POSITION_EFFECT, POSITION_DIRECTION
 
 __config__ = {
     "base": {
@@ -39,7 +39,7 @@ __config__ = {
 }
 
 
-def test_buy_open():
+def test_buy_open(assert_order):
     def init(context):
         context.f1 = 'P88'
         subscribe(context.f1)
@@ -49,10 +49,10 @@ def test_buy_open():
         assert_order(
             o, order_book_id=context.f1, quantity=1, status=ORDER_STATUS.FILLED, side=SIDE.BUY, position_effect=POSITION_EFFECT.OPEN
         )
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
-def test_sell_open():
+def test_sell_open(assert_order):
     def init(context):
         context.f1 = 'P88'
         subscribe(context.f1)
@@ -62,7 +62,7 @@ def test_sell_open():
         assert_order(
             o, order_book_id=context.f1, quantity=1, status=ORDER_STATUS.FILLED, side=SIDE.SELL, position_effect=POSITION_EFFECT.OPEN
         )
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_buy_close():
@@ -73,8 +73,9 @@ def test_buy_close():
     def handle_bar(context, _):
         orders = buy_close(context.f1, 1)
         # TODO: Add More Sell Close Test
+        assert isinstance(orders, list)
         assert len(orders) == 0
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_sell_close():
@@ -85,8 +86,9 @@ def test_sell_close():
     def handle_bar(context, _):
         orders = sell_close(context.f1, 1)
         # TODO: Add More Sell Close Test
+        assert isinstance(orders, list)
         assert len(orders) == 0
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_close_today():
@@ -102,7 +104,7 @@ def test_close_today():
             assert get_position(context.f1).quantity == 1
             context.fired = True
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_future_order_to():
@@ -125,4 +127,4 @@ def test_future_order_to():
             assert get_position(context.f1, POSITION_DIRECTION.SHORT).quantity == 0
             assert get_position(context.f1, POSITION_DIRECTION.LONG).quantity == 1
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)

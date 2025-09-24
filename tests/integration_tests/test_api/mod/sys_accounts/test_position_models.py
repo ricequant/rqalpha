@@ -12,7 +12,11 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from copy import deepcopy
+
 from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
 
 __config__ = {
     "base": {
@@ -35,6 +39,12 @@ __config__ = {
 }
 
 
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
+
+
 def test_stock_sellable():
     def init(context):
         context.fired = False
@@ -47,12 +57,12 @@ def test_stock_sellable():
             assert sellable == 0, "wrong sellable {}, supposed to be {}".format(sellable, 0)
             context.fired = True
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_trading_pnl():
 
-    __config__ = {
+    config = _config({
         "base": {
             "start_date": "2020-01-02",
             "end_date": "2020-01-02",
@@ -70,7 +80,7 @@ def test_trading_pnl():
                 "show": True,
             }
         },
-    }
+    })
 
     def init(context):
         context.quantity = 2
@@ -89,5 +99,5 @@ def test_trading_pnl():
         assert pos.trading_pnl == (5361.8 - 5300.0) * context.quantity * 200
         assert pos.trading_pnl == (context.close_price - context.open_price) * context.quantity * 200
 
-    return locals()
+    run_func(config=config, init=init, open_auction=open_auction, handle_bar=handle_bar, after_trading=after_trading)
 

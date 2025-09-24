@@ -15,8 +15,11 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from copy import deepcopy
+
 from numpy.testing import assert_equal
 from rqalpha.apis import *
+from rqalpha import run_func
 
 __config__ = {
     "base": {
@@ -101,7 +104,7 @@ def test_stock_position_queue_open_close():
             queue = position.position_queue
             assert_equal(len(queue), 0)  # 应该为空
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_stock_position_queue_short_selling():
@@ -109,7 +112,7 @@ def test_stock_position_queue_short_selling():
     测试股票卖空时的 position_queue
     注意：此测试需要在支持卖空的环境中运行，否则会跳过测试
     """
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2016-03-07",
             "end_date": "2016-03-10",
@@ -168,24 +171,24 @@ def test_stock_position_queue_short_selling():
                 assert_equal(queue[0][0], context.now.date())
                 assert_equal(queue[0][1], 500)  # 应该变成+500
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_stock_position_queue_split():
     """
     测试股票拆分时的 position_queue
     """
-    __config__ = {
-        "base": {
-            "start_date": "2024-06-17",
-            "end_date": "2024-06-19"
-        },
-        "mod": {
-            "sys_accounts": {
-                "validate_stock_position": False  # 禁用股票仓位检查以启用卖空
-            }
+    config = deepcopy(__config__)
+    config["base"].update({
+        "start_date": "2024-06-17",
+        "end_date": "2024-06-19",
+    })
+    config["mod"].update({
+        "sys_accounts": {
+            "validate_stock_position": False  # 禁用股票仓位检查以启用卖空
         }
-    }
+    })
+    
 
     def init(context):
         context.s = "688032.XSHG"
@@ -218,19 +221,18 @@ def test_stock_position_queue_split():
             assert_equal(queue[0][0], date(2024, 6, 17))
             assert_equal(queue[0][1] + queue[1][1], -1070)
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_stock_position_queue_delist():
     """
     测试股票退市时的 position_queue
     """
-    __config__ = {
-        "base": {
-            "start_date": "2018-12-25",
-            "end_date": "2019-01-05"
-        }
-    }
+    config = deepcopy(__config__)
+    config["base"].update({
+        "start_date": "2018-12-25",
+        "end_date": "2019-01-05",
+    })
 
     def init(context):
         context.s = "000979.XSHE"  # 这只股票在2018-12-28退市
@@ -260,14 +262,14 @@ def test_stock_position_queue_delist():
             queue = position.position_queue
             assert_equal(len(queue), 0)  # 应该为空
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_future_position_queue_close_today():
     """
     测试期货平今仓时的 position_queue
     """
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2016-03-07",
             "end_date": "2016-03-08",
@@ -328,14 +330,14 @@ def test_future_position_queue_close_today():
         if today_position_after_close > 0:
             assert_equal(today_position - today_position_after_close, 1)
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_comprehensive_position_queue():
     """
     综合测试 position_queue 的各种情况
     """
-    __config__ = {
+    config = {
         "base": {
             "start_date": "2016-03-07",
             "end_date": "2016-03-11",
@@ -442,4 +444,4 @@ def test_comprehensive_position_queue():
             future_short_queue = future_short_position.position_queue
             assert_equal(len(future_short_queue), 0)  # 应该为空
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)

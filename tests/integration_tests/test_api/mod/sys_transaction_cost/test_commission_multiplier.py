@@ -12,55 +12,54 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+from copy import deepcopy
+
 from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
+from rqalpha.environment import Environment
 
 __config__ = {
     "base": {
-        "start_date": "2016-01-01",
-        "end_date": "2016-01-31",
+        "start_date": "2022-01-01",
+        "end_date": "2022-01-30",
         "frequency": "1d",
         "accounts": {
             "stock": 1000000,
+            "future": 1000000,
         }
     },
     "mod": {
-        "sys_accounts": {
-            "financing_stocks_restriction_enabled": True
+        "sys_transaction_cost": {
+            "stock_commission_multiplier": 2,
+            "futures_commission_multiplier": 3,
         }
     }
 }
 
 
-def test_margin_stocks():
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
 
-    try:
-        import rqdatac
-    except ImportError:
-        print("rqdatac not install, not test margin_stocks")
-        return {}
+
+def test_commission_multiplier():
 
     def init(context):
-        context.total = 0
-        context.margin_symbol = "000001.XSHE"
-        context.not_margin_symbol = "000004.XSHE"
+        context.s1 = "000001.XSHE"
+        context.s2 = "IC2203"
+        context.fixed = True
 
     def handle_bar(context, bar_dict):
-        if context.total == 0:
-            order_shares(context.margin_symbol, 100)
-            order_shares(context.not_margin_symbol, 100)
-        elif context.total == 1:
-            # 融资余额 == 0，所以不开启股票池设置
-            assert 100 == get_position(context.not_margin_symbol).quantity
-            assert 100 == get_position(context.margin_symbol).quantity
-        elif context.total == 2:
-            finance(10000)
-            order_shares(context.margin_symbol, 100)
-            order_shares(context.not_margin_symbol, 100)
-        elif context.total == 3:
-            # 限制了股票池，买不到非融资融券的股票
-            assert 100 == get_position(context.not_margin_symbol).quantity
-            assert 200 == get_position(context.margin_symbol).quantity
-        context.total += 1
+        if context.fixed:
+            stock_order = order_percent(context.s1, 1)
+            future_order = buy_open(context.s2, 1)
+            env = Environment.get_instance()
+            future_commission_info = env.data_proxy.get_futures_trading_parameters(context.s2, bar_dict.dt.date())
+            context.fixed = False
+            assert stock_order.transaction_cost == 16.66 * 59900 * 8 / 10000 * 2
+            assert future_order.transaction_cost == 7308 * 200 * future_commission_info.open_commission_ratio * 3
 
-    return locals()
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 

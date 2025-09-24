@@ -16,12 +16,16 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import date
+from copy import deepcopy
+from math import isclose
 
-from numpy.testing import assert_almost_equal
+from pandas import read_excel
 
 from rqalpha.environment import Environment
+from rqalpha.apis import *
+from rqalpha import run_func
+from rqalpha.utils.dict_func import deep_update
 
-from ..utils import make_test_strategy_decorator
 
 test_strategies = []
 
@@ -46,12 +50,14 @@ __config__ = {
 }
 
 
-def assert_almost_equal(first, second):
-    assert round(abs(first - second), 10) == 0
+def _config(c):
+    config = deepcopy(__config__)
+    deep_update(c, config)
+    return config
 
 
 def test_futures_info():
-    __config__ = {
+    config = _config({
         "base": {
             "future_info": {
                 "SC": {
@@ -61,8 +67,8 @@ def test_futures_info():
                 }
             }
         }
-        }
-
+    })
+    
     def init(context):
         context.f1 = "SC1809"
         subscribe_event(EVENT.TRADE, on_trade)
@@ -75,34 +81,34 @@ def test_futures_info():
         trade = event.trade
         contract_multiplier = Environment.get_instance().data_proxy.instrument("SC1809").contract_multiplier
         if trade.position_effect == POSITION_EFFECT.OPEN:
-            assert_almost_equal(
+            assert isclose(
                 trade.transaction_cost, 0.0002 * trade.last_quantity * trade.last_price * contract_multiplier
             )
         elif trade.position_effect == POSITION_EFFECT.CLOSE:
-            assert_almost_equal(
+            assert isclose(
                 trade.transaction_cost, 0.0001 * trade.last_quantity * trade.last_price * contract_multiplier
             )
         else:
             assert trade.transaction_cost == 0
 
-    return locals()
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_init_position():
-    __config__ = {
+    config = _config({
         "base": {
             "accounts": {
                 "stock": 10000000
             },
             "init_positions": "000006.XSHE:10000"
-        },
-   }
-
+        }
+    })
+    
     def before_trading(context):
         if context.now.date() == date(2018, 4, 2):
             # 首个交易日，持仓价格应为昨收
             pos = get_position("000006.XSHE")  # noqa
-            assert_almost_equal(pos.last_price, 7.37)
+            assert isclose(pos.last_price, 7.37)
             assert pos.quantity == 10000
 
     def init(context):
@@ -110,4 +116,4 @@ def test_init_position():
         stock_position = context.portfolio.get_position('000006.XSHE', 'LONG')
         assert stock_position.quantity == 10000
 
-    return locals()
+    run_func(config=config, before_trading=before_trading, init=init)
