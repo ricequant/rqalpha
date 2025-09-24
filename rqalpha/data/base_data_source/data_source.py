@@ -387,7 +387,7 @@ class BaseDataSource(AbstractDataSource):
     def history_ticks(self, instrument, count, dt):
         raise NotImplementedError
 
-    def get_algo_bar(self, id_or_ins, start_min, end_min, dt):
+    def get_algo_bar(self, id_or_ins: Union[str, Instrument], start_min: int, end_min: int, dt: datetime) -> Optional[np.ndarray]:
         raise NotImplementedError("open source rqalpha not support algo order")
 
     def get_open_auction_volume(self, instrument: Instrument, dt: datetime):
