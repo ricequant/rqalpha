@@ -145,7 +145,8 @@ class AnalyserMod(AbstractMod):
     
     NULL_OID = {"null", "NULL"}
     NON_CN_CALENDAR_OIDS = {
-        "930930.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND
+        "930930.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND,
+        "930933.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND
     }
 
     def _get_one_benchmark_daily_returns(self, ins: Instrument, trading_dates: pd.DatetimeIndex):
