@@ -89,6 +89,8 @@ class OrderTargetPortfolio:
                 prev_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
                 for order_book_id in index:
                     bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["close"], prev_date)
+                    if bars is None:
+                        raise RuntimeError("missing valuation prices: {}".format(order_book_id))
                     self._prices.loc[order_book_id, "last"] = bars["close"][0]
         elif phase == EXECUTION_PHASE.ON_BAR:
             if env.config.base.frequency == "1d":
@@ -96,6 +98,8 @@ class OrderTargetPortfolio:
                 # 当前先选择开盘价
                 for order_book_id in index:
                     bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["open", "limit_up", "limit_down"], env.trading_dt)
+                    if bars is None:
+                        raise RuntimeError("missing valuation prices: {}".format(order_book_id))
                     self._prices.loc[order_book_id] = list(bars[0])
                 if valuation_prices is not None:
                     self._prices["last"] = valuation_prices

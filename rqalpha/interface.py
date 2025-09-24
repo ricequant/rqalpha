@@ -775,5 +775,4 @@ class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
         """
         计算指定交易应付的印花税
         """
-        # TODO: 兼容旧的 API
         raise NotImplementedError

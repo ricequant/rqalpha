@@ -405,12 +405,18 @@ class MarketOrder(OrderStyle):
     def get_limit_price(self):
         return None
 
+    def __eq__(self, other):
+        return isinstance(other, MarketOrder)
+
 
 class LimitOrder(OrderStyle):
     __repr__ = ORDER_TYPE.LIMIT.__repr__  # type: ignore
 
     def __init__(self, limit_price):
         self.limit_price = float(limit_price)
+
+    def __eq__(self, other):
+        return isinstance(other, LimitOrder) and self.limit_price == other.limit_price
 
     def get_limit_price(self):
         return self.limit_price
