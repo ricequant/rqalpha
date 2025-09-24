@@ -31,6 +31,7 @@ from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_dat
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.typing import DateLike
+from rqalpha.utils.logger import system_log
 from rqalpha.environment import Environment
 from rqalpha.data.base_data_source.adjust import FIELDS_REQUIRE_ADJUSTMENT, adjust_bars
 from rqalpha.data.base_data_source.storage_interface import (AbstractCalendarStore, AbstractDateSet,
@@ -94,10 +95,16 @@ class BaseDataSource(AbstractDataSource):
         instruments = []
         
         env = Environment.get_instance()
+        unsupported_types = []
         with open(_p('instruments.pk'), 'rb') as f:
             for i in pickle.load(f):
                 if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):
                     i["listed_date"] = datetime(1990, 1, 1)
+                if i["type"] not in INSTRUMENT_TYPE:
+                    if i["type"] not in unsupported_types:
+                        unsupported_types.append(i["type"])
+                        system_log.warning(f"Unsupported type: {i['type']}")
+                    continue
                 instruments.append(Instrument(
                     i, 
                     lambda i: self._future_info_store.get_tick_size(i),

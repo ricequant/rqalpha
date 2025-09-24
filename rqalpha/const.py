@@ -158,6 +158,7 @@ class INSTRUMENT_TYPE(CustomEnum):
     SPOT = "Spot"
     REPO = "Repo"
     REITs = "REITs"
+    FutureArbitrage = "FutureArbitrage"
 
 
 # noinspection PyPep8Naming

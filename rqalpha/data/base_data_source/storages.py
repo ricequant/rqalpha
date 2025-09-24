@@ -135,7 +135,7 @@ class InstrumentStore(AbstractInstrumentStore):
 
         for ins in instruments:
             if ins.type != instrument_type:
-                continue
+                    continue
             self._instruments[ins.order_book_id] = ins
             self._sym_id_map[ins.symbol] = ins.order_book_id
 
