@@ -2,6 +2,101 @@
 CHANGELOG
 ==================
 
+6.0.0
+==================
+
+**[新增功能]**
+
+- `mod_sys_accounts`新增 `dividend_tax_rate` 配置项，支持固定股息税率配置，默认为 0
+- 新增 `order_target_portfolio_smart` API，相比 `order_target_portfolio` 更加智能和精确
+
+**[问题修复]**
+
+- 修复分红情况下 `position_pnl` 的计算
+- 修复 `order_value` 及关联 API 在算法单撮合场景下对可买股数估计不准的问题
+
+**[重构和改善]**
+
+- 重构测试框架，从自定义框架迁移到 pytest（仍然在迁移中），提升测试灵活性和功能性
+- 重构 `BaseDataSource`，改善代码质量和性能；废弃 `InstrumentStore` 和 `AbstractInstrumentStore`
+- 重构更新 bundle 的部分代码，提升扩展性
+- 修改 `DataProxy` 的部分接口，改进代码质量和类型安全性
+- 重构 `StockPosition` 类，增强分红拆分计算的鲁棒性
+- 重构 `AnalyserMod`，增加对部分非 A 股交易日历的 benchmark 的支持
+- 重构 `StockTransactionCostDecider` 和 `FutureTransactionCostDecider`，适配新的接口、简化代码
+- 改善 `Instrument`、`Order` 和 `Trade` 类，简化使用、提升性能
+- 改善 `Portfolio` 和 `Account` 类，提升针对不同合约及多市场场景下的扩展性
+- 改善类型提示
+
+**[其他改进]**
+
+- 策略抛出异常时，RQAlpha 主函数或进程最终也会抛出异常（而不是仅打印错误日志）
+- 更新翻译文件
+
+
+**[For Mod 开发者] 接口变更指引**
+
+本版本对接口进行了重大重构，主要目的是简化代码、提升类型安全性及提升针对多市场交易的扩展性
+
+**1. `interface.py` 变更**
+
+- `AbstractTransactionCostDecider` 接口发生重大变更，多个方法合并为单一 `calc` 方法
+- `DataSource` 新增 `get_exchange_rate` 方法，对于单一货币的场景，简单返回全 1 的汇率结构即可（参考 `BaseDataSource` 的实现）
+
+**2. `BaseDataSource` 接口变更**
+
+- `register_xxx_store` 增加 `market` 参数，`register_instrument_store` 替换为 `register_instruments`
+- `InstrumentStore` 和 `AbstractInstrumentStore` 已标记为废弃
+
+**3. `DataProxy` 接口变更**
+
+- 删除 `get_dividend_by_book_date` 和 `get_split_by_ex_date` 方法
+- `get_prev_close` 方法新增 `adjust_type` 参数
+- 新增 `instrument_not_none` 和 `multi_instruments` 方法，提高类型安全性
+- 新增 `get_exchange_rate` 方法，用于获取汇率数据
+- 交易日历相关方法 `trading_calendar_type` 参数的默认值改为 `TRADING_CALENDAR_TYPE.CN_STOCK`
+
+**4. `Environment` 接口变更**
+
+- 简化税费计算相关接口，将功能重叠的多个接口合并精简为 `calc_transaction_cost`
+- 变更多个组件属性的行为以提升类型安全，以下属性在未设置之前尝试访问会抛出 `AttributeError`（而不是返回 `None`）：
+  - `data_proxy`
+  - `data_source`
+  - `price_board`
+  - `event_source`
+  - `broker`
+  - `strategy_loader`
+  - `portfolio`
+  - `mod_dict`
+  - `user_strategy`
+
+**4. 各 model 和业务类**
+
+- `Instrument`
+  - 构造函数新增 `market` 参数，非中国市场标的需要传入该参数
+  - 新增 `min_order_quantity` 和 `order_step_size` 属性，改善原 `round_lot` 含义模糊的问题
+
+- `Order`
+  - 新增 `estimated_transaction_cost` 属性，用于估算订单交易成本
+
+- `Trade` 
+  - 构造后不再需要显式设置 `commission` 和 `tax`，这一过程已集成至 `__from_create__` 内部
+
+- `Account`
+  - 增加 `available_cash_for` 方法，用于在多市场场景下获取指定标的的可用资金，风控场景应使用该方法而不是 `cash` 属性
+
+**5. 枚举类型变化**
+
+- `TRADING_CALENDAR_TYPE` 新增 `HK_STOCK` 和 `SOUTHBOUND` 类型，原 `EXCHANGE` 类型重命名为 `CN_STOCK`
+- 新增 `MARKET` 枚举 (`MARKET.CN`, `MARKET.HK`) 用于多市场支持
+
+**6. 重构测试框架**
+
+- 新的回测结果断言工具
+  - `rqalpha.utils.testing` 下新增 `assert_result` 工具函数，用于断言回测结果与文件中持久化的结果相一致
+  - 增加了专门用来持久化回测结果的自定义文件格式，兼顾了可读性和序列化能力
+
+
 5.3.3
 ==================
 - 修复平今数量的计算异常
