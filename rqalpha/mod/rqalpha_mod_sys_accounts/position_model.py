@@ -190,6 +190,7 @@ class StockPosition(Position):
                     delta_cash = self.market_value_local
             if self.cash_return_by_stock_delisted:
                 delta_cash = self.market_value_local
+                self._trade_cost = -self.market_value  # 相当于卖掉了，所以给一个负成本
             self._quantity = self._old_quantity = 0
             self._queue.clear()
         return delta_cash
