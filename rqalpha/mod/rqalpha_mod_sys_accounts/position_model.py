@@ -24,7 +24,7 @@ from numpy import ndarray
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
@@ -56,6 +56,8 @@ class StockPosition(Position):
     dividend_tax_rate: float = 0.
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
+
+    calendar_type = TRADING_CALENDAR_TYPE.CN_STOCK
 
     def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
         super(StockPosition, self).__init__(order_book_id, direction, init_quantity, init_price)
@@ -163,7 +165,7 @@ class StockPosition(Position):
             return 0
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
-        next_date = self._env.data_proxy.get_next_trading_date(trading_date)
+        next_date = self._env.data_proxy.get_next_trading_date(trading_date, trading_calendar_type=self.calendar_type)
         instrument = self._env.data_proxy.instrument_not_none(self._order_book_id)
         delta_cash = 0
         if instrument.de_listed_at(next_date):
