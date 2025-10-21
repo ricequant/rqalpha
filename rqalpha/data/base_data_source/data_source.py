@@ -116,6 +116,7 @@ class BaseDataSource(AbstractDataSource):
             INSTRUMENT_TYPE.CS: dividend_store,
             INSTRUMENT_TYPE.ETF: dividend_store,
             INSTRUMENT_TYPE.LOF: dividend_store,
+            INSTRUMENT_TYPE.REITs: dividend_store,
         }
 
         self._calendar_providers = {
