@@ -266,7 +266,12 @@ def gen_future_info(d):
             except AttributeError:
                 # FIXME: why get_dominant return None???
                 continue
-            commission = commission_df[commission_df['order_book_id'] == dominant].iloc[0]
+            
+            dominant_indexer = commission_df["order_book_id"] == dominant
+            if not dominant_indexer.any():
+                # S0301：大豆期货的最后一个合约，该合约出现在 instrument 中，但取不到 commission，这种情况忽略掉
+                continue
+            commission = commission_df[dominant_indexer].iloc[0]
 
             for p in param:
                 future_dict[p] = commission[p]
