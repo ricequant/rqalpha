@@ -642,7 +642,7 @@ def test_deposit_withdraw_before_and_after_trading():
             total_value = context.portfolio.total_value
             cash = context.portfolio.accounts["FUTURE"].cash
             deposit("FUTURE", 50000000)
-            assert context.portfolio.accounts["FUTURE"].cash == cash + 50000000
+            assert isclose(context.portfolio.accounts["FUTURE"].cash, cash + 50000000)
             assert context.portfolio.units > units
             assert context.portfolio.total_value > total_value
             assert context.portfolio.unit_net_value == unit_net_value
