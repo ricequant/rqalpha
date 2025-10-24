@@ -30,11 +30,12 @@ import h5py
 import numpy as np
 import pandas
 
-from rqalpha.const import COMMISSION_TYPE, MARKET
+from rqalpha.const import COMMISSION_TYPE, MARKET, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.functools import lru_cache
+from rqalpha.utils.logger import system_log
 
 from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
@@ -124,21 +125,26 @@ class FutureInfoStore(object):
         return tick_size
 
 
-
-
 def load_instruments_from_pkl(pkl_path: str, future_info_store: FutureInfoStore) -> List[Instrument]:
     with open(pkl_path, "rb") as f:
         instruments: List[Instrument] = []
+        unsupported_types = []
         with open(pkl_path, 'rb') as f:
             for i in pickle.load(f):
                 if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):
                     i["listed_date"] = datetime(1990, 1, 1)
+                if i["type"] not in INSTRUMENT_TYPE:
+                    if i["type"] not in unsupported_types:
+                        unsupported_types.append(i["type"])
+                        system_log.warning(f"Unsupported type: {i['type']}")
+                    continue
                 instruments.append(Instrument(
                     i, 
                     future_info_store.get_tick_size,
                     market=MARKET.CN
                 ))
         return instruments
+
 
 class ShareTransformationStore(object):
     def __init__(self, f):

@@ -59,7 +59,9 @@ getcontext().prec = 10
 export_as_api(industry_code, name='industry_code')
 export_as_api(sector_code, name='sector_code')
 
+
 KSH_MIN_AMOUNT = 200
+BJSE_MIN_AMOUNT = 100
 
 
 def _get_account_position_ins(id_or_ins):
@@ -78,6 +80,9 @@ def _round_order_quantity(ins, quantity, method: Callable = int) -> int:
     if ins.type == "CS" and ins.board_type == "KSH":
         # KSH can buy(sell) 201, 202 shares
         return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
+    elif ins.type == "CS" and ins.board_type == "BJS":
+        # BJSE can buy(sell) 101, 202 shares
+        return 0 if abs(quantity) < BJSE_MIN_AMOUNT else int(quantity)
     else:
         round_lot = ins.round_lot
         try:

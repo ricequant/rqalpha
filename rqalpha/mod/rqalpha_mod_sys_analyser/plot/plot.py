@@ -26,6 +26,7 @@ from matplotlib import gridspec, ticker, image as mpimg, pyplot
 
 import rqalpha
 from rqalpha.const import POSITION_EFFECT
+from rqalpha.utils.logger import system_log
 from .utils import IndicatorInfo, LineInfo, max_dd as _max_dd, SpotInfo, max_ddd as _max_ddd
 from .utils import weekly_returns, trading_dates_index
 from .consts import PlotTemplate, DefaultPlot
@@ -245,6 +246,8 @@ def plot_result(
 
     _plot(summary["strategy_file"], sub_plots, strategy_name)
 
+    system_log.debug(f"Matplotlib backend: {pyplot.get_backend()}")
+    
     if save:
         file_path = save
         if os.path.isdir(save):

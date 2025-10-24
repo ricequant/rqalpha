@@ -110,7 +110,7 @@ class Instrument(metaclass=PropertyReprMeta):
     @cached_property
     def type(self) -> INSTRUMENT_TYPE:
         """
-        [sty] 合约类型，目前支持的类型有: ‘CS’, ‘INDX’, ‘LOF’, ‘ETF’, ‘Future’
+        [str] 合约类型，目前支持的类型有: ‘CS’, ‘INDX’, ‘LOF’, ‘ETF’, ‘Future’
         """
         return INSTRUMENT_TYPE[self._dict["type"]]  # type: ignore
 
