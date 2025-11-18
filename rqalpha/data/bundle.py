@@ -544,7 +544,6 @@ class AutomaticUpdateBundle(object):
         self._api = api
         self._fields = fields
         self._start_date = start_date
-        self._end_date = end_date
         self.updated = []
         self._env = Environment.get_instance()
         self._file_lock = FileLock(self._file + ".lock")
@@ -589,10 +588,10 @@ class AutomaticUpdateBundle(object):
                         # 需要兼容此前的旧版数据，对字段名进行更新
                         if len(h5[order_book_id][:]) != 0:
                             last_date = datetime.datetime.strptime(str(h5[order_book_id][-1]['trading_dt']), "%Y%m%d").date()
-                            if last_date >= self._end_date:
+                            if last_date >= self._env.config.base.end_date:
                                 return
                             start_date = self._env.data_proxy._data_source.get_next_trading_date(last_date).date()
-                            if start_date > self._end_date:
+                            if start_date > self._env.config.base.end_date:
                                 return
                     else:
                         del h5[order_book_id]
@@ -618,7 +617,7 @@ class AutomaticUpdateBundle(object):
             h5.close()
     
     def _get_array(self, instrument: Instrument, start_date: datetime.date) -> Optional[np.ndarray]:
-        df = self._api(instrument.order_book_id, start_date, self._end_date, self._fields)
+        df = self._api(instrument.order_book_id, start_date, self._env.config.base.end_date, self._fields)
         if not (df is None or df.empty):
             df = df[self._fields].loc[instrument.order_book_id] # rqdatac.get_open_auction_info get Futures's data will auto add 'open_interest' and 'prev_settlement'
             record = df.iloc[0: 1].to_records()

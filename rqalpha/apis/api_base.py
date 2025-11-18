@@ -138,7 +138,7 @@ def get_open_orders():
     verify_that("amount").is_number().is_greater_than(0),
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
-def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
+def submit_order(id_or_ins, amount, side, price_or_style=None, price=None, style=None, position_effect=None):
     # type: (Union[str, Instrument], float, SIDE, Optional[float], Optional[POSITION_EFFECT]) -> Optional[Order]
     """
     通用下单函数，策略可以通过该函数自由选择参数下单。
@@ -146,7 +146,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
     :param id_or_ins: 下单标的物
     :param amount: 下单量，需为正数
     :param side: 多空方向
-    :param price: 下单价格，默认为None，表示市价单
+    :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、TWAPOrder、VWAPOrder
     :param position_effect: 开平方向，交易股票不需要该参数
     :example:
 
@@ -172,7 +172,7 @@ def submit_order(id_or_ins, amount, side, price=None, position_effect=None):
             raise RQInvalidArgument(
                 _(u"Index Future contracts[99] are not supported in paper trading.")
             )
-    style = cal_style(price, None)
+    style = cal_style(price, style, price_or_style)
     market_price = env.get_last_price(order_book_id)
     if not is_valid_price(market_price):
         reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)

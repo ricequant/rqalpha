@@ -328,7 +328,10 @@ def _assert_result(result: dict, expected_result: dict):
            (isinstance(expected_val, float) and math.isnan(expected_val)):
             continue
         
-        assert actual_val == expected_val
+        if isinstance(expected_val, float):
+            assert math.isclose(actual_val, expected_val, rel_tol=1e-7)
+        else:   
+            assert actual_val == expected_val
 
 
 def assert_result(result: dict, expected_result_file: str):

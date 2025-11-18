@@ -117,7 +117,7 @@ class BaseDataSource(AbstractDataSource):
         dividend_store = DividendStore(_p('dividends.h5'))
         split_store = SimpleFactorStore(_p('split_factor.h5'))
         ex_factor_store = SimpleFactorStore(_p('ex_cum_factor.h5'))
-        for ins_type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF]:
+        for ins_type in [INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.REITs]:
             self.register_dividend_store(ins_type, dividend_store)
             self.register_split_store(ins_type, split_store)
             self.register_ex_factor_store(ins_type, ex_factor_store)

@@ -16,7 +16,8 @@ class EnvironmentFixture(RQAlphaFixture):
         super(EnvironmentFixture, self).__init__(*args, **kwargs)
         self.env_config = RqAttrDict({
             "base":{
-                "start_date": date(2016, 1, 1)
+                "start_date": date(2016, 1, 1),
+                "end_date": date(2023, 12, 28)
             }
         })
         self.env = None
@@ -72,6 +73,7 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
                 "accounts": {"STOCK": 100},
                 "start_date": date(2016, 1, 1),
                 "data_bundle_path": self.default_bundle_path,
+                "end_date": date(2023, 12, 28),
             }
         })
 

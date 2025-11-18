@@ -73,7 +73,7 @@ inject_run_param(click.Option(
 ))
 inject_run_param(click.Option(
     ('-p', '--plot', 'mod__sys_analyser__plot'),
-    default=None, is_flag=False, flag_value="default",
+    is_flag=True, default=False,
     help=_("[sys_analyser] plot result")
 ))
 inject_run_param(click.Option(
