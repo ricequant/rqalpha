@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 
 
 from rqalpha.apis import order_shares, instruments, subscribe_event, EVENT
@@ -26,7 +26,7 @@ def test_s_tick_size(run_and_assert_result):
             order_shares(stock, 100)
         context.count += 1
 
-    config: dict[str, Any] = {
+    config: Dict[str, Any] = {
         "base": {
             "start_date": "2016-07-01",
             "end_date": "2017-08-01",

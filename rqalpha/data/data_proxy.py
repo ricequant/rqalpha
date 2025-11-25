@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Tuple, Iterable
+from typing import Union, List, Sequence, Optional, Tuple, Iterable, Dict
 
 import numpy as np
 import pandas as pd
@@ -71,7 +71,7 @@ class DataProxy(TradingDatesMixin):
         else:
             return np.nan
 
-    def get_dividend(self, order_book_id: str) -> np.ndarray | None:
+    def get_dividend(self, order_book_id: str) -> Optional[np.ndarray]:
         """
         获取股票/基金分红信息
 
@@ -96,7 +96,7 @@ class DataProxy(TradingDatesMixin):
         instrument = self.instrument_not_none(order_book_id)
         return self._data_source.get_dividend(instrument)
 
-    def get_split(self, order_book_id: str) -> np.ndarray | None:
+    def get_split(self, order_book_id: str) -> Optional[np.ndarray]:
         """
         获取股票拆股信息
 
@@ -305,7 +305,7 @@ class DataProxy(TradingDatesMixin):
         except StopIteration:
             raise LookupError(_("Instrument not found: {}").format(sym_or_id))
 
-    def multi_instruments(self, order_book_ids: Iterable[str]) -> dict[str, Instrument]:
+    def multi_instruments(self, order_book_ids: Iterable[str]) -> Dict[str, Instrument]:
         return {i.order_book_id: i for i in self._data_source.get_instruments(id_or_syms=order_book_ids)}
 
     def instruments(self, sym_or_ids):

@@ -19,7 +19,6 @@ from collections import UserDict, deque
 from datetime import date
 from decimal import Decimal
 from typing import Dict, Iterable, Tuple, Optional, Deque, List
-from functools import cached_property
 
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET, SIDE
 from rqalpha.environment import Environment
@@ -31,6 +30,7 @@ from rqalpha.utils import is_valid_price
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import PropertyReprMeta, property_repr
 from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.class_helper import cached_property
 
 
 def new_position_meta():

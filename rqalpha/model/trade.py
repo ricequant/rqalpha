@@ -17,11 +17,11 @@
 
 import time
 from typing import TYPE_CHECKING, Optional
-from functools import cached_property
 
 from rqalpha.utils import id_gen, get_position_direction
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr, properties
+from rqalpha.utils.class_helper import cached_property
 from rqalpha.environment import Environment
 from rqalpha.const import POSITION_EFFECT, SIDE, MARKET
 from rqalpha.model.instrument import Instrument

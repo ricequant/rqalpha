@@ -2,6 +2,7 @@ import os
 from warnings import warn
 import json
 from io import StringIO
+from typing import Tuple, Optional
 
 import pandas as pd
 from pandas import DataFrame
@@ -55,7 +56,7 @@ class StructuredTextFormat:
     """
     
     @staticmethod
-    def _dataframe_to_csv_with_metadata(df: DataFrame) -> tuple[str, dict, str]:
+    def _dataframe_to_csv_with_metadata(df: DataFrame) -> Tuple[str, dict, str]:
         """Convert DataFrame to CSV string with metadata"""
         object_type = "DataFrame"
         metadata = {
@@ -63,9 +64,8 @@ class StructuredTextFormat:
             "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
             "index_dtype": str(df.index.dtype),
             "index_name": df.index.name,
-            "columns": list(df.columns)
+            "columns": list(df.columns),
         }
-        
         if df.empty:
             csv_data = "# Empty DataFrame"
         else:
@@ -108,6 +108,9 @@ class StructuredTextFormat:
         
         csv_buffer = StringIO(csv_data)
         df = pd.read_csv(csv_buffer, index_col=0)
+        if "order_book_id" in df.columns and df["order_book_id"].dtype == "int64":
+            # 存在当 order_book_id 全为数字时，如 ETF 期权，读取出来为 int64，需要转换为 str
+            df["order_book_id"] = df["order_book_id"].astype(str)
         
         # Restore dtypes
         for col, dtype_str in metadata.get("dtypes", {}).items():
@@ -294,10 +297,13 @@ def _filter_integration_result(result: dict) -> dict:
     return filtered_data
 
 
-def _assert_dafaframe(result: DataFrame, expected_result: DataFrame, exclude_columns: list | None = None):
+def _assert_dafaframe(result: DataFrame, expected_result: DataFrame, exclude_columns: Optional[list] = None):
     if exclude_columns:
         result = result.drop(exclude_columns, axis=1)
         expected_result = expected_result.drop(exclude_columns, axis=1)
+    if result.empty:
+        assert expected_result.empty
+        return
     assert_frame_equal(result, expected_result, atol=1e-7)
 
 
@@ -310,7 +316,7 @@ def _assert_result(result: dict, expected_result: dict):
 
     for field in [
         "stock_positions",
-        "future_positions", 
+        "future_positions",
         "stock_account",
         "future_account",
         "portfolio",

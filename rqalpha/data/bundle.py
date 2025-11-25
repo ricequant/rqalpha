@@ -18,7 +18,7 @@ import os
 import pickle
 import re
 from itertools import chain
-from typing import Callable, Optional, Union, List, Iterable
+from typing import Callable, Optional, Union, List, Iterable, Tuple
 from filelock import FileLock, Timeout
 import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
@@ -89,7 +89,7 @@ class GenerateDividendBundle:
         stocks = rqdatac.all_instruments().order_book_id.tolist()
         return rqdatac.get_dividend(stocks)
 
-    def _write(self, data_iter: Iterable[tuple[str, np.ndarray]]):
+    def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
         with h5py.File(os.path.join(self.d, 'dividends.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
@@ -118,7 +118,7 @@ class GenerateSplitBundle:
         stocks = rqdatac.all_instruments().order_book_id.tolist()
         return rqdatac.get_split(stocks)
     
-    def _write(self, data_iter: Iterable[tuple[str, np.ndarray]]):
+    def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
         with h5py.File(os.path.join(self.d, 'split_factor.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
@@ -146,7 +146,7 @@ class GenerateExFactorBundle:
         stocks = rqdatac.all_instruments().order_book_id.tolist()
         return rqdatac.get_ex_factor(stocks)
 
-    def _write(self, data_iter: Iterable[tuple[str, np.ndarray]]):
+    def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
         with h5py.File(os.path.join(self.d, 'ex_cum_factor.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)

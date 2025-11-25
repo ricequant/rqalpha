@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from functools import cached_property
+from rqalpha.utils.class_helper import cached_property
 
 
 def _repr(cls_name, properties):

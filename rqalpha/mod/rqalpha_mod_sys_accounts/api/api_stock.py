@@ -138,7 +138,7 @@ def _order_shares(ins, amount, style, quantity, auto_switch_order_value, zero_am
     return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
 
 
-def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity: int | float, price: float) -> float:
+def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity: Union[int, float], price: float) -> float:
     if delta_quantity > 0:
         side, position_effect = SIDE.BUY, POSITION_EFFECT.OPEN
     else:
@@ -192,7 +192,6 @@ def _order_value(account: Account, position: AbstractPosition, ins: Instrument, 
     return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False, zero_amount_as_exception=zero_amount_as_exception)
 
 
-@cast_singledispatch(order_shares).register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_shares(id_or_ins, amount, price_or_style=None, price=None, style=None):
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
     account, position, ins = _get_account_position_ins(id_or_ins)
@@ -200,21 +199,21 @@ def stock_order_shares(id_or_ins, amount, price_or_style=None, price=None, style
         assure_instrument(id_or_ins), amount, cal_style(price, style, price_or_style), position.quantity,
         auto_switch_order_value
     )
+stock_order_shares = cast_singledispatch(order_shares).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_shares)
 
 
-@cast_singledispatch(order_value).register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, cash_amount, cal_style(price, style, price_or_style))
+stock_order_value = cast_singledispatch(order_value).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_value)
 
 
-@cast_singledispatch(order_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, account.total_value * percent, cal_style(price, style, price_or_style))
+stock_order_percent = cast_singledispatch(order_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_percent)
 
 
-@cast_singledispatch(order_target_value).register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
@@ -225,9 +224,9 @@ def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=
     _delta = cash_amount - position.market_value
     _style = open_style if _delta > 0 else close_style
     return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False)
+stock_order_target_value = cast_singledispatch(order_target_value).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_value)
 
 
-@cast_singledispatch(order_target_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
@@ -238,17 +237,17 @@ def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=No
     _delta = account.total_value * percent - position.market_value
     _style = open_style if _delta > 0 else close_style
     return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False)
+stock_order_target_percent = cast_singledispatch(order_target_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_percent)
 
 
-@cast_singledispatch(order).register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order(order_book_id, quantity, price_or_style=None, price=None, style=None):
     result_order = stock_order_shares(order_book_id, quantity, price, style, price_or_style)
     if result_order:
         return [result_order]
     return []
+stock_order = cast_singledispatch(order).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order)
 
 
-@cast_singledispatch(order_to).register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
     position = Environment.get_instance().portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
@@ -258,6 +257,7 @@ def stock_order_to(order_book_id, quantity, price_or_style=None, price=None, sty
     if result_order:
         return [result_order]
     return []
+stock_order_to = cast_singledispatch(order_to).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_to)
 
 
 @export_as_api

@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 from itertools import chain
 from typing import TYPE_CHECKING
 
@@ -68,7 +68,7 @@ class Environment(object):
 
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
-        self._transaction_cost_deciders: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractTransactionCostDecider] = {}
+        self._transaction_cost_deciders: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractTransactionCostDecider] = {}
         self.rqdatac_init = rqdatac_init
         self._trading_days_a_year = None
 

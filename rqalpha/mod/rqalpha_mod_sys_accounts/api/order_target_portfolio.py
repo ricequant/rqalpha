@@ -1,4 +1,4 @@
-from typing import Mapping, NamedTuple, cast, Optional, Union
+from typing import Mapping, NamedTuple, cast, Optional, Union, Dict
 from collections import defaultdict
 from operator import itemgetter
 
@@ -35,15 +35,15 @@ class OrderTargetPortfolio:
         self,
         account: Account,
         target_weights: Series,
-        valuation_prices: Series | None,
+        valuation_prices: Optional[Series],
         env: Environment,
     ):
         quantities, closable = {},  {}
         for position in account.get_positions():
             quantities[position.order_book_id] = position.quantity
             closable[position.order_book_id] = position.closable
-        current_quantities = Series(quantities)
-        current_closable = Series(closable)
+        current_quantities = Series(quantities, dtype=int)
+        current_closable = Series(closable, dtype=int)
         index = Index(target_weights.index.union(current_quantities.index).union(current_closable.index))
         if valuation_prices is not None:
             valuation_prices = valuation_prices.reindex(index)
@@ -60,15 +60,15 @@ class OrderTargetPortfolio:
             if i.type != INSTRUMENT_TYPE.CS:
                 raise RQApiNotSupportedError(_("instrument type {} is not supported").format(i.type))
             
-        self._market = Series({i.order_book_id: i.market for i in instruments.values()})
-        self._min_qty = Series({i.order_book_id: i.min_order_quantity for i in instruments.values()})
-        self._step_size = Series({i.order_book_id: i.order_step_size for i in instruments.values()})
+        self._market = Series({i.order_book_id: i.market for i in instruments.values()}, dtype="object")
+        self._min_qty = Series({i.order_book_id: i.min_order_quantity for i in instruments.values()}, dtype="int64")
+        self._step_size = Series({i.order_book_id: i.order_step_size for i in instruments.values()}, dtype="int64")
         self._suspended = Series({
             i: env.data_proxy.is_suspended(i, env.trading_dt) for i in index
-        })
+        }, dtype=bool)
 
         exchange_rate_middle = Series(index=index, dtype=float)
-        self._exchange_rates: dict[MARKET, ExchangeRatePair] = {}
+        self._exchange_rates: Dict[MARKET, ExchangeRatePair] = {}
         for market, group in self._market.groupby(by=self._market):
             market = cast(MARKET, market)
             exchange_rate = env.data_proxy.get_exchange_rate(env.trading_dt.date(), market)
@@ -169,7 +169,7 @@ class OrderTargetPortfolio:
 
     def __call__(self, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> Series:
         if self._current_quantities.empty and self._target_weights.empty:
-            return Series()
+            return Series(dtype="float64")
 
         if self._target_weights.sum() > 0.95:
             # 如果目标是满仓或者接近满仓，则使用一个较高的 safety 开始下降
@@ -215,8 +215,8 @@ class OrderTargetPortfolio:
 )
 def order_target_portfolio_smart(
     target_portfolio: Union[Mapping[str, float], Series], 
-    order_prices: Union[AlgoOrder, Mapping[str, float] | Series, None] = None,
-    valuation_prices: Union[Mapping[str, float] | Series, None] = None,
+    order_prices: Optional[Union[AlgoOrder, Mapping[str, float], Series]] = None,
+    valuation_prices: Optional[Union[Mapping[str, float], Series]] = None,
 ):
     """
     智能批量调整股票仓位至目标权重。
@@ -275,10 +275,10 @@ def order_target_portfolio_smart(
     env = Environment.get_instance()
     target_weights = Series({
         assure_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
-    })
+    }, dtype=float)
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     if isinstance(order_prices, (Mapping, Series)):
-        style_map: dict[str, OrderStyle] = {
+        style_map: Dict[str, OrderStyle] = {
             cast(str, order_book_id): LimitOrder(price) for order_book_id, price in order_prices.items()
         }
         def _get_style(order_book_id) -> OrderStyle:
