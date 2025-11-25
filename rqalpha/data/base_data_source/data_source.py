@@ -18,7 +18,6 @@ from collections import defaultdict, ChainMap
 import os
 from datetime import date, datetime, timedelta
 from itertools import chain, repeat
-from re import T
 from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast, Tuple
 
 try:
