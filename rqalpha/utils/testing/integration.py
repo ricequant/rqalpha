@@ -107,10 +107,7 @@ class StructuredTextFormat:
             return df
         
         csv_buffer = StringIO(csv_data)
-        df = pd.read_csv(csv_buffer, index_col=0)
-        if "order_book_id" in df.columns and df["order_book_id"].dtype == "int64":
-            # 存在当 order_book_id 全为数字时，如 ETF 期权，读取出来为 int64，需要转换为 str
-            df["order_book_id"] = df["order_book_id"].astype(str)
+        df = pd.read_csv(csv_buffer, index_col=0, dtype={'order_book_id': 'str'})
         
         # Restore dtypes
         for col, dtype_str in metadata.get("dtypes", {}).items():

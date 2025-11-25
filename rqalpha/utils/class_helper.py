@@ -34,7 +34,7 @@ class CachedProperty:
 
     def __get__(self, instance, owner):
         if instance is None:
-            return self
+            return self._getter
         value = self._getter(instance)
         setattr(instance, self._name, value)
         return value
