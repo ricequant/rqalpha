@@ -33,11 +33,10 @@ requirements = [
     'matplotlib >=3.1.0',
     "openpyxl",
     "methodtools",
-    "filelock"
+    "filelock",
+    "pytest",
+    "typing-extensions <4.8.0 ; python_version <= '3.7'"
 ]
-
-if sys.version_info < (3, 5):
-    requirements.append('typing')
 
 if sys.version_info.major == 2 and sys.version_info.minor == 7:
     requirements.extend([
