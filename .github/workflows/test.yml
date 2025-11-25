@@ -54,7 +54,7 @@ jobs:
           rqalpha download-bundle
     - name: run test
       run:  |
-          coverage run --source=rqalpha test.py
+          python -m pytest
           ls -al $HOME/.rqalpha/
           ls -al $HOME/.rqalpha/bundle/
     - name: Upload coverage data to coveralls.io
