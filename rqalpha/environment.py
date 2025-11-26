@@ -15,14 +15,14 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from datetime import date, datetime
-from typing import Optional, Dict, List
+from datetime import datetime
+from typing import Optional, Dict, List, Tuple
 from itertools import chain
 from typing import TYPE_CHECKING
 
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
-from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT
+from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT, MARKET
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
@@ -30,38 +30,46 @@ from rqalpha.utils.class_helper import cached_property
 from rqalpha.const import SIDE
 if TYPE_CHECKING:
     from rqalpha.model.order import Order
-    
+    from rqalpha.portfolio import Portfolio
+    from rqalpha.data.data_proxy import DataProxy
+    from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, AbstractEventSource, \
+        AbstractStrategyLoader, AbstractMod, AbstractBroker, AbstractTransactionCostDecider, TransactionCostArgs, TransactionCost
+    from rqalpha.core.strategy import Strategy
+    from rqalpha.model.instrument import Instrument
 
 
 class Environment(object):
-    _env = None  # type: Environment
+    _env: Optional["Environment"] = None
+
+    data_proxy: "DataProxy"
+    data_source: "AbstractDataSource"
+    price_board: "AbstractPriceBoard"
+    event_source: "AbstractEventSource"
+    broker: "AbstractBroker"
+    strategy_loader: "AbstractStrategyLoader"
+    portfolio: "Portfolio"
+    mod_dict: "Dict[str, AbstractMod]"
+    user_strategy: "Strategy"
 
     def __init__(self, config, rqdatac_init):
         Environment._env = self
         self.config = config
-        self.data_proxy = None  # type: Optional[rqalpha.data.data_proxy.DataProxy]
-        self.data_source = None
-        self.price_board = None
-        self.event_source = None
-        self.strategy_loader = None
+
         self.global_vars = GlobalVars()
         self.persist_provider = None
         self.persist_helper = None
-        self.broker = None
         self.profile_deco = None
         self.system_log = system_log
         self.user_log = user_log
         self.user_system_log = user_system_log
         self.event_bus = EventBus()
-        self.portfolio = None  # type: Optional[rqalpha.portfolio.Portfolio]
         self.calendar_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
         self.trading_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
-        self.mod_dict = None
-        self.user_strategy = None
+
         self._frontend_validators = {}  # type: Dict[str, List]
         self._default_frontend_validators = []
-        self._transaction_cost_decider_dict = {}
-        self.rqdatac_init = rqdatac_init # type: Boolean
+        self._transaction_cost_deciders: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractTransactionCostDecider] = {}
+        self.rqdatac_init = rqdatac_init
         self._trading_days_a_year = None
 
         # Environment.event_bus used in StrategyUniverse()
@@ -120,13 +128,13 @@ class Environment(object):
     def _get_frontend_validators(self, instrument_type):
         return chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators)
 
-    def submit_order(self, order):
+    def submit_order(self, order: "Order") -> "Optional[Order]":
         if self.can_submit_order(order):
             self.broker.submit_order(order)
             return order
 
     def can_cancel_order(self, order):
-        instrument_type = self.data_proxy.instrument(order.order_book_id).type
+        instrument_type = self.data_proxy.instrument_not_none(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in chain(self._frontend_validators.get(instrument_type, []), self._default_frontend_validators):
             try:
@@ -172,31 +180,21 @@ class Environment(object):
     def get_open_orders(self, order_book_id=None):
         return self.broker.get_open_orders(order_book_id)
 
-    def set_transaction_cost_decider(self, instrument_type, decider):
-        # type: (INSTRUMENT_TYPE, rqalpha.interface.AbstractTransactionCostDecider) -> None
-        self._transaction_cost_decider_dict[instrument_type] = decider
+    def set_transaction_cost_decider(self, instrument_type: INSTRUMENT_TYPE, decider: "AbstractTransactionCostDecider", market: MARKET = MARKET.CN):
+        self._transaction_cost_deciders[(instrument_type, market)] = decider
 
-    def _get_transaction_cost_decider(self, order_book_id):
-        instrument_type = self.data_proxy.instrument(order_book_id).type
+    def get_transaction_cost_decider(self, instrument_type: INSTRUMENT_TYPE, market: MARKET = MARKET.CN) -> "AbstractTransactionCostDecider":
+        return self._transaction_cost_deciders[(instrument_type, market)]
+
+    def calc_transaction_cost(self, args: "TransactionCostArgs") -> "TransactionCost":
+        ins = args.instrument
         try:
-            return self._transaction_cost_decider_dict[instrument_type]
+            decider = self.get_transaction_cost_decider(ins.type, ins.market)
         except KeyError:
             raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}".format(
-                order_book_id
+                ins.order_book_id
             )))
-
-    def get_trade_tax(self, trade):
-        return self._get_transaction_cost_decider(trade.order_book_id).get_trade_tax(trade)
-    
-    def get_transaction_cost_with_value(self, value: float) -> float:
-        side = SIDE.BUY if value >= 0 else SIDE.SELL
-        return self._transaction_cost_decider_dict[INSTRUMENT_TYPE.CS].get_transaction_cost_with_value(abs(value), side)
-
-    def get_trade_commission(self, trade):
-        return self._get_transaction_cost_decider(trade.order_book_id).get_trade_commission(trade)
-
-    def get_order_transaction_cost(self, order):
-        return self._get_transaction_cost_decider(order.order_book_id).get_order_transaction_cost(order)
+        return decider.calc(args)
 
     def update_time(self, calendar_dt, trading_dt):
         # type: (datetime, datetime) -> None
@@ -205,7 +203,7 @@ class Environment(object):
 
     def can_submit_order(self, order: 'Order') -> bool:
         # forward compatible
-        instrument_type = self.data_proxy.instrument(order.order_book_id).type
+        instrument_type = self.data_proxy.instrument_not_none(order.order_book_id).type
         account = self.portfolio.get_account(order.order_book_id)
         for v in self._get_frontend_validators(instrument_type):
             try:

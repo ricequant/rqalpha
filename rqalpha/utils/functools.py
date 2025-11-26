@@ -19,6 +19,13 @@ from inspect import signature
 from typing import Callable, Union, Iterable
 from functools import wraps, lru_cache as origin_lru_cache
 
+try:
+    from typing import Protocol, cast
+except ImportError:
+    from typing_extensions import Protocol, cast
+
+from rqalpha.const import INSTRUMENT_TYPE
+
 cached_functions = []
 
 
@@ -36,14 +43,24 @@ def clear_all_cached_functions():
         func.cache_clear()
 
 
+class SingleDispatchProtocol(Protocol):
+    def register(self, instypes: Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable:
+        ...
+
+
+def cast_singledispatch(func: Callable) -> SingleDispatchProtocol:
+    # make IDE happy
+    return cast(SingleDispatchProtocol, func)
+
+
 def instype_singledispatch(func):
     from rqalpha.model.instrument import Instrument
     from rqalpha.const import INSTRUMENT_TYPE
     from rqalpha.utils.exception import RQInvalidArgument, RQApiNotSupportedError
     from rqalpha.utils.i18n import gettext as _
+    from rqalpha.environment import Environment
 
     registry = {}
-    data_proxy = None
 
     def rq_invalid_argument(arg):
         if registry:
@@ -58,14 +75,10 @@ def instype_singledispatch(func):
 
     @lru_cache(1024)
     def dispatch(id_or_ins):
-        nonlocal data_proxy
         if isinstance(id_or_ins, Instrument):
             instype = id_or_ins.type
         else:
-            if not data_proxy:
-                from rqalpha.environment import Environment
-                data_proxy = Environment.get_instance().data_proxy
-            ins = data_proxy.instrument(id_or_ins)
+            ins = Environment.get_instance().data_proxy.instrument(id_or_ins)
             if not ins:
                 raise rq_invalid_argument(id_or_ins)
             instype = ins.type
@@ -74,8 +87,7 @@ def instype_singledispatch(func):
         except KeyError:
             raise rq_invalid_argument(id_or_ins)
 
-    def register(instypes):
-        # type: (Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable
+    def register(instypes: Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable:
         if isinstance(instypes, str):
             instypes = [instypes]
 
@@ -103,8 +115,9 @@ def instype_singledispatch(func):
             raise rq_invalid_argument(arg)
         return impl(*args, **kwargs)
 
+
     funcname = getattr(func, '__name__', 'instype_singledispatch function')
     argname = next(iter(signature(func).parameters))
-    wrapper.register = register
+    wrapper.register = register  # type: ignore
 
-    return wrapper
+    return wrapper  # type: ignore

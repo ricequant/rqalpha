@@ -18,40 +18,46 @@
 import time
 from decimal import Decimal
 
+from datetime import datetime
+from typing import Optional
+
 import numpy as np
 
-from rqalpha.const import ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION, ALGO
+from rqalpha.const import MARKET, ORDER_STATUS, ORDER_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION, ALGO
 from rqalpha.utils import id_gen, decimal_rounding_floor, get_position_direction
 from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
 from rqalpha.environment import Environment
+from rqalpha.model.instrument import Instrument
+from rqalpha.utils.class_helper import cached_property
 
 
 class Order(object):
 
     order_id_gen = id_gen(int(time.time()) * 10000)
 
-    __repr__ = property_repr
+    __repr__ = property_repr  # type: ignore
 
-    def __init__(self):
-        self._order_id = None
-        self._secondary_order_id = None
-        self._calendar_dt = None
-        self._trading_dt = None
-        self._quantity = None
-        self._order_book_id = None
-        self._side = None
-        self._position_effect = None
-        self._message = None
-        self._filled_quantity = None
-        self._status = None
-        self._frozen_price = None
-        self._init_frozen_cash = None
-        self._type = None
-        self._avg_price = None
-        self._transaction_cost = None
-        self._style = None
-        self._kwargs = {}
+    _env: Environment
+
+    _order_id: int
+    _secondary_order_id: str
+    _calendar_dt: datetime
+    _trading_dt: datetime
+    _quantity: int
+    _order_book_id: str
+    _side: SIDE
+    _position_effect: Optional[POSITION_EFFECT]
+    _message: str
+    _filled_quantity: int
+    _status: ORDER_STATUS
+    _frozen_price: float
+    _init_frozen_cash: float
+    _type: ORDER_TYPE
+    _avg_price: float
+    _transaction_cost: float
+    _style: "OrderStyle"
+    _kwargs: dict
 
     @staticmethod
     def _str_to_enum(enum_class, s):
@@ -85,13 +91,13 @@ class Order(object):
         self._trading_dt = d['trading_dt']
         self._order_book_id = d['order_book_id']
         self._quantity = d['quantity']
-        self._side = SIDE[d["side"]]
-        self._position_effect = POSITION_EFFECT[d["position_effect"]] if d["position_effect"] else None
+        self._side = SIDE(d["side"])
+        self._position_effect = POSITION_EFFECT(d["position_effect"]) if d["position_effect"] else None
         self._message = d['message']
         self._filled_quantity = d['filled_quantity']
-        self._status = ORDER_STATUS[d["status"]]
+        self._status = ORDER_STATUS(d["status"])
         self._frozen_price = d['frozen_price']
-        self._type = ORDER_TYPE[d["type"]]
+        self._type = ORDER_TYPE(d["type"])
         self._transaction_cost = d['transaction_cost']
         self._avg_price = d['avg_price']
         self._kwargs = d['kwargs']
@@ -100,6 +106,7 @@ class Order(object):
     def __from_create__(cls, order_book_id, quantity, side, style, position_effect, **kwargs):
         env = Environment.get_instance()
         order = cls()
+        order._env = env
         order._order_id = next(order.order_id_gen)
         order._calendar_dt = env.calendar_dt
         order._trading_dt = env.trading_dt
@@ -145,14 +152,14 @@ class Order(object):
         return self._secondary_order_id
 
     @property
-    def trading_datetime(self):
+    def trading_datetime(self) -> datetime:
         """
         [datetime.datetime] 订单的交易日期（对应期货夜盘）
         """
         return self._trading_dt
 
     @property
-    def datetime(self):
+    def datetime(self) -> datetime:
         """
         [datetime.datetime] 订单创建时间
         """
@@ -285,6 +292,27 @@ class Order(object):
     @property
     def kwargs(self):
         return self._kwargs
+    
+    @cached_property
+    def instrument(self) -> Instrument:
+        return self._env.data_proxy.instrument_not_none(self._order_book_id)
+    
+    @cached_property
+    def market(self) -> MARKET:
+        return self.instrument.market
+
+    @property
+    def estimated_transaction_cost(self) -> float:
+        from rqalpha.interface import TransactionCostArgs
+
+        if self.position_effect == POSITION_EFFECT.CLOSE_TODAY:
+            close_today_quantity = self.quantity
+        else:
+            close_today_quantity = 0
+        return self._env.calc_transaction_cost(TransactionCostArgs(
+            self.instrument, self.frozen_price, self.quantity, self.side, self.position_effect,
+            close_today_quantity=close_today_quantity,
+        )).total
 
     def __getattr__(self, item):
         try:
@@ -313,7 +341,7 @@ class Order(object):
         quantity = trade.last_quantity
         assert self.filled_quantity + quantity <= self.quantity
         new_quantity = self._filled_quantity + quantity
-        self._transaction_cost += trade.commission + trade.tax
+        self._transaction_cost += trade.transaction_cost
         if trade.position_effect != POSITION_EFFECT.MATCH:
             self._avg_price = (self._avg_price * self._filled_quantity + trade.last_price * quantity) / new_quantity
         self._filled_quantity = new_quantity
@@ -352,7 +380,7 @@ class OrderStyle(object):
 
 
 class AlgoOrder(OrderStyle):
-    __repr__ = ORDER_TYPE.ALGO.__repr__
+    __repr__ = ORDER_TYPE.ALGO.__repr__  # type: ignore
 
     def __init__(self, start_min, end_min):
         self.start_min = start_min
@@ -373,17 +401,23 @@ class VWAPOrder(AlgoOrder):
 
 
 class MarketOrder(OrderStyle):
-    __repr__ = ORDER_TYPE.MARKET.__repr__
+    __repr__ = ORDER_TYPE.MARKET.__repr__  # type: ignore
 
     def get_limit_price(self):
         return None
 
+    def __eq__(self, other):
+        return isinstance(other, MarketOrder)
+
 
 class LimitOrder(OrderStyle):
-    __repr__ = ORDER_TYPE.LIMIT.__repr__
+    __repr__ = ORDER_TYPE.LIMIT.__repr__  # type: ignore
 
     def __init__(self, limit_price):
         self.limit_price = float(limit_price)
+
+    def __eq__(self, other):
+        return isinstance(other, LimitOrder) and self.limit_price == other.limit_price
 
     def get_limit_price(self):
         return self.limit_price

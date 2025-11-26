@@ -26,9 +26,9 @@ from rqalpha.utils.i18n import gettext as _
 
 
 def validate_cash(env: Environment, order: Order, cash: float) -> Optional[str]:
-    instrument = env.data_proxy.instrument(order.order_book_id)
+    instrument = env.data_proxy.instrument_not_none(order.order_book_id)
     cost_money = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
-    cost_money += env.get_order_transaction_cost(order)
+    cost_money += order.estimated_transaction_cost
     if cost_money <= cash:
         return None
     reason = _("Order Creation Failed: not enough money to buy {order_book_id}, needs {cost_money:.2f},"
@@ -49,4 +49,5 @@ class CashValidator(AbstractFrontendValidator):
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return None
-        return validate_cash(self._env, order, account.cash)
+        # TODO：分别计算 A H 股的可用资金
+        return validate_cash(self._env, order, account.available_cash_for(order.instrument))

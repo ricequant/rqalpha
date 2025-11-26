@@ -20,27 +20,27 @@ import json
 import locale
 import os
 import sys
+import pickle
 from copy import copy
-from itertools import chain
+from datetime import datetime
 from contextlib import contextmanager
-from typing import Dict, Iterable, Optional, NamedTuple
+from typing import Dict, NamedTuple, List
 
 import h5py
 import numpy as np
 import pandas
-from methodtools import lru_cache
 
-from rqalpha.const import COMMISSION_TYPE, INSTRUMENT_TYPE
+from rqalpha.const import COMMISSION_TYPE, MARKET, INSTRUMENT_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.functools import lru_cache
+from rqalpha.utils.logger import system_log
 
 from .storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
-                                AbstractInstrumentStore,
                                 AbstractSimpleFactorStore)
-
+from .deprecated import InstrumentStore
 
 class FuturesTradingParameters(NamedTuple):
     """
@@ -111,8 +111,7 @@ class FutureInfoStore(object):
         return futures_info
     
     @lru_cache(8)
-    def get_tick_size(self, instrument):
-        # type: (str, str) -> float
+    def get_tick_size(self, instrument: Instrument) -> float:
         order_book_id = instrument.order_book_id
         underlying_symbol = instrument.underlying_symbol
         custom_info = self._custom_data.get(order_book_id) or self._custom_data.get(underlying_symbol)
@@ -126,40 +125,25 @@ class FutureInfoStore(object):
         return tick_size
 
 
-class InstrumentStore(AbstractInstrumentStore):
-    def __init__(self, instruments, instrument_type):
-        # type: (Iterable[Instrument], INSTRUMENT_TYPE) -> None
-        self._instrument_type = instrument_type
-        self._instruments = {}
-        self._sym_id_map = {}
-
-        for ins in instruments:
-            if ins.type != instrument_type:
+def load_instruments_from_pkl(pkl_path: str, future_info_store: FutureInfoStore) -> List[Instrument]:
+    with open(pkl_path, "rb") as f:
+        instruments: List[Instrument] = []
+        unsupported_types = []
+        with open(pkl_path, 'rb') as f:
+            for i in pickle.load(f):
+                if i["type"] == "Future" and Instrument.is_future_continuous_contract(i["order_book_id"]):
+                    i["listed_date"] = datetime(1990, 1, 1)
+                if i["type"] not in INSTRUMENT_TYPE:
+                    if i["type"] not in unsupported_types:
+                        unsupported_types.append(i["type"])
+                        system_log.warning(f"Unsupported type: {i['type']}")
                     continue
-            self._instruments[ins.order_book_id] = ins
-            self._sym_id_map[ins.symbol] = ins.order_book_id
-
-    @property
-    def instrument_type(self):
-        # type: () -> INSTRUMENT_TYPE
-        return self._instrument_type
-
-    @property
-    def all_id_and_syms(self):
-        # type: () -> Iterable[str]
-        return chain(self._instruments.keys(), self._sym_id_map.keys())
-
-    def get_instruments(self, id_or_syms):
-        # type: (Optional[Iterable[str]]) -> Iterable[Instrument]
-        if id_or_syms is None:
-            return self._instruments.values()
-        order_book_ids = set()
-        for i in id_or_syms:
-            if i in self._instruments:
-                order_book_ids.add(i)
-            elif i in self._sym_id_map:
-                order_book_ids.add(self._sym_id_map[i])
-        return (self._instruments[i] for i in order_book_ids)
+                instruments.append(Instrument(
+                    i, 
+                    future_info_store.get_tick_size,
+                    market=MARKET.CN
+                ))
+        return instruments
 
 
 class ShareTransformationStore(object):

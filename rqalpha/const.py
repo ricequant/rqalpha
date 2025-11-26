@@ -208,5 +208,14 @@ class EXCHANGE(CustomEnum):
 
 # noinspection PyPep8Naming
 class TRADING_CALENDAR_TYPE(CustomEnum):
-    EXCHANGE = "EXCHANGE"
+    CN_STOCK = "CN_STOCK"
+    HK_STOCK = "HK_STOCK"
+    SOUTHBOUND = "SOUTHBOUND"
     INTER_BANK = "INTERBANK"
+
+# backward compatible
+TRADING_CALENDAR_TYPE.EXCHANGE = TRADING_CALENDAR_TYPE.CN_STOCK
+
+class MARKET(CustomEnum):
+    CN = "CN"
+    HK = "HK"

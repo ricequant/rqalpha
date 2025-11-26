@@ -18,7 +18,7 @@ import os
 import pickle
 import re
 from itertools import chain
-from typing import Callable, Optional, Union, List
+from typing import Callable, Optional, Union, List, Iterable, Tuple
 from filelock import FileLock, Timeout
 import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
@@ -81,57 +81,100 @@ def gen_suspended_days(d):
             h5[order_book_id] = days
 
 
-def gen_dividends(d):
-    stocks = rqdatac.all_instruments().order_book_id.tolist()
-    dividend = rqdatac.get_dividend(stocks)
-    need_cols = ["dividend_cash_before_tax", "book_closure_date", "ex_dividend_date", "payable_date", "round_lot"]
-    dividend = dividend[need_cols]
-    dividend.reset_index(inplace=True)
-    dividend.rename(columns={'declaration_announcement_date': 'announcement_date'}, inplace=True)
-    for f in ('book_closure_date', 'ex_dividend_date', 'payable_date', 'announcement_date'):
-        dividend[f] = [convert_date_to_date_int(d) for d in dividend[f]]
-    dividend.set_index(['order_book_id', 'book_closure_date'], inplace=True)
-    with h5py.File(os.path.join(d, 'dividends.h5'), 'w') as h5:
-        for order_book_id in dividend.index.levels[0]:
-            h5[order_book_id] = dividend.loc[order_book_id].to_records()
+class GenerateDividendBundle:
+    def __init__(self, d: str):
+        self.d = d
+
+    def _get_dividend(self):
+        stocks = rqdatac.all_instruments().order_book_id.tolist()
+        return rqdatac.get_dividend(stocks)
+
+    def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
+        with h5py.File(os.path.join(self.d, 'dividends.h5'), "w") as h5:
+            for order_book_id, data in data_iter:
+                h5.create_dataset(order_book_id, data=data)
+
+    def __call__(self):
+        dividend = self._get_dividend()
+        if dividend is None:
+            raise RuntimeError("Got no dividend data")
+        need_cols = ["dividend_cash_before_tax", "book_closure_date", "ex_dividend_date", "payable_date", "round_lot"]
+        dividend = dividend[need_cols]
+        dividend.reset_index(inplace=True)
+        dividend.rename(columns={'declaration_announcement_date': 'announcement_date'}, inplace=True)
+        for f in ('book_closure_date', 'ex_dividend_date', 'payable_date', 'announcement_date'):
+            dividend[f] = [convert_date_to_date_int(d) for d in dividend[f]]
+        dividend.set_index(['order_book_id', 'book_closure_date'], inplace=True)
+        self._write([(
+            order_book_id, dividend.loc[order_book_id].to_records()
+        ) for order_book_id in dividend.index.levels[0]])  # type: ignore
 
 
-def gen_splits(d):
-    stocks = rqdatac.all_instruments().order_book_id.tolist()
-    split = rqdatac.get_split(stocks)
-    split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
-    split = split[['split_factor']]
-    split.reset_index(inplace=True)
-    split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)
-    split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]
-    split.set_index(['order_book_id', 'ex_date'], inplace=True)
+class GenerateSplitBundle:
+    def __init__(self, d: str):
+        self.d = d
 
-    with h5py.File(os.path.join(d, 'split_factor.h5'), 'w') as h5:
-        for order_book_id in split.index.levels[0]:
-            h5[order_book_id] = split.loc[order_book_id].to_records()
+    def _get_split(self):
+        stocks = rqdatac.all_instruments().order_book_id.tolist()
+        return rqdatac.get_split(stocks)
+    
+    def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
+        with h5py.File(os.path.join(self.d, 'split_factor.h5'), "w") as h5:
+            for order_book_id, data in data_iter:
+                h5.create_dataset(order_book_id, data=data)
+    
+    def __call__(self):
+        split = self._get_split()
+        if split is None:
+            raise RuntimeError("Got no split data")
+        split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
+        split = split[['split_factor']]
+        split.reset_index(inplace=True)
+        split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)  # type: ignore
+        split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]
+        split.set_index(['order_book_id', 'ex_date'], inplace=True)
+        self._write([(
+            order_book_id, split.loc[order_book_id].to_records()
+        ) for order_book_id in split.index.levels[0]])  # type: ignore
 
+    
+class GenerateExFactorBundle:
+    def __init__(self, d: str):
+        self.d = d
+    
+    def _get_ex_factor(self):
+        stocks = rqdatac.all_instruments().order_book_id.tolist()
+        return rqdatac.get_ex_factor(stocks)
 
-def gen_ex_factor(d):
-    stocks = rqdatac.all_instruments().order_book_id.tolist()
-    ex_factor = rqdatac.get_ex_factor(stocks)
-    ex_factor.reset_index(inplace=True)
-    ex_factor['ex_date'] = [convert_date_to_int(d) for d in ex_factor['ex_date']]
-    ex_factor.rename(columns={'ex_date': 'start_date'}, inplace=True)
-    ex_factor.set_index(['order_book_id', 'start_date'], inplace=True)
-    ex_factor = ex_factor[['ex_cum_factor']]
+    def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
+        with h5py.File(os.path.join(self.d, 'ex_cum_factor.h5'), "w") as h5:
+            for order_book_id, data in data_iter:
+                h5.create_dataset(order_book_id, data=data)
+    
+    def __call__(self):
+        ex_factor = self._get_ex_factor()
+        if ex_factor is None:
+            raise RuntimeError("Got no ex factor data")
+        ex_factor.reset_index(inplace=True)
+        ex_factor['ex_date'] = [convert_date_to_int(d) for d in ex_factor['ex_date']]
+        ex_factor.rename(columns={'ex_date': 'start_date'}, inplace=True)
+        ex_factor.set_index(['order_book_id', 'start_date'], inplace=True)
+        ex_factor = ex_factor[['ex_cum_factor']]
 
-    dtype = ex_factor.loc[ex_factor.index.levels[0][0]].to_records().dtype
-    initial = np.empty((1,), dtype=dtype)
-    initial['start_date'] = 0
-    initial['ex_cum_factor'] = 1.0
+        dtype = ex_factor.loc[ex_factor.index.levels[0][0]].to_records().dtype  # type: ignore
+        initial = np.empty((1,), dtype=dtype)
+        initial['start_date'] = 0
+        initial['ex_cum_factor'] = 1.0
 
-    with h5py.File(os.path.join(d, 'ex_cum_factor.h5'), 'w') as h5:
-        for order_book_id in ex_factor.index.levels[0]:
-            h5[order_book_id] = np.concatenate([initial, ex_factor.loc[order_book_id].to_records()])
+        self._write(((
+            order_book_id, np.concatenate([initial, ex_factor.loc[order_book_id].to_records()])
+        ) for order_book_id in ex_factor.index.levels[0]))  # type: ignore
 
 
 def gen_share_transformation(d):
     df = rqdatac.get_share_transformation()
+    if df is None:
+        raise RuntimeError("Got no share transformation data")
     df.drop_duplicates("predecessor", inplace=True)
     df.set_index('predecessor', inplace=True)
     df.effective_date = df.effective_date.astype(str)
@@ -285,8 +328,10 @@ def gen_future_info(d):
 
 
 class GenerateFileTask(ProgressedTask):
-    def __init__(self, func):
+    def __init__(self, func, *args, **kwargs):
         self._func = func
+        self._args = args
+        self._kwargs = kwargs
         self._step = 100
 
     @property
@@ -294,8 +339,8 @@ class GenerateFileTask(ProgressedTask):
         # type: () -> int
         return self._step
 
-    def __call__(self, *args, **kwargs):
-        self._func(*args, **kwargs)
+    def __call__(self):
+        self._func(*self._args, **self._kwargs)
         yield self._step
 
 
@@ -306,25 +351,29 @@ FUND_FIELDS = STOCK_FIELDS
 
 
 class DayBarTask(ProgressedTask):
-    def __init__(self, order_book_ids):
+    def __init__(self, order_book_ids, file_path: str, fields: List[str], market="cn", **h5_kwargs):
         self._order_book_ids = order_book_ids
+        self._file_path = file_path
+        self._fields = fields
+        self._h5_kwargs = h5_kwargs
+        self._market = market
 
     @property
     def total_steps(self):
         # type: () -> int
         return len(self._order_book_ids)
 
-    def __call__(self, path, fields, **kwargs):
+    def __call__(self):
         raise NotImplementedError
 
 
 class GenerateDayBarTask(DayBarTask):
-    def __call__(self, path, fields, **kwargs):
+    def __call__(self):
         try:
-            h5 = h5py.File(path, "w")
+            h5 = h5py.File(self._file_path, "w")
         except OSError:
             system_log.error("File {} update failed, if it is using, please update later, "
-                            "or you can delete then update again".format(path))
+                            "or you can delete then update again".format(self._file_path))
             sval.value = False
             yield 1
         else:
@@ -333,7 +382,7 @@ class GenerateDayBarTask(DayBarTask):
                 while True:
                     order_book_ids = self._order_book_ids[i:i + step]
                     df = rqdatac.get_price(order_book_ids, START_DATE, datetime.date.today(), '1d',
-                                        adjust_type='none', fields=fields, expect_df=True)
+                                        adjust_type='none', fields=self._fields, expect_df=True, market=self._market)
                     if not (df is None or df.empty):
                         df.reset_index(inplace=True)
                         df['datetime'] = [convert_date_to_int(d) for d in df['date']]
@@ -341,7 +390,7 @@ class GenerateDayBarTask(DayBarTask):
                         df.set_index(['order_book_id', 'datetime'], inplace=True)
                         df.sort_index(inplace=True)
                         for order_book_id in df.index.levels[0]:
-                            h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **kwargs)
+                            h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **self._h5_kwargs)
                     i += step
                     yield len(order_book_ids)
                     if i >= len(self._order_book_ids):
@@ -361,26 +410,26 @@ class UpdateDayBarTask(DayBarTask):
             return h5_fields == wanted_fields
         return False
 
-    def __call__(self, path, fields, **kwargs):
+    def __call__(self):
         need_recreate_h5 = False
         try:
-            with h5py.File(path, 'r') as h5:
-                need_recreate_h5 = not self.h5_has_valid_fields(h5, fields)
+            with h5py.File(self._file_path, 'r') as h5:
+                need_recreate_h5 = not self.h5_has_valid_fields(h5, self._fields)
         except (OSError, RuntimeError):
             need_recreate_h5 = True
         if need_recreate_h5:
-            yield from GenerateDayBarTask(self._order_book_ids)(path, fields, **kwargs)
+            yield from GenerateDayBarTask(self._order_book_ids, self._file_path, self._fields, self._market, **self._h5_kwargs)()
         else:
             h5 = None
             try:
-                h5 = h5py.File(path, 'a')
+                h5 = h5py.File(self._file_path, 'a')
             except OSError:
                 system_log.error("File {} update failed, if it is using, please update later, "
-                                "or you can delete then update again".format(path))
+                                "or you can delete then update again".format(self._file_path))
                 sval.value = False
                 yield 1
             else:
-                is_futures = "futures" == os.path.basename(path).split(".")[0]
+                is_futures = "futures" == os.path.basename(self._file_path).split(".")[0]
                 for order_book_id in self._order_book_ids:
                     # 特殊处理前复权合约，需要全量更新
                     is_pre = is_futures and "888" in order_book_id
@@ -389,7 +438,7 @@ class UpdateDayBarTask(DayBarTask):
                             last_date = int(h5[order_book_id]['datetime'][-1] // 1000000)
                         except OSError:
                             system_log.error("File {} update failed, if it is using, please update later, "
-                                            "or you can delete then update again".format(path))
+                                            "or you can delete then update again".format(self._file_path))
                             sval.value = False
                             yield 1
                             break
@@ -401,9 +450,9 @@ class UpdateDayBarTask(DayBarTask):
                     else:
                         start_date = START_DATE
                     df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
-                                        adjust_type='none', fields=fields, expect_df=True)
+                                        adjust_type='none', fields=self._fields, expect_df=True, market=self._market)
                     if not (df is None or df.empty):
-                        df = df[fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
+                        df = df[self._fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
                         df = df.loc[order_book_id]
                         df.reset_index(inplace=True)
                         df['datetime'] = [convert_date_to_int(d) for d in df['date']]
@@ -415,9 +464,9 @@ class UpdateDayBarTask(DayBarTask):
                                 dtype=h5[order_book_id].dtype
                             )
                             del h5[order_book_id]
-                            h5.create_dataset(order_book_id, data=data, **kwargs)
+                            h5.create_dataset(order_book_id, data=data, **self._h5_kwargs)
                         else:
-                            h5.create_dataset(order_book_id, data=df.to_records(), **kwargs)
+                            h5.create_dataset(order_book_id, data=df.to_records(), **self._h5_kwargs)
                     yield 1
             finally:
                 if h5:
@@ -437,7 +486,8 @@ def process_init(args: Optional[Synchronized] = None, kwargs = None):
         sval = args
 
 
-def update_bundle(path, create, enable_compression=False, concurrency=1, **kwargs):
+def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs) -> List[ProgressedTask]:
+    tasks = []
     if create:
         _DayBarTask = GenerateDayBarTask
     else:
@@ -451,26 +501,37 @@ def update_bundle(path, create, enable_compression=False, concurrency=1, **kwarg
         ("funds.h5", rqdatac.all_instruments('FUND').order_book_id.tolist(), FUND_FIELDS),
     )
 
-    rqdatac.reset()
-
     gen_file_funcs = (
-        gen_instruments, gen_trading_dates, gen_dividends, gen_splits, gen_ex_factor, gen_st_days,
+        gen_instruments, gen_trading_dates, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
+    kwargs = {}
+    if enable_compression:
+        kwargs['compression'] = 9
+    # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
+    for file, order_book_id, field in day_bar_args:
+        tasks.append(_DayBarTask(order_book_id, os.path.join(path, file), field, **h5_kwargs))
+    for func in gen_file_funcs:
+        tasks.append(GenerateFileTask(func, path))
+    tasks.append(GenerateFileTask(GenerateDividendBundle(path)))
+    tasks.append(GenerateFileTask(GenerateSplitBundle(path)))
+    tasks.append(GenerateFileTask(GenerateExFactorBundle(path)))
+    return tasks
 
+
+def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwargs):
     succeed = multiprocessing.Value(c_bool, True)
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=process_init, initargs=(succeed, kwargs)
+            max_workers=concurrency, initializer=process_init, initargs=(succeed, rqdatac_kwargs)
     ) as executor:
-        kwargs = {}
-        if enable_compression:
-            kwargs['compression'] = 9
-        # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
-        for func in gen_file_funcs:
-            executor.submit(GenerateFileTask(func), path)
-        for file, order_book_id, field in day_bar_args:
-            executor.submit(_DayBarTask(order_book_id), os.path.join(path, file), field, **kwargs)
+        for task in tasks:
+            executor.submit(task)
     return succeed.value
+
+
+def update_bundle(path, create, enable_compression=False, concurrency=1, **kwargs):
+    tasks = gather_tasks(path, create, enable_compression, **kwargs)
+    return run_tasks(tasks, concurrency, **kwargs)
 
 
 class AutomaticUpdateBundle(object):

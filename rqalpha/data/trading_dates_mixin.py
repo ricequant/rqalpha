@@ -23,30 +23,25 @@ import numpy as np
 
 from rqalpha.utils.functools import lru_cache
 from rqalpha.const import TRADING_CALENDAR_TYPE
+from rqalpha.utils.typing import DateLike
+from rqalpha.interface import AbstractDataSource
 
 
-def _to_timestamp(d: Union[datetime.date, str, int, float]):
-    return pd.Timestamp(d).replace(hour=0, minute=0, second=0, microsecond=0)
+def _to_timestamp(d: Union[datetime.date, str, int, float]) -> pd.Timestamp:
+    return pd.Timestamp(d).replace(hour=0, minute=0, second=0, microsecond=0)  # type: ignore
 
 
 class TradingDatesMixin(object):
-    def __init__(self, trading_calendars):
-        # type: (Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]) -> TradingDatesMixin
-        self.trading_calendars = trading_calendars
-        self.merged_trading_calendars = pd.DatetimeIndex(sorted(set.union(*(
-            set(calendar) for calendar in trading_calendars.values()
-        ))))
+    def __init__(self, data_source: AbstractDataSource):
+        self._data_source = data_source
+        self._trading_calendars: Optional[Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]] = None
 
-    def get_trading_calendar(self, trading_calendar_type=None):
-        # type: (Optional[TRADING_CALENDAR_TYPE]) -> pd.DatetimeIndex
-        if trading_calendar_type is None:
-            return self.merged_trading_calendars
-        try:
-            return self.trading_calendars[trading_calendar_type]
-        except KeyError:
-            raise NotImplementedError("unsupported trading_calendar_type {}".format(trading_calendar_type))
+    def get_trading_calendar(self, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK) -> pd.DatetimeIndex:
+        if self._trading_calendars is None:
+            self._trading_calendars = self._data_source.get_trading_calendars()
+        return self._trading_calendars[trading_calendar_type]
 
-    def get_trading_dates(self, start_date, end_date, trading_calendar_type=None):
+    def get_trading_dates(self, start_date, end_date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
         # 只需要date部分
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         start_date = _to_timestamp(start_date)
@@ -56,7 +51,7 @@ class TradingDatesMixin(object):
         return trading_dates[left:right]
 
     @lru_cache(64)
-    def get_previous_trading_date(self, date, n=1, trading_calendar_type=None) -> pd.Timestamp:
+    def get_previous_trading_date(self, date: DateLike, n=1, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK) -> pd.Timestamp:
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
         if pos >= n:
@@ -65,7 +60,7 @@ class TradingDatesMixin(object):
             return trading_dates[0]
 
     @lru_cache(64)
-    def get_next_trading_date(self, date, n=1, trading_calendar_type=None):
+    def get_next_trading_date(self, date, n=1, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date), side='right')
         if pos + n > len(trading_dates):
@@ -73,20 +68,19 @@ class TradingDatesMixin(object):
         else:
             return trading_dates[pos + n - 1]
 
-    def is_trading_date(self, date, trading_calendar_type=None):
+    def is_trading_date(self, date: datetime.date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
-        pos = trading_dates.searchsorted(_to_timestamp(date))
+        pos = trading_dates.searchsorted(pd.Timestamp(date))
         return pos < len(trading_dates) and trading_dates[pos].date() == date
 
     def get_trading_dt(self, calendar_dt):
         trading_date = self.get_future_trading_date(calendar_dt)
         return datetime.datetime.combine(trading_date, calendar_dt.time())
 
-    def get_future_trading_date(self, dt):
-        # type: (datetime.datetime) -> pd.Timestamp
+    def get_future_trading_date(self, dt: datetime.datetime) -> pd.Timestamp:
         return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))
 
-    def get_n_trading_dates_until(self, dt, n, trading_calendar_type=None):
+    def get_n_trading_dates_until(self, dt, n, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(dt), side='right')
         if pos >= n:
@@ -94,7 +88,7 @@ class TradingDatesMixin(object):
 
         return trading_dates[:pos]
 
-    def count_trading_dates(self, start_date, end_date, trading_calendar_type=None):
+    def count_trading_dates(self, start_date, end_date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
         start_date = _to_timestamp(start_date)
         end_date = _to_timestamp(end_date)
         trading_dates = self.get_trading_calendar(trading_calendar_type)
@@ -107,7 +101,7 @@ class TradingDatesMixin(object):
         # 非交易日抛出 RuntimeError
         dt1 = dt - datetime.timedelta(hours=4)
         td = pd.Timestamp(dt1.date())
-        trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.EXCHANGE)
+        trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.CN_STOCK)
         pos = trading_dates.searchsorted(td)
         if trading_dates[pos] != td:
             raise RuntimeError('invalid future calendar datetime: {}'.format(dt))
@@ -120,6 +114,6 @@ class TradingDatesMixin(object):
         # 获取 numpy.array 中所有时间所在的交易日
         # 认为晚八点后为第二个交易日，认为晚八点至次日凌晨四点为夜盘
         dt = dt_index - datetime.timedelta(hours=4)
-        trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.EXCHANGE)
+        trading_dates = self.get_trading_calendar(TRADING_CALENDAR_TYPE.CN_STOCK)
         pos = trading_dates.searchsorted(dt.date) + np.where(dt.hour >= 16, 1, 0)
         return trading_dates[pos]

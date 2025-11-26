@@ -16,28 +16,34 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import time
+from typing import TYPE_CHECKING, Optional
 
 from rqalpha.utils import id_gen, get_position_direction
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.repr import property_repr, properties
+from rqalpha.utils.class_helper import cached_property
 from rqalpha.environment import Environment
-from rqalpha.const import POSITION_EFFECT, SIDE
+from rqalpha.const import POSITION_EFFECT, SIDE, MARKET
+from rqalpha.model.instrument import Instrument
 
+if TYPE_CHECKING:
+    from rqalpha.interface import TransactionCost
 
+# TODO: 改成 namedtuple，提升性能
 class Trade(object):
 
-    __repr__ = property_repr
+    __repr__ = property_repr  # type: ignore
 
     trade_id_gen = id_gen(int(time.time()) * 10000)
 
-    def __init__(self):
+    def __init__(self, env: Environment):
+        self._env = env
         self._calendar_dt = None
         self._trading_dt = None
         self._price = None
         self._amount = None
         self._order_id = None
-        self._commission = None
-        self._tax = None
+        self._transaction_cost = None
         self._trade_id = None
         self._close_today_amount = None
         self._side = None
@@ -48,31 +54,37 @@ class Trade(object):
 
     @classmethod
     def __from_create__(
-            cls, order_id, price, amount, side, position_effect, order_book_id, commission=0., tax=0.,
-            trade_id=None, close_today_amount=0, frozen_price=0, calendar_dt=None, trading_dt=None, **kwargs
+            cls, order_id, price, amount, side, position_effect, order_book_id, transaction_cost: "Optional[TransactionCost]" = None,
+            trade_id=None, close_today_amount=0, frozen_price=0., calendar_dt=None, trading_dt=None, **kwargs
     ):
+        from rqalpha.interface import TransactionCostArgs
+        env = Environment.get_instance()
 
-        trade = cls()
+        trade = cls(env)
         trade_id = trade_id or next(trade.trade_id_gen)
 
-        for value in (price, amount, commission, tax, frozen_price):
+        for value in (price, amount, frozen_price):
             if value != value:
                 raise RuntimeError(_(
-                    "price, amount, commission, tax and frozen_price of trade {trade_id} is not supposed to be nan, "
+                    "price, amount, and frozen_price of trade {trade_id} is not supposed to be nan, "
                     "current_value is {price}, {amount}, {commission}, {tax}, {frozen_price}"
                 ).format(
-                    trade_id=trade_id, price=price, amount=amount, commission=commission, tax=tax,
+                    trade_id=trade_id, price=price, amount=amount,
                     frozen_price=frozen_price
                 ))
 
-        env = Environment.get_instance()
+        ins = env.data_proxy.instrument_not_none(order_book_id)
+        if transaction_cost is None:
+            transaction_cost = env.calc_transaction_cost(TransactionCostArgs(
+                ins, price, amount, side, position_effect, order_id=order_id, close_today_quantity=close_today_amount,
+            ))
+
         trade._calendar_dt = calendar_dt or env.calendar_dt
         trade._trading_dt = trading_dt or env.trading_dt
         trade._price = price
         trade._amount = amount
         trade._order_id = order_id
-        trade._commission = commission
-        trade._tax = tax
+        trade._transaction_cost = transaction_cost
         trade._trade_id = trade_id
         trade._close_today_amount = close_today_amount
         trade._side = side
@@ -88,9 +100,9 @@ class Trade(object):
     order_id = property(lambda self: self._order_id)
     last_price = property(lambda self: self._price)
     last_quantity = property(lambda self: self._amount)
-    commission = property(lambda self: self._commission)
-    tax = property(lambda self: self._tax)
-    transaction_cost = property(lambda self: self.commission + self.tax)
+    commission = property(lambda self: self._transaction_cost.commission)
+    tax = property(lambda self: self._transaction_cost.tax)
+    transaction_cost = property(lambda self: self._transaction_cost.total)
     side = property(lambda self: self._side)
     position_effect = property(lambda self: self._position_effect or (
         POSITION_EFFECT.OPEN if self._side == SIDE.BUY else POSITION_EFFECT.CLOSE
@@ -104,7 +116,15 @@ class Trade(object):
         try:
             return self.__dict__["_kwargs"][item]
         except KeyError:
-            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))  # type: ignore
 
     def __simple_object__(self):
         return properties(self)
+
+    @cached_property
+    def _ins(self) -> Instrument:
+        return self._env.data_proxy.instrument_not_none(self.order_book_id)
+    
+    @cached_property
+    def market(self) -> MARKET:
+        return self._ins.market

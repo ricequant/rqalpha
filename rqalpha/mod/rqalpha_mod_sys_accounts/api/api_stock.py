@@ -19,7 +19,6 @@ import datetime
 from decimal import Decimal, getcontext
 from itertools import chain
 from typing import Dict, List, Optional, Union, Tuple, Callable
-import math
 from collections import defaultdict
 
 import numpy as np
@@ -33,23 +32,26 @@ from rqalpha.apis.api_abstract import (order, order_percent, order_shares,
 from rqalpha.apis.api_base import (assure_instrument, assure_order_book_id,
                                    cal_style, calc_open_close_style)
 from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE,
-                           INSTRUMENT_TYPE, ORDER_TYPE, POSITION_DIRECTION,
+                           INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION,
                            POSITION_EFFECT, SIDE)
 from rqalpha.core.execution_context import ExecutionContext
-from rqalpha.core.events import Event, EVENT
 from rqalpha.environment import Environment
 from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import validate_cash
 from rqalpha.model.instrument import IndustryCode as industry_code
 from rqalpha.model.instrument import IndustryCodeItem, Instrument
 from rqalpha.model.instrument import SectorCode as sector_code
 from rqalpha.model.instrument import SectorCodeItem
+from rqalpha.portfolio import Account, AbstractPosition
 from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle, ALGO_ORDER_STYLES
+from rqalpha.interface import TransactionCostArgs, AbstractTransactionCostDecider, TransactionCostArgs
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
+from rqalpha.utils.functools import cast_singledispatch
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from .order_target_portfolio import order_target_portfolio_smart
 
 # 使用Decimal 解决浮点数运算精度问题
 getcontext().prec = 10
@@ -123,7 +125,7 @@ def _submit_order(ins, amount, side, position_effect, style, current_quantity, a
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
     if side == SIDE.BUY and auto_switch_order_value:
         account, position, ins = _get_account_position_ins(ins)
-        if validate_cash(env, order, account.cash):
+        if validate_cash(env, order, account.available_cash_for(ins)):
             user_system_log.warn(_(
                 "insufficient cash, use all remaining cash({}) to create order"
             ).format(account.cash))
@@ -136,28 +138,46 @@ def _order_shares(ins, amount, style, quantity, auto_switch_order_value, zero_am
     return _submit_order(ins, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
 
 
-def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exception=True):
+def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity: Union[int, float], price: float) -> float:
+    if delta_quantity > 0:
+        side, position_effect = SIDE.BUY, POSITION_EFFECT.OPEN
+    else:
+        side, position_effect = SIDE.SELL, POSITION_EFFECT.CLOSE
+    return env.calc_transaction_cost(TransactionCostArgs(
+        ins, price, abs(delta_quantity), side, position_effect,  # type: ignore
+    )).total
+    
+
+def _order_value(account: Account, position: AbstractPosition, ins: Instrument, cash_amount: float, style: OrderStyle, zero_amount_as_exception=True):
     env = Environment.get_instance()
     if cash_amount > 0:
         cash_amount = min(cash_amount, account.cash)
     if isinstance(style, LimitOrder):
         price = style.get_limit_price()
+    elif isinstance(style, ALGO_ORDER_STYLES):
+        # FIXME: 这里提前用了成交价计算数量，不太合理。可以考虑改成针对算法单不做验资风控，而是在撮合的时候成交尽量多的数量。
+        price, __ = env.data_proxy.get_algo_bar(ins.order_book_id, style, env.calendar_dt)
+        if not is_valid_price(price):
+            reason = _(u"Order Creation Failed: [{order_book_id}] has no valid algo price").format(order_book_id=ins.order_book_id)
+            env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
+            return
     else:
         price = env.data_proxy.get_last_price(ins.order_book_id)
         if not is_valid_price(price):
             reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=ins.order_book_id)
             env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
             return
-
-    amount = int(Decimal(cash_amount) / Decimal(price))
+    exchange_rates = env.data_proxy.get_exchange_rate(env.trading_dt.date(), ins.market)
+    exchange_rate_middle = (exchange_rates.bid_reference + exchange_rates.ask_reference) / 2
+    amount = int(Decimal(cash_amount) / Decimal(price * exchange_rate_middle))
+    if cash_amount > 0:
+        amount = min(amount, int(Decimal(account.cash) / Decimal(price * exchange_rates.ask_reference)))
     round_lot = int(ins.round_lot)
     if cash_amount > 0:
         amount = _round_order_quantity(ins, amount)
         while amount > 0:
-            expected_transaction_cost = env.get_order_transaction_cost(Order.__from_create__(
-                ins.order_book_id, amount, SIDE.BUY, LimitOrder(price), POSITION_EFFECT.OPEN
-            ))
-            if amount * price + expected_transaction_cost <= cash_amount:
+            expected_transaction_cost = _estimate_transaction_cost(env, ins, amount, price)
+            if amount * price * exchange_rates.ask_reference + expected_transaction_cost <= cash_amount:
                 break
             amount -= round_lot
         else:
@@ -172,7 +192,6 @@ def _order_value(account, position, ins, cash_amount, style, zero_amount_as_exce
     return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False, zero_amount_as_exception=zero_amount_as_exception)
 
 
-@order_shares.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_shares(id_or_ins, amount, price_or_style=None, price=None, style=None):
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
     account, position, ins = _get_account_position_ins(id_or_ins)
@@ -180,21 +199,21 @@ def stock_order_shares(id_or_ins, amount, price_or_style=None, price=None, style
         assure_instrument(id_or_ins), amount, cal_style(price, style, price_or_style), position.quantity,
         auto_switch_order_value
     )
+stock_order_shares = cast_singledispatch(order_shares).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_shares)
 
 
-@order_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, cash_amount, cal_style(price, style, price_or_style))
+stock_order_value = cast_singledispatch(order_value).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_value)
 
 
-@order_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, account.total_value * percent, cal_style(price, style, price_or_style))
+stock_order_percent = cast_singledispatch(order_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_percent)
 
 
-@order_target_value.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
@@ -205,9 +224,9 @@ def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=
     _delta = cash_amount - position.market_value
     _style = open_style if _delta > 0 else close_style
     return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False)
+stock_order_target_value = cast_singledispatch(order_target_value).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_value)
 
 
-@order_target_percent.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
@@ -218,17 +237,17 @@ def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=No
     _delta = account.total_value * percent - position.market_value
     _style = open_style if _delta > 0 else close_style
     return _order_value(account, position, ins, _delta, _style, zero_amount_as_exception=False)
+stock_order_target_percent = cast_singledispatch(order_target_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_percent)
 
 
-@order.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order(order_book_id, quantity, price_or_style=None, price=None, style=None):
     result_order = stock_order_shares(order_book_id, quantity, price, style, price_or_style)
     if result_order:
         return [result_order]
     return []
+stock_order = cast_singledispatch(order).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order)
 
 
-@order_to.register(INST_TYPE_IN_STOCK_ACCOUNT)
 def stock_order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
     position = Environment.get_instance().portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
@@ -238,6 +257,7 @@ def stock_order_to(order_book_id, quantity, price_or_style=None, price=None, sty
     if result_order:
         return [result_order]
     return []
+stock_order_to = cast_singledispatch(order_to).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_to)
 
 
 @export_as_api
@@ -333,7 +353,7 @@ def order_target_portfolio(
 
     """
     env = Environment.get_instance()
-    target: Dict[str, Tuple[float, float, float, float]] = {}
+    target: Dict[str, Tuple[float, OrderStyle, OrderStyle, float, Instrument]] = {}
     for id_or_ins, percent in target_portfolio.items():
         ins = assure_instrument(id_or_ins)
         if not ins:
@@ -361,7 +381,7 @@ def order_target_portfolio(
                 "excepted float between 0 and 1, got {} (key: {})"
             ).format(percent, id_or_ins))
 
-        target[order_book_id] = percent, open_style, close_style, last_price
+        target[ins.order_book_id] = percent, open_style, close_style, last_price, ins
 
     total_percent = sum(p for p, *__ in target.values())
     if total_percent > 1 and not np.isclose(total_percent, 1):
@@ -383,15 +403,15 @@ def order_target_portfolio(
     if total_percent == 1:
         # 在此处形成的订单不包含交易费用，需要预留一点余额以供交易费用使用
         estimate_transaction_cost = 0
-        for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
+        for order_book_id, (target_percent, open_style, close_style, last_price, ins) in target.items():
             current_value = current_quantities.get(order_book_id, 0) * last_price
             change_value = target_percent * account_value - current_value
-            estimate_transaction_cost += env.get_transaction_cost_with_value(change_value)
+            estimate_transaction_cost += _estimate_transaction_cost(env, ins, change_value / last_price, last_price)
         account_value = account_value - estimate_transaction_cost
 
     close_orders, open_orders = [], []
     waiting_to_buy = defaultdict()
-    for order_book_id, (target_percent, open_style, close_style, last_price) in target.items():
+    for order_book_id, (target_percent, open_style, close_style, last_price, ins) in target.items():
         open_price = _get_order_style_price(order_book_id, open_style)
         close_price = _get_order_style_price(order_book_id, close_style)
         if not (is_valid_price(close_price) and is_valid_price(open_price)):
@@ -407,7 +427,7 @@ def order_target_portfolio(
         if delta_quantity == 0:
             continue
         elif delta_quantity > 0:
-            waiting_to_buy[order_book_id] = (delta_quantity, POSITION_EFFECT.OPEN, open_style, last_price)
+            waiting_to_buy[order_book_id] = (delta_quantity, POSITION_EFFECT.OPEN, open_style, last_price, ins)
             continue
         else:
             quantity, side, position_effect = abs(delta_quantity), SIDE.SELL, POSITION_EFFECT.CLOSE
@@ -415,16 +435,16 @@ def order_target_portfolio(
         if isinstance(close_style, MarketOrder):
             order.set_frozen_price(last_price)
         close_orders.append(order)
-    
-    estimate_cash = account.cash + sum([o.quantity * o.frozen_price - env.get_order_transaction_cost(o) for o in close_orders])
-    for order_book_id, (delta_quantity, position_effect, open_style, last_price) in waiting_to_buy.items():
-        cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
+
+    estimate_cash = account.cash + sum([o.quantity * o.frozen_price - o.estimated_transaction_cost for o in close_orders])
+    for order_book_id, (delta_quantity, position_effect, open_style, last_price, ins) in waiting_to_buy.items():
+        cost = delta_quantity * last_price + _estimate_transaction_cost(env, ins, delta_quantity, last_price)
         if cost > estimate_cash:
             delta_quantity = estimate_cash / last_price
             delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
             if delta_quantity == 0:
                 continue
-            cost = delta_quantity * last_price + env.get_transaction_cost_with_value(delta_quantity * last_price)
+            cost = delta_quantity * last_price + _estimate_transaction_cost(env, ins, delta_quantity, last_price)
         order = Order.__from_create__(order_book_id, delta_quantity, SIDE.BUY, open_style, position_effect)
         if isinstance(open_style, MarketOrder):
             order.set_frozen_price(last_price)

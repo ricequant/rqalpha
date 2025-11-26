@@ -15,6 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import sys
 import copy
 import typing
 from collections import OrderedDict
@@ -23,7 +24,8 @@ from rqalpha.interface import AbstractMod
 from rqalpha.utils.package_helper import import_mod
 from rqalpha.utils.logger import system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import RqAttrDict
+from rqalpha.utils import RqAttrDict, create_custom_exception
+from rqalpha.utils.exception import ExceptionGroup
 
 
 class ModHandler(object):
@@ -74,16 +76,22 @@ class ModHandler(object):
 
     def tear_down(self, *args):
         result = {}
+        exceptions = []
         for mod_name, __ in reversed(self._mod_list):
             try:
                 system_log.debug(_(u"mod tear_down [START] {}").format(mod_name))
                 ret = self._mod_dict[mod_name].tear_down(*args)
                 system_log.debug(_(u"mod tear_down [END]   {}").format(mod_name))
             except Exception as e:
+                exc_type, exc_val, exc_tb = sys.exc_info()
+                exceptions.append(create_custom_exception(exc_type, exc_val, exc_tb, self._env.config.base.strategy_file))
                 system_log.exception("tear down fail for {}", mod_name)
                 continue
-            if ret is not None:
-                result[mod_name] = ret
+            else:
+                if ret is not None:
+                    result[mod_name] = ret
+        if exceptions:
+            raise ExceptionGroup("Mod tear down failed", exceptions)
         return result
 
 

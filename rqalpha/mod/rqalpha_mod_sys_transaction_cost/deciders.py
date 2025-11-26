@@ -15,32 +15,44 @@
 from collections import defaultdict
 from datetime import datetime
 
-from rqalpha.interface import AbstractTransactionCostDecider
+from pandas import Series
+from numpy import maximum
+
+from rqalpha.interface import AbstractTransactionCostDecider, TransactionCostArgs, TransactionCost
 from rqalpha.environment import Environment
-from rqalpha.const import SIDE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT
+from rqalpha.const import SIDE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT, INSTRUMENT_TYPE
 from rqalpha.core.events import EVENT
 
 
 STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 28)
 
 
-class StockTransactionCostDecider(AbstractTransactionCostDecider):
-    def __init__(self, commission_rate, commission_multiplier, min_commission):
-        self.commission_rate = commission_rate
+class AbstractStockTransactionCostDecider(AbstractTransactionCostDecider):
+    def batch_estimate(self, delta_quantities: Series, prices: Series) -> Series:
+        raise NotImplementedError
+
+
+class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
+    def __init__(self, commission_multiplier, min_commission, tax_multiplier, pit_tax, event_bus):
+        self.commission_rate = 0.0008
         self.commission_multiplier = commission_multiplier
         self.commission_map = defaultdict(lambda: min_commission)
         self.min_commission = min_commission
 
+        self.tax_rate = 0.0005
+        if pit_tax:
+            event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self._update_tax_rate)
+        self.tax_multiplier = tax_multiplier
+
         self.env = Environment.get_instance()
 
-    def _get_order_commission(self, order_book_id, side, price, quantity):
-        commission = price * quantity * self.commission_rate * self.commission_multiplier
-        return max(commission, self.min_commission)
+    def _update_tax_rate(self, event):
+        if event.trading_dt < STOCK_PIT_TAX_CHANGE_DATE:
+            self.tax_rate = 0.001
+        else:
+            self.tax_rate = 0.0005
 
-    def _get_tax(self, order_book_id, side, cost_money):
-        raise NotImplementedError
-
-    def get_trade_commission(self, trade):
+    def _calc_commission(self, args: TransactionCostArgs) -> float:
         """
         计算手续费这个逻辑比较复杂，按照如下算法来计算：
         1.  定义一个剩余手续费的概念，根据order_id存储在commission_map中，默认为min_commission
@@ -52,9 +64,11 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
             4.1 如果commission 等于 min_commission, 说明是第一笔trade, 此时，返回min_commission(提前把最小手续费收了)
             4.2 如果commission 不等于 min_commission， 说明不是第一笔trade, 之前的trade中min_commission已经收过了，所以返回0.
         """
-        order_id = trade.order_id
+        cost_commission = args.price * args.quantity * self.commission_rate * self.commission_multiplier
+        order_id = args.order_id
+        if order_id is None:
+            return max(cost_commission, self.min_commission) 
         commission = self.commission_map[order_id]
-        cost_commission = trade.last_price * trade.last_quantity * self.commission_rate * self.commission_multiplier
         if cost_commission > commission:
             if commission == self.min_commission:
                 self.commission_map[order_id] = 0
@@ -70,83 +84,48 @@ class StockTransactionCostDecider(AbstractTransactionCostDecider):
                 self.commission_map[order_id] -= cost_commission
                 return 0
 
-    def get_trade_tax(self, trade):
-        return self._get_tax(trade.order_book_id, trade.side, trade.last_price * trade.last_quantity)
-
-    def get_order_transaction_cost(self, order):
-        commission = self._get_order_commission(order.order_book_id, order.side, order.frozen_price, order.quantity)
-        tax = self._get_tax(order.order_book_id, order.side, order.frozen_price * order.quantity)
-        return tax + commission
-    
-    def get_transaction_cost_with_value(self, value: float, side: SIDE) -> float:
-        raise NotImplementedError
-
-
-class CNStockTransactionCostDecider(StockTransactionCostDecider):
-    def __init__(self, commission_multiplier, min_commission, tax_multiplier, pit_tax, event_bus):
-        super(CNStockTransactionCostDecider, self).__init__(0.0008, commission_multiplier, min_commission)
-        self.tax_rate = 0.0005
-        if pit_tax:
-            event_bus.add_listener(EVENT.PRE_BEFORE_TRADING, self.set_tax_rate)
-        self.tax_multiplier = tax_multiplier
-
-    def _get_tax(self, order_book_id, side, cost_money):
-        instrument = Environment.get_instance().get_instrument(order_book_id)
-        if instrument.type != 'CS':
+    def _calc_tax(self, args: TransactionCostArgs) -> float:
+        if args.side == SIDE.BUY or args.instrument.type != INSTRUMENT_TYPE.CS:
             return 0
-        return cost_money * self.tax_rate * self.tax_multiplier if side == SIDE.SELL else 0
-    
-    def set_tax_rate(self, event):
-        if event.trading_dt < STOCK_PIT_TAX_CHANGE_DATE:
-            self.tax_rate = 0.001
-        else:
-            self.tax_rate = 0.0005
+        cost_money = args.price * args.quantity
+        return cost_money * self.tax_rate * self.tax_multiplier
 
-    def get_transaction_cost_with_value(self, value: float, side: SIDE) -> float:
-        tax = value * self.tax_rate * self.tax_multiplier if side == SIDE.SELL else 0
-        commission = max(value * self.commission_rate * self.commission_multiplier, self.min_commission)
-        return tax + commission
+    def calc(self, args: TransactionCostArgs) -> TransactionCost:
+        return TransactionCost(commission=self._calc_commission(args), tax=self._calc_tax(args), other_fees=0)
 
+    def batch_estimate(self, delta_quantities: Series, prices: Series) -> Series:
+        commission = maximum(delta_quantities.abs() * prices * self.commission_rate * self.commission_multiplier, self.min_commission)
+        tax = delta_quantities.abs() * prices * self.tax_rate * (delta_quantities < 0)
+        return commission + tax
+        
 
-class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
+class FuturesTransactionCostDecider(AbstractTransactionCostDecider):
     def __init__(self, commission_multiplier):
         self.commission_multiplier = commission_multiplier
         self.hedge_type = HEDGE_TYPE.SPECULATION
 
         self.env = Environment.get_instance()
 
-    def _get_commission(self, order_book_id, position_effect, price, quantity, close_today_quantity, dt):
-        # type: (str, POSITION_EFFECT, float, int, int, datetime.date) -> float
-        info = self.env.data_proxy.get_futures_trading_parameters(order_book_id, dt)
+    def _calc_commission(self, args: TransactionCostArgs) -> float:
+        ins = args.instrument
+        info = self.env.data_proxy.get_futures_trading_parameters(ins.order_book_id, self.env.trading_dt)
         commission = 0
         if info.commission_type == COMMISSION_TYPE.BY_MONEY:
-            contract_multiplier = self.env.get_instrument(order_book_id).contract_multiplier
-            if position_effect == POSITION_EFFECT.OPEN:
-                commission += price * quantity * contract_multiplier * info.open_commission_ratio
+            contract_multiplier = ins.contract_multiplier
+            if args.position_effect == POSITION_EFFECT.OPEN:
+                commission += args.price * args.quantity * contract_multiplier * info.open_commission_ratio
             else:
-                commission += price * (
-                        quantity - close_today_quantity
+                commission += args.price * (
+                        args.quantity - args.close_today_quantity
                 ) * contract_multiplier * info.close_commission_ratio
-                commission += price * close_today_quantity * contract_multiplier * info.close_commission_today_ratio
+                commission += args.price * args.close_today_quantity * contract_multiplier * info.close_commission_today_ratio
         else:
-            if position_effect == POSITION_EFFECT.OPEN:
-                commission += quantity * info.open_commission_ratio
+            if args.position_effect == POSITION_EFFECT.OPEN:
+                commission += args.quantity * info.open_commission_ratio
             else:
-                commission += (quantity - close_today_quantity) * info.close_commission_ratio
-                commission += close_today_quantity * info.close_commission_today_ratio
+                commission += (args.quantity - args.close_today_quantity) * info.close_commission_ratio
+                commission += args.close_today_quantity * info.close_commission_today_ratio
         return commission * self.commission_multiplier
 
-    def get_trade_commission(self, trade):
-        return self._get_commission(
-            trade.order_book_id, trade.position_effect, trade.last_price, trade.last_quantity, trade.close_today_amount, trade.trading_datetime.date()
-        )
-
-    def get_trade_tax(self, trade):
-        return 0
-
-    def get_order_transaction_cost(self, order):
-        close_today_quantity = order.quantity if order.position_effect == POSITION_EFFECT.CLOSE_TODAY else 0
-
-        return self._get_commission(
-            order.order_book_id, order.position_effect, order.frozen_price, order.quantity, close_today_quantity, order.trading_datetime.date()
-        )
+    def calc(self, args: TransactionCostArgs) -> TransactionCost:
+        return TransactionCost(commission=self._calc_commission(args), tax=0, other_fees=0)

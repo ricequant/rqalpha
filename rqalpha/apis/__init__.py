@@ -15,3 +15,6 @@
 from rqalpha.apis.api_abstract import *
 from rqalpha.apis.api_base import *
 from rqalpha.apis.api_rqdatac import *
+
+from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import *
+from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import *

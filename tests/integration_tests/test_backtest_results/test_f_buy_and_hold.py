@@ -1,0 +1,29 @@
+from rqalpha.apis import subscribe, buy_open, logger
+
+
+def test_f_buy_and_hold(run_and_assert_result):
+    def init(context):
+        context.s1 = "IF88"
+        subscribe(context.s1)
+        logger.info("Interested in: " + str(context.s1))
+
+    def handle_bar(context, bar_dict):
+        buy_open(context.s1, 1)
+
+    config = {
+        "base": {
+            "start_date": "2015-01-09",
+            "end_date": "2015-03-09",
+            "frequency": "1d",
+            "matching_type": "current_bar",
+            "benchmark": None,
+            "accounts": {
+                "future": 1000000
+            }
+        },
+        "extra": {
+            "log_level": "error",
+        }
+    }
+
+    run_and_assert_result(config=config, init=init, handle_bar=handle_bar)
