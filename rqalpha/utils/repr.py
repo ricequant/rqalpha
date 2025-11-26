@@ -37,7 +37,7 @@ class PropertyReprMeta(abc.ABCMeta):
         else:
             repr_properties = []
             for c in cls.mro():
-                repr_properties.extend(v for v in list(vars(c).keys()) if isinstance(vars(c)[v], (property, cached_property)))
+                repr_properties.extend(name for name, value in vars(c).items() if isinstance(value, (property, cached_property)))
         cls.__repr__ = _repr(cls.__name__, repr_properties)
         return cls
 
@@ -90,7 +90,6 @@ def slots(inst):
 
 
 def iter_properties_of_class(cls):
-    for varname in vars(cls):
-        value = vars(cls)[varname]
+    for varname, value in vars(cls).items():
         if isinstance(value, (property, cached_property)):
             yield varname

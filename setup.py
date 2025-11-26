@@ -34,7 +34,6 @@ requirements = [
     "openpyxl",
     "methodtools",
     "filelock",
-    "pytest",
     "typing-extensions <4.8.0 ; python_version <= '3.7'"
 ]
 
