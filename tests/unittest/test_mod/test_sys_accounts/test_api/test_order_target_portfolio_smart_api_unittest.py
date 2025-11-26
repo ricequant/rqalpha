@@ -31,6 +31,7 @@ from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import StockTransactionCostDecider
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_portfolio_smart
 from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.main import cleanup_resources
 
 
 config = parse_config({
@@ -79,7 +80,8 @@ def environment():
 
     env.submit_order = MagicMock()
     yield env
-    Environment._env = None
+    
+    cleanup_resources(env)
 
 
 @pytest.fixture

@@ -247,6 +247,8 @@ def run(config, source_code=None, user_funcs=None):
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug(_(u"strategy run successfully, normal exit"))
         return result
+    finally:
+        cleanup_resources(env)
 
 
 def _exception_handler(e):
@@ -290,6 +292,28 @@ def output_profile_result(env):
     profile_output = profile_output.rstrip()
     six.print_(profile_output)
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))
+
+
+def cleanup_resources(env):
+    """
+    清理资源，防止内存泄漏
+    在每次策略运行结束后调用，确保对象能被正确回收
+    """
+    # 1. 清理 Environment 单例引用
+    Environment._env = None
+    # 2. 清理 DataProxy 的实例方法缓存
+    if hasattr(env, 'data_proxy'):
+        for method_name in [
+            '_get_prev_close', '_get_prev_settlement', '_get_settlement', 'get_bar', 'instrument', 'instrument_not_none'
+        ]:
+            method = getattr(env.data_proxy, method_name, None)
+            if method and hasattr(method, 'cache_clear'):
+                method.cache_clear()
+    # 3. 清理 BaseDataSource 中的 Instrument 缓存（这是最大的内存占用）
+    if hasattr(env, 'data_source'):
+        for property_name in ['_id_instrument_map', '_sym_instrument_map', '_grouped_instruments']:
+            if hasattr(env.data_source, property_name):
+                getattr(env.data_source, property_name).clear()
 
 
 def set_loggers(config):
