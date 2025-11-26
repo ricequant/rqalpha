@@ -58,9 +58,9 @@ def instype_singledispatch(func):
     from rqalpha.const import INSTRUMENT_TYPE
     from rqalpha.utils.exception import RQInvalidArgument, RQApiNotSupportedError
     from rqalpha.utils.i18n import gettext as _
+    from rqalpha.environment import Environment
 
     registry = {}
-    data_proxy = None
 
     def rq_invalid_argument(arg):
         if registry:
@@ -75,14 +75,10 @@ def instype_singledispatch(func):
 
     @lru_cache(1024)
     def dispatch(id_or_ins):
-        nonlocal data_proxy
         if isinstance(id_or_ins, Instrument):
             instype = id_or_ins.type
         else:
-            if not data_proxy:
-                from rqalpha.environment import Environment
-                data_proxy = Environment.get_instance().data_proxy
-            ins = data_proxy.instrument(id_or_ins)
+            ins = Environment.get_instance().data_proxy.instrument(id_or_ins)
             if not ins:
                 raise rq_invalid_argument(id_or_ins)
             instype = ins.type
@@ -91,8 +87,7 @@ def instype_singledispatch(func):
         except KeyError:
             raise rq_invalid_argument(id_or_ins)
 
-    def register(instypes):
-        # type: (Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable
+    def register(instypes: Union[INSTRUMENT_TYPE, Iterable[INSTRUMENT_TYPE]]) -> Callable:
         if isinstance(instypes, str):
             instypes = [instypes]
 
