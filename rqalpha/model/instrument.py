@@ -21,7 +21,6 @@ import datetime
 import inspect
 from typing import Dict, Callable, Optional
 from methodtools import lru_cache
-from functools import cached_property
 
 import numpy as np
 from dateutil.parser import parse
@@ -30,6 +29,7 @@ from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
 from rqalpha.utils import TimeRange, INST_TYPE_IN_STOCK_ACCOUNT
 from rqalpha.utils.repr import property_repr, PropertyReprMeta
+from rqalpha.utils.class_helper import cached_property
 
 
 # TODO：改为 namedtuple，提升性能
@@ -37,7 +37,7 @@ class Instrument(metaclass=PropertyReprMeta):
     DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
 
     @staticmethod
-    def _fix_date(ds, dflt=None) -> datetime.datetime | None:
+    def _fix_date(ds, dflt=None) -> Optional[datetime.datetime]:
         if isinstance(ds, datetime.datetime):
             return ds
         if ds == '0000-00-00' or ds is None:
@@ -62,7 +62,7 @@ class Instrument(metaclass=PropertyReprMeta):
             self._dict["maturity_date"] = self._fix_date(dic["maturity_date"], self.DEFAULT_DE_LISTED_DATE)
 
         if 'contract_multiplier' in dic:
-            if np.isnan(self.contract_multiplier):
+            if np.isnan(self._dict["contract_multiplier"]):
                 raise RuntimeError("Contract multiplier of {} is not supposed to be nan".format(self.order_book_id))
         self.market = market
 

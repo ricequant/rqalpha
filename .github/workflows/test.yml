@@ -45,6 +45,7 @@ jobs:
             pip install "numpy>=2.0.0"
             pip install "TA-Lib>=0.6.5" -i https://rquser:Ricequant8@pypi2.ricequant.com/simple/
           fi
+          pip install pytest
           pip install coveralls
           pip install -U setuptools
           pip install ipython==5.3.0
@@ -54,7 +55,7 @@ jobs:
           rqalpha download-bundle
     - name: run test
       run:  |
-          coverage run --source=rqalpha test.py
+          python -m pytest
           ls -al $HOME/.rqalpha/
           ls -al $HOME/.rqalpha/bundle/
     - name: Upload coverage data to coveralls.io

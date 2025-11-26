@@ -15,9 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from datetime import date
-from typing import Optional, Deque
+from typing import Optional, Deque, Tuple
 from collections import deque
-from functools import cached_property
 
 from decimal import Decimal
 from numpy import ndarray
@@ -34,6 +33,7 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.core.events import EVENT, Event
+from rqalpha.utils.class_helper import cached_property
 
 
 def _int_to_date(d):
@@ -61,7 +61,7 @@ class StockPosition(Position):
 
     def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
         super(StockPosition, self).__init__(order_book_id, direction, init_quantity, init_price)
-        self._dividend_receivable: Deque[tuple[date, float]] = deque()
+        self._dividend_receivable: Deque[Tuple[date, float]] = deque()
         self._pending_transform = None
         self._non_closable = 0
 
@@ -202,12 +202,12 @@ class StockPosition(Position):
         return self._instrument.market_tplus
 
     @cached_property
-    def _all_dividends(self) -> ndarray | None:
+    def _all_dividends(self) -> Optional[ndarray]:
         dividends = self._env.data_proxy.get_dividend(self._order_book_id)
         return dividends
 
     @cached_property
-    def _all_splits(self) -> ndarray | None:
+    def _all_splits(self) -> Optional[ndarray]:
         splits = self._env.data_proxy.get_split(self._order_book_id)
         if splits is None:
             return None
@@ -215,7 +215,7 @@ class StockPosition(Position):
         splits["ex_date"] = splits["ex_date"] // 1000000
         return splits
 
-    def _get_dividends_or_splits(self, events: ndarray | None, trading_date: date, date_field: str):
+    def _get_dividends_or_splits(self, events: Optional[ndarray], trading_date: date, date_field: str):
         if events is None:
             return None
         last_date = self._env.data_proxy.get_previous_trading_date(trading_date)

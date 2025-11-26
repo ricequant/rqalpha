@@ -12,24 +12,21 @@ order_target_portfolio_smart 单元测试套件
 目标数量 = (总资金 × 目标权重) / 股票价格
 实际下单数量会经过算法的最小单位调整、安全边距(safety)等机制处理
 """
-
-import os
-
 import pytest
 
 from unittest.mock import MagicMock
+from typing import Dict, Tuple
 
-from pandas import Timestamp, Series
+from pandas import Timestamp
 
 from rqalpha.environment import Environment
-from rqalpha.model.order import MarketOrder, LimitOrder, OrderStyle
-from rqalpha.portfolio import Account, Portfolio
-from rqalpha.utils import RqAttrDict
+from rqalpha.model.order import MarketOrder, LimitOrder
+from rqalpha.portfolio import Portfolio
 from rqalpha.utils.config import parse_config
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
 from rqalpha.data.data_proxy import DataProxy
-from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_EFFECT, SIDE, DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_EFFECT, SIDE
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import StockTransactionCostDecider
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_portfolio_smart
@@ -87,7 +84,7 @@ def environment():
 
 @pytest.fixture
 def assert_submitted_orders(environment):
-    def _assert(orders: dict[str, tuple[int, SIDE, POSITION_EFFECT, str]]):
+    def _assert(orders: Dict[str, Tuple[int, SIDE, POSITION_EFFECT, str]]):
         called = {}
         for args, *_ in environment.submit_order.call_args_list:
             order = args[0]

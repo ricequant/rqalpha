@@ -17,7 +17,7 @@
 
 import time
 from decimal import Decimal
-from functools import cache, cached_property
+
 from datetime import datetime
 from typing import Optional
 
@@ -29,6 +29,7 @@ from rqalpha.utils.repr import property_repr, properties
 from rqalpha.utils.logger import user_system_log
 from rqalpha.environment import Environment
 from rqalpha.model.instrument import Instrument
+from rqalpha.utils.class_helper import cached_property
 
 
 class Order(object):

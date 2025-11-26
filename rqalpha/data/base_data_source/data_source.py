@@ -18,7 +18,12 @@ from collections import defaultdict, ChainMap
 import os
 from datetime import date, datetime, timedelta
 from itertools import chain, repeat
-from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast
+from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast, Tuple
+
+try:
+    from typing import Protocol, runtime_checkable
+except ImportError:
+    from typing_extensions import Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
@@ -64,6 +69,22 @@ BAR_RESAMPLE_FIELD_METHODS = {
 }
 
 
+@runtime_checkable
+class BaseDataSourceProtocol(Protocol):
+    def register_day_bar_store(self, instrument_type: INSTRUMENT_TYPE, store: AbstractDayBarStore, market: MARKET = MARKET.CN) -> None:
+        ...
+    def register_instruments(self, instruments: Iterable[Instrument]) -> None:
+        ...
+    def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN) -> None:
+        ...
+    def register_split_store(self, instrument_type: INSTRUMENT_TYPE, split_store: AbstractSimpleFactorStore, market: MARKET = MARKET.CN) -> None:
+        ...
+    def register_calendar_store(self, calendar_type: TRADING_CALENDAR_TYPE, calendar_store: AbstractCalendarStore) -> None:
+        ...
+    def register_ex_factor_store(self, instrument_type: INSTRUMENT_TYPE, ex_factor_store: AbstractSimpleFactorStore, market: MARKET = MARKET.CN) -> None:
+        ...
+
+
 class BaseDataSource(AbstractDataSource):
     DEFAULT_INS_TYPES = (
         INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.INDX,
@@ -87,13 +108,13 @@ class BaseDataSource(AbstractDataSource):
         self._st_stock_days = DateSet(_p('st_stock_days.h5'))
 
         # dynamic registered storages
-        self._ins_id_or_sym_type_map = {}  # type: Dict[str, INSTRUMENT_TYPE]
-        self._instrument_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractInstrumentStore] = {}
-        self._day_bar_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDayBarStore] = {}
-        self._dividend_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
-        self._split_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
+        self._ins_id_or_sym_type_map: Dict[str, INSTRUMENT_TYPE] = {}
+        self._instrument_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractInstrumentStore] = {}
+        self._day_bar_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractDayBarStore] = {}
+        self._dividend_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
+        self._split_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
         self._calendar_stores: Dict[TRADING_CALENDAR_TYPE, AbstractCalendarStore] = {}
-        self._ex_factor_stores: Dict[tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
+        self._ex_factor_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
 
         # instruments
         self._id_instrument_map: Dict[str, Instrument] = {}

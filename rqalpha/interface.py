@@ -317,8 +317,7 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_dividend(self, instrument):
-        # type: (Instrument) -> numpy.ndarray | None
+    def get_dividend(self, instrument: Instrument) -> Optional[numpy.ndarray]:
         """
         获取股票/基金分红信息
 
