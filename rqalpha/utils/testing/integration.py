@@ -295,12 +295,12 @@ def _filter_integration_result(result: dict) -> dict:
 
 
 def _assert_dafaframe(result: DataFrame, expected_result: DataFrame, exclude_columns: Optional[list] = None):
-    if exclude_columns:
-        result = result.drop(exclude_columns, axis=1)
-        expected_result = expected_result.drop(exclude_columns, axis=1)
     if result.empty:
         assert expected_result.empty
         return
+    if exclude_columns:
+        result = result.drop(exclude_columns, axis=1)
+        expected_result = expected_result.drop(exclude_columns, axis=1)
     assert_frame_equal(result, expected_result, atol=1e-7)
 
 
