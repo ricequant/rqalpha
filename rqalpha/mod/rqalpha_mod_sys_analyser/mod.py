@@ -21,9 +21,13 @@ import pandas
 import pickle
 import jsonpickle
 import datetime
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from collections import defaultdict
 from typing import Dict, Optional, List, Tuple, Union, Iterable
+try:
+    from typing import Protocol
+except ImportError:
+    from typing_extensions import Protocol
 
 import numpy as np
 import pandas as pd
@@ -32,11 +36,14 @@ from rqrisk import Risk, DAILY, WEEKLY, MONTHLY
 from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
+from rqalpha.environment import Environment
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
-from rqalpha.utils.datetime_func import convert_int_to_date
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, RqAttrDict
+from rqalpha.utils.datetime_func import convert_int_to_date, convert_date_to_int
 from rqalpha.utils.logger import user_system_log
 from rqalpha.api import export_as_api
+from rqalpha.const import TRADING_CALENDAR_TYPE
+from rqalpha.model import Instrument
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
@@ -53,11 +60,26 @@ def _get_yearly_risk_free_rates(
 
 EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
 
+class PlotConfigProtocol(Protocol):
+    open_close_points: bool
+    weekly_indicators: bool
+
+class ModConfigProtocol(Protocol):
+    benchmark: Optional[str]
+    record: bool
+    strategy_name: Optional[str]
+    output_file: Optional[str]
+    report_save_path: Optional[str]
+    plot: bool
+    plot_save_file: Optional[str]
+    plot_config: PlotConfigProtocol
+
 
 class AnalyserMod(AbstractMod):
+    _env: Environment
+    _mod_config: ModConfigProtocol
+
     def __init__(self):
-        self._env = None
-        self._mod_config = None
         self._enabled = False
 
         self._orders = []
@@ -86,7 +108,7 @@ class AnalyserMod(AbstractMod):
             'orders': self._orders,
             'trades': self._trades,
             'daily_pnl': self._daily_pnl
-        }).encode('utf-8')
+        }).encode('utf-8')  # type: ignore
 
     def set_state(self, state):
         value = jsonpickle.loads(state.decode('utf-8'))
@@ -101,6 +123,7 @@ class AnalyserMod(AbstractMod):
     def start_up(self, env, mod_config):
         self._env = env
         self._mod_config = mod_config
+
         self._enabled = (
             mod_config.record or mod_config.plot or mod_config.output_file or
             mod_config.plot_save_file or mod_config.report_save_path or mod_config.benchmark
@@ -121,6 +144,62 @@ class AnalyserMod(AbstractMod):
             export_as_api(self._plot_store.plot)
     
     NULL_OID = {"null", "NULL"}
+    NON_CN_CALENDAR_OIDS = {
+        "930930.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND,
+        "930933.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND
+    }
+
+    def _get_one_benchmark_daily_returns(self, ins: Instrument, trading_dates: pd.DatetimeIndex):
+        # trading_dates 需要比需求的日期多一天，因为首日也需要计算收益率
+        bars_s, returns_s, e = itemgetter(0, 1, -1)(trading_dates)
+        bars = self._env.data_proxy.history_bars(
+            order_book_id=ins.order_book_id,
+            bar_count=None,
+            frequency="1d",
+            field=["datetime", "close"],
+            dt=e,
+            skip_suspended=False,
+        )
+        if bars is None:
+            raise RuntimeError(
+                _("benchmark {} missing data between backtest start date {} and end date {}").format(
+                    ins.order_book_id, returns_s, e)
+            )
+        left = bars['datetime'].searchsorted(np.uint64(convert_date_to_int(bars_s)), side='left')
+        bars = bars[left:]
+        try:
+            calendar_type = self.NON_CN_CALENDAR_OIDS[ins.order_book_id]
+        except KeyError:
+            # A 股交易日历的标的，验证其价格的完整性
+            if len(bars) == len(trading_dates):
+                if convert_int_to_date(bars[1]['datetime']) != returns_s:
+                    raise RuntimeError(_(
+                        "benchmark {} missing data between backtest start date {} and end date {}").format(ins.order_book_id, returns_s, e)
+                    )
+                return (bars['close'] / np.roll(bars['close'], 1) - 1.0)[1: ]
+            else:
+                if len(bars) == 0:
+                    (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
+                else:
+                    (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']).date(), convert_int_to_date(bars[-1]['datetime']).date())
+                raise RuntimeError(
+                    _("benchmark {} available data start date {} >= backtest start date {} or end date {} <= backtest end "
+                    "date {}").format(ins.order_book_id, available_s, returns_s, available_e, e)
+                )
+
+        else:
+            # 非 A 股交易日历的合约
+            close_series = pd.Series(bars["close"], index=pd.DatetimeIndex(bars["datetime"].astype(str)))
+            ins_calendar = self._env.data_proxy.get_trading_dates(bars_s, e, trading_calendar_type=calendar_type)
+            merged_calendar = trading_dates.union(ins_calendar)
+            if any((~ins_calendar.isin(close_series.index))):
+                # 价格相对于预期的交易日历有缺失
+                raise RuntimeError(
+                    _("benchmark {} missing data between backtest start date {} and end date {}").format(
+                        ins.order_book_id, returns_s, e)
+                )
+            close_series[close_series == 0] = np.nan  # 针对脏数据的处理，这部分本来应当在 rqdata 做
+            return close_series.reindex(merged_calendar).ffill().loc[trading_dates].pct_change().iloc[1: ].values
 
     def generate_benchmark_daily_returns_and_portfolio(self, event):
         _s = self._env.config.base.start_date
@@ -133,38 +212,13 @@ class AnalyserMod(AbstractMod):
         # generate benchmerk daily returns
         self._benchmark_daily_returns = np.zeros(len(trading_dates))
         weights = 0
+        trading_dates_with_extra_one = self._env.data_proxy.get_trading_dates(self._env.data_proxy.get_previous_trading_date(_s), _e)
         for order_book_id, weight in self._benchmark:
             if order_book_id in self.NULL_OID:
                 daily_returns = np.zeros(len(trading_dates))
             else:
-                ins = self._env.data_proxy.instrument(order_book_id)
-                if ins is None:
-                    raise RuntimeError(
-                        _("benchmark {} not exists, please entry correct order_book_id").format(order_book_id)
-                    )
-                bars = self._env.data_proxy.history_bars(
-                    order_book_id = order_book_id,
-                    bar_count = len(trading_dates) + 1,  # Get an extra day for calculation
-                    frequency = "1d",
-                    field = ["datetime", "close"],
-                    dt = _e,
-                    skip_suspended=False,
-                )
-                if len(bars) == len(trading_dates) + 1:
-                    if convert_int_to_date(bars[1]['datetime']).date() != _s:
-                        raise RuntimeError(_(
-                            "benchmark {} missing data between backtest start date {} and end date {}").format(order_book_id, _s, _e)
-                        )
-                    daily_returns = (bars['close'] / np.roll(bars['close'], 1) - 1.0)[1: ]
-                else:
-                    if len(bars) == 0:
-                        (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
-                    else:
-                        (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']).date(), convert_int_to_date(bars[-1]['datetime']).date())
-                    raise RuntimeError(
-                        _("benchmark {} available data start date {} >= backtest start date {} or end date {} <= backtest end "
-                        "date {}").format(order_book_id, available_s, _s, available_e, _e)
-                    )
+                ins = self._env.data_proxy.instrument_not_none(order_book_id)
+                daily_returns = self._get_one_benchmark_daily_returns(ins, trading_dates_with_extra_one)
             self._benchmark_daily_returns = self._benchmark_daily_returns + daily_returns * weight
             weights += weight
 
@@ -209,7 +263,7 @@ class AnalyserMod(AbstractMod):
                 ))
 
     def _symbol(self, order_book_id):
-        return self._env.data_proxy.instrument(order_book_id).symbol
+        return self._env.data_proxy.instrument_not_none(order_book_id).symbol
 
     @staticmethod
     def _parse_benchmark(benchmarks):
@@ -332,6 +386,9 @@ class AnalyserMod(AbstractMod):
         # 当 PRE_SETTLEMENT 事件没有被触发当时候，self._total_portfolio 为空list
         if len(self._total_portfolios) == 0:
             return
+        if not hasattr(self, "_mod_config"):
+            # start_up unsuccessful
+            return
 
         if self._mod_config.strategy_name:
             strategy_name = self._mod_config.strategy_name
@@ -353,10 +410,10 @@ class AnalyserMod(AbstractMod):
             if len(self._benchmark) == 1:
                 benchmark_obid, _ = self._benchmark[0]
                 summary["benchmark"] = benchmark_obid
-                summary["benchmark_symbol"] = self._env.data_proxy.instrument(benchmark_obid).symbol
+                summary["benchmark_symbol"] = self._env.data_proxy.instrument_not_none(benchmark_obid).symbol
             else:
                 summary["benchmark"] = ",".join(f"{o}:{w}" for o, w in self._benchmark)
-                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument(o).symbol if o not in self.NULL_OID else 'null'}:{w}" for o, w in self._benchmark)
+                summary["benchmark_symbol"] = ",".join(f"{self._env.data_proxy.instrument_not_none(o).symbol if o not in self.NULL_OID else 'null'}:{w}" for o, w in self._benchmark)
 
         trading_days_a_year = self._env.trading_days_a_year
         risk_free_rate = data_proxy.get_risk_free_rate(self._env.config.base.start_date, self._env.config.base.end_date)
@@ -474,8 +531,8 @@ class AnalyserMod(AbstractMod):
             result_dict["summary"]["excess_max_drawdown_duration_end_date"] = str(max_ddd.end_date)
             result_dict["summary"]["excess_max_drawdown_duration_days"] = (max_ddd.end_date - max_ddd.start_date).days
         else:
-            weekly_b_returns = pandas.Series(index=weekly_returns.index)
-            monthly_b_returns = pandas.Series(index=monthly_returns.index)
+            weekly_b_returns = pandas.Series(index=weekly_returns.index, dtype=float)
+            monthly_b_returns = pandas.Series(index=monthly_returns.index, dtype=float)
 
         # 周度风险指标
         weekly_risk = Risk(weekly_returns, weekly_b_returns, risk_free_rate, WEEKLY)

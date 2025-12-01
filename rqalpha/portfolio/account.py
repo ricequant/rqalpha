@@ -17,15 +17,16 @@
 
 from itertools import chain
 from datetime import date
+from tokenize import Floatnumber
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
-from rqalpha.model.order import Order, OrderStyle
-from rqalpha.model.trade import Trade
+from rqalpha.model import Order, OrderStyle, Trade, Instrument
 from rqalpha.utils.class_helper import deprecated_property
+from rqalpha.utils import is_valid_price
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
@@ -57,19 +58,24 @@ class Account(metaclass=AccountMeta):
     ]
 
     def __init__(
-            self, account_type: str, total_cash: float, init_positions: Dict[str, Tuple[int, Optional[float]]],
-            financing_rate: float
+            self, 
+            account_type: str, 
+            total_cash: float, 
+            init_positions: Dict[str, int],
+            financing_rate: float,
+            env: Environment
     ):
         self._type = account_type
+        self._env = env
+
+        # 现金项币种均为人民币
         self._total_cash = total_cash  # 包含保证金的总资金
-        self._env = Environment.get_instance()
+        self._frozen_cash = 0
+        self._cash_liabilities = 0      # 现金负债
 
         self._positions: Dict[str, Dict[POSITION_DIRECTION, Position]] = {}
         self._backward_trade_set = set()
-        self._frozen_cash = 0
         self._pending_deposit_withdraw: List[Tuple[date, float]] = []
-
-        self._cash_liabilities = 0      # 现金负债
 
         self.register_event()
 
@@ -80,10 +86,16 @@ class Account(metaclass=AccountMeta):
         # 融资利率/年
         self._financing_rate = financing_rate
 
-        for order_book_id, (init_quantity, init_price) in init_positions.items():
+        prev_date = self._env.data_proxy.get_previous_trading_date(self._env.trading_dt)
+        for order_book_id, init_quantity in init_positions.items():
             position_direction = POSITION_DIRECTION.LONG if init_quantity > 0 else POSITION_DIRECTION.SHORT
             init_quantity = abs(init_quantity) if init_quantity < 0 else init_quantity
-            self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price)
+            init_price: float = self._env.data_proxy.get_bar(order_book_id, prev_date).close  # type: ignore
+            if not is_valid_price(init_price):
+                raise ValueError(_("invalid init position {order_book_id}: no valid price at {date}").format(
+                    order_book_id=order_book_id, date=prev_date
+                ))
+            self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price=init_price)
 
     def __repr__(self):
         positions_repr = {}
@@ -179,7 +191,7 @@ class Account(metaclass=AccountMeta):
         try:
             return self._positions[order_book_id][direction]
         except KeyError:
-            return Position(order_book_id, direction)
+            return self._init_position(order_book_id, direction, 0, None)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction, position_effect):
         return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount, position_effect)
@@ -191,6 +203,7 @@ class Account(metaclass=AccountMeta):
     @property
     @lru_cache(None)
     def positions(self):
+        user_system_log.warn(_("account.positions is deprecated, please use get_position/get_positions API instead"))
         return PositionProxyDict(self._positions)
 
     @property
@@ -254,7 +267,7 @@ class Account(metaclass=AccountMeta):
         """
         多方向保证金
         """
-        return sum(getattr(p, "margin", 0) for p in self._iter_pos(POSITION_DIRECTION.LONG))
+        return sum(getattr(p, "margin", 0) for p in self._iter_pos(direction=POSITION_DIRECTION.LONG))
 
     @property
     def sell_margin(self):
@@ -314,6 +327,12 @@ class Account(metaclass=AccountMeta):
         """
         return sum(p.trading_pnl for p in self._iter_pos())
 
+    def available_cash_for(self, instrument: Instrument) -> float:
+        """
+        可用于交易指定标的的资金，用于风控
+        """
+        return self.cash
+
     def _on_before_trading(self, _):
         for order_book_id, positions in list(self._positions.items()):
             if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
@@ -324,7 +343,8 @@ class Account(metaclass=AccountMeta):
             _, amount = self._pending_deposit_withdraw.pop(0)
             self._total_cash += amount
 
-        for position in self._iter_pos():
+        # 涉及到资金变动，此处只处理中国市场的持仓
+        for position in self._iter_pos(market=MARKET.CN):
             self._total_cash += position.before_trading(trading_date)
 
         # 负债自增利息
@@ -334,10 +354,10 @@ class Account(metaclass=AccountMeta):
     def _on_settlement(self, event):
         trading_date = self._env.trading_dt.date()
 
-        for order_book_id, positions in list(self._positions.items()):
-            for position in six.itervalues(positions):
-                delta_cash = position.settlement(trading_date)
-                self._total_cash += delta_cash
+        # 涉及到资金变动，此处只处理中国市场的持仓
+        for position in self._iter_pos(market=MARKET.CN):
+            delta_cash = position.settlement(trading_date)
+            self._total_cash += delta_cash
 
         self._backward_trade_set.clear()
 
@@ -405,18 +425,24 @@ class Account(metaclass=AccountMeta):
             self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
 
-    def _iter_pos(self, direction=None):
-        # type: (Optional[POSITION_DIRECTION]) -> Iterable[Position]
+    def _iter_pos(self, *, direction: Optional[POSITION_DIRECTION] = None, market: Optional[MARKET] = None) -> Iterable[Position]:
         if direction:
-            return (p[direction] for p in six.itervalues(self._positions))
+            pos_iter = (p[direction] for p in self._positions.values())
         else:
-            return chain(*[six.itervalues(p) for p in six.itervalues(self._positions)])
+            pos_iter = chain(*[p.values() for p in self._positions.values()])
+        if market:
+            return (p for p in pos_iter if p.market == market)
+        else:
+            return pos_iter
+
+    def _init_position(self, order_book_id: str, direction: POSITION_DIRECTION, init_quantity: int, init_price: Optional[float] = None) -> Position:
+        return Position(order_book_id, direction, init_quantity, init_price)
 
     def _get_or_create_pos(
             self,
             order_book_id: str,
             direction: Union[POSITION_DIRECTION, str],
-            init_quantity: float = 0,
+            init_quantity: int = 0,
             init_price : Optional[float] = None
     ) -> Position:
         if order_book_id not in self._positions:
@@ -424,14 +450,12 @@ class Account(metaclass=AccountMeta):
                 long_quantity, short_quantity = init_quantity, 0
             else:
                 long_quantity, short_quantity = 0, init_quantity
-            positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: Position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
-                POSITION_DIRECTION.SHORT: Position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
-            })
             if not init_price:
-                last_price = self._env.get_last_price(order_book_id)
-                for p in positions.values():
-                    p.update_last_price(last_price)
+                init_price = self._env.get_last_price(order_book_id)
+            positions = self._positions.setdefault(order_book_id, {
+                POSITION_DIRECTION.LONG: self._init_position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
+                POSITION_DIRECTION.SHORT: self._init_position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
+            })
             if hasattr(positions[direction], "margin") and hasattr(self.__class__, "_margin"):
                 # black magic: improve performance for pure stock strategy
                 setattr(self.__class__, "margin", self.__class__._margin)
@@ -458,11 +482,10 @@ class Account(metaclass=AccountMeta):
 
     def _frozen_cash_of_order(self, order):
         if order.position_effect == POSITION_EFFECT.OPEN:
-            instrument = self._env.data_proxy.instrument(order.order_book_id)
-            order_cost = instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
+            order_cost = order.instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
         else:
             order_cost = 0
-        return order_cost + self._env.get_order_transaction_cost(order)
+        return order_cost + order.estimated_transaction_cost
 
     def _management_fee(self):
         # type: () -> float
@@ -533,7 +556,3 @@ class Account(metaclass=AccountMeta):
                 pass
         else:
             user_system_log.warn(f"{self.type} not support finance_repay")
-
-    holding_pnl = deprecated_property("holding_pnl", "position_pnl")
-    realized_pnl = deprecated_property("realized_pnl", "trading_pnl")
-    equity = deprecated_property("equity", "position_equity")

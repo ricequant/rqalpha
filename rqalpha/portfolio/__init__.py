@@ -53,30 +53,32 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             starting_cash: Dict[str, float],
             init_positions: List[Tuple[str, int]],
             financing_rate: float,
-            start_date: date,
-            data_proxy: DataProxy,
-            event_bus: EventBus
+            env: Environment,
     ):
+        self._accounts = self._init_accounts(starting_cash, init_positions, financing_rate, env)
+        self._static_unit_net_value = 1
+        self._units = sum(account.total_value for account in six.itervalues(self._accounts))
+        self._env = env
+        env.event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
+
+    @classmethod
+    def _init_accounts(
+        cls,
+        starting_cash: Dict[str, float],
+        init_positions: List[Tuple[str, int]],
+        financing_rate: float,
+        env: Environment,
+    ) -> Dict[str, Account]:
         account_args = {}
         for account_type, cash in starting_cash.items():
             account_args[account_type] = {
-                "account_type": account_type, "total_cash": cash, "init_positions": {}, "financing_rate": financing_rate
+                "account_type": account_type, "total_cash": cash, "init_positions": {}, "financing_rate": financing_rate, "env": env
             }
-        last_trading_date = data_proxy.get_previous_trading_date(start_date)
         for order_book_id, quantity in init_positions:
-            account_type = self.get_account_type(order_book_id)
+            account_type = env.data_proxy.instrument_not_none(order_book_id).account_type
             if account_type in account_args:
-                price = data_proxy.get_bar(order_book_id, last_trading_date).close
-                if not is_valid_price(price):
-                    raise ValueError(_("invalid init position {order_book_id}: no valid price at {date}").format(
-                        order_book_id=order_book_id, date=last_trading_date
-                    ))
-                account_args[account_type]["init_positions"][order_book_id] = quantity, price
-        self._accounts = {account_type: Account(**args) for account_type, args in account_args.items()}
-        self._static_unit_net_value = 1
-        self._units = sum(account.total_value for account in six.itervalues(self._accounts))
-
-        event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
+                account_args[account_type]["init_positions"][order_book_id] = quantity
+        return {account_type: Account(**args) for account_type, args in account_args.items()}
 
     def get_state(self):
         return jsonpickle.encode({
@@ -105,7 +107,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     @classmethod
     def get_account_type(cls, order_book_id):
-        instrument = Environment.get_instance().data_proxy.instrument(order_book_id)
+        instrument = Environment.get_instance().data_proxy.instrument_not_none(order_book_id)
         return instrument.account_type
 
     def get_account(self, order_book_id):
@@ -138,7 +140,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         """
         [datetime.datetime] 策略投资组合的开始日期
         """
-        return Environment.get_instance().config.base.start_date
+        return self._env.config.base.start_date
 
     @property
     def units(self):
@@ -192,7 +194,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         if self.unit_net_value <= 0:
             return -1
 
-        env = Environment.get_instance()
+        env = self._env
         date_count = float(env.data_proxy.count_trading_dates(env.config.base.start_date, env.trading_dt.date()))
         trading_days_a_year = env.trading_days_a_year
         return self.unit_net_value ** (trading_days_a_year / date_count) - 1
@@ -286,7 +288,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     def finance_repay(self, amount, account_type):
         """ 融资还款 """
-        if Environment.get_instance().config.base.run_type == RUN_TYPE.LIVE_TRADING:
+        if self._env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
             raise ValueError("finance and report api not support LIVE_TRADING")
 
         if account_type not in self._accounts:

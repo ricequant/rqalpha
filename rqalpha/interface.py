@@ -17,9 +17,7 @@
 
 import abc
 from datetime import datetime, date
-from typing import Any, Union, Optional, Iterable, Dict, List, Sequence, TYPE_CHECKING
-if TYPE_CHECKING:
-    from rqalpha.portfolio.account import Account
+from typing import Any, Union, Optional, Iterable, Dict, List, Sequence, TYPE_CHECKING, NamedTuple
 
 import numpy
 from six import with_metaclass
@@ -28,9 +26,12 @@ import pandas
 from rqalpha.utils.typing import DateLike
 from rqalpha.model.tick import TickObject
 from rqalpha.model.order import Order
-from rqalpha.model.trade import Trade
 from rqalpha.model.instrument import Instrument
-from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE, SIDE
+from rqalpha.const import POSITION_DIRECTION, TRADING_CALENDAR_TYPE, INSTRUMENT_TYPE, SIDE, \
+    MARKET, POSITION_EFFECT
+if TYPE_CHECKING:
+    from rqalpha.portfolio.account import Account
+
 
 
 class AbstractPosition(with_metaclass(abc.ABCMeta)):
@@ -240,42 +241,46 @@ class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
     因此抽离出 `AbstractPriceBoard`, 您可以自行进行扩展并替换默认 PriceBoard
     """
     @abc.abstractmethod
-    def get_last_price(self, order_book_id):
-        # type: (str) -> float
+    def get_last_price(self, order_book_id: str) -> float:
         """
         获取合约的最新价
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_limit_up(self, order_book_id):
-        # type: (str) -> float
+    def get_limit_up(self, order_book_id: str) -> float:
         """
         获取合约的涨停价
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_limit_down(self, order_book_id):
-        # type: (str) -> float
+    def get_limit_down(self, order_book_id: str) -> float:
         """
         获取合约的跌停价
         """
         raise NotImplementedError
 
-    def get_a1(self, order_book_id):
-        # type: (str) -> Union[float, numpy.nan]
+    def get_a1(self, order_book_id: str) -> float:
         """
         获取合约的卖一价
         """
         raise NotImplementedError
 
-    def get_b1(self, order_book_id):
-        # type: (str) -> Union[float, numpy.nan]
+    def get_b1(self, order_book_id: str) -> float:
         """
         获取合约的买一价
         """
         raise NotImplementedError
+
+
+class ExchangeRate(NamedTuple):
+    bid_reference: float  # 参考汇率买入价
+    ask_reference: float  # 参考汇率卖出价
+    bid_settlement_sh: float
+    ask_settlement_sh: float
+    bid_settlement_sz: float
+    ask_settlement_sz: float
 
 
 class AbstractDataSource(object):
@@ -285,8 +290,7 @@ class AbstractDataSource(object):
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换默认的数据源。可参考 :class:`BaseDataSource`。
     """
 
-    def get_instruments(self, id_or_syms=None, types=None):
-        # type: (Optional[Iterable[str]], Optional[Iterable[INSTRUMENT_TYPE]]) -> Iterable[Instrument]
+    def get_instruments(self, id_or_syms: Optional[Iterable[str]] = None, types: Optional[Iterable[INSTRUMENT_TYPE]] = None) -> Iterable[Instrument]:
         """
         获取 instrument，
         可指定 order_book_id 或 symbol 或 instrument type，id_or_syms 优先级高于 types，
@@ -313,17 +317,69 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def get_dividend(self, instrument):
-        # type: (Instrument) -> numpy.ndarray
+    def get_dividend(self, instrument: Instrument) -> Optional[numpy.ndarray]:
         """
         获取股票/基金分红信息
+
+        :param instrument: 合约对象
+        :type instrument: :class:`~Instrument`
+
+        :return: `numpy.ndarray` | `None`
+            返回分红信息的结构化数组，包含以下字段:
+            
+            =========================   ===================================================
+            字段名                       类型和描述  
+            =========================   ===================================================
+            book_closure_date           '<i8' - 股权登记日，格式为 YYYYMMDD 的整数
+            announcement_date           '<i8' - 公告日期，格式为 YYYYMMDD 的整数  
+            dividend_cash_before_tax    '<f8' - 税前现金分红，单位为元
+            ex_dividend_date            '<i8' - 除权除息日，格式为 YYYYMMDD 的整数
+            payable_date                '<i8' - 分红派息日，格式为 YYYYMMDD 的整数
+            round_lot                   '<f8' - 分红最小单位，例如：10 代表每 10 股派发
+            =========================   ===================================================
+            
+            数据示例::
+            
+                array([(19910430, 19910430, 3.   , 19910502, 19910502, 10.),
+                       (19920320, 19920314, 2.   , 19920323, 19920323, 10.),
+                       (19930521, 19930509, 3.   , 19930524, 19930524, 10.)],
+                      dtype=[('book_closure_date', '<i8'), ('announcement_date', '<i8'), 
+                             ('dividend_cash_before_tax', '<f8'), ('ex_dividend_date', '<i8'), 
+                             ('payable_date', '<i8'), ('round_lot', '<f8')])
+            
+            如果该合约没有分红记录，则返回 None
         """
         raise NotImplementedError
 
-    def get_split(self, instrument):
-        # type: (Instrument) -> numpy.ndarray
+    def get_split(self, instrument) -> Optional[numpy.ndarray]:
         """
-        获取拆股信息
+        获取股票拆股信息
+
+        :param instrument: 合约对象
+        :type instrument: :class:`~Instrument`
+
+        :return: `numpy.ndarray` | `None`
+            返回拆股信息的结构化数组，包含以下字段:
+            
+            =========================   ===================================================
+            字段名                       类型和描述  
+            =========================   ===================================================
+            ex_date                     '<i8' - 除权日，格式为 YYYYMMDDHHMMSS 的整数
+            split_factor                '<f8' - 拆股比例，表示每股拆分后的股数
+            =========================   ===================================================
+            
+            数据示例::
+            
+                array([(19910502000000, 1.4 ), (19920323000000, 1.5 ),
+                       (19930524000000, 1.85), (19940711000000, 1.5 ),
+                       (19950925000000, 1.2 ), (19960527000000, 2.  )],
+                      dtype=[('ex_date', '<i8'), ('split_factor', '<f8')])
+            
+            其中 split_factor 表示拆股倍数：
+            - 1.5 表示每 1 股拆为 1.5 股（即 2 拆 3）
+            - 2.0 表示每 1 股拆为 2 股（即 1 拆 2） 
+            
+            如果该合约没有拆股记录，则返回 None
         """
         raise NotImplementedError
 
@@ -377,15 +433,25 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def history_bars(self, instrument, bar_count, frequency, fields, dt, skip_suspended=True,
-                     include_now=False, adjust_type='pre', adjust_orig=None):
+    def history_bars(
+        self, 
+        instrument: Instrument, 
+        bar_count: Optional[int], 
+        frequency: str, 
+        fields: Union[str, List[str], None], 
+        dt: datetime, 
+        skip_suspended: bool = True,
+        include_now: bool = False, 
+        adjust_type: str = 'pre', 
+        adjust_orig: Optional[datetime] = None
+    ) -> Optional[numpy.ndarray]:
         """
         获取历史数据
 
         :param instrument: 合约对象
         :type instrument: :class:`~Instrument`
 
-        :param int bar_count: 获取的历史数据数量
+        :param int bar_count: 获取的历史数据数量，None 表示获取尽可能多的历史数据
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
         :param str fields: 返回数据字段
 
@@ -510,11 +576,12 @@ class AbstractDataSource(object):
         # type: (str, Sequence[DateLike]) -> Sequence[bool]
         raise NotImplementedError
 
-    def get_algo_bar(self, id_or_ins, start_min, end_min, dt):
-        # type: (Union[str, Instrument], int, int, datetime) -> Optional[numpy.void]
+    def get_algo_bar(self, id_or_ins: Union[str, Instrument], start_min: int, end_min: int, dt: datetime) -> Optional[numpy.ndarray]:
         # 格式: (date, VWAP, TWAP, volume) -> 案例 (20200102, 16.79877183, 16.83271429, 144356044)
         raise NotImplementedError
 
+    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+        raise NotImplementedError
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):
     """
@@ -674,33 +741,37 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
+class TransactionCostArgs(NamedTuple):
+    instrument: Instrument
+    price: float
+    quantity: int
+    side: SIDE
+    position_effect: POSITION_EFFECT
+    order_id: Optional[int] = None
+    close_today_quantity: int = 0
+
+
+class TransactionCost(NamedTuple):
+    commission: float
+    tax: float
+    other_fees: float
+
+    @property
+    def total(self) -> float:
+        return self.commission + self.tax + self.other_fees
+
+    @classmethod
+    def zero(cls) -> 'TransactionCost':
+        return cls(commission=0, tax=0, other_fees=0)
+
+
 class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
     """
     订单税费计算接口，通过实现次接口可以定义不同市场、不同合约的个性化税费计算逻辑。
     """
     @abc.abstractmethod
-    def get_trade_tax(self, trade: Trade) -> float:
+    def calc(self, args: TransactionCostArgs) -> TransactionCost:
         """
         计算指定交易应付的印花税
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_trade_commission(self, trade: Trade) -> float:
-        """
-        计算指定交易应付的佣金
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_order_transaction_cost(self, order: Order) -> float:
-        """
-        计算指定订单应付的交易成本（税 + 费）
-        """
-        raise NotImplementedError
-    
-    def get_transaction_cost_with_value(self, value: float, side: SIDE) -> float:
-        """
-        计算指定价格交易应付的交易成本（税 + 费）
         """
         raise NotImplementedError

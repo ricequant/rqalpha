@@ -16,13 +16,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Tuple
+from typing import Union, List, Sequence, Optional, Tuple, Iterable, Dict
 
-import six
 import numpy as np
 import pandas as pd
 
-from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, EXECUTION_PHASE
+from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, EXECUTION_PHASE, MARKET
 from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
@@ -32,21 +31,17 @@ from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
 from rqalpha.utils.typing import DateLike, StrOrIter
-from rqalpha.interface import AbstractDataSource, AbstractPriceBoard
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, ExchangeRate
 from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.utils.typing import DateLike
 
 
 class DataProxy(TradingDatesMixin):
-    def __init__(self, data_source, price_board):
-        # type: (AbstractDataSource, AbstractPriceBoard) -> None
+    def __init__(self, data_source: AbstractDataSource, price_board: AbstractPriceBoard):
         self._data_source = data_source
         self._price_board = price_board
-        try:
-            trading_calendars = data_source.get_trading_calendars()
-        except NotImplementedError:
-            # forward compatible
-            trading_calendars = {TRADING_CALENDAR_TYPE.EXCHANGE: data_source.get_trading_calendar()}
-        TradingDatesMixin.__init__(self, trading_calendars)
+        TradingDatesMixin.__init__(self, data_source)
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)
@@ -57,7 +52,7 @@ class DataProxy(TradingDatesMixin):
         return [] if minutes is None else minutes
 
     def get_yield_curve(self, start_date, end_date, tenor=None):
-        if isinstance(tenor, six.string_types):
+        if isinstance(tenor, str):
             tenor = [tenor]
         return self._data_source.get_yield_curve(start_date, end_date, tenor)
 
@@ -76,58 +71,64 @@ class DataProxy(TradingDatesMixin):
         else:
             return np.nan
 
-    def get_dividend(self, order_book_id):
-        instrument = self.instruments(order_book_id)
+    def get_dividend(self, order_book_id: str) -> Optional[np.ndarray]:
+        """
+        获取股票/基金分红信息
+
+        :param str order_book_id: 合约代码
+        
+        :return: `numpy.ndarray` | `None`
+            返回分红信息的结构化数组，包含以下字段:
+            
+            =========================   ===================================================
+            字段名                       描述  
+            =========================   ===================================================
+            book_closure_date           股权登记日，格式为 YYYYMMDD 的整数
+            announcement_date           公告日期，格式为 YYYYMMDD 的整数  
+            dividend_cash_before_tax    税前现金分红，单位为元
+            ex_dividend_date            除权除息日，格式为 YYYYMMDD 的整数
+            payable_date                分红派息日，格式为 YYYYMMDD 的整数
+            round_lot                   分红最小单位，例如：10 代表每 10 股派发
+            =========================   ===================================================
+            
+            如果该合约没有分红记录，则返回 None
+        """
+        instrument = self.instrument_not_none(order_book_id)
         return self._data_source.get_dividend(instrument)
 
-    def get_split(self, order_book_id):
-        instrument = self.instruments(order_book_id)
+    def get_split(self, order_book_id: str) -> Optional[np.ndarray]:
+        """
+        获取股票拆股信息
+
+        :param str order_book_id: 合约代码
+        
+        :return: `numpy.ndarray` | `None`
+            返回拆股信息的结构化数组，包含以下字段:
+            
+            =========================   ===================================================
+            字段名                       描述  
+            =========================   ===================================================
+            ex_date                     除权日，格式为 YYYYMMDDHHMMSS 的整数（时分秒通常为000000）
+            split_factor                拆股比例，例如：1.5 表示每股拆为 1.5 股
+            =========================   ===================================================
+            
+            如果该合约没有拆股记录，则返回 None
+        """
+        instrument = self.instrument_not_none(order_book_id)
         return self._data_source.get_split(instrument)
 
-    def get_dividend_by_book_date(self, order_book_id, date):
-        table = self._data_source.get_dividend(self.instruments(order_book_id))
-        if table is None or len(table) == 0:
-            return
-
-        try:
-            dates = table['book_closure_date']
-        except ValueError:
-            dates = table['ex_dividend_date']
-            date = self.get_next_trading_date(date)
-
-        dt = date.year * 10000 + date.month * 100 + date.day
-
-        left_pos = dates.searchsorted(dt)
-        right_pos = dates.searchsorted(dt, side="right")
-
-        if left_pos >= right_pos:
-            return None
-
-        return table[left_pos: right_pos]
-
-    def get_split_by_ex_date(self, order_book_id, date):
-        df = self.get_split(order_book_id)
-        if df is None or len(df) == 0:
-            return
-
-        dt = convert_date_to_int(date)
-        pos = df['ex_date'].searchsorted(dt)
-        if pos == len(df) or df['ex_date'][pos] != dt:
-            return None
-
-        return df['split_factor'][pos]
-
     @lru_cache(10240)
-    def _get_prev_close(self, order_book_id, dt):
-        instrument = self.instruments(order_book_id)
+    def _get_prev_close(self, order_book_id, dt, adjust_type: str = "pre"):
+        instrument = self.instrument_not_none(order_book_id)
         prev_trading_date = self.get_previous_trading_date(dt)
         bar = self._data_source.history_bars(instrument, 1, '1d', 'close', prev_trading_date,
-                                             skip_suspended=False, include_now=False, adjust_orig=dt)
+                                             skip_suspended=False, include_now=False, adjust_type=adjust_type, adjust_orig=dt)
         if bar is None or len(bar) < 1:
             return np.nan
         return bar[0]
 
-    def get_prev_close(self, order_book_id, dt):
+    def get_prev_close(self, order_book_id, dt, adjust_type: str = "pre"):
+        # 获取（基于当日前复权过的）昨收价
         return self._get_prev_close(order_book_id, dt.replace(hour=0, minute=0, second=0))
 
     @lru_cache(10240)
@@ -202,10 +203,19 @@ class DataProxy(TradingDatesMixin):
         return self.history_bars(order_book_id, bar_count, frequency, field, dt, skip_suspended=False,
                                  adjust_type='pre', adjust_orig=dt)
 
-    def history_bars(self, order_book_id, bar_count, frequency, field, dt,
-                     skip_suspended=True, include_now=False,
-                     adjust_type='pre', adjust_orig=None):
-        instrument = self.instruments(order_book_id)
+    def history_bars(
+        self,
+        order_book_id: str,
+        bar_count: Optional[int],
+        frequency: str, 
+        field: Union[str, List[str], None], 
+        dt: datetime,
+        skip_suspended: bool = True, 
+        include_now: bool = False, 
+        adjust_type: str = 'pre', 
+        adjust_orig: Optional[datetime] = None
+    ):
+        instrument = self.instrument_not_none(order_book_id)
         if adjust_orig is None:
             adjust_orig = dt
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
@@ -213,7 +223,7 @@ class DataProxy(TradingDatesMixin):
                                               adjust_type=adjust_type, adjust_orig=adjust_orig)
 
     def history_ticks(self, order_book_id, count, dt):
-        instrument = self.instruments(order_book_id)
+        instrument = self.instrument_not_none(order_book_id)
         return self._data_source.history_ticks(instrument, count, dt)
 
     def current_snapshot(self, order_book_id, frequency, dt):
@@ -288,6 +298,16 @@ class DataProxy(TradingDatesMixin):
     def instrument(self, sym_or_id):
         return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])), None)
 
+    @lru_cache(2048)
+    def instrument_not_none(self, sym_or_id) -> Instrument:
+        try:
+            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])))
+        except StopIteration:
+            raise LookupError(_("Instrument not found: {}").format(sym_or_id))
+
+    def multi_instruments(self, order_book_ids: Iterable[str]) -> Dict[str, Instrument]:
+        return {i.order_book_id: i for i in self._data_source.get_instruments(id_or_syms=order_book_ids)}
+
     def instruments(self, sym_or_ids):
         # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
         if isinstance(sym_or_ids, str):
@@ -317,12 +337,13 @@ class DataProxy(TradingDatesMixin):
         if not isinstance(order_style, ALGO_ORDER_STYLES):
             raise RuntimeError("get_algo_bar only support VWAPOrder and TWAPOrder")
         if not isinstance(id_or_ins, Instrument):
-            id_or_ins = self.instrument(id_or_ins)
-        if id_or_ins is None:
-            return np.nan, 0
+            id_or_ins = self.instrument_not_none(id_or_ins)
         # 存在一些有日线没分钟线的情况,如果不是缺了,通常都是因为volume为0,用日线先判断确认下
         day_bar = self.get_bar(order_book_id=id_or_ins.order_book_id, dt=dt, frequency="1d")
         if day_bar.volume == 0:
             return np.nan, 0
         bar = self._data_source.get_algo_bar(id_or_ins, order_style.start_min, order_style.end_min, dt)
         return (bar[order_style.TYPE], bar["volume"]) if bar else (np.nan, 0)
+
+    def get_exchange_rate(self, date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+        return self._data_source.get_exchange_rate(date, local, settlement)

@@ -29,6 +29,7 @@ class RQAlphaTestCase(TestCase):
 
 
 __all__ = [
+    "integration_test",
     "MagicMock",
     "RQAlphaFixture",
     "RQAlphaTestCase",

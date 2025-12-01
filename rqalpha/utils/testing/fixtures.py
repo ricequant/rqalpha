@@ -2,14 +2,9 @@ import os
 import pickle
 from contextlib import contextmanager
 from datetime import date
+from unittest.mock import MagicMock
 
-import six
-
-if six.PY3:
-    from unittest.mock import MagicMock
-else:
-    from mock import MagicMock
-
+from rqalpha.utils.config import RqAttrDict
 
 class RQAlphaFixture(object):
     def init_fixture(self):
@@ -19,12 +14,12 @@ class RQAlphaFixture(object):
 class EnvironmentFixture(RQAlphaFixture):
     def __init__(self, *args, **kwargs):
         super(EnvironmentFixture, self).__init__(*args, **kwargs)
-        self.env_config = {
+        self.env_config = RqAttrDict({
             "base":{
                 "start_date": date(2016, 1, 1),
                 "end_date": date(2023, 12, 28)
             }
-        }
+        })
         self.env = None
 
     def init_fixture(self):
@@ -32,7 +27,7 @@ class EnvironmentFixture(RQAlphaFixture):
         from rqalpha.environment import Environment
 
         super(EnvironmentFixture, self).init_fixture()
-        self.env = Environment(RqAttrDict(self.env_config), False)
+        self.env = Environment(self.env_config, False)
 
     @contextmanager
     def mock_env_method(self, name, mock_method):
@@ -63,10 +58,7 @@ class TempDirFixture(RQAlphaFixture):
         self.temp_dir = None
 
     def init_fixture(self):
-        if six.PY3:
-            from tempfile import TemporaryDirectory
-        else:
-            from backports.tempfile import TemporaryDirectory
+        from tempfile import TemporaryDirectory
 
         super(TempDirFixture, self).init_fixture()
         self.temp_dir = TemporaryDirectory()
@@ -75,14 +67,15 @@ class TempDirFixture(RQAlphaFixture):
 class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
     def __init__(self, *args, **kwargs):
         super(BaseDataSourceFixture, self).__init__(*args, **kwargs)
-
-        self.env_config = {
+        self.default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
+        self.env_config = RqAttrDict({
             "base": {
                 "accounts": {"STOCK": 100},
                 "start_date": date(2016, 1, 1),
+                "data_bundle_path": self.default_bundle_path,
                 "end_date": date(2023, 12, 28),
             }
-        }
+        })
 
         self.base_data_source = None
 
@@ -90,8 +83,7 @@ class BaseDataSourceFixture(TempDirFixture, EnvironmentFixture):
         from rqalpha.data.base_data_source import BaseDataSource
 
         super(BaseDataSourceFixture, self).init_fixture()
-        default_bundle_path = os.path.abspath(os.path.expanduser('~/.rqalpha/bundle'))
-        self.base_data_source = BaseDataSource(default_bundle_path, {})
+        self.base_data_source = BaseDataSource(self.env_config.base)  # type: ignore
 
 
 class BarDictPriceBoardFixture(EnvironmentFixture):

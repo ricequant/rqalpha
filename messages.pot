@@ -1,29 +1,29 @@
 # Translations template for PROJECT.
-# Copyright (C) 2024 ORGANIZATION
+# Copyright (C) 2025 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-11-25 10:04+0800\n"
+"POT-Creation-Date: 2025-09-18 18:22+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.1\n"
+"Generated-By: Babel 2.15.0\n"
 
-#: rqalpha/environment.py:76
+#: rqalpha/environment.py:86
 msgid ""
 "Environment has not been created. Please Use `Environment.get_instance()`"
 " after RQAlpha init"
 msgstr ""
 
-#: rqalpha/environment.py:182
+#: rqalpha/environment.py:194
 msgid "No such transaction cost decider, order_book_id = {}"
 msgstr ""
 
@@ -43,38 +43,44 @@ msgstr ""
 msgid "rqdatac init failed, some apis will not function properly: {}"
 msgstr ""
 
-#: rqalpha/main.py:222
+#: rqalpha/main.py:216
 msgid "system restored"
 msgstr ""
 
-#: rqalpha/main.py:252
+#: rqalpha/main.py:248
 msgid "strategy run successfully, normal exit"
 msgstr ""
 
-#: rqalpha/main.py:257
+#: rqalpha/main.py:253
 msgid "strategy execute exception"
 msgstr ""
 
-#: rqalpha/apis/api_base.py:69 rqalpha/apis/api_base.py:283
-#: rqalpha/apis/api_base.py:319
+#: rqalpha/apis/api_base.py:69
+msgid ""
+"invalid argument, expected order_book_ids or Instrument objects, got {} "
+"(type: {})"
+msgstr ""
+
+#: rqalpha/apis/api_base.py:74 rqalpha/apis/api_base.py:288
+#: rqalpha/apis/api_base.py:324
 msgid "unsupported order_book_id type"
 msgstr ""
 
-#: rqalpha/apis/api_base.py:164
+#: rqalpha/apis/api_base.py:169
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:60
 msgid "Main Future contracts[88] are not supported in paper trading."
 msgstr ""
 
-#: rqalpha/apis/api_base.py:168
+#: rqalpha/apis/api_base.py:173
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:62
 msgid "Index Future contracts[99] are not supported in paper trading."
 msgstr ""
 
-#: rqalpha/apis/api_base.py:173
+#: rqalpha/apis/api_base.py:178
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:66
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:105
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:143
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:346
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:107
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:162
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:366
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr ""
 
@@ -106,15 +112,15 @@ msgstr ""
 msgid "in get_price, start_date {} > end_date {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:873
+#: rqalpha/apis/api_rqdatac.py:877
 msgid "'{0}' future does not exist"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:1159
+#: rqalpha/apis/api_rqdatac.py:1163
 msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:1193 rqalpha/apis/api_rqdatac.py:1258
+#: rqalpha/apis/api_rqdatac.py:1197 rqalpha/apis/api_rqdatac.py:1262
 #: rqalpha/utils/arg_checker.py:320
 msgid ""
 "function {}: invalid {} argument, quarter should be in form of '2012q3', "
@@ -247,53 +253,57 @@ msgstr ""
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr ""
 
-#: rqalpha/data/bundle.py:550
+#: rqalpha/data/bundle.py:597
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr ""
 
-#: rqalpha/data/base_data_source/storages.py:81
+#: rqalpha/data/data_proxy.py:305
+msgid "Instrument not found: {}"
+msgstr ""
+
+#: rqalpha/data/base_data_source/storages.py:80
 msgid ""
 "The bundle data you are using is too old, please update it to lastest "
 "before using"
 msgstr ""
 
-#: rqalpha/data/base_data_source/storages.py:97
-#: rqalpha/data/base_data_source/storages.py:124
+#: rqalpha/data/base_data_source/storages.py:96
+#: rqalpha/data/base_data_source/storages.py:122
 msgid "unsupported future instrument {}"
 msgstr ""
 
-#: rqalpha/data/base_data_source/storages.py:195
-#: rqalpha/data/base_data_source/storages.py:205
+#: rqalpha/data/base_data_source/storages.py:173
+#: rqalpha/data/base_data_source/storages.py:183
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
 msgstr ""
 
-#: rqalpha/mod/__init__.py:53
+#: rqalpha/mod/__init__.py:55
 msgid "loading mod {}"
 msgstr ""
 
-#: rqalpha/mod/__init__.py:71
+#: rqalpha/mod/__init__.py:73
 msgid ""
 "mod start_up [START] {}\n"
 "{}"
 msgstr ""
 
-#: rqalpha/mod/__init__.py:73
+#: rqalpha/mod/__init__.py:75
 msgid "mod start_up [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/__init__.py:79
+#: rqalpha/mod/__init__.py:82
 msgid "mod tear_down [START] {}"
 msgstr ""
 
-#: rqalpha/mod/__init__.py:81
+#: rqalpha/mod/__init__.py:84
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:318
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:355
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
 
@@ -312,13 +322,13 @@ msgid ""
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:50
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:115
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:160
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:117
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:180
 msgid "Order Creation Failed: 0 order quantity, order_book_id={order_book_id}"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:56
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:102
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:104
 msgid "Limit order price should not be nan."
 msgstr ""
 
@@ -340,121 +350,143 @@ msgid ""
 "[{new_orders_repr}]"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:68
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:70
 msgid ""
 "order_book_id: {order_book_id} needs stock account, please set and try "
 "again!"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:122
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:124
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:335
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:156
+msgid "Order Creation Failed: [{order_book_id}] has no valid algo price"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:355
 msgid ""
 "function order_target_portfolio: invalid keys of target_portfolio, "
 "expected order_book_ids or Instrument objects, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:340
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:360
 msgid ""
 "function order_target_portfolio: invalid instrument type, excepted "
 "CS/ETF/LOF/INDX, got {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:354
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:374
 msgid ""
 "function order_target_portfolio: invalid values of target_portfolio, "
 "excepted float between 0 and 1, got {} (key: {})"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:363
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:383
 msgid "total percent should be lower than 1, current: {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:393
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:413
 msgid ""
 "Adjust position of {id_or_ins} Failed: Invalid close/open price "
 "{close_price}/{open_price}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:719
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:739
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:66
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:51
+msgid "prices of {} is not provided"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:61
+msgid "instrument type {} is not supported"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:105
+msgid "frequency {} is not supported"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:107
+msgid "not supported to be called in {} phase"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:232
+msgid "price of {} is needed, which is not provided in the algo_or_prices"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:67
 msgid "[sys_analyser] save report"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:71
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:72
 msgid "[sys_analyser] output result pickle file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:76
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:77
 msgid "[sys_analyser] plot result"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:81
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:82
 msgid "[sys_analyser] save plot to file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:86
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:87
 msgid "[sys_analyser] order_book_id of benchmark"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:91
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:92
 msgid "[sys_analyser] show open close points on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:96
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:97
 msgid "[sys_analyser] show weekly indicators and return curve on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:100
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:101
 msgid "[sys_analyser] Plot from strategy output file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:103
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:104
 msgid "save plot result to file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:104
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:105
 msgid "show open close points on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:105
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:106
 msgid "show weekly indicators and return curve on plot"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:115
+#: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:116
 msgid "[sys_analyser] Generate report from strategy output file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:111
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:137
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
 "instead"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:149
-msgid "benchmark {} not exists, please entry correct order_book_id"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:161
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:164
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:175
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:197
 msgid "benchmark {} missing data between backtest start date {} and end date {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:173
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:185
 msgid ""
 "benchmark {} available data start date {} >= backtest start date {} or "
 "end date {} <= backtest end date {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:241
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:290
 msgid "invalid init benchmark {}, should be in format 'order_book_id:weight'"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:246
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:295
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr ""
 
@@ -696,82 +728,74 @@ msgid ""
 "trade: [{}...]"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:119
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:348
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:134
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:351
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:69
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
 "listed date [{listed_date}]"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:126
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:141
 msgid "Order Cancelled: {order_book_id} miss market data or bar no volume."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:151
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:95
-msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:162
+msgid ""
+"Order Cancelled: current bar [{order_book_id}] reach the "
+"{limit_up_or_down} price."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:157
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:104
-msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:166
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:171
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:86
 msgid "Order Cancelled: {order_book_id} bar no volume"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:179
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:436
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:591
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:184
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:431
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:584
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} due "
 "to volume limit"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:218
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:474
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:221
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:467
 msgid ""
 "Order Cancelled: not enough money to buy {order_book_id}, needs "
 "{cost_money:.2f}, cash {cash:.2f}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:230
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:233
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
 "larger than {volume_percent_limit} percent of current bar volume, fill "
 "{filled_volume} actually"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:356
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:359
 msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:387
-msgid "Order Cancelled: current tick [{order_book_id}] reach the limit_up price."
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:393
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:388
 msgid ""
-"Order Cancelled: current tick [{order_book_id}] reach the limit_down "
-"price."
+"Order Cancelled: current tick [{order_book_id}] reach the "
+"{limit_up_or_down} price."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:400
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:406
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:395
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:401
 msgid "Order Cancelled: [{order_book_id}] has no liquidity."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:486
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:479
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
 "larger than {volume_percent_limit} percent of current tick volume, fill "
 "{filled_volume} actually"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:635
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:626
 msgid ""
 "Order Cancelled: market order {order_book_id} fill {filled_volume} "
 "actually"
@@ -802,6 +826,14 @@ msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:75
 msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:95
+msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:104
+msgid "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:108
@@ -844,7 +876,7 @@ msgstr ""
 msgid "invalid slippage rate value {} which cause price <= 0"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_transaction_cost/mod.py:42
+#: rqalpha/mod/rqalpha_mod_sys_transaction_cost/mod.py:34
 msgid ""
 "invalid commission multiplier or tax multiplier value: value range is [0,"
 " +∞)"
@@ -854,34 +886,40 @@ msgstr ""
 msgid "id_or_symbols {} does not exist"
 msgstr ""
 
-#: rqalpha/model/trade.py:60
+#: rqalpha/model/trade.py:68
 msgid ""
-"price, amount, commission, tax and frozen_price of trade {trade_id} is "
-"not supposed to be nan, current_value is {price}, {amount}, {commission},"
-" {tax}, {frozen_price}"
+"price, amount, and frozen_price of trade {trade_id} is not supposed to be"
+" nan, current_value is {price}, {amount}, {commission}, {tax}, "
+"{frozen_price}"
 msgstr ""
 
-#: rqalpha/portfolio/__init__.py:71
-msgid "invalid init position {order_book_id}: no valid price at {date}"
-msgstr ""
-
-#: rqalpha/portfolio/__init__.py:278 rqalpha/portfolio/__init__.py:291
+#: rqalpha/portfolio/__init__.py:281 rqalpha/portfolio/__init__.py:294
 msgid "invalid account type {}, choose in {}"
 msgstr ""
 
-#: rqalpha/portfolio/__init__.py:282
+#: rqalpha/portfolio/__init__.py:285
 msgid "Cash add {}. units {} become to {}"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:350
+#: rqalpha/portfolio/account.py:95
+msgid "invalid init position {order_book_id}: no valid price at {date}"
+msgstr ""
+
+#: rqalpha/portfolio/account.py:206
+msgid ""
+"account.positions is deprecated, please use get_position/get_positions "
+"API instead"
+msgstr ""
+
+#: rqalpha/portfolio/account.py:370
 msgid "Futures account's cash turns negative after settlement"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:356
+#: rqalpha/portfolio/account.py:376
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:506 rqalpha/portfolio/account.py:525
+#: rqalpha/portfolio/account.py:529 rqalpha/portfolio/account.py:548
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr ""
 
@@ -1017,13 +1055,13 @@ msgstr ""
 msgid "unknown persist mode: {}"
 msgstr ""
 
-#: rqalpha/utils/functools.py:50
+#: rqalpha/utils/functools.py:67
 msgid ""
 "function {}: invalid {} argument, expected an order_book_id or instrument"
 " with types {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/functools.py:55
+#: rqalpha/utils/functools.py:72
 msgid "function {} is not supported, please check your account or mod config"
 msgstr ""
 

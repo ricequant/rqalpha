@@ -212,8 +212,6 @@ class DefaultBarMatcher(AbstractMatcher):
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
-        trade._commission = self._env.get_trade_commission(trade)
-        trade._tax = self._env.get_trade_tax(trade)
 
         if order.position_effect == POSITION_EFFECT.OPEN and self._slippage_decider.decider.rate != 0:
             # 标的价格经过滑点处理后，账户资金可能不够买入，需要进行验证
@@ -461,8 +459,6 @@ class DefaultTickMatcher(AbstractMatcher):
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
-        trade._commission = self._env.get_trade_commission(trade)
-        trade._tax = self._env.get_trade_tax(trade)
 
         if order.position_effect == POSITION_EFFECT.OPEN and self._slippage_decider.decider.rate != 0:
             cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
@@ -615,8 +611,6 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
-        trade._commission = self._env.get_trade_commission(trade)
-        trade._tax = self._env.get_trade_tax(trade)
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
         self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=order))

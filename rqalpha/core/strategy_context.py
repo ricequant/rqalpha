@@ -44,13 +44,8 @@ class RunInfo(object):
         try:
             self._matching_type = config.mod.sys_simulation.matching_type
             self._slippage = config.mod.sys_simulation.slippage
-            self._commission_multiplier = config.mod.sys_transaction_cost.commission_multiplier
-            if config.mod.sys_transaction_cost.commission_multiplier:
-                self._stock_commission_multiplier = self._commission_multiplier
-                self._futures_commission_multiplier = self._commission_multiplier
-            else:
-                self._stock_commission_multiplier = config.mod.sys_transaction_cost.stock_commission_multiplier
-                self._futures_commission_multiplier = config.mod.sys_transaction_cost.futures_commission_multiplier
+            self._stock_commission_multiplier = config.mod.sys_transaction_cost.stock_commission_multiplier
+            self._futures_commission_multiplier = config.mod.sys_transaction_cost.futures_commission_multiplier
         except:
             pass
 
@@ -109,14 +104,6 @@ class RunInfo(object):
         撮合方式
         """
         return self._matching_type
-
-    @property
-    def commission_multiplier(self):
-        # type: () -> float
-        """
-        手续费倍率
-        """
-        return self._commission_multiplier
 
     @property
     def stock_commission_multiplier(self):

@@ -146,14 +146,9 @@ def run(config, source_code=None, user_funcs=None):
         mod_handler.set_env(env)
         mod_handler.start_up()
 
-        if not env.data_source:
-            env.set_data_source(BaseDataSource(
-                config.base.data_bundle_path, 
-                getattr(config.base, "future_info", {}),
-                const.DEFAULT_ACCOUNT_TYPE.FUTURE in config.base.accounts and config.base.futures_time_series_trading_parameters,
-                config.base.end_date
-            ))
-        if env.price_board is None:
+        if not hasattr(env, "data_source"):
+            env.set_data_source(BaseDataSource(config.base))
+        if not hasattr(env, "price_board"):
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
             env.price_board = BarDictPriceBoard()
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))
@@ -170,11 +165,10 @@ def run(config, source_code=None, user_funcs=None):
 
         assert env.broker is not None
         assert env.event_source is not None
-        if env.portfolio is None:
+        if not hasattr(env, "portfolio"):
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(
-                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate,
-                config.base.start_date, env.data_proxy, env.event_bus
+                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate, env                
             ))
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))
@@ -236,6 +230,7 @@ def run(config, source_code=None, user_funcs=None):
             persist_helper.persist()
         code = _exception_handler(e)
         mod_handler.tear_down(code, e)
+        raise e
     except Exception as e:
         if init_succeed and persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_CRASH:
             persist_helper.persist()
@@ -245,12 +240,15 @@ def run(config, source_code=None, user_funcs=None):
 
         code = _exception_handler(user_exc)
         mod_handler.tear_down(code, user_exc)
+        raise user_exc
     else:
         if persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT:
             persist_helper.persist()
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
         system_log.debug(_(u"strategy run successfully, normal exit"))
         return result
+    finally:
+        cleanup_resources(env)
 
 
 def _exception_handler(e):
@@ -294,6 +292,28 @@ def output_profile_result(env):
     profile_output = profile_output.rstrip()
     six.print_(profile_output)
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))
+
+
+def cleanup_resources(env):
+    """
+    清理资源，防止内存泄漏
+    在每次策略运行结束后调用，确保对象能被正确回收
+    """
+    # 1. 清理 Environment 单例引用
+    Environment._env = None
+    # 2. 清理 DataProxy 的实例方法缓存
+    if hasattr(env, 'data_proxy'):
+        for method_name in [
+            '_get_prev_close', '_get_prev_settlement', '_get_settlement', 'get_bar', 'instrument', 'instrument_not_none'
+        ]:
+            method = getattr(env.data_proxy, method_name, None)
+            if method and hasattr(method, 'cache_clear'):
+                method.cache_clear()
+    # 3. 清理 BaseDataSource 中的 Instrument 缓存（这是最大的内存占用）
+    if hasattr(env, 'data_source'):
+        for property_name in ['_id_instrument_map', '_sym_instrument_map', '_grouped_instruments']:
+            if hasattr(env.data_source, property_name):
+                getattr(env.data_source, property_name).clear()
 
 
 def set_loggers(config):
