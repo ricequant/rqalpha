@@ -67,8 +67,7 @@ class Instrument(metaclass=PropertyReprMeta):
         self.market = market
 
     @cached_property
-    def order_book_id(self):
-        # type: () -> str
+    def order_book_id(self) -> str:
         """
         [str] 股票：证券代码，证券的独特的标识符。应以’.XSHG’或’.XSHE’结尾，前者代表上证，后者代表深证。
         期货：期货代码，期货的独特的标识符（郑商所期货合约数字部分进行了补齐。例如原有代码’ZC609’补齐之后变为’ZC1609’）。
