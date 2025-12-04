@@ -13,6 +13,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
+import numpy as np
+import pandas as pd
 from typing import Union
 from collections import namedtuple
 
@@ -33,8 +35,11 @@ def convert_date_to_date_int(dt):
 
 def convert_date_to_int(dt):
     # 原先的写法在pandas2.0下会被转化为int32类型导致精度丢失
-    t = dt.year * 10000000000 + dt.month * 100000000 + dt.day * 1000000
-    return t
+    # 在pandas 2.x中，DatetimeIndex的year/month/day返回int32，需要先转换为int64避免溢出
+    year, month, day = dt.year, dt.month, dt.day
+    if isinstance(dt, pd.DatetimeIndex):
+        year, month, day = year.astype(np.int64), month.astype(np.int64), day.astype(np.int64)
+    return year * 10000000000 + month * 100000000 + day * 1000000
 
 
 def convert_dt_to_int(dt):
