@@ -17,20 +17,20 @@ import inspect
 import datetime
 import six
 import pandas as pd
-from typing import Iterable
+from typing import Iterable, Optional
 from functools import wraps
 from collections import OrderedDict
 from contextlib import contextmanager
 
 from dateutil.parser import parse as parse_date
 
-from rqalpha.utils.exception import RQInvalidArgument, RQTypeError, RQApiNotSupportedError
+from rqalpha.utils.exception import RQInvalidArgument, RQTypeError
 from rqalpha.model.instrument import Instrument
 from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, EXC_TYPE
-from rqalpha.utils import unwrapper, INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils import unwrapper
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME
+from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME, InstrumentNotFound
 from rqalpha.utils.logger import user_system_log
 
 
@@ -83,50 +83,35 @@ class ArgumentChecker(object):
             self.raise_invalid_instrument_error(func_name, value)
         return instrument
 
-    def is_valid_instrument(self, valid_instrument_types=None):
-        def check_is_valid_instrument(func_name, value):
-            instrument = None
-            if isinstance(value, six.string_types):
-                instrument = Environment.get_instance().get_instrument(value)
-            elif isinstance(value, Instrument):
-                instrument = value
-
-            if instrument is None:
-                self.raise_invalid_instrument_error(func_name, value)
-            if valid_instrument_types and instrument.type not in valid_instrument_types:
-                raise RQInvalidArgument(_(
-                    u"function {}: invalid {} argument, expected instrument with types {}, got instrument with type {}"
-                ).format(func_name, self._arg_name, valid_instrument_types, instrument.type))
-            return instrument
-
-        self._rules.append(check_is_valid_instrument)
-        return self
-
-    def _is_listed_instrument(self, func_name, value):
-        instrument = self._is_valid_instrument(func_name, value)
-        if not instrument.listed:
-            self.raise_instrument_not_listed_error(func_name, value)
-
     def is_listed_instrument(self):
-        self._rules.append(self._is_listed_instrument)
+        def check(func_name, value):
+            if isinstance(value, Instrument):
+                if not value.listed:
+                    self.raise_instrument_not_listed_error(func_name, value)
+                return value
+            if isinstance(value, six.string_types):
+                env = Environment.get_instance()
+                try:
+                    instrument = env.data_proxy.instrument_not_none(value, dt=env.trading_dt)
+                except InstrumentNotFound as e:
+                    self.raise_invalid_instrument_error(func_name, value)
+                return instrument
+            raise RQInvalidArgument(_(
+                u"function {}: invalid {} argument, expected instrument or order_book_id, got {} (type: {})"
+            ).format(func_name, self._arg_name, value, type(value)))
+
+        self._rules.append(check)
         return self
 
-    def _is_valid_stock(self, func_name, value):
-        instrument = self._is_valid_instrument(func_name, value)
-        if instrument.type not in INST_TYPE_IN_STOCK_ACCOUNT:
-            self.raise_not_valid_stock_error(func_name, value)
-
-    def is_valid_stock(self):
-        self._rules.append(self._is_valid_stock)
-        return self
-
-    def _is_valid_future(self, func_name, value):
-        instrument = self._is_valid_instrument(func_name, value)
-        if instrument.type != INSTRUMENT_TYPE.FUTURE:
-            self.raise_not_valid_future_error(func_name, value)
-
-    def is_valid_future(self):
-        self._rules.append(self._is_valid_future)
+    def is_valid_order_book_id(self, expected_type: Optional[INSTRUMENT_TYPE] = None):
+        def check(func_name, value):
+            env = Environment.get_instance()
+            try:
+                order_book_id = env.data_proxy.assure_order_book_id(value, expected_type)
+            except InstrumentNotFound as e:
+                raise RQInvalidArgument(_(f"func: {func_name}: invalid order_book_id: {value}").format(func_name, value))
+            return order_book_id
+        self._rules.append(check)
         return self
 
     def _is_number(self, func_name, value):

@@ -17,8 +17,7 @@
 
 import re
 import copy
-import datetime
-import inspect
+from datetime import datetime, time, date
 from typing import Dict, Callable, Optional
 from methodtools import lru_cache
 
@@ -34,17 +33,17 @@ from rqalpha.utils.class_helper import cached_property
 
 # TODO：改为 namedtuple，提升性能
 class Instrument(metaclass=PropertyReprMeta):
-    DEFAULT_DE_LISTED_DATE = datetime.datetime(2999, 12, 31)
+    DEFAULT_DE_LISTED_DATE = datetime(2999, 12, 31)
 
     @staticmethod
-    def _fix_date(ds, dflt=None) -> Optional[datetime.datetime]:
-        if isinstance(ds, datetime.datetime):
+    def _fix_date(ds, dflt=None) -> Optional[datetime]:
+        if isinstance(ds, datetime):
             return ds
         if ds == '0000-00-00' or ds is None:
             return dflt
         try:
             year, month, day = ds.split('-')
-            return datetime.datetime(int(year), int(month), int(day))
+            return datetime(int(year), int(month), int(day))
         except:
             return parse(ds)
 
@@ -92,15 +91,14 @@ class Instrument(metaclass=PropertyReprMeta):
         return int(self._dict["round_lot"])
 
     @cached_property
-    def listed_date(self) -> Optional[datetime.datetime]:
+    def listed_date(self) -> datetime:
         """
         [datetime] 股票：该证券上市日期。期货：期货的上市日期，主力连续合约与指数连续合约都为 datetime(1990, 1, 1)。
         """
         return self._dict["listed_date"]
 
     @cached_property
-    def de_listed_date(self):
-        # type: () -> datetime.datetime
+    def de_listed_date(self) -> datetime:
         """
         [datetime] 股票：退市日期。期货：交割日期。
         """
@@ -262,7 +260,7 @@ class Instrument(metaclass=PropertyReprMeta):
 
     @cached_property
     def maturity_date(self):
-        # type: () -> datetime.datetime
+        # type: () -> datetime
         """
         [datetime] 到期日
         """
@@ -316,27 +314,21 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
-    def listing_at(self, dt):
+    def listing_at(self, dt: datetime) -> bool:
         """
         该合约在指定日期是否在交易
-        :param dt: datetime.datetime
-        :return: bool
         """
         return self.listed_at(dt) and not self.de_listed_at(dt)
 
-    def listed_at(self, dt):
+    def listed_at(self, dt: datetime) -> bool:
         """
         该合约在指定日期是否已上市
-        :param dt: datetime.datetime
-        :return: bool
         """
-        return self.listed_date and self.listed_date <= dt
+        return self.listed_date <= dt
 
-    def de_listed_at(self, dt):
+    def de_listed_at(self, dt: datetime) -> bool:
         """
         该合约在指定日期是否已退市
-        :param dt: datetime.datetime
-        :return: bool
         """
         if self.type in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
             return dt.date() > self.de_listed_date.date()
@@ -344,8 +336,8 @@ class Instrument(metaclass=PropertyReprMeta):
             return dt >= self.de_listed_date
 
     STOCK_TRADING_PERIOD = [
-        TimeRange(start=datetime.time(9, 31), end=datetime.time(11, 30)),
-        TimeRange(start=datetime.time(13, 1), end=datetime.time(15, 0)),
+        TimeRange(start=time(9, 31), end=time(11, 30)),
+        TimeRange(start=time(13, 1), end=time(15, 0)),
     ]
 
     @cached_property
@@ -361,16 +353,16 @@ class Instrument(metaclass=PropertyReprMeta):
         trading_hours = trading_hours.replace("-", ":")
         for time_range_str in trading_hours.split(","):
             start_h, start_m, end_h, end_m = (int(i) for i in time_range_str.split(":"))
-            start, end = datetime.time(start_h, start_m), datetime.time(end_h, end_m)
+            start, end = time(start_h, start_m), time(end_h, end_m)
             if start > end:
-                trading_period.append(TimeRange(start, datetime.time(23, 59)))
-                trading_period.append(TimeRange(datetime.time(0, 0), end))
+                trading_period.append(TimeRange(start, time(23, 59)))
+                trading_period.append(TimeRange(time(0, 0), end))
             else:
                 trading_period.append(TimeRange(start, end))
         return trading_period
 
     def during_continuous_auction(self, time):
-        # type: (datetime.time) -> bool
+        # type: (time) -> bool
         """ 是否处于连续竞价时间段内 """
         for time_range in self.trading_hours:
             if time_range.start <= time <= time_range.end:
@@ -389,7 +381,7 @@ class Instrument(metaclass=PropertyReprMeta):
 
     @cached_property
     def trade_at_night(self):
-        return any(r.start <= datetime.time(4, 0) or r.end >= datetime.time(19, 0) for r in (self.trading_hours or []))
+        return any(r.start <= time(4, 0) or r.end >= time(19, 0) for r in (self.trading_hours or []))
 
     @cached_property
     def min_order_quantity(self):
@@ -455,21 +447,21 @@ class Instrument(metaclass=PropertyReprMeta):
             raise NotImplementedError
 
     @lru_cache(8)
-    def get_long_margin_ratio(self, dt: datetime.date) -> float:
+    def get_long_margin_ratio(self, dt: date) -> float:
         """
         获取多头保证金率（期货专用）
         """
         return Environment.get_instance().data_proxy.get_futures_trading_parameters(self.order_book_id, dt).long_margin_ratio
 
     @lru_cache(8)
-    def get_short_margin_ratio(self, dt: datetime.date) -> float:
+    def get_short_margin_ratio(self, dt: date) -> float:
         """
         获取空头保证金率（期货专用）
         """
         return Environment.get_instance().data_proxy.get_futures_trading_parameters(self.order_book_id, dt).short_margin_ratio
 
     def calc_cash_occupation(self, price, quantity, direction, dt):
-        # type: (float, int, POSITION_DIRECTION, datetime.date) -> float
+        # type: (float, int, POSITION_DIRECTION, date) -> float
         if self.market != MARKET.CN:
             exchagne_rate = Environment.get_instance().data_proxy.get_exchange_rate(dt, self.market)
             price = price * exchagne_rate.ask_reference

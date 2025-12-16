@@ -183,8 +183,7 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, instrument, trading_dt):
         raise NotImplementedError
 
-    def get_trading_calendars(self):
-        # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
+    def get_trading_calendars(self) -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]:
         return {t: store.get_trading_calendar() for t, store in self._calendar_stores.items()}
 
     def get_instruments(self, id_or_syms: Optional[Iterable[str]] = None, types: Optional[Iterable[INSTRUMENT_TYPE]] = None) -> Iterable[Instrument]:

@@ -28,7 +28,7 @@ from rqalpha.apis import names
 from rqalpha.environment import Environment
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
-from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.exception import RQInvalidArgument, InstrumentNotFound
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.api import export_as_api
@@ -60,22 +60,35 @@ export_as_api(MATCHING_TYPE, name='MATCHING_TYPE')
 export_as_api(EVENT, name='EVENT')
 
 
-def assure_instrument(id_or_ins) -> Instrument:
+def assure_instrument(id_or_ins, verify_listing: bool) -> Instrument:
+    # verify_listing: 是否验证合约是否上市，注意，港股存在复用代码的情况，因此该参数应尽量设为 True 以避免搜索 instrument 失败
     if isinstance(id_or_ins, Instrument):
         return id_or_ins
     elif isinstance(id_or_ins, six.string_types):
-        ins = Environment.get_instance().data_proxy.instrument(id_or_ins)
-        if not ins:
-            raise RQInvalidArgument(_(
-                "invalid argument, expected order_book_ids or Instrument objects, got {} (type: {})"
-            ).format(id_or_ins, type(id_or_ins)))
+        env = Environment.get_instance()
+        try:
+            ins = env.data_proxy.instrument_not_none(id_or_ins, env.trading_dt if verify_listing else None)
+        except InstrumentNotFound as e:
+            if verify_listing:
+                raise RQInvalidArgument(_(
+                    "instrument {} not found or not listed at {}"
+                ).format(id_or_ins, env.trading_dt.date()))
+            else:
+                raise RQInvalidArgument(_(
+                    "instrument {} not found"
+                ).format(id_or_ins))
         return ins
     else:
         raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
 
 def assure_order_book_id(id_or_ins):
-    return assure_instrument(id_or_ins).order_book_id
+    if isinstance(id_or_ins, Instrument):
+        return id_or_ins.order_book_id
+    try:
+        return Environment.get_instance().data_proxy.assure_order_book_id(id_or_ins)
+    except InstrumentNotFound as e:
+        raise RQInvalidArgument(_("instrument {} not found").format(id_or_ins))
 
 
 def cal_style(price, style, price_or_style=None):
@@ -134,7 +147,7 @@ def get_open_orders():
 
 @export_as_api
 @apply_rules(
-    verify_that("id_or_ins").is_valid_instrument(),
+    verify_that("id_or_ins").is_valid_order_book_id(),
     verify_that("amount").is_number().is_greater_than(0),
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
@@ -755,7 +768,7 @@ def get_next_trading_date(date, n=1):
     EXECUTION_PHASE.AFTER_TRADING,
     EXECUTION_PHASE.SCHEDULED,
 )
-@apply_rules(verify_that("id_or_symbol").is_valid_instrument())
+@apply_rules(verify_that("id_or_symbol").is_valid_order_book_id())
 def current_snapshot(id_or_symbol):
     # type: (Union[str, Instrument]) -> Optional[TickObject]
     """

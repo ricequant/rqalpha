@@ -16,12 +16,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Tuple, Iterable, Dict
+from typing import Union, List, Sequence, Optional, Tuple, Iterable, Dict, Callable
 
 import numpy as np
 import pandas as pd
 
-from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, EXECUTION_PHASE, MARKET
+from rqalpha.const import INSTRUMENT_TYPE, EXECUTION_PHASE, MARKET
 from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
@@ -29,12 +29,13 @@ from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
+from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.utils.typing import DateLike, StrOrIter
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, ExchangeRate
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils.typing import DateLike
+from rqalpha.utils.exception import InstrumentNotFound
 
 
 class DataProxy(TradingDatesMixin):
@@ -285,8 +286,7 @@ class DataProxy(TradingDatesMixin):
         # type: (str) -> float
         return float(self._price_board.get_last_price(order_book_id))
 
-    def all_instruments(self, types, dt=None):
-        # type: (List[INSTRUMENT_TYPE], Optional[datetime]) -> List[Instrument]
+    def all_instruments(self, types: List[INSTRUMENT_TYPE], dt: Optional[datetime] = None) -> List[Instrument]:
         li = []
         for i in self._data_source.get_instruments(types=types):
             if dt is None or i.listing_at(dt):
@@ -295,20 +295,42 @@ class DataProxy(TradingDatesMixin):
         # return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
 
     @lru_cache(2048)
-    def instrument(self, sym_or_id):
-        return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])), None)
+    def instrument_not_none(self, id_or_sym: str, dt: Optional[datetime] = None) -> Instrument:
+        """
+        根据合约代码获取唯一的 Instrument 对象
 
-    @lru_cache(2048)
-    def instrument_not_none(self, sym_or_id) -> Instrument:
-        try:
-            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])))
-        except StopIteration:
-            raise LookupError(_("Instrument not found: {}").format(sym_or_id))
+        :param str id_or_sym: 合约代码或合约简称
+        :param datetime dt: 可选，指定查询的时间点。若提供此参数，则仅返回在该时间点处于上市状态的合约
+            注意，对于港股等可能出现复用代码情况等品种，请一律指定 dt 参数
+        :return: 匹配的 Instrument 对象
+        """
+        candidates = []
+        for instrument in self._data_source.get_instruments(id_or_syms=[id_or_sym]):
+            if dt is None or instrument.listing_at(dt):
+                candidates.append(instrument)
+        if not candidates:
+            raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_sym))
+        if len(candidates) > 1:
+            raise InstrumentNotFound(_("Multiple instruments found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_sym))
+        return candidates[0]
 
     def multi_instruments(self, order_book_ids: Iterable[str]) -> Dict[str, Instrument]:
         return {i.order_book_id: i for i in self._data_source.get_instruments(id_or_syms=order_book_ids)}
 
+    def assure_order_book_id(self, order_book_id: str, expected_type: Optional[INSTRUMENT_TYPE] = None) -> str:
+        for instrument in self._data_source.get_instruments(id_or_syms=[order_book_id]):
+            if expected_type is not None and instrument.type != expected_type:
+                continue
+            return instrument.order_book_id
+        raise InstrumentNotFound(_("No instrument found: {}").format(order_book_id))
+
+    @lru_cache(2048)
+    def instrument(self, sym_or_id):
+        # deprecated
+        return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])), None)
+
     def instruments(self, sym_or_ids):
+        # deprecated
         # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
         if isinstance(sym_or_ids, str):
             return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_ids])), None)

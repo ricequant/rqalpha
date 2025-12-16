@@ -268,7 +268,11 @@ stock_order_to = cast_singledispatch(order_to).register(INST_TYPE_IN_STOCK_ACCOU
     EXECUTION_PHASE.SCHEDULED,
     EXECUTION_PHASE.GLOBAL
 )
-@apply_rules(verify_that('id_or_ins').is_valid_stock(), verify_that('amount').is_number(), *common_rules)
+@apply_rules(
+    verify_that('id_or_ins').is_valid_order_book_id(expected_type=INSTRUMENT_TYPE.CS), 
+    verify_that('amount').is_number(), 
+    *common_rules
+)
 def order_lots(id_or_ins, amount, price_or_style=None, price=None, style=None):
     # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
     """
@@ -462,7 +466,7 @@ def order_target_portfolio(
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('order_book_id').is_valid_instrument(),
+@apply_rules(verify_that('order_book_id').is_valid_order_book_id(),
              verify_that('count').is_greater_than(0))
 def is_suspended(order_book_id, count=1):
     # type: (str, Optional[int]) -> Union[bool, pd.DataFrame]
@@ -486,7 +490,7 @@ def is_suspended(order_book_id, count=1):
                                 EXECUTION_PHASE.ON_TICK,
                                 EXECUTION_PHASE.AFTER_TRADING,
                                 EXECUTION_PHASE.SCHEDULED)
-@apply_rules(verify_that('order_book_id').is_valid_instrument())
+@apply_rules(verify_that('order_book_id').is_valid_order_book_id())
 def is_st_stock(order_book_id, count=1):
     # type: (str, Optional[int]) -> Union[bool, pd.DataFrame]
     """
@@ -697,7 +701,7 @@ def sector(code):
 
 @export_as_api
 @apply_rules(
-    verify_that("order_book_id").is_valid_instrument(),
+    verify_that("order_book_id").is_valid_order_book_id(),
     verify_that("start_date").is_valid_date(ignore_none=False),
 )
 def get_dividend(order_book_id, start_date):
