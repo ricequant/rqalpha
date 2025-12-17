@@ -165,7 +165,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         instrument = self.get_active_instrument(order_book_id, trading_dt)
         if instrument.type != 'Future':
             return np.nan
-        return self._data_source.get_settle_price(instrument, date)
+        return self._data_source.get_settle_price(instrument, trading_dt)
 
     @lru_cache(512)
     def get_bar(self, order_book_id: str, dt: date, frequency: str = '1d') -> BarObject:
