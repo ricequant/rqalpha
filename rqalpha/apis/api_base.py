@@ -388,7 +388,7 @@ def get_yield_curve(date=None, tenor=None):
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(
-    verify_that("order_book_id", pre_check=True).is_active_instrument(),
+    verify_that("order_book_id", pre_check=True).is_listed_instrument(),
     verify_that("bar_count").is_instance_of(int).is_greater_than(0),
     verify_that("frequency", pre_check=True).is_valid_frequency(),
     verify_that("fields").are_valid_fields(

@@ -20,6 +20,8 @@ from typing import Optional, Dict, List, Tuple
 from itertools import chain
 from typing import TYPE_CHECKING
 
+from typing_extensions import deprecated
+
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
 from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT, MARKET
@@ -168,6 +170,7 @@ class Environment(object):
     def get_last_price(self, order_book_id):
         return self.data_proxy.get_last_price(order_book_id)
 
+    @deprecated("Use APIs from data_proxy instead", category=None)
     def get_instrument(self, order_book_id):
         return self.data_proxy.instrument(order_book_id)
 

@@ -156,14 +156,13 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
             return np.nan
         return self._get_prev_settlement(instrument, dt)
 
-    def get_settlement(self, instrument, dt):
-        # type: (Instrument, datetime) -> float
+    def get_settlement(self, instrument: Instrument, dt: datetime) -> float:
         if instrument.type != INSTRUMENT_TYPE.FUTURE:
             raise LookupError("'{}', instrument_type={}".format(instrument.order_book_id, instrument.type))
         return self._get_settlement(instrument, dt)
 
-    def get_settle_price(self, order_book_id, date):
-        instrument = self.instruments(order_book_id)
+    def get_settle_price(self, order_book_id, trading_dt: datetime):
+        instrument = self.get_active_instrument(order_book_id, trading_dt)
         if instrument.type != 'Future':
             return np.nan
         return self._data_source.get_settle_price(instrument, date)

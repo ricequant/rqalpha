@@ -128,9 +128,10 @@ class InstrumentsMixin:
     @deprecated("Use get_instrument_history instead", category=None)
     def instrument(self, sym_or_id):
         ins = self.get_instrument_history(sym_or_id)
-        if not ins:
+        try:
+            return ins[0]
+        except IndexError:
             return None
-        return ins[0]
 
     @deprecated("Use get_listed_instruments or get_instrument_history instead", category=None)
     def instruments(self, sym_or_ids: Union[str, Iterable[str]]) -> Union[None, Instrument, List[Instrument]]:

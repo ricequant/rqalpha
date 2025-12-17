@@ -81,6 +81,32 @@ def assure_active_instrument(id_or_ins) -> Instrument:
         return _raise()
 
 
+def assure_listed_instrument(id_or_ins) -> Instrument:
+    """确保合约已上市（可以是已退市的），用于历史数据查询"""
+    def _raise():
+        raise RQInvalidArgument(_(
+            u"invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
+        ).format(id_or_ins, type(id_or_ins)))
+
+    if isinstance(id_or_ins, Instrument):
+        if not id_or_ins.listed:
+            return _raise()
+        return id_or_ins
+    elif isinstance(id_or_ins, six.string_types):
+        env = Environment.get_instance()
+        instruments = env.data_proxy.get_instrument_history(id_or_ins)
+        if not instruments:
+            return _raise()
+        # 找一个已经上市的（可以是已退市的）
+        for ins in instruments:
+            if ins.listed_at(env.trading_dt):
+                return ins
+        # 都还没上市
+        return _raise()
+    else:
+        return _raise()
+
+
 class ArgumentChecker(ArgumentCheckerBase):
     """仅验证参数，不修改参数值"""
     def __init__(self, arg_name, pre_check):
@@ -115,6 +141,11 @@ class ArgumentChecker(ArgumentCheckerBase):
 
     def is_active_instrument(self):
         self._rules.append(lambda func_name, value: assure_active_instrument(value))
+        return self
+
+    def is_listed_instrument(self):
+        """只要求合约已上市（可以是已退市的），用于历史数据查询"""
+        self._rules.append(lambda func_name, value: assure_listed_instrument(value))
         return self
 
     def is_valid_order_book_id(self, expected_type: Optional[INSTRUMENT_TYPE] = None):
