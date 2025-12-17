@@ -21,7 +21,6 @@ from typing import Union, Optional, List
 import numpy as np
 
 from rqalpha.api import export_as_api
-from rqalpha.apis.api_base import assure_instrument
 from rqalpha.apis.api_abstract import order, order_to, buy_open, buy_close, sell_open, sell_close, PRICE_OR_STYLE_TYPE
 from rqalpha.apis.api_base import cal_style
 from rqalpha.apis.api_rqdatac import futures
@@ -35,14 +34,14 @@ from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.functools import cast_singledispatch
 
 
 __all__ = []
 
 
-def _submit_order(id_or_ins, amount, side, position_effect, style):
-    instrument = assure_instrument(id_or_ins)
-    order_book_id = instrument.order_book_id
+def _submit_order(ins: Instrument, amount, side, position_effect, style):
+    order_book_id = ins.order_book_id
     env = Environment.get_instance()
 
     amount = int(amount)
@@ -55,7 +54,7 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
 
-    if env.config.base.run_type != RUN_TYPE.BACKTEST and instrument.type == INSTRUMENT_TYPE.FUTURE:
+    if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == INSTRUMENT_TYPE.FUTURE:
         if "88" in order_book_id:
             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
         if "99" in order_book_id:
@@ -131,11 +130,10 @@ def _submit_order(id_or_ins, amount, side, position_effect, style):
         return orders
 
 
-def _order(order_book_id, quantity, style, target):
-    # type: (str, Union[int, float], OrderStyle, bool) -> List[Order]
+def _order(ins: Instrument, quantity: Union[int, float], style: OrderStyle, target: bool) -> List[Order]:
     portfolio = Environment.get_instance().portfolio
-    long_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
-    short_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.SHORT)
+    long_position = portfolio.get_position(ins.order_book_id, POSITION_DIRECTION.LONG)
+    short_position = portfolio.get_position(ins.order_book_id, POSITION_DIRECTION.SHORT)
     if target:
         # For order_to
         quantity -= (long_position.quantity - short_position.quantity)
@@ -154,53 +152,47 @@ def _order(order_book_id, quantity, style, target):
     old_to_be_closed, today_to_be_closed = position_to_be_closed.old_quantity, position_to_be_closed.today_quantity
     if old_to_be_closed > 0:
         # 平昨仓
-        orders.append(_submit_order(order_book_id, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
+        orders.append(_submit_order(ins, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
         quantity -= old_to_be_closed
     if quantity <= 0:
         return orders
     if today_to_be_closed > 0:
         # 平今仓
         orders.append(_submit_order(
-            order_book_id, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
+            ins, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
         ))
         quantity -= today_to_be_closed
     if quantity <= 0:
         return orders
     # 开仓
-    orders.append(_submit_order(order_book_id, quantity, side, POSITION_EFFECT.OPEN, style))
+    orders.append(_submit_order(ins, quantity, side, POSITION_EFFECT.OPEN, style))
     return orders
 
 
-@order.register(INSTRUMENT_TYPE.FUTURE)
-def future_order(order_book_id, quantity, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
-    return _order(order_book_id, quantity, cal_style(price, style, price_or_style), False)
+def future_order(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
+    # type: (Instrument, int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
+    return _order(id_or_ins, quantity, cal_style(price, style, price_or_style), False)
 
 
-@order_to.register(INSTRUMENT_TYPE.FUTURE)
-def future_order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
-    return _order(order_book_id, quantity, cal_style(price, style, price_or_style), True)
+def future_order_to(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
+    # type: (Instrument, int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
+    return _order(id_or_ins, quantity, cal_style(price, style, price_or_style), True)
 
 
-@buy_open.register(INSTRUMENT_TYPE.FUTURE)
-def future_buy_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
+def future_buy_open(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None):
     return _submit_order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
-@buy_close.register(INSTRUMENT_TYPE.FUTURE)
-def future_buy_close(id_or_ins, amount, price_or_style=None, price=None, style=None, close_today=False):
+def future_buy_close(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None, close_today=False):
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style, price_or_style))
 
 
-@sell_open.register(INSTRUMENT_TYPE.FUTURE)
-def future_sell_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
+def future_sell_open(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None):
     return _submit_order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
-@sell_close.register(INSTRUMENT_TYPE.FUTURE)
-def future_sell_close(id_or_ins, amount, price_or_style=None, price=None, style=None, close_today=False):
+def future_sell_close(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None, close_today=False):
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style, price_or_style))
 
@@ -229,4 +221,11 @@ def get_future_contracts(underlying_symbol):
     return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)
 
 
-futures.get_contracts = staticmethod(get_future_contracts)
+# register implementations for FUTURE instrument type
+future_order = cast_singledispatch(order).register(INSTRUMENT_TYPE.FUTURE)(future_order)
+future_order_to = cast_singledispatch(order_to).register(INSTRUMENT_TYPE.FUTURE)(future_order_to)
+future_buy_open = cast_singledispatch(buy_open).register(INSTRUMENT_TYPE.FUTURE)(future_buy_open)
+future_buy_close = cast_singledispatch(buy_close).register(INSTRUMENT_TYPE.FUTURE)(future_buy_close)
+future_sell_open = cast_singledispatch(sell_open).register(INSTRUMENT_TYPE.FUTURE)(future_sell_open)
+future_sell_close = cast_singledispatch(sell_close).register(INSTRUMENT_TYPE.FUTURE)(future_sell_close)
+futures.get_contracts = staticmethod(get_future_contracts)  # type: ignore

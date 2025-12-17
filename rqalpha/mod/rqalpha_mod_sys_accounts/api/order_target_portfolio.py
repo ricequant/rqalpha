@@ -6,7 +6,7 @@ from pandas import Series, Index, DataFrame
 from numpy import sign, round as np_round, inf
 
 from rqalpha.api import export_as_api
-from rqalpha.apis.api_base import assure_instrument
+from rqalpha.utils.arg_checker import assure_listed_instrument
 from rqalpha.model.order import AlgoOrder, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
@@ -274,7 +274,7 @@ def order_target_portfolio_smart(
 
     env = Environment.get_instance()
     target_weights = Series({
-        assure_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
+        assure_listed_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
     }, dtype=float)
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     if isinstance(order_prices, (Mapping, Series)):

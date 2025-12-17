@@ -18,7 +18,7 @@
 import datetime
 from decimal import Decimal, getcontext
 from itertools import chain
-from typing import Dict, List, Optional, Union, Tuple, Callable
+from typing import Dict, List, Optional, Union, Tuple, Callable, cast
 from collections import defaultdict
 
 import numpy as np
@@ -29,10 +29,9 @@ from rqalpha.apis.api_abstract import (order, order_percent, order_shares,
                                        order_target_value, order_to,
                                        order_value,
                                        common_rules, TUPLE_PRICE_OR_STYLE_TYPE, PRICE_OR_STYLE_TYPE)
-from rqalpha.apis.api_base import (assure_instrument, assure_order_book_id,
-                                   cal_style, calc_open_close_style)
+from rqalpha.apis.api_base import assure_order_book_id, cal_style, calc_open_close_style
 from rqalpha.const import (DEFAULT_ACCOUNT_TYPE, EXECUTION_PHASE,
-                           INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION,
+                           INSTRUMENT_TYPE, POSITION_DIRECTION,
                            POSITION_EFFECT, SIDE)
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
@@ -46,7 +45,7 @@ from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle, ALGO
 from rqalpha.interface import TransactionCostArgs, AbstractTransactionCostDecider, TransactionCostArgs
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.functools import cast_singledispatch
-from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that, assure_listed_instrument
 from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
@@ -64,8 +63,7 @@ KSH_MIN_AMOUNT = 200
 BJSE_MIN_AMOUNT = 100
 
 
-def _get_account_position_ins(id_or_ins):
-    ins = assure_instrument(id_or_ins)
+def _get_account_position_ins(ins: Instrument):
     try:
         account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     except KeyError:
@@ -192,29 +190,29 @@ def _order_value(account: Account, position: AbstractPosition, ins: Instrument, 
     return _order_shares(ins, amount, style, position.quantity, auto_switch_order_value=False, zero_amount_as_exception=zero_amount_as_exception)
 
 
-def stock_order_shares(id_or_ins, amount, price_or_style=None, price=None, style=None):
+def stock_order_shares(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None):
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_shares(
-        assure_instrument(id_or_ins), amount, cal_style(price, style, price_or_style), position.quantity,
+        ins, amount, cal_style(price, style, price_or_style), position.quantity,
         auto_switch_order_value
     )
 stock_order_shares = cast_singledispatch(order_shares).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_shares)
 
 
-def stock_order_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
+def stock_order_value(id_or_ins: Instrument, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, cash_amount, cal_style(price, style, price_or_style))
 stock_order_value = cast_singledispatch(order_value).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_value)
 
 
-def stock_order_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
+def stock_order_percent(id_or_ins: Instrument, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     return _order_value(account, position, ins, account.total_value * percent, cal_style(price, style, price_or_style))
 stock_order_percent = cast_singledispatch(order_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_percent)
 
 
-def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
+def stock_order_target_value(id_or_ins: Instrument, cash_amount, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     if cash_amount == 0:
@@ -227,7 +225,7 @@ def stock_order_target_value(id_or_ins, cash_amount, price_or_style=None, price=
 stock_order_target_value = cast_singledispatch(order_target_value).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_value)
 
 
-def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
+def stock_order_target_percent(id_or_ins: Instrument, percent, price_or_style=None, price=None, style=None):
     account, position, ins = _get_account_position_ins(id_or_ins)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     if percent == 0:
@@ -240,20 +238,20 @@ def stock_order_target_percent(id_or_ins, percent, price_or_style=None, price=No
 stock_order_target_percent = cast_singledispatch(order_target_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_percent)
 
 
-def stock_order(order_book_id, quantity, price_or_style=None, price=None, style=None):
-    result_order = stock_order_shares(order_book_id, quantity, price, style, price_or_style)
+def stock_order(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
+    result_order = stock_order_shares(id_or_ins, quantity, price, style, price_or_style)
     if result_order:
         return [result_order]
     return []
 stock_order = cast_singledispatch(order).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order)
 
 
-def stock_order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
-    position = Environment.get_instance().portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
+def stock_order_to(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
+    position = Environment.get_instance().portfolio.get_position(id_or_ins.order_book_id, POSITION_DIRECTION.LONG)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     quantity = quantity - position.quantity
     _style = open_style if quantity > 0 else close_style
-    result_order = stock_order_shares(order_book_id, quantity, price, _style, price_or_style)
+    result_order = stock_order_shares(id_or_ins, quantity, price, _style, price_or_style)
     if result_order:
         return [result_order]
     return []
@@ -269,12 +267,18 @@ stock_order_to = cast_singledispatch(order_to).register(INST_TYPE_IN_STOCK_ACCOU
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    verify_that('id_or_ins').is_valid_order_book_id(expected_type=INSTRUMENT_TYPE.CS), 
+    assure_that('id_or_ins').is_listed_instrument(), 
     verify_that('amount').is_number(), 
     *common_rules
 )
-def order_lots(id_or_ins, amount, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_lots(
+    id_or_ins: Union[str, Instrument], 
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None,
+    ins: Optional[Instrument] = None,
+) -> Optional[Order]:
     """
     指定手数发送买/卖单。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
@@ -293,12 +297,16 @@ def order_lots(id_or_ins, amount, price_or_style=None, price=None, style=None):
         order_lots('000001.XSHE', 10, price_or_style=LimitOrder(10))
 
     """
+    ins = cast(Instrument, id_or_ins)  # converted in arg checker
     auto_switch_order_value = Environment.get_instance().config.mod.sys_accounts.auto_switch_order_value
-    account, position, ins = _get_account_position_ins(id_or_ins)
+    account, position, ins = _get_account_position_ins(ins)
     return _order_shares(
         ins, amount * int(ins.round_lot), cal_style(price, style, price_or_style), position.quantity,
         auto_switch_order_value
     )
+
+
+# Note: The following functions don't need assure_that because they pass order_book_id to data_proxy directly
 
 
 ORDER_TARGET_PORTFOLIO_SUPPORTED_INS_TYPES = {
@@ -359,7 +367,7 @@ def order_target_portfolio(
     env = Environment.get_instance()
     target: Dict[str, Tuple[float, OrderStyle, OrderStyle, float, Instrument]] = {}
     for id_or_ins, percent in target_portfolio.items():
-        ins = assure_instrument(id_or_ins)
+        ins = assure_listed_instrument(id_or_ins)
         if not ins:
             raise RQInvalidArgument(_(
                 "function order_target_portfolio: invalid keys of target_portfolio, "
@@ -455,7 +463,12 @@ def order_target_portfolio(
         open_orders.append(order)
         estimate_cash -= cost
 
-    return list(env.submit_order(o) for o in chain(close_orders, open_orders))
+    orders = []
+    for o in chain(close_orders, open_orders):
+        o_result = env.submit_order(o)
+        if o_result:
+            orders.append(o_result)
+    return orders
 
 
 @export_as_api

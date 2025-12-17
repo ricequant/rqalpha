@@ -22,7 +22,7 @@ from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.const import EXECUTION_PHASE
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import MarketOrder, LimitOrder, OrderStyle, Order, ALL_ORDER_STYPES
-from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that
 from rqalpha.utils.functools import instype_singledispatch
 
 
@@ -50,6 +50,7 @@ TUPLE_PRICE_OR_STYLE_TYPE = Union[
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('amount').is_number(),
     *common_rules
 )
@@ -91,6 +92,7 @@ def order_shares(id_or_ins, amount, price_or_style=None, price=None, style=None)
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('cash_amount').is_number(),
     *common_rules
 )
@@ -131,6 +133,7 @@ def order_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=N
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('percent', pre_check=True).is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
     *common_rules
 )
@@ -171,6 +174,7 @@ def order_percent(id_or_ins, percent, price_or_style=None, price=None, style=Non
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('cash_amount').is_number(),
     *common_rules
 )
@@ -211,6 +215,7 @@ def order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, 
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('percent', pre_check=True).is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
     *common_rules
 )
@@ -260,6 +265,7 @@ def order_target_percent(id_or_ins, percent, price_or_style=None, price=None, st
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
@@ -293,6 +299,7 @@ def buy_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
@@ -327,6 +334,7 @@ def buy_close(id_or_ins, amount, price_or_style=None, price=None, style=None, cl
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
@@ -361,6 +369,7 @@ def sell_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
+    assure_that('id_or_ins').is_listed_instrument(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
@@ -389,7 +398,11 @@ def sell_close(id_or_ins, amount, price_or_style=None, price=None, style=None, c
 
 
 @export_as_api
-@apply_rules(verify_that("quantity").is_number(), *common_rules)
+@apply_rules(
+    assure_that("order_book_id").is_listed_instrument(),
+    verify_that("quantity").is_number(), 
+    *common_rules
+)
 @instype_singledispatch
 def order(order_book_id, quantity, price_or_style=None, price=None, style=None):
     # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
@@ -428,7 +441,11 @@ def order(order_book_id, quantity, price_or_style=None, price=None, style=None):
 
 
 @export_as_api
-@apply_rules(verify_that("quantity").is_number(), *common_rules)
+@apply_rules(
+    assure_that("order_book_id").is_listed_instrument(),
+    verify_that("quantity").is_number(), 
+    *common_rules
+)
 @instype_singledispatch
 def order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
     # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]

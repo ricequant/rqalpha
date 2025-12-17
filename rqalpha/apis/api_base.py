@@ -18,7 +18,7 @@ from __future__ import division
 
 import types
 from datetime import date, datetime
-from typing import Callable, List, Optional, Union, Iterable
+from typing import Callable, List, Optional, Union, Iterable, cast
 
 import pandas as pd
 import numpy as np
@@ -30,7 +30,7 @@ from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.exception import RQInvalidArgument, InstrumentNotFound
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that
 from rqalpha.api import export_as_api
 from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
 from rqalpha.model.instrument import Instrument
@@ -58,28 +58,6 @@ export_as_api(ORDER_TYPE, name='ORDER_TYPE')
 export_as_api(RUN_TYPE, name='RUN_TYPE')
 export_as_api(MATCHING_TYPE, name='MATCHING_TYPE')
 export_as_api(EVENT, name='EVENT')
-
-
-def assure_instrument(id_or_ins, verify_listing: bool) -> Instrument:
-    # verify_listing: 是否验证合约是否上市，注意，港股存在复用代码的情况，因此该参数应尽量设为 True 以避免搜索 instrument 失败
-    if isinstance(id_or_ins, Instrument):
-        return id_or_ins
-    elif isinstance(id_or_ins, six.string_types):
-        env = Environment.get_instance()
-        try:
-            ins = env.data_proxy.instrument_not_none(id_or_ins, env.trading_dt if verify_listing else None)
-        except InstrumentNotFound as e:
-            if verify_listing:
-                raise RQInvalidArgument(_(
-                    "instrument {} not found or not listed at {}"
-                ).format(id_or_ins, env.trading_dt.date()))
-            else:
-                raise RQInvalidArgument(_(
-                    "instrument {} not found"
-                ).format(id_or_ins))
-        return ins
-    else:
-        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
 
 
 def assure_order_book_id(id_or_ins):
@@ -147,12 +125,19 @@ def get_open_orders():
 
 @export_as_api
 @apply_rules(
-    verify_that("id_or_ins").is_valid_order_book_id(),
+    assure_that("id_or_ins").is_listed_instrument(),
     verify_that("amount").is_number().is_greater_than(0),
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
-def submit_order(id_or_ins, amount, side, price_or_style=None, price=None, style=None, position_effect=None):
-    # type: (Union[str, Instrument], float, SIDE, Optional[float], Optional[POSITION_EFFECT]) -> Optional[Order]
+def submit_order(
+    id_or_ins: Union[str, Instrument],
+    amount: float,
+    side: SIDE,
+    price_or_style: Optional[Union[float, OrderStyle, LimitOrder, MarketOrder, VWAPOrder, TWAPOrder]] = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None,
+    position_effect: Optional[POSITION_EFFECT] = None,
+) -> Optional[Order]:
     """
     通用下单函数，策略可以通过该函数自由选择参数下单。
 
@@ -171,12 +156,10 @@ def submit_order(id_or_ins, amount, side, price_or_style=None, price=None, style
         submit_order('RB1812', 10, SIDE.SELL, price=4000, position_effect=POSITION_EFFECT.CLOSE_TODAY)
 
     """
-    order_book_id = assure_order_book_id(id_or_ins)
+    ins = cast(Instrument, id_or_ins)  # converted in arg checker
+    order_book_id = ins.order_book_id
     env = Environment.get_instance()
-    if (
-            env.config.base.run_type != RUN_TYPE.BACKTEST
-            and env.get_instrument(order_book_id).type == "Future"
-    ):
+    if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == "Future":
         if "88" in order_book_id:
             raise RQInvalidArgument(
                 _(u"Main Future contracts[88] are not supported in paper trading.")
