@@ -33,6 +33,7 @@ from rqalpha.utils.class_helper import cached_property
 
 # TODO：改为 namedtuple，提升性能
 class Instrument(metaclass=PropertyReprMeta):
+    DEFAULT_LISTED_DATE = datetime(1990, 1, 1)
     DEFAULT_DE_LISTED_DATE = datetime(2999, 12, 31)
 
     @staticmethod
@@ -54,7 +55,7 @@ class Instrument(metaclass=PropertyReprMeta):
         self._futures_tick_size_getter = futures_tick_size_getter
 
         if "listed_date" in dic:
-            self._dict["listed_date"] = self._fix_date(dic["listed_date"])
+            self._dict["listed_date"] = self._fix_date(dic["listed_date"], self.DEFAULT_LISTED_DATE)
         if "de_listed_date" in dic:
             self._dict["de_listed_date"] = self._fix_date(dic["de_listed_date"], self.DEFAULT_DE_LISTED_DATE)
         if "maturity_date" in self._dict:
@@ -289,7 +290,7 @@ class Instrument(metaclass=PropertyReprMeta):
         [bool] 该合约当前日期是否在交易
         """
         trading_dt = Environment.get_instance().trading_dt
-        return self.listing_at(trading_dt)
+        return self.active_at(trading_dt)
 
     @property
     def listed(self):
@@ -314,10 +315,11 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
-    def listing_at(self, dt: datetime) -> bool:
+    def active_at(self, dt: datetime) -> bool:
         """
         该合约在指定日期是否在交易
         """
+        # 原有命名 listing_at 不合理，listing 一般表示“正在挂牌”的过程中
         return self.listed_at(dt) and not self.de_listed_at(dt)
 
     def listed_at(self, dt: datetime) -> bool:

@@ -109,7 +109,6 @@ class BaseDataSource(AbstractDataSource):
 
         # dynamic registered storages
         self._ins_id_or_sym_type_map: Dict[str, INSTRUMENT_TYPE] = {}
-        self._instrument_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractInstrumentStore] = {}
         self._day_bar_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractDayBarStore] = {}
         self._dividend_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
         self._split_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}

@@ -45,7 +45,7 @@ from rqalpha.model.order import LimitOrder, MarketOrder, Order, OrderStyle, ALGO
 from rqalpha.interface import TransactionCostArgs, AbstractTransactionCostDecider, TransactionCostArgs
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.functools import cast_singledispatch
-from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that, assure_listed_instrument
+from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that, assure_active_instrument
 from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
@@ -238,20 +238,20 @@ def stock_order_target_percent(id_or_ins: Instrument, percent, price_or_style=No
 stock_order_target_percent = cast_singledispatch(order_target_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_percent)
 
 
-def stock_order(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
-    result_order = stock_order_shares(id_or_ins, quantity, price, style, price_or_style)
+def stock_order(order_book_id: Instrument, quantity, price_or_style=None, price=None, style=None):
+    result_order = stock_order_shares(order_book_id, quantity, price, style, price_or_style)
     if result_order:
         return [result_order]
     return []
 stock_order = cast_singledispatch(order).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order)
 
 
-def stock_order_to(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
-    position = Environment.get_instance().portfolio.get_position(id_or_ins.order_book_id, POSITION_DIRECTION.LONG)
+def stock_order_to(order_book_id: Instrument, quantity, price_or_style=None, price=None, style=None):
+    position = Environment.get_instance().portfolio.get_position(order_book_id.order_book_id, POSITION_DIRECTION.LONG)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     quantity = quantity - position.quantity
     _style = open_style if quantity > 0 else close_style
-    result_order = stock_order_shares(id_or_ins, quantity, price, _style, price_or_style)
+    result_order = stock_order_shares(order_book_id, quantity, price, _style, price_or_style)
     if result_order:
         return [result_order]
     return []
@@ -267,7 +267,7 @@ stock_order_to = cast_singledispatch(order_to).register(INST_TYPE_IN_STOCK_ACCOU
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_listed_instrument(), 
+    assure_that('id_or_ins').is_active_instrument(), 
     verify_that('amount').is_number(), 
     *common_rules
 )
@@ -367,7 +367,7 @@ def order_target_portfolio(
     env = Environment.get_instance()
     target: Dict[str, Tuple[float, OrderStyle, OrderStyle, float, Instrument]] = {}
     for id_or_ins, percent in target_portfolio.items():
-        ins = assure_listed_instrument(id_or_ins)
+        ins = assure_active_instrument(id_or_ins)
         if not ins:
             raise RQInvalidArgument(_(
                 "function order_target_portfolio: invalid keys of target_portfolio, "

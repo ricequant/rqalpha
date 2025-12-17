@@ -37,12 +37,14 @@ from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils.typing import DateLike
 from rqalpha.utils.exception import InstrumentNotFound
 
+from .instruments_mixin import InstrumentsMixin
 
-class DataProxy(TradingDatesMixin):
+class DataProxy(TradingDatesMixin, InstrumentsMixin):
     def __init__(self, data_source: AbstractDataSource, price_board: AbstractPriceBoard):
         self._data_source = data_source
         self._price_board = price_board
         TradingDatesMixin.__init__(self, data_source)
+        InstrumentsMixin.__init__(self, data_source)
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)
@@ -285,57 +287,6 @@ class DataProxy(TradingDatesMixin):
     def get_last_price(self, order_book_id):
         # type: (str) -> float
         return float(self._price_board.get_last_price(order_book_id))
-
-    def all_instruments(self, types: List[INSTRUMENT_TYPE], dt: Optional[datetime] = None) -> List[Instrument]:
-        li = []
-        for i in self._data_source.get_instruments(types=types):
-            if dt is None or i.listing_at(dt):
-                li.append(i)
-        return li
-        # return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
-
-    @lru_cache(2048)
-    def instrument_not_none(self, id_or_sym: str, dt: Optional[datetime] = None) -> Instrument:
-        """
-        根据合约代码获取唯一的 Instrument 对象
-
-        :param str id_or_sym: 合约代码或合约简称
-        :param datetime dt: 可选，指定查询的时间点。若提供此参数，则仅返回在该时间点处于上市状态的合约
-            注意，对于港股等可能出现复用代码情况等品种，请一律指定 dt 参数
-        :return: 匹配的 Instrument 对象
-        """
-        candidates = []
-        for instrument in self._data_source.get_instruments(id_or_syms=[id_or_sym]):
-            if dt is None or instrument.listing_at(dt):
-                candidates.append(instrument)
-        if not candidates:
-            raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_sym))
-        if len(candidates) > 1:
-            raise InstrumentNotFound(_("Multiple instruments found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_sym))
-        return candidates[0]
-
-    def multi_instruments(self, order_book_ids: Iterable[str]) -> Dict[str, Instrument]:
-        return {i.order_book_id: i for i in self._data_source.get_instruments(id_or_syms=order_book_ids)}
-
-    def assure_order_book_id(self, order_book_id: str, expected_type: Optional[INSTRUMENT_TYPE] = None) -> str:
-        for instrument in self._data_source.get_instruments(id_or_syms=[order_book_id]):
-            if expected_type is not None and instrument.type != expected_type:
-                continue
-            return instrument.order_book_id
-        raise InstrumentNotFound(_("No instrument found: {}").format(order_book_id))
-
-    @lru_cache(2048)
-    def instrument(self, sym_or_id):
-        # deprecated
-        return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])), None)
-
-    def instruments(self, sym_or_ids):
-        # deprecated
-        # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
-        if isinstance(sym_or_ids, str):
-            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_ids])), None)
-        else:
-            return list(self._data_source.get_instruments(id_or_syms=sym_or_ids))
 
     def get_future_contracts(self, underlying, date):
         # type: (str, DateLike) -> List[str]

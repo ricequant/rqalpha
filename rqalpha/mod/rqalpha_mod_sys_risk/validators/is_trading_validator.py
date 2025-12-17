@@ -31,7 +31,7 @@ class IsTradingValidator(AbstractFrontendValidator):
     
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         instrument = self._env.data_proxy.instrument(order.order_book_id)
-        if instrument.type != INSTRUMENT_TYPE.INDX and not instrument.listing_at(self._env.trading_dt):
+        if instrument.type != INSTRUMENT_TYPE.INDX and not instrument.active_at(self._env.trading_dt):
             reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(
                 order_book_id=order.order_book_id)
             return reason

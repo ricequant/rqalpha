@@ -125,7 +125,7 @@ def get_open_orders():
 
 @export_as_api
 @apply_rules(
-    assure_that("id_or_ins").is_listed_instrument(),
+    assure_that("id_or_ins").is_active_instrument(),
     verify_that("amount").is_number().is_greater_than(0),
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
@@ -388,7 +388,7 @@ def get_yield_curve(date=None, tenor=None):
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(
-    verify_that("order_book_id", pre_check=True).is_listed_instrument(),
+    verify_that("order_book_id", pre_check=True).is_active_instrument(),
     verify_that("bar_count").is_instance_of(int).is_greater_than(0),
     verify_that("frequency", pre_check=True).is_valid_frequency(),
     verify_that("fields").are_valid_fields(
@@ -521,7 +521,7 @@ def history_bars(
 
 @export_as_api
 @apply_rules(
-    verify_that("order_book_id", pre_check=True).is_listed_instrument(),
+    verify_that("order_book_id", pre_check=True).is_active_instrument(),
     verify_that('count').is_instance_of(int).is_greater_than(0)
 )
 def history_ticks(order_book_id, count):

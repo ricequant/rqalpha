@@ -169,14 +169,14 @@ def _order(ins: Instrument, quantity: Union[int, float], style: OrderStyle, targ
     return orders
 
 
-def future_order(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
+def future_order(order_book_id: Instrument, quantity, price_or_style=None, price=None, style=None):
     # type: (Instrument, int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
-    return _order(id_or_ins, quantity, cal_style(price, style, price_or_style), False)
+    return _order(order_book_id, quantity, cal_style(price, style, price_or_style), False)
 
 
-def future_order_to(id_or_ins: Instrument, quantity, price_or_style=None, price=None, style=None):
+def future_order_to(order_book_id: Instrument, quantity, price_or_style=None, price=None, style=None):
     # type: (Instrument, int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
-    return _order(id_or_ins, quantity, cal_style(price, style, price_or_style), True)
+    return _order(order_book_id, quantity, cal_style(price, style, price_or_style), True)
 
 
 def future_buy_open(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None):
@@ -221,7 +221,7 @@ def get_future_contracts(underlying_symbol):
     return env.data_proxy.get_future_contracts(underlying_symbol, env.trading_dt)
 
 
-# register implementations for FUTURE instrument type
+# python3.9 之前不支持表达式形式的装饰器，暂时需要显式调用注册
 future_order = cast_singledispatch(order).register(INSTRUMENT_TYPE.FUTURE)(future_order)
 future_order_to = cast_singledispatch(order_to).register(INSTRUMENT_TYPE.FUTURE)(future_order_to)
 future_buy_open = cast_singledispatch(buy_open).register(INSTRUMENT_TYPE.FUTURE)(future_buy_open)

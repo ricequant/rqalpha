@@ -60,7 +60,7 @@ class ArgumentCheckerBase(object):
 
 
 
-def assure_listed_instrument(id_or_ins) -> Instrument:
+def assure_active_instrument(id_or_ins) -> Instrument:
     def _raise():
         raise RQInvalidArgument(_(
             u"invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
@@ -73,7 +73,7 @@ def assure_listed_instrument(id_or_ins) -> Instrument:
     elif isinstance(id_or_ins, six.string_types):
         env = Environment.get_instance()
         try:
-            ins = env.data_proxy.instrument_not_none(id_or_ins, env.trading_dt)
+            ins = env.data_proxy.get_active_instrument(id_or_ins, env.trading_dt)
         except InstrumentNotFound as e:
             return _raise()
         return ins
@@ -113,8 +113,8 @@ class ArgumentChecker(ArgumentCheckerBase):
             self.raise_invalid_instrument_error(func_name, value)
         return instrument
 
-    def is_listed_instrument(self):
-        self._rules.append(lambda func_name, value: assure_listed_instrument(value))
+    def is_active_instrument(self):
+        self._rules.append(lambda func_name, value: assure_active_instrument(value))
         return self
 
     def is_valid_order_book_id(self, expected_type: Optional[INSTRUMENT_TYPE] = None):
@@ -369,9 +369,9 @@ class ArgumentConverter(ArgumentCheckerBase):
     def __init__(self, arg_name):
         super().__init__(arg_name)
 
-    def is_listed_instrument(self):
+    def is_active_instrument(self):
         """验证并转换为上市中的 Instrument 对象"""
-        self._rules.append(lambda func_name, value: assure_listed_instrument(value))
+        self._rules.append(lambda func_name, value: assure_active_instrument(value))
         return self
 
     def convert(self, func_name, call_args):
