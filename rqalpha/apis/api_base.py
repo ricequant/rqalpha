@@ -18,7 +18,7 @@ from __future__ import division
 
 import types
 from datetime import date, datetime
-from typing import Callable, List, Optional, Union, Iterable, cast
+from typing import Callable, List, Optional, Sequence, Union, Iterable, cast
 
 import pandas as pd
 import numpy as np
@@ -631,8 +631,7 @@ def all_instruments(type=None, date=None):
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(verify_that("id_or_symbols").is_instance_of((str, Iterable)))
-def instruments(id_or_symbols):
-    # type: (Union[str, List[str]]) -> Union[Instrument, List[Instrument]]
+def instruments(id_or_symbols: Union[str, Iterable[str]]) -> Union[None, Instrument, List[Instrument]]:
     """
     获取某个国家市场内一个或多个合约的详细信息。目前仅支持中国市场。
 
@@ -672,8 +671,36 @@ def instruments(id_or_symbols):
 
             instruments('IF1701').days_to_expire()
     """
-    return Environment.get_instance().data_proxy.instruments(id_or_symbols)
+    env = Environment.get_instance()
+    data_proxy = env.data_proxy
+    if isinstance(id_or_symbols, str):
+        instruments = data_proxy.get_instrument_history(id_or_symbols)
+    else:
+        instruments = data_proxy.get_instruments_history(id_or_symbols)
+    # 返回值的行为有点恶心，为了兼容旧版本
+    if not instruments:
+        return None
+    if len(instruments) == 1:
+        return instruments[0]
+    return instruments
 
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("id_or_sym").is_active_instrument())
+def active_instrument(id_or_sym: Union[str, Instrument]) -> Instrument:
+    return cast(Instrument, id_or_sym)
+
+
+# TODO: 提供 instrument_history, active_instruments, instruments_history 等 API
 
 @export_as_api
 @apply_rules(
@@ -815,10 +842,11 @@ def get_positions():
 
 @export_as_api
 @apply_rules(
+    # 注意，此处存在不兼容的改动，旧的行为：在合约未上市时获取到的
+    verify_that("order_book_id").is_active_instrument(),
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
-def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
-    # type: (str, Optional[POSITION_DIRECTION]) -> Position
+def get_position(order_book_id: str, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> Position:
     """
     获取某个标的的持仓对象。
 

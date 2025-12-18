@@ -61,7 +61,7 @@ class InstrumentsMixin:
         """
         return list(self._data_source.get_instruments(id_or_syms=[id_or_sym]))
 
-    def get_listed_instruments(self, id_or_syms: Iterable[str], dt: datetime) -> Dict[str, Instrument]:
+    def get_active_instruments(self, id_or_syms: Iterable[str], dt: datetime) -> Dict[str, Instrument]:
         """批量获取指定时间点上市的合约对象。
 
         :param id_or_syms: 合约代码或 order_book_id 的可迭代对象
@@ -74,6 +74,14 @@ class InstrumentsMixin:
             if ins.active_at(dt):
                 result[ins.order_book_id] = ins
         return result
+
+    def get_instruments_history(self, id_or_syms: Iterable[str]) -> List[Instrument]:
+        """获取合约历史记录列表（包括已退市的合约）。
+
+        :param id_or_syms: 合约代码或 order_book_id 的可迭代对象
+        :returns: 合约对象列表
+        """
+        return list(self._data_source.get_instruments(id_or_syms=id_or_syms))
 
     def get_all_instruments(self, types: List[INSTRUMENT_TYPE], dt: Optional[datetime] = None) -> List[Instrument]:
         """获取指定类型的所有合约。

@@ -116,9 +116,9 @@ class BaseDataSource(AbstractDataSource):
         self._ex_factor_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
 
         # instruments
-        self._id_instrument_map: Dict[str, Instrument] = {}
-        self._sym_instrument_map: Dict[str, Instrument] = {}
-        self._id_or_sym_instrument_map: Mapping[str, Instrument] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
+        self._id_instrument_map: DefaultDict[str, list[Instrument]] = defaultdict(list)
+        self._sym_instrument_map: DefaultDict[str, list[Instrument]] = defaultdict(list)
+        self._id_or_sym_instrument_map: Mapping[str, list[Instrument]] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
         self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, List[Instrument]] = defaultdict(list)
 
         # register instruments
@@ -150,8 +150,8 @@ class BaseDataSource(AbstractDataSource):
 
     def register_instruments(self, instruments: Iterable[Instrument]):
         for ins in instruments:
-            self._id_instrument_map[ins.order_book_id] = ins
-            self._sym_instrument_map[ins.symbol] = ins
+            self._id_instrument_map[ins.order_book_id].append(ins)
+            self._sym_instrument_map[ins.symbol].append(ins)
             self._grouped_instruments[ins.type].append(ins)
     
     def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN):
@@ -187,11 +187,13 @@ class BaseDataSource(AbstractDataSource):
 
     def get_instruments(self, id_or_syms: Optional[Iterable[str]] = None, types: Optional[Iterable[INSTRUMENT_TYPE]] = None) -> Iterable[Instrument]:
         if id_or_syms is not None:
+            seen = set()
             for i in id_or_syms:
-                try:
-                    yield self._id_or_sym_instrument_map[i]
-                except KeyError:
-                    pass
+                if i in self._id_or_sym_instrument_map:
+                    for ins in self._id_or_sym_instrument_map[i]:
+                        if ins not in seen:
+                            seen.add(ins)
+                            yield ins
         else:
             for t in types or self._grouped_instruments.keys():
                 yield from self._grouped_instruments[t]
@@ -340,18 +342,19 @@ class BaseDataSource(AbstractDataSource):
                 left = i - bar_count * 5 if i >= bar_count * 5 else 0
             bars = bars[left:i]
 
+            resample_fields: Union[str, List[str]] = list(bars.dtype.names) if fields is None else fields
             if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
                 # 期货及指数无需复权
-                week_bars = self.resample_week_bars(bars, bar_count, fields)
+                week_bars = self.resample_week_bars(bars, bar_count, resample_fields)
                 return week_bars if fields is None else week_bars[fields]
 
             if isinstance(fields, str) and fields not in FIELDS_REQUIRE_ADJUSTMENT:
-                week_bars = self.resample_week_bars(bars, bar_count, fields)
+                week_bars = self.resample_week_bars(bars, bar_count, resample_fields)
                 return week_bars if fields is None else week_bars[fields]
 
             adjust_bars_date = adjust_bars(bars, self.get_ex_cum_factor(instrument),
                                            fields, adjust_type, adjust_orig)
-            adjust_week_bars = self.resample_week_bars(adjust_bars_date, bar_count, fields)
+            adjust_week_bars = self.resample_week_bars(adjust_bars_date, bar_count, resample_fields)
             return adjust_week_bars if fields is None else adjust_week_bars[fields]
         i = bars['datetime'].searchsorted(np.uint64(convert_date_to_int(dt)), side='right')
         if bar_count is None:

@@ -78,7 +78,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._env = Environment.get_instance()
 
         self._order_book_id = order_book_id
-        self._instrument = self._env.data_proxy.instrument(order_book_id)  # type: Instrument
+        self._instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
         self._direction = direction
 
         self._quantity = init_quantity

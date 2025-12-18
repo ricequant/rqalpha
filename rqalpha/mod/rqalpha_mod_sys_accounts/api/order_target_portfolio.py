@@ -55,7 +55,7 @@ class OrderTargetPortfolio:
 
         self._env = env
 
-        instruments = env.data_proxy.get_listed_instruments(index, env.trading_dt)
+        instruments = env.data_proxy.get_active_instruments(index, env.trading_dt)
         for i in instruments.values():
             if i.type != INSTRUMENT_TYPE.CS:
                 raise RQApiNotSupportedError(_("instrument type {} is not supported").format(i.type))

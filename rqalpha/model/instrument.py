@@ -66,6 +66,10 @@ class Instrument(metaclass=PropertyReprMeta):
                 raise RuntimeError("Contract multiplier of {} is not supposed to be nan".format(self.order_book_id))
         self.market = market
 
+    def __hash__(self) -> int:
+        # 考虑到代码复用的情况
+        return hash((self.order_book_id, self.listed_date, self.market))
+
     @cached_property
     def order_book_id(self) -> str:
         """
