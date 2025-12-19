@@ -5,9 +5,13 @@ CHANGELOG
 6.1.0
 ==================
 
+本次迭代包含重大的架构基本假设变更：
+  - 旧版本隐含假设了 每个 order_book_id 只对应唯一的 Instrument 对象，这与实际业务逻辑不符；
+  - 新版本假设 instrument 是时序的，同一个 order_book_id 在不同时间点可能对应不同的 Instrument 对象；
+
 **[不兼容改动]**
 
-- `get_position` 不能传入不在上市期间的 order_book_id，传入此类代码会抛出异常
+- `get_position` 不能传入还未上市的 order_book_id，传入此类代码会抛出异常
 
 **[新增 API]**
 

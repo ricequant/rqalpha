@@ -50,13 +50,18 @@ TUPLE_PRICE_OR_STYLE_TYPE = Union[
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('amount').is_number(),
     *common_rules
 )
 @instype_singledispatch
-def order_shares(id_or_ins, amount, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_shares(
+    id_or_ins: Union[str, Instrument],
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> Optional[Order]:
     """
     指定股数的买/卖单，最常见的落单方式之一。如有需要落单类型当做一个参量传入，如果忽略掉落单类型，那么默认是市价单（market order）。
 
@@ -92,13 +97,18 @@ def order_shares(id_or_ins, amount, price_or_style=None, price=None, style=None)
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('cash_amount').is_number(),
     *common_rules
 )
 @instype_singledispatch
-def order_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], float, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_value(
+    id_or_ins: Union[str, Instrument],
+    cash_amount: float,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> Optional[Order]:
     """
     使用想要花费的金钱买入/卖出股票，而不是买入/卖出想要的股数，正数代表买入，负数代表卖出。股票的股数总是会被调整成对应的100的倍数（在A中国A股市场1手是100股）。
     如果资金不足，该API将会使用最大可用资金发单。
@@ -133,13 +143,18 @@ def order_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=N
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('percent', pre_check=True).is_number().is_greater_or_equal_than(-1).is_less_or_equal_than(1),
     *common_rules
 )
 @instype_singledispatch
-def order_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], float, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_percent(
+    id_or_ins: Union[str, Instrument],
+    percent: float,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> Optional[Order]:
     """
     发送一个花费价值等于目前投资组合（市场价值和目前现金的总和）一定百分比现金的买/卖单，正数代表买，负数代表卖。股票的股数总是会被调整成对应的一手的股票数的倍数（1手是100股）。百分比是一个小数，并且小于或等于1（<=100%），0.5表示的是50%.需要注意，如果资金不足，该API将会使用最大可用资金发单。
 
@@ -174,13 +189,18 @@ def order_percent(id_or_ins, percent, price_or_style=None, price=None, style=Non
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('cash_amount').is_number(),
     *common_rules
 )
 @instype_singledispatch
-def order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], float, TUPLE_PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_target_value(
+    id_or_ins: Union[str, Instrument],
+    cash_amount: float,
+    price_or_style: TUPLE_PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> Optional[Order]:
     """
     买入/卖出并且自动调整该证券的仓位到一个目标价值。
     加仓时，cash_amount 代表现有持仓的价值加上即将花费（包含税费）的现金的总价值。
@@ -215,13 +235,18 @@ def order_target_value(id_or_ins, cash_amount, price_or_style=None, price=None, 
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('percent', pre_check=True).is_number().is_greater_or_equal_than(0).is_less_or_equal_than(1),
     *common_rules
 )
 @instype_singledispatch
-def order_target_percent(id_or_ins, percent, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], float, TUPLE_PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Optional[Order]
+def order_target_percent(
+    id_or_ins: Union[str, Instrument],
+    percent: float,
+    price_or_style: TUPLE_PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> Optional[Order]:
     """
     买入/卖出证券以自动调整该证券的仓位到占有一个目标价值。
 
@@ -265,13 +290,18 @@ def order_target_percent(id_or_ins, percent, price_or_style=None, price=None, st
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
 @instype_singledispatch
-def buy_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
+def buy_open(
+    id_or_ins: Union[str, Instrument],
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> Union[Order, List[Order], None]:
     """
     买入开仓。
 
@@ -299,13 +329,19 @@ def buy_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
 @instype_singledispatch
-def buy_close(id_or_ins, amount, price_or_style=None, price=None, style=None, close_today=False):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
+def buy_close(
+    id_or_ins: Union[str, Instrument],
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None,
+    close_today: bool = False
+) -> Union[Order, List[Order], None]:
     """
     平卖仓
 
@@ -334,13 +370,18 @@ def buy_close(id_or_ins, amount, price_or_style=None, price=None, style=None, cl
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
 @instype_singledispatch
-def sell_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> Union[Order, List[Order], None]
+def sell_open(
+    id_or_ins: Union[str, Instrument],
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> Union[Order, List[Order], None]:
     """
     卖出开仓
 
@@ -369,13 +410,19 @@ def sell_open(id_or_ins, amount, price_or_style=None, price=None, style=None):
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_active_instrument(),
+    assure_that('id_or_ins').is_valid_order_book_id(),
     verify_that('amount', pre_check=True).is_number().is_greater_or_equal_than(0),
     *common_rules
 )
 @instype_singledispatch
-def sell_close(id_or_ins, amount, price_or_style=None, price=None, style=None, close_today=False):
-    # type: (Union[str, Instrument], float, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle], Optional[bool]) -> Union[Order, List[Order], None]
+def sell_close(
+    id_or_ins: Union[str, Instrument],
+    amount: float,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None,
+    close_today: bool = False
+) -> Union[Order, List[Order], None]:
     """
     平买仓
 
@@ -399,13 +446,18 @@ def sell_close(id_or_ins, amount, price_or_style=None, price=None, style=None, c
 
 @export_as_api
 @apply_rules(
-    assure_that("order_book_id").is_active_instrument(),
+    assure_that("order_book_id").is_valid_order_book_id(),
     verify_that("quantity").is_number(), 
     *common_rules
 )
 @instype_singledispatch
-def order(order_book_id, quantity, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
+def order(
+    order_book_id: Union[str, Instrument],
+    quantity: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> List[Order]:
     """
       全品种通用智能调仓函数
 
@@ -442,13 +494,18 @@ def order(order_book_id, quantity, price_or_style=None, price=None, style=None):
 
 @export_as_api
 @apply_rules(
-    assure_that("order_book_id").is_active_instrument(),
+    assure_that("order_book_id").is_valid_order_book_id(),
     verify_that("quantity").is_number(), 
     *common_rules
 )
 @instype_singledispatch
-def order_to(order_book_id, quantity, price_or_style=None, price=None, style=None):
-    # type: (Union[str, Instrument], int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
+def order_to(
+    order_book_id: Union[str, Instrument],
+    quantity: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None
+) -> List[Order]:
     """
     全品种通用智能调仓函数
 
@@ -491,8 +548,11 @@ def order_to(order_book_id, quantity, price_or_style=None, price=None, style=Non
 )
 @apply_rules(verify_that("amount", pre_check=True).is_number().is_greater_or_equal_than(1))
 @instype_singledispatch
-def exercise(id_or_ins, amount, convert=False):
-    # type: (Union[str, Instrument], int, Optional[bool]) -> Optional[Order]
+def exercise(
+    id_or_ins: Union[str, Instrument],
+    amount: int,
+    convert: bool = False
+) -> Optional[Order]:
     """
         行权。针对期权、可转债等含权合约，行使合约权利方被赋予的权利。
 

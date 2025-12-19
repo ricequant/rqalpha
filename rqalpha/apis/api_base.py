@@ -18,7 +18,7 @@ from __future__ import division
 
 import types
 from datetime import date, datetime
-from typing import Callable, List, Optional, Sequence, Union, Iterable, cast
+from typing import Callable, List, Optional, Union, Iterable, cast
 
 import pandas as pd
 import numpy as np
@@ -67,6 +67,16 @@ def assure_order_book_id(id_or_ins):
         return Environment.get_instance().data_proxy.assure_order_book_id(id_or_ins)
     except InstrumentNotFound as e:
         raise RQInvalidArgument(_("instrument {} not found").format(id_or_ins))
+
+
+def assure_active_ins_for_order_api(order_book_id: str) -> Optional[Instrument]:
+    env = Environment.get_instance()
+    try:
+        return env.data_proxy.get_active_instrument(order_book_id, env.trading_dt)
+    except InstrumentNotFound as e:
+        reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(order_book_id=order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))
 
 
 def cal_style(price, style, price_or_style=None):
@@ -125,7 +135,7 @@ def get_open_orders():
 
 @export_as_api
 @apply_rules(
-    assure_that("id_or_ins").is_active_instrument(),
+    assure_that("id_or_ins").is_valid_order_book_id(),
     verify_that("amount").is_number().is_greater_than(0),
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
@@ -156,8 +166,10 @@ def submit_order(
         submit_order('RB1812', 10, SIDE.SELL, price=4000, position_effect=POSITION_EFFECT.CLOSE_TODAY)
 
     """
-    ins = cast(Instrument, id_or_ins)  # converted in arg checker
-    order_book_id = ins.order_book_id
+    order_book_id = cast(str, id_or_ins)
+    ins = assure_active_ins_for_order_api(order_book_id)
+    if ins is None:
+        return
     env = Environment.get_instance()
     if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == "Future":
         if "88" in order_book_id:
@@ -227,20 +239,15 @@ def cancel_order(order):
     EXECUTION_PHASE.AFTER_TRADING,
     EXECUTION_PHASE.SCHEDULED,
 )
-@apply_rules(verify_that("id_or_symbols").are_valid_instruments())
-def update_universe(id_or_symbols):
-    # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
+@apply_rules(assure_that("id_or_symbols").is_valid_oid_list())
+def update_universe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[Instrument]]):
     """
     该方法用于更新现在关注的证券的集合（e.g.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为['000001.XSHE', '000024.XSHE']然后调用了update_universe(['000030.XSHE'])之后，股票池就会变成000030.XSHE一个股票了，随后的数据更新也只会跟踪000030.XSHE这一个股票了。
 
     :param id_or_symbols: 标的物
 
     """
-    if isinstance(id_or_symbols, (six.string_types, Instrument)):
-        id_or_symbols = [id_or_symbols]
-    order_book_ids = set(
-        assure_order_book_id(order_book_id) for order_book_id in id_or_symbols
-    )
+    order_book_ids: set[str] = set(cast(list, id_or_symbols))
     if order_book_ids != Environment.get_instance().get_universe():
         Environment.get_instance().update_universe(order_book_ids)
 

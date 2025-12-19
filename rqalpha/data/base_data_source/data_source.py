@@ -201,8 +201,7 @@ class BaseDataSource(AbstractDataSource):
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
 
-    def is_suspended(self, order_book_id, dates):
-        # type: (str, Sequence[DateLike]) -> List[bool]
+    def is_suspended(self, order_book_id: str, dates: Sequence[DateLike]) -> List[bool]:
         for date_set in self._suspend_days:
             result = date_set.contains(order_book_id, dates)
             if result is not None:
@@ -210,7 +209,7 @@ class BaseDataSource(AbstractDataSource):
         else:
             return [False] * len(dates)
 
-    def is_st_stock(self, order_book_id, dates):
+    def is_st_stock(self, order_book_id: str, dates: Sequence[DateLike]) -> List[bool]:
         result = self._st_stock_days.contains(order_book_id, dates)
         return result if result is not None else [False] * len(dates)
 

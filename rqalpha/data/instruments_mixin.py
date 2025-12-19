@@ -53,13 +53,17 @@ class InstrumentsMixin:
         return candidates[0]
 
     @lru_cache(2048)
-    def get_instrument_history(self, id_or_sym: str) -> List[Instrument]:
+    def get_instrument_history(self, id_or_sym: str, listed_at: Optional[datetime] = None) -> List[Instrument]:
         """获取合约历史记录列表（包括已退市的合约）。
 
         :param id_or_sym: 合约代码或 order_book_id
-        :returns: 合约对象列表
+        :param listed_at: 可选，指定时间点，若提供则只返回该时间点已经上市了的合约
+        :returns: 合约对象列表，按上市时间排序，上市时间早的在前
         """
-        return list(self._data_source.get_instruments(id_or_syms=[id_or_sym]))
+        result = list(self._data_source.get_instruments(id_or_syms=[id_or_sym]))
+        if listed_at is not None:
+            result = [ins for ins in result if ins.listed_at(listed_at)]
+        return sorted(result, key=lambda ins: ins.listed_date)
 
     def get_active_instruments(self, id_or_syms: Iterable[str], dt: datetime) -> Dict[str, Instrument]:
         """批量获取指定时间点上市的合约对象。

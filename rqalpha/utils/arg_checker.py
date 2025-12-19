@@ -17,7 +17,7 @@ import inspect
 import datetime
 import six
 import pandas as pd
-from typing import Iterable, Optional, List, Callable, Dict, Any
+from typing import Iterable, Optional, List, Callable, Dict, Any, Union
 from functools import wraps
 from contextlib import contextmanager
 
@@ -41,7 +41,6 @@ class ArgumentCheckerBase(object):
     """验证/转换规则的基类"""
     def __init__(self, arg_name):
         self._arg_name = arg_name
-        self._rules = []
 
     @property
     def arg_name(self):
@@ -107,11 +106,21 @@ def assure_listed_instrument(id_or_ins) -> Instrument:
         return _raise()
 
 
+def assure_order_book_id(order_book_id: str, expected_type: Optional[INSTRUMENT_TYPE] = None):
+    env = Environment.get_instance()
+    try:
+        order_book_id = env.data_proxy.assure_order_book_id(order_book_id, expected_type)
+    except InstrumentNotFound as e:
+        raise RQInvalidArgument(_("invalid order_book_id: {order_book_id}").format(order_book_id=order_book_id))
+    return order_book_id
+
+
 class ArgumentChecker(ArgumentCheckerBase):
     """仅验证参数，不修改参数值"""
     def __init__(self, arg_name, pre_check):
         super().__init__(arg_name)
         self._pre_check = pre_check
+        self._rules = []
 
     @property
     def pre_check(self):
@@ -149,14 +158,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         return self
 
     def is_valid_order_book_id(self, expected_type: Optional[INSTRUMENT_TYPE] = None):
-        def check(func_name, value):
-            env = Environment.get_instance()
-            try:
-                order_book_id = env.data_proxy.assure_order_book_id(value, expected_type)
-            except InstrumentNotFound as e:
-                raise RQInvalidArgument(_(f"func: {func_name}: invalid order_book_id: {value}").format(func_name, value))
-            return order_book_id
-        self._rules.append(check)
+        self._rules.append(lambda func_name, value: assure_order_book_id(value, expected_type))
         return self
 
     def _is_number(self, func_name, value):
@@ -399,17 +401,38 @@ class ArgumentConverter(ArgumentCheckerBase):
     """验证参数并转换参数值，转换后的值会替换原参数"""
     def __init__(self, arg_name):
         super().__init__(arg_name)
+        self._rules: List[Callable[[Any], Any]] = []
 
     def is_active_instrument(self):
         """验证并转换为上市中的 Instrument 对象"""
-        self._rules.append(lambda func_name, value: assure_active_instrument(value))
+        self._rules.append(assure_active_instrument)
         return self
 
-    def convert(self, func_name, call_args):
+    def is_valid_order_book_id(self):
+        def convert(value: Union[str, Instrument]):
+            if isinstance(value, Instrument):
+                return value.order_book_id
+            return assure_order_book_id(value)
+        self._rules.append(convert)
+        return self
+
+    def is_valid_oid_list(self):
+        def convert(value: Union[str, Iterable[str], Instrument, Iterable[Instrument]]):
+            result = []
+            for v in ([value] if isinstance(value, (str, Instrument)) else value):
+                if isinstance(v, Instrument):
+                    result.append(v.order_book_id)
+                else:
+                    result.append(assure_order_book_id(v))
+            return result
+        self._rules.append(convert)
+        return self
+
+    def convert(self, call_args):
         """执行转换规则，返回转换后的值"""
         value = call_args[self.arg_name]
         for r in self._rules:
-            value = r(func_name, value)
+            value = r(value)
         return value
 
 
@@ -458,7 +481,7 @@ class ApiArgumentsChecker(object):
         for r in checkers:
             r.verify(func_name, call_args)
 
-    def _apply_converters(self, func_name: str, get_call_args: Callable[[], Dict[str, Any]]):
+    def _apply_converters(self, get_call_args: Callable[[], Dict[str, Any]]):
         """应用所有转换器，返回转换后的参数字典"""
         converted = {}
         if not self._converters:
@@ -466,7 +489,7 @@ class ApiArgumentsChecker(object):
         # lazy evaluate call_args, avoid unnecessary evaluation
         call_args = get_call_args()
         for converter in self._converters:
-            converted[converter.arg_name] = converter.convert(func_name, call_args)
+            converted[converter.arg_name] = converter.convert(call_args)
         return converted
 
     @contextmanager
@@ -479,7 +502,7 @@ class ApiArgumentsChecker(object):
             return _call_args
 
         self._apply_checkers(self.pre_check_rules, func.__name__, call_args)
-        converted_args = self._apply_converters(func.__name__, call_args)
+        converted_args = self._apply_converters(call_args)
         if converted_args:
             updated_kwargs = call_args()
             updated_kwargs.update(converted_args)
@@ -505,7 +528,7 @@ class ApiArgumentsChecker(object):
             raise
 
 
-def apply_rules(*rules):
+def apply_rules(*rules: ArgumentCheckerBase):
     checker = ApiArgumentsChecker(rules)
 
     def decorator(func):

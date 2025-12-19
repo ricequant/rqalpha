@@ -22,11 +22,11 @@ import numpy as np
 
 from rqalpha.api import export_as_api
 from rqalpha.apis.api_abstract import order, order_to, buy_open, buy_close, sell_open, sell_close, PRICE_OR_STYLE_TYPE
-from rqalpha.apis.api_base import cal_style
+from rqalpha.apis.api_base import cal_style, assure_active_ins_for_order_api
 from rqalpha.apis.api_rqdatac import futures
 from rqalpha.environment import Environment
-from rqalpha.model.order import Order, LimitOrder, OrderStyle, ALGO_ORDER_STYLES
-from rqalpha.const import SIDE, POSITION_EFFECT, ORDER_TYPE, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
+from rqalpha.model.order import Order, LimitOrder, OrderStyle
+from rqalpha.const import SIDE, POSITION_EFFECT, RUN_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.model.instrument import Instrument
 from rqalpha.portfolio.position import Position
 from rqalpha.utils import is_valid_price
@@ -40,8 +40,7 @@ from rqalpha.utils.functools import cast_singledispatch
 __all__ = []
 
 
-def _submit_order(ins: Instrument, amount, side, position_effect, style):
-    order_book_id = ins.order_book_id
+def _submit_order(order_book_id: str, amount, side, position_effect, style) -> Union[Order, List[Order], None]:
     env = Environment.get_instance()
 
     amount = int(amount)
@@ -53,7 +52,9 @@ def _submit_order(ins: Instrument, amount, side, position_effect, style):
         return None
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
         raise RQInvalidArgument(_(u"Limit order price should not be nan."))
-
+    ins = assure_active_ins_for_order_api(order_book_id)
+    if ins is None:
+        return
     if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == INSTRUMENT_TYPE.FUTURE:
         if "88" in order_book_id:
             raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
@@ -69,7 +70,7 @@ def _submit_order(ins: Instrument, amount, side, position_effect, style):
     orders = []
     if position_effect in (POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.CLOSE):
         direction = POSITION_DIRECTION.LONG if side == SIDE.SELL else POSITION_DIRECTION.SHORT
-        position = env.portfolio.get_position(order_book_id, direction)  # type: Position
+        position = env.portfolio.get_position(order_book_id, direction)
         if position_effect == POSITION_EFFECT.CLOSE_TODAY:
             if amount > position.today_closable:
                 reason = _(
@@ -130,10 +131,10 @@ def _submit_order(ins: Instrument, amount, side, position_effect, style):
         return orders
 
 
-def _order(ins: Instrument, quantity: Union[int, float], style: OrderStyle, target: bool) -> List[Order]:
+def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, target: bool) -> List[Order]:
     portfolio = Environment.get_instance().portfolio
-    long_position = portfolio.get_position(ins.order_book_id, POSITION_DIRECTION.LONG)
-    short_position = portfolio.get_position(ins.order_book_id, POSITION_DIRECTION.SHORT)
+    long_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
+    short_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.SHORT)
     if target:
         # For order_to
         quantity -= (long_position.quantity - short_position.quantity)
@@ -152,55 +153,90 @@ def _order(ins: Instrument, quantity: Union[int, float], style: OrderStyle, targ
     old_to_be_closed, today_to_be_closed = position_to_be_closed.old_quantity, position_to_be_closed.today_quantity
     if old_to_be_closed > 0:
         # 平昨仓
-        orders.append(_submit_order(ins, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
+        orders.append(_submit_order(order_book_id, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
         quantity -= old_to_be_closed
     if quantity <= 0:
         return orders
     if today_to_be_closed > 0:
         # 平今仓
         orders.append(_submit_order(
-            ins, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
+            order_book_id, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
         ))
         quantity -= today_to_be_closed
     if quantity <= 0:
         return orders
     # 开仓
-    orders.append(_submit_order(ins, quantity, side, POSITION_EFFECT.OPEN, style))
+    orders.append(_submit_order(order_book_id, quantity, side, POSITION_EFFECT.OPEN, style))
     return orders
 
 
-def future_order(order_book_id: Instrument, quantity, price_or_style=None, price=None, style=None):
-    # type: (Instrument, int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
+def future_order(
+    order_book_id: str, 
+    quantity: int, 
+    price_or_style: PRICE_OR_STYLE_TYPE = None, 
+    price: Optional[float] = None, 
+    style: Optional[OrderStyle] = None
+) -> List[Order]:
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), False)
 
 
-def future_order_to(order_book_id: Instrument, quantity, price_or_style=None, price=None, style=None):
-    # type: (Instrument, int, PRICE_OR_STYLE_TYPE, Optional[float], Optional[OrderStyle]) -> List[Order]
+def future_order_to(
+    order_book_id: str, 
+    quantity: int, 
+    price_or_style: PRICE_OR_STYLE_TYPE = None, 
+    price: Optional[float] = None, 
+    style: Optional[OrderStyle] = None
+) -> List[Order]:
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), True)
 
 
-def future_buy_open(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None):
+def future_buy_open(
+    id_or_ins: str, 
+    amount: int, 
+    price_or_style: PRICE_OR_STYLE_TYPE = None, 
+    price: Optional[float] = None, 
+    style: Optional[OrderStyle] = None
+) -> Union[Order, List[Order], None]:
     return _submit_order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
-def future_buy_close(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None, close_today=False):
+def future_buy_close(
+    id_or_ins: str, 
+    amount: int, 
+    price_or_style: PRICE_OR_STYLE_TYPE = None, 
+    price: Optional[float] = None, 
+    style: Optional[OrderStyle] = None, 
+    close_today: bool = False
+) -> Union[Order, List[Order], None]:
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.BUY, position_effect, cal_style(price, style, price_or_style))
 
 
-def future_sell_open(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None):
+def future_sell_open(
+    id_or_ins: str, 
+    amount: int, 
+    price_or_style: PRICE_OR_STYLE_TYPE = None, 
+    price: Optional[float] = None, 
+    style: Optional[OrderStyle] = None
+) -> Union[Order, List[Order], None]:
     return _submit_order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
-def future_sell_close(id_or_ins: Instrument, amount, price_or_style=None, price=None, style=None, close_today=False):
+def future_sell_close(
+    id_or_ins: str, 
+    amount: int, 
+    price_or_style: PRICE_OR_STYLE_TYPE = None, 
+    price: Optional[float] = None, 
+    style: Optional[OrderStyle] = None, 
+    close_today: bool = False
+) -> Union[Order, List[Order], None]:
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
     return _submit_order(id_or_ins, amount, SIDE.SELL, position_effect, cal_style(price, style, price_or_style))
 
 
 @export_as_api
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
-def get_future_contracts(underlying_symbol):
-    # type: (str) -> List[str]
+def get_future_contracts(underlying_symbol: str) -> List[str]:
     """
     获取某一期货品种在策略当前日期的可交易合约order_book_id列表。按照到期月份，下标从小到大排列，返回列表中第一个合约对应的就是该品种的近月合约。
 

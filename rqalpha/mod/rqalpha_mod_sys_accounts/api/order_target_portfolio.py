@@ -326,7 +326,7 @@ def order_target_portfolio_smart(
             order = _order_value(
                 account, 
                 account.get_position(order_book_id), 
-                env.data_proxy.instrument_not_none(order_book_id), 
+                order_book_id, 
                 account.cash, 
                 _get_style(order_book_id), 
                 zero_amount_as_exception=False

@@ -177,7 +177,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
             return BarObject(instrument, bar)
         return BarObject(instrument, NANDict, dt)
 
-    def get_open_auction_bar(self, order_book_id, dt):
+    def get_open_auction_bar(self, order_book_id: str, dt):
         instrument = self.instruments(order_book_id)
         try:
             bar = self._data_source.get_open_auction_bar(instrument, dt)
@@ -265,15 +265,14 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)
 
-    def is_suspended(self, order_book_id, dt, count=1):
-        # type: (str, DateLike, int) -> Union[Sequence[bool], bool]
+    def is_suspended(self, order_book_id: str, dt: DateLike, count: int = 1) -> Union[bool, List[bool]]:
         if count == 1:
             return self._data_source.is_suspended(order_book_id, [dt])[0]
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_suspended(order_book_id, trading_dates)
 
-    def is_st_stock(self, order_book_id, dt, count=1):
+    def is_st_stock(self, order_book_id: str, dt: DateLike, count: int = 1) -> Union[bool, List[bool]]:
         if count == 1:
             return self._data_source.is_st_stock(order_book_id, [dt])[0]
 
@@ -283,8 +282,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
     def get_tick_size(self, order_book_id):
         return self.instruments(order_book_id).tick_size()
 
-    def get_last_price(self, order_book_id):
-        # type: (str) -> float
+    def get_last_price(self, order_book_id: str) -> float:
         return float(self._price_board.get_last_price(order_book_id))
 
     def get_future_contracts(self, underlying, date):
