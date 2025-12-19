@@ -303,8 +303,7 @@ def order_target_portfolio_smart(
         target_weights=Series(target_weights),
         valuation_prices=prices,
         env=env
-    )(
-    )
+    )()
 
     orders = []
 
