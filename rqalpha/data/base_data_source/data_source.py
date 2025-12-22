@@ -32,7 +32,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE, MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.interface import AbstractDataSource, ExchangeRate
 from rqalpha.model.instrument import Instrument
-from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_date, convert_int_to_datetime)
+from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_date, convert_int_to_datetime, convert_dt_to_int)
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.typing import DateLike
@@ -266,13 +266,26 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
+    @lru_cache(1024)
     def get_ex_cum_factor(self, instrument: Instrument):
         try:
             ex_factor_store = self._ex_factor_stores[instrument.type, instrument.market]
         except KeyError:
             return None
-
-        return ex_factor_store.get_factors(instrument.order_book_id)
+        factors = ex_factor_store.get_factors(instrument.order_book_id)
+        if factors is None:
+            return None
+        # 考虑代码复用的情况，需要过滤掉不在上市日期范围内到数据
+        factors = factors[
+            (factors["start_date"] >= convert_dt_to_int(instrument.listed_date)) & 
+            (factors["start_date"] <= convert_dt_to_int(instrument.de_listed_date))
+        ]
+        if len(factors) == 0:
+            return None
+        if factors["start_date"][0] != 0:
+            # kind of dirty，强行设置初始值为 1
+            factors = np.concatenate([np.array([(0, 1.0)], dtype=factors.dtype), factors])
+        return factors
 
     def _update_weekly_trading_date_index(self, idx):
         env = Environment.get_instance()

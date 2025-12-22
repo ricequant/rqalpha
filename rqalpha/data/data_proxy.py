@@ -217,7 +217,10 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         adjust_type: str = 'pre', 
         adjust_orig: Optional[datetime] = None
     ):
-        instrument = self.instrument_not_none(order_book_id)
+        instruments = self.get_instrument_history(order_book_id, dt)
+        if len(instruments) == 0:
+            raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=order_book_id))
+        instrument = instruments[-1]
         if adjust_orig is None:
             adjust_orig = dt
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
