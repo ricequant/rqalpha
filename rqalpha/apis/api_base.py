@@ -18,7 +18,7 @@ from __future__ import division
 
 import types
 from datetime import date, datetime
-from typing import Callable, List, Optional, Union, Iterable, cast
+from typing import Callable, List, Optional, Union, Iterable, cast, Dict
 
 import pandas as pd
 import numpy as np
@@ -726,7 +726,7 @@ def active_instrument(order_book_id: Union[str, Instrument]) -> Instrument:
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(assure_that("order_book_id").is_valid_order_book_id())
-def instrument_history(order_book_id: str) -> list[Instrument]:
+def instrument_history(order_book_id: str) -> List[Instrument]:
     """
     获取指定合约的历史记录列表（包含未上市或已退市合约）。
 
@@ -749,7 +749,7 @@ def instrument_history(order_book_id: str) -> list[Instrument]:
 @apply_rules(assure_that("order_book_ids").is_valid_oid_list())
 def active_instruments(
     order_book_ids: Union[str, Instrument, Iterable[str], Iterable[Instrument]]
-) -> dict[str, Instrument]:
+) -> Dict[str, Instrument]:
     """
     批量获取当前交易时点已上市的合约对象。
 
@@ -774,7 +774,7 @@ def active_instruments(
 @apply_rules(assure_that("order_book_ids").is_valid_oid_list())
 def instruments_history(
     order_book_ids: Union[str, Instrument, Iterable[str], Iterable[Instrument]]
-) -> list[Instrument]:
+) -> List[Instrument]:
     """
     批量获取合约历史记录列表（包含已退市合约）。
 
