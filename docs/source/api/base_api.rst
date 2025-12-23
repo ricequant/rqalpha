@@ -325,6 +325,30 @@ instruments - 合约详细信息
 ..  autofunction:: instruments
 
 
+active_instrument - 当前交易时点活跃合约
+------------------------------------------------------
+
+..  autofunction:: active_instrument
+
+
+instrument_history - 合约历史记录
+------------------------------------------------------
+
+..  autofunction:: instrument_history
+
+
+active_instruments - 批量活跃合约
+------------------------------------------------------
+
+..  autofunction:: active_instruments
+
+
+instruments_history - 批量合约历史记录
+------------------------------------------------------
+
+..  autofunction:: instruments_history
+
+
 history_bars - 某一合约历史 bar 数据
 ------------------------------------------------------
 

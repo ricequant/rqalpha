@@ -610,7 +610,7 @@ def all_instruments(type=None, date=None):
     else:
         types = None
 
-    result = env.data_proxy.all_instruments(types, dt)
+    result = env.data_proxy.get_all_instruments(types, dt)
     if types is not None and len(types) == 1:
         data = []
         for i in result:
@@ -641,6 +641,7 @@ def all_instruments(type=None, date=None):
 def instruments(id_or_symbols: Union[str, Iterable[str]]) -> Union[None, Instrument, List[Instrument]]:
     """
     获取某个国家市场内一个或多个合约的详细信息。目前仅支持中国市场。
+    若传入单个合约代码且存在多个历史合约，则返回合约列表；找不到合约时返回 None。
 
     :param id_or_symbols: 合约代码或者合约代码列表
 
@@ -702,12 +703,87 @@ def instruments(id_or_symbols: Union[str, Iterable[str]]) -> Union[None, Instrum
     EXECUTION_PHASE.AFTER_TRADING,
     EXECUTION_PHASE.SCHEDULED,
 )
-@apply_rules(assure_that("id_or_sym").is_active_instrument())
-def active_instrument(id_or_sym: Union[str, Instrument]) -> Instrument:
-    return cast(Instrument, id_or_sym)
+@apply_rules(assure_that("order_book_id").is_active_instrument())
+def active_instrument(order_book_id: Union[str, Instrument]) -> Instrument:
+    """
+    获取当前交易时点正在活跃（上市中、未退市）的合约对象。
+
+    :param order_book_id: 合约代码或 Instrument
+    :return: 当前交易时点有效的 Instrument 对象
+    :raises: 若合约在当前交易时点未上市或已退市，会抛出异常
+    """
+    return cast(Instrument, order_book_id)
 
 
-# TODO: 提供 instrument_history, active_instruments, instruments_history 等 API
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("order_book_id").is_valid_order_book_id())
+def instrument_history(order_book_id: str) -> list[Instrument]:
+    """
+    获取指定合约的历史记录列表（包含未上市或已退市合约）。
+
+    :param order_book_id: 合约代码或 symbol
+    :return: 合约历史列表，按上市时间排序
+    """
+    return Environment.get_instance().data_proxy.get_instrument_history(order_book_id)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("order_book_ids").is_valid_oid_list())
+def active_instruments(
+    order_book_ids: Union[str, Instrument, Iterable[str], Iterable[Instrument]]
+) -> dict[str, Instrument]:
+    """
+    批量获取当前交易时点已上市的合约对象。
+
+    :param order_book_ids: 合约代码或 Instrument 的可迭代对象
+    :return: order_book_id -> Instrument 的映射
+    """
+    env = Environment.get_instance()
+    dt = env.trading_dt
+    return env.data_proxy.get_active_instruments(cast(list, order_book_ids), dt)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("order_book_ids").is_valid_oid_list())
+def instruments_history(
+    order_book_ids: Union[str, Instrument, Iterable[str], Iterable[Instrument]]
+) -> list[Instrument]:
+    """
+    批量获取合约历史记录列表（包含已退市合约）。
+
+    :param order_book_ids: 合约代码或 Instrument 的可迭代对象
+    :return: 合约对象列表
+    """
+    env = Environment.get_instance()
+    return env.data_proxy.get_instruments_history(cast(list, order_book_ids))
+
 
 @export_as_api
 @apply_rules(
@@ -1001,5 +1077,4 @@ def repay(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
     """
     env = Environment.get_instance()
     return env.portfolio.finance_repay(amount * -1, account_type)
-
 
