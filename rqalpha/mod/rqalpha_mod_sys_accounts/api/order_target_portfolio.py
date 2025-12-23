@@ -6,7 +6,7 @@ from pandas import Series, Index, DataFrame
 from numpy import sign, round as np_round, inf
 
 from rqalpha.api import export_as_api
-from rqalpha.apis.api_base import assure_instrument
+from rqalpha.utils.arg_checker import assure_active_instrument
 from rqalpha.model.order import AlgoOrder, MarketOrder, LimitOrder, OrderStyle
 from rqalpha.model.order import Order
 from rqalpha.environment import Environment
@@ -55,7 +55,7 @@ class OrderTargetPortfolio:
 
         self._env = env
 
-        instruments = env.data_proxy.multi_instruments(index)
+        instruments = env.data_proxy.get_active_instruments(index, env.trading_dt)
         for i in instruments.values():
             if i.type != INSTRUMENT_TYPE.CS:
                 raise RQApiNotSupportedError(_("instrument type {} is not supported").format(i.type))
@@ -274,7 +274,7 @@ def order_target_portfolio_smart(
 
     env = Environment.get_instance()
     target_weights = Series({
-        assure_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
+        assure_active_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
     }, dtype=float)
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     if isinstance(order_prices, (Mapping, Series)):
@@ -303,8 +303,7 @@ def order_target_portfolio_smart(
         target_weights=Series(target_weights),
         valuation_prices=prices,
         env=env
-    )(
-    )
+    )()
 
     orders = []
 
@@ -326,7 +325,7 @@ def order_target_portfolio_smart(
             order = _order_value(
                 account, 
                 account.get_position(order_book_id), 
-                env.data_proxy.instrument_not_none(order_book_id), 
+                order_book_id, 
                 account.cash, 
                 _get_style(order_book_id), 
                 zero_amount_as_exception=False

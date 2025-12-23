@@ -568,12 +568,10 @@ class AbstractDataSource(object):
         """
         raise NotImplementedError
 
-    def is_suspended(self, order_book_id, dates):
-        # type: (str, Sequence[DateLike]) -> Sequence[bool]
+    def is_suspended(self, order_book_id: str, dates: Sequence[DateLike]) -> List[bool]:
         raise NotImplementedError
 
-    def is_st_stock(self, order_book_id, dates):
-        # type: (str, Sequence[DateLike]) -> Sequence[bool]
+    def is_st_stock(self, order_book_id: str, dates: Sequence[DateLike]) -> List[bool]:
         raise NotImplementedError
 
     def get_algo_bar(self, id_or_ins: Union[str, Instrument], start_min: int, end_min: int, dt: datetime) -> Optional[numpy.ndarray]:

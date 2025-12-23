@@ -24,12 +24,12 @@ class BarDictPriceBoard(AbstractPriceBoard):
     def __init__(self):
         self._env = Environment.get_instance()
 
-    def _get_bar(self, order_book_id):
+    def _get_bar(self, order_book_id: str):
         if ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION:
             return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.trading_dt)
         return self._env.get_bar(order_book_id)
 
-    def get_last_price(self, order_book_id):
+    def get_last_price(self, order_book_id: str):
         return self._get_bar(order_book_id).last
 
     def get_limit_up(self, order_book_id):

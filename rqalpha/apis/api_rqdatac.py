@@ -827,7 +827,7 @@ def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
 
 
 @export_as_api
-@apply_rules(verify_that('order_book_id').is_valid_instrument(),
+@apply_rules(verify_that('order_book_id').is_valid_order_book_id(),
              verify_that('quarter').is_valid_quarter(),
              verify_that('fields').are_valid_fields(VALID_CURRENT_PERFORMANCE_FIELDS, ignore_none=True))
 def current_performance(order_book_id, info_date=None, quarter=None, interval='1q', fields=None):

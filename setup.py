@@ -34,7 +34,7 @@ requirements = [
     "openpyxl",
     "methodtools",
     "filelock",
-    "typing-extensions <4.8.0 ; python_version <= '3.7'"
+    "typing-extensions >=4.5.0"
 ]
 
 if sys.version_info.major == 2 and sys.version_info.minor == 7:

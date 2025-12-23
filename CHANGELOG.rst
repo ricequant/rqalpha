@@ -2,6 +2,43 @@
 CHANGELOG
 ==================
 
+6.1.0
+==================
+
+本次迭代包含重大的架构基本假设变更：
+  - 旧版本隐含假设了 每个 order_book_id 只对应唯一的 Instrument 对象，这与实际业务逻辑不符；
+  - 新版本假设 instrument 是时序的，同一个 order_book_id 在不同时间点可能对应不同的 Instrument 对象；
+
+**[不兼容改动]**
+
+- `get_position` 不能传入还未上市的 order_book_id，传入此类代码会抛出异常
+- `Instrument.listing_at` 更名为 `active_at`，旧方法移除
+
+**[新增功能]**
+
+- 新增 `active_instrument` / `active_instruments` API，用于获取当前交易时点正在活跃（上市中、未退市）的合约对象
+- 新增 `instrument_history`/ `instruments_history` API，用于获取合约历史记录列表（包含未上市或已退市合约）
+
+**[重构和改善]**
+
+- API 参数校验支持自动转换（Instrument/symbol -> order_book_id），统一下单与查询路径
+- 风控、下单、分析等模块统一基于交易时点的合约对象进行判断
+
+**[其他改进]**
+
+- 依赖调整：`typing-extensions` 版本提升至 `>=4.5.0`
+- 更新翻译文件
+
+**[For Mod 开发者] 接口变更指引**
+
+- `DataProxy` 增加合约历史/活跃合约相关接口（如 `get_active_instrument(s)`、`get_instrument_history`、`get_instruments_history` 等）
+- `Environment.get_instrument` 及 `DataProxy` 旧合约相关接口（因不符合新假设）标记为废弃
+- 参数校验体系调整
+  - 新增 `assure_that` 支持参数自动转换（如 Instrument / symbol -> order_book_id），若 API 内部需要参数格式转换，推荐直接使用该功能将检验和转换合并
+  - 移除部分依赖 “全局唯一 Instrument” 假设的校验规则，如 `is_valid_stock` / `is_valid_future` / `is_valid_instrument` 等
+  - 新增 `is_valid_order_book_id` 用于 order_book_id 的基础合法性检验/转换
+
+
 6.0.0
 ==================
 

@@ -18,7 +18,7 @@ from __future__ import division
 
 import types
 from datetime import date, datetime
-from typing import Callable, List, Optional, Union, Iterable
+from typing import Callable, List, Optional, Union, Iterable, cast, Dict
 
 import pandas as pd
 import numpy as np
@@ -28,9 +28,9 @@ from rqalpha.apis import names
 from rqalpha.environment import Environment
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
-from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.exception import RQInvalidArgument, InstrumentNotFound
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.arg_checker import apply_rules, verify_that
+from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that
 from rqalpha.api import export_as_api
 from rqalpha.utils.logger import user_log as logger, user_system_log, user_print
 from rqalpha.model.instrument import Instrument
@@ -60,22 +60,23 @@ export_as_api(MATCHING_TYPE, name='MATCHING_TYPE')
 export_as_api(EVENT, name='EVENT')
 
 
-def assure_instrument(id_or_ins) -> Instrument:
-    if isinstance(id_or_ins, Instrument):
-        return id_or_ins
-    elif isinstance(id_or_ins, six.string_types):
-        ins = Environment.get_instance().data_proxy.instrument(id_or_ins)
-        if not ins:
-            raise RQInvalidArgument(_(
-                "invalid argument, expected order_book_ids or Instrument objects, got {} (type: {})"
-            ).format(id_or_ins, type(id_or_ins)))
-        return ins
-    else:
-        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
-
-
 def assure_order_book_id(id_or_ins):
-    return assure_instrument(id_or_ins).order_book_id
+    if isinstance(id_or_ins, Instrument):
+        return id_or_ins.order_book_id
+    try:
+        return Environment.get_instance().data_proxy.assure_order_book_id(id_or_ins)
+    except InstrumentNotFound as e:
+        raise RQInvalidArgument(_("instrument {} not found").format(id_or_ins))
+
+
+def assure_active_ins_for_order_api(order_book_id: str) -> Optional[Instrument]:
+    env = Environment.get_instance()
+    try:
+        return env.data_proxy.get_active_instrument(order_book_id, env.trading_dt)
+    except InstrumentNotFound as e:
+        reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(order_book_id=order_book_id)
+        user_system_log.warn(reason)
+        env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))
 
 
 def cal_style(price, style, price_or_style=None):
@@ -134,12 +135,19 @@ def get_open_orders():
 
 @export_as_api
 @apply_rules(
-    verify_that("id_or_ins").is_valid_instrument(),
+    assure_that("id_or_ins").is_valid_order_book_id(),
     verify_that("amount").is_number().is_greater_than(0),
     verify_that("side").is_in([SIDE.BUY, SIDE.SELL]),
 )
-def submit_order(id_or_ins, amount, side, price_or_style=None, price=None, style=None, position_effect=None):
-    # type: (Union[str, Instrument], float, SIDE, Optional[float], Optional[POSITION_EFFECT]) -> Optional[Order]
+def submit_order(
+    id_or_ins: Union[str, Instrument],
+    amount: float,
+    side: SIDE,
+    price_or_style: Optional[Union[float, OrderStyle, LimitOrder, MarketOrder, VWAPOrder, TWAPOrder]] = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None,
+    position_effect: Optional[POSITION_EFFECT] = None,
+) -> Optional[Order]:
     """
     通用下单函数，策略可以通过该函数自由选择参数下单。
 
@@ -158,12 +166,12 @@ def submit_order(id_or_ins, amount, side, price_or_style=None, price=None, style
         submit_order('RB1812', 10, SIDE.SELL, price=4000, position_effect=POSITION_EFFECT.CLOSE_TODAY)
 
     """
-    order_book_id = assure_order_book_id(id_or_ins)
+    order_book_id = cast(str, id_or_ins)
+    ins = assure_active_ins_for_order_api(order_book_id)
+    if ins is None:
+        return
     env = Environment.get_instance()
-    if (
-            env.config.base.run_type != RUN_TYPE.BACKTEST
-            and env.get_instrument(order_book_id).type == "Future"
-    ):
+    if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == "Future":
         if "88" in order_book_id:
             raise RQInvalidArgument(
                 _(u"Main Future contracts[88] are not supported in paper trading.")
@@ -231,20 +239,15 @@ def cancel_order(order):
     EXECUTION_PHASE.AFTER_TRADING,
     EXECUTION_PHASE.SCHEDULED,
 )
-@apply_rules(verify_that("id_or_symbols").are_valid_instruments())
-def update_universe(id_or_symbols):
-    # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
+@apply_rules(assure_that("id_or_symbols").is_valid_oid_list())
+def update_universe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[Instrument]]):
     """
     该方法用于更新现在关注的证券的集合（e.g.：股票池）。PS：会在下一个bar事件触发时候产生（新的关注的股票池更新）效果。并且update_universe会是覆盖（overwrite）的操作而不是在已有的股票池的基础上进行增量添加。比如已有的股票池为['000001.XSHE', '000024.XSHE']然后调用了update_universe(['000030.XSHE'])之后，股票池就会变成000030.XSHE一个股票了，随后的数据更新也只会跟踪000030.XSHE这一个股票了。
 
     :param id_or_symbols: 标的物
 
     """
-    if isinstance(id_or_symbols, (six.string_types, Instrument)):
-        id_or_symbols = [id_or_symbols]
-    order_book_ids = set(
-        assure_order_book_id(order_book_id) for order_book_id in id_or_symbols
-    )
+    order_book_ids: set[str] = set(cast(list, id_or_symbols))
     if order_book_ids != Environment.get_instance().get_universe():
         Environment.get_instance().update_universe(order_book_ids)
 
@@ -525,7 +528,7 @@ def history_bars(
 
 @export_as_api
 @apply_rules(
-    verify_that("order_book_id", pre_check=True).is_listed_instrument(),
+    verify_that("order_book_id", pre_check=True).is_active_instrument(),
     verify_that('count').is_instance_of(int).is_greater_than(0)
 )
 def history_ticks(order_book_id, count):
@@ -607,7 +610,7 @@ def all_instruments(type=None, date=None):
     else:
         types = None
 
-    result = env.data_proxy.all_instruments(types, dt)
+    result = env.data_proxy.get_all_instruments(types, dt)
     if types is not None and len(types) == 1:
         data = []
         for i in result:
@@ -635,10 +638,10 @@ def all_instruments(type=None, date=None):
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(verify_that("id_or_symbols").is_instance_of((str, Iterable)))
-def instruments(id_or_symbols):
-    # type: (Union[str, List[str]]) -> Union[Instrument, List[Instrument]]
+def instruments(id_or_symbols: Union[str, Iterable[str]]) -> Union[None, Instrument, List[Instrument]]:
     """
     获取某个国家市场内一个或多个合约的详细信息。目前仅支持中国市场。
+    若传入单个合约代码且存在多个历史合约，则返回合约列表；找不到合约时返回 None。
 
     :param id_or_symbols: 合约代码或者合约代码列表
 
@@ -676,7 +679,110 @@ def instruments(id_or_symbols):
 
             instruments('IF1701').days_to_expire()
     """
-    return Environment.get_instance().data_proxy.instruments(id_or_symbols)
+    env = Environment.get_instance()
+    data_proxy = env.data_proxy
+    if isinstance(id_or_symbols, str):
+        instruments = data_proxy.get_instrument_history(id_or_symbols)
+    else:
+        instruments = data_proxy.get_instruments_history(id_or_symbols)
+    # 返回值的行为有点恶心，为了兼容旧版本
+    if not instruments:
+        return None
+    if len(instruments) == 1:
+        return instruments[0]
+    return instruments
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("order_book_id").is_active_instrument())
+def active_instrument(order_book_id: Union[str, Instrument]) -> Instrument:
+    """
+    获取当前交易时点正在活跃（上市中、未退市）的合约对象。
+
+    :param order_book_id: 合约代码或 Instrument
+    :return: 当前交易时点有效的 Instrument 对象
+    :raises: 若合约在当前交易时点未上市或已退市，会抛出异常
+    """
+    return cast(Instrument, order_book_id)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("order_book_id").is_valid_order_book_id())
+def instrument_history(order_book_id: str) -> List[Instrument]:
+    """
+    获取指定合约的历史记录列表（包含未上市或已退市合约）。
+
+    :param order_book_id: 合约代码或 symbol
+    :return: 合约历史列表，按上市时间排序
+    """
+    return Environment.get_instance().data_proxy.get_instrument_history(order_book_id)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("order_book_ids").is_valid_oid_list())
+def active_instruments(
+    order_book_ids: Union[str, Instrument, Iterable[str], Iterable[Instrument]]
+) -> Dict[str, Instrument]:
+    """
+    批量获取当前交易时点已上市的合约对象。
+
+    :param order_book_ids: 合约代码或 Instrument 的可迭代对象
+    :return: order_book_id -> Instrument 的映射
+    """
+    env = Environment.get_instance()
+    dt = env.trading_dt
+    return env.data_proxy.get_active_instruments(cast(list, order_book_ids), dt)
+
+
+@export_as_api
+@ExecutionContext.enforce_phase(
+    EXECUTION_PHASE.ON_INIT,
+    EXECUTION_PHASE.BEFORE_TRADING,
+    EXECUTION_PHASE.OPEN_AUCTION,
+    EXECUTION_PHASE.ON_BAR,
+    EXECUTION_PHASE.ON_TICK,
+    EXECUTION_PHASE.AFTER_TRADING,
+    EXECUTION_PHASE.SCHEDULED,
+)
+@apply_rules(assure_that("order_book_ids").is_valid_oid_list())
+def instruments_history(
+    order_book_ids: Union[str, Instrument, Iterable[str], Iterable[Instrument]]
+) -> List[Instrument]:
+    """
+    批量获取合约历史记录列表（包含已退市合约）。
+
+    :param order_book_ids: 合约代码或 Instrument 的可迭代对象
+    :return: 合约对象列表
+    """
+    env = Environment.get_instance()
+    return env.data_proxy.get_instruments_history(cast(list, order_book_ids))
 
 
 @export_as_api
@@ -755,7 +861,7 @@ def get_next_trading_date(date, n=1):
     EXECUTION_PHASE.AFTER_TRADING,
     EXECUTION_PHASE.SCHEDULED,
 )
-@apply_rules(verify_that("id_or_symbol").is_valid_instrument())
+@apply_rules(verify_that("id_or_symbol").is_valid_order_book_id())
 def current_snapshot(id_or_symbol):
     # type: (Union[str, Instrument]) -> Optional[TickObject]
     """
@@ -819,10 +925,11 @@ def get_positions():
 
 @export_as_api
 @apply_rules(
+    # 注意，此处存在不兼容的改动，旧的行为：在合约未上市时获取到的
+    verify_that("order_book_id").is_active_instrument(),
     verify_that("direction").is_in([POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT])
 )
-def get_position(order_book_id, direction=POSITION_DIRECTION.LONG):
-    # type: (str, Optional[POSITION_DIRECTION]) -> Position
+def get_position(order_book_id: str, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> Position:
     """
     获取某个标的的持仓对象。
 
@@ -970,5 +1077,4 @@ def repay(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
     """
     env = Environment.get_instance()
     return env.portfolio.finance_repay(amount * -1, account_type)
-
 

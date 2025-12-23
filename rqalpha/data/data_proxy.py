@@ -16,12 +16,12 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Tuple, Iterable, Dict
+from typing import Union, List, Sequence, Optional, Tuple, Iterable, Dict, Callable
 
 import numpy as np
 import pandas as pd
 
-from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE, EXECUTION_PHASE, MARKET
+from rqalpha.const import INSTRUMENT_TYPE, EXECUTION_PHASE, MARKET
 from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
@@ -29,19 +29,22 @@ from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import ALGO_ORDER_STYLES
 from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.datetime_func import convert_int_to_datetime, convert_date_to_int
+from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.utils.typing import DateLike, StrOrIter
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, ExchangeRate
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils.typing import DateLike
+from rqalpha.utils.exception import InstrumentNotFound
 
+from .instruments_mixin import InstrumentsMixin
 
-class DataProxy(TradingDatesMixin):
+class DataProxy(TradingDatesMixin, InstrumentsMixin):
     def __init__(self, data_source: AbstractDataSource, price_board: AbstractPriceBoard):
         self._data_source = data_source
         self._price_board = price_board
         TradingDatesMixin.__init__(self, data_source)
+        InstrumentsMixin.__init__(self, data_source)
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)
@@ -153,17 +156,16 @@ class DataProxy(TradingDatesMixin):
             return np.nan
         return self._get_prev_settlement(instrument, dt)
 
-    def get_settlement(self, instrument, dt):
-        # type: (Instrument, datetime) -> float
+    def get_settlement(self, instrument: Instrument, dt: datetime) -> float:
         if instrument.type != INSTRUMENT_TYPE.FUTURE:
             raise LookupError("'{}', instrument_type={}".format(instrument.order_book_id, instrument.type))
         return self._get_settlement(instrument, dt)
 
-    def get_settle_price(self, order_book_id, date):
-        instrument = self.instruments(order_book_id)
+    def get_settle_price(self, order_book_id, trading_dt: datetime):
+        instrument = self.get_active_instrument(order_book_id, trading_dt)
         if instrument.type != 'Future':
             return np.nan
-        return self._data_source.get_settle_price(instrument, date)
+        return self._data_source.get_settle_price(instrument, trading_dt)
 
     @lru_cache(512)
     def get_bar(self, order_book_id: str, dt: date, frequency: str = '1d') -> BarObject:
@@ -175,7 +177,7 @@ class DataProxy(TradingDatesMixin):
             return BarObject(instrument, bar)
         return BarObject(instrument, NANDict, dt)
 
-    def get_open_auction_bar(self, order_book_id, dt):
+    def get_open_auction_bar(self, order_book_id: str, dt):
         instrument = self.instruments(order_book_id)
         try:
             bar = self._data_source.get_open_auction_bar(instrument, dt)
@@ -215,7 +217,10 @@ class DataProxy(TradingDatesMixin):
         adjust_type: str = 'pre', 
         adjust_orig: Optional[datetime] = None
     ):
-        instrument = self.instrument_not_none(order_book_id)
+        instruments = self.get_instrument_history(order_book_id, dt)
+        if len(instruments) == 0:
+            raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=order_book_id))
+        instrument = instruments[-1]
         if adjust_orig is None:
             adjust_orig = dt
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
@@ -263,15 +268,14 @@ class DataProxy(TradingDatesMixin):
     def get_merge_ticks(self, order_book_id_list, trading_date, last_dt=None):
         return self._data_source.get_merge_ticks(order_book_id_list, trading_date, last_dt)
 
-    def is_suspended(self, order_book_id, dt, count=1):
-        # type: (str, DateLike, int) -> Union[Sequence[bool], bool]
+    def is_suspended(self, order_book_id: str, dt: DateLike, count: int = 1) -> Union[bool, List[bool]]:
         if count == 1:
             return self._data_source.is_suspended(order_book_id, [dt])[0]
 
         trading_dates = self.get_n_trading_dates_until(dt, count)
         return self._data_source.is_suspended(order_book_id, trading_dates)
 
-    def is_st_stock(self, order_book_id, dt, count=1):
+    def is_st_stock(self, order_book_id: str, dt: DateLike, count: int = 1) -> Union[bool, List[bool]]:
         if count == 1:
             return self._data_source.is_st_stock(order_book_id, [dt])[0]
 
@@ -281,39 +285,8 @@ class DataProxy(TradingDatesMixin):
     def get_tick_size(self, order_book_id):
         return self.instruments(order_book_id).tick_size()
 
-    def get_last_price(self, order_book_id):
-        # type: (str) -> float
+    def get_last_price(self, order_book_id: str) -> float:
         return float(self._price_board.get_last_price(order_book_id))
-
-    def all_instruments(self, types, dt=None):
-        # type: (List[INSTRUMENT_TYPE], Optional[datetime]) -> List[Instrument]
-        li = []
-        for i in self._data_source.get_instruments(types=types):
-            if dt is None or i.listing_at(dt):
-                li.append(i)
-        return li
-        # return [i for i in self._data_source.get_instruments(types=types) if dt is None or i.listing_at(dt)]
-
-    @lru_cache(2048)
-    def instrument(self, sym_or_id):
-        return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])), None)
-
-    @lru_cache(2048)
-    def instrument_not_none(self, sym_or_id) -> Instrument:
-        try:
-            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_id])))
-        except StopIteration:
-            raise LookupError(_("Instrument not found: {}").format(sym_or_id))
-
-    def multi_instruments(self, order_book_ids: Iterable[str]) -> Dict[str, Instrument]:
-        return {i.order_book_id: i for i in self._data_source.get_instruments(id_or_syms=order_book_ids)}
-
-    def instruments(self, sym_or_ids):
-        # type: (StrOrIter) -> Union[None, Instrument, List[Instrument]]
-        if isinstance(sym_or_ids, str):
-            return next(iter(self._data_source.get_instruments(id_or_syms=[sym_or_ids])), None)
-        else:
-            return list(self._data_source.get_instruments(id_or_syms=sym_or_ids))
 
     def get_future_contracts(self, underlying, date):
         # type: (str, DateLike) -> List[str]

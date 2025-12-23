@@ -261,11 +261,12 @@ class AnalyserMod(AbstractMod):
 
             for order_book_id, pos in pos_dict.items():
                 self._positions[account_type].append(self._to_position_record(
-                    date, order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
+                    self._env.calendar_dt, self._env.trading_dt, 
+                    order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
                 ))
 
-    def _symbol(self, order_book_id):
-        return self._env.data_proxy.instrument_not_none(order_book_id).symbol
+    def _symbol(self, order_book_id, trading_dt: datetime.datetime):
+        return self._env.data_proxy.get_active_instrument(order_book_id, trading_dt).symbol
 
     @staticmethod
     def _parse_benchmark(benchmarks):
@@ -339,13 +340,19 @@ class AnalyserMod(AbstractMod):
 
     LONG_ONLY_INS_TYPE = INST_TYPE_IN_STOCK_ACCOUNT + [INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.BOND]
 
-    def _to_position_record(self, date, order_book_id, long, short):
-        # type: (datetime.date, str, AbstractPosition, AbstractPosition) -> Dict
-        instrument = self._env.data_proxy.instrument(order_book_id)
+    def _to_position_record(
+        self, 
+        calendar_dt: datetime.datetime, 
+        trading_dt: datetime.datetime, 
+        order_book_id: str, 
+        long: Optional[AbstractPosition], 
+        short: Optional[AbstractPosition]
+    ) -> Dict:
+        instrument = self._env.data_proxy.get_active_instrument(order_book_id, trading_dt)
         data = {
             'order_book_id': order_book_id,
-            'symbol': self._symbol(order_book_id),
-            'date': date,
+            'symbol': self._symbol(order_book_id, trading_dt),
+            'date': calendar_dt.date(),
         }
         if instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
             for field in ['quantity', 'last_price', 'avg_price', 'market_value']:
@@ -369,7 +376,7 @@ class AnalyserMod(AbstractMod):
             'datetime': trade.datetime.strftime("%Y-%m-%d %H:%M:%S"),
             'trading_datetime': trade.trading_datetime.strftime("%Y-%m-%d %H:%M:%S"),
             'order_book_id': trade.order_book_id,
-            'symbol': self._symbol(trade.order_book_id),
+            'symbol': self._symbol(trade.order_book_id, trade.trading_datetime),
             'side': trade.side.name,
             'position_effect': trade.position_effect.name,
             'exec_id': trade.exec_id,

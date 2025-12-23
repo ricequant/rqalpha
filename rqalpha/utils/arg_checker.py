@@ -17,20 +17,19 @@ import inspect
 import datetime
 import six
 import pandas as pd
-from typing import Iterable
+from typing import Iterable, Optional, List, Callable, Dict, Any, Union
 from functools import wraps
-from collections import OrderedDict
 from contextlib import contextmanager
 
 from dateutil.parser import parse as parse_date
 
-from rqalpha.utils.exception import RQInvalidArgument, RQTypeError, RQApiNotSupportedError
+from rqalpha.utils.exception import RQInvalidArgument, RQTypeError
 from rqalpha.model.instrument import Instrument
 from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, EXC_TYPE
-from rqalpha.utils import unwrapper, INST_TYPE_IN_STOCK_ACCOUNT
+from rqalpha.utils import unwrapper
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME
+from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME, InstrumentNotFound
 from rqalpha.utils.logger import user_system_log
 
 
@@ -38,11 +37,94 @@ main_contract_warning_flag = True
 index_contract_warning_flag = True
 
 
-class ArgumentChecker(object):
-    def __init__(self, arg_name, pre_check):
+class ArgumentCheckerBase(object):
+    """验证/转换规则的基类"""
+    def __init__(self, arg_name):
         self._arg_name = arg_name
+
+    @property
+    def arg_name(self):
+        return self._arg_name
+
+    def raise_invalid_instrument_error(self, func_name, value):
+        return self.raise_instrument_error(func_name, value, _("valid order_book_id/instrument"))
+
+    def raise_instrument_not_listed_error(self, func_name, value):
+        return self.raise_instrument_error(func_name, value, _("listed order_book_id/instrument"))
+
+    def raise_instrument_error(self, func_name, value, instrument_info):
+        raise RQInvalidArgument(_(
+            u"function {}: invalid {} argument, expected a {}, got {} (type: {})"
+        ).format(func_name, self._arg_name, instrument_info, value, type(value)))
+
+
+
+def assure_active_instrument(id_or_ins) -> Instrument:
+    def _raise():
+        raise RQInvalidArgument(_(
+            u"invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
+        ).format(id_or_ins, type(id_or_ins)))
+
+    if isinstance(id_or_ins, Instrument):
+        if not id_or_ins.listed:
+            return _raise()
+        return id_or_ins
+    elif isinstance(id_or_ins, six.string_types):
+        env = Environment.get_instance()
+        try:
+            ins = env.data_proxy.get_active_instrument(id_or_ins, env.trading_dt)
+        except InstrumentNotFound as e:
+            return _raise()
+        return ins
+    else:
+        return _raise()
+
+
+def assure_listed_instrument(id_or_ins) -> Instrument:
+    """确保合约已上市（可以是已退市的），用于历史数据查询"""
+    def _raise():
+        raise RQInvalidArgument(_(
+            u"invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
+        ).format(id_or_ins, type(id_or_ins)))
+
+    if isinstance(id_or_ins, Instrument):
+        if not id_or_ins.listed:
+            return _raise()
+        return id_or_ins
+    elif isinstance(id_or_ins, six.string_types):
+        env = Environment.get_instance()
+        instruments = env.data_proxy.get_instrument_history(id_or_ins)
+        if not instruments:
+            return _raise()
+        # 找一个已经上市的（可以是已退市的）
+        for ins in instruments:
+            if ins.listed_at(env.trading_dt):
+                return ins
+        # 都还没上市
+        return _raise()
+    else:
+        return _raise()
+
+
+def assure_order_book_id(order_book_id: str, expected_type: Optional[INSTRUMENT_TYPE] = None):
+    env = Environment.get_instance()
+    try:
+        order_book_id = env.data_proxy.assure_order_book_id(order_book_id, expected_type)
+    except InstrumentNotFound as e:
+        raise RQInvalidArgument(_("invalid order_book_id: {order_book_id}").format(order_book_id=order_book_id))
+    return order_book_id
+
+
+class ArgumentChecker(ArgumentCheckerBase):
+    """仅验证参数，不修改参数值"""
+    def __init__(self, arg_name, pre_check):
+        super().__init__(arg_name)
         self._pre_check = pre_check
         self._rules = []
+
+    @property
+    def pre_check(self):
+        return self._pre_check
 
     def is_instance_of(self, types):
         def check_is_instance_of(func_name, value):
@@ -55,23 +137,6 @@ class ArgumentChecker(object):
         self._rules.append(check_is_instance_of)
         return self
 
-    def raise_invalid_instrument_error(self, func_name, value):
-        return self.raise_instrument_error(func_name, value, _("valid order_book_id/instrument"))
-
-    def raise_not_valid_stock_error(self, func_name, value):
-        return self.raise_instrument_error(func_name, value, _("valid stock order_book_id/instrument"))
-
-    def raise_not_valid_future_error(self, func_name, value):
-        return self.raise_instrument_error(func_name, value, _("valid future order_book_id/instrument"))
-
-    def raise_instrument_not_listed_error(self, func_name, value):
-        return self.raise_instrument_error(func_name, value, _("listed order_book_id/instrument"))
-
-    def raise_instrument_error(self, func_name, value, instrument_info):
-        raise RQInvalidArgument(_(
-            u"function {}: invalid {} argument, expected a {}, got {} (type: {})"
-        ).format(func_name, self._arg_name, instrument_info, value, type(value)))
-
     def _is_valid_instrument(self, func_name, value):
         instrument = None
         if isinstance(value, six.string_types):
@@ -83,50 +148,17 @@ class ArgumentChecker(object):
             self.raise_invalid_instrument_error(func_name, value)
         return instrument
 
-    def is_valid_instrument(self, valid_instrument_types=None):
-        def check_is_valid_instrument(func_name, value):
-            instrument = None
-            if isinstance(value, six.string_types):
-                instrument = Environment.get_instance().get_instrument(value)
-            elif isinstance(value, Instrument):
-                instrument = value
-
-            if instrument is None:
-                self.raise_invalid_instrument_error(func_name, value)
-            if valid_instrument_types and instrument.type not in valid_instrument_types:
-                raise RQInvalidArgument(_(
-                    u"function {}: invalid {} argument, expected instrument with types {}, got instrument with type {}"
-                ).format(func_name, self._arg_name, valid_instrument_types, instrument.type))
-            return instrument
-
-        self._rules.append(check_is_valid_instrument)
+    def is_active_instrument(self):
+        self._rules.append(lambda func_name, value: assure_active_instrument(value))
         return self
-
-    def _is_listed_instrument(self, func_name, value):
-        instrument = self._is_valid_instrument(func_name, value)
-        if not instrument.listed:
-            self.raise_instrument_not_listed_error(func_name, value)
 
     def is_listed_instrument(self):
-        self._rules.append(self._is_listed_instrument)
+        """只要求合约已上市（可以是已退市的），用于历史数据查询"""
+        self._rules.append(lambda func_name, value: assure_listed_instrument(value))
         return self
 
-    def _is_valid_stock(self, func_name, value):
-        instrument = self._is_valid_instrument(func_name, value)
-        if instrument.type not in INST_TYPE_IN_STOCK_ACCOUNT:
-            self.raise_not_valid_stock_error(func_name, value)
-
-    def is_valid_stock(self):
-        self._rules.append(self._is_valid_stock)
-        return self
-
-    def _is_valid_future(self, func_name, value):
-        instrument = self._is_valid_instrument(func_name, value)
-        if instrument.type != INSTRUMENT_TYPE.FUTURE:
-            self.raise_not_valid_future_error(func_name, value)
-
-    def is_valid_future(self):
-        self._rules.append(self._is_valid_future)
+    def is_valid_order_book_id(self, expected_type: Optional[INSTRUMENT_TYPE] = None):
+        self._rules.append(lambda func_name, value: assure_order_book_id(value, expected_type))
         return self
 
     def _is_number(self, func_name, value):
@@ -361,21 +393,55 @@ class ArgumentChecker(object):
 
     def verify(self, func_name, call_args):
         value = call_args[self.arg_name]
-
         for r in self._rules:
             r(func_name, value)
 
-    @property
-    def arg_name(self):
-        return self._arg_name
 
-    @property
-    def pre_check(self):
-        return self._pre_check
+class ArgumentConverter(ArgumentCheckerBase):
+    """验证参数并转换参数值，转换后的值会替换原参数"""
+    def __init__(self, arg_name):
+        super().__init__(arg_name)
+        self._rules: List[Callable[[Any], Any]] = []
+
+    def is_active_instrument(self):
+        """验证并转换为上市中的 Instrument 对象"""
+        self._rules.append(assure_active_instrument)
+        return self
+
+    def is_valid_order_book_id(self):
+        def convert(value: Union[str, Instrument]):
+            if isinstance(value, Instrument):
+                return value.order_book_id
+            return assure_order_book_id(value)
+        self._rules.append(convert)
+        return self
+
+    def is_valid_oid_list(self):
+        def convert(value: Union[str, Iterable[str], Instrument, Iterable[Instrument]]):
+            result = []
+            for v in ([value] if isinstance(value, (str, Instrument)) else value):
+                if isinstance(v, Instrument):
+                    result.append(v.order_book_id)
+                else:
+                    result.append(assure_order_book_id(v))
+            return result
+        self._rules.append(convert)
+        return self
+
+    def convert(self, call_args):
+        """执行转换规则，返回转换后的值"""
+        value = call_args[self.arg_name]
+        for r in self._rules:
+            value = r(value)
+        return value
 
 
 def verify_that(arg_name, pre_check=False):
     return ArgumentChecker(arg_name, pre_check)
+
+
+def assure_that(arg_name):
+    return ArgumentConverter(arg_name)
 
 
 def get_call_args(func, args, kwargs, traceback=None):
@@ -386,49 +452,72 @@ def get_call_args(func, args, kwargs, traceback=None):
 
 
 class ApiArgumentsChecker(object):
-    def __init__(self, rules):
-        # type: (Iterable[ArgumentChecker]) -> ApiArgumentsChecker
-        self._rules = OrderedDict()
+    def __init__(self, rules: Iterable[ArgumentCheckerBase]):
+        self._checkers: List[ArgumentChecker] = []
+        self._converters: List[ArgumentConverter] = []
         for r in rules:
-            self._rules[r.arg_name] = r
-
-    @property
-    def rules(self):
-        return self._rules
+            if isinstance(r, ArgumentConverter):
+                self._converters.append(r)
+            elif isinstance(r, ArgumentChecker):
+                self._checkers.append(r)
 
     @property
     def pre_check_rules(self):
-        for r in six.itervalues(self._rules):
+        for r in self._checkers:
             if r.pre_check:
                 yield r
 
     @property
     def post_check_rules(self):
-        for r in six.itervalues(self._rules):
+        for r in self._checkers:
             if not r.pre_check:
                 yield r
 
+    def _apply_checkers(self, checkers: Iterable[ArgumentChecker], func_name: str, get_call_args: Callable[[], Dict[str, Any]]):
+        if not checkers:
+            return
+        # lazy evaluate call_args, avoid unnecessary evaluation
+        call_args = get_call_args()
+        for r in checkers:
+            r.verify(func_name, call_args)
+
+    def _apply_converters(self, get_call_args: Callable[[], Dict[str, Any]]):
+        """应用所有转换器，返回转换后的参数字典"""
+        converted = {}
+        if not self._converters:
+            return converted
+        # lazy evaluate call_args, avoid unnecessary evaluation
+        call_args = get_call_args()
+        for converter in self._converters:
+            converted[converter.arg_name] = converter.convert(call_args)
+        return converted
+
     @contextmanager
     def check(self, func, args, kwargs):
-        call_args = None
-        for r in self.pre_check_rules:
-            if call_args is None:
-                call_args = get_call_args(func, args, kwargs)
-            r.verify(func.__name__, call_args)
+        _call_args = None
+        def call_args():
+            nonlocal _call_args
+            if _call_args is None:
+                _call_args = get_call_args(func, args, kwargs)
+            return _call_args
 
+        self._apply_checkers(self.pre_check_rules, func.__name__, call_args)
+        converted_args = self._apply_converters(call_args)
+        if converted_args:
+            updated_kwargs = call_args()
+            updated_kwargs.update(converted_args)
+        else:
+            updated_kwargs = None
         try:
-            yield
+            yield updated_kwargs
         except RQInvalidArgument:
             raise
         except Exception as e:
             exc_info = sys.exc_info()
             t, v, tb = exc_info
 
-            if call_args is None:
-                call_args = get_call_args(func, args, kwargs, tb)
             try:
-                for r in self.post_check_rules:
-                    r.verify(func.__name__, call_args)
+                self._apply_checkers(self.post_check_rules, func.__name__, call_args)
             except RQInvalidArgument as e:
                 six.reraise(RQInvalidArgument, e, tb)
                 return
@@ -439,17 +528,20 @@ class ApiArgumentsChecker(object):
             raise
 
 
-def apply_rules(*rules):
+def apply_rules(*rules: ArgumentCheckerBase):
     checker = ApiArgumentsChecker(rules)
 
     def decorator(func):
         @wraps(func)
         def api_rule_check_wrapper(*args, **kwargs):
-            with checker.check(func, args, kwargs):
-                return func(*args, **kwargs)
+            with checker.check(func, args, kwargs) as update_kwargs:
+                # 将转换后的参数注入 kwargs
+                if update_kwargs:                
+                    return func(**update_kwargs)
+                else:
+                    return func(*args, **kwargs)
 
-        api_rule_check_wrapper._rq_api_args_checker = checker
-        api_rule_check_wrapper._rq_exception_checked = True
+        setattr(api_rule_check_wrapper, "_rq_exception_checked", True)
         return api_rule_check_wrapper
 
     return decorator

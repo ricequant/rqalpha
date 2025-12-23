@@ -22,6 +22,7 @@ from typing import Dict, Iterable, Tuple, Optional, Deque, List
 
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET, SIDE
 from rqalpha.environment import Environment
+from rqalpha.utils.exception import InstrumentNotFound
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import Order
@@ -78,7 +79,11 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._env = Environment.get_instance()
 
         self._order_book_id = order_book_id
-        self._instrument = self._env.data_proxy.instrument(order_book_id)  # type: Instrument
+        instruments = self._env.data_proxy.get_instrument_history(order_book_id, self._env.trading_dt)
+        if not instruments:
+            raise InstrumentNotFound(_("No instruments found at {dt}: {id_or_sym}").format(dt=self._env.trading_dt, id_or_sym=order_book_id))
+        # 获取已上市合约中的最新一个，即使该合约已退市也能获取到，这是为了兼容 get_position 可获取已退市合约的 position 对象的历史行为
+        self._instrument = instruments[-1]
         self._direction = direction
 
         self._quantity = init_quantity
