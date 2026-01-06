@@ -529,9 +529,10 @@ def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwarg
     return succeed.value
 
 
-def update_bundle(path, create, enable_compression=False, concurrency=1, **kwargs):
-    tasks = gather_tasks(path, create, enable_compression, **kwargs)
-    return run_tasks(tasks, concurrency, **kwargs)
+def update_bundle(path, create, enable_compression=False, concurrency=1, rqdata_kwargs=None, **h5_kwargs):
+    tasks = gather_tasks(path, create, enable_compression, **h5_kwargs)
+    rqdata_kwargs = rqdata_kwargs or {}
+    return run_tasks(tasks, concurrency, **rqdata_kwargs)
 
 
 class AutomaticUpdateBundle(object):
