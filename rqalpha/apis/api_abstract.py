@@ -446,13 +446,13 @@ def sell_close(
 
 @export_as_api
 @apply_rules(
-    assure_that("order_book_id").is_valid_order_book_id(),
+    assure_that("id_or_ins").is_valid_order_book_id(),
     verify_that("quantity").is_number(), 
     *common_rules
 )
 @instype_singledispatch
 def order(
-    order_book_id: Union[str, Instrument],
+    id_or_ins: Union[str, Instrument],
     quantity: int,
     price_or_style: PRICE_OR_STYLE_TYPE = None,
     price: Optional[float] = None,
@@ -494,13 +494,13 @@ def order(
 
 @export_as_api
 @apply_rules(
-    assure_that("order_book_id").is_valid_order_book_id(),
+    assure_that("id_or_ins").is_valid_order_book_id(),
     verify_that("quantity").is_number(), 
     *common_rules
 )
 @instype_singledispatch
 def order_to(
-    order_book_id: Union[str, Instrument],
+    id_or_ins: Union[str, Instrument],
     quantity: int,
     price_or_style: PRICE_OR_STYLE_TYPE = None,
     price: Optional[float] = None,
