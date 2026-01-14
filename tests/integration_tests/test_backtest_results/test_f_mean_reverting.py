@@ -1,4 +1,5 @@
 # 可以自己import我们平台支持的第三方python模块，比如pandas、numpy等。
+import pytest
 import numpy as np
 from rqalpha.apis import subscribe, history_bars, buy_open, sell_open, sell_close, buy_close
 
@@ -144,5 +145,5 @@ def test_f_mean_reverting(run_and_assert_result):
         },
     }
 
-    run_and_assert_result(config=config, init=init, handle_bar=handle_bar)
+    run_and_assert_result(reload_futures_info=True, config=config, init=init, handle_bar=handle_bar)
 
