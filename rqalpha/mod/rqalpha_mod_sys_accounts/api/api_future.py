@@ -177,7 +177,7 @@ def future_order(
     price: Optional[float] = None, 
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
-    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else order_book_id
+    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else id_or_ins
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), False)
 
 
@@ -188,7 +188,7 @@ def future_order_to(
     price: Optional[float] = None, 
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
-    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else order_book_id
+    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else id_or_ins
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), True)
 
 
