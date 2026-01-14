@@ -11,6 +11,7 @@ CHANGELOG
 
 **[不兼容改动]**
 
+- `order` 和 `order_to` 下单 API 的 order_book_id 参数名修改为 id_or_ins
 - `get_position` 不能传入还未上市的 order_book_id，传入此类代码会抛出异常
 - `Instrument.listing_at` 更名为 `active_at`，旧方法移除
 
