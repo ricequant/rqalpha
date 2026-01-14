@@ -68,4 +68,4 @@ def test_f_tick_size(run_and_assert_result):
         },
     }
 
-    run_and_assert_result(config=config, init=init, handle_bar=handle_bar)
+    run_and_assert_result(reload_futures_info=True, config=config, init=init, handle_bar=handle_bar)

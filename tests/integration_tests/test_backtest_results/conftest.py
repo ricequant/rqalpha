@@ -21,6 +21,10 @@ def future_info_file():
 def run_and_assert_result(result_file, future_info_file):
     def _do(reload_futures_info=False, **kwargs):
         if reload_futures_info:
+            """ 
+            部分测试用例依赖于 future_info.json 的数据，而这个数据在每个月的数据更新中都会产生变化，导致需要去更新测试结果数据。
+            因此，当测试用例依赖于该文件时，将 bundle 数据和 resources/future_info.json 拷贝到临时文件夹中作为测试 bundle 数据
+            """
             conf = kwargs.get("config") or {}
             base = conf.get("base") or {}
             bundle_path = base.get("data_bundle_path") or os.path.join(os.path.expanduser("~/.rqalpha"), "bundle")
