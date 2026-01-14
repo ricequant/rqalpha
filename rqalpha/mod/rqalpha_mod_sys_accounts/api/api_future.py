@@ -131,10 +131,10 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style) -> U
         return orders
 
 
-def _order(id_or_ins: Union[str, Instrument], quantity: Union[int, float], style: OrderStyle, target: bool) -> List[Order]:
+def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, target: bool) -> List[Order]:
     portfolio = Environment.get_instance().portfolio
-    long_position = portfolio.get_position(id_or_ins, POSITION_DIRECTION.LONG)
-    short_position = portfolio.get_position(id_or_ins, POSITION_DIRECTION.SHORT)
+    long_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
+    short_position = portfolio.get_position(order_book_id, POSITION_DIRECTION.SHORT)
     if target:
         # For order_to
         quantity -= (long_position.quantity - short_position.quantity)
@@ -153,20 +153,20 @@ def _order(id_or_ins: Union[str, Instrument], quantity: Union[int, float], style
     old_to_be_closed, today_to_be_closed = position_to_be_closed.old_quantity, position_to_be_closed.today_quantity
     if old_to_be_closed > 0:
         # 平昨仓
-        orders.append(_submit_order(id_or_ins, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
+        orders.append(_submit_order(order_book_id, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
         quantity -= old_to_be_closed
     if quantity <= 0:
         return orders
     if today_to_be_closed > 0:
         # 平今仓
         orders.append(_submit_order(
-            id_or_ins, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
+            order_book_id, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
         ))
         quantity -= today_to_be_closed
     if quantity <= 0:
         return orders
     # 开仓
-    orders.append(_submit_order(id_or_ins, quantity, side, POSITION_EFFECT.OPEN, style))
+    orders.append(_submit_order(order_book_id, quantity, side, POSITION_EFFECT.OPEN, style))
     return orders
 
 
@@ -177,7 +177,8 @@ def future_order(
     price: Optional[float] = None, 
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
-    return _order(id_or_ins, quantity, cal_style(price, style, price_or_style), False)
+    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else order_book_id
+    return _order(order_book_id, quantity, cal_style(price, style, price_or_style), False)
 
 
 def future_order_to(
@@ -187,7 +188,8 @@ def future_order_to(
     price: Optional[float] = None, 
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
-    return _order(id_or_ins, quantity, cal_style(price, style, price_or_style), True)
+    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else order_book_id
+    return _order(order_book_id, quantity, cal_style(price, style, price_or_style), True)
 
 
 def future_buy_open(
