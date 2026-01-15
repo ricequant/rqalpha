@@ -171,22 +171,24 @@ def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, t
 
 
 def future_order(
-    order_book_id: str, 
+    id_or_ins: Union[str, Instrument], 
     quantity: int, 
     price_or_style: PRICE_OR_STYLE_TYPE = None, 
     price: Optional[float] = None, 
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
+    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else id_or_ins
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), False)
 
 
 def future_order_to(
-    order_book_id: str, 
+    id_or_ins: Union[str, Instrument], 
     quantity: int, 
     price_or_style: PRICE_OR_STYLE_TYPE = None, 
     price: Optional[float] = None, 
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
+    order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else id_or_ins
     return _order(order_book_id, quantity, cal_style(price, style, price_or_style), True)
 
 

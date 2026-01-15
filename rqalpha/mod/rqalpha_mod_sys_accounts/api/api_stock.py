@@ -244,20 +244,20 @@ def stock_order_target_percent(id_or_ins: str, percent, price_or_style=None, pri
 stock_order_target_percent = cast_singledispatch(order_target_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_percent)
 
 
-def stock_order(order_book_id: str, quantity, price_or_style=None, price=None, style=None):
-    result_order = stock_order_shares(order_book_id, quantity, price, style, price_or_style)
+def stock_order(id_or_ins: Union[str, Instrument], quantity, price_or_style=None, price=None, style=None):
+    result_order = stock_order_shares(id_or_ins, quantity, price, style, price_or_style)
     if result_order:
         return [result_order]
     return []
 stock_order = cast_singledispatch(order).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order)
 
 
-def stock_order_to(order_book_id: str, quantity, price_or_style=None, price=None, style=None):
-    position = Environment.get_instance().portfolio.get_position(order_book_id, POSITION_DIRECTION.LONG)
+def stock_order_to(id_or_ins: Union[str, Instrument], quantity, price_or_style=None, price=None, style=None):
+    position = Environment.get_instance().portfolio.get_position(id_or_ins, POSITION_DIRECTION.LONG)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     quantity = quantity - position.quantity
     _style = open_style if quantity > 0 else close_style
-    result_order = stock_order_shares(order_book_id, quantity, price, _style, price_or_style)
+    result_order = stock_order_shares(id_or_ins, quantity, price, _style, price_or_style)
     if result_order:
         return [result_order]
     return []
