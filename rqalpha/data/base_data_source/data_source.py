@@ -116,10 +116,10 @@ class BaseDataSource(AbstractDataSource):
         self._ex_factor_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
 
         # instruments
-        self._id_instrument_map: DefaultDict[str, list[Instrument]] = defaultdict(list)
-        self._sym_instrument_map: DefaultDict[str, list[Instrument]] = defaultdict(list)
-        self._id_or_sym_instrument_map: Mapping[str, list[Instrument]] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
-        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, List[Instrument]] = defaultdict(list)
+        self._id_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
+        self._sym_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
+        self._id_or_sym_instrument_map: Mapping[str, dict[datetime, Instrument]] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
+        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, dict[datetime, Instrument]] = defaultdict(dict)
 
         # register instruments
         self.register_instruments(load_instruments_from_pkl(_p('instruments.pk'), self._future_info_store))
@@ -150,9 +150,9 @@ class BaseDataSource(AbstractDataSource):
 
     def register_instruments(self, instruments: Iterable[Instrument]):
         for ins in instruments:
-            self._id_instrument_map[ins.order_book_id].append(ins)
-            self._sym_instrument_map[ins.symbol].append(ins)
-            self._grouped_instruments[ins.type].append(ins)
+            self._id_instrument_map[ins.order_book_id][ins.listed_date] = ins
+            self._sym_instrument_map[ins.symbol][ins.listed_date] = ins
+            self._grouped_instruments[ins.type][ins.listed_date] = ins
     
     def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN):
         self._dividend_stores[instrument_type, market] = dividend_store
@@ -190,13 +190,13 @@ class BaseDataSource(AbstractDataSource):
             seen = set()
             for i in id_or_syms:
                 if i in self._id_or_sym_instrument_map:
-                    for ins in self._id_or_sym_instrument_map[i]:
+                    for ins in self._id_or_sym_instrument_map[i].values():
                         if ins not in seen:
                             seen.add(ins)
                             yield ins
         else:
             for t in types or self._grouped_instruments.keys():
-                yield from self._grouped_instruments[t]
+                yield from self._grouped_instruments[t].values()
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
