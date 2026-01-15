@@ -12,16 +12,16 @@ def result_file(request, testcase_name):
     return os.path.join(os.path.dirname(request.path), "outs", f"{testcase_name}.txt")
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session")
 def bundle_path():
     with TemporaryDirectory() as tmp_bundle:
         bundle = os.path.join(os.path.expanduser("~/.rqalpha"), "bundle")
         for f in os.listdir(bundle):
             src = os.path.join(bundle, f)
             if not f.startswith(".") and os.path.isfile(src) and f != "future_info.json":
-                shutil.copy2(src, os.path.join(tmp_bundle, f))
+                os.symlink(src, os.path.join(tmp_bundle, f))
         future_info_file = os.path.join(os.path.dirname(__file__), "resources", "future_info.json")
-        shutil.copy2(future_info_file, os.path.join(tmp_bundle, "future_info.json"))
+        os.symlink(future_info_file, os.path.join(tmp_bundle, "future_info.json"))
         yield tmp_bundle
 
 
