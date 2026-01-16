@@ -27,17 +27,10 @@ from pandas import Series, DataFrame
 from rqrisk import Risk
 from rqrisk import DAILY, WEEKLY, MONTHLY
 from rqalpha.environment import Environment
+from rqalpha.const import DAYS_CNT
 
 from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
 from rqalpha.mod.rqalpha_mod_sys_analyser.report.excel_template import generate_xlsx_reports
-
-
-PRESSURE_TEST_PERIOD = {
-    "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
-    "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
-    "行业风格切换": (datetime.date(2021, 9, 1), datetime.date(2021, 12, 31)),
-    "小盘踩踏危机": (datetime.date(2024, 1, 5), datetime.date(2024, 2, 8)),
-}
 
 
 def _returns(unit_net_value: Series):
@@ -71,7 +64,13 @@ def _yearly_indicators(
         excess_nav = (p_year_returns + 1).cumprod() / (b_year_returns + 1).cumprod()
         excess_max_dd = _max_dd(excess_nav.values, excess_nav.index)
         max_dd = _max_dd(p_nav[year_slice].values, p_nav[year_slice].index)
-        trading_days_a_year = Environment.get_instance().trading_days_a_year
+        try:
+            trading_days_a_year = Environment.get_instance().trading_days_a_year
+        except RuntimeError as e:
+            if "Environment has not been created" in str(e):
+                trading_days_a_year = DAYS_CNT.TRADING_DAYS_A_YEAR
+            else:
+                raise e
         risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year], period=DAILY, trading_days_a_year=trading_days_a_year)
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
@@ -121,45 +120,6 @@ def _gen_positions_weight(df):
     return df.reset_index().rename(columns=rename).to_dict(orient="list")
 
 
-def _pressure_test(
-        p_nav: Series, p_returns: Series, b_nav: Optional[Series], b_returns: Optional[Series]
-    ):
-    env = Environment.get_instance()
-    # data = {field: [] for field in [
-    #     "title", "start_date", "end_date", "returns", "annual_return", "geometric_excess_return", "max_drawdown",
-    #     "geometric_excess_drawdown", "sharpe", "excess_sharpe"
-    # ]}
-    data = defaultdict(list)
-    
-    for title, (start, end) in PRESSURE_TEST_PERIOD.items():
-        p_period_returns = p_returns.loc[start: end]
-        if (p_period_returns is None or p_period_returns.empty):
-            continue
-        # 当且仅当回测周期完整包含压力测试的一个区间时才展示该区间的表现
-        if len(p_period_returns) != len(env.data_proxy.get_trading_dates(start, end)):
-            continue
-        if b_nav is not None:
-            b_period_returns = b_returns.loc[start: end]
-        else:
-            b_period_returns = Series(index=p_period_returns.index)
-        risk_free_rate = env.data_proxy.get_risk_free_rate(start, end)
-        trading_days_a_year = env.trading_days_a_year
-        risk = Risk(p_period_returns, b_period_returns, risk_free_rate, period=DAILY, trading_days_a_year=trading_days_a_year)
-        data["title"].append(title)
-        data["start_date"].append(str(start))
-        data["end_date"].append(str(end))
-        data["returns"].append(risk.return_rate)
-        data["annual_return"].append(risk.annual_return)
-        data["geometric_excess_return"].append(risk.geometric_excess_return)
-        data["max_drawdown"].append(risk.max_drawdown)
-        data["geometric_excess_drawdown"].append(risk.geometric_excess_drawdown)
-        data["sharpe"].append(risk.sharpe)
-        data["excess_sharpe"].append(risk.excess_sharpe)
-    if not data["title"]:
-        return None
-    return data
-
-
 def generate_report(result_dict, output_path):
     from six import StringIO
 
@@ -178,14 +138,17 @@ def generate_report(result_dict, output_path):
         b_returns = _returns(b_nav)
     else:
         b_nav = b_returns = None
-    generate_xlsx_reports({
+
+    generate_dict = {
         "概览": summary,
         "年度指标": _yearly_indicators(p_nav, p_returns, b_nav, b_returns, result_dict["yearly_risk_free_rates"]),
         "月度收益": _monthly_returns(p_returns),
         "月度超额收益（几何）": _monthly_geometric_excess_returns(p_returns, b_returns),
         "个股权重": _gen_positions_weight(result_dict["positions_weight"]),
-        "压力测试": _pressure_test(p_nav, p_returns, b_nav, b_returns),
-    }, output_path)
+    }
+    if result_dict.get("pressure_test") is not None:
+        generate_dict["压力测试"] = result_dict["pressure_test"].to_dict("list")
+    generate_xlsx_reports(generate_dict, output_path)
 
     for name in ["portfolio", "stock_account", "future_account",
                  "stock_positions", "future_positions", "trades", "positions_weight"]:
