@@ -265,3 +265,6 @@ def format_exception_group(exc_group, indent=""):
 class InstrumentNotFound(LookupError):
     pass
 
+
+class EnvironmentNotInitialized(RuntimeError):
+    pass

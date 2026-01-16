@@ -29,6 +29,7 @@ from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.class_helper import cached_property
+from rqalpha.utils.exception import EnvironmentNotInitialized
 from rqalpha.const import SIDE
 if TYPE_CHECKING:
     from rqalpha.model.order import Order
@@ -84,7 +85,7 @@ class Environment(object):
         返回已经创建的 Environment 对象
         """
         if Environment._env is None:
-            raise RuntimeError(
+            raise EnvironmentNotInitialized(
                 _(u"Environment has not been created. Please Use `Environment.get_instance()` after RQAlpha init"))
         return Environment._env
 

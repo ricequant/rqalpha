@@ -58,6 +58,14 @@ def _get_yearly_risk_free_rates(
         start_date = datetime.date(year + 1, 1, 1)
 
 
+PRESSURE_TEST_PERIOD = {
+    "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
+    "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
+    "行业风格切换": (datetime.date(2021, 9, 1), datetime.date(2021, 12, 31)),
+    "小盘踩踏危机": (datetime.date(2024, 1, 5), datetime.date(2024, 2, 8)),
+}
+
+
 EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
 
 class PlotConfigProtocol(Protocol):
@@ -388,6 +396,43 @@ class AnalyserMod(AbstractMod):
             'transaction_cost': trade.transaction_cost,
         }
 
+    def _pressure_test(self, portfolio: pd.DataFrame, benchmark_portfolio: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
+
+        def _returns(unit_net_value: pd.Series) -> pd.Series:
+            return (unit_net_value / unit_net_value.shift(1).fillna(1)).fillna(0) - 1
+
+        env = Environment.get_instance()
+        p_returns = _returns(portfolio.unit_net_value)
+
+        data = defaultdict(list)
+        for title, (start, end) in PRESSURE_TEST_PERIOD.items():
+            p_period_returns = p_returns.loc[start: end]
+            if (p_period_returns is None or p_period_returns.empty):
+                continue
+            # 当且仅当回测周期完整包含压力测试的一个区间时才展示该区间的表现
+            if len(p_period_returns) != len(env.data_proxy.get_trading_dates(start, end)):
+                continue
+            if benchmark_portfolio is not None:
+                b_period_returns = _returns(benchmark_portfolio.unit_net_value).loc[start: end]
+            else:
+                b_period_returns = pd.Series(index=p_period_returns.index)
+            risk_free_rate = env.data_proxy.get_risk_free_rate(start, end)
+            risk = Risk(p_period_returns, b_period_returns, risk_free_rate, period=DAILY, trading_days_a_year=env.trading_days_a_year)
+            data["title"].append(title)
+            data["start_date"].append(str(start))
+            data["end_date"].append(str(end))
+            data["returns"].append(risk.return_rate)
+            data["annual_return"].append(risk.annual_return)
+            data["geometric_excess_return"].append(risk.geometric_excess_return)
+            data["max_drawdown"].append(risk.max_drawdown)
+            data["geometric_excess_drawdown"].append(risk.geometric_excess_drawdown)
+            data["sharpe"].append(risk.sharpe)
+            data["excess_sharpe"].append(risk.excess_sharpe)
+        if not data["title"]:
+            return None
+        return pd.DataFrame(data)
+
+
     def tear_down(self, code, exception=None):
         if code != EXIT_CODE.EXIT_SUCCESS or not self._enabled:
             return
@@ -572,6 +617,11 @@ class AnalyserMod(AbstractMod):
                 "weekly_excess_ulcer_index": weekly_risk.excess_ulcer_index,
                 "weekly_excess_ulcer_performance_index": weekly_risk.excess_ulcer_performance_index,
             })
+
+        # 压力测试期
+        pressure_test_result = self._pressure_test(result_dict.get("portfolio"), result_dict.get("benchmark_portdolio"))
+        if pressure_test_result is not None:
+            result_dict["pressure_test"] = pressure_test_result
 
         plots = self._plot_store.get_plots()
         if plots:
