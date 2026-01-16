@@ -40,6 +40,10 @@ if TYPE_CHECKING:
     from rqalpha.model.instrument import Instrument
 
 
+class EnvironmentNotInitialized(RuntimeError):
+    pass
+
+
 class Environment(object):
     _env: Optional["Environment"] = None
 
@@ -84,7 +88,7 @@ class Environment(object):
         返回已经创建的 Environment 对象
         """
         if Environment._env is None:
-            raise RuntimeError(
+            raise EnvironmentNotInitialized(
                 _(u"Environment has not been created. Please Use `Environment.get_instance()` after RQAlpha init"))
         return Environment._env
 

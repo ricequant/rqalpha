@@ -26,7 +26,7 @@ from pandas import Series, DataFrame
 
 from rqrisk import Risk
 from rqrisk import DAILY, WEEKLY, MONTHLY
-from rqalpha.environment import Environment
+from rqalpha.environment import Environment, EnvironmentNotInitialized
 from rqalpha.const import DAYS_CNT
 
 from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
@@ -66,11 +66,8 @@ def _yearly_indicators(
         max_dd = _max_dd(p_nav[year_slice].values, p_nav[year_slice].index)
         try:
             trading_days_a_year = Environment.get_instance().trading_days_a_year
-        except RuntimeError as e:
-            if "Environment has not been created" in str(e):
-                trading_days_a_year = DAYS_CNT.TRADING_DAYS_A_YEAR
-            else:
-                raise e
+        except EnvironmentNotInitialized:
+            trading_days_a_year = DAYS_CNT.TRADING_DAYS_A_YEAR
         risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year], period=DAILY, trading_days_a_year=trading_days_a_year)
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
