@@ -29,6 +29,7 @@ from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.class_helper import cached_property
+from rqalpha.utils.exception import EnvironmentNotInitialized
 from rqalpha.const import SIDE
 if TYPE_CHECKING:
     from rqalpha.model.order import Order
@@ -38,10 +39,6 @@ if TYPE_CHECKING:
         AbstractStrategyLoader, AbstractMod, AbstractBroker, AbstractTransactionCostDecider, TransactionCostArgs, TransactionCost
     from rqalpha.core.strategy import Strategy
     from rqalpha.model.instrument import Instrument
-
-
-class EnvironmentNotInitialized(RuntimeError):
-    pass
 
 
 class Environment(object):

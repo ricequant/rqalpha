@@ -26,7 +26,8 @@ from pandas import Series, DataFrame
 
 from rqrisk import Risk
 from rqrisk import DAILY, WEEKLY, MONTHLY
-from rqalpha.environment import Environment, EnvironmentNotInitialized
+from rqalpha.environment import Environment
+from rqalpha.utils.exception import EnvironmentNotInitialized
 from rqalpha.const import DAYS_CNT
 
 from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
