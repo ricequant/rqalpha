@@ -273,8 +273,8 @@ class StockPosition(Position):
                 ratio = splits["split_coefficient_to"] / splits["split_coefficient_from"]
                 return Decimal(ratio.cumprod[-1])
 
-        coefficient_to = (splits["split_coefficient_to"]).cumprod()[-1]
-        coefficient_from = (splits["split_coefficient_from"]).cumprod()[-1]
+        coefficient_to = (splits["split_coefficient_to"].astype(int)).cumprod()[-1]
+        coefficient_from = (splits["split_coefficient_from"].astype(int)).cumprod()[-1]
         return Decimal(int(coefficient_to)) / Decimal(int(coefficient_from))
 
     def _handle_split(self, trading_date, data_proxy) -> float:
