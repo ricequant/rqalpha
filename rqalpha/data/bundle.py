@@ -509,13 +509,13 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
     if enable_compression:
         kwargs['compression'] = 9
     # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
-    for file, order_book_id, field in day_bar_args:
-        tasks.append(_DayBarTask(order_book_id, os.path.join(path, file), field, **h5_kwargs))
-    for func in gen_file_funcs:
-        tasks.append(GenerateFileTask(func, path))
-    tasks.append(GenerateFileTask(GenerateDividendBundle(path)))
+    # for file, order_book_id, field in day_bar_args:
+    #     tasks.append(_DayBarTask(order_book_id, os.path.join(path, file), field, **h5_kwargs))
+    # for func in gen_file_funcs:
+    #     tasks.append(GenerateFileTask(func, path))
+    # tasks.append(GenerateFileTask(GenerateDividendBundle(path)))
     tasks.append(GenerateFileTask(GenerateSplitBundle(path)))
-    tasks.append(GenerateFileTask(GenerateExFactorBundle(path)))
+    # tasks.append(GenerateFileTask(GenerateExFactorBundle(path)))
     return tasks
 
 

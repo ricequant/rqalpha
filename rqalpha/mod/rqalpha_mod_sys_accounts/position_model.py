@@ -17,6 +17,7 @@
 from datetime import date
 from typing import Optional, Deque, Tuple
 from collections import deque
+from math import isclose
 
 from decimal import Decimal, ROUND_HALF_UP
 from numpy import ndarray
@@ -263,23 +264,26 @@ class StockPosition(Position):
         else:
             return payable_value
     
-    def _get_split_ratio(self, splits):
+    def _get_split_ratio(self, splits) -> Decimal:
         # rqalpha 6.1.0 修改了 bundle 的 splits_factor 的数据格式，需要向前兼容
         if 'split_coefficient_to' not in splits.dtype.names:
             ratio = splits["split_factor"].cumprod()[-1]
-            return ratio, Decimal(ratio)
-        normalization_value = splits["split_coefficient_from"] / 10
-        coefficient_to = (splits["split_coefficient_to"] / normalization_value).cumprod()[-1]
-        coefficient_from = (splits["split_coefficient_from"] / normalization_value).cumprod()[-1]
-        ratio_decimal = Decimal(coefficient_to) / Decimal(coefficient_from)
-        return float(ratio_decimal), ratio_decimal
+            return Decimal(ratio)
+        coefficient_to = (splits["split_coefficient_to"]).cumprod()[-1]
+        coefficient_from = (splits["split_coefficient_from"]).cumprod()[-1]
+
+        for v in [coefficient_from, coefficient_to]:
+            if not isclose(v % 1, 0):
+                return Decimal(coefficient_to / coefficient_from)
+        return Decimal(coefficient_to) / Decimal(coefficient_from)
 
     def _handle_split(self, trading_date, data_proxy) -> float:
         splits = self._get_dividends_or_splits(self._all_splits, trading_date, "ex_date")  # type: ignore[reportIncompatibleVariableOverride]
         if splits is None or len(splits) == 0:
             return 1.
-        ratio, ratio_decimal = self._get_split_ratio(splits)
+        ratio_decimal = self._get_split_ratio(splits)
         
+        ratio = float(ratio_decimal)
         self._avg_price /= ratio
         self._last_price /= ratio  # type: ignore
         # int(6000 * 1.15) -> 6899
