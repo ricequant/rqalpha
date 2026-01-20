@@ -128,7 +128,7 @@ class GenerateSplitBundle:
         if split is None:
             raise RuntimeError("Got no split data")
         split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
-        split = split[['split_factor']]
+        split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from']]
         split.reset_index(inplace=True)
         split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)  # type: ignore
         split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]

@@ -18,7 +18,7 @@ from datetime import date
 from typing import Optional, Deque, Tuple
 from collections import deque
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from numpy import ndarray
 
 from rqalpha.interface import TransactionCost
@@ -262,17 +262,28 @@ class StockPosition(Position):
             return payable_value - amount * last_price
         else:
             return payable_value
+    
+    def _get_split_ratio(self, splits: ndarray) -> tuple[float, Decimal]:
+        # rqalpha 6.1.0 修改了 bundle 的 splits_factor 的数据格式，需要向前兼容
+        if 'split_coefficient_to' not in splits.dtype.names:
+            ratio = splits["split_factor"].cumprod()[-1]
+            return ratio, Decimal(ratio)
+        normalization_value = splits["split_coefficient_from"] / 10
+        coefficient_to = (splits["split_coefficient_to"] / normalization_value).cumprod()[-1]
+        coefficient_from = (splits["split_coefficient_from"] / normalization_value).cumprod()[-1]
+        ratio_decimal = Decimal(coefficient_to) / Decimal(coefficient_from)
+        return float(ratio_decimal), ratio_decimal
 
     def _handle_split(self, trading_date, data_proxy) -> float:
         splits = self._get_dividends_or_splits(self._all_splits, trading_date, "ex_date")  # type: ignore[reportIncompatibleVariableOverride]
         if splits is None or len(splits) == 0:
             return 1.
-        ratio: float = splits["split_factor"].cumprod()[-1]
+        ratio, ratio_decimal = self._get_split_ratio(splits)
+        
         self._avg_price /= ratio
         self._last_price /= ratio  # type: ignore
-        ratio_decimal = Decimal(ratio)
         # int(6000 * 1.15) -> 6899
-        self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio_decimal)
+        self._old_quantity = self._quantity = int((Decimal(self._quantity) * ratio_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
         self._queue.handle_split(ratio_decimal, self._quantity)
         return ratio
 
