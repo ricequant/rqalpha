@@ -263,7 +263,7 @@ class StockPosition(Position):
         else:
             return payable_value
     
-    def _get_split_ratio(self, splits: ndarray) -> tuple[float, Decimal]:
+    def _get_split_ratio(self, splits):
         # rqalpha 6.1.0 修改了 bundle 的 splits_factor 的数据格式，需要向前兼容
         if 'split_coefficient_to' not in splits.dtype.names:
             ratio = splits["split_factor"].cumprod()[-1]
