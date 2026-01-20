@@ -17,10 +17,9 @@
 from datetime import date
 from typing import Optional, Deque, Tuple
 from collections import deque
-from math import isclose
 
 from decimal import Decimal, ROUND_HALF_UP
-from numpy import ndarray
+from numpy import ndarray, isclose
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
@@ -267,15 +266,16 @@ class StockPosition(Position):
     def _get_split_ratio(self, splits) -> Decimal:
         # rqalpha 6.1.0 修改了 bundle 的 splits_factor 的数据格式，需要向前兼容
         if 'split_coefficient_to' not in splits.dtype.names:
-            ratio = splits["split_factor"].cumprod()[-1]
-            return Decimal(ratio)
+            return Decimal(splits["split_factor"].cumprod()[-1])
+
+        for field in ["split_coefficient_to", "split_coefficient_from"]:
+            if not all(isclose(splits[field] % 1, 0)):
+                ratio = splits["split_coefficient_to"] / splits["split_coefficient_from"]
+                return Decimal(ratio.cumprod[-1])
+
         coefficient_to = (splits["split_coefficient_to"]).cumprod()[-1]
         coefficient_from = (splits["split_coefficient_from"]).cumprod()[-1]
-
-        for v in [coefficient_from, coefficient_to]:
-            if not isclose(v % 1, 0):
-                return Decimal(coefficient_to / coefficient_from)
-        return Decimal(coefficient_to) / Decimal(coefficient_from)
+        return Decimal(int(coefficient_to)) / Decimal(int(coefficient_from))
 
     def _handle_split(self, trading_date, data_proxy) -> float:
         splits = self._get_dividends_or_splits(self._all_splits, trading_date, "ex_date")  # type: ignore[reportIncompatibleVariableOverride]
