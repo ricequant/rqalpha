@@ -271,7 +271,7 @@ class StockPosition(Position):
         for field in ["split_coefficient_to", "split_coefficient_from"]:
             if not all(isclose(splits[field] % 1, 0)):
                 ratio = splits["split_coefficient_to"] / splits["split_coefficient_from"]
-                return Decimal(ratio.cumprod[-1])
+                return Decimal(ratio.cumprod()[-1])
 
         coefficient_to = (splits["split_coefficient_to"].astype(int)).cumprod()[-1]
         coefficient_from = (splits["split_coefficient_from"].astype(int)).cumprod()[-1]
