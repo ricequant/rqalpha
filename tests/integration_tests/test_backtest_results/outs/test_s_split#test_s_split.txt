@@ -1,0 +1,71 @@
+[trades]
+DataFrame
+{"shape":[0,0],"dtypes":{},"index_dtype":"int64","index_name":null,"columns":[]}
+# Empty DataFrame
+
+[stock_positions]
+DataFrame
+{"shape":[8,6],"dtypes":{"order_book_id":"object","symbol":"object","quantity":"float64","last_price":"float64","avg_price":"float64","market_value":"float64"},"index_dtype":"datetime64[ns]","index_name":"date","columns":["order_book_id","symbol","quantity","last_price","avg_price","market_value"]}
+,order_book_id,symbol,quantity,last_price,avg_price,market_value
+2024-06-11 00:00:00,688550.XSHG,瑞联新材,1445.0,33.39,31.79,48248.55
+2024-06-12 00:00:00,688550.XSHG,瑞联新材,1445.0,34.18,31.79,49390.1
+2024-06-13 00:00:00,688550.XSHG,瑞联新材,1445.0,34.7,31.79,50141.5
+2024-06-14 00:00:00,688550.XSHG,瑞联新材,1879.0,26.0,24.1077,48854.0
+2024-06-17 00:00:00,688550.XSHG,瑞联新材,1879.0,25.87,24.1077,48609.73
+2024-06-18 00:00:00,688550.XSHG,瑞联新材,1879.0,25.55,24.1077,48008.45
+2024-06-19 00:00:00,688550.XSHG,瑞联新材,1879.0,25.48,24.1077,47876.92
+2024-06-20 00:00:00,688550.XSHG,瑞联新材,1879.0,25.58,24.1077,48064.82
+
+[stock_account]
+DataFrame
+{"shape":[8,4],"dtypes":{"cash":"float64","transaction_cost":"float64","market_value":"float64","total_value":"float64"},"index_dtype":"datetime64[ns]","index_name":"date","columns":["cash","transaction_cost","market_value","total_value"]}
+,cash,transaction_cost,market_value,total_value
+2024-06-11 00:00:00,1000000.0,0.0,48248.55,1048248.55
+2024-06-12 00:00:00,1000000.0,0.0,49390.1,1049390.1
+2024-06-13 00:00:00,1000000.0,0.0,50141.5,1050141.5
+2024-06-14 00:00:00,1000650.25,0.0,48854.0,1049504.25
+2024-06-17 00:00:00,1000650.25,0.0,48609.73,1049259.98
+2024-06-18 00:00:00,1000650.25,0.0,48008.45,1048658.7
+2024-06-19 00:00:00,1000650.25,0.0,47876.92,1048527.17
+2024-06-20 00:00:00,1000650.25,0.0,48064.82,1048715.07
+
+[portfolio]
+DataFrame
+{"shape":[8,6],"dtypes":{"cash":"float64","total_value":"float64","market_value":"float64","unit_net_value":"float64","units":"float64","static_unit_net_value":"float64"},"index_dtype":"datetime64[ns]","index_name":"date","columns":["cash","total_value","market_value","unit_net_value","units","static_unit_net_value"]}
+,cash,total_value,market_value,unit_net_value,units,static_unit_net_value
+2024-06-11 00:00:00,1000000.0,1048248.55,48248.55,1.00221,1045936.55,1.0
+2024-06-12 00:00:00,1000000.0,1049390.1,49390.1,1.003302,1045936.55,1.0022
+2024-06-13 00:00:00,1000000.0,1050141.5,50141.5,1.00402,1045936.55,1.0033
+2024-06-14 00:00:00,1000650.25,1049504.25,48854.0,1.003411,1045936.55,1.004
+2024-06-17 00:00:00,1000650.25,1049259.98,48609.73,1.003177,1045936.55,1.0034
+2024-06-18 00:00:00,1000650.25,1048658.7,48008.45,1.002603,1045936.55,1.0032
+2024-06-19 00:00:00,1000650.25,1048527.17,47876.92,1.002477,1045936.55,1.0026
+2024-06-20 00:00:00,1000650.25,1048715.07,48064.82,1.002656,1045936.55,1.0025
+
+[summary]
+dict
+{}
+{
+    "strategy_name":"strategy",
+    "start_date":"2024-06-11",
+    "end_date":"2024-06-20",
+    "starting_cash":"STOCK:1000000.0",
+    "alpha":NaN,
+    "beta":NaN,
+    "sharpe":4.627769423802232,
+    "excess_sharpe":NaN,
+    "information_ratio":NaN,
+    "tracking_error":NaN,
+    "sortino":7.861996788106883,
+    "volatility":0.015298451977415738,
+    "max_drawdown":0.0015372499801217182,
+    "excess_max_drawdown":NaN,
+    "excess_returns":NaN,
+    "excess_annual_returns":NaN,
+    "win_rate":0.5,
+    "total_value":1048715.07,
+    "cash":1000650.25,
+    "total_returns":0.002656490013662971,
+    "annualized_returns":0.08715966696778854,
+    "unit_net_value":1.002656490013663
+}
