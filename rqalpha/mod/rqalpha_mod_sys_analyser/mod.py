@@ -602,6 +602,7 @@ class AnalyserMod(AbstractMod):
             "weekly_volatility": weekly_risk.annual_volatility,
             "weekly_ulcer_index": weekly_risk.ulcer_index,
             "weekly_ulcer_performance_index": weekly_risk.ulcer_performance_index,
+            "weekly_excess_sharpe": weekly_risk.excess_sharpe,
         })
 
         # 月度风险指标
