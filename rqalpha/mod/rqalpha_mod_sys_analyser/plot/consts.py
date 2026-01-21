@@ -132,6 +132,7 @@ class DefaultPlot(PlotTemplate):
         IndicatorInfo("weekly_information_ratio", _("WeeklyInfoRatio"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("weekly_tracking_error", _("WeeklyTrackingError"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("weekly_max_drawdown", _("WeeklyMaxDrawdown"), BLACK, "{0:.3%}", 11, 1),
+        IndicatorInfo("weekly_excess_sharpe", _("WeeklyExcessSharpe"), BLACK, "{0:.4}", 11, 1.4)
     ]]
 
     EXCESS_INDICATORS = [[
