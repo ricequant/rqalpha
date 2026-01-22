@@ -181,7 +181,7 @@ class Account(metaclass=AccountMeta):
 
     def get_position(self, order_book_id: str, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> Position:
         """
-        获取某个标的的持仓对象，不能传入还未上市的 order_book_id，否则将抛出异常
+        获取某个标的的持仓对象
 
         :param order_book_id: 标的编号
         :param direction: 持仓方向
