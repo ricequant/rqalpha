@@ -1,6 +1,11 @@
+setuptools <81
 Sphinx ==2.4.4
-sphinxcontrib-applehelp <1.0.4 # 需要与 sphinx==2.4.4 兼容
-sphinxcontrib-devhelp <1.0.2
+sphinxcontrib-applehelp ==1.0.3 # 需要与 sphinx==2.4.4 兼容
+sphinxcontrib-devhelp ==1.0.1
+sphinxcontrib-htmlhelp ==1.0.3
+sphinxcontrib-jsmath ==1.0.1
+sphinxcontrib-qthelp ==1.0.2
+sphinxcontrib-serializinghtml ==1.1.5
 watchdog
 sphinx_rtd_theme
 nbsphinx ==0.3.5
@@ -8,10 +13,12 @@ jupyter_client
 sphinx-autodoc-typehints
 astroid ==2.2.5
 nbconvert <6.0.0
-jinja2 <3.0.0
-docutils <0.17
+jinja2 ==2.11.3
+docutils ==0.16
+pygments==2.7.4
+alabaster==0.7.12
 scipy
 numpy
 pandas
 matplotlib
-markupsafe <2.1.0
+markupsafe ==2.0.1
