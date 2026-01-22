@@ -12,3 +12,4 @@ scipy
 numpy
 pandas
 matplotlib
+markupsafe<2.1.0
