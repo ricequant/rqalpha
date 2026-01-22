@@ -1,4 +1,6 @@
 Sphinx ==2.4.4
+sphinxcontrib-applehelp <1.0.4 # 需要与 sphinx==2.4.4 兼容
+sphinxcontrib-devhelp <1.0.2
 watchdog
 sphinx_rtd_theme
 nbsphinx ==0.3.5
@@ -12,4 +14,4 @@ scipy
 numpy
 pandas
 matplotlib
-markupsafe<2.1.0
+markupsafe <2.1.0
