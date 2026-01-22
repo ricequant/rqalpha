@@ -463,15 +463,15 @@ def order(
 
       如果不指定 price, 则相当于下 MarketOrder
 
-      如果 order_book_id 是股票，等同于调用 order_shares
+      如果 id_or_ins 是股票，等同于调用 order_shares
 
-      如果 order_book_id 是期货，则进行智能下单:
+      如果 id_or_ins 是期货，则进行智能下单:
 
           *   quantity 表示调仓量
           *   如果 quantity 为正数，则先平 Sell 方向仓位，再开 Buy 方向仓位
           *   如果 quantity 为负数，则先平 Buy 反向仓位，再开 Sell 方向仓位
 
-      :param order_book_id: 下单标的物
+      :param id_or_ins: 下单标的物
       :param quantity: 调仓量
       :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
                             TWAPOrder、VWAPOrder
@@ -511,15 +511,15 @@ def order_to(
 
     如果不指定 price, 则相当于 MarketOrder
 
-    如果 order_book_id 是股票，则表示仓位调整到多少股
+    如果 id_or_ins 是股票，则表示仓位调整到多少股
 
-    如果 order_book_id 是期货，则进行智能调仓:
+    如果 id_or_ins 是期货，则进行智能调仓:
 
         *   quantity 表示调整至某个仓位
         *   quantity 如果为正数，则先平 SELL 方向仓位，再 BUY 方向开仓 quantity 手
         *   quantity 如果为负数，则先平 BUY 方向仓位，再 SELL 方向开仓 -quantity 手
 
-    :param order_book_id: 下单标的物
+    :param id_or_ins: 下单标的物
     :param int quantity: 调仓量
     :param price_or_style: 默认为None，表示市价单，可设置价格，表示限价单，也可以直接设置订单类型，有如下选项：MarketOrder、LimitOrder、
                             TWAPOrder、VWAPOrder

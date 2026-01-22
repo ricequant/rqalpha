@@ -889,6 +889,12 @@ Instrument对象也支持如下方法：
 
         instruments(order_book_id).tick_size()
 
+合约在指定日期是否在交易：
+
+    .. code-block:: python
+
+        instrument(order_book_id).active_at(dt)
+
 枚举常量
 ======================================================
 
