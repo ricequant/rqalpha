@@ -22,6 +22,7 @@ import re
 from decimal import getcontext, ROUND_FLOOR
 from datetime import time
 from typing import Optional, Mapping
+from functools import partial
 
 from contextlib import contextmanager
 import numpy as np
@@ -252,8 +253,11 @@ def check_items_in_container(items, should_in, name):
             )
 
 
-def resample_monthly(df: pd.DataFrame):
-    try:
-        return df.resample("ME")
-    except ValueError:
-        return df.resample("M")
+def resample_monthly(type_name: str, df: pd.DataFrame):
+    return df.resample(type_name)
+
+
+if pd.__version__ >= "2.2.0":
+    resample_monthly = partial(resample_monthly, "ME")
+else:
+    resample_monthly = partial(resample_monthly, "M")
