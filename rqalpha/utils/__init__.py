@@ -255,5 +255,5 @@ def check_items_in_container(items, should_in, name):
 def resample_monthly(df: pd.DataFrame):
     try:
         return df.resample("ME")
-    except KeyError:
+    except ValueError:
         return df.resample("M")

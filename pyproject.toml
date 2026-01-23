@@ -80,3 +80,4 @@ exclude = []
 [tool.setuptools_scm]
 write_to = "rqalpha/_version.py"
 tag_regex = "^release/(?P<version>.*)$"
+version_scheme = "guess-next-dev"
