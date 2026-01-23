@@ -2,7 +2,7 @@
 name = "rqalpha"
 description = "Ricequant Algorithm Trading System"
 readme = "README.rst"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 authors = [
     {name = "ricequant", email = "public@ricequant.com"}
 ]
