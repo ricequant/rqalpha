@@ -10,6 +10,8 @@ jobs:
     steps:
     # Checks out a copy of your repository on the ubuntu-latest machine
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整的 git 历史，而不是 shallow clone
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
