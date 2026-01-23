@@ -71,11 +71,20 @@ author = 'RiceQuant'
 # The short X.Y version.
 
 try:
-    import rqalpha
-    from rqalpha.mod.rqalpha_mod_sys_accounts.api import api_stock, api_future
-    version = rqalpha.__main_version__
+    from setuptools_scm import get_version
+    from setuptools_scm.version import guess_next_version
+
+    version = get_version(
+        root='../..',
+        relative_to=__file__,
+        tag_regex=r'^release/(?P<version>[^\+]+)(?:\+.*)?$'
+    )
+    # 提取主版本号 (例如 5.6.6.dev83 -> 5.6.x)
+    version_parts = version.split('.')
+    if len(version_parts) >= 2:
+        version = f"{version_parts[0]}.{version_parts[1]}.x"
     release = version
-except ImportError:
+except Exception:
     version = '0.0'
     release = '0.0'
 
