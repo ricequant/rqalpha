@@ -22,3 +22,4 @@ rqalpha_test_coverage_report/
 .tmp.pkl
 .env
 .DS_Store
+rqalpha/_version.py

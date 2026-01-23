@@ -23,3 +23,4 @@ numpy
 pandas
 matplotlib
 markupsafe ==2.0.1
+setuptools_scm
