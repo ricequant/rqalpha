@@ -38,7 +38,7 @@ from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, RqAttrDict
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, RqAttrDict, resample_monthly
 from rqalpha.utils.datetime_func import convert_int_to_date, convert_date_to_int
 from rqalpha.utils.logger import user_system_log
 from rqalpha.api import export_as_api
@@ -535,7 +535,7 @@ class AnalyserMod(AbstractMod):
             total_portfolios["geometric_excess_unit_net_value"] = total_portfolios["unit_net_value"] / total_portfolios["benchmark_unit_net_value"] - 1
         df.index = df['date']
         weekly_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
-        monthly_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()
+        monthly_nav = resample_monthly(df).last().set_index("date").unit_net_value.dropna()
         weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
         monthly_returns = (monthly_nav / monthly_nav.shift(1).fillna(1)).fillna(0) - 1
 
@@ -573,7 +573,7 @@ class AnalyserMod(AbstractMod):
             benchmark_portfolios = df.set_index('date').sort_index()
             df.index = df['date']
             weekly_b_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
-            monthly_b_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()
+            monthly_b_nav = resample_monthly(df).last().set_index("date").unit_net_value.dropna()
             weekly_b_returns = (weekly_b_nav / weekly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             monthly_b_returns = (monthly_b_nav / monthly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios

@@ -22,9 +22,11 @@ import re
 from decimal import getcontext, ROUND_FLOOR
 from datetime import time
 from typing import Optional, Mapping
+from functools import partial
 
 from contextlib import contextmanager
 import numpy as np
+import pandas as pd
 
 from rqalpha.utils.exception import CustomError, CustomException
 from rqalpha.const import EXC_TYPE, INSTRUMENT_TYPE, DEFAULT_ACCOUNT_TYPE, SIDE, POSITION_EFFECT, POSITION_DIRECTION
@@ -249,3 +251,13 @@ def check_items_in_container(items, should_in, name):
             raise ValueError(
                 "{}: got invalided value {}, choose any in {}".format(name, item, should_in)
             )
+
+
+def resample_monthly(type_name: str, df: pd.DataFrame):
+    return df.resample(type_name)
+
+
+if pd.__version__ >= "2.2.0":
+    resample_monthly = partial(resample_monthly, "ME")
+else:
+    resample_monthly = partial(resample_monthly, "M")

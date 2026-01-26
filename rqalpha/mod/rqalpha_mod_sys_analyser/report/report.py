@@ -27,6 +27,7 @@ from pandas import Series, DataFrame
 from rqrisk import Risk
 from rqrisk import DAILY, WEEKLY, MONTHLY
 from rqalpha.environment import Environment
+from rqalpha.utils import resample_monthly
 from rqalpha.utils.exception import EnvironmentNotInitialized
 from rqalpha.const import DAYS_CNT
 
@@ -54,8 +55,8 @@ def _yearly_indicators(
             weekly_excess_win_rate = weekly_risk.excess_win_rate
 
             # 月胜率
-            monthly_p_returns = _returns(p_nav[year_slice].resample("M").last().dropna())
-            monthly_b_returns = _returns(b_nav[year_slice].resample("M").last().dropna())
+            monthly_p_returns = _returns(resample_monthly(p_nav[year_slice]).last().dropna())
+            monthly_b_returns = _returns(resample_monthly(b_nav[year_slice]).last().dropna())
             monthly_risk = Risk(monthly_p_returns, monthly_b_returns, risk_free_rates[year], period=MONTHLY)
             monthly_excess_win_rate = monthly_risk.excess_win_rate
         else:
