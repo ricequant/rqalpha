@@ -16,7 +16,7 @@ astroid ==2.2.5
 nbconvert <6.0.0
 jinja2 ==2.11.3
 docutils ==0.16
-pygments==2.7.4
+pygments==2.15.0
 alabaster==0.7.12
 scipy
 numpy
