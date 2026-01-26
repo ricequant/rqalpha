@@ -111,7 +111,7 @@ Mod名                       说明
 .. _master 分支: https://github.com/ricequant/rqalpha
 .. _rqalpha_mod_sys_stock_realtime: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_stock_realtime/README.rst
 .. _rqalpha_mod_tushare: https://github.com/ricequant/rqalpha-mod-tushare
-.. _通过 Mod 扩展 RQAlpha: http://rqalpha.io/zh_CN/latest/development/mod.html
+.. _通过 Mod 扩展 RQAlpha: http://rqalpha.readthedocs.io/zh_CN/latest/development/mod.html
 .. _sys_accounts: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_accounts/README.rst
 .. _sys_scheduler: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_scheduler/README.rst
 .. _sys_analyser: https://github.com/ricequant/rqalpha/blob/master/rqalpha/mod/rqalpha_mod_sys_analyser/README.rst

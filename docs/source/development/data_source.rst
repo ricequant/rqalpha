@@ -281,7 +281,7 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 您如果想要替换，可以使用如下两种方式:
 
 *   写脚本将自有数据源按照相同的格式生成对应的文件，并进行文件替换。
-*   实现 `AbstractDataSource <http://rqalpha.io/zh_CN/latest/development/basic_concept.html#datasource>`_ 对应的接口，您可以继承 `BaseDataSource <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/data/base_data_source.py>`_ 并 override 对应的接口即可完成替换。
+*   实现 `AbstractDataSource <http://rqalpha.readthedocs.io/zh_CN/latest/development/basic_concept.html#datasource>`_ 对应的接口，您可以继承 `BaseDataSource <https://github.com/ricequant/rqalpha/blob/develop/rqalpha/data/base_data_source.py>`_ 并 override 对应的接口即可完成替换。
 
 
 行情数据 - 五十行代码接入 tushare 行情数据

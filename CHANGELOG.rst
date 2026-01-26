@@ -1121,7 +1121,7 @@ RQAlpha 4.x 相对于 3.x 版本进行了部分重构，重构的核心目标是
 2.2.2
 ==================
 
-- 增加 :code:`run_file` | :code:`run_code` | :code:`run_func` API, 详情请参见 `多种方式运行策略 <http://rqalpha.io/zh_CN/latest/intro/run_algorithm.html>`_
+- 增加 :code:`run_file` | :code:`run_code` | :code:`run_func` API, 详情请参见 `多种方式运行策略 <http://rqalpha.readthedocs.io/zh_CN/latest/intro/run_algorithm.html>`_
 - Breaking Change: 更改 :code:`AbstractStrategyLoader:load` 函数的传入参数，现在不需要 :code:`strategy` 了。
 - 增加 :code:`UserFuncStrategyLoader` 类
 - 根据 `Issue 116 <https://github.com/ricequant/rqalpha/issues/116>`_ 增加如下内容:
