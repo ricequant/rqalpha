@@ -52,7 +52,7 @@ jobs:
           pip install coveralls
           pip install -U setuptools
           pip install ipython==5.3.0
-          pip install --prefer-binary .
+          pip install -e .
 
         # download-bundle
           rqalpha download-bundle
