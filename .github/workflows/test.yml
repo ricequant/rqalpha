@@ -48,16 +48,17 @@ jobs:
             pip install "TA-Lib>=0.6.5" -i https://rquser:Ricequant8@pypi2.ricequant.com/simple/
           fi
           pip install pytest
+          pip install pytest-cov
           pip install coveralls
           pip install -U setuptools
           pip install ipython==5.3.0
-          pip install --prefer-binary .
+          pip install -e .
 
         # download-bundle
           rqalpha download-bundle
     - name: run test
       run:  |
-          python -m pytest
+          pytest --cov=rqalpha --cov-report=
           ls -al $HOME/.rqalpha/
           ls -al $HOME/.rqalpha/bundle/
     - name: Upload coverage data to coveralls.io
