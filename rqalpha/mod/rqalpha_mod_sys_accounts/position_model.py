@@ -18,8 +18,8 @@ from datetime import date
 from typing import Optional, Deque, Tuple
 from collections import deque
 
-from decimal import Decimal
-from numpy import ndarray
+from decimal import Decimal, ROUND_HALF_UP
+from numpy import ndarray, isclose
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
@@ -166,9 +166,8 @@ class StockPosition(Position):
         if self.direction != POSITION_DIRECTION.LONG:
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         next_date = self._env.data_proxy.get_next_trading_date(trading_date, trading_calendar_type=self.calendar_type)
-        instrument = self._env.data_proxy.instrument_not_none(self._order_book_id)
         delta_cash = 0
-        if instrument.de_listed_at(next_date):
+        if self._instrument.de_listed_at(next_date):
             try:
                 transform_data = self._env.data_proxy.get_share_transformation(self._order_book_id)
             except NotImplementedError:
@@ -263,17 +262,32 @@ class StockPosition(Position):
             return payable_value - amount * last_price
         else:
             return payable_value
+    
+    def _get_split_ratio(self, splits) -> Decimal:
+        # rqalpha 6.1.0 修改了 bundle 的 splits_factor 的数据格式，需要向前兼容
+        if 'split_coefficient_to' not in splits.dtype.names:
+            return Decimal(splits["split_factor"].cumprod()[-1])
+
+        for field in ["split_coefficient_to", "split_coefficient_from"]:
+            if not all(isclose(splits[field] % 1, 0)):
+                ratio = splits["split_coefficient_to"] / splits["split_coefficient_from"]
+                return Decimal(ratio.cumprod()[-1])
+
+        coefficient_to = (splits["split_coefficient_to"].astype(int)).cumprod()[-1]
+        coefficient_from = (splits["split_coefficient_from"].astype(int)).cumprod()[-1]
+        return Decimal(int(coefficient_to)) / Decimal(int(coefficient_from))
 
     def _handle_split(self, trading_date, data_proxy) -> float:
         splits = self._get_dividends_or_splits(self._all_splits, trading_date, "ex_date")  # type: ignore[reportIncompatibleVariableOverride]
         if splits is None or len(splits) == 0:
             return 1.
-        ratio: float = splits["split_factor"].cumprod()[-1]
+        ratio_decimal = self._get_split_ratio(splits)
+        
+        ratio = float(ratio_decimal)
         self._avg_price /= ratio
         self._last_price /= ratio  # type: ignore
-        ratio_decimal = Decimal(ratio)
         # int(6000 * 1.15) -> 6899
-        self._old_quantity = self._quantity = round(Decimal(self._quantity) * ratio_decimal)
+        self._old_quantity = self._quantity = int((Decimal(self._quantity) * ratio_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
         self._queue.handle_split(ratio_decimal, self._quantity)
         return ratio
 
@@ -372,14 +386,13 @@ class FuturePosition(Position):
         if self._quantity == 0:
             return delta_cash
         data_proxy = self._env.data_proxy
-        instrument = data_proxy.instrument(self._order_book_id)
         next_date = data_proxy.get_next_trading_date(trading_date)
         if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
             # 逐日盯市按照结算价结算
             self._last_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
         delta_cash += self.equity
         self._avg_price = self.last_price
-        if instrument.de_listed_at(next_date):
+        if self._instrument.de_listed_at(next_date):
             user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))

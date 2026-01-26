@@ -38,7 +38,7 @@ from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, RqAttrDict
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, RqAttrDict, resample_monthly
 from rqalpha.utils.datetime_func import convert_int_to_date, convert_date_to_int
 from rqalpha.utils.logger import user_system_log
 from rqalpha.api import export_as_api
@@ -56,6 +56,14 @@ def _get_yearly_risk_free_rates(
         year = start_date.year
         yield year, data_proxy.get_risk_free_rate(start_date, min(end_date, datetime.date(year, 12, 31)))
         start_date = datetime.date(year + 1, 1, 1)
+
+
+PRESSURE_TEST_PERIOD = {
+    "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
+    "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
+    "行业风格切换": (datetime.date(2021, 9, 1), datetime.date(2021, 12, 31)),
+    "小盘踩踏危机": (datetime.date(2024, 1, 5), datetime.date(2024, 2, 8)),
+}
 
 
 EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
@@ -146,7 +154,9 @@ class AnalyserMod(AbstractMod):
     NULL_OID = {"null", "NULL"}
     NON_CN_CALENDAR_OIDS = {
         "930930.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND,
-        "930933.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND
+        "930933.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND,
+        "930644.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND,  # 港股通中国内地企业综合指数
+        "866012.RI": TRADING_CALENDAR_TYPE.SOUTHBOUND,  # 港股通等权指数
     }
 
     def _get_one_benchmark_daily_returns(self, ins: Instrument, trading_dates: pd.DatetimeIndex):
@@ -259,11 +269,12 @@ class AnalyserMod(AbstractMod):
 
             for order_book_id, pos in pos_dict.items():
                 self._positions[account_type].append(self._to_position_record(
-                    date, order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
+                    self._env.calendar_dt, self._env.trading_dt, 
+                    order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
                 ))
 
-    def _symbol(self, order_book_id):
-        return self._env.data_proxy.instrument_not_none(order_book_id).symbol
+    def _symbol(self, order_book_id, trading_dt: datetime.datetime):
+        return self._env.data_proxy.get_active_instrument(order_book_id, trading_dt).symbol
 
     @staticmethod
     def _parse_benchmark(benchmarks):
@@ -337,13 +348,19 @@ class AnalyserMod(AbstractMod):
 
     LONG_ONLY_INS_TYPE = INST_TYPE_IN_STOCK_ACCOUNT + [INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.BOND]
 
-    def _to_position_record(self, date, order_book_id, long, short):
-        # type: (datetime.date, str, AbstractPosition, AbstractPosition) -> Dict
-        instrument = self._env.data_proxy.instrument(order_book_id)
+    def _to_position_record(
+        self, 
+        calendar_dt: datetime.datetime, 
+        trading_dt: datetime.datetime, 
+        order_book_id: str, 
+        long: Optional[AbstractPosition], 
+        short: Optional[AbstractPosition]
+    ) -> Dict:
+        instrument = self._env.data_proxy.get_active_instrument(order_book_id, trading_dt)
         data = {
             'order_book_id': order_book_id,
-            'symbol': self._symbol(order_book_id),
-            'date': date,
+            'symbol': self._symbol(order_book_id, trading_dt),
+            'date': calendar_dt.date(),
         }
         if instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
             for field in ['quantity', 'last_price', 'avg_price', 'market_value']:
@@ -367,7 +384,7 @@ class AnalyserMod(AbstractMod):
             'datetime': trade.datetime.strftime("%Y-%m-%d %H:%M:%S"),
             'trading_datetime': trade.trading_datetime.strftime("%Y-%m-%d %H:%M:%S"),
             'order_book_id': trade.order_book_id,
-            'symbol': self._symbol(trade.order_book_id),
+            'symbol': self._symbol(trade.order_book_id, trade.trading_datetime),
             'side': trade.side.name,
             'position_effect': trade.position_effect.name,
             'exec_id': trade.exec_id,
@@ -378,6 +395,43 @@ class AnalyserMod(AbstractMod):
             'order_id': trade.order_id,
             'transaction_cost': trade.transaction_cost,
         }
+
+    def _pressure_test(self, portfolio: pd.DataFrame, benchmark_portfolio: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
+
+        def _returns(unit_net_value: pd.Series) -> pd.Series:
+            return (unit_net_value / unit_net_value.shift(1).fillna(1)).fillna(0) - 1
+
+        env = Environment.get_instance()
+        p_returns = _returns(portfolio.unit_net_value)
+
+        data = defaultdict(list)
+        for title, (start, end) in PRESSURE_TEST_PERIOD.items():
+            p_period_returns = p_returns.loc[start: end]
+            if (p_period_returns is None or p_period_returns.empty):
+                continue
+            # 当且仅当回测周期完整包含压力测试的一个区间时才展示该区间的表现
+            if len(p_period_returns) != len(env.data_proxy.get_trading_dates(start, end)):
+                continue
+            if benchmark_portfolio is not None:
+                b_period_returns = _returns(benchmark_portfolio.unit_net_value).loc[start: end]
+            else:
+                b_period_returns = pd.Series(index=p_period_returns.index)
+            risk_free_rate = env.data_proxy.get_risk_free_rate(start, end)
+            risk = Risk(p_period_returns, b_period_returns, risk_free_rate, period=DAILY, trading_days_a_year=env.trading_days_a_year)
+            data["title"].append(title)
+            data["start_date"].append(str(start))
+            data["end_date"].append(str(end))
+            data["returns"].append(risk.return_rate)
+            data["annual_return"].append(risk.annual_return)
+            data["geometric_excess_return"].append(risk.geometric_excess_return)
+            data["max_drawdown"].append(risk.max_drawdown)
+            data["geometric_excess_drawdown"].append(risk.geometric_excess_drawdown)
+            data["sharpe"].append(risk.sharpe)
+            data["excess_sharpe"].append(risk.excess_sharpe)
+        if not data["title"]:
+            return None
+        return pd.DataFrame(data)
+
 
     def tear_down(self, code, exception=None):
         if code != EXIT_CODE.EXIT_SUCCESS or not self._enabled:
@@ -481,7 +535,7 @@ class AnalyserMod(AbstractMod):
             total_portfolios["geometric_excess_unit_net_value"] = total_portfolios["unit_net_value"] / total_portfolios["benchmark_unit_net_value"] - 1
         df.index = df['date']
         weekly_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
-        monthly_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()
+        monthly_nav = resample_monthly(df).last().set_index("date").unit_net_value.dropna()
         weekly_returns = (weekly_nav / weekly_nav.shift(1).fillna(1)).fillna(0) - 1
         monthly_returns = (monthly_nav / monthly_nav.shift(1).fillna(1)).fillna(0) - 1
 
@@ -519,7 +573,7 @@ class AnalyserMod(AbstractMod):
             benchmark_portfolios = df.set_index('date').sort_index()
             df.index = df['date']
             weekly_b_nav = df.resample("W").last().set_index("date").unit_net_value.dropna()
-            monthly_b_nav = df.resample("M").last().set_index("date").unit_net_value.dropna()
+            monthly_b_nav = resample_monthly(df).last().set_index("date").unit_net_value.dropna()
             weekly_b_returns = (weekly_b_nav / weekly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             monthly_b_returns = (monthly_b_nav / monthly_b_nav.shift(1).fillna(1)).fillna(0) - 1
             result_dict['benchmark_portfolio'] = benchmark_portfolios
@@ -548,6 +602,7 @@ class AnalyserMod(AbstractMod):
             "weekly_volatility": weekly_risk.annual_volatility,
             "weekly_ulcer_index": weekly_risk.ulcer_index,
             "weekly_ulcer_performance_index": weekly_risk.ulcer_performance_index,
+            "weekly_excess_sharpe": weekly_risk.excess_sharpe,
         })
 
         # 月度风险指标
@@ -563,6 +618,11 @@ class AnalyserMod(AbstractMod):
                 "weekly_excess_ulcer_index": weekly_risk.excess_ulcer_index,
                 "weekly_excess_ulcer_performance_index": weekly_risk.excess_ulcer_performance_index,
             })
+
+        # 压力测试期
+        pressure_test_result = self._pressure_test(result_dict.get("portfolio"), result_dict.get("benchmark_portdolio"))
+        if pressure_test_result is not None:
+            result_dict["pressure_test"] = pressure_test_result
 
         plots = self._plot_store.get_plots()
         if plots:

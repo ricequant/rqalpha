@@ -61,6 +61,5 @@ class AbstractDividendStore:
 
 class AbstractSimpleFactorStore:
     @abc.abstractmethod
-    def get_factors(self, order_book_id):
-        # type: (str) -> np.ndarray
+    def get_factors(self, order_book_id: str) -> Optional[np.ndarray]:
         raise NotImplementedError

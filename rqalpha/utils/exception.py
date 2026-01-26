@@ -260,3 +260,11 @@ def format_exception_group(exc_group, indent=""):
     
     return "\n".join(lines)
 
+
+#  Internal exceptions
+class InstrumentNotFound(LookupError):
+    pass
+
+
+class EnvironmentNotInitialized(RuntimeError):
+    pass

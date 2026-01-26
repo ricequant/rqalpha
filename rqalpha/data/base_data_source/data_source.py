@@ -32,7 +32,7 @@ from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE, MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.interface import AbstractDataSource, ExchangeRate
 from rqalpha.model.instrument import Instrument
-from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_date, convert_int_to_datetime)
+from rqalpha.utils.datetime_func import (convert_date_to_int, convert_int_to_date, convert_int_to_datetime, convert_dt_to_int)
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.typing import DateLike
@@ -109,7 +109,6 @@ class BaseDataSource(AbstractDataSource):
 
         # dynamic registered storages
         self._ins_id_or_sym_type_map: Dict[str, INSTRUMENT_TYPE] = {}
-        self._instrument_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractInstrumentStore] = {}
         self._day_bar_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractDayBarStore] = {}
         self._dividend_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractDividendStore] = {}
         self._split_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
@@ -117,10 +116,10 @@ class BaseDataSource(AbstractDataSource):
         self._ex_factor_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
 
         # instruments
-        self._id_instrument_map: Dict[str, Instrument] = {}
-        self._sym_instrument_map: Dict[str, Instrument] = {}
-        self._id_or_sym_instrument_map: Mapping[str, Instrument] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
-        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, List[Instrument]] = defaultdict(list)
+        self._id_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
+        self._sym_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
+        self._id_or_sym_instrument_map: Mapping[str, dict[datetime, Instrument]] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
+        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, dict[datetime, Instrument]] = defaultdict(dict)
 
         # register instruments
         self.register_instruments(load_instruments_from_pkl(_p('instruments.pk'), self._future_info_store))
@@ -151,9 +150,9 @@ class BaseDataSource(AbstractDataSource):
 
     def register_instruments(self, instruments: Iterable[Instrument]):
         for ins in instruments:
-            self._id_instrument_map[ins.order_book_id] = ins
-            self._sym_instrument_map[ins.symbol] = ins
-            self._grouped_instruments[ins.type].append(ins)
+            self._id_instrument_map[ins.order_book_id][ins.listed_date] = ins
+            self._sym_instrument_map[ins.symbol][ins.listed_date] = ins
+            self._grouped_instruments[ins.type][ins.listed_date] = ins
     
     def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN):
         self._dividend_stores[instrument_type, market] = dividend_store
@@ -183,26 +182,26 @@ class BaseDataSource(AbstractDataSource):
     def get_trading_minutes_for(self, instrument, trading_dt):
         raise NotImplementedError
 
-    def get_trading_calendars(self):
-        # type: () -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]
+    def get_trading_calendars(self) -> Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]:
         return {t: store.get_trading_calendar() for t, store in self._calendar_stores.items()}
 
     def get_instruments(self, id_or_syms: Optional[Iterable[str]] = None, types: Optional[Iterable[INSTRUMENT_TYPE]] = None) -> Iterable[Instrument]:
         if id_or_syms is not None:
+            seen = set()
             for i in id_or_syms:
-                try:
-                    yield self._id_or_sym_instrument_map[i]
-                except KeyError:
-                    pass
+                if i in self._id_or_sym_instrument_map:
+                    for ins in self._id_or_sym_instrument_map[i].values():
+                        if ins not in seen:
+                            seen.add(ins)
+                            yield ins
         else:
             for t in types or self._grouped_instruments.keys():
-                yield from self._grouped_instruments[t]
+                yield from self._grouped_instruments[t].values()
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
 
-    def is_suspended(self, order_book_id, dates):
-        # type: (str, Sequence[DateLike]) -> List[bool]
+    def is_suspended(self, order_book_id: str, dates: Sequence[DateLike]) -> List[bool]:
         for date_set in self._suspend_days:
             result = date_set.contains(order_book_id, dates)
             if result is not None:
@@ -210,7 +209,7 @@ class BaseDataSource(AbstractDataSource):
         else:
             return [False] * len(dates)
 
-    def is_st_stock(self, order_book_id, dates):
+    def is_st_stock(self, order_book_id: str, dates: Sequence[DateLike]) -> List[bool]:
         result = self._st_stock_days.contains(order_book_id, dates)
         return result if result is not None else [False] * len(dates)
 
@@ -267,13 +266,26 @@ class BaseDataSource(AbstractDataSource):
                 return False
         return True
 
+    @lru_cache(1024)
     def get_ex_cum_factor(self, instrument: Instrument):
         try:
             ex_factor_store = self._ex_factor_stores[instrument.type, instrument.market]
         except KeyError:
             return None
-
-        return ex_factor_store.get_factors(instrument.order_book_id)
+        factors = ex_factor_store.get_factors(instrument.order_book_id)
+        if factors is None:
+            return None
+        # 考虑代码复用的情况，需要过滤掉不在上市日期范围内到数据
+        factors = factors[
+            (factors["start_date"] >= convert_dt_to_int(instrument.listed_date)) & 
+            (factors["start_date"] <= convert_dt_to_int(instrument.de_listed_date))
+        ]
+        if len(factors) == 0:
+            return None
+        if factors["start_date"][0] != 0:
+            # kind of dirty，强行设置初始值为 1
+            factors = np.concatenate([np.array([(0, 1.0)], dtype=factors.dtype), factors])
+        return factors
 
     def _update_weekly_trading_date_index(self, idx):
         env = Environment.get_instance()
@@ -342,18 +354,19 @@ class BaseDataSource(AbstractDataSource):
                 left = i - bar_count * 5 if i >= bar_count * 5 else 0
             bars = bars[left:i]
 
+            resample_fields: Union[str, List[str]] = list(bars.dtype.names) if fields is None else fields
             if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
                 # 期货及指数无需复权
-                week_bars = self.resample_week_bars(bars, bar_count, fields)
+                week_bars = self.resample_week_bars(bars, bar_count, resample_fields)
                 return week_bars if fields is None else week_bars[fields]
 
             if isinstance(fields, str) and fields not in FIELDS_REQUIRE_ADJUSTMENT:
-                week_bars = self.resample_week_bars(bars, bar_count, fields)
+                week_bars = self.resample_week_bars(bars, bar_count, resample_fields)
                 return week_bars if fields is None else week_bars[fields]
 
             adjust_bars_date = adjust_bars(bars, self.get_ex_cum_factor(instrument),
                                            fields, adjust_type, adjust_orig)
-            adjust_week_bars = self.resample_week_bars(adjust_bars_date, bar_count, fields)
+            adjust_week_bars = self.resample_week_bars(adjust_bars_date, bar_count, resample_fields)
             return adjust_week_bars if fields is None else adjust_week_bars[fields]
         i = bars['datetime'].searchsorted(np.uint64(convert_date_to_int(dt)), side='right')
         if bar_count is None:

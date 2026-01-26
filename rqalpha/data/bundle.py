@@ -128,7 +128,7 @@ class GenerateSplitBundle:
         if split is None:
             raise RuntimeError("Got no split data")
         split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
-        split = split[['split_factor']]
+        split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from']]
         split.reset_index(inplace=True)
         split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)  # type: ignore
         split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]
@@ -529,9 +529,10 @@ def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwarg
     return succeed.value
 
 
-def update_bundle(path, create, enable_compression=False, concurrency=1, **kwargs):
-    tasks = gather_tasks(path, create, enable_compression, **kwargs)
-    return run_tasks(tasks, concurrency, **kwargs)
+def update_bundle(path, create, enable_compression=False, concurrency=1, rqdata_kwargs=None, **h5_kwargs):
+    tasks = gather_tasks(path, create, enable_compression, **h5_kwargs)
+    rqdata_kwargs = rqdata_kwargs or {}
+    return run_tasks(tasks, concurrency, **rqdata_kwargs)
 
 
 class AutomaticUpdateBundle(object):

@@ -20,6 +20,8 @@ from typing import Optional, Dict, List, Tuple
 from itertools import chain
 from typing import TYPE_CHECKING
 
+from typing_extensions import deprecated
+
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
 from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT, MARKET
@@ -27,6 +29,7 @@ from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.class_helper import cached_property
+from rqalpha.utils.exception import EnvironmentNotInitialized
 from rqalpha.const import SIDE
 if TYPE_CHECKING:
     from rqalpha.model.order import Order
@@ -82,7 +85,7 @@ class Environment(object):
         返回已经创建的 Environment 对象
         """
         if Environment._env is None:
-            raise RuntimeError(
+            raise EnvironmentNotInitialized(
                 _(u"Environment has not been created. Please Use `Environment.get_instance()` after RQAlpha init"))
         return Environment._env
 
@@ -168,6 +171,7 @@ class Environment(object):
     def get_last_price(self, order_book_id):
         return self.data_proxy.get_last_price(order_book_id)
 
+    @deprecated("Use APIs from data_proxy instead", category=None)
     def get_instrument(self, order_book_id):
         return self.data_proxy.instrument(order_book_id)
 

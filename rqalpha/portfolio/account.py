@@ -17,7 +17,6 @@
 
 from itertools import chain
 from datetime import date
-from tokenize import Floatnumber
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
@@ -25,7 +24,6 @@ from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_T
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
 from rqalpha.model import Order, OrderStyle, Trade, Instrument
-from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _

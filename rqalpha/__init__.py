@@ -210,9 +210,7 @@ def run_func(**kwargs):
     return main.run(config, user_funcs=user_funcs)
 
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+from ._version import __version__
 
 version_info = tuple(int(v) if v.isdigit() else v for v in __version__.split('.'))
 try:

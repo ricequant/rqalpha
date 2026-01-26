@@ -219,6 +219,70 @@ def test_instruments_code():
     run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
+def test_instrument_api():
+    from rqalpha.utils.exception import RQInvalidArgument
+
+    config = {
+        "base": {
+            "start_date": "2019-01-02",
+            "end_date": "2019-01-04",
+            "frequency": "1d",
+            "accounts": {
+                "stock": 1000000,
+            }
+        },
+        "extra": {
+            "log_level": "error",
+        },
+    }
+
+    def init(context):
+        context.active_stock = "000001.XSHE"
+        context.inactive_stock = "000979.XSHE"
+
+    def handle_bar(context, _):
+        active_ins = active_instrument(context.active_stock)
+        assert active_ins.order_book_id == context.active_stock
+        assert active_ins.active_at(context.now)
+
+        ins = instruments(context.active_stock)
+        assert isinstance(ins, Instrument)
+        assert ins.order_book_id == context.active_stock
+        listed_date = ins.listed_date.date() if hasattr(ins.listed_date, "date") else ins.listed_date
+        assert listed_date <= context.now.date()
+
+        ins_list = instruments([context.active_stock, context.inactive_stock])
+        assert isinstance(ins_list, list)
+        assert {i.order_book_id for i in ins_list} == {context.active_stock, context.inactive_stock}
+
+        active_history = instrument_history(context.active_stock)
+        assert len(active_history) >= 1
+        assert active_history == sorted(active_history, key=lambda i: i.listed_date)
+
+        inactive_history = instrument_history(context.inactive_stock)
+        assert len(inactive_history) >= 1
+        delisted_date = inactive_history[-1].de_listed_date
+        assert delisted_date is not None
+        delisted_date = delisted_date.date() if hasattr(delisted_date, "date") else delisted_date
+        assert delisted_date < context.now.date()
+
+        active_map = active_instruments([context.active_stock, context.inactive_stock])
+        assert context.active_stock in active_map
+        assert context.inactive_stock not in active_map
+
+        history_list = instruments_history([context.active_stock, context.inactive_stock])
+        assert {i.order_book_id for i in history_list} == {context.active_stock, context.inactive_stock}
+
+        try:
+            active_instrument(context.inactive_stock)
+        except RQInvalidArgument:
+            pass
+        else:
+            raise AssertionError("inactive instrument should raise RQInvalidArgument")
+
+    run_func(config=config, init=init, handle_bar=handle_bar)
+
+
 def test_sector():
     def handle_bar(_, __):
         assert len(sector('金融')) >= 80, "sector('金融') 返回结果少于 80 个"

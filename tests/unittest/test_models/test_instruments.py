@@ -127,12 +127,12 @@ class TestInstrument(unittest.TestCase):
         self.assertFalse(cs_inst.de_listed_at(test_date))
         
         # 应该在交易
-        self.assertTrue(cs_inst.listing_at(test_date))
+        self.assertTrue(cs_inst.active_at(test_date))
         
         # 测试上市前的日期
         pre_listing_date = datetime.datetime(1990, 1, 1)
         self.assertFalse(cs_inst.listed_at(pre_listing_date))
-        self.assertFalse(cs_inst.listing_at(pre_listing_date))
+        self.assertFalse(cs_inst.active_at(pre_listing_date))
         
     def test_trading_hours(self):
         """测试交易时间"""
