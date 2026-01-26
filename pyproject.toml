@@ -64,7 +64,7 @@ build-backend = "setuptools.build_meta"
 zip-safe = false
 
 [tool.setuptools.packages.find]
-exclude = []
+exclude = ["tests", "tests.*"]
 
 [tool.setuptools.package-data]
 "rqalpha" = [
