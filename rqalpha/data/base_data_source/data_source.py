@@ -189,8 +189,9 @@ class BaseDataSource(AbstractDataSource):
         if id_or_syms is not None:
             seen = set()
             for i in id_or_syms:
-                if i in self._id_or_sym_instrument_map:
-                    for ins in self._id_or_sym_instrument_map.get(i, {}).values():
+                v = self._id_or_sym_instrument_map.get(i)
+                if v:
+                    for ins in v.values():
                         if ins not in seen:
                             seen.add(ins)
                             yield ins
