@@ -14,11 +14,11 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from collections import defaultdict
+from collections import ChainMap
 import os
 from datetime import date, datetime, timedelta
 from itertools import chain, repeat
-from typing import DefaultDict, Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast, Tuple
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast, Tuple
 
 try:
     from typing import Protocol, runtime_checkable
@@ -138,10 +138,10 @@ class BaseDataSource(AbstractDataSource):
         self._ex_factor_stores: Dict[Tuple[INSTRUMENT_TYPE, MARKET], AbstractSimpleFactorStore] = {}
 
         # instruments
-        self._id_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
-        self._sym_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
-        self._id_or_sym_instrument_map: Mapping[str, dict[datetime, Instrument]] = InstrumentMapView(self._id_instrument_map, self._sym_instrument_map)
-        self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, dict[datetime, Instrument]] = defaultdict(dict)
+        self._id_instrument_map: Dict[str, Dict[datetime, Instrument]] = {}
+        self._sym_instrument_map: Dict[str, Dict[datetime, Instrument]] = {}
+        self._id_or_sym_instrument_map: Mapping[str, Dict[datetime, Instrument]] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
+        self._grouped_instruments: Dict[INSTRUMENT_TYPE, Dict[datetime, Instrument]] = {}
 
         # register instruments
         self.register_instruments(load_instruments_from_pkl(_p('instruments.pk'), self._future_info_store))
@@ -172,9 +172,9 @@ class BaseDataSource(AbstractDataSource):
 
     def register_instruments(self, instruments: Iterable[Instrument]):
         for ins in instruments:
-            self._id_instrument_map[ins.order_book_id][ins.listed_date] = ins
-            self._sym_instrument_map[ins.symbol][ins.listed_date] = ins
-            self._grouped_instruments[ins.type][ins.listed_date] = ins
+            self._id_instrument_map.setdefault(ins.order_book_id, {})[ins.listed_date] = ins
+            self._sym_instrument_map.setdefault(ins.symbol, {})[ins.listed_date] = ins
+            self._grouped_instruments.setdefault(ins.type, {})[ins.listed_date] = ins
     
     def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN):
         self._dividend_stores[instrument_type, market] = dividend_store
