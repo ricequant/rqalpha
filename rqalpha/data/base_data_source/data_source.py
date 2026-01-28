@@ -14,7 +14,7 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from collections import defaultdict, ChainMap
+from collections import defaultdict
 import os
 from datetime import date, datetime, timedelta
 from itertools import chain, repeat
@@ -69,6 +69,28 @@ BAR_RESAMPLE_FIELD_METHODS = {
 }
 
 
+class InstrumentMapView:
+    def __init__(self, id_map, sym_map):
+        self._id_map = id_map
+        self._sym_map = sym_map
+
+    def __getitem__(self, key):
+        if key in self._id_map:
+            return self._id_map[key]
+        if key in self._sym_map:
+            return self._sym_map[key]
+        raise KeyError(key)
+
+    def __contains__(self, key):
+        return key in self._id_map or key in self._sym_map
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
 @runtime_checkable
 class BaseDataSourceProtocol(Protocol):
     def register_day_bar_store(self, instrument_type: INSTRUMENT_TYPE, store: AbstractDayBarStore, market: MARKET = MARKET.CN) -> None:
@@ -118,7 +140,7 @@ class BaseDataSource(AbstractDataSource):
         # instruments
         self._id_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
         self._sym_instrument_map: DefaultDict[str, dict[datetime, Instrument]] = defaultdict(dict)
-        self._id_or_sym_instrument_map: Mapping[str, dict[datetime, Instrument]] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
+        self._id_or_sym_instrument_map: Mapping[str, dict[datetime, Instrument]] = InstrumentMapView(self._id_instrument_map, self._sym_instrument_map)
         self._grouped_instruments: DefaultDict[INSTRUMENT_TYPE, dict[datetime, Instrument]] = defaultdict(dict)
 
         # register instruments
@@ -190,7 +212,7 @@ class BaseDataSource(AbstractDataSource):
             seen = set()
             for i in id_or_syms:
                 if i in self._id_or_sym_instrument_map:
-                    for ins in self._id_or_sym_instrument_map[i].values():
+                    for ins in self._id_or_sym_instrument_map.get(i, {}).values():
                         if ins not in seen:
                             seen.add(ins)
                             yield ins
