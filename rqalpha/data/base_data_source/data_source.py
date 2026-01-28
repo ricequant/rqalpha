@@ -69,28 +69,6 @@ BAR_RESAMPLE_FIELD_METHODS = {
 }
 
 
-class InstrumentMapView:
-    def __init__(self, id_map, sym_map):
-        self._id_map = id_map
-        self._sym_map = sym_map
-
-    def __getitem__(self, key):
-        if key in self._id_map:
-            return self._id_map[key]
-        if key in self._sym_map:
-            return self._sym_map[key]
-        raise KeyError(key)
-
-    def __contains__(self, key):
-        return key in self._id_map or key in self._sym_map
-
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
-
 @runtime_checkable
 class BaseDataSourceProtocol(Protocol):
     def register_day_bar_store(self, instrument_type: INSTRUMENT_TYPE, store: AbstractDayBarStore, market: MARKET = MARKET.CN) -> None:
