@@ -19,7 +19,7 @@ import time
 from decimal import Decimal
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -41,7 +41,7 @@ class Order(object):
     _env: Environment
 
     _order_id: int
-    _secondary_order_id: str
+    _secondary_order_id: Optional[Union[str, int]]
     _calendar_dt: datetime
     _trading_dt: datetime
     _quantity: int
@@ -108,6 +108,7 @@ class Order(object):
         order = cls()
         order._env = env
         order._order_id = next(order.order_id_gen)
+        order._secondary_order_id = None 
         order._calendar_dt = env.calendar_dt
         order._trading_dt = env.trading_dt
         order._quantity = quantity
