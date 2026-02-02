@@ -81,6 +81,8 @@ class Order(object):
             'transaction_cost': self._transaction_cost,
             'avg_price': self._avg_price,
             'kwargs': self._kwargs,
+            'style': self._style,
+            'init_frozen_cash': getattr(self, '_init_frozen_cash', np.nan),
         }
 
     def set_state(self, d):
@@ -101,6 +103,15 @@ class Order(object):
         self._transaction_cost = d['transaction_cost']
         self._avg_price = d['avg_price']
         self._kwargs = d['kwargs']
+        self._init_frozen_cash = d['init_frozen_cash']
+        self._style = d['style']
+
+    def __getstate__(self):
+        return self.get_state()
+    
+    def __setstate__(self, state):
+        self._env = Environment.get_instance()
+        self.set_state(state)
 
     @classmethod
     def __from_create__(cls, order_book_id, quantity, side, style, position_effect, **kwargs):
@@ -317,7 +328,7 @@ class Order(object):
 
     def __getattr__(self, item):
         try:
-            return self.__dict__["_kwargs"][item]
+            return object.__getattribute__(self, '__dict__')["_kwargs"][item]
         except KeyError:
             raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
 

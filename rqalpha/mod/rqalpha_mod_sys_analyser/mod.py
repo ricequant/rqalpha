@@ -114,24 +114,18 @@ class AnalyserMod(AbstractMod):
             'total_benchmark_portfolios': self._total_benchmark_portfolios,
             'sub_accounts': self._sub_accounts,
             'positions': self._positions,
-            'orders': [order.get_state() for order in self._orders],  # 将 Order 对象转换为字典，避免序列化 Order 对象本身（包含 _env 等复杂引用）
+            'orders': self._orders,
             'trades': self._trades,
             'daily_pnl': self._daily_pnl
         }).encode('utf-8')  # type: ignore
 
     def set_state(self, state):
         value = jsonpickle.loads(state.decode('utf-8'))
-        env = Environment.get_instance()
         self._portfolio_daily_returns = value["portfolio_daily_returns"]
         self._total_portfolios = value['total_portfolios']
         self._sub_accounts = value['sub_accounts']
         self._positions = value["positions"]
-        self._orders = []  # 将字典列表转换回 Order 对象列表
-        for order_dict in value['orders']:
-            order = Order()
-            order._env = env
-            order.set_state(order_dict)
-            self._orders.append(order)
+        self._orders = value["orders"]
         self._trades = value["trades"]
         self._daily_pnl = value.get("daily_pnl", [])
 
