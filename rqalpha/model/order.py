@@ -82,7 +82,7 @@ class Order(object):
             'avg_price': self._avg_price,
             'kwargs': self._kwargs,
             'style': self._style,
-            'init_frozen_cash': getattr(self, '_init_frozen_cash', np.nan),
+            'init_frozen_cash': self._init_frozen_cash,
         }
 
     def set_state(self, d):
@@ -143,6 +143,7 @@ class Order(object):
         else:
             order._frozen_price = env.get_last_price(order_book_id)
             order._type = ORDER_TYPE.MARKET
+        order._init_frozen_cash = 0
         order._avg_price = 0
         order._transaction_cost = 0
         order._kwargs = kwargs
