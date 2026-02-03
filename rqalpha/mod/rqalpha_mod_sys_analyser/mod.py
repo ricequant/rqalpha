@@ -44,6 +44,7 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.api import export_as_api
 from rqalpha.const import TRADING_CALENDAR_TYPE
 from rqalpha.model import Instrument
+from rqalpha.model.order import Order
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
@@ -124,7 +125,7 @@ class AnalyserMod(AbstractMod):
         self._total_portfolios = value['total_portfolios']
         self._sub_accounts = value['sub_accounts']
         self._positions = value["positions"]
-        self._orders = value['orders']
+        self._orders = value["orders"]
         self._trades = value["trades"]
         self._daily_pnl = value.get("daily_pnl", [])
 
