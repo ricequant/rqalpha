@@ -107,6 +107,7 @@ class Order(object):
         self._style = d['style']
 
     def __getstate__(self):
+        """ Order 对象中存储的 Environment 会导致 Order 在进行序列化时出问题，需要筛选序列化的内容 """
         return self.get_state()
     
     def __setstate__(self, state):
