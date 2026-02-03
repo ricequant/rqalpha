@@ -19,7 +19,7 @@ import time
 from decimal import Decimal
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -41,7 +41,7 @@ class Order(object):
     _env: Environment
 
     _order_id: int
-    _secondary_order_id: str
+    _secondary_order_id: Optional[Union[str, int]]
     _calendar_dt: datetime
     _trading_dt: datetime
     _quantity: int
@@ -81,6 +81,8 @@ class Order(object):
             'transaction_cost': self._transaction_cost,
             'avg_price': self._avg_price,
             'kwargs': self._kwargs,
+            'style': self._style,
+            'init_frozen_cash': self._init_frozen_cash,
         }
 
     def set_state(self, d):
@@ -101,6 +103,16 @@ class Order(object):
         self._transaction_cost = d['transaction_cost']
         self._avg_price = d['avg_price']
         self._kwargs = d['kwargs']
+        self._init_frozen_cash = d['init_frozen_cash']
+        self._style = d['style']
+
+    def __getstate__(self):
+        """ Order 对象中存储的 Environment 会导致 Order 在进行序列化时出问题，需要筛选序列化的内容 """
+        return self.get_state()
+    
+    def __setstate__(self, state):
+        self._env = Environment.get_instance()
+        self.set_state(state)
 
     @classmethod
     def __from_create__(cls, order_book_id, quantity, side, style, position_effect, **kwargs):
@@ -108,6 +120,7 @@ class Order(object):
         order = cls()
         order._env = env
         order._order_id = next(order.order_id_gen)
+        order._secondary_order_id = None 
         order._calendar_dt = env.calendar_dt
         order._trading_dt = env.trading_dt
         order._quantity = quantity
@@ -131,6 +144,7 @@ class Order(object):
         else:
             order._frozen_price = env.get_last_price(order_book_id)
             order._type = ORDER_TYPE.MARKET
+        order._init_frozen_cash = 0
         order._avg_price = 0
         order._transaction_cost = 0
         order._kwargs = kwargs
@@ -316,7 +330,7 @@ class Order(object):
 
     def __getattr__(self, item):
         try:
-            return self.__dict__["_kwargs"][item]
+            return object.__getattribute__(self, '__dict__')["_kwargs"][item]
         except KeyError:
             raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__, item))
 
