@@ -86,7 +86,7 @@ class GenerateDividendBundle:
         self.d = d
 
     def _get_dividend(self):
-        stocks = rqdatac.all_instruments().order_book_id.tolist()
+        stocks = rqdatac.all_instruments("CS").order_book_id.tolist()
         return rqdatac.get_dividend(stocks)
 
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
@@ -115,7 +115,7 @@ class GenerateSplitBundle:
         self.d = d
 
     def _get_split(self):
-        stocks = rqdatac.all_instruments().order_book_id.tolist()
+        stocks = rqdatac.all_instruments("CS").order_book_id.tolist()
         return rqdatac.get_split(stocks)
     
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
@@ -143,7 +143,7 @@ class GenerateExFactorBundle:
         self.d = d
     
     def _get_ex_factor(self):
-        stocks = rqdatac.all_instruments().order_book_id.tolist()
+        stocks = rqdatac.all_instruments("CS").order_book_id.tolist()
         return rqdatac.get_ex_factor(stocks)
 
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
