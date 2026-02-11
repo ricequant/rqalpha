@@ -39,12 +39,12 @@ from rqalpha.model.instrument import Instrument
 START_DATE = 20050104
 END_DATE = 29991231
 
-IGNORE_TYPE = ["Future", "Option", "Spot"]
+CORPORATE_ACTION_EXCLUSIONS = ["Future", "Option", "Spot"]
 
 
-def _get_oids_with_ignore_type():
+def _get_oids_with_corporate_action_exclusions():
     ints = rqdatac.all_instruments()
-    ints = ints[~ints.type.isin(IGNORE_TYPE)]
+    ints = ints[~ints.type.isin(CORPORATE_ACTION_EXCLUSIONS)]
     return ints.order_book_id.tolist()
 
 
@@ -94,7 +94,7 @@ class GenerateDividendBundle:
         self.d = d
 
     def _get_dividend(self):
-        order_book_ids = _get_oids_with_ignore_type()
+        order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_dividend(order_book_ids)
 
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
@@ -123,7 +123,7 @@ class GenerateSplitBundle:
         self.d = d
 
     def _get_split(self):
-        order_book_ids = _get_oids_with_ignore_type()
+        order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_split(order_book_ids)
     
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
@@ -151,7 +151,7 @@ class GenerateExFactorBundle:
         self.d = d
     
     def _get_ex_factor(self):
-        order_book_ids = _get_oids_with_ignore_type()
+        order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_ex_factor(order_book_ids)
 
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
