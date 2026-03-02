@@ -143,14 +143,14 @@ def test_order_target_portfolio_smart_all_denials():
             )
 
             # 验证涨停买入拒单
-            assert result.denials['001270.XSHE'] == _('Order rejected: cannot buy due to limit up')
+            assert result.denials['001270.XSHE'] == _('Order creation failed: cannot buy due to limit up')
 
             # 验证量太小拒单
             assert result.denials['000002.XSHE'] == _(
-                'Order rejected: quantity less than half of minimum order quantity'
+                'Order creation failed: quantity less than half of minimum order quantity'
             )
             # 验证停牌买入拒单
-            assert result.denials['002166.XSHE'] == _('Order rejected: cannot buy due to suspension')
+            assert result.denials['002166.XSHE'] == _('Order creation failed: cannot buy due to suspension')
 
             # 验证正常成交
             assert '000001.XSHE' not in result.denials
@@ -162,7 +162,7 @@ def test_order_target_portfolio_smart_all_denials():
                 }
             )
             # 验证停牌卖出拒单
-            assert result.denials['002036.XSHE'] == _('Order rejected: cannot sell due to suspension')
+            assert result.denials['002036.XSHE'] == _('Order creation failed: cannot sell due to suspension')
 
         elif current_date == date(2025, 12, 19):
             # Day 3 (2025-12-19): 测试跌停卖出拒单
@@ -175,6 +175,6 @@ def test_order_target_portfolio_smart_all_denials():
                 }
             )
 
-            assert result.denials['000668.XSHE'] == _('Order rejected: cannot sell due to limit down')
+            assert result.denials['000668.XSHE'] == _('Order creation failed: cannot sell due to limit down')
 
     run_func(config=config, init=init, handle_bar=handle_bar)

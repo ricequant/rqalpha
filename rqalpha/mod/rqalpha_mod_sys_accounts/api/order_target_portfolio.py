@@ -1,5 +1,6 @@
+from enum import Enum
 from operator import itemgetter
-from typing import Dict, Mapping, NamedTuple, Optional, Union, cast
+from typing import Dict, Mapping, NamedTuple, Optional, Union, cast, List, Tuple
 
 from numpy import inf, sign
 from numpy import round as np_round
@@ -31,12 +32,14 @@ from rqalpha.utils.i18n import gettext as _
 
 class AdjustingResult(NamedTuple):
     adjustments: Series
-    denials: dict[str, str]
+    denials: Dict[str, str]
+    """denials: key 为 order_book_id，value 为 DenialReason.translation（见 DenialReason 枚举）"""
 
 
 class OrderPortfolioResult(NamedTuple):
-    orders: list[Order]
-    denials: dict[str, str]
+    orders: List[Order]
+    denials: Dict[str, str]
+    """denials: key 为 order_book_id，value 为 DenialReason.translation（见 DenialReason 枚举）"""
 
 
 class ExchangeRatePair(NamedTuple):
@@ -46,6 +49,28 @@ class ExchangeRatePair(NamedTuple):
     @property
     def middle(self):
         return (self.bid + self.ask) / 2
+
+
+class CommentedEnum(str, Enum):
+    translation: str
+
+    def __new__(cls, value, translation: str):
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj.translation = translation
+        return obj
+
+
+class DenialReason(CommentedEnum):
+    less_than_half = 'less_than_half', _('Order creation failed: quantity less than half of minimum order quantity')
+    suspended_buy = 'suspended_buy', _('Order creation failed: cannot buy due to suspension')
+    suspended_sell = 'suspended_sell', _('Order creation failed: cannot sell due to suspension')
+    no_price = 'no_price', _('Order creation failed: no market data available')
+    limit_up_buy = 'limit_up_buy', _('Order creation failed: cannot buy due to limit up')
+    limit_up_sell = 'limit_up_sell', _('Order creation failed: cannot sell due to limit up')
+    limit_down_buy = 'limit_down_buy', _('Order creation failed: cannot buy due to limit down')
+    limit_down_sell = 'limit_down_sell', _('Order creation failed: cannot sell due to limit down')
+    closable_exceeded = 'closable_exceeded', _('Order creation failed: insufficient closable position')
 
 
 class OrderTargetPortfolio:
@@ -152,13 +177,13 @@ class OrderTargetPortfolio:
         # TODO: 分别计算 A H 股的可用资金
         self._cash_available = account.cash
 
-    def _round_adjusting_odd_lots(self, adjusting: Series) -> Series:
+    def _round_adjusting_odd_lots(self, adjusting: Series) -> Tuple[Series, Dict[DenialReason, Series]]:
         # 调仓量不足最小挂单量一半的设为0
         min_qty = self._min_qty
         lot_size = self._step_size
         positions = self._current_quantities
         less_than_half = (adjusting.abs() < (min_qty / 2)) & (-adjusting != positions)
-        self._less_than_half = less_than_half & (adjusting != 0)
+        less_than_half_denial = less_than_half & (adjusting != 0)
         adjusting[less_than_half] = 0
 
         # 调仓量不足最小挂单量但高于一半的设为最小挂单量
@@ -171,89 +196,53 @@ class OrderTargetPortfolio:
         gte_min_qty = (adjusting.abs() >= min_qty) & (-adjusting != positions)
         adjusting[gte_min_qty] = (np_round((adjusting / lot_size).astype(float)) * lot_size)[gte_min_qty]
         adjusting[(adjusting < 0) & (-adjusting > positions)] = -positions
-        return adjusting
+        return adjusting, {DenialReason.less_than_half: less_than_half_denial}
 
-    def _calc_adjusting(self, target_quantities: Series, direction: POSITION_DIRECTION) -> Series:
+    def _calc_adjusting(
+        self, target_quantities: Series, direction: POSITION_DIRECTION
+    ) -> Tuple[Series, Dict[DenialReason, Series]]:
         # caller should ensure the index of diff, price_df and suspended are the same
-        diff = self._round_adjusting_odd_lots(target_quantities.sub(self._current_quantities, fill_value=0))
+        diff, denials = self._round_adjusting_odd_lots(target_quantities.sub(self._current_quantities, fill_value=0))
         prices, limit_up, limit_down = itemgetter('last', 'limit_up', 'limit_down')(self._prices)
         adjusting_denied = (
             self._suspended  # 停牌
             | prices.isna()  # 无行情
         )
 
-        self._suspended_buy = (diff > 0) & self._suspended
-        self._suspended_sell = (diff < 0) & self._suspended
-        self._no_price = prices.isna() & (diff != 0)
+        denials[DenialReason.suspended_buy] = (diff > 0) & self._suspended
+        denials[DenialReason.suspended_sell] = (diff < 0) & self._suspended
+        denials[DenialReason.no_price] = prices.isna() & (diff != 0)
 
         limit_up = ~(limit_up.isna()) & (prices >= limit_up)
         limit_down = ~(limit_down.isna()) & (prices <= limit_down)
         if direction == POSITION_DIRECTION.LONG:
             # 涨停不能开、跌停不能平
-            self._limit_buy = (diff > 0) & (limit_up)
-            self._limit_sell = (diff < 0) & (limit_down)
+            limit_buy = (diff > 0) & limit_up
+            limit_sell = (diff < 0) & limit_down
+            denials[DenialReason.limit_up_buy] = limit_buy
+            denials[DenialReason.limit_down_sell] = limit_sell
         else:
             # 跌停不能开、涨停不能平
-            self._limit_buy = (diff > 0) & (limit_down)
-            self._limit_sell = (diff < 0) & (limit_up)
-        adjusting_denied |= self._limit_buy
-        adjusting_denied |= self._limit_sell
+            limit_buy = (diff > 0) & limit_down
+            limit_sell = (diff < 0) & limit_up
+            denials[DenialReason.limit_down_buy] = limit_buy
+            denials[DenialReason.limit_up_sell] = limit_sell
+        adjusting_denied |= limit_buy
+        adjusting_denied |= limit_sell
         diff[adjusting_denied] = 0
 
         closable_exceeded = diff.add(self._current_closable, fill_value=0) < 0
         diff[closable_exceeded] = -self._current_closable  # 可平仓位
-        self._closable_exceeded = closable_exceeded & (self._current_closable == 0)
-        return diff
+        denials[DenialReason.closable_exceeded] = closable_exceeded & (self._current_closable == 0)
+        return diff, denials
 
-    def _store_denials(self):
-        return (
-            self._less_than_half,
-            self._suspended_buy,
-            self._suspended_sell,
-            self._no_price,
-            self._limit_buy,
-            self._limit_sell,
-            self._closable_exceeded,
-        )
-
-    def _restore_denials(self, last_snapshot):
-        (
-            self._less_than_half,
-            self._suspended_buy,
-            self._suspended_sell,
-            self._no_price,
-            self._limit_buy,
-            self._limit_sell,
-            self._closable_exceeded,
-        ) = last_snapshot
-
-    def _collect_denials(self, direction: POSITION_DIRECTION) -> Dict[str, str]:
-        denials: Dict[str, str] = {}
-        for obid in self._less_than_half[self._less_than_half].index:
-            denials[obid] = _('Order rejected: quantity less than half of minimum order quantity')
-        for obid in self._suspended_buy[self._suspended_buy].index:
-            denials[obid] = _('Order rejected: cannot buy due to suspension')
-        for obid in self._suspended_sell[self._suspended_sell].index:
-            denials[obid] = _('Order rejected: cannot sell due to suspension')
-        for obid in self._no_price[self._no_price].index:
-            denials[obid] = _('Order rejected: no market data available')
-        if direction == POSITION_DIRECTION.LONG:
-            buy_reason, sell_reason = (
-                _('Order rejected: cannot buy due to limit up'),
-                _('Order rejected: cannot sell due to limit down'),
-            )
-        else:
-            buy_reason, sell_reason = (
-                _('Order rejected: cannot buy due to limit down'),
-                _('Order rejected: cannot sell due to limit up'),
-            )
-        for obid in self._limit_buy[self._limit_buy].index:
-            denials[obid] = buy_reason
-        for obid in self._limit_sell[self._limit_sell].index:
-            denials[obid] = sell_reason
-        for obid in self._closable_exceeded[self._closable_exceeded].index:
-            denials[obid] = _('Order rejected: insufficient closable position')
-        return denials
+    @staticmethod
+    def _format_denials(denials: Dict[DenialReason, Series]) -> Dict[str, str]:
+        denial_reason_details: Dict[str, str] = {}
+        for reason, mask in denials.items():
+            for obid in mask[mask].index:
+                denial_reason_details[obid] = reason.translation
+        return denial_reason_details
 
     @lru_cache(maxsize=8)
     def _trans_cost_decider(self, market: MARKET) -> AbstractStockTransactionCostDecider:
@@ -286,7 +275,7 @@ class OrderTargetPortfolio:
                 # 防止 bug 导致的死循环
                 raise RuntimeError('safety < 0: {}'.format(safety))
             target_quantities: Series = (self._total_value * safety * self._target_weights / prices).round(0)
-            diff = self._calc_adjusting(target_quantities, direction)
+            diff, denials = self._calc_adjusting(target_quantities, direction)
 
             delta_mv = diff * prices
             cash_consumed = delta_mv.sum()
@@ -309,14 +298,12 @@ class OrderTargetPortfolio:
             proportion_diff = abs(total_proportion - self._target_weights.sum())
             if cash_consumed < self._cash_available:
                 # TODO: 分别计算 A H 股的可用资金
-                if proportion_diff > last_proportion_diff and last_diff is not None:
-                    self._restore_denials(last_denials)
-                    return AdjustingResult(adjustments=last_diff, denials=self._collect_denials(direction))
-                last_diff = diff
-                last_denials = self._store_denials()
+                if proportion_diff > last_proportion_diff and last_diff is not None and last_denials is not None:
+                    break
+                last_diff, last_denials = diff, denials
             last_proportion_diff = proportion_diff
             safety -= min(max(proportion_diff / 10, 0.0001), 0.002)
-
+        return AdjustingResult(adjustments=last_diff, denials=self._format_denials(last_denials))
 
 @export_as_api
 @ExecutionContext.enforce_phase(
