@@ -18,6 +18,7 @@ from datetime import date
 
 from rqalpha import run_func
 from rqalpha.apis import get_position, order_target_portfolio_smart
+from rqalpha.model import Order
 from rqalpha.utils.i18n import gettext as _
 
 
@@ -143,17 +144,17 @@ def test_order_target_portfolio_smart_all_denials():
             )
 
             # 验证涨停买入拒单
-            assert result.denials['001270.XSHE'] == _('Order creation failed: cannot buy due to limit up')
+            assert result['001270.XSHE'] == _('Order creation failed: cannot buy due to limit up')
 
             # 验证量太小拒单
-            assert result.denials['000002.XSHE'] == _(
+            assert result['000002.XSHE'] == _(
                 'Order creation failed: quantity less than half of minimum order quantity'
             )
             # 验证停牌买入拒单
-            assert result.denials['002166.XSHE'] == _('Order creation failed: cannot buy due to suspension')
+            assert result['002166.XSHE'] == _('Order creation failed: cannot buy due to suspension')
 
-            # 验证正常成交
-            assert '000001.XSHE' not in result.denials
+            # 验证正常成交（results 中应该是 Order 对象，不是字符串）
+            assert isinstance(result.get('000001.XSHE'), Order)
         elif current_date == date(2025, 12, 18):
             result = order_target_portfolio_smart(
                 {
@@ -162,7 +163,7 @@ def test_order_target_portfolio_smart_all_denials():
                 }
             )
             # 验证停牌卖出拒单
-            assert result.denials['002036.XSHE'] == _('Order creation failed: cannot sell due to suspension')
+            assert result['002036.XSHE'] == _('Order creation failed: cannot sell due to suspension')
 
         elif current_date == date(2025, 12, 19):
             # Day 3 (2025-12-19): 测试跌停卖出拒单
@@ -175,6 +176,6 @@ def test_order_target_portfolio_smart_all_denials():
                 }
             )
 
-            assert result.denials['000668.XSHE'] == _('Order creation failed: cannot sell due to limit down')
+            assert result['000668.XSHE'] == _('Order creation failed: cannot sell due to limit down')
 
     run_func(config=config, init=init, handle_bar=handle_bar)

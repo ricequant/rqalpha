@@ -36,12 +36,6 @@ class AdjustingResult(NamedTuple):
     """denials: key 为 order_book_id，value 为 DenialReason.translation（见 DenialReason 枚举）"""
 
 
-class OrderPortfolioResult(NamedTuple):
-    orders: List[Order]
-    denials: Dict[str, str]
-    """denials: key 为 order_book_id，value 为 DenialReason.translation（见 DenialReason 枚举）"""
-
-
 class ExchangeRatePair(NamedTuple):
     ask: float
     bid: float
@@ -52,25 +46,30 @@ class ExchangeRatePair(NamedTuple):
 
 
 class CommentedEnum(str, Enum):
-    translation: str
+    _translation_key: str
 
-    def __new__(cls, value, translation: str):
+    def __new__(cls, value, translation_key: str):
         obj = str.__new__(cls, value)
         obj._value_ = value
-        obj.translation = translation
+        obj._translation_key = translation_key
         return obj
+
+    @property
+    def translation(self) -> str:
+        """Lazy translation - evaluates at access time using current locale"""
+        return _(self._translation_key)
 
 
 class DenialReason(CommentedEnum):
-    less_than_half = 'less_than_half', _('Order creation failed: quantity less than half of minimum order quantity')
-    suspended_buy = 'suspended_buy', _('Order creation failed: cannot buy due to suspension')
-    suspended_sell = 'suspended_sell', _('Order creation failed: cannot sell due to suspension')
-    no_price = 'no_price', _('Order creation failed: no market data available')
-    limit_up_buy = 'limit_up_buy', _('Order creation failed: cannot buy due to limit up')
-    limit_up_sell = 'limit_up_sell', _('Order creation failed: cannot sell due to limit up')
-    limit_down_buy = 'limit_down_buy', _('Order creation failed: cannot buy due to limit down')
-    limit_down_sell = 'limit_down_sell', _('Order creation failed: cannot sell due to limit down')
-    closable_exceeded = 'closable_exceeded', _('Order creation failed: insufficient closable position')
+    less_than_half = 'less_than_half', 'Order creation failed: quantity less than half of minimum order quantity'
+    suspended_buy = 'suspended_buy', 'Order creation failed: cannot buy due to suspension'
+    suspended_sell = 'suspended_sell', 'Order creation failed: cannot sell due to suspension'
+    no_price = 'no_price', 'Order creation failed: no market data available'
+    limit_up_buy = 'limit_up_buy', 'Order creation failed: cannot buy due to limit up'
+    limit_up_sell = 'limit_up_sell', 'Order creation failed: cannot sell due to limit up'
+    limit_down_buy = 'limit_down_buy', 'Order creation failed: cannot buy due to limit down'
+    limit_down_sell = 'limit_down_sell', 'Order creation failed: cannot sell due to limit down'
+    closable_exceeded = 'closable_exceeded', 'Order creation failed: insufficient closable position'
 
 
 class OrderTargetPortfolio:
@@ -314,7 +313,7 @@ def order_target_portfolio_smart(
     target_portfolio: Union[Mapping[str, float], Series],
     order_prices: Optional[Union[AlgoOrder, Mapping[str, float], Series]] = None,
     valuation_prices: Optional[Union[Mapping[str, float], Series]] = None,
-):
+) -> Dict[str, Union[Order, str]]:
     """
     智能批量调整股票仓位至目标权重。
 
@@ -327,8 +326,8 @@ def order_target_portfolio_smart(
                         - None：使用 prev_close（open_auction 中）或 open（handle_bar 中）计算估值
                         - Dict/Series: 自定义算法可获取到的最新价格
 
-    :return: OrderPortfolioResult，包含 orders（提交的订单列表）和 denials（策略拒单原因字典）
-    :rtype: OrderPortfolioResult
+    :return: 字典（key 为 order_book_id，value 为 Order 对象或拒单原因字符串）
+    :rtype: Dict
 
     :example:
 
@@ -409,7 +408,10 @@ def order_target_portfolio_smart(
     adjusting = result.adjustments
     denials = dict(result.denials) if result.denials else {}
 
-    orders = []
+    results: Dict[str, Union[Order, str]] = {}
+
+    # 先将拒单原因加入结果
+    results.update(denials)
 
     # 先平
     for order_book_id, delta_quantity in cast(Series, (adjusting[adjusting < 0])).items():
@@ -423,7 +425,7 @@ def order_target_portfolio_smart(
             )
         )
         if order is not None:
-            orders.append(order)
+            results[order_book_id] = order
     # 后开
     for order_book_id, delta_quantity in cast(Series, (adjusting[adjusting > 0])).items():
         order_book_id = cast(str, order_book_id)
@@ -447,5 +449,5 @@ def order_target_portfolio_smart(
         else:
             order = env.submit_order(order_to_be_submitted)
         if order is not None:
-            orders.append(order)
-    return OrderPortfolioResult(orders=orders, denials=denials)
+            results[order_book_id] = order
+    return results
