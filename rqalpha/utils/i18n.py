@@ -70,3 +70,27 @@ def gettext(message):
 def set_locale(lc: str = None):
     global localization
     localization = Localization(lc)
+
+
+def lazy_gettext(message):
+    """
+    延迟翻译标记函数 - 原样返回字符串，不进行翻译。
+
+    此函数用于标记需要翻译但不应立即翻译的字符串。实际翻译会在字符串被访问时发生。
+
+    常用于：
+    - 枚举定义中需要延迟翻译的场景
+    - 类级别常量需要翻译的场景
+    - 任何需要在访问时而非定义时翻译的上下文
+
+    示例：
+        class MyEnum(Enum):
+            OPTION_A = 'a', lazy_gettext('Option A')  # 标记为需要翻译，但不立即翻译
+
+        # 稍后访问时：
+        translated = MyEnum.OPTION_A.translation  # 此时才使用当前 locale 翻译
+
+    :param message: 需要标记的字符串
+    :return: 原样返回输入的字符串
+    """
+    return message
