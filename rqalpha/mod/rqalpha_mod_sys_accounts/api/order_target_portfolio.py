@@ -27,7 +27,7 @@ from rqalpha.portfolio.account import Account
 from rqalpha.utils.arg_checker import assure_active_instrument
 from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.i18n import gettext as _, lazy_gettext
 
 
 class AdjustingResult(NamedTuple):
@@ -61,15 +61,15 @@ class CommentedEnum(str, Enum):
 
 
 class DenialReason(CommentedEnum):
-    less_than_half = 'less_than_half', 'Order creation failed: quantity less than half of minimum order quantity'
-    suspended_buy = 'suspended_buy', 'Order creation failed: cannot buy due to suspension'
-    suspended_sell = 'suspended_sell', 'Order creation failed: cannot sell due to suspension'
-    no_price = 'no_price', 'Order creation failed: no market data available'
-    limit_up_buy = 'limit_up_buy', 'Order creation failed: cannot buy due to limit up'
-    limit_up_sell = 'limit_up_sell', 'Order creation failed: cannot sell due to limit up'
-    limit_down_buy = 'limit_down_buy', 'Order creation failed: cannot buy due to limit down'
-    limit_down_sell = 'limit_down_sell', 'Order creation failed: cannot sell due to limit down'
-    closable_exceeded = 'closable_exceeded', 'Order creation failed: insufficient closable position'
+    less_than_half = 'less_than_half', lazy_gettext('Order creation failed: quantity less than half of minimum order quantity')
+    suspended_buy = 'suspended_buy', lazy_gettext('Order creation failed: cannot buy due to suspension')
+    suspended_sell = 'suspended_sell', lazy_gettext('Order creation failed: cannot sell due to suspension')
+    no_price = 'no_price', lazy_gettext('Order creation failed: no market data available')
+    limit_up_buy = 'limit_up_buy', lazy_gettext('Order creation failed: cannot buy due to limit up')
+    limit_up_sell = 'limit_up_sell', lazy_gettext('Order creation failed: cannot sell due to limit up')
+    limit_down_buy = 'limit_down_buy', lazy_gettext('Order creation failed: cannot buy due to limit down')
+    limit_down_sell = 'limit_down_sell', lazy_gettext('Order creation failed: cannot sell due to limit down')
+    closable_exceeded = 'closable_exceeded', lazy_gettext('Order creation failed: insufficient closable position')
 
 
 class OrderTargetPortfolio:
