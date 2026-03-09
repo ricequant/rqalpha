@@ -273,6 +273,14 @@ def test_instrument_api():
         history_list = instruments_history([context.active_stock, context.inactive_stock])
         assert {i.order_book_id for i in history_list} == {context.active_stock, context.inactive_stock}
 
+        all_ints = all_instruments("CS")
+        if context.now.date() == date(2019, 1, 2):
+            assert len(all_ints) == 3569
+        else:
+            assert len(all_ints) == 3570  # 2019-1-3 新上市一只股票
+        assert context.active_stock in all_ints.order_book_id.tolist()
+        assert context.inactive_stock not in all_ints.order_book_id.tolist()
+
         try:
             active_instrument(context.inactive_stock)
         except RQInvalidArgument:
