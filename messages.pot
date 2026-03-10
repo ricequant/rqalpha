@@ -473,6 +473,42 @@ msgstr ""
 msgid "price of {} is needed, which is not provided in the algo_or_prices"
 msgstr ""
 
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:273
+msgid "Order creation failed: quantity less than half of minimum order quantity"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:275
+msgid "Order creation failed: cannot buy due to suspension"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:277
+msgid "Order creation failed: cannot sell due to suspension"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:279
+msgid "Order creation failed: no market data available"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:282
+msgid "Order creation failed: cannot buy due to limit up"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:283
+msgid "Order creation failed: cannot sell due to limit down"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:286
+msgid "Order creation failed: cannot buy due to limit down"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:288
+msgid "Order creation failed: cannot sell due to limit up"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:295
+msgid "Order creation failed: insufficient closable position"
+msgstr ""
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:67
 msgid "[sys_analyser] save report"
 msgstr ""

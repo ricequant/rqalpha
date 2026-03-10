@@ -1,24 +1,39 @@
-from typing import Mapping, NamedTuple, cast, Optional, Union, Dict
-from collections import defaultdict
+from enum import Enum
 from operator import itemgetter
+from typing import Dict, Mapping, NamedTuple, Optional, Union, cast, List, Tuple
 
-from pandas import Series, Index, DataFrame
-from numpy import sign, round as np_round, inf
+from numpy import inf, sign
+from numpy import round as np_round
+from pandas import DataFrame, Index, Series
 
 from rqalpha.api import export_as_api
-from rqalpha.utils.arg_checker import assure_active_instrument
-from rqalpha.model.order import AlgoOrder, MarketOrder, LimitOrder, OrderStyle
-from rqalpha.model.order import Order
-from rqalpha.environment import Environment
-from rqalpha.const import EXECUTION_PHASE, POSITION_DIRECTION, INSTRUMENT_TYPE, MARKET, DEFAULT_ACCOUNT_TYPE, SIDE, POSITION_EFFECT
+from rqalpha.const import (
+    DEFAULT_ACCOUNT_TYPE,
+    EXECUTION_PHASE,
+    INSTRUMENT_TYPE,
+    MARKET,
+    POSITION_DIRECTION,
+    POSITION_EFFECT,
+    SIDE,
+)
 from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.environment import Environment
+from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import validate_cash
+from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import (
+    AbstractStockTransactionCostDecider,
+)
+from rqalpha.model.order import AlgoOrder, LimitOrder, MarketOrder, Order, OrderStyle
 from rqalpha.portfolio.account import Account
+from rqalpha.utils.arg_checker import assure_active_instrument
 from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.i18n import gettext as _, lazy_gettext
 
-from rqalpha.mod.rqalpha_mod_sys_risk.validators.cash_validator import validate_cash
-from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import AbstractStockTransactionCostDecider
+
+class AdjustingResult(NamedTuple):
+    adjustments: Series
+    denials: Dict[str, str]
+    """denials: key 为 order_book_id，value 为 DenialReason.translation（见 DenialReason 枚举）"""
 
 
 class ExchangeRatePair(NamedTuple):
@@ -30,6 +45,33 @@ class ExchangeRatePair(NamedTuple):
         return (self.bid + self.ask) / 2
 
 
+class CommentedEnum(str, Enum):
+    _translation_key: str
+
+    def __new__(cls, value, translation_key: str):
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj._translation_key = translation_key
+        return obj
+
+    @property
+    def translation(self) -> str:
+        """Lazy translation - evaluates at access time using current locale"""
+        return _(self._translation_key)
+
+
+class DenialReason(CommentedEnum):
+    less_than_half = 'less_than_half', lazy_gettext('Order creation failed: quantity less than half of minimum order quantity')
+    suspended_buy = 'suspended_buy', lazy_gettext('Order creation failed: cannot buy due to suspension')
+    suspended_sell = 'suspended_sell', lazy_gettext('Order creation failed: cannot sell due to suspension')
+    no_price = 'no_price', lazy_gettext('Order creation failed: no market data available')
+    limit_up_buy = 'limit_up_buy', lazy_gettext('Order creation failed: cannot buy due to limit up')
+    limit_up_sell = 'limit_up_sell', lazy_gettext('Order creation failed: cannot sell due to limit up')
+    limit_down_buy = 'limit_down_buy', lazy_gettext('Order creation failed: cannot buy due to limit down')
+    limit_down_sell = 'limit_down_sell', lazy_gettext('Order creation failed: cannot sell due to limit down')
+    closable_exceeded = 'closable_exceeded', lazy_gettext('Order creation failed: insufficient closable position')
+
+
 class OrderTargetPortfolio:
     def __init__(
         self,
@@ -38,7 +80,7 @@ class OrderTargetPortfolio:
         valuation_prices: Optional[Series],
         env: Environment,
     ):
-        quantities, closable = {},  {}
+        quantities, closable = {}, {}
         for position in account.get_positions():
             quantities[position.order_book_id] = position.quantity
             closable[position.order_book_id] = position.closable
@@ -48,7 +90,9 @@ class OrderTargetPortfolio:
         if valuation_prices is not None:
             valuation_prices = valuation_prices.reindex(index)
             if valuation_prices.isna().any():
-                raise RQInvalidArgument(_("prices of {} is not provided").format(valuation_prices.isna().index[valuation_prices.isna()]))
+                raise RQInvalidArgument(
+                    _('prices of {} is not provided').format(valuation_prices.isna().index[valuation_prices.isna()])
+                )
         self._target_weights = target_weights.reindex(index, fill_value=0)
         self._current_quantities = current_quantities.reindex(index, fill_value=0)
         self._current_closable = current_closable.reindex(index, fill_value=0)
@@ -58,118 +102,163 @@ class OrderTargetPortfolio:
         instruments = env.data_proxy.get_active_instruments(index, env.trading_dt)
         for i in instruments.values():
             if i.type != INSTRUMENT_TYPE.CS:
-                raise RQApiNotSupportedError(_("instrument type {} is not supported").format(i.type))
-            
-        self._market = Series({i.order_book_id: i.market for i in instruments.values()}, dtype="object")
-        self._min_qty = Series({i.order_book_id: i.min_order_quantity for i in instruments.values()}, dtype="int64")
-        self._step_size = Series({i.order_book_id: i.order_step_size for i in instruments.values()}, dtype="int64")
-        self._suspended = Series({
-            i: env.data_proxy.is_suspended(i, env.trading_dt) for i in index
-        }, dtype=bool)
+                raise RQApiNotSupportedError(_('instrument type {} is not supported').format(i.type))
+
+        self._market = Series({i.order_book_id: i.market for i in instruments.values()}, dtype='object')
+        self._min_qty = Series(
+            {i.order_book_id: i.min_order_quantity for i in instruments.values()},
+            dtype='int64',
+        )
+        self._step_size = Series(
+            {i.order_book_id: i.order_step_size for i in instruments.values()},
+            dtype='int64',
+        )
+        self._suspended = Series(
+            {i: env.data_proxy.is_suspended(i, env.trading_dt) for i in index},
+            dtype=bool,
+        )
 
         exchange_rate_middle = Series(index=index, dtype=float)
         self._exchange_rates: Dict[MARKET, ExchangeRatePair] = {}
         for market, group in self._market.groupby(by=self._market):
             market = cast(MARKET, market)
             exchange_rate = env.data_proxy.get_exchange_rate(env.trading_dt.date(), market)
-            pair = ExchangeRatePair(
-                ask=exchange_rate.ask_reference,
-                bid=exchange_rate.bid_reference
-            )
+            pair = ExchangeRatePair(ask=exchange_rate.ask_reference, bid=exchange_rate.bid_reference)
             exchange_rate_middle[group.index] = pair.middle
-            self._exchange_rates[market] = pair  
+            self._exchange_rates[market] = pair
 
         phase = ExecutionContext.phase()
-        self._prices = DataFrame(index=index, columns=["last", "limit_up", "limit_down"], dtype=float)   # type: ignore
+        self._prices = DataFrame(index=index, columns=['last', 'limit_up', 'limit_down'], dtype=float)  # type: ignore
         if phase == EXECUTION_PHASE.OPEN_AUCTION:
             # 集合竞价阶段，最近的价格是昨收
             if valuation_prices is not None:
-                self._prices["last"] = valuation_prices
+                self._prices['last'] = valuation_prices
             else:
                 prev_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
                 for order_book_id in index:
-                    bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["close"], prev_date)
+                    bars = env.data_proxy.history_bars(order_book_id, 1, '1d', ['close'], prev_date)
                     if bars is None:
-                        raise RuntimeError("missing valuation prices: {}".format(order_book_id))
-                    self._prices.loc[order_book_id, "last"] = bars["close"][0]
+                        raise RuntimeError('missing valuation prices: {}'.format(order_book_id))
+                    self._prices.loc[order_book_id, 'last'] = bars['close'][0]
         elif phase == EXECUTION_PHASE.ON_BAR:
-            if env.config.base.frequency == "1d":
+            if env.config.base.frequency == '1d':
                 # TODO：根据算法时间选择最近的分钟线作为估值
                 # 当前先选择开盘价
                 for order_book_id in index:
-                    bars = env.data_proxy.history_bars(order_book_id, 1, "1d", ["open", "limit_up", "limit_down"], env.trading_dt)
+                    bars = env.data_proxy.history_bars(
+                        order_book_id,
+                        1,
+                        '1d',
+                        ['open', 'limit_up', 'limit_down'],
+                        env.trading_dt,
+                    )
                     if bars is None:
-                        raise RuntimeError("missing valuation prices: {}".format(order_book_id))
+                        raise RuntimeError('missing valuation prices: {}'.format(order_book_id))
                     self._prices.loc[order_book_id] = list(bars[0])
                 if valuation_prices is not None:
-                    self._prices["last"] = valuation_prices
-            elif env.config.base.frequency == "1m":
+                    self._prices['last'] = valuation_prices
+            elif env.config.base.frequency == '1m':
                 raise NotImplementedError
             else:
-                raise RQApiNotSupportedError(_("frequency {} is not supported").format(env.config.base.frequency))
+                raise RQApiNotSupportedError(_('frequency {} is not supported').format(env.config.base.frequency))
         else:
-            raise RQApiNotSupportedError(_("not supported to be called in {} phase").format(phase))
-        self._prices_settle_ccy = self._prices["last"] * exchange_rate_middle
+            raise RQApiNotSupportedError(_('not supported to be called in {} phase').format(phase))
+        self._prices_settle_ccy = self._prices['last'] * exchange_rate_middle
         if self._prices_settle_ccy.isna().any():
             missing_prices = self._prices_settle_ccy[self._prices_settle_ccy.isna()]
-            raise RecursionError("missing valuation prices: {}".format(missing_prices.index.to_list()))
+            raise RecursionError('missing valuation prices: {}'.format(missing_prices.index.to_list()))
         # 排除未来数据影响，使用 valuation_prices 重新计算估值
-        self._total_value = account.total_value - account.market_value + current_quantities.mul(self._prices_settle_ccy, fill_value=0).sum()
-         # TODO: 分别计算 A H 股的可用资金
+        self._total_value = (
+            account.total_value
+            - account.market_value
+            + current_quantities.mul(self._prices_settle_ccy, fill_value=0).sum()
+        )
+        # TODO: 分别计算 A H 股的可用资金
         self._cash_available = account.cash
 
-    def _round_adjusting_odd_lots(self, adjusting: Series) -> Series:
+    def _round_adjusting_odd_lots(self, adjusting: Series) -> Tuple[Series, Dict[DenialReason, Series]]:
         # 调仓量不足最小挂单量一半的设为0
         min_qty = self._min_qty
         lot_size = self._step_size
         positions = self._current_quantities
-        adjusting[(adjusting.abs() < (min_qty / 2)) & (-adjusting != positions)] = 0
+        less_than_half = (adjusting.abs() < (min_qty / 2)) & (-adjusting != positions)
+        less_than_half_denial = less_than_half & (adjusting != 0)
+        adjusting[less_than_half] = 0
 
         # 调仓量不足最小挂单量但高于一半的设为最小挂单量
-        lt_min_qty_gte_half = (adjusting.abs() >= (min_qty / 2)) & (adjusting.abs() < min_qty) & (-adjusting != positions)
+        lt_min_qty_gte_half = (
+            (adjusting.abs() >= (min_qty / 2)) & (adjusting.abs() < min_qty) & (-adjusting != positions)
+        )
         adjusting[lt_min_qty_gte_half] = (min_qty * sign(adjusting))[lt_min_qty_gte_half]
-        
+
         # 调仓量超过最小挂单量的按 lot_size 四舍五入进行 round
         gte_min_qty = (adjusting.abs() >= min_qty) & (-adjusting != positions)
         adjusting[gte_min_qty] = (np_round((adjusting / lot_size).astype(float)) * lot_size)[gte_min_qty]
         adjusting[(adjusting < 0) & (-adjusting > positions)] = -positions
-        return adjusting
+        return adjusting, {DenialReason.less_than_half: less_than_half_denial}
 
-    def _calc_adjusting(self, target_quantities: Series, direction: POSITION_DIRECTION) -> Series:
+    def _calc_adjusting(
+        self, target_quantities: Series, direction: POSITION_DIRECTION
+    ) -> Tuple[Series, Dict[DenialReason, Series]]:
         # caller should ensure the index of diff, price_df and suspended are the same
-        diff = self._round_adjusting_odd_lots(target_quantities.sub(self._current_quantities, fill_value=0))
-        prices, limit_up, limit_down = itemgetter("last", "limit_up", "limit_down")(self._prices)
+        diff, denials = self._round_adjusting_odd_lots(target_quantities.sub(self._current_quantities, fill_value=0))
+        prices, limit_up, limit_down = itemgetter('last', 'limit_up', 'limit_down')(self._prices)
         adjusting_denied = (
-            self._suspended |                                              # 停牌
-            prices.isna()                                             # 无行情
+            self._suspended  # 停牌
+            | prices.isna()  # 无行情
         )
+
+        denials[DenialReason.suspended_buy] = (diff > 0) & self._suspended
+        denials[DenialReason.suspended_sell] = (diff < 0) & self._suspended
+        denials[DenialReason.no_price] = prices.isna() & (diff != 0)
+
         limit_up = ~(limit_up.isna()) & (prices >= limit_up)
         limit_down = ~(limit_down.isna()) & (prices <= limit_down)
         if direction == POSITION_DIRECTION.LONG:
             # 涨停不能开、跌停不能平
-            adjusting_denied |= ((diff > 0) & (limit_up))
-            adjusting_denied |= ((diff < 0) & (limit_down))
+            limit_buy = (diff > 0) & limit_up
+            limit_sell = (diff < 0) & limit_down
+            denials[DenialReason.limit_up_buy] = limit_buy
+            denials[DenialReason.limit_down_sell] = limit_sell
         else:
             # 跌停不能开、涨停不能平
-            adjusting_denied |= ((diff > 0) & (limit_down))
-            adjusting_denied |= ((diff < 0) & (limit_up))
+            limit_buy = (diff > 0) & limit_down
+            limit_sell = (diff < 0) & limit_up
+            denials[DenialReason.limit_down_buy] = limit_buy
+            denials[DenialReason.limit_up_sell] = limit_sell
+        adjusting_denied |= limit_buy
+        adjusting_denied |= limit_sell
         diff[adjusting_denied] = 0
 
-        diff[diff.add(self._current_closable, fill_value=0) < 0] = -self._current_closable # 可平仓位
-        return diff
+        closable_exceeded = diff.add(self._current_closable, fill_value=0) < 0
+        diff[closable_exceeded] = -self._current_closable  # 可平仓位
+        denials[DenialReason.closable_exceeded] = closable_exceeded & (self._current_closable == 0)
+        return diff, denials
+
+    @staticmethod
+    def _format_denials(denials: Dict[DenialReason, Series]) -> Dict[str, str]:
+        denial_reason_details: Dict[str, str] = {}
+        for reason, mask in denials.items():
+            for obid in mask[mask].index:
+                denial_reason_details[obid] = reason.translation
+        return denial_reason_details
 
     @lru_cache(maxsize=8)
     def _trans_cost_decider(self, market: MARKET) -> AbstractStockTransactionCostDecider:
         decider = self._env.get_transaction_cost_decider(INSTRUMENT_TYPE.CS, market)
         if not isinstance(decider, AbstractStockTransactionCostDecider):
-            raise RuntimeError("transaction cost decider for market {} is not a subclass of AbstractStockTransactionCostDecider".format(market))
+            raise RuntimeError(
+                'transaction cost decider for market {} is not a subclass of AbstractStockTransactionCostDecider'.format(
+                    market
+                )
+            )
         return decider
 
     SAFETY: float = 1.2
 
-    def __call__(self, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> Series:
+    def __call__(self, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> AdjustingResult:
         if self._current_quantities.empty and self._target_weights.empty:
-            return Series(dtype="float64")
+            return AdjustingResult(adjustments=Series(dtype='float64'), denials=dict())
 
         if self._target_weights.sum() > 0.95:
             # 如果目标是满仓或者接近满仓，则使用一个较高的 safety 开始下降
@@ -178,35 +267,42 @@ class OrderTargetPortfolio:
             safety = 1.
         last_proportion_diff = inf
         last_diff = None
+        last_denials = None
         prices = self._prices_settle_ccy
         while True:
             if safety < 0:
                 # 防止 bug 导致的死循环
-                raise RuntimeError("safety < 0: {}".format(safety))
+                raise RuntimeError('safety < 0: {}'.format(safety))
             target_quantities: Series = (self._total_value * safety * self._target_weights / prices).round(0)
-            diff = self._calc_adjusting(target_quantities, direction)
+            diff, denials = self._calc_adjusting(target_quantities, direction)
 
             delta_mv = diff * prices
             cash_consumed = delta_mv.sum()
             for market, group in self._market.groupby(by=self._market):
                 # 税费等成本
-                cash_consumed += self._trans_cost_decider(market).batch_estimate(diff[group.index], prices[group.index]).sum()  # type: ignore
+                cash_consumed += (
+                    self._trans_cost_decider(market).batch_estimate(diff[group.index], prices[group.index]).sum()
+                )  # type: ignore
                 # 汇率成本
                 if market != MARKET.CN:
                     exchange_rate = self._exchange_rates[market]  # type: ignore
-                    cash_consumed += delta_mv[(diff > 0) & (diff.index.isin(group.index))].sum() * (exchange_rate.ask / exchange_rate.middle - 1)
-                    cash_consumed += delta_mv[(diff < 0) & (diff.index.isin(group.index))].sum() * (exchange_rate.middle / exchange_rate.bid - 1)
+                    cash_consumed += delta_mv[(diff > 0) & (diff.index.isin(group.index))].sum() * (
+                        exchange_rate.ask / exchange_rate.middle - 1
+                    )
+                    cash_consumed += delta_mv[(diff < 0) & (diff.index.isin(group.index))].sum() * (
+                        exchange_rate.middle / exchange_rate.bid - 1
+                    )
 
             total_proportion = ((self._current_quantities.add(diff, fill_value=0)) * prices).sum() / self._total_value
             proportion_diff = abs(total_proportion - self._target_weights.sum())
             if cash_consumed < self._cash_available:
                 # TODO: 分别计算 A H 股的可用资金
-                if proportion_diff > last_proportion_diff and last_diff is not None:
-                    return last_diff
-                last_diff = diff
+                if proportion_diff > last_proportion_diff and last_diff is not None and last_denials is not None:
+                    break
+                last_diff, last_denials = diff, denials
             last_proportion_diff = proportion_diff
             safety -= min(max(proportion_diff / 10, 0.0001), 0.002)
-            
+        return AdjustingResult(adjustments=last_diff, denials=self._format_denials(last_denials))
 
 @export_as_api
 @ExecutionContext.enforce_phase(
@@ -214,10 +310,10 @@ class OrderTargetPortfolio:
     EXECUTION_PHASE.ON_BAR,
 )
 def order_target_portfolio_smart(
-    target_portfolio: Union[Mapping[str, float], Series], 
+    target_portfolio: Union[Mapping[str, float], Series],
     order_prices: Optional[Union[AlgoOrder, Mapping[str, float], Series]] = None,
     valuation_prices: Optional[Union[Mapping[str, float], Series]] = None,
-):
+) -> Dict[str, Union[Order, str]]:
     """
     智能批量调整股票仓位至目标权重。
 
@@ -230,8 +326,8 @@ def order_target_portfolio_smart(
                         - None：使用 prev_close（open_auction 中）或 open（handle_bar 中）计算估值
                         - Dict/Series: 自定义算法可获取到的最新价格
 
-    :return: 提交的订单列表
-    :rtype: List[Order]
+    :return: 字典（key 为 order_book_id，value 为 Order 对象或拒单原因字符串）
+    :rtype: Dict
 
     :example:
 
@@ -262,7 +358,7 @@ def order_target_portfolio_smart(
         order_target_portfolio_smart({
             '000001.XSHE': 0.3,
             '600000.XSHG': 0.2
-        }, 
+        },
         order_prices=VWAPOrder(930, 940),
         valuation_prices={
             '000001.XSHE': 14.8,  # 使用模型估值
@@ -273,19 +369,23 @@ def order_target_portfolio_smart(
     from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import _order_value
 
     env = Environment.get_instance()
-    target_weights = Series({
-        assure_active_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()
-    }, dtype=float)
+    target_weights = Series(
+        {assure_active_instrument(id_or_ins).order_book_id: percent for id_or_ins, percent in target_portfolio.items()},
+        dtype=float,
+    )
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     if isinstance(order_prices, (Mapping, Series)):
         style_map: Dict[str, OrderStyle] = {
             cast(str, order_book_id): LimitOrder(price) for order_book_id, price in order_prices.items()
         }
+
         def _get_style(order_book_id) -> OrderStyle:
             try:
                 return style_map[order_book_id]
             except KeyError:
-                raise RQInvalidArgument(_("price of {} is needed, which is not provided in the algo_or_prices").format(order_book_id))
+                raise RQInvalidArgument(
+                    _('price of {} is needed, which is not provided in the algo_or_prices').format(order_book_id)
+                )
     else:
         style = order_prices or MarketOrder()
         _get_style = lambda order_book_id: style
@@ -296,42 +396,58 @@ def order_target_portfolio_smart(
         prices = None
 
     if target_weights[target_weights < 0].any():
-        raise ValueError("target_weights contains negative value: {}".format(target_weights[target_weights < 0]))
+        raise ValueError('target_weights contains negative value: {}'.format(target_weights[target_weights < 0]))
 
-    adjusting = OrderTargetPortfolio(
+    result = OrderTargetPortfolio(
         account=account,
         target_weights=Series(target_weights),
         valuation_prices=prices,
-        env=env
+        env=env,
     )()
 
-    orders = []
+    adjusting = result.adjustments
+    denials = dict(result.denials) if result.denials else {}
+
+    results: Dict[str, Union[Order, str]] = {}
+
+    # 先将拒单原因加入结果
+    results.update(denials)
 
     # 先平
     for order_book_id, delta_quantity in cast(Series, (adjusting[adjusting < 0])).items():
-        order = env.submit_order(Order.__from_create__(
-            order_book_id, abs(delta_quantity), SIDE.SELL, _get_style(order_book_id), POSITION_EFFECT.CLOSE
-        ))
+        order = env.submit_order(
+            Order.__from_create__(
+                order_book_id,
+                abs(delta_quantity),
+                SIDE.SELL,
+                _get_style(order_book_id),
+                POSITION_EFFECT.CLOSE,
+            )
+        )
         if order is not None:
-            orders.append(order)
+            results[order_book_id] = order
     # 后开
     for order_book_id, delta_quantity in cast(Series, (adjusting[adjusting > 0])).items():
         order_book_id = cast(str, order_book_id)
         order_to_be_submitted = Order.__from_create__(
-            order_book_id, delta_quantity, SIDE.BUY, _get_style(order_book_id), POSITION_EFFECT.OPEN
+            order_book_id,
+            delta_quantity,
+            SIDE.BUY,
+            _get_style(order_book_id),
+            POSITION_EFFECT.OPEN,
         )
         if validate_cash(env, order_to_be_submitted, account.cash) is not None:
             # 因为资金不够而下单失败，使用剩余资金下单
             order = _order_value(
-                account, 
-                account.get_position(order_book_id), 
-                order_book_id, 
-                account.cash, 
-                _get_style(order_book_id), 
-                zero_amount_as_exception=False
+                account,
+                account.get_position(order_book_id),
+                order_book_id,
+                account.cash,
+                _get_style(order_book_id),
+                zero_amount_as_exception=False,
             )
         else:
             order = env.submit_order(order_to_be_submitted)
         if order is not None:
-            orders.append(order)
-    return orders
+            results[order_book_id] = order
+    return results
