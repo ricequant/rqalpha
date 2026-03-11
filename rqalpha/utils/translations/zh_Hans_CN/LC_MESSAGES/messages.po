@@ -493,6 +493,42 @@ msgstr "不支持在 {} 阶段调用"
 msgid "price of {} is needed, which is not provided in the algo_or_prices"
 msgstr "需要 {} 的价格，但在 algo_or_prices 中未提供"
 
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:273
+msgid "Order creation failed: quantity less than half of minimum order quantity"
+msgstr "订单创建失败: 不足最小挂单量的一半"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:275
+msgid "Order creation failed: cannot buy due to suspension"
+msgstr "订单创建失败: 因停牌无法买入"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:277
+msgid "Order creation failed: cannot sell due to suspension"
+msgstr "订单创建失败: 因停牌无法卖出"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:279
+msgid "Order creation failed: no market data available"
+msgstr "订单创建失败: 无行情数据"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:282
+msgid "Order creation failed: cannot buy due to limit up"
+msgstr "订单创建失败: 因涨停无法买入"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:283
+msgid "Order creation failed: cannot sell due to limit down"
+msgstr "订单创建失败: 因跌停无法卖出"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:286
+msgid "Order creation failed: cannot buy due to limit down"
+msgstr "订单创建失败: 因跌停无法买入"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:288
+msgid "Order creation failed: cannot sell due to limit up"
+msgstr "订单创建失败: 因涨停无法卖出"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:295
+msgid "Order creation failed: insufficient closable position"
+msgstr "订单创建失败: 因可平仓位不足"
+
 #: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:67
 msgid "[sys_analyser] save report"
 msgstr "[sys_analyser] 保存报告"

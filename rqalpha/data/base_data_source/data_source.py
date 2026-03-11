@@ -119,7 +119,7 @@ class BaseDataSource(AbstractDataSource):
         self._id_instrument_map: Dict[str, Dict[datetime, Instrument]] = {}
         self._sym_instrument_map: Dict[str, Dict[datetime, Instrument]] = {}
         self._id_or_sym_instrument_map: Mapping[str, Dict[datetime, Instrument]] = ChainMap(self._id_instrument_map, self._sym_instrument_map)
-        self._grouped_instruments: Dict[INSTRUMENT_TYPE, Dict[datetime, Instrument]] = {}
+        self._grouped_instruments: Dict[INSTRUMENT_TYPE, List[Instrument]] = {}
 
         # register instruments
         self.register_instruments(load_instruments_from_pkl(_p('instruments.pk'), self._future_info_store))
@@ -152,7 +152,7 @@ class BaseDataSource(AbstractDataSource):
         for ins in instruments:
             self._id_instrument_map.setdefault(ins.order_book_id, {})[ins.listed_date] = ins
             self._sym_instrument_map.setdefault(ins.symbol, {})[ins.listed_date] = ins
-            self._grouped_instruments.setdefault(ins.type, {})[ins.listed_date] = ins
+            self._grouped_instruments.setdefault(ins.type, []).append(ins)
     
     def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN):
         self._dividend_stores[instrument_type, market] = dividend_store
@@ -197,7 +197,7 @@ class BaseDataSource(AbstractDataSource):
                             yield ins
         else:
             for t in types or self._grouped_instruments.keys():
-                yield from self._grouped_instruments[t].values()
+                yield from self._grouped_instruments[t]
 
     def get_share_transformation(self, order_book_id):
         return self._share_transformation.get_share_transformation(order_book_id)
