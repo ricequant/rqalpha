@@ -1,583 +1,73 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
-RQAlpha is an algorithmic trading system that provides a complete solution for quantitative trading, from data acquisition, backtesting, to live trading. It features:
-- Flexible configuration system
-- Powerful extensibility through Mod system
-- Support for stocks, futures, options, and other instruments
-- Comprehensive backtesting and analysis capabilities
+RQAlpha is an algorithmic trading system for quantitative trading with backtesting and live trading capabilities.
 
 **License**: Non-commercial use only (Apache 2.0). Commercial use requires authorization from Ricequant.
 
-## Common Commands
+## Quick Commands
 
-### Installation
 ```bash
-# Install from PyPI
-pip install rqalpha
-
-# Install from source (development)
-pip install -e .
-```
-
-### Running Strategies
-```bash
-# Basic backtest
+# Run backtest
 rqalpha run -f strategy.py -s 2014-01-01 -e 2016-01-01 --account stock 100000
 
 # With RQData connection
 rqalpha run --rqdatac-uri tcp://user:password@host:port -f strategy.py -s 2014-01-01 -e 2016-01-01 --account stock 100000
 
-# Generate example strategies
-rqalpha examples -d ./examples
-
-# Run with plot
-rqalpha run -f strategy.py -s 2014-01-01 -e 2016-01-01 --account stock 100000 --plot
-```
-
-### Bundle Management
-```bash
-# Download monthly bundle
+# Download bundle data
 rqalpha download-bundle
-
-# Create bundle from RQData
-rqalpha create-bundle --rqdatac-uri tcp://user:password@host:port
 
 # Update bundle
 rqalpha update-bundle --rqdatac-uri tcp://user:password@host:port
 
-# Check bundle integrity
-rqalpha check-bundle
-```
+# Generate examples
+rqalpha examples -d ./examples
 
-### Mod Management
-```bash
-# List all mods
-rqalpha mod list
-
-# Enable a mod
-rqalpha mod enable mod_name
-
-# Disable a mod
-rqalpha mod disable mod_name
-```
-
-### Configuration
-```bash
-# Generate default config file
-rqalpha generate-config
-
-# Show version
-rqalpha version
-```
-
-### Testing
-```bash
-# Run all tests
+# Run tests
 pytest
-
-# Run specific test file
-pytest tests/unittest/test_models/test_instruments.py
-
-# Run with verbose output
-pytest -v
-
-# Run with short traceback
-pytest --tb=short
-
-# Run integration tests
-pytest tests/integration_tests/
-
-# Run unit tests
 pytest tests/unittest/
+pytest tests/integration_tests/
 ```
 
-## Architecture Overview
+## Project-Specific Rules
 
-### Core Components
+### When Writing Strategies
 
-1. **Environment** (`rqalpha/environment.py`)
-   - Central registry for all system components
-   - Manages global state and provides access to data, broker, event bus, etc.
-   - Singleton pattern - accessed via `Environment.get_instance()`
+1. **Always consult documentation first**: Read `docs/source/intro/tutorial.rst` and `docs/source/api/base_api.rst` before writing strategies
+2. **Use correct API signatures**: Check `docs/source/api/base_api.rst` for function parameters and return types
+3. **Follow strategy lifecycle**: Implement `init()`, `before_trading()`, `handle_bar()`, `after_trading()` in correct order
+4. **Stock code format**: Always use format like "000001.XSHE" (code + exchange)
+5. **Date format**: Use 'YYYY-MM-DD' format for dates
 
-2. **Main Entry** (`rqalpha/main.py`)
-   - `run()` function orchestrates the entire backtest/live trading process
-   - Initializes environment, loads strategy, sets up mods, and executes
+### When Debugging/Testing
 
-3. **Strategy Execution** (`rqalpha/core/`)
-   - `Strategy`: Wraps user strategy code
-   - `StrategyContext`: Provides context object passed to strategy functions
-   - `StrategyLoader`: Loads strategy from file, source code, or user functions
-   - `Executor`: Executes strategy lifecycle (init, before_trading, handle_bar, etc.)
+1. **Write minimal reproducible examples**: Create smallest possible strategy that reproduces the bug
+2. **Use logger, not print**: Use `logger.info()` instead of `print()` in strategies
+3. **Add assertions**: Verify expected behavior with assertions in test code
+4. **Short date ranges**: Use 1-3 month ranges for faster iteration during testing
 
-4. **Data Layer** (`rqalpha/data/`)
-   - `DataProxy`: Main interface for accessing market data
-   - `bundle.py`: Manages local data bundle (HDF5 format)
-   - `BaseDataSource`: Abstract interface for data sources
-   - Supports both local bundle and RQData remote connection
+### Code Modifications
 
-5. **Event System** (`rqalpha/core/events.py`)
-   - Event-driven architecture
-   - Key events: `PRE_BEFORE_TRADING`, `BEFORE_TRADING`, `BAR`, `TICK`, `AFTER_TRADING`, `POST_SETTLEMENT`
-   - Mods can subscribe to events to extend functionality
+1. **Chinese comments OK**: Domain-specific logic can use Chinese comments
+2. **Follow PEP 8**: Standard Python style guide
+3. **Test before commit**: Run pytest to ensure tests pass
 
-6. **Mod System** (`rqalpha/mod/`)
-   - Extensibility through `AbstractMod` interface
-   - Mods implement `start_up()` and `tear_down()` lifecycle methods
-   - System mods (built-in):
-     - `sys_accounts`: Account and position management
-     - `sys_simulation`: Simulation broker and event source
-     - `sys_analyser`: Performance analysis and reporting
-     - `sys_risk`: Risk management and order validation
-     - `sys_scheduler`: Scheduled task execution
-     - `sys_progress`: Progress display
-     - `sys_transaction_cost`: Transaction cost calculation
+## Key Architecture Points
 
-7. **Interface Layer** (`rqalpha/interface.py`)
-   - Abstract interfaces for extensibility:
-     - `AbstractMod`: Mod extension interface
-     - `AbstractBroker`: Broker interface for order execution
-     - `AbstractDataSource`: Data source interface
-     - `AbstractPosition`: Position interface
-     - `AbstractPersistProvider`: Persistence interface
+- **Environment singleton**: Access via `Environment.get_instance()` - central registry for all components
+- **Event-driven**: Mods subscribe to events (BAR, TICK, BEFORE_TRADING, etc.)
+- **Mod system**: Extensibility through `AbstractMod` interface
+- **Data bundle**: HDF5 format stored in `~/.rqalpha/bundle/`
+- **Config hierarchy**: CLI args > strategy `__config__` > config file > defaults
 
-### Key Directories
+## Detailed Documentation
 
-- `rqalpha/`: Main package
-  - `api.py`: Public API functions
-  - `apis/`: API implementations
-  - `cmds/`: CLI command implementations
-  - `core/`: Core execution engine
-  - `data/`: Data access layer
-  - `mod/`: Built-in mods
-  - `model/`: Data models (Order, Trade, Position, etc.)
-  - `portfolio/`: Portfolio and account management
-  - `utils/`: Utility functions
-  - `examples/`: Example strategies
+For detailed information, see:
+- **Architecture**: `docs/claude/architecture.md` - Core components and system design
+- **Strategy Writing**: `docs/claude/strategy-guide.md` - How to write strategies with API reference
+- **Bug Reproduction**: `docs/claude/bug-reproduction.md` - Writing backtests to reproduce bugs
+- **Development**: `docs/claude/development.md` - Development guidelines and debugging
 
-- `tests/`: Test suite
-  - `unittest/`: Unit tests
-  - `integration_tests/`: Integration tests
-  - `api_tests/`: API tests
-
-### Configuration System
-
-- Uses YAML configuration files
-- Default config: `rqalpha/config.yml`
-- Mod configs: `rqalpha/mod_config.yml`
-- Config hierarchy: CLI args > strategy `__config__` > config file > defaults
-- Access via `env.config` or passed to mod `start_up()`
-
-### Strategy Lifecycle
-
-1. `init(context)` - Called once at strategy start
-2. `before_trading(context)` - Called before market opens each day
-3. `handle_bar(context, bar_dict)` - Called on each bar (1d/1m/tick frequency)
-4. `after_trading(context)` - Called after market closes each day
-
-### Data Bundle Structure
-
-- Stored in `~/.rqalpha/bundle/` by default
-- HDF5 format for efficient storage and access
-- Contains:
-  - Instrument info
-  - Daily bars
-  - Dividends and splits
-  - Trading calendar
-  - Index weights
-
-## Development Guidelines
-
-### Code Style
-- Follow PEP 8
-- Use type hints where appropriate
-- Chinese comments are acceptable for domain-specific logic
-
-### Testing
-- Write tests for new features
-- Use pytest fixtures in `tests/integration_tests/conftest.py`
-- Test both unit and integration levels
-- Ensure tests pass before committing
-
-### Adding a New Mod
-
-1. Create mod package: `rqalpha_mod_<name>/`
-2. Implement `AbstractMod` interface
-3. Define `__config__` dict with mod settings
-4. Implement `load_mod()` function returning mod instance
-5. Register mod in config file
-
-### Extending Data Sources
-
-1. Implement `AbstractDataSource` interface
-2. Override required methods: `get_bar()`, `history_bars()`, etc.
-3. Register via `env.set_data_source()` in mod `start_up()`
-
-### Working with Events
-
-```python
-# Subscribe to events in mod start_up()
-env.event_bus.add_listener(EVENT.POST_BAR, on_bar_callback)
-
-# Publish custom events
-env.event_bus.publish_event(Event(EVENT.CUSTOM, data=...))
-```
-
-## Common Patterns
-
-### Accessing Environment
-```python
-from rqalpha.environment import Environment
-env = Environment.get_instance()
-```
-
-### Getting Current Data
-```python
-# In strategy
-current_price = context.portfolio.positions[order_book_id].last_price
-
-# Via API
-from rqalpha.api import get_price
-price = get_price(order_book_id, start_date, end_date)
-```
-
-### Order Placement
-```python
-# Market order
-order_shares(order_book_id, amount)
-
-# Limit order
-order_shares(order_book_id, amount, style=LimitOrder(price))
-
-# Target position
-order_target_percent(order_book_id, percent)
-```
-
-## Debugging
-
-### Enable Debug Logging
-```bash
-rqalpha run -f strategy.py --log-level debug
-```
-
-### Profiling
-```bash
-# Requires line_profiler
-pip install rqalpha[profiler]
-rqalpha run -f strategy.py --enable-profiler
-```
-
-### Common Issues
-
-1. **Bundle not found**: Run `rqalpha download-bundle` first
-2. **Import errors**: Ensure rqalpha is installed in current environment
-3. **Data mismatch**: Check bundle version matches RQAlpha version
-4. **Mod conflicts**: Check mod priority and load order
-
-## Writing Backtests for Bug Reproduction
-
-**IMPORTANT**: This project focuses on running backtests. When encountering bugs, you may need to write a backtest to reproduce the issue.
-
-### Quick Start: Writing a Simple Backtest
-
-Create a strategy file (e.g., `test_strategy.py`):
-
-```python
-from rqalpha.apis import *
-
-def init(context):
-    """初始化策略"""
-    logger.info("策略初始化")
-    context.stock = "000001.XSHE"  # 平安银行
-    update_universe(context.stock)
-
-def before_trading(context):
-    """每日开盘前执行"""
-    logger.info(f"日期: {context.now.date()}")
-
-def handle_bar(context, bar_dict):
-    """每个bar执行一次 - 主要交易逻辑"""
-    # 获取历史数据
-    prices = history_bars(context.stock, 20, '1d', 'close')
-
-    if prices is not None:
-        avg_price = prices.mean()
-        current_price = bar_dict[context.stock].close
-
-        # 简单的均值回归策略
-        if current_price < avg_price * 0.98:
-            order_value(context.stock, 30000)
-            logger.info(f"买入 {context.stock}")
-        elif current_price > avg_price * 1.02:
-            position = get_position(context.stock)
-            if position.quantity > 0:
-                order_target_percent(context.stock, 0)
-                logger.info(f"卖出 {context.stock}")
-
-def after_trading(context):
-    """每日收盘后执行"""
-    positions = context.portfolio.positions
-    if len(positions) > 0:
-        logger.info(f"持仓: {[p.order_book_id for p in positions.values()]}")
-```
-
-### Running the Backtest
-
-```bash
-# Basic run
-rqalpha run -f test_strategy.py -s 2023-01-01 -e 2023-03-31 --account stock 100000
-
-# Save results to file
-rqalpha run -f test_strategy.py -s 2023-01-01 -e 2023-03-31 --account stock 100000 -o result.pkl
-
-# With detailed logging
-rqalpha run -f test_strategy.py -s 2023-01-01 -e 2023-03-31 --account stock 100000 --log-level debug
-
-# Generate report
-rqalpha run -f test_strategy.py -s 2023-01-01 -e 2023-03-31 --account stock 100000 --report report.csv
-```
-
-### Writing Test Cases for Bug Reproduction
-
-Create a test file (e.g., `test_bug_reproduction.py`):
-
-```python
-"""
-Bug 复现测试模板
-
-用于复现和验证 bug 修复
-"""
-import pytest
-from rqalpha import run
-
-
-def test_bug_order_execution():
-    """
-    Bug描述: [在这里描述bug]
-    复现步骤: [列出复现步骤]
-    预期行为: [描述预期行为]
-    实际行为: [描述实际行为]
-    """
-    strategy_code = """
-from rqalpha.apis import *
-
-def init(context):
-    context.stock = "000001.XSHE"
-    context.order_placed = False
-
-def handle_bar(context, bar_dict):
-    # 复现bug的最小代码
-    if not context.order_placed:
-        order_id = order_shares(context.stock, 100)
-        logger.info(f"订单ID: {order_id}")
-        context.order_placed = True
-
-        # 添加断言来验证预期行为
-        assert order_id is not None, "订单ID不应该为None"
-"""
-
-    config = {
-        "base": {
-            "start_date": "2023-01-01",
-            "end_date": "2023-01-10",
-            "accounts": {"stock": 100000}
-        }
-    }
-
-    # 运行回测
-    result = run(config, source_code=strategy_code)
-
-    # 验证结果
-    assert result is not None
-
-
-def test_bug_position_calculation():
-    """测试持仓计算bug"""
-    strategy_code = """
-from rqalpha.apis import *
-
-def init(context):
-    context.stock = "000001.XSHE"
-
-def handle_bar(context, bar_dict):
-    if context.now.date().day == 3:
-        order_value(context.stock, 50000)
-
-    position = get_position(context.stock)
-    if position.quantity > 0:
-        logger.info(f"持仓: {position.quantity}, 市值: {position.market_value}")
-
-        # 验证持仓计算
-        assert position.market_value > 0, "持仓市值应该大于0"
-        assert position.quantity > 0, "持仓数量应该大于0"
-"""
-
-    config = {
-        "base": {
-            "start_date": "2023-01-01",
-            "end_date": "2023-01-31",
-            "accounts": {"stock": 100000}
-        }
-    }
-
-    result = run(config, source_code=strategy_code)
-    assert result is not None
-
-
-# 运行测试
-if __name__ == "__main__":
-    import sys
-
-    test_bug_order_execution()
-    sys.stderr.write("✓ 订单执行测试通过\n")
-
-    test_bug_position_calculation()
-    sys.stderr.write("✓ 持仓计算测试通过\n")
-```
-
-### Running Test Cases
-
-```bash
-# Run with pytest
-pytest test_bug_reproduction.py -v
-
-# Run specific test
-pytest test_bug_reproduction.py::test_bug_order_execution -v
-
-# Run directly
-python test_bug_reproduction.py
-```
-
-### Common Backtest Patterns
-
-#### 1. Testing Order Execution
-```python
-def handle_bar(context, bar_dict):
-    # 市价单
-    order_id = order_shares("000001.XSHE", 100)
-
-    # 限价单
-    order_id = order_shares("000001.XSHE", 100, style=LimitOrder(10.5))
-
-    # 目标仓位
-    order_target_percent("000001.XSHE", 0.3)  # 30%仓位
-
-    # 目标金额
-    order_target_value("000001.XSHE", 50000)
-```
-
-#### 2. Testing Position Management
-```python
-def handle_bar(context, bar_dict):
-    # 获取单个持仓
-    position = get_position("000001.XSHE")
-    logger.info(f"数量: {position.quantity}, 市值: {position.market_value}")
-
-    # 获取所有持仓
-    positions = get_positions()
-    for order_book_id, position in positions.items():
-        logger.info(f"{order_book_id}: {position.quantity}")
-```
-
-#### 3. Testing Historical Data
-```python
-def handle_bar(context, bar_dict):
-    # 获取历史K线
-    prices = history_bars("000001.XSHE", 20, '1d', 'close')
-
-    # 获取多个字段
-    bars = history_bars("000001.XSHE", 20, '1d', ['open', 'high', 'low', 'close'])
-
-    # 验证数据
-    assert prices is not None, "历史数据不应该为None"
-    assert len(prices) <= 20, "数据长度不应超过请求长度"
-```
-
-#### 4. Testing Multiple Accounts
-```python
-def init(context):
-    # 多账户配置
-    pass
-
-def handle_bar(context, bar_dict):
-    # 访问股票账户
-    stock_account = context.portfolio.accounts['stock']
-    logger.info(f"股票账户现金: {stock_account.cash}")
-
-    # 访问期货账户
-    if 'future' in context.portfolio.accounts:
-        future_account = context.portfolio.accounts['future']
-        logger.info(f"期货账户现金: {future_account.cash}")
-```
-
-### Debugging Backtest Issues
-
-#### 1. Check Logs
-```bash
-# Run with debug logging
-rqalpha run -f strategy.py -s 2023-01-01 -e 2023-01-31 --account stock 100000 --log-level debug 2>&1 | tee debug.log
-
-# Filter specific logs
-rqalpha run -f strategy.py ... 2>&1 | grep "ERROR"
-rqalpha run -f strategy.py ... 2>&1 | grep "订单"
-```
-
-#### 2. Add Logging in Strategy
-```python
-def handle_bar(context, bar_dict):
-    # 打印调试信息
-    logger.info(f"当前时间: {context.now}")
-    logger.info(f"账户现金: {context.portfolio.cash}")
-    logger.info(f"持仓数量: {len(context.portfolio.positions)}")
-
-    # 打印bar数据
-    for stock in bar_dict:
-        bar = bar_dict[stock]
-        logger.info(f"{stock}: 开{bar.open} 高{bar.high} 低{bar.low} 收{bar.close}")
-```
-
-#### 3. Use Assertions
-```python
-def handle_bar(context, bar_dict):
-    position = get_position("000001.XSHE")
-
-    # 添加断言验证预期
-    assert position.quantity >= 0, "持仓数量不能为负"
-    assert context.portfolio.cash >= 0, "现金不能为负"
-
-    # 验证数据完整性
-    prices = history_bars("000001.XSHE", 20, '1d', 'close')
-    assert prices is not None, "历史数据不应该为None"
-    assert len(prices) > 0, "历史数据不应该为空"
-```
-
-### Best Practices for Bug Reproduction
-
-1. **Minimal Reproducible Example**: Write the smallest possible strategy that reproduces the bug
-2. **Clear Documentation**: Add comments explaining what the bug is and expected vs actual behavior
-3. **Specific Date Ranges**: Use short date ranges (1-3 months) for faster iteration
-4. **Assertions**: Add assertions to verify expected behavior
-5. **Logging**: Use `logger.info()` to track execution flow
-6. **Isolation**: Test one thing at a time - don't mix multiple features in one test
-
-### Common Pitfalls
-
-1. **Using `print()` after backtest**: Use `sys.stderr.write()` or `logger.info()` instead
-2. **Accessing undefined APIs**: Check API availability in `rqalpha/api.py`
-3. **Wrong date format**: Use 'YYYY-MM-DD' format for dates
-4. **Missing bundle**: Ensure bundle is downloaded before running
-5. **Incorrect stock codes**: Use format like "000001.XSHE" (stock code + exchange)
-
-## API Exploration
-
-```bash
-# List all instruments
-python -c "import rqalpha; from rqalpha.api import *; print(all_instruments('CS'))"
-
-# Get trading dates
-python -c "from rqalpha.api import *; print(get_trading_dates('2020-01-01', '2020-12-31'))"
-```
+Official documentation:
+- Tutorial: `docs/source/intro/tutorial.rst`
+- API Reference: `docs/source/api/base_api.rst`
+- Examples: `docs/source/intro/examples.rst`
