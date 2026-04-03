@@ -17,7 +17,6 @@ from rqalpha.interface import AbstractFrontendValidator
 from rqalpha.const import ORDER_TYPE, POSITION_EFFECT
 from rqalpha.model.order import Order
 from rqalpha.portfolio.account import Account
-from rqalpha.utils.logger import user_system_log
 
 from rqalpha.utils.i18n import gettext as _
 
@@ -29,9 +28,10 @@ class PriceValidator(AbstractFrontendValidator):
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (order.type != ORDER_TYPE.LIMIT) or (order.position_effect == POSITION_EFFECT.EXERCISE):
             return None
-        
+
         # FIXME: it may be better to round price in data source
         limit_up = round(self._env.price_board.get_limit_up(order.order_book_id), 4)
+        # 此处不使用 price_limits.reaches_limit，以为事前风控宜松不宜紧，要对挂单做无罪推定。
         if order.price > limit_up:
             reason = _(
                 "Order Creation Failed: limit order price {limit_price} is higher "

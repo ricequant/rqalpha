@@ -19,6 +19,7 @@
 from copy import deepcopy
 from rqalpha import run_func
 from rqalpha.apis import *
+from rqalpha.environment import Environment
 
 __config__ = {
     "base": {
@@ -122,6 +123,72 @@ def test_order_target_value(assert_order):
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
     
     run_func(config=__config__, init=init, handle_bar=handle_bar)
+
+
+def test_order_apis_reject_limit_band_prices(assert_order):
+    config = deepcopy(__config__)
+    config["base"].update({
+        "start_date": "2016-03-07",
+        "end_date": "2016-03-08",
+    })
+    config["mod"]["sys_simulation"] = {
+        "signal": True,
+    }
+
+    def init(context):
+        context.counter = 0
+        context.s1 = "000001.XSHE"
+
+    def handle_bar(context, bar_dict):
+        context.counter += 1
+        tick_size = Environment.get_instance().data_proxy.get_tick_size(context.s1)
+        safe_buy_price = bar_dict[context.s1].limit_up - tick_size
+        blocked_buy_price = safe_buy_price + 5e-6
+        safe_sell_price = bar_dict[context.s1].limit_down + tick_size
+        blocked_sell_price = safe_sell_price - 5e-6
+
+        if context.counter == 1:
+            o = order_shares(context.s1, 2000, safe_buy_price)
+            assert_order(o, status=ORDER_STATUS.FILLED, quantity=2000, price=safe_buy_price)
+            assert context.portfolio.positions[context.s1].quantity == 2000
+            return
+
+        initial_quantity = context.portfolio.positions[context.s1].quantity
+
+        rejected_buy_by_shares = order_shares(context.s1, 100, blocked_buy_price)
+        assert_order(rejected_buy_by_shares, status=ORDER_STATUS.REJECTED, price=blocked_buy_price)
+        assert context.portfolio.positions[context.s1].quantity == initial_quantity
+
+        rejected_buy_by_value = order_value(context.s1, blocked_buy_price * 100 + 5, blocked_buy_price)
+        assert_order(rejected_buy_by_value, status=ORDER_STATUS.REJECTED, price=blocked_buy_price)
+        assert context.portfolio.positions[context.s1].quantity == initial_quantity
+
+        rejected_sell_by_shares = order_shares(context.s1, -100, blocked_sell_price)
+        assert_order(rejected_sell_by_shares, status=ORDER_STATUS.REJECTED, price=blocked_sell_price)
+        assert context.portfolio.positions[context.s1].quantity == initial_quantity
+
+        rejected_sell_by_target = order_target_percent(context.s1, 0, style=LimitOrder(blocked_sell_price))
+        assert rejected_sell_by_target is not None
+        assert rejected_sell_by_target.status == ORDER_STATUS.REJECTED
+        assert rejected_sell_by_target.price == blocked_sell_price
+        assert context.portfolio.positions[context.s1].quantity == initial_quantity
+
+        filled_sell_by_target = order_target_percent(context.s1, 0, style=LimitOrder(safe_sell_price))
+        assert filled_sell_by_target is not None
+        assert filled_sell_by_target.status == ORDER_STATUS.FILLED
+        assert filled_sell_by_target.price == safe_sell_price
+        assert context.portfolio.positions[context.s1].quantity == 0
+
+        filled_buy_by_lots = order_lots(context.s1, 1, safe_buy_price)
+        assert_order(filled_buy_by_lots, status=ORDER_STATUS.FILLED, quantity=100, price=safe_buy_price)
+
+        filled_buy_by_percent = order_percent(context.s1, 0.0001, safe_buy_price)
+        assert filled_buy_by_percent is not None
+        assert filled_buy_by_percent.status == ORDER_STATUS.FILLED
+        assert filled_buy_by_percent.price == safe_buy_price
+        assert context.portfolio.positions[context.s1].quantity > 100
+
+    run_func(config=config, init=init, handle_bar=handle_bar)
 
 
 def test_auto_switch_order_value():

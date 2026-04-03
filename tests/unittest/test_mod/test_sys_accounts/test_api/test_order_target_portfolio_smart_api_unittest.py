@@ -17,7 +17,7 @@ import pytest
 from unittest.mock import MagicMock
 from typing import Dict, Tuple
 
-from pandas import Timestamp
+from pandas import DataFrame, Series, Timestamp
 
 from rqalpha.environment import Environment
 from rqalpha.model.order import MarketOrder, LimitOrder
@@ -26,10 +26,11 @@ from rqalpha.utils.config import parse_config
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
 from rqalpha.data.data_proxy import DataProxy
-from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_EFFECT, SIDE
+from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION, POSITION_EFFECT, SIDE
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import StockTransactionCostDecider
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_portfolio_smart
+from rqalpha.mod.rqalpha_mod_sys_accounts.api.order_target_portfolio import DenialReason, OrderTargetPortfolio
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.main import cleanup_resources
 
@@ -221,7 +222,7 @@ def test_order_target_portfolio_smart_limit_order(environment, on_handle_bar, as
 
 def test_order_target_portfolio_smart_partial_limit_prices_error(environment, on_handle_bar, assert_submitted_orders):
     """测试部分股票指定限价 - 缺失价格应该报错"""
-    with pytest.raises(RQInvalidArgument, match="price of .* is needed"):
+    with pytest.raises(RQInvalidArgument, match="000004\\.XSHE"):
         order_target_portfolio_smart(
             {
                 "000001.XSHE": 0.1,
@@ -258,7 +259,7 @@ def test_order_target_portfolio_smart_custom_valuation_prices(environment, on_ha
 
 def test_order_target_portfolio_smart_missing_valuation_price_error(environment, on_handle_bar, assert_submitted_orders):
     """测试缺失估值价格 - 应该报错"""
-    with pytest.raises(RQInvalidArgument, match="prices of .* is not provided"):
+    with pytest.raises(RQInvalidArgument, match="000004\\.XSHE"):
         order_target_portfolio_smart(
             {
                 "000001.XSHE": 0.1,
@@ -332,3 +333,67 @@ def test_order_target_portfolio_smart_limit_and_valuation_prices(environment, on
 
 # TODO：测试有初始持仓的场景
 # TODO：测试资金不足的场景
+
+
+def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band():
+    index = ["000001.XSHE", "000002.XSHE"]
+    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
+    otp._current_quantities = Series([0, 100], index=index, dtype=int)
+    otp._current_closable = Series([0, 100], index=index, dtype=int)
+    otp._tick_sizes = Series([0.01, 0.01], index=index, dtype=float)
+    otp._min_qty = Series([100, 100], index=index, dtype="int64")
+    otp._step_size = Series([100, 100], index=index, dtype="int64")
+    otp._suspended = Series([False, False], index=index, dtype=bool)
+    otp._prices = DataFrame(
+        {
+            "last": [9.990005, 9.009995],
+            "limit_up": [10.0, 10.0],
+            "limit_down": [9.0, 9.0],
+        },
+        index=index,
+        dtype=float,
+    )
+
+    diff, denials = otp._calc_adjusting(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.LONG)
+
+    assert diff.to_dict() == {"000001.XSHE": 0, "000002.XSHE": 0}
+    assert denials[DenialReason.limit_up_buy].to_dict() == {
+        "000001.XSHE": True,
+        "000002.XSHE": False,
+    }
+    assert denials[DenialReason.limit_down_sell].to_dict() == {
+        "000001.XSHE": False,
+        "000002.XSHE": True,
+    }
+
+
+def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band_for_short():
+    index = ["000001.XSHE", "000002.XSHE"]
+    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
+    otp._current_quantities = Series([0, 100], index=index, dtype=int)
+    otp._current_closable = Series([0, 100], index=index, dtype=int)
+    otp._tick_sizes = Series([0.01, 0.01], index=index, dtype=float)
+    otp._min_qty = Series([100, 100], index=index, dtype="int64")
+    otp._step_size = Series([100, 100], index=index, dtype="int64")
+    otp._suspended = Series([False, False], index=index, dtype=bool)
+    otp._prices = DataFrame(
+        {
+            "last": [9.009995, 9.990005],
+            "limit_up": [10.0, 10.0],
+            "limit_down": [9.0, 9.0],
+        },
+        index=index,
+        dtype=float,
+    )
+
+    diff, denials = otp._calc_adjusting(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.SHORT)
+
+    assert diff.to_dict() == {"000001.XSHE": 0, "000002.XSHE": 0}
+    assert denials[DenialReason.limit_down_buy].to_dict() == {
+        "000001.XSHE": True,
+        "000002.XSHE": False,
+    }
+    assert denials[DenialReason.limit_up_sell].to_dict() == {
+        "000001.XSHE": False,
+        "000002.XSHE": True,
+    }

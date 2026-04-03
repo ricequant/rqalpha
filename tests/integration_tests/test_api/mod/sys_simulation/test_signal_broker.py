@@ -19,6 +19,7 @@ from copy import deepcopy
 
 from rqalpha.apis import *
 from rqalpha import run_func
+from rqalpha.environment import Environment
 from rqalpha.utils.dict_func import deep_update
 
 __config__ = {
@@ -55,17 +56,42 @@ def _config(c):
 def test_price_limit():
     def handle_bar(context, bar_dict):
         stock = "000001.XSHE"
+        tick_size = Environment.get_instance().data_proxy.get_tick_size(stock)
         price = bar_dict[stock].limit_up * 0.99
         order_shares(stock, 100, price)
         assert get_position(stock).quantity == 100
         assert get_position(stock).avg_price == price
 
-        # 超过涨停价拒单
-        order_shares(stock, 100, bar_dict[stock].limit_up)
+        # 进入涨停前最后一个 tick 区间的未 round 价格也应拒单
+        order_shares(stock, 100, bar_dict[stock].limit_up - tick_size + 5e-6)
+        assert get_position(stock).quantity == 100
+        assert get_position(stock).avg_price == price
+
+        # 进入跌停前最后一个 tick 区间的未 round 价格也应拒单
+        order_shares(stock, -100, bar_dict[stock].limit_down + tick_size - 5e-6)
         assert get_position(stock).quantity == 100
         assert get_position(stock).avg_price == price
 
     run_func(config=__config__, handle_bar=handle_bar)
+
+
+def test_price_limit_sell_open():
+    def init(context):
+        context.future = "P88"
+        subscribe(context.future)
+
+    def handle_bar(context, bar_dict):
+        tick_size = Environment.get_instance().data_proxy.get_tick_size(context.future)
+        valid_price = bar_dict[context.future].limit_down + tick_size
+        sell_open(context.future, 1, valid_price)
+        assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 1
+        assert get_position(context.future, POSITION_DIRECTION.SHORT).avg_price == valid_price
+
+        sell_open(context.future, 1, bar_dict[context.future].limit_down + tick_size - 5e-6)
+        assert get_position(context.future, POSITION_DIRECTION.SHORT).quantity == 1
+        assert get_position(context.future, POSITION_DIRECTION.SHORT).avg_price == valid_price
+
+    run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
 def test_signal_open_auction():

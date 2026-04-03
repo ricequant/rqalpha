@@ -28,6 +28,7 @@ from rqalpha.utils.arg_checker import assure_active_instrument
 from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _, lazy_gettext
+from rqalpha.utils.price_limits import reaches_limit_down_vectorized, reaches_limit_up_vectorized
 
 
 class AdjustingResult(NamedTuple):
@@ -105,6 +106,7 @@ class OrderTargetPortfolio:
                 raise RQApiNotSupportedError(_('instrument type {} is not supported').format(i.type))
 
         self._market = Series({i.order_book_id: i.market for i in instruments.values()}, dtype='object')
+        self._tick_sizes = Series({i: env.data_proxy.get_tick_size(i) for i in index}, dtype=float)
         self._min_qty = Series(
             {i.order_book_id: i.min_order_quantity for i in instruments.values()},
             dtype='int64',
@@ -212,8 +214,8 @@ class OrderTargetPortfolio:
         denials[DenialReason.suspended_sell] = (diff < 0) & self._suspended
         denials[DenialReason.no_price] = prices.isna() & (diff != 0)
 
-        limit_up = ~(limit_up.isna()) & (prices >= limit_up)
-        limit_down = ~(limit_down.isna()) & (prices <= limit_down)
+        limit_up = reaches_limit_up_vectorized(prices, limit_up, self._tick_sizes)
+        limit_down = reaches_limit_down_vectorized(prices, limit_down, self._tick_sizes)
         if direction == POSITION_DIRECTION.LONG:
             # 涨停不能开、跌停不能平
             limit_buy = (diff > 0) & limit_up

@@ -24,6 +24,7 @@ from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import is_valid_price
+from rqalpha.utils.price_limits import reaches_limit
 from rqalpha.core.events import EVENT, Event
 from rqalpha.model.trade import Trade
 from rqalpha.model.order import ALGO_ORDER_STYLES
@@ -59,6 +60,7 @@ class SignalBroker(AbstractBroker):
     def _match(self, account, order):
         order_book_id = order.order_book_id
         price_board = self._env.price_board
+        tick_size = self._env.data_proxy.get_tick_size(order_book_id)
 
         last_price = price_board.get_last_price(order_book_id)
 
@@ -91,19 +93,19 @@ class SignalBroker(AbstractBroker):
 
         if self._price_limit:
             if order.position_effect != POSITION_EFFECT.EXERCISE:
-                if order.side == SIDE.BUY and deal_price >= price_board.get_limit_up(order_book_id):
+                if reaches_limit(
+                    order_book_id,
+                    deal_price,
+                    order.side,
+                    price_board,
+                    tick_size,
+                ):
                     order.mark_rejected(_(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_up price."
-                    ).format(order_book_id=order.order_book_id))
-                    self._env.event_bus.publish_event(Event(
-                        EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)
+                        "Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price."
+                    ).format(
+                        order_book_id=order.order_book_id,
+                        limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down",
                     ))
-                    return
-
-                if order.side == SIDE.SELL and deal_price <= price_board.get_limit_down(order_book_id):
-                    order.mark_rejected(_(
-                        "Order Cancelled: current bar [{order_book_id}] reach the limit_down price."
-                    ).format(order_book_id=order.order_book_id))
                     self._env.event_bus.publish_event(Event(
                         EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)
                     ))

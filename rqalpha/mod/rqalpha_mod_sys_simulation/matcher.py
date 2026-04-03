@@ -16,7 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import datetime
 from collections import defaultdict
-import math
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
@@ -25,24 +24,10 @@ from rqalpha.model.trade import Trade
 from rqalpha.model.tick import TickObject
 from rqalpha.portfolio.account import Account
 from rqalpha.utils import is_valid_price
-from rqalpha.interface import AbstractPriceBoard
+from rqalpha.utils.price_limits import reaches_limit
 from typing import Dict
 from rqalpha.utils.i18n import gettext as _
 from .slippage import SlippageDecider
-
-
-LIMIT_PRICE_VALID_THRESHOLD = 1e-7
-
-
-def _price_reaches_limit(order_book_id: str, side: SIDE, deal_price: float, price_board: AbstractPriceBoard):
-    if side == SIDE.BUY:
-        limit_price = price_board.get_limit_up(order_book_id)
-        return deal_price >= limit_price or math.isclose(deal_price, limit_price, abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
-    elif side == SIDE.SELL:
-        limit_price = price_board.get_limit_down(order_book_id)
-        return deal_price <= limit_price or math.isclose(deal_price, limit_price, abs_tol=LIMIT_PRICE_VALID_THRESHOLD)
-    else:
-        raise ValueError(f"Unsupport side: {side}")
 
 
 class AbstractMatcher:
@@ -125,6 +110,7 @@ class DefaultBarMatcher(AbstractMatcher):
             raise NotImplementedError
         order_book_id = order.order_book_id
         instrument = self._env.get_instrument(order_book_id)
+        tick_size = self._env.data_proxy.get_tick_size(order_book_id)
 
         deal_price = self._get_deal_price(order, open_auction)
 
@@ -154,11 +140,11 @@ class DefaultBarMatcher(AbstractMatcher):
                 return
             # 是否限制涨跌停不成交
             if self._price_limit:
-                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
+                if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
                     return
         else:
             if self._price_limit:
-                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
+                if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
                     reason = _(
                         "Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price."
                     ).format(order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
@@ -330,6 +316,7 @@ class DefaultTickMatcher(AbstractMatcher):
         # 标的信息
         order_book_id = order.order_book_id
         instrument = self._env.get_instrument(order_book_id)
+        tick_size = self._env.data_proxy.get_tick_size(order_book_id)
 
         # 获取tick数据
         _cur_tick = self._cur_tick.get(order_book_id)
@@ -375,7 +362,7 @@ class DefaultTickMatcher(AbstractMatcher):
                 return
             # 是否限制涨跌停不成交
             if self._price_limit:
-                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
+                if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
                     return
             if self._liquidity_limit:
                 if order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0:
@@ -384,7 +371,7 @@ class DefaultTickMatcher(AbstractMatcher):
                     return
         else:
             if self._price_limit:
-                if _price_reaches_limit(order_book_id, order.side, deal_price, price_board):
+                if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
                     reason = _(
                         "Order Cancelled: current tick [{order_book_id}] reach the {limit_up_or_down} price."
                     ).format(order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
