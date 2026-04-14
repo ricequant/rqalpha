@@ -147,25 +147,19 @@ class OrderTargetPortfolio:
             else:
                 prev_date = env.data_proxy.get_previous_trading_date(env.trading_dt)
                 for order_book_id in index:
-                    bars = env.data_proxy.history_bars(order_book_id, 1, '1d', ['close'], prev_date)
-                    if bars is None:
+                    bar = env.data_proxy.get_bar(order_book_id, prev_date, '1d')
+                    if bar.isnan:
                         raise RuntimeError('missing valuation prices: {}'.format(order_book_id))
-                    self._prices.loc[order_book_id, 'last'] = bars['close'][0]
+                    self._prices.loc[order_book_id, 'last'] = bar.close
         elif phase == EXECUTION_PHASE.ON_BAR:
             if env.config.base.frequency == '1d':
                 # TODO：根据算法时间选择最近的分钟线作为估值
                 # 当前先选择开盘价
                 for order_book_id in index:
-                    bars = env.data_proxy.history_bars(
-                        order_book_id,
-                        1,
-                        '1d',
-                        ['open', 'limit_up', 'limit_down'],
-                        env.trading_dt,
-                    )
-                    if bars is None:
+                    bar = env.data_proxy.get_bar(order_book_id, env.trading_dt, '1d')
+                    if bar.isnan:
                         raise RuntimeError('missing valuation prices: {}'.format(order_book_id))
-                    self._prices.loc[order_book_id] = list(bars[0])
+                    self._prices.loc[order_book_id] = [bar.open, bar.limit_up, bar.limit_down]
                 if valuation_prices is not None:
                     self._prices['last'] = valuation_prices
             elif env.config.base.frequency == '1m':
