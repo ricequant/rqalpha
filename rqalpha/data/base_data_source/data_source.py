@@ -42,8 +42,8 @@ from rqalpha.data.base_data_source.adjust import FIELDS_REQUIRE_ADJUSTMENT, adju
 from rqalpha.data.base_data_source.storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
                                 AbstractInstrumentStore, AbstractSimpleFactorStore)
-from rqalpha.data.base_data_source.storages import (DateSet, DayBarStore, DividendStore,
-                       ExchangeTradingCalendarStore, FutureDayBarStore,
+from rqalpha.data.base_data_source.storages import (DateSet, SecuritiesDayBarStore, INDXDayBarStore, 
+                       FutureDayBarStore, DividendStore, ExchangeTradingCalendarStore, 
                        FutureInfoStore, ShareTransformationStore, SimpleFactorStore,
                        YieldCurveStore, FuturesTradingParameters, load_instruments_from_pkl)
 
@@ -125,10 +125,10 @@ class BaseDataSource(AbstractDataSource):
         self.register_instruments(load_instruments_from_pkl(_p('instruments.pk'), self._future_info_store))
 
         # register day bar stores
-        funds_day_bar_store = DayBarStore(_p('funds.h5'))
+        funds_day_bar_store = SecuritiesDayBarStore(_p('funds.h5'))
         for ins_type, store in chain([
-            (INSTRUMENT_TYPE.CS, DayBarStore(_p('stocks.h5'))),
-            (INSTRUMENT_TYPE.INDX, DayBarStore(_p('indexes.h5'))),
+            (INSTRUMENT_TYPE.CS, SecuritiesDayBarStore(_p('stocks.h5'))),
+            (INSTRUMENT_TYPE.INDX, INDXDayBarStore(_p('indexes.h5'))),
             (INSTRUMENT_TYPE.FUTURE, FutureDayBarStore(_p('futures.h5'))),
         ], zip([INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF, INSTRUMENT_TYPE.REITs], repeat(funds_day_bar_store))):
             self.register_day_bar_store(ins_type, store)
