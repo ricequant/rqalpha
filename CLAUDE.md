@@ -50,6 +50,11 @@ pytest tests/integration_tests/
 1. **Chinese comments OK**: Domain-specific logic can use Chinese comments
 2. **Follow PEP 8**: Standard Python style guide
 3. **Test before commit**: Run pytest to ensure tests pass
+4. **If translatable strings change**: sync Babel artifacts using the commands in `babel.cfg`
+   `pybabel extract -F babel.cfg --input-dirs rqalpha/ -o messages.pot`
+   `pybabel update -i messages.pot -d rqalpha/utils/translations`
+   update `rqalpha/utils/translations/zh_Hans_CN/LC_MESSAGES/messages.po` as needed, then run
+   `pybabel compile -d rqalpha/utils/translations`
 
 ## Key Architecture Points
 

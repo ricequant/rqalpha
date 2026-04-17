@@ -36,7 +36,6 @@ font = findfont(FontProperties(family=['sans-serif']))
 if "/matplotlib/" in font:
     system_log.warn("PLOT: Missing Chinese fonts. Fallback to English.")
     LABEL_FONT_SIZE = 9
-    _ = lambda txt: txt
     SUPPORT_CHINESE = False
 else:
     LABEL_FONT_SIZE = 11
@@ -106,23 +105,23 @@ class DefaultPlot(PlotTemplate):
         IndicatorInfo("beta", _("Beta"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("sharpe", _("Sharpe"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("sortino", _("Sortino"), BLACK, "{0:.4}", 11, 1),
-        IndicatorInfo("weekly_ulcer_index", _("WeeklyUlcerIndex"), BLACK, "{0:.4}", 11, 1.4),
+        IndicatorInfo("weekly_ulcer_index", _("WeeklyUlcerIndex"), BLACK, "{0:.4}", 11, 1),
     ], [
         IndicatorInfo("benchmark_total_returns", _("BenchmarkReturns"), BLUE, "{0:.3%}", 11, 1),
         IndicatorInfo("benchmark_annualized_returns", _("BenchmarkAnnual"), BLUE, "{0:.3%}", 11, 1),
         IndicatorInfo("volatility", _("Volatility"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("tracking_error", _("TrackingError"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("downside_risk", _("DownsideRisk"), BLACK, "{0:.4}", 11, 1),
-        IndicatorInfo("information_ratio", _("InformationRatio"), BLACK, "{0:.4}", 11, 1),
-        IndicatorInfo("weekly_ulcer_performance_index", _("WeeklyUlcerPerformanceIndex"), BLACK, "{0:.4}", 11, 1.4),
+        IndicatorInfo("annualized_twoside_turnover", _("AnnualTwosideTurnover"), BLACK, "{0:.3%}", 11, 1),
+        IndicatorInfo("weekly_ulcer_performance_index", _("WeeklyUlcerPerfIndex"), BLACK, "{0:.4}", 11, 1),
     ], [
         IndicatorInfo("excess_cum_returns", _("ExcessCumReturns"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("win_rate", _("WinRate"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("weekly_win_rate", _("WeeklyWinRate"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("profit_loss_rate", _("ProfitLossRate"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("max_drawdown", _("MaxDrawDown"), BLACK, "{0:.3%}", 11, 1),
-        IndicatorInfo("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6, 1),
-        IndicatorInfo("weekly_excess_ulcer_index", _("WeeklyExcessUlcerIndex"), BLACK, "{0:.4}", 11, 1.4),
+        IndicatorInfo("max_dd_ddd", _("MaxDD/DDD"), BLACK, "{}", 7, 1),
+        IndicatorInfo("weekly_excess_ulcer_index", _("WeeklyExcessUlcerIndex"), BLACK, "{0:.4}", 11, 1),
     ]]
 
     WEEKLY_INDICATORS = [[
@@ -132,7 +131,7 @@ class DefaultPlot(PlotTemplate):
         IndicatorInfo("weekly_information_ratio", _("WeeklyInfoRatio"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("weekly_tracking_error", _("WeeklyTrackingError"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("weekly_max_drawdown", _("WeeklyMaxDrawdown"), BLACK, "{0:.3%}", 11, 1),
-        IndicatorInfo("weekly_excess_sharpe", _("WeeklyExcessSharpe"), BLACK, "{0:.4}", 11, 1.4)
+        IndicatorInfo("weekly_excess_sharpe", _("WeeklyExcessSharpe"), BLACK, "{0:.4}", 11, 1.7)
     ]]
 
     EXCESS_INDICATORS = [[
@@ -141,8 +140,8 @@ class DefaultPlot(PlotTemplate):
         IndicatorInfo("excess_sharpe", _("ExcessSharpe"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("excess_volatility", _("ExcessVolatility"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.3%}", 11, 1),
-        IndicatorInfo("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 6, 1),
-        IndicatorInfo("weekly_excess_ulcer_performance_index", _("WeeklyExcessUlcerPerformanceIndex"), BLACK, "{0:.4}", 11, 1.4),
+        IndicatorInfo("excess_max_dd_ddd", _("ExcessMaxDD/DDD"), BLACK, "{}", 7, 1),
+        IndicatorInfo("weekly_excess_ulcer_performance_index", _("WeeklyExcessUlcerPerfIndex"), BLACK, "{0:.4}", 11, 1),
     ]]
 
 
@@ -162,14 +161,14 @@ class RiceQuant(PlotTemplate):
         IndicatorInfo("sharpe", _("Sharpe"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("weekly_sharpe", _("WeeklySharpe"), BLACK, "{0:.4}", 11, 1),
         IndicatorInfo("monthly_sharpe", _("MonthlySharpe"), BLACK, "{0:.4}", 11, 1),
-        IndicatorInfo("information_ratio", _("InformationRatio"), BLACK, "{0:.4}", 11, 1),
+        IndicatorInfo("annualized_twoside_turnover", _("AnnualTwosideTurnover"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("sortino", _("Sortino"), BLACK, "{0:.4}", 11, 1),
     ], [
         IndicatorInfo("volatility", _("Volatility"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("weekly_volatility", _("WeeklyVolatility"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("monthly_volatility", _("MonthlyVolatility"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("max_drawdown", _("MaxDrawDown"), BLACK, "{0:.3%}", 11, 1),
-        IndicatorInfo("max_dd_ddd", _("MaxDD/MaxDDD"), BLACK, "{}", 6, 1),
+        IndicatorInfo("max_dd_ddd", _("MaxDD/DDD"), BLACK, "{}", 7, 1),
     ]]
 
     EXCESS_INDICATORS = [[
@@ -183,7 +182,7 @@ class RiceQuant(PlotTemplate):
         IndicatorInfo("excess_volatility", _("ExcessVolatility"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("excess_win_rate", _("ExcessWinRate"), BLACK, "{0:.3%}", 11, 1),
         IndicatorInfo("excess_max_drawdown", _("ExcessMaxDD"), BLACK, "{0:.3%}", 11, 1),
-        IndicatorInfo("excess_max_dd_ddd", _("ExcessMaxDD/ExcessMaxDDD"), BLACK, "{}", 6, 1),
+        IndicatorInfo("excess_max_dd_ddd", _("ExcessMaxDD/DDD"), BLACK, "{}", 7, 1),
     ]]
 
     WEEKLY_INDICATORS = []

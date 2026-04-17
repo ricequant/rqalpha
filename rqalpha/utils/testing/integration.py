@@ -285,7 +285,7 @@ def _filter_integration_result(result: dict) -> dict:
                     # Risk metrics
                     'volatility', 'max_drawdown', 'sharpe', 'sortino',
                     # Other important metrics
-                    'win_rate', 'alpha', 'beta', 'information_ratio', 'tracking_error'
+                    'win_rate', 'alpha', 'beta', 'information_ratio', 'tracking_error', 'annualized_twoside_turnover'
                 ]
                 filtered_data[field] = {k: v for k, v in sys_analyser[field].items() if k in important_fields}
             else:
@@ -321,6 +321,10 @@ def _assert_result(result: dict, expected_result: dict):
         if field in expected:
             _assert_dafaframe(actual[field], expected[field])
     
+    actual_summary_keys = set(actual["summary"])
+    expected_summary_keys = set(expected["summary"])
+    assert actual_summary_keys == expected_summary_keys
+
     for summary_field in expected["summary"]:
         actual_val = actual["summary"][summary_field]
         expected_val = expected["summary"][summary_field]
@@ -338,9 +342,16 @@ def _assert_result(result: dict, expected_result: dict):
 
 
 def assert_result(result: dict, expected_result_file: str):
+    update_snapshot = os.environ.get("RQALPHA_UPDATE_OUTS") == "1"
     if not os.path.exists(expected_result_file):
         warn(f"Result file {expected_result_file} not found, creating it")
         # Filter result using business logic before serialization
+        filtered_result = _filter_integration_result(result)
+        with open(expected_result_file, "w", encoding='utf-8') as f:
+            StructuredTextFormat.dump(filtered_result, f)
+        return
+
+    if update_snapshot:
         filtered_result = _filter_integration_result(result)
         with open(expected_result_file, "w", encoding='utf-8') as f:
             StructuredTextFormat.dump(filtered_result, f)

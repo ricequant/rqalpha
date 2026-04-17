@@ -2,7 +2,7 @@
 DataFrame
 {"shape":[1,13],"dtypes":{"datetime":"object","trading_datetime":"object","order_book_id":"object","symbol":"object","side":"object","position_effect":"object","exec_id":"int64","tax":"int64","commission":"int64","last_quantity":"int64","last_price":"float64","order_id":"int64","transaction_cost":"int64"},"index_dtype":"datetime64[ns]","index_name":"datetime","columns":["datetime","trading_datetime","order_book_id","symbol","side","position_effect","exec_id","tax","commission","last_quantity","last_price","order_id","transaction_cost"]}
 ,datetime,trading_datetime,order_book_id,symbol,side,position_effect,exec_id,tax,commission,last_quantity,last_price,order_id,transaction_cost
-2016-07-04 15:00:00,2016-07-04 15:00:00,2016-07-04 15:00:00,000001.XSHE,平安银行,BUY,OPEN,17612770310487,0,5,100,8.91,17612770310688,5
+2016-07-04 15:00:00,2016-07-04 15:00:00,2016-07-04 15:00:00,000001.XSHE,平安银行,BUY,OPEN,17764213191223,0,5,100,8.91,17764213191454,5
 
 [stock_positions]
 DataFrame
@@ -838,5 +838,6 @@ dict
     "cash":999119.8,
     "total_returns":0.00022380000000010725,
     "annualized_returns":0.0002128199638995465,
-    "unit_net_value":1.0002238
+    "unit_net_value":1.0002238,
+    "annualized_twoside_turnover":0.9153549807374793
 }

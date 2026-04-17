@@ -2,10 +2,10 @@
 DataFrame
 {"shape":[4,13],"dtypes":{"datetime":"object","trading_datetime":"object","order_book_id":"object","symbol":"object","side":"object","position_effect":"object","exec_id":"int64","tax":"int64","commission":"float64","last_quantity":"int64","last_price":"float64","order_id":"float64","transaction_cost":"float64"},"index_dtype":"datetime64[ns]","index_name":"datetime","columns":["datetime","trading_datetime","order_book_id","symbol","side","position_effect","exec_id","tax","commission","last_quantity","last_price","order_id","transaction_cost"]}
 ,datetime,trading_datetime,order_book_id,symbol,side,position_effect,exec_id,tax,commission,last_quantity,last_price,order_id,transaction_cost
-2024-02-05 15:00:00,2024-02-05 15:00:00,2024-02-05 15:00:00,IH2402,上证50期货2402,BUY,OPEN,17574897030000,0,51.0048,3,2240.0,17574897030000.0,51.0048
-2024-02-05 15:00:00,2024-02-05 15:00:00,2024-02-05 15:00:00,IC2402,中证500期货2402,SELL,OPEN,17574897030001,0,66.4884,3,4380.0,17574897030001.0,66.4884
-2024-02-19 15:30:00,2024-02-19 15:30:00,2024-02-19 15:30:00,IH2402,上证50期货2402,SELL,CLOSE,17574897030002,0,0.0,3,2363.0,,0.0
-2024-02-19 15:30:00,2024-02-19 15:30:00,2024-02-19 15:30:00,IC2402,中证500期货2402,BUY,CLOSE,17574897030003,0,0.0,3,5105.6,,0.0
+2024-02-05 15:00:00,2024-02-05 15:00:00,2024-02-05 15:00:00,IH2402,上证50期货2402,BUY,OPEN,17764213190009,0,51.0048,3,2240.0,17764213190037.0,51.0048
+2024-02-05 15:00:00,2024-02-05 15:00:00,2024-02-05 15:00:00,IC2402,中证500期货2402,SELL,OPEN,17764213190010,0,66.4884,3,4380.0,17764213190038.0,66.4884
+2024-02-19 15:30:00,2024-02-19 15:30:00,2024-02-19 15:30:00,IH2402,上证50期货2402,SELL,CLOSE,17764213190011,0,0.0,3,2363.0,,0.0
+2024-02-19 15:30:00,2024-02-19 15:30:00,2024-02-19 15:30:00,IC2402,中证500期货2402,BUY,CLOSE,17764213190012,0,0.0,3,5105.6,,0.0
 
 [future_positions]
 DataFrame
@@ -67,5 +67,6 @@ dict
     "cash":9675222.506800001,
     "total_returns":-0.032477749319999805,
     "annualized_returns":-0.7501033786896171,
-    "unit_net_value":0.9675222506800002
+    "unit_net_value":0.9675222506800002,
+    "annualized_twoside_turnover":NaN
 }
