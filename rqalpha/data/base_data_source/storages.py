@@ -196,7 +196,7 @@ def h5_file(path, *args, mode="r", **kwargs):
             h5.close()
 
 
-class INDXDayBarStore(AbstractDayBarStore):
+class DayBarStore(AbstractDayBarStore):
     DEFAULT_DTYPE = np.dtype([
         ('datetime', np.int64),
         ('open', np.float64),
@@ -228,8 +228,12 @@ class INDXDayBarStore(AbstractDayBarStore):
                 return 20050104, 20050104
             
 
-class DayBarStore(INDXDayBarStore):
-    DEFAULT_DTYPE = np.dtype(INDXDayBarStore.DEFAULT_DTYPE.descr + [
+class INDXDayBarStore(DayBarStore):
+    pass
+            
+
+class SecuritiesDayBarStore(DayBarStore):
+    DEFAULT_DTYPE = np.dtype(DayBarStore.DEFAULT_DTYPE.descr + [
         ('limit_up', np.float64),
         ('limit_down', np.float64),
     ])
@@ -237,6 +241,8 @@ class DayBarStore(INDXDayBarStore):
 
 class FutureDayBarStore(DayBarStore):
     DEFAULT_DTYPE = np.dtype(DayBarStore.DEFAULT_DTYPE.descr + [
+        ('limit_up', np.float64),
+        ('limit_down', np.float64),
         ("open_interest", np.float64), 
         ("settlement", np.float64),
         ("prev_settlement", np.float64)
