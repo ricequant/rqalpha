@@ -196,14 +196,15 @@ def h5_file(path, *args, mode="r", **kwargs):
             h5.close()
 
 
-class DayBarStore(AbstractDayBarStore):
+class INDXDayBarStore(AbstractDayBarStore):
     DEFAULT_DTYPE = np.dtype([
-        ('datetime', np.uint64),
+        ('datetime', np.int64),
         ('open', np.float64),
         ('close', np.float64),
         ('high', np.float64),
         ('low', np.float64),
         ('volume', np.float64),
+        ('total_turnover', np.float64),
     ])
 
     def __init__(self, path):
@@ -214,7 +215,7 @@ class DayBarStore(AbstractDayBarStore):
     def get_bars(self, order_book_id):
         with h5_file(self._path) as h5:
             try:
-                return h5[order_book_id][:]
+                return h5[order_book_id].fields(list(self.DEFAULT_DTYPE.names))[:]
             except KeyError:
                 return np.empty(0, dtype=self.DEFAULT_DTYPE)
 
@@ -225,10 +226,21 @@ class DayBarStore(AbstractDayBarStore):
                 return data[0]['datetime'], data[-1]['datetime']
             except KeyError:
                 return 20050104, 20050104
+            
+
+class DayBarStore(INDXDayBarStore):
+    DEFAULT_DTYPE = np.dtype(INDXDayBarStore.DEFAULT_DTYPE.descr + [
+        ('limit_up', np.float64),
+        ('limit_down', np.float64),
+    ])
 
 
 class FutureDayBarStore(DayBarStore):
-    DEFAULT_DTYPE = np.dtype(DayBarStore.DEFAULT_DTYPE.descr + [("open_interest", '<f8')])
+    DEFAULT_DTYPE = np.dtype(DayBarStore.DEFAULT_DTYPE.descr + [
+        ("open_interest", np.float64), 
+        ("settlement", np.float64),
+        ("prev_settlement", np.float64)
+    ])
 
 
 class DividendStore(AbstractDividendStore):
