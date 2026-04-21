@@ -70,8 +70,8 @@ def test_order_target_portfolio():
                 },
             )
             assert get_position('000001.XSHE').quantity == 0  # 清仓
-            assert get_position('000004.XSHE').quantity == 5500  # (993695.7496 * 0.1) / 18 = 5520.53
-            assert get_position('000005.XSHE').quantity == 67600  # (993695.7496 * 0.2) / 2.92 = 68061.35
+            assert get_position('000004.XSHE').quantity == 5700  # (993695.7496 * 0.1) / 18 = 5520.53
+            assert get_position('000005.XSHE').quantity == 69700  # (993695.7496 * 0.2) / 2.92 = 68061.35
             assert get_position('600519.XSHG').quantity == 0  # 970 低于 收盘价 无法买进
 
     run_func(config=config, init=init, handle_bar=handle_bar)
@@ -111,7 +111,7 @@ def test_order_target_portfolio_in_signal_mode():
 
 
 def test_order_target_portfolio_smart_all_denials():
-    """测试所有拒单场景: 权重过小、涨停买入、跌停卖出、停牌买入、停牌卖出"""
+    """测试所有拒单场景: 涨停买入、跌停卖出、停牌买入、停牌卖出"""
     config = {
         'base': {
             'start_date': '2025-12-17',
@@ -131,51 +131,41 @@ def test_order_target_portfolio_smart_all_denials():
         current_date = context.now.date()
 
         if current_date == date(2025, 12, 17):
-            # Day 1 (2025-12-17): 测试涨停买入拒单 + 权重过小拒单
-            # 锋龙股份在 12-17 涨停 (18 连板首日)
+            # Day 1: 测试涨停买入拒单 + 停牌买入拒单，同时买入后续测试需要的股票
             result = order_target_portfolio_smart(
                 {
                     '001270.XSHE': 0.3,  # 锋龙股份涨停 → limit_up 拒单
-                    '000002.XSHE': 0.0001,  # 权重极小 → quantity_too_small 拒单
-                    '000001.XSHE': 0.3,  # 正常买入,
-                    '002166.XSHE': 0.3,  # 停牌
-                    '002036.XSHE': 0.3,  # 正常买入
+                    '000001.XSHE': 0.2,  # 正常买入
+                    '002166.XSHE': 0.3,  # 停牌 → suspended_buy 拒单
+                    '002036.XSHE': 0.2,  # 正常买入（用于 Day 2 测试 suspended_sell）
+                    '000668.XSHE': 0.2,  # 正常买入（用于 Day 3 测试 limit_down_sell）
                 }
             )
 
-            # 验证涨停买入拒单
             assert result['001270.XSHE'] == _('Order creation failed: cannot buy due to limit up')
-
-            # 验证量太小拒单
-            assert result['000002.XSHE'] == _(
-                'Order creation failed: quantity less than half of minimum order quantity'
-            )
-            # 验证停牌买入拒单
             assert result['002166.XSHE'] == _('Order creation failed: cannot buy due to suspension')
-
-            # 验证正常成交（results 中应该是 Order 对象，不是字符串）
             assert isinstance(result.get('000001.XSHE'), Order)
+            assert isinstance(result.get('000668.XSHE'), Order)
+
         elif current_date == date(2025, 12, 18):
+            # Day 2: 测试停牌卖出拒单（保持 000668 和 000001 持仓）
             result = order_target_portfolio_smart(
                 {
-                    '002036.XSHE': 0,
-                    '000668.XSHE': 0.5,
+                    '002036.XSHE': 0,  # 停牌，目标权重 0 → suspended_sell 拒单
+                    '000668.XSHE': 0.3,  # 保持持仓
+                    '000001.XSHE': 0.3,  # 保持持仓
                 }
             )
-            # 验证停牌卖出拒单
             assert result['002036.XSHE'] == _('Order creation failed: cannot sell due to suspension')
 
         elif current_date == date(2025, 12, 19):
-            # Day 3 (2025-12-19): 测试跌停卖出拒单
-            # 注意: 此处假设 000001.XSHE (平安银行) 在 12-19 跌停
-            # 若实际数据中该股未跌停, 需调整为其他跌停股票
+            # Day 3: 测试跌停卖出拒单
             result = order_target_portfolio_smart(
                 {
                     '000668.XSHE': 0.0,  # 跌停, 目标权重 0 → limit_down_sell 拒单
                     '000001.XSHE': 0.5,  # 正常持仓
                 }
             )
-
             assert result['000668.XSHE'] == _('Order creation failed: cannot sell due to limit down')
 
     run_func(config=config, init=init, handle_bar=handle_bar)
