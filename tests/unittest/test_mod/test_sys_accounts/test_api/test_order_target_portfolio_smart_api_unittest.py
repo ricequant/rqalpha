@@ -246,7 +246,7 @@ def test_order_target_portfolio_smart_nan_limit_price_rejected(environment, on_h
             "000004.XSHE": 11.0,
         }
     )
-    assert result["000001.XSHE"] == "Limit order price has no valid price."
+    assert result["000001.XSHE"] == "Limit order price is invalid."
     assert_submitted_orders({
         "000004.XSHE": (189900, SIDE.BUY, POSITION_EFFECT.OPEN, LimitOrder(11.0)),
     })

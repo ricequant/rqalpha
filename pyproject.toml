@@ -81,3 +81,4 @@ include = ["rqalpha", "rqalpha.*"]
 write_to = "rqalpha/_version.py"
 tag_regex = "^release/(?P<version>.*)$"
 version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"

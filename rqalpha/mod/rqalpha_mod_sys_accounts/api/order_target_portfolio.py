@@ -381,15 +381,17 @@ def order_target_portfolio_smart(
         dtype=float,
     )
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
-    invalid_order_price_denials: Dict[str, str] = {}
+    invalid_order_book_ids = Index([])
     if isinstance(order_prices, (Mapping, Series)):
-        style_map: Dict[str, OrderStyle] = {}
-        for order_book_id, price in order_prices.items():
-            normalized_order_book_id = cast(str, assure_active_instrument(order_book_id).order_book_id)
-            if not is_valid_price(price):
-                invalid_order_price_denials[normalized_order_book_id] = _('Limit order price has no valid price.')
-                continue
-            style_map[normalized_order_book_id] = LimitOrder(price)
+        normalized_order_prices = Series(
+            {assure_active_instrument(order_book_id).order_book_id: price for order_book_id, price in order_prices.items()},
+            dtype=object,
+        )
+        valid_order_price_mask = normalized_order_prices.map(is_valid_price)
+        invalid_order_book_ids = normalized_order_prices.index[~valid_order_price_mask]
+        style_map: Dict[str, OrderStyle] = {
+            order_book_id: LimitOrder(price) for order_book_id, price in normalized_order_prices[valid_order_price_mask].items()
+        }
 
         def _get_style(order_book_id) -> OrderStyle:
             try:
@@ -419,11 +421,12 @@ def order_target_portfolio_smart(
 
     adjusting = result.adjustments
     denials = dict(result.denials) if result.denials else {}
-    if invalid_order_price_denials:
-        invalid_order_book_ids = Index(invalid_order_price_denials.keys())
+    if len(invalid_order_book_ids) > 0:
         invalid_price_mask = adjusting.index.isin(invalid_order_book_ids) & (adjusting != 0)
         adjusting.loc[invalid_price_mask] = 0
-        denials.update({order_book_id: invalid_order_price_denials[order_book_id] for order_book_id in adjusting.index[invalid_price_mask]})
+        denials.update(
+            {order_book_id: _('Limit order price is invalid.') for order_book_id in adjusting.index[invalid_price_mask]}
+        )
 
     results: Dict[str, Union[Order, str]] = {}
 
