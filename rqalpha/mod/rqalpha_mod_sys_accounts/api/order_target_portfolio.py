@@ -24,7 +24,7 @@ from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import (
 )
 from rqalpha.model.order import AlgoOrder, LimitOrder, MarketOrder, Order, OrderStyle
 from rqalpha.portfolio.account import Account
-from rqalpha.utils import is_valid_price
+from rqalpha.utils import are_valid_prices
 from rqalpha.utils.arg_checker import assure_active_instrument
 from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
@@ -387,7 +387,7 @@ def order_target_portfolio_smart(
             {assure_active_instrument(order_book_id).order_book_id: price for order_book_id, price in order_prices.items()},
             dtype=object,
         )
-        valid_order_price_mask = normalized_order_prices.map(is_valid_price)
+        valid_order_price_mask = are_valid_prices(normalized_order_prices)
         invalid_order_book_ids = normalized_order_prices.index[~valid_order_price_mask]
         style_map: Dict[str, OrderStyle] = {
             order_book_id: LimitOrder(price) for order_book_id, price in normalized_order_prices[valid_order_price_mask].items()
