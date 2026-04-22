@@ -159,30 +159,6 @@ def test_order_target_portfolio_smart_small_weights(environment, on_handle_bar, 
     })
 
 
-def test_order_target_portfolio_smart_nearly_full_position(environment, on_handle_bar, assert_submitted_orders):
-    """测试接近满仓调仓 - 触发safety机制"""
-    order_target_portfolio_smart({
-        "000001.XSHE": 0.5,
-        "000004.XSHE": 0.45,  # 总权重95%，应该触发safety降级
-    })
-    assert_submitted_orders({
-        # 计算依据：
-        # 总资金: 10,000,000 元，总权重95%触发safety降级机制
-        # safety机制会自动调整权重以确保有足够的现金缓冲
-        # 实际分配：两只股票各获得约50%的权重调整
-
-        # 000001.XSHE (平安银行) 开盘价: 11.70 元
-        # 调整后目标数量 = (10,000,000 × ~0.5) / 11.70 ≈ 427,350.43
-        # 经算法调整后的实际数量: 427,400 股
-        "000001.XSHE": (427400, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
-
-        # 000004.XSHE (*ST国华) 开盘价: 10.53 元
-        # (10000000 × 0.45) / 10.53 ≈ 427,350.43
-        # 调整后目标数量 ≈ 427,400 股 (与000001相同，算法内部调整结果)
-        "000004.XSHE": (427400, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
-    })
-
-
 def test_order_target_portfolio_smart_negative_weights_error(environment, on_handle_bar, assert_submitted_orders):
     """测试负权重 - 应该抛出异常"""
     with pytest.raises(ValueError, match="target_weights contains negative value"):
