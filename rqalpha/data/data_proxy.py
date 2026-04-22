@@ -283,6 +283,8 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         return self._data_source.is_st_stock(order_book_id, trading_dates)
 
     def get_tick_size(self, order_book_id):
+        if order_book_id == "113625.XSHG":
+            print()
         try:
             return self.instruments(order_book_id).tick_size()
         except Exception as e:
