@@ -195,6 +195,10 @@ def is_valid_price(price):
     return not (price is None or np.isnan(price) or price <= 0)
 
 
+def are_valid_prices(prices: pd.Series):
+    return (~(prices.isna())) & (prices > 0)
+
+
 def get_position_direction(side, position_effect):
     # type: (SIDE, Optional[POSITION_EFFECT]) -> POSITION_DIRECTION
     if position_effect is None:

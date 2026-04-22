@@ -73,7 +73,7 @@ class StructuredTextFormat:
             # Convert index to string to avoid datetime serialization issues
             df_copy = df.copy()
             df_copy.index = [str(idx) for idx in df_copy.index]
-            df_copy.to_csv(csv_buffer, index=True)
+            df_copy.to_csv(csv_buffer, index=True, lineterminator='\n')
             csv_data = csv_buffer.getvalue().strip()
         
         return object_type, metadata, csv_data

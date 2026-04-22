@@ -2,7 +2,7 @@ from enum import Enum
 from operator import itemgetter
 from typing import Dict, Mapping, NamedTuple, Optional, Tuple, Union, cast
 
-from numpy import inf, sign
+from numpy import inf, isnan, sign
 from numpy import round as np_round
 from pandas import DataFrame, Index, Series
 
@@ -24,6 +24,7 @@ from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import (
 )
 from rqalpha.model.order import AlgoOrder, LimitOrder, MarketOrder, Order, OrderStyle
 from rqalpha.portfolio.account import Account
+from rqalpha.utils import are_valid_prices
 from rqalpha.utils.arg_checker import assure_active_instrument
 from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
@@ -448,9 +449,16 @@ def order_target_portfolio_smart(
         dtype=float,
     )
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
+    invalid_order_book_ids = Index([])
     if isinstance(order_prices, (Mapping, Series)):
+        normalized_order_prices = Series(
+            {assure_active_instrument(order_book_id).order_book_id: price for order_book_id, price in order_prices.items()},
+            dtype=object,
+        )
+        valid_order_price_mask = are_valid_prices(normalized_order_prices)
+        invalid_order_book_ids = normalized_order_prices.index[~valid_order_price_mask]
         style_map: Dict[str, OrderStyle] = {
-            cast(str, order_book_id): LimitOrder(price) for order_book_id, price in order_prices.items()
+            order_book_id: LimitOrder(price) for order_book_id, price in normalized_order_prices[valid_order_price_mask].items()
         }
 
         def _get_style(order_book_id) -> OrderStyle:
@@ -481,6 +489,12 @@ def order_target_portfolio_smart(
 
     adjusting = result.adjustments
     denials = dict(result.denials) if result.denials else {}
+    if len(invalid_order_book_ids) > 0:
+        invalid_price_mask = adjusting.index.isin(invalid_order_book_ids) & (adjusting != 0)
+        adjusting.loc[invalid_price_mask] = 0
+        denials.update(
+            {order_book_id: _('Limit order price is invalid.') for order_book_id in adjusting.index[invalid_price_mask]}
+        )
 
     results: Dict[str, Union[Order, str]] = {}
 
