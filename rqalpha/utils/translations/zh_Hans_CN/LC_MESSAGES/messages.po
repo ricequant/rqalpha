@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-30 11:34+0800\n"
+"POT-Creation-Date: 2026-04-30 14:01+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -1074,7 +1074,7 @@ msgstr "不合法的 order_book_id/instrument，应传入已上市的合约代�
 #: rqalpha/utils/arg_checker.py:114
 #, python-brace-format
 msgid "invalid order_book_id: {order_book_id}"
-msgstr "无效的标的：{order_book_id}"
+msgstr "无效的 order_book_id：{order_book_id}"
 
 #: rqalpha/utils/arg_checker.py:133
 #, python-brace-format
@@ -1781,7 +1781,8 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 #~ msgstr "函数 {}：无效的 {} 参数，期望类型为 {} 的 Instrument，实际获得类型为 {} 的 Instrument"
 
 #~ msgid ""
-#~ "Order creation failed: quantity less than half of minimum order quantity"
+#~ "Order creation failed: quantity less "
+#~ "than half of minimum order quantity"
 #~ msgstr "订单创建失败: 不足最小挂单量的一半"
 
 #~ msgid "Order creation failed: cannot buy due to suspension"
