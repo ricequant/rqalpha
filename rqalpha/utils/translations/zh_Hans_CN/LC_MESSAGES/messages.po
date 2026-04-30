@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-17 17:35+0800\n"
+"POT-Creation-Date: 2026-04-30 14:01+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.15.0\n"
+"Generated-By: Babel 2.17.0\n"
 
 #: rqalpha/environment.py:89
 msgid ""
@@ -153,7 +153,7 @@ msgstr "函数 {}：参数 {} 不合法，季度应为形如 '2012q3' 的字符�
 msgid "create bundle using RQDatac"
 msgstr "使用 RQDatac 创建 Bundle"
 
-#: rqalpha/cmds/bundle.py:45
+#: rqalpha/cmds/bundle.py:46
 msgid ""
 "rqdatac is required to create bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -171,7 +171,7 @@ msgstr "rqdatac 初始化失败：{}"
 msgid "Update bundle using RQDatac"
 msgstr "使用 RQDatac 更新 Bundle"
 
-#: rqalpha/cmds/bundle.py:74
+#: rqalpha/cmds/bundle.py:75
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -292,7 +292,7 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/bundle.py:624
+#: rqalpha/data/bundle.py:623
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
@@ -326,8 +326,8 @@ msgstr "您所使用的 Bundle 数据过旧，请将其更新至最新后再进�
 msgid "unsupported future instrument {}"
 msgstr "不支持的期货标的{}"
 
-#: rqalpha/data/base_data_source/storages.py:179
-#: rqalpha/data/base_data_source/storages.py:189
+#: rqalpha/data/base_data_source/storages.py:180
+#: rqalpha/data/base_data_source/storages.py:190
 #, python-brace-format
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
@@ -368,7 +368,7 @@ msgstr "mod 关闭 [结束]   {}"
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_validator.py:40
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_validator.py:41
 #, python-brace-format
 msgid ""
 "Order Creation Failed: not enough today position {order_book_id} to "
@@ -376,7 +376,7 @@ msgid ""
 "{closable}"
 msgstr "订单创建失败：{order_book_id} 的今仓不足，目标平今仓量为 {quantity}，可平今仓量为 {closable}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_validator.py:49
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_validator.py:50
 #, python-brace-format
 msgid ""
 "Order Creation Failed: not enough position {order_book_id} to close or "
@@ -396,7 +396,7 @@ msgstr "{order_book_id} 的订单创建失败：下单数量为 0"
 msgid "Limit order price should not be nan."
 msgstr "限价单价格不能为 nan。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:76
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:77
 #, python-brace-format
 msgid ""
 "Order Creation Failed: close today amount {amount} is larger than today "
@@ -410,21 +410,21 @@ msgid ""
 "quantity {quantity}"
 msgstr "订单创建失败: 平仓量 {amount} 大于当前持仓量 {quantity}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:111
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_future.py:112
 #, python-brace-format
 msgid ""
 "Order was separated, original order: {original_order_repr}, new orders: "
 "[{new_orders_repr}]"
 msgstr "订单被拆分，原订单：{original_order_repr}，新订单：[{new_orders_repr}]"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:70
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:71
 #, python-brace-format
 msgid ""
 "order_book_id: {order_book_id} needs stock account, please set and try "
 "again!"
 msgstr "标的代码: {order_book_id} 需要股票账户，请设置后重试！"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:130
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:131
 #, python-brace-format
 msgid "insufficient cash, use all remaining cash({}) to create order"
 msgstr "现金不足，使用当前剩余资金({})创建订单"
@@ -434,7 +434,7 @@ msgstr "现金不足，使用当前剩余资金({})创建订单"
 msgid "Order Creation Failed: [{order_book_id}] has no valid algo price"
 msgstr "订单创建失败：[{order_book_id}] 没有有效的算法价格"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:381
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:382
 #, python-brace-format
 msgid ""
 "function order_target_portfolio: invalid keys of target_portfolio, "
@@ -443,14 +443,14 @@ msgstr ""
 "函数 order_target_portfolio：不合法的参数。target_portfolio 的键应为合约代码或 Instrument "
 "对象，实际传入了 {}（类型：{}）。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:386
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:387
 #, fuzzy, python-brace-format
 msgid ""
 "function order_target_portfolio: invalid instrument type, excepted "
 "CS/ETF/LOF/INDX/Convertible/REITs, got {}"
 msgstr "函数 order_target_portfolio：不合法的资产类型。应传入股票、ETF、LOF 或指数，实际传入了 {}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:400
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:401
 #, python-brace-format
 msgid ""
 "function order_target_portfolio: invalid values of target_portfolio, "
@@ -469,35 +469,39 @@ msgid ""
 "{close_price}/{open_price}"
 msgstr "调整 {id_or_ins} 仓位失败：无效的平仓/开仓价格 {close_price}/{open_price}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:773
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/api_stock.py:774
 #, python-brace-format
 msgid "in get_dividend, start_date {} is later than the previous test day {}"
 msgstr "在 get_dividend 函数中，start_date {} 晚于当前回测时间的上一个交易日 {}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:104
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:109
 #, python-brace-format
 msgid "prices of {} is not provided"
 msgstr "未提供 {} 的价格"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:115
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:120
 #, python-brace-format
 msgid "instrument type {} is not supported"
 msgstr "不支持的标的类型: {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:168
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:173
 #, python-brace-format
 msgid "frequency {} is not supported"
 msgstr "不支持回测频率: {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:170
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:175
 #, python-brace-format
 msgid "not supported to be called in {} phase"
 msgstr "不支持在 {} 阶段调用"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:393
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:469
 #, python-brace-format
 msgid "price of {} is needed, which is not provided in the algo_or_prices"
 msgstr "需要 {} 的价格，但在 algo_or_prices 中未提供"
+
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:496
+msgid "Limit order price is invalid."
+msgstr "限价单价格不能为 nan。"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/__init__.py:67
 msgid "[sys_analyser] save report"
@@ -554,7 +558,7 @@ msgid ""
 msgstr "配置'base.benchmark'已被弃用，使用'mod.sys_analyser.benchmark'代替"
 
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:182
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:193
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:194
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:215
 #, python-brace-format
 msgid "benchmark {} missing data between backtest start date {} and end date {}"
@@ -799,14 +803,14 @@ msgstr "订单创建失败: 可用资金不足。当前资金: {cash:.2f}，{ord
 msgid "Order Creation Failed: security {order_book_id} is suspended on {date}"
 msgstr "订单创建失败: {order_book_id} 在 {date} 时停牌"
 
-#: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:36
+#: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:37
 #, python-brace-format
 msgid ""
 "Order Creation Failed: limit order price {limit_price} is higher than "
 "limit up {limit_up}, order_book_id={order_book_id}"
 msgstr "订单创建失败：限价单价格 {limit_price} 高于涨停价 {limit_up}，合约代码={order_book_id}"
 
-#: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:48
+#: rqalpha/mod/rqalpha_mod_sys_risk/validators/price_validator.py:49
 #, python-brace-format
 msgid ""
 "Order Creation Failed: limit order price {limit_price} is lower than "
@@ -820,9 +824,9 @@ msgid ""
 "trade: [{}...]"
 msgstr "订单创建失败，当前存在可能导致自成交的挂单：[{}...]"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:120
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:338
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:71
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:121
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:339
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:72
 #, python-brace-format
 msgid ""
 "Order Cancelled: current security [{order_book_id}] can not be traded in "
@@ -834,8 +838,8 @@ msgstr "订单被撤销: [{order_book_id}] 上市首日无法交易"
 msgid "Order Cancelled: {order_book_id} miss market data or bar no volume."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据或无成交量。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:148
-#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:103
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:149
+#: rqalpha/mod/rqalpha_mod_sys_simulation/signal_broker.py:104
 #, python-brace-format
 msgid ""
 "Order Cancelled: current bar [{order_book_id}] reach the "
@@ -865,7 +869,7 @@ msgid ""
 "{cost_money:.2f}, cash {cash:.2f}"
 msgstr "订单创建失败: 可用资金不足。当前资金: {cash:.2f}，{order_book_id} 下单所需资金: {cost_money:.2f}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:219
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:220
 #, python-brace-format
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
@@ -880,20 +884,20 @@ msgstr ""
 msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:375
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:376
 #, python-brace-format
 msgid ""
 "Order Cancelled: current tick [{order_book_id}] reach the "
 "{limit_up_or_down} price."
 msgstr "订单被拒单：[{order_book_id}] 已触及涨跌停价 {limit_up_or_down}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:382
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:388
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:383
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:389
 #, python-brace-format
 msgid "Order Cancelled: [{order_book_id}] has no liquidity."
 msgstr "合约 [{order_book_id}] 流动性不足，拒单。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:466
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:467
 #, python-brace-format
 msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} is "
@@ -960,7 +964,7 @@ msgstr "订单被拒单: {order_book_id} 当天交易结束，订单无法成交
 msgid "{order_book_id} should be subscribed when frequency is tick."
 msgstr "tick回测下单失败，请使用 subscribe 订阅合约 {order_book_id}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:46
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_event_source.py:47
 msgid "Current universe is empty. Please use subscribe function before trade"
 msgstr "当前合约池为空。请使用 subscribe 订阅合约。"
 
@@ -982,7 +986,7 @@ msgstr "无效的 滑点 设置: 其值范围为 [0, 1)"
 msgid "invalid slippage rate value: value range is greater than 0"
 msgstr "无效的 滑点 设置: 其值需为正数。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/slippage.py:101
+#: rqalpha/mod/rqalpha_mod_sys_simulation/slippage.py:102
 #, python-brace-format
 msgid "invalid slippage rate value {} which cause price <= 0"
 msgstr "无效的 滑点 设置: 该值导致了调整后的价格为负。"
@@ -998,7 +1002,7 @@ msgstr "无效的手续费倍数或税费倍数值：值范围为 [0, +∞)"
 msgid "id_or_symbols {} does not exist"
 msgstr "您选择的证券[{}]不存在。"
 
-#: rqalpha/model/trade.py:68
+#: rqalpha/model/trade.py:69
 #, python-brace-format
 msgid ""
 "price, amount, and frozen_price of trade {trade_id} is not supposed to be"
@@ -1055,12 +1059,12 @@ msgstr "有效的合约代码/Instrument"
 msgid "listed order_book_id/instrument"
 msgstr "已上市的合约代码/Instrument"
 
-#: rqalpha/utils/arg_checker.py:56
+#: rqalpha/utils/arg_checker.py:57
 #, python-brace-format
 msgid "function {}: invalid {} argument, expected a {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望 {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:64 rqalpha/utils/arg_checker.py:86
+#: rqalpha/utils/arg_checker.py:65 rqalpha/utils/arg_checker.py:87
 #, python-brace-format
 msgid ""
 "invalid order_book_id/instrument, expected a listed "
@@ -1068,8 +1072,9 @@ msgid ""
 msgstr "不合法的 order_book_id/instrument，应传入已上市的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
 #: rqalpha/utils/arg_checker.py:114
+#, python-brace-format
 msgid "invalid order_book_id: {order_book_id}"
-msgstr ""
+msgstr "无效的 order_book_id：{order_book_id}"
 
 #: rqalpha/utils/arg_checker.py:133
 #, python-brace-format
@@ -1153,7 +1158,7 @@ msgid ""
 "'5m', '1d', '1w' got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，频率应为 '1m'、'5m'、'1d'、'1w' 的形式，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/class_helper.py:25
+#: rqalpha/utils/class_helper.py:26
 #, python-brace-format
 msgid ""
 "\"{}\" is deprecated, please use \"{}\" instead, check the document for "
@@ -1170,7 +1175,7 @@ msgstr "在执行 parse_user_config 时，产生异常: {e}"
 msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr "无效的 future info: 合约品种 {} 不合法"
 
-#: rqalpha/utils/config.py:211
+#: rqalpha/utils/config.py:212
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
@@ -1201,14 +1206,14 @@ msgstr "未知的策略类型：{}"
 msgid "unknown persist mode: {}"
 msgstr "未知的持久化模式：{}"
 
-#: rqalpha/utils/functools.py:67
+#: rqalpha/utils/functools.py:68
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expected an order_book_id or instrument"
 " with types {}, got {} (type: {})"
 msgstr "函数 {}：不合法的参数 {}，应传入具有 {} 类型的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
-#: rqalpha/utils/functools.py:72
+#: rqalpha/utils/functools.py:73
 #, python-brace-format
 msgid "function {} is not supported, please check your account or mod config"
 msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启了包含该 API 实现的 Mod"
