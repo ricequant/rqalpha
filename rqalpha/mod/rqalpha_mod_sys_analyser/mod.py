@@ -363,17 +363,16 @@ class AnalyserMod(AbstractMod):
         long: Optional[AbstractPosition], 
         short: Optional[AbstractPosition]
     ) -> Dict:
-        instrument = self._env.data_proxy.get_active_instrument(order_book_id, trading_dt)
+        position = long or short
         data = {
             'order_book_id': order_book_id,
-            'symbol': self._symbol(order_book_id, trading_dt),
+            'symbol': position.instrument.symbol,
             'date': calendar_dt.date(),
         }
-        if instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
+        if position.instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
             for field in ['quantity', 'last_price', 'avg_price', 'market_value']:
                 data[field] = self._safe_convert(getattr(long, field, None))
         else:
-            position = long or short
             if position:
                 for field in ['margin', 'contract_multiplier', 'last_price']:
                     data[field] = self._safe_convert(getattr(position, field))

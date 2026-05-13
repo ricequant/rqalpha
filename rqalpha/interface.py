@@ -42,16 +42,14 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     """
 
     @abc.abstractmethod
-    def get_state(self):
-        # type: () -> Any
+    def get_state(self) -> Any:
         """
         主要用于进行持久化时候，提供对应需要持久化的数据
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def set_state(self, state):
-        # type: (Any) -> None
+    def set_state(self, state: Any) -> None:
         """
         主要用于持久化恢复时，根据提供的持久化数据进行恢复 Position 的实现
         """
@@ -59,16 +57,14 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def order_book_id(self):
-        # type: () -> str
+    def order_book_id(self) -> str:
         """
         返回当前持仓的 order_book_id
         """
         raise NotImplementedError
 
     @property
-    def direction(self):
-        # type: () -> POSITION_DIRECTION
+    def direction(self) -> POSITION_DIRECTION:
         """
         返回当前持仓的方向
         """
@@ -76,8 +72,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def market_value(self):
-        # type: () -> Union[int, float]
+    def market_value(self) -> Union[int, float]:
         """
         返回当前持仓的市值
         """
@@ -85,15 +80,15 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def transaction_cost(self):
-        # type: () -> Union[int, float]
-        # 返回当前持仓的当日交易费用
+    def transaction_cost(self) -> Union[int, float]:
+        """
+        返回当前持仓的当日交易费用
+        """
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def position_pnl(self):
-        # type: () -> Union[int, float]
+    def position_pnl(self) -> Union[int, float]:
         """
         返回当前持仓当日的持仓盈亏
         """
@@ -101,8 +96,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def trading_pnl(self):
-        # type: () -> Union[int, float]
+    def trading_pnl(self) -> Union[int, float]:
         """
         返回当前持仓当日的交易盈亏
         """
@@ -110,8 +104,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def closable(self):
-        # type: () -> Union[int, float]
+    def closable(self) -> Union[int, float]:
         """
         返回可平仓位
         """
@@ -119,8 +112,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def today_closable(self):
-        # type: () -> Union[int, float]
+    def today_closable(self) -> Union[int, float]:
         """
         返回今仓中的可平仓位
         """
@@ -128,8 +120,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def quantity(self):
-        # type: () -> Union[int, float]
+    def quantity(self) -> Union[int, float]:
         """
         返回当前持仓量
         """
@@ -137,8 +128,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def avg_price(self):
-        # type: () -> Union[int, float]
+    def avg_price(self) -> Union[int, float]:
         """
         开仓均价
         """
@@ -146,8 +136,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def pnl(self):
-        # type: () -> float
+    def pnl(self) -> float:
         """
         该持仓的累计盈亏
         """
@@ -155,8 +144,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def equity(self):
-        # type: () -> float
+    def equity(self) -> float:
         """
         当前持仓市值
         """
@@ -164,8 +152,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def prev_close(self):
-        # type: () -> float
+    def prev_close(self) -> float:
         """
         昨日收盘价
         """
@@ -173,10 +160,17 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
 
     @property
     @abc.abstractmethod
-    def last_price(self):
-        # type: () -> float
+    def last_price(self) -> float:
         """
         当前最新价
+        """
+        raise NotImplementedError
+    
+    @property
+    @abc.abstractmethod
+    def instrument(self) -> Instrument:
+        """
+        仓位合约详细信息
         """
         raise NotImplementedError
 

@@ -97,7 +97,6 @@ class ExecutionContext(object):
         from rqalpha.utils import create_custom_exception
         strategy_file = Environment.get_instance().config.base.strategy_file
         user_exc = create_custom_exception(exc_type, exc_val, exc_tb, strategy_file)
-        raise user_exc
 
     @classmethod
     def enforce_phase(cls, *phases):
