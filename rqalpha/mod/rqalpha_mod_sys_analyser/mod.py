@@ -275,10 +275,11 @@ class AnalyserMod(AbstractMod):
                 pos_dict.setdefault(pos.order_book_id, {})[pos.direction] = pos
 
             for order_book_id, pos in pos_dict.items():
-                self._positions[account_type].append(self._to_position_record(
-                    self._env.calendar_dt, self._env.trading_dt, 
-                    order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
-                ))
+                record = self._to_position_record(
+                    self._env.calendar_dt, order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
+                )
+                if record is not None:
+                    self._positions[account_type].append(record)
 
     def _symbol(self, order_book_id, trading_dt: datetime.datetime):
         return self._env.data_proxy.get_active_instrument(order_book_id, trading_dt).symbol
@@ -358,22 +359,22 @@ class AnalyserMod(AbstractMod):
     def _to_position_record(
         self, 
         calendar_dt: datetime.datetime, 
-        trading_dt: datetime.datetime, 
         order_book_id: str, 
         long: Optional[AbstractPosition], 
         short: Optional[AbstractPosition]
     ) -> Dict:
-        instrument = self._env.data_proxy.get_active_instrument(order_book_id, trading_dt)
+        position = long or short
+        if position is None:
+            return
         data = {
             'order_book_id': order_book_id,
-            'symbol': self._symbol(order_book_id, trading_dt),
+            'symbol': position.instrument.symbol,
             'date': calendar_dt.date(),
         }
-        if instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
+        if position.instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
             for field in ['quantity', 'last_price', 'avg_price', 'market_value']:
                 data[field] = self._safe_convert(getattr(long, field, None))
         else:
-            position = long or short
             if position:
                 for field in ['margin', 'contract_multiplier', 'last_price']:
                     data[field] = self._safe_convert(getattr(position, field))
