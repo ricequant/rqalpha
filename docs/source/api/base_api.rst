@@ -250,6 +250,12 @@ order_target_portfolio - 批量调仓「股票专用」
 .. autofunction:: order_target_portfolio
 
 
+order_target_portfolio_smart - 批量调仓「股票专用」
+------------------------------------------------------
+
+.. autofunction:: order_target_portfolio_smart
+
+
 buy_open - 买开「期货专用」
 ------------------------------------------------------
 
