@@ -390,7 +390,7 @@ def order_target_portfolio_smart(
     valuation_prices: Optional[Union[Mapping[str, float], Series]] = None,
 ) -> Dict[str, Union[Order, str]]:
     """
-    智能批量调整股票仓位至目标权重。
+    智能批量调整仓位至目标权重，支持股票、指数、场内基金、REITs、可转债。
 
     :param target_portfolio: 目标权重字典或 Series，key 为 order_book_id，value 为权重
     :param order_prices: 挂单/撮合价格设置，支持以下格式：

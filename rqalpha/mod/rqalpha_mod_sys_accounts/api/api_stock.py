@@ -335,7 +335,7 @@ def order_target_portfolio(
         target_portfolio: Dict[str, float], price_or_styles: Dict[str, TUPLE_PRICE_OR_STYLE_TYPE] = dict({}),
 ) -> List[Order]:
     """
-    批量调整股票仓位至目标权重。注意：股票账户中未出现在 target_portfolio 中的资产将被平仓！
+    批量调整仓位至目标权重，支持股票、指数、场内基金、REITs、可转债。注意：股票账户中未出现在 target_portfolio 中的资产将被平仓！
     rqalpha v6 版本开始新加 order_target_portfolio_smart API，相比当前 API 更加智能和精准，推荐使用新 API 进行调仓！
 
     该 API 的参数 target_portfolio 为字典，key 为 order_book_id 或 instrument，value 为权重。
