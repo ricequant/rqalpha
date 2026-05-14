@@ -170,7 +170,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def instrument(self) -> Instrument:
         """
-        仓位合约详细信息
+        标的对象
         """
         raise NotImplementedError
 
