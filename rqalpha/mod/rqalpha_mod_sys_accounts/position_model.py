@@ -145,8 +145,8 @@ class StockPosition(Position):
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         data_proxy = self._env.data_proxy
         self._daily_dividend = self._handle_dividend_book_closure(trading_date, data_proxy)
-        delta_cash += self._handle_dividend_payable(trading_date)
         self._daily_split = self._handle_split(trading_date, data_proxy)
+        delta_cash += self._handle_dividend_payable(trading_date)
         return delta_cash
 
     def apply_trade(self, trade):
