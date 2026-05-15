@@ -101,3 +101,42 @@ def test_trading_pnl():
 
     run_func(config=config, init=init, open_auction=open_auction, handle_bar=handle_bar, after_trading=after_trading)
 
+
+def test_dividend_reinvestment_and_splits_on_the_same_day():
+    """
+    测试分红再投资和拆股行为在同一天时的逻辑，只要测试点为：在当日分红再投资买入的票不应当参与拆股
+    """
+    config = _config({
+        "base": {
+            "start_date": "2017-02-01",
+            "end_date": "2017-03-10",
+            "frequency": "1d",
+            "accounts": {
+                "stock": 10000000
+            },
+        },
+        "extra": {
+            "log_level": "error",
+        },
+        "mod": {
+            "sys_accounts": {
+                "dividend_reinvestment": True
+            }
+        }
+    })
+
+    def init(context):
+        context.s1 = "600816.XSHG"
+        context.fired = False
+
+    def handle_bar(context, bar_dict):
+        if not context.fired:
+            order_shares(context.s1, 10000)
+            context.fired = True
+            assert get_position(context.s1).quantity == 10000
+        if context.now.date() == date(2017, 3, 6):
+            # 1. 每 1 股拆为 2.2 股
+            # 2. 每 10 股分现金 6 元，总共分 6000 元，再投资买入 400 股
+            assert get_position(context.s1).quantity == 22400
+
+    run_func(config=config, init=init, handle_bar=handle_bar)
