@@ -145,8 +145,9 @@ class StockPosition(Position):
             raise RuntimeError("direction of stock position {} is not supposed to be short".format(self._order_book_id))
         data_proxy = self._env.data_proxy
         self._daily_dividend = self._handle_dividend_book_closure(trading_date, data_proxy)
-        delta_cash += self._handle_dividend_payable(trading_date)
+        # 需要先执行拆股后再执行分红支付操作，否则当开启分红再投资时，会将当日到账的票也进行拆股
         self._daily_split = self._handle_split(trading_date, data_proxy)
+        delta_cash += self._handle_dividend_payable(trading_date)
         return delta_cash
 
     def apply_trade(self, trade):
