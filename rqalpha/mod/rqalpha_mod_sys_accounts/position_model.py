@@ -34,6 +34,7 @@ from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.core.events import EVENT, Event
 from rqalpha.utils.class_helper import cached_property
+from .trade_utils import round_order_quantity, estimate_transaction_cost_calculator
 
 
 def _int_to_date(d):
@@ -252,15 +253,19 @@ class StockPosition(Position):
         if payable_value and self.dividend_reinvestment:
             last_price = self.last_price
             amount = int(Decimal(payable_value) / Decimal(last_price))
-            round_lot = self._instrument.round_lot
-            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
-            if amount > 0:
+            amount = round_order_quantity(self._instrument, amount)
+            while amount > 0:
                 account = self._env.get_account(self._order_book_id)
-                trade = Trade.__from_create__(
-                    None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id,
-                )
-                self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
-            return payable_value - amount * last_price
+                transaction_cost = estimate_transaction_cost_calculator(self._env, self._instrument, amount, last_price)
+                if amount * last_price + transaction_cost > payable_value:
+                    amount = round_order_quantity(self._instrument, amount - self._instrument.order_step_size)
+                else:
+                    trade = Trade.__from_create__(
+                        None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id,
+                    )
+                    self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
+                    return payable_value - amount * last_price - trade.transaction_cost
+                return payable_value
         else:
             return payable_value
     

@@ -163,7 +163,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
 
     def get_settle_price(self, order_book_id, trading_dt: datetime):
         instrument = self.get_active_instrument(order_book_id, trading_dt)
-        if instrument.type != 'Future':
+        if instrument.type not in [INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.SPOT]:
             return np.nan
         return self._data_source.get_settle_price(instrument, trading_dt)
 
