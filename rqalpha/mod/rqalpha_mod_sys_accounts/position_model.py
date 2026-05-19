@@ -34,7 +34,7 @@ from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.core.events import EVENT, Event
 from rqalpha.utils.class_helper import cached_property
-from .trade_utils import round_order_quantity, estimate_transaction_cost_calculator, get_amount_from_value
+from .trade_utils import get_amount_from_value
 
 
 def _int_to_date(d):
