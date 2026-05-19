@@ -34,3 +34,19 @@ def round_order_quantity(ins, quantity, method: Callable = int) -> int:
             return method(Decimal(quantity) / Decimal(round_lot)) * round_lot
         except ValueError:
             raise
+
+
+def get_amount_from_value(value: float, ins: Instrument, price: float, env: Environment, account_cash: float) -> int:
+    exchange_rates = env.data_proxy.get_exchange_rate(env.trading_dt.date(), ins.market)
+    exchange_rate_middle = (exchange_rates.bid_reference + exchange_rates.ask_reference) / 2
+    amount = int(Decimal(value) / Decimal(price * exchange_rate_middle))
+    if value > 0:
+        amount = min(amount, int(Decimal(account_cash) / Decimal(price * exchange_rates.ask_reference)))
+        amount = round_order_quantity(ins, amount)
+        while amount > 0:
+            estimate_transaction_cost = estimate_transaction_cost_calculator(env, ins, amount, price)
+            if amount * price + estimate_transaction_cost > value:
+                amount = round_order_quantity(ins, amount - ins.order_step_size)
+            else:
+                return amount
+    return amount

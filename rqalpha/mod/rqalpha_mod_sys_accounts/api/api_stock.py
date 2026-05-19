@@ -50,7 +50,7 @@ from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
-from rqalpha.mod.rqalpha_mod_sys_accounts.trade_utils import estimate_transaction_cost_calculator, round_order_quantity
+from rqalpha.mod.rqalpha_mod_sys_accounts.trade_utils import estimate_transaction_cost_calculator, round_order_quantity, get_amount_from_value
 from .order_target_portfolio import order_target_portfolio_smart
 
 # 使用Decimal 解决浮点数运算精度问题
@@ -143,24 +143,12 @@ def _order_value(account: Account, position: AbstractPosition, order_book_id: st
     ins = assure_active_ins_for_order_api(order_book_id)
     if ins is None:
         return
-    exchange_rates = env.data_proxy.get_exchange_rate(env.trading_dt.date(), ins.market)
-    exchange_rate_middle = (exchange_rates.bid_reference + exchange_rates.ask_reference) / 2
-    amount = int(Decimal(cash_amount) / Decimal(price * exchange_rate_middle))
-    if cash_amount > 0:
-        amount = min(amount, int(Decimal(account.cash) / Decimal(price * exchange_rates.ask_reference)))
-    round_lot = int(ins.round_lot)
-    if cash_amount > 0:
-        amount = round_order_quantity(ins, amount)
-        while amount > 0:
-            expected_transaction_cost = estimate_transaction_cost_calculator(env, ins, amount, price)
-            if amount * price * exchange_rates.ask_reference + expected_transaction_cost <= cash_amount:
-                break
-            amount -= round_lot
-        else:
-            if zero_amount_as_exception:
-                reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
-                env.order_creation_failed(order_book_id=order_book_id, reason=reason)
-            return
+    
+    amount = get_amount_from_value(cash_amount, ins, price, env, account.cash)
+    if amount == 0 and zero_amount_as_exception:
+        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+        env.order_creation_failed(order_book_id=order_book_id, reason=reason)
+        return
 
     if amount < 0:
         amount = max(amount, -position.closable)
