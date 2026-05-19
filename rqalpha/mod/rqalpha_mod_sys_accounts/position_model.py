@@ -29,7 +29,7 @@ from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.datetime_func import convert_date_to_date_int
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.core.events import EVENT, Event
@@ -395,7 +395,11 @@ class FuturePosition(Position):
         next_date = data_proxy.get_next_trading_date(trading_date)
         if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
             # 逐日盯市按照结算价结算
-            self._last_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
+            settle_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
+            if not is_valid_price(settle_price):
+                system_log.warning(f"{self._order_book_id} is missing settlement data for {self._env.trading_dt}, close price will be used.")
+            else:
+                self._last_price = settle_price
         delta_cash += self.equity
         self._avg_price = self.last_price
         if self._instrument.de_listed_at(next_date):
