@@ -29,11 +29,12 @@ from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
 from rqalpha.utils.datetime_func import convert_date_to_date_int
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.core.events import EVENT, Event
 from rqalpha.utils.class_helper import cached_property
+from .trade_utils import get_amount_from_value
 
 
 def _int_to_date(d):
@@ -251,16 +252,15 @@ class StockPosition(Position):
             payable_value += dividend_value
         if payable_value and self.dividend_reinvestment:
             last_price = self.last_price
-            amount = int(Decimal(payable_value) / Decimal(last_price))
-            round_lot = self._instrument.round_lot
-            amount = int(Decimal(amount) / Decimal(round_lot)) * round_lot
+            account = self._env.get_account(self._order_book_id)
+            amount = get_amount_from_value(payable_value, self._instrument, last_price, self._env, account.cash)
             if amount > 0:
-                account = self._env.get_account(self._order_book_id)
                 trade = Trade.__from_create__(
                     None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id,
                 )
                 self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
-            return payable_value - amount * last_price
+                return payable_value - amount * last_price - trade.transaction_cost
+            return payable_value
         else:
             return payable_value
     
@@ -390,7 +390,11 @@ class FuturePosition(Position):
         next_date = data_proxy.get_next_trading_date(trading_date)
         if self._env.config.mod.sys_accounts.futures_settlement_price_type == "settlement":
             # 逐日盯市按照结算价结算
-            self._last_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
+            settle_price = self._env.data_proxy.get_settle_price(self._order_book_id, self._env.trading_dt)
+            if not is_valid_price(settle_price):
+                system_log.warning(f"{self._order_book_id} is missing settlement data for {self._env.trading_dt}, close price will be used.")
+            else:
+                self._last_price = settle_price
         delta_cash += self.equity
         self._avg_price = self.last_price
         if self._instrument.de_listed_at(next_date):

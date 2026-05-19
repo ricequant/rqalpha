@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from datetime import datetime, date
-from typing import Union, List, Sequence, Optional, Tuple, Iterable, Dict, Callable
+from typing import Union, List, Sequence, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -36,8 +36,10 @@ from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, ExchangeRa
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils.typing import DateLike
 from rqalpha.utils.exception import InstrumentNotFound
+from rqalpha.data.base_data_source.storages import FuturesTradingParameters
 
 from .instruments_mixin import InstrumentsMixin
+
 
 class DataProxy(TradingDatesMixin, InstrumentsMixin):
     def __init__(self, data_source: AbstractDataSource, price_board: AbstractPriceBoard):
@@ -152,18 +154,18 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
 
     def get_prev_settlement(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
-        if instrument.type not in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
+        if instrument.type not in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION, INSTRUMENT_TYPE.SPOT):
             return np.nan
         return self._get_prev_settlement(instrument, dt)
 
     def get_settlement(self, instrument: Instrument, dt: datetime) -> float:
-        if instrument.type != INSTRUMENT_TYPE.FUTURE:
+        if instrument.type not in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION, INSTRUMENT_TYPE.SPOT):
             raise LookupError("'{}', instrument_type={}".format(instrument.order_book_id, instrument.type))
         return self._get_settlement(instrument, dt)
 
     def get_settle_price(self, order_book_id, trading_dt: datetime):
         instrument = self.get_active_instrument(order_book_id, trading_dt)
-        if instrument.type != 'Future':
+        if instrument.type not in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION, INSTRUMENT_TYPE.SPOT):
             return np.nan
         return self._data_source.get_settle_price(instrument, trading_dt)
 
@@ -260,8 +262,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
     def available_data_range(self, frequency):
         return self._data_source.available_data_range(frequency)
 
-    def get_futures_trading_parameters(self, order_book_id, dt):
-        # type: (str, datetime.date) -> FuturesTradingParameters
+    def get_futures_trading_parameters(self, order_book_id: str, dt: datetime.date) -> FuturesTradingParameters:
         instrument = self.instruments(order_book_id)
         return self._data_source.get_futures_trading_parameters(instrument, dt)
 
@@ -288,8 +289,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
     def get_last_price(self, order_book_id: str) -> float:
         return float(self._price_board.get_last_price(order_book_id))
 
-    def get_future_contracts(self, underlying, date):
-        # type: (str, DateLike) -> List[str]
+    def get_future_contracts(self, underlying: str, date: DateLike) -> List[str]:
         return sorted(i.order_book_id for i in self.all_instruments(
             [INSTRUMENT_TYPE.FUTURE], date
         ) if i.underlying_symbol == underlying and not Instrument.is_future_continuous_contract(i.order_book_id))

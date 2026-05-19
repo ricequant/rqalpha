@@ -50,6 +50,7 @@ from rqalpha.utils.datetime_func import to_date
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from rqalpha.mod.rqalpha_mod_sys_accounts.trade_utils import estimate_transaction_cost_calculator, round_order_quantity, get_amount_from_value
 from .order_target_portfolio import order_target_portfolio_smart
 
 # 使用Decimal 解决浮点数运算精度问题
@@ -57,10 +58,6 @@ getcontext().prec = 10
 
 export_as_api(industry_code, name='industry_code')
 export_as_api(sector_code, name='sector_code')
-
-
-KSH_MIN_AMOUNT = 200
-BJSE_MIN_AMOUNT = 100
 
 
 def _get_account_position(order_book_id: str):
@@ -72,21 +69,6 @@ def _get_account_position(order_book_id: str):
             ).format(order_book_id=order_book_id))
     position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)
     return account, position
-
-
-def _round_order_quantity(ins, quantity, method: Callable = int) -> int:
-    if ins.type == "CS" and ins.board_type == "KSH":
-        # KSH can buy(sell) 201, 202 shares
-        return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
-    elif ins.type == "CS" and ins.board_type == "BJS":
-        # BJSE can buy(sell) 101, 202 shares
-        return 0 if abs(quantity) < BJSE_MIN_AMOUNT else int(quantity)
-    else:
-        round_lot = ins.round_lot
-        try:
-            return method(Decimal(quantity) / Decimal(round_lot)) * round_lot
-        except ValueError:
-            raise
 
 
 def _get_order_style_price(order_book_id, style):
@@ -116,7 +98,7 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style, curr
 
     if (side == SIDE.BUY and current_quantity != -amount) or (side == SIDE.SELL and current_quantity != abs(amount)):
         # 在融券回测中，需要用买单作为平空，对于此种情况下出现的碎股，亦允许一次性申报卖出
-        amount = _round_order_quantity(ins, amount)
+        amount = round_order_quantity(ins, amount)
 
     if amount == 0:
         if zero_amount_as_exception:
@@ -137,16 +119,6 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style, curr
 def _order_shares(order_book_id: str, amount, style, quantity, auto_switch_order_value, zero_amount_as_exception=True):
     side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
     return _submit_order(order_book_id, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
-
-
-def _estimate_transaction_cost(env: Environment, ins: Instrument, delta_quantity: Union[int, float], price: float) -> float:
-    if delta_quantity > 0:
-        side, position_effect = SIDE.BUY, POSITION_EFFECT.OPEN
-    else:
-        side, position_effect = SIDE.SELL, POSITION_EFFECT.CLOSE
-    return env.calc_transaction_cost(TransactionCostArgs(
-        ins, price, abs(delta_quantity), side, position_effect,  # type: ignore
-    )).total
     
 
 def _order_value(account: Account, position: AbstractPosition, order_book_id: str, cash_amount: float, style: OrderStyle, zero_amount_as_exception=True):
@@ -171,24 +143,12 @@ def _order_value(account: Account, position: AbstractPosition, order_book_id: st
     ins = assure_active_ins_for_order_api(order_book_id)
     if ins is None:
         return
-    exchange_rates = env.data_proxy.get_exchange_rate(env.trading_dt.date(), ins.market)
-    exchange_rate_middle = (exchange_rates.bid_reference + exchange_rates.ask_reference) / 2
-    amount = int(Decimal(cash_amount) / Decimal(price * exchange_rate_middle))
-    if cash_amount > 0:
-        amount = min(amount, int(Decimal(account.cash) / Decimal(price * exchange_rates.ask_reference)))
-    round_lot = int(ins.round_lot)
-    if cash_amount > 0:
-        amount = _round_order_quantity(ins, amount)
-        while amount > 0:
-            expected_transaction_cost = _estimate_transaction_cost(env, ins, amount, price)
-            if amount * price * exchange_rates.ask_reference + expected_transaction_cost <= cash_amount:
-                break
-            amount -= round_lot
-        else:
-            if zero_amount_as_exception:
-                reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
-                env.order_creation_failed(order_book_id=order_book_id, reason=reason)
-            return
+    
+    amount = get_amount_from_value(cash_amount, ins, price, env, account.cash)
+    if amount == 0 and zero_amount_as_exception:
+        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+        env.order_creation_failed(order_book_id=order_book_id, reason=reason)
+        return
 
     if amount < 0:
         amount = max(amount, -position.closable)
@@ -428,7 +388,7 @@ def order_target_portfolio(
         for order_book_id, (target_percent, open_style, close_style, last_price, ins) in target.items():
             current_value = current_quantities.get(order_book_id, 0) * last_price
             change_value = target_percent * account_value - current_value
-            estimate_transaction_cost += _estimate_transaction_cost(env, ins, change_value / last_price, last_price)
+            estimate_transaction_cost += estimate_transaction_cost_calculator(env, ins, change_value / last_price, last_price)
         account_value = account_value - estimate_transaction_cost
 
     close_orders, open_orders = [], []
@@ -443,7 +403,7 @@ def order_target_portfolio(
             env.order_creation_failed(order_book_id=order_book_id, reason=reason)
             continue
         delta_quantity = (account_value * target_percent / close_price) - current_quantities.get(order_book_id, 0)
-        delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity, method=round)
+        delta_quantity = round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity, method=round)
         
         # 优先生成卖单，以便计算出剩余现金，进行买单数量的计算
         if delta_quantity == 0:
@@ -460,13 +420,13 @@ def order_target_portfolio(
 
     estimate_cash = account.cash + sum([o.quantity * o.frozen_price - o.estimated_transaction_cost for o in close_orders])
     for order_book_id, (delta_quantity, position_effect, open_style, last_price, ins) in waiting_to_buy.items():
-        cost = delta_quantity * last_price + _estimate_transaction_cost(env, ins, delta_quantity, last_price)
+        cost = delta_quantity * last_price + estimate_transaction_cost_calculator(env, ins, delta_quantity, last_price)
         if cost > estimate_cash:
             delta_quantity = estimate_cash / last_price
-            delta_quantity = _round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
+            delta_quantity = round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity)
             if delta_quantity == 0:
                 continue
-            cost = delta_quantity * last_price + _estimate_transaction_cost(env, ins, delta_quantity, last_price)
+            cost = delta_quantity * last_price + estimate_transaction_cost_calculator(env, ins, delta_quantity, last_price)
         order = Order.__from_create__(order_book_id, delta_quantity, SIDE.BUY, open_style, position_effect)
         if isinstance(open_style, MarketOrder):
             order.set_frozen_price(last_price)

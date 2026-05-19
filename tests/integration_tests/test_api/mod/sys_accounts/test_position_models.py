@@ -140,3 +140,45 @@ def test_dividend_reinvestment_and_splits_on_the_same_day():
             assert get_position(context.s1).quantity == 22400
 
     run_func(config=config, init=init, handle_bar=handle_bar)
+
+
+def test_dividend_reinvestment_with_transaction():
+    """
+    测试分红再投资时考虑手续费
+    """
+    config = _config({
+        "base": {
+            "start_date": "2013-06-10",
+            "end_date": "2013-06-21",
+            "accounts": {
+                "stock": 10000,
+            },
+            "init_positions": "000001.XSHE:15000",
+        },
+        "extra": {
+            "log_level": "error",
+        },
+        "mod": {
+            "sys_accounts": {
+                "dividend_reinvestment": True
+            }
+        }
+    })
+
+    def init(context):
+        context.s1 = "000001.XSHE"
+        context.fired = False
+
+    def handle_bar(context, bar_dict):
+        if not context.fired:
+            assert get_position(context.s1).quantity == 15000
+            context.fired = True
+        if context.now.date() == date(2013, 6, 20):
+            # 1. 每 1 股拆为 1.6 股
+            # 2. 每 10 股分现金 1.7 元，总共分 2550 元，再投资买入 200 股
+            assert get_position(context.s1).quantity == 24200
+            # 分红再投资的剩余现金为 2550 - (200 * 11.9187 + 5)
+            assert context.stock_account.cash - 10000 == 161.25
+            
+    
+    run_func(config=config, init=init, handle_bar=handle_bar)
