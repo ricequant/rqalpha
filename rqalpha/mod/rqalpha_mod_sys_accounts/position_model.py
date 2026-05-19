@@ -265,7 +265,7 @@ class StockPosition(Position):
                     )
                     self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
                     return payable_value - amount * last_price - trade.transaction_cost
-                return payable_value
+            return payable_value
         else:
             return payable_value
     
