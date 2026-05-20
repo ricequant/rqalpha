@@ -103,28 +103,23 @@ class Position(AbstractPosition, metaclass=PositionMeta):
             self._queue.handle_trade(init_quantity, self._env.trading_dt.date())
 
     @property
-    def order_book_id(self):
-        # type: () -> str
+    def order_book_id(self) -> str:
         return self._order_book_id
 
     @property
-    def direction(self):
-        # type: () -> POSITION_DIRECTION
+    def direction(self) -> POSITION_DIRECTION:
         return self._direction
 
     @property
-    def quantity(self):
-        # type: () -> int
+    def quantity(self) -> int:
         return self._quantity
 
     @property
-    def transaction_cost(self):
-        # type: () -> float
+    def transaction_cost(self) -> float:
         return self._transaction_cost
 
     @property
-    def avg_price(self):
-        # type: () -> float
+    def avg_price(self) -> float:
         return self._avg_price
 
     @property
@@ -156,21 +151,18 @@ class Position(AbstractPosition, metaclass=PositionMeta):
             return 0
 
     @property
-    def pnl(self):
-        # type: () -> float
+    def pnl(self) -> float:
         """
         返回该持仓的累积盈亏
         """
         return (self.last_price - self.avg_price) * self._quantity * self._direction_factor
 
     @property
-    def market_value(self):
-        # type: () -> float
+    def market_value(self) -> float:
         return self.last_price * self._quantity if self._quantity else 0
 
     @property
-    def equity(self):
-        # type: () -> float
+    def equity(self) -> float:
         return self.last_price * self._quantity if self._quantity else 0
 
     @property
@@ -183,8 +175,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self._prev_close
 
     @property
-    def last_price(self):
-        # type: () -> float
+    def last_price(self) -> float:
         if not is_valid_price(self._last_price):
             self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
             if not is_valid_price(self._last_price):
@@ -192,8 +183,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self._last_price
 
     @property
-    def closable(self):
-        # type: () -> int
+    def closable(self) -> int:
         """
         可平仓位
         """
@@ -203,8 +193,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self._quantity - order_quantity
 
     @property
-    def today_closable(self):
-        # type: () -> int
+    def today_closable(self) -> int:
         return self._quantity - self._old_quantity - sum(
             o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
         )
@@ -241,8 +230,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._prev_close = state.get("prev_close")
         self._queue.set_sate(state.get("position_queue", []))
 
-    def before_trading(self, trading_date):
-        # type: (date) -> float
+    def before_trading(self, trading_date: date) -> float:
         # 返回该阶段导致总资金的变化量
         self._old_quantity = self._quantity
         self._logical_old_quantity = self._old_quantity
@@ -258,8 +246,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         else:
             self._trade_cost -= trade.last_price * trade.last_quantity
 
-    def apply_trade(self, trade):
-        # type: (Trade) -> float
+    def apply_trade(self, trade: Trade) -> float:
         # 返回总资金的变化量
         self._update_costs(trade)
         if trade.position_effect == POSITION_EFFECT.OPEN:
@@ -282,8 +269,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
                 self.__class__.__name__, trade.position_effect
             ))
 
-    def settlement(self, trading_date):
-        # type: (date) -> float
+    def settlement(self, trading_date: date) -> float:
         # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
         return 0
 
@@ -294,8 +280,7 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return 0
 
     @property
-    def position_queue(self):
-        # type: () -> deque[tuple[date, int]]
+    def position_queue(self) -> Deque[Tuple[date, int]]:
         """
         获取持仓队列，返回每笔持仓的开仓时间和数量
         格式为 [(开仓日期, 持仓数量), ...]
@@ -303,11 +288,14 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         return self._queue.queue
 
     @property
-    def _open_orders(self):
-        # type: () -> Iterable[Order]
+    def _open_orders(self) -> Iterable[Order]:
         for order in self._env.broker.get_open_orders(self.order_book_id):
             if order.position_direction == self._direction:
                 yield order
+
+    @property
+    def instrument(self) -> Instrument:
+        return self._instrument
 
 
 class PositionQueue:

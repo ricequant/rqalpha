@@ -1,8 +1,8 @@
 from enum import Enum
 from operator import itemgetter
-from typing import Dict, Mapping, NamedTuple, Optional, Union, cast, List, Tuple
+from typing import Dict, Mapping, NamedTuple, Optional, Tuple, Union, cast
 
-from numpy import inf, sign
+from numpy import inf, isnan, sign
 from numpy import round as np_round
 from pandas import DataFrame, Index, Series
 
@@ -24,10 +24,12 @@ from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import (
 )
 from rqalpha.model.order import AlgoOrder, LimitOrder, MarketOrder, Order, OrderStyle
 from rqalpha.portfolio.account import Account
+from rqalpha.utils import are_valid_prices
 from rqalpha.utils.arg_checker import assure_active_instrument
 from rqalpha.utils.exception import RQApiNotSupportedError, RQInvalidArgument
 from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.i18n import gettext as _, lazy_gettext
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.i18n import lazy_gettext
 from rqalpha.utils.price_limits import reaches_limit_down_vectorized, reaches_limit_up_vectorized
 
 
@@ -62,7 +64,10 @@ class CommentedEnum(str, Enum):
 
 
 class DenialReason(CommentedEnum):
-    less_than_half = 'less_than_half', lazy_gettext('Order creation failed: quantity less than half of minimum order quantity')
+    less_than_half = (
+        'less_than_half',
+        lazy_gettext('Order creation failed: quantity less than half of minimum order quantity'),
+    )
     suspended_buy = 'suspended_buy', lazy_gettext('Order creation failed: cannot buy due to suspension')
     suspended_sell = 'suspended_sell', lazy_gettext('Order creation failed: cannot sell due to suspension')
     no_price = 'no_price', lazy_gettext('Order creation failed: no market data available')
@@ -205,18 +210,26 @@ class OrderTargetPortfolio:
     def _calc_adjusting(
         self, target_quantities: Series, direction: POSITION_DIRECTION
     ) -> Tuple[Series, Dict[DenialReason, Series]]:
-        # caller should ensure the index of diff, price_df and suspended are the same
+        """计算调仓数量并应用各类约束。
+
+        Returns:
+            (diff, denials): 调整后的数量变化和各类拒绝原因
+        """
         diff, denials = self._round_adjusting_odd_lots(target_quantities.sub(self._current_quantities, fill_value=0))
         prices, limit_up, limit_down = itemgetter('last', 'limit_up', 'limit_down')(self._prices)
+
+        # 构建完全不可调整的资产掩码（停牌、无行情）
         adjusting_denied = (
             self._suspended  # 停牌
             | prices.isna()  # 无行情
         )
 
+        # 记录各类拒绝原因（用于向用户报告）
         denials[DenialReason.suspended_buy] = (diff > 0) & self._suspended
         denials[DenialReason.suspended_sell] = (diff < 0) & self._suspended
         denials[DenialReason.no_price] = prices.isna() & (diff != 0)
 
+        # 涨跌停限制（方向相关）
         limit_up = reaches_limit_up_vectorized(prices, limit_up, self._tick_sizes)
         limit_down = reaches_limit_down_vectorized(prices, limit_down, self._tick_sizes)
         if direction == POSITION_DIRECTION.LONG:
@@ -259,55 +272,111 @@ class OrderTargetPortfolio:
             )
         return decider
 
-    SAFETY: float = 1.2
+    def _estimate_transaction_costs(self, diff: Series, prices: Series) -> float:
+        """估算交易成本（手续费 + 汇率成本）。"""
+        delta_mv = diff * prices
+        costs = 0.0
+        for market, group in self._market.groupby(by=self._market):
+            # 税费等成本
+            costs += self._trans_cost_decider(market).batch_estimate(diff[group.index], prices[group.index]).sum()  # type: ignore
+            if market != MARKET.CN:
+                # 汇率成本
+                exchange_rate = self._exchange_rates[market]  # type: ignore
+                buy_mask = (diff > 0) & (diff.index.isin(group.index))
+                sell_mask = (diff < 0) & (diff.index.isin(group.index))
+                costs += delta_mv[buy_mask].sum() * (exchange_rate.ask / exchange_rate.middle - 1)
+                costs += delta_mv[sell_mask].sum() * (exchange_rate.middle / exchange_rate.bid - 1)
+        return costs
+
+    def _calc_min_adjustable(self, denials: Dict[DenialReason, Series], prices: Series) -> float:
+        """计算最小可调精度，仅基于可调资产（排除所有拒绝的资产）。无可调资产时返回 inf 触发退出。"""
+        adjusting_denied = Series(False, index=prices.index)
+        for reason, mask in denials.items():
+            adjusting_denied |= mask
+        can_adjust = ~adjusting_denied
+        if can_adjust.any():
+            return (self._min_qty[can_adjust] * prices[can_adjust] / self._total_value).min()
+        return inf
+
+    MAX_ITERATIONS: int = 150
+    KP_INIT: float = 0.382  # 比例增益初始值（黄金分割比）
+    KP_MIN: float = 0.01  # 比例增益下限
+    KP_DECAY: float = 0.382  # 振荡时 kp 衰减因子
+    PRECISION: float = 0.0001  # 硬性精度要求（万分之一）
+    MAX_OSCILLATIONS: int = 10  # kp 达到下限后允许的最大振荡次数
 
     def __call__(self, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> AdjustingResult:
+        """使用 P 控制器迭代求解最优调仓方案。
+
+        算法核心思路：
+        1. 通过 safety 系数缩放目标持仓量，用比例控制器（P-controller）调节 safety 使实际持仓比例逼近目标权重
+        2. 仅基于可调资产（排除停牌、涨跌停、不可平仓等）计算最小可调精度，无可调资产时立即退出
+        tips:
+        1. 误差定义：diff_proportion = 持仓市值 / (总资产 - 交易成本)，将手续费、税费、汇率成本纳入控制目标
+        2. 振荡抑制：检测误差符号翻转时降低比例增益 kp，防止在离散约束下来回震荡
+        """
         if self._current_quantities.empty and self._target_weights.empty:
             return AdjustingResult(adjustments=Series(dtype='float64'), denials=dict())
 
-        if self._target_weights.sum() > 0.95:
-            # 如果目标是满仓或者接近满仓，则使用一个较高的 safety 开始下降
-            safety = self.SAFETY
-        else:
-            safety = 1.
-        last_proportion_diff = inf
-        last_diff = None
-        last_denials = None
+        # 初始化 P 控制器状态
+        total_target_weight = self._target_weights.sum()
+        safety = 1.0  # 目标持仓缩放系数，通过迭代调节逼近目标权重
+        kp = self.KP_INIT  # 比例增益，控制每次 safety 调整幅度
+        prev_error = 0.0  # 上一次带符号误差，用于振荡检测
+        oscillation_count = 0  # 振荡次数，误差符号翻转时累加
+
+        # 历史最优可行解
+        best_error = inf
+        best_diff = Series(dtype='float64')
+        best_denials = None
         prices = self._prices_settle_ccy
-        while True:
-            if safety < 0:
-                # 防止 bug 导致的死循环
-                raise RuntimeError('safety < 0: {}'.format(safety))
+
+        for iteration in range(self.MAX_ITERATIONS):
+            # 1. 根据当前 safety 计算目标持仓量，并应用各类约束
             target_quantities: Series = (self._total_value * safety * self._target_weights / prices).round(0)
             diff, denials = self._calc_adjusting(target_quantities, direction)
 
-            delta_mv = diff * prices
-            cash_consumed = delta_mv.sum()
-            for market, group in self._market.groupby(by=self._market):
-                # 税费等成本
-                cash_consumed += (
-                    self._trans_cost_decider(market).batch_estimate(diff[group.index], prices[group.index]).sum()
-                )  # type: ignore
-                # 汇率成本
-                if market != MARKET.CN:
-                    exchange_rate = self._exchange_rates[market]  # type: ignore
-                    cash_consumed += delta_mv[(diff > 0) & (diff.index.isin(group.index))].sum() * (
-                        exchange_rate.ask / exchange_rate.middle - 1
-                    )
-                    cash_consumed += delta_mv[(diff < 0) & (diff.index.isin(group.index))].sum() * (
-                        exchange_rate.middle / exchange_rate.bid - 1
-                    )
+            # 2. 计算交易成本和现金消耗
+            transaction_costs = self._estimate_transaction_costs(diff, prices)
+            cash_consumed = (diff * prices).sum() + transaction_costs
 
-            total_proportion = ((self._current_quantities.add(diff, fill_value=0)) * prices).sum() / self._total_value
-            proportion_diff = abs(total_proportion - self._target_weights.sum())
-            if cash_consumed < self._cash_available:
+            # 3. 计算成本感知误差
+            # signed_error > 0 表示实际比例低于目标，需增大 safety；反之需减小
+            total_market_value = ((self._current_quantities.add(diff, fill_value=0)) * prices).sum()
+            diff_proportion = total_market_value / (self._total_value - transaction_costs)
+            signed_error = total_target_weight - diff_proportion
+            current_error = abs(signed_error)
+
+            # 4. 更新最优可行解
+            if current_error < best_error:
+                best_error = current_error
+                best_diff = diff
+                best_denials = denials
+
+            # 5. 振荡检测与 kp 衰减
+            if signed_error * prev_error < 0:
+                oscillation_count += 1
+                kp *= self.KP_DECAY
+                kp = max(kp, self.KP_MIN)
+
+            # 检查退出条件
+            min_adjustable = self._calc_min_adjustable(denials, prices)
+            if (
+                cash_consumed < self._cash_available
+                # 寻找基于当前可用现金下的最优解
                 # TODO: 分别计算 A H 股的可用资金
-                if proportion_diff > last_proportion_diff and last_diff is not None and last_denials is not None:
-                    break
-                last_diff, last_denials = diff, denials
-            last_proportion_diff = proportion_diff
-            safety -= min(max(proportion_diff / 10, 0.0001), 0.002)
-        return AdjustingResult(adjustments=last_diff, denials=self._format_denials(last_denials))
+                and (
+                        current_error < min_adjustable
+                        or current_error <= self.PRECISION
+                )
+            ) or (kp <= self.KP_MIN and oscillation_count > self.MAX_OSCILLATIONS):
+                break
+
+            # safety 调整量 = kp × 误差
+            safety += kp * signed_error
+            prev_error = signed_error
+
+        return AdjustingResult(adjustments=best_diff, denials=self._format_denials(best_denials or dict()))
 
 
 @export_as_api
@@ -321,7 +390,7 @@ def order_target_portfolio_smart(
     valuation_prices: Optional[Union[Mapping[str, float], Series]] = None,
 ) -> Dict[str, Union[Order, str]]:
     """
-    智能批量调整股票仓位至目标权重。
+    智能批量调整仓位至目标权重，支持股票、指数、场内基金、REITs、可转债。
 
     :param target_portfolio: 目标权重字典或 Series，key 为 order_book_id，value 为权重
     :param order_prices: 挂单/撮合价格设置，支持以下格式：
@@ -380,9 +449,16 @@ def order_target_portfolio_smart(
         dtype=float,
     )
     account = env.portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
+    invalid_order_book_ids = Index([])
     if isinstance(order_prices, (Mapping, Series)):
+        normalized_order_prices = Series(
+            {assure_active_instrument(order_book_id).order_book_id: price for order_book_id, price in order_prices.items()},
+            dtype=object,
+        )
+        valid_order_price_mask = are_valid_prices(normalized_order_prices)
+        invalid_order_book_ids = normalized_order_prices.index[~valid_order_price_mask]
         style_map: Dict[str, OrderStyle] = {
-            cast(str, order_book_id): LimitOrder(price) for order_book_id, price in order_prices.items()
+            order_book_id: LimitOrder(price) for order_book_id, price in normalized_order_prices[valid_order_price_mask].items()
         }
 
         def _get_style(order_book_id) -> OrderStyle:
@@ -413,6 +489,12 @@ def order_target_portfolio_smart(
 
     adjusting = result.adjustments
     denials = dict(result.denials) if result.denials else {}
+    if len(invalid_order_book_ids) > 0:
+        invalid_price_mask = adjusting.index.isin(invalid_order_book_ids) & (adjusting != 0)
+        adjusting.loc[invalid_price_mask] = 0
+        denials.update(
+            {order_book_id: _('Limit order price is invalid.') for order_book_id in adjusting.index[invalid_price_mask]}
+        )
 
     results: Dict[str, Union[Order, str]] = {}
 

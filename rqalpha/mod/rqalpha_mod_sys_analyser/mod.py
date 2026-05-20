@@ -59,6 +59,12 @@ def _get_yearly_risk_free_rates(
         start_date = datetime.date(year + 1, 1, 1)
 
 
+def _all_trades_are_equities(trades: pd.DataFrame) -> bool:
+    if trades.empty or "order_book_id" not in trades.columns:
+        return False
+    return trades["order_book_id"].map(lambda oid: isinstance(oid, str) and EQUITIES_OID_RE.match(oid) is not None).all()
+
+
 PRESSURE_TEST_PERIOD = {
     "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
     "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
@@ -269,10 +275,11 @@ class AnalyserMod(AbstractMod):
                 pos_dict.setdefault(pos.order_book_id, {})[pos.direction] = pos
 
             for order_book_id, pos in pos_dict.items():
-                self._positions[account_type].append(self._to_position_record(
-                    self._env.calendar_dt, self._env.trading_dt, 
-                    order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
-                ))
+                record = self._to_position_record(
+                    self._env.calendar_dt, order_book_id, pos.get(POSITION_DIRECTION.LONG), pos.get(POSITION_DIRECTION.SHORT)
+                )
+                if record is not None:
+                    self._positions[account_type].append(record)
 
     def _symbol(self, order_book_id, trading_dt: datetime.datetime):
         return self._env.data_proxy.get_active_instrument(order_book_id, trading_dt).symbol
@@ -352,22 +359,22 @@ class AnalyserMod(AbstractMod):
     def _to_position_record(
         self, 
         calendar_dt: datetime.datetime, 
-        trading_dt: datetime.datetime, 
         order_book_id: str, 
         long: Optional[AbstractPosition], 
         short: Optional[AbstractPosition]
     ) -> Dict:
-        instrument = self._env.data_proxy.get_active_instrument(order_book_id, trading_dt)
+        position = long or short
+        if position is None:
+            return
         data = {
             'order_book_id': order_book_id,
-            'symbol': self._symbol(order_book_id, trading_dt),
+            'symbol': position.instrument.symbol,
             'date': calendar_dt.date(),
         }
-        if instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
+        if position.instrument.type in self.LONG_ONLY_INS_TYPE + [INSTRUMENT_TYPE.REPO]:
             for field in ['quantity', 'last_price', 'avg_price', 'market_value']:
                 data[field] = self._safe_convert(getattr(long, field, None))
         else:
-            position = long or short
             if position:
                 for field in ['margin', 'contract_multiplier', 'last_price']:
                     data[field] = self._safe_convert(getattr(position, field))
@@ -555,18 +562,23 @@ class AnalyserMod(AbstractMod):
             'portfolio': total_portfolios,
         }
 
-        if not trades.empty and all(
-            EQUITIES_OID_RE.match(trade.order_book_id) for trade in trades.itertuples()  # type: ignore
-        ):
+        if _all_trades_are_equities(trades):
             # 策略仅交易股票、指数、场内基金等品种时才计算换手率
             trades_values = trades.last_price * trades.last_quantity
-            market_values = total_portfolios.market_value
-            summary["turnover"] = trades_values.sum() / market_values.mean() / 2
+            market_values = total_portfolios.market_value.dropna()
+            mean_market_value = market_values.mean()
+            if len(market_values) > 0 and np.isfinite(mean_market_value) and mean_market_value != 0:
+                summary["turnover"] = trades_values.sum() / mean_market_value / 2
+                summary["annualized_twoside_turnover"] = summary["turnover"] * 2 * trading_days_a_year / len(market_values)
+            else:
+                summary["turnover"] = np.nan
+                summary["annualized_twoside_turnover"] = np.nan
             avg_daily_turnover = (trades_values.groupby(trades.index.date).sum() / market_values / 2)
             with pd.option_context('mode.use_inf_as_na', True):
                 summary["avg_daily_turnover"] = avg_daily_turnover.fillna(0).mean()
         else:
             summary["turnover"] = np.nan
+            summary["annualized_twoside_turnover"] = np.nan
 
         if self._benchmark:
             df = pd.DataFrame(self._total_benchmark_portfolios)

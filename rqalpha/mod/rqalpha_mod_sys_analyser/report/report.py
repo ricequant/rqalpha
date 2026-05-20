@@ -16,6 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
+import re
 from typing import Dict, Optional
 import datetime
 
@@ -35,14 +36,34 @@ from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
 from rqalpha.mod.rqalpha_mod_sys_analyser.report.excel_template import generate_xlsx_reports
 
 
+EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
+
+
 def _returns(unit_net_value: Series):
     return (unit_net_value / unit_net_value.shift(1).fillna(1)).fillna(0) - 1
 
 
+def _all_trades_are_equities(trades: DataFrame) -> bool:
+    if trades.empty or "order_book_id" not in trades.columns:
+        return False
+    return trades["order_book_id"].map(lambda oid: isinstance(oid, str) and EQUITIES_OID_RE.match(oid) is not None).all()
+
+
+def _calc_trade_values(trades: DataFrame) -> Series:
+    return trades["last_price"] * trades["last_quantity"]
+
+
 def _yearly_indicators(
-        p_nav: Series, p_returns: Series, b_nav: Optional[Series], b_returns: Optional[Series], risk_free_rates: Dict
+        p_nav: Series,
+        p_returns: Series,
+        b_nav: Optional[Series],
+        b_returns: Optional[Series],
+        risk_free_rates: Dict,
+        market_values: Series,
+        trades: DataFrame,
 ):
     data = defaultdict(list)
+    can_calc_turnover = _all_trades_are_equities(trades)
 
     for year, p_year_returns in p_returns.groupby(p_returns.index.year):  # noqa
         year_slice = p_returns.index.year == year  # noqa
@@ -71,6 +92,17 @@ def _yearly_indicators(
         except EnvironmentNotInitialized:
             trading_days_a_year = DAYS_CNT.TRADING_DAYS_A_YEAR
         risk = Risk(p_year_returns, b_year_returns, risk_free_rates[year], period=DAILY, trading_days_a_year=trading_days_a_year)
+        if can_calc_turnover:
+            year_market_values = market_values[market_values.index.year == year].dropna()
+            year_trades = trades[trades.index.year == year]
+            mean_market_value = year_market_values.mean()
+            if len(year_market_values) > 0 and numpy.isfinite(mean_market_value) and mean_market_value != 0:
+                turnover = _calc_trade_values(year_trades).sum() / mean_market_value / 2
+                annualized_twoside_turnover = turnover * 2 * trading_days_a_year / len(year_market_values)
+            else:
+                annualized_twoside_turnover = numpy.nan
+        else:
+            annualized_twoside_turnover = numpy.nan
         data["year"].append(year)
         data["returns"].append(risk.return_rate)
         data["benchmark_returns"].append(risk.benchmark_return)
@@ -80,6 +112,7 @@ def _yearly_indicators(
         data["sharpe_ratio"].append(risk.sharpe)
         data["excess_sharpe"].append(risk.excess_sharpe)
         data["information_ratio"].append(risk.information_ratio)
+        data["annualized_twoside_turnover"].append(annualized_twoside_turnover)
         data["annual_tracking_error"].append(risk.annual_tracking_error)
         data["weekly_excess_win_rate"].append(weekly_excess_win_rate)
         data["monthly_excess_win_rate"].append(monthly_excess_win_rate)
@@ -131,6 +164,8 @@ def generate_report(result_dict, output_path):
     portfolio = result_dict["portfolio"]
     p_nav = portfolio.unit_net_value
     p_returns = _returns(p_nav)
+    market_values = portfolio.market_value if "market_value" in portfolio else Series(index=portfolio.index, dtype=float)
+    trades = result_dict.get("trades", DataFrame())
     if "benchmark_portfolio" in result_dict:
         benchmark_portfolio = result_dict["benchmark_portfolio"]
         b_nav = benchmark_portfolio.unit_net_value
@@ -140,7 +175,9 @@ def generate_report(result_dict, output_path):
 
     generate_dict = {
         "概览": summary,
-        "年度指标": _yearly_indicators(p_nav, p_returns, b_nav, b_returns, result_dict["yearly_risk_free_rates"]),
+        "年度指标": _yearly_indicators(
+            p_nav, p_returns, b_nav, b_returns, result_dict["yearly_risk_free_rates"], market_values, trades
+        ),
         "月度收益": _monthly_returns(p_returns),
         "月度超额收益（几何）": _monthly_geometric_excess_returns(p_returns, b_returns),
         "个股权重": _gen_positions_weight(result_dict["positions_weight"]),

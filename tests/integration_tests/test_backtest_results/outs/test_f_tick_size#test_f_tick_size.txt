@@ -2,8 +2,8 @@
 DataFrame
 {"shape":[2,13],"dtypes":{"datetime":"object","trading_datetime":"object","order_book_id":"object","symbol":"object","side":"object","position_effect":"object","exec_id":"int64","tax":"int64","commission":"float64","last_quantity":"int64","last_price":"float64","order_id":"int64","transaction_cost":"float64"},"index_dtype":"datetime64[ns]","index_name":"datetime","columns":["datetime","trading_datetime","order_book_id","symbol","side","position_effect","exec_id","tax","commission","last_quantity","last_price","order_id","transaction_cost"]}
 ,datetime,trading_datetime,order_book_id,symbol,side,position_effect,exec_id,tax,commission,last_quantity,last_price,order_id,transaction_cost
-2016-09-01 15:00:00,2016-09-01 15:00:00,2016-09-01 15:00:00,AG1702,白银1702,BUY,OPEN,17682878550135,0,31.552500000000002,10,4207.0,17682878550163,31.552500000000002
-2016-09-02 15:00:00,2016-09-02 15:00:00,2016-09-02 15:00:00,AG1612,白银1612,BUY,OPEN,17682878550136,0,6.9613499999999995,10,4219.0,17682878550164,6.9613499999999995
+2016-09-01 15:00:00,2016-09-01 15:00:00,2016-09-01 15:00:00,AG1702,白银1702,BUY,OPEN,17764213190135,0,31.552500000000002,10,4207.0,17764213190163,31.552500000000002
+2016-09-02 15:00:00,2016-09-02 15:00:00,2016-09-02 15:00:00,AG1612,白银1612,BUY,OPEN,17764213190136,0,6.9613499999999995,10,4219.0,17764213190164,6.9613499999999995
 
 [future_positions]
 DataFrame
@@ -124,5 +124,6 @@ dict
     "cash":884794.48615,
     "total_returns":0.019311486150000112,
     "annualized_returns":0.27252747555121504,
-    "unit_net_value":1.0193114861500001
+    "unit_net_value":1.0193114861500001,
+    "annualized_twoside_turnover":NaN
 }

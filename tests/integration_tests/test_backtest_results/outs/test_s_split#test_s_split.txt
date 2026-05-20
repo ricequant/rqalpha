@@ -67,5 +67,6 @@ dict
     "cash":1000650.25,
     "total_returns":0.002656490013662971,
     "annualized_returns":0.08715966696778854,
-    "unit_net_value":1.002656490013663
+    "unit_net_value":1.002656490013663,
+    "annualized_twoside_turnover":NaN
 }

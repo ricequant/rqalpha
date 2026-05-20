@@ -47,6 +47,7 @@ class SubPlot:
 class IndicatorArea(SubPlot):
     height: int = INDICATOR_AREA_HEIGHT
     right_pad = -1
+    X_PADDING = 0.02
 
     def __init__(
             self, indicators: List[List[IndicatorInfo]], indicator_values: Mapping[str, float],
@@ -57,21 +58,44 @@ class IndicatorArea(SubPlot):
         self._template = plot_template
         self._strategy_name = strategy_name
 
+    def _iter_layout(self, indicators):
+        available_width = 1 - 2 * self.X_PADDING
+        column_count = max(len(row) for row in self._indicators)
+        column_width = available_width / column_count if column_count else 0
+        for index, indicator in enumerate(indicators):
+            yield self.X_PADDING + column_width * (index + 0.5), indicator
+
+    @staticmethod
+    def _label_font_size(label: str) -> int:
+        if len(label) >= 30:
+            return 7
+        if len(label) >= 22:
+            return 8
+        if len(label) >= 16:
+            return 9
+        return LABEL_FONT_SIZE
+
+    @staticmethod
+    def _value_font_size(value: str, base_size: int) -> int:
+        longest_line = max((len(line) for line in value.splitlines()), default=0)
+        if longest_line >= 24:
+            return min(base_size, 5)
+        if longest_line >= 18:
+            return min(base_size, 6)
+        return base_size
+
     def plot(self, ax: Axes):
         ax.axis("off")
         for lineno, indicators in enumerate(self._indicators[::-1]):  # lineno: 自下而上的行号
-            _extra_width = 0  # 用于保存加长的部分, 原因是部分label太长出现覆盖
-            for index_in_line, i in enumerate(indicators):
-                _extra_width += (i.label_width_multiplier - 1) * self._template.INDICATOR_WIDTH
-                x = index_in_line * self._template.INDICATOR_WIDTH + _extra_width
+            for x, i in self._iter_layout(indicators):
                 y_value = lineno * (self._template.INDICATOR_VALUE_HEIGHT + self._template.INDICATOR_LABEL_HEIGHT)
                 y_label = y_value + self._template.INDICATOR_LABEL_HEIGHT
                 try:
                     value = i.formatter.format(self._values[i.key])
                 except KeyError:
                     value = "nan"
-                ax.text(x, y_label, i.label, color=i.color, fontsize=LABEL_FONT_SIZE),
-                ax.text(x, y_value, value, color=BLACK, fontsize=i.value_font_size)
+                ax.text(x, y_label, i.label, color=i.color, fontsize=self._label_font_size(i.label), ha="center")
+                ax.text(x, y_value, value, color=BLACK, fontsize=self._value_font_size(value, i.value_font_size), ha="center")
         if self._strategy_name:
             p = TitlePlot(self._strategy_name, len(self._indicators), self._template)
             p.plot(ax)
@@ -167,6 +191,16 @@ class WaterMark:
             )
 
 
+def _compact_index_range(index_range):
+    start = index_range.start_date
+    end = index_range.end_date
+    if start.year == end.year:
+        span = "{}~{}, {}d".format(start.strftime("%m-%d"), end.strftime("%m-%d"), (end - start).days)
+    else:
+        span = "{}~{}, {}d".format(start, end, (end - start).days)
+    return span
+
+
 def _plot(title: str, sub_plots: List[SubPlot], strategy_name):
     img_height = sum(s.height for s in sub_plots)
     water_mark = WaterMark(IMG_WIDTH, img_height, strategy_name)
@@ -196,7 +230,8 @@ def plot_result(
         plot_template = plot_template_cls(portfolio.unit_net_value, benchmark_portfolio.unit_net_value)
         ex_returns = plot_template.geometric_excess_returns
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
-            _max_dd(ex_returns + 1, portfolio.index).repr, _max_ddd(ex_returns + 1, portfolio.index).repr
+            _compact_index_range(_max_dd(ex_returns + 1, portfolio.index)),
+            _compact_index_range(_max_ddd(ex_returns + 1, portfolio.index)),
         )
         indicators = plot_template.INDICATORS + plot_template.EXCESS_INDICATORS
 
@@ -232,7 +267,9 @@ def plot_result(
         spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.OPEN, portfolio.index), OPEN_POINT))
 
     sub_plots = [IndicatorArea(indicators, ChainMap(summary, {
-        "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(max_dd.repr, max_ddd.repr),
+        "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(
+            _compact_index_range(max_dd), _compact_index_range(max_ddd)
+        ),
         "excess_max_dd_ddd": ex_max_dd_ddd,
     }), plot_template, strategy_name), ReturnPlot(
         portfolio.unit_net_value - 1, return_lines, spots_on_returns

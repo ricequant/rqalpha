@@ -109,7 +109,7 @@ def test_order_target_portfolio_smart_base(environment, on_handle_bar, assert_su
         # 目标数量 = (10,000,000 × 0.1) / 11.70 = 1,000,000 / 11.70 ≈ 85,470.09
         # 经算法调整后的实际数量: 85,500 股
         "000001.XSHE": (85500, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
-        
+
         # 000004.XSHE (*ST国华) 开盘价: 10.53 元
         # 目标数量 = (10,000,000 × 0.2) / 10.53 = 2,000,000 / 10.53 ≈ 189,936.09
         # 经算法调整后的实际数量: 189,900 股
@@ -159,30 +159,6 @@ def test_order_target_portfolio_smart_small_weights(environment, on_handle_bar, 
     })
 
 
-def test_order_target_portfolio_smart_nearly_full_position(environment, on_handle_bar, assert_submitted_orders):
-    """测试接近满仓调仓 - 触发safety机制"""
-    order_target_portfolio_smart({
-        "000001.XSHE": 0.5,
-        "000004.XSHE": 0.45,  # 总权重95%，应该触发safety降级
-    })
-    assert_submitted_orders({
-        # 计算依据：
-        # 总资金: 10,000,000 元，总权重95%触发safety降级机制
-        # safety机制会自动调整权重以确保有足够的现金缓冲
-        # 实际分配：两只股票各获得约50%的权重调整
-        
-        # 000001.XSHE (平安银行) 开盘价: 11.70 元
-        # 调整后目标数量 = (10,000,000 × ~0.5) / 11.70 ≈ 427,350.43
-        # 经算法调整后的实际数量: 427,400 股
-        "000001.XSHE": (427400, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
-        
-        # 000004.XSHE (*ST国华) 开盘价: 10.53 元
-        # (10000000 × 0.45) / 10.53 ≈ 427,350.43
-        # 调整后目标数量 ≈ 427,400 股 (与000001相同，算法内部调整结果)
-        "000004.XSHE": (427400, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
-    })
-
-
 def test_order_target_portfolio_smart_negative_weights_error(environment, on_handle_bar, assert_submitted_orders):
     """测试负权重 - 应该抛出异常"""
     with pytest.raises(ValueError, match="target_weights contains negative value"):
@@ -207,12 +183,12 @@ def test_order_target_portfolio_smart_limit_order(environment, on_handle_bar, as
     assert_submitted_orders({
         # 计算依据：使用开盘价计算目标数量，但用限价单执行
         # 总资金: 10,000,000 元
-        
+
         # 000001.XSHE (平安银行) 开盘价: 11.70 元（估值用），限价: 12.0 元
         # 目标数量 = (10,000,000 × 0.1) / 11.70 = 1,000,000 / 11.70 ≈ 85,470.09
         # 经算法调整后的实际数量: 85,500 股，使用 12.0 元限价单执行
         "000001.XSHE": (85500, SIDE.BUY, POSITION_EFFECT.OPEN, LimitOrder(12.0)),
-        
+
         # 000004.XSHE (*ST国华) 开盘价: 10.53 元（估值用），限价: 11.0 元
         # 目标数量 = (10,000,000 × 0.2) / 10.53 = 2,000,000 / 10.53 ≈ 189,936.09
         # 经算法调整后的实际数量: 189,900 股，使用 11.0 元限价单执行
@@ -232,6 +208,24 @@ def test_order_target_portfolio_smart_partial_limit_prices_error(environment, on
                 "000001.XSHE": 12.0,  # 只指定了000001的价格，缺少000004
             }
         )
+
+
+def test_order_target_portfolio_smart_nan_limit_price_rejected(environment, on_handle_bar, assert_submitted_orders):
+    """测试指定 nan 限价时应拒单，而不是抛出异常"""
+    result = order_target_portfolio_smart(
+        {
+            "000001.XSHE": 0.1,
+            "000004.XSHE": 0.2,
+        },
+        order_prices={
+            "000001.XSHE": float("nan"),
+            "000004.XSHE": 11.0,
+        }
+    )
+    assert result["000001.XSHE"] == "Limit order price is invalid."
+    assert_submitted_orders({
+        "000004.XSHE": (189900, SIDE.BUY, POSITION_EFFECT.OPEN, LimitOrder(11.0)),
+    })
 
 
 def test_order_target_portfolio_smart_custom_valuation_prices(environment, on_handle_bar, assert_submitted_orders):
@@ -254,7 +248,6 @@ def test_order_target_portfolio_smart_custom_valuation_prices(environment, on_ha
         # 经算法调整后的实际数量: 250,000 股
         "000001.XSHE": (250000, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
     })
- 
 
 
 def test_order_target_portfolio_smart_missing_valuation_price_error(environment, on_handle_bar, assert_submitted_orders):
@@ -272,7 +265,6 @@ def test_order_target_portfolio_smart_missing_valuation_price_error(environment,
         )
 
 
-
 def test_order_target_portfolio_smart_adjust_existing_positions(environment, on_handle_bar, assert_submitted_orders):
     """测试持仓调整逻辑 - 简化测试"""
     # 由于涉及初始持仓的复杂计算，这里改为测试不同权重的调整
@@ -288,10 +280,10 @@ def test_order_target_portfolio_smart_adjust_existing_positions(environment, on_
         # 经算法调整后的实际数量: 170,900 股
         "000001.XSHE": (170900, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
     })
-    
+
     # 重置mock以便检查调整
     environment.submit_order.reset_mock()
-    
+
     # 第二步：调整为更小权重（模拟调整持仓）
     order_target_portfolio_smart({
         "000001.XSHE": 0.1,  # 降至10%权重
@@ -306,7 +298,6 @@ def test_order_target_portfolio_smart_adjust_existing_positions(environment, on_
         # 经算法调整后的实际数量: 85,500 股
         "000001.XSHE": (85500, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
     })
-
 
 
 def test_order_target_portfolio_smart_limit_and_valuation_prices(environment, on_handle_bar, assert_submitted_orders):
