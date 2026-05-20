@@ -16,7 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from itertools import chain
-from datetime import date
 from collections.abc import Mapping
 from typing import Callable, Dict, List, Tuple, Union
 
@@ -26,12 +25,11 @@ import six
 
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE
 from rqalpha.environment import Environment
-from rqalpha.core.events import EVENT, EventBus
+from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.portfolio.account import Account
-from rqalpha.data import DataProxy
-from rqalpha.utils import is_valid_price
+from rqalpha.portfolio.income_tax import CapitalGainsTaxCalculator
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
@@ -56,10 +54,13 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             env: Environment,
     ):
         self._accounts = self._init_accounts(starting_cash, init_positions, financing_rate, env)
+        self._capital_gains_tax_calculators: Dict[str, CapitalGainsTaxCalculator] = self._init_capital_gains_tax_calculators(starting_cash, env)
         self._static_unit_net_value = 1
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
         self._env = env
         env.event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
+        env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
+        env.event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
 
     @classmethod
     def _init_accounts(
@@ -79,6 +80,10 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             if account_type in account_args:
                 account_args[account_type]["init_positions"][order_book_id] = quantity
         return {account_type: Account(**args) for account_type, args in account_args.items()}
+    
+    @classmethod
+    def _init_capital_gains_tax_calculators(cls, starting_cash: Dict[str, float], env: Environment):
+        return {account_type: CapitalGainsTaxCalculator(env) for account_type, _ in starting_cash.items()}
 
     def get_state(self):
         return jsonpickle.encode({
@@ -294,6 +299,18 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         if account_type not in self._accounts:
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
         self._accounts[account_type].finance_repay(amount)
+
+    def _on_trade(self, event):
+        capital_gains_tax_calaulator = self._capital_gains_tax_calculators[self.get_account_type(event.trade.order_book_id)]
+        capital_gains_tax_calaulator.on_trade(event.trade)
+
+    def _on_settlement(self, event):
+        trading_dt = self._env.trading_dt.date()
+        for account_type, capital_gains_tax_calculator in self._capital_gains_tax_calculators.items():
+            # 获取资本利得税并进行现金扣除
+            # FIXME: 可能存在剩余现金不足以扣除税费，应该如何处理？
+            tax = capital_gains_tax_calculator.calc(trading_dt)
+            self._accounts[account_type].tax_deduction(tax)
 
 
 class MixedPositions(Mapping):

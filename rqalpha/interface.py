@@ -767,3 +767,15 @@ class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
         计算指定交易应付的印花税
         """
         raise NotImplementedError
+
+
+class AbstractIncomeTaxCalculator((with_metaclass(abc.ABCMeta))):
+    """
+    收益型税种计算接口，通过实现此接口可以计算不同税种的税收数值，如资本利得税、红利税等。
+    """
+    @abc.abstractmethod
+    def calc(self, trading_dt: datetime.date) -> float:
+        """
+        计算指定日期需支付的收益税
+        """
+        raise NotImplementedError

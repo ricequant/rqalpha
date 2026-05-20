@@ -554,3 +554,6 @@ class Account(metaclass=AccountMeta):
                 pass
         else:
             user_system_log.warn(f"{self.type} not support finance_repay")
+
+    def tax_deduction(self, amount: float):
+        self._total_cash -= amount

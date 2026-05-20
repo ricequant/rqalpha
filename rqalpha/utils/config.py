@@ -22,12 +22,13 @@ import pandas as pd
 import yaml
 import simplejson as json
 import six
+import click
 
 from rqalpha.const import RUN_TYPE, PERSIST_MODE, COMMISSION_TYPE
 from rqalpha.utils import RqAttrDict, logger
 from rqalpha.utils.i18n import gettext as _, set_locale
 from rqalpha.utils.dict_func import deep_update
-from rqalpha.utils.logger import system_log
+from rqalpha.utils.logger import system_log, init_logger
 from rqalpha.mod.utils import mod_config_value_parse
 
 
@@ -115,13 +116,21 @@ def dump_config(config_path, config, dumper=yaml.Dumper):
         stream.write(yaml.dump(config, Dumper=dumper))
 
 
+def _check_capital_gain_tax_rate(base_config):
+    # Check if capital_gain_tax_rate is explicitly set;if not,throw a warning.
+    # This check will be remove in a later version.
+    if "capital_gain_tax_rate" not in base_config:
+        init_logger()
+        system_log.warning("The strategy requires explicit configuration of base.capital_gain_tax_rate, which currently has a default value of 0 and will be changed to a non-zero value in a future version.")
+
+
 def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
+    _check_capital_gain_tax_rate(config_args["base"])
     conf = default_config()
     deep_update(user_config(), conf)
     deep_update(project_config(), conf)
     if config_path is not None:
         deep_update(load_yaml(config_path), conf)
-
     if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
         # FIXME: ugly, we need this to get code
         conf['base']['strategy_file'] = config_args['base__strategy_file']
