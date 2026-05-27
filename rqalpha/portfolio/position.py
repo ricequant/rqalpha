@@ -20,7 +20,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Dict, Iterable, Tuple, Optional, Deque, List
 
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET, SIDE
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET
 from rqalpha.environment import Environment
 from rqalpha.utils.exception import InstrumentNotFound
 from rqalpha.interface import AbstractPosition
@@ -301,9 +301,11 @@ class Position(AbstractPosition, metaclass=PositionMeta):
 class PositionQueue:
     def __init__(self):
         self._queue: Deque[Tuple[date, int]] = deque()
+        self._close_details_queue: Deque[Tuple[date, int]] = deque()
 
     def set_sate(self, state: List[Tuple[date, int]]):
         self._queue = deque(state)
+        self._close_details_queue.clear()
 
     def handle_trade(self, delta_quantity, trading_date: date, close_today: bool = False):
         if delta_quantity == 0:
@@ -315,19 +317,23 @@ class PositionQueue:
                 d, qty_in_queue = self._queue[-1]
                 if d >= trading_date:
                     if abs(qty_in_queue) <= abs(delta_quantity):
+                        self._close_details_queue.append((d, -qty_in_queue))
                         delta_quantity += qty_in_queue
                         self._queue.pop()
                     else:
+                        self._close_details_queue.append((d, delta_quantity))
                         self._queue[-1] = (d, qty_in_queue + delta_quantity)
                         delta_quantity = 0
             while delta_quantity and self._queue:
                 d, qty_in_queue = self._queue[0]
                 if abs(qty_in_queue) <= abs(delta_quantity):
                     # 当前持仓批次全部平掉
+                    self._close_details_queue.append((d, -qty_in_queue))
                     delta_quantity += qty_in_queue
                     self._queue.popleft()
                 else:
                     # 当前持仓批次部分平掉
+                    self._close_details_queue.append((d, delta_quantity))
                     self._queue[0] = (d, qty_in_queue + delta_quantity)
                     delta_quantity = 0
             if delta_quantity != 0:
@@ -359,6 +365,16 @@ class PositionQueue:
     @property
     def queue(self):
         return self._queue.copy()
+
+    @property
+    def close_details_queue(self):
+        """
+        返回待消费的平仓详细信息，包括所平仓位的建仓时间和平仓数量
+        """
+        return self._close_details_queue
+    
+    def clear_close_details(self):
+        self._close_details_queue.clear()
 
 
 class PositionProxy(metaclass=PositionProxyMeta):

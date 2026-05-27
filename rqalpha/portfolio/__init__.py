@@ -17,25 +17,36 @@
 
 from itertools import chain
 from collections.abc import Mapping
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union, NamedTuple, Optional
 
 import jsonpickle
 import numpy as np
 import six
+import datetime as datetime_module
+from datetime import date
 
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE, POSITION_EFFECT, TAX_TYPE, PORTFOLIO_EVENT_TYPE
 from rqalpha.environment import Environment
-from rqalpha.core.events import EVENT
+from rqalpha.core.events import EVENT, Event
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.portfolio.account import Account
-from rqalpha.portfolio.income_tax import CapitalGainsTaxCalculator
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.repr import PropertyReprMeta
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
+
+
+class PortfolioEvent(NamedTuple):
+    type: PORTFOLIO_EVENT_TYPE
+    order_book_id: Optional[str]
+    delta_quantity: int
+    delta_amount: float
+    datetime: datetime_module.datetime
+    trading_date: date
+    remark: Optional[str]
 
 
 class Portfolio(object, metaclass=PropertyReprMeta):
@@ -54,13 +65,14 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             env: Environment,
     ):
         self._accounts = self._init_accounts(starting_cash, init_positions, financing_rate, env)
-        self._capital_gains_tax_calculators: Dict[str, CapitalGainsTaxCalculator] = self._init_capital_gains_tax_calculators(starting_cash, env)
+        self._capital_gains_tax_calculator: CapitalGainsTaxCalculator = CapitalGainsTaxCalculator()
         self._static_unit_net_value = 1
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
         self._env = env
+        self._portfolio_event: List[PortfolioEvent] = []
         env.event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
-        env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
         env.event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        env.event_bus.add_listener(EVENT.PORTFOLIO_EVENT, self._collect_portfolio_event)
 
     @classmethod
     def _init_accounts(
@@ -80,10 +92,6 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             if account_type in account_args:
                 account_args[account_type]["init_positions"][order_book_id] = quantity
         return {account_type: Account(**args) for account_type, args in account_args.items()}
-    
-    @classmethod
-    def _init_capital_gains_tax_calculators(cls, starting_cash: Dict[str, float], env: Environment):
-        return {account_type: CapitalGainsTaxCalculator(env) for account_type, _ in starting_cash.items()}
 
     def get_state(self):
         return jsonpickle.encode({
@@ -105,8 +113,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
     def get_positions(self):
         return list(chain(*(a.get_positions() for a in six.itervalues(self._accounts))))
 
-    def get_position(self, order_book_id, direction):
-        # type: (str, POSITION_DIRECTION) -> AbstractPosition
+    def get_position(self, order_book_id: str, direction: POSITION_DIRECTION) -> AbstractPosition:
         account = self._accounts[self.get_account_type(order_book_id)]
         return account.get_position(order_book_id, direction)
 
@@ -117,10 +124,12 @@ class Portfolio(object, metaclass=PropertyReprMeta):
 
     def get_account(self, order_book_id):
         return self._accounts[self.get_account_type(order_book_id)]
+    
+    def get_portfolio_event(self):
+        return self._portfolio_event
 
     @property
-    def accounts(self):
-        # type: () -> Dict[DEFAULT_ACCOUNT_TYPE, Account]
+    def accounts(self) -> Dict[DEFAULT_ACCOUNT_TYPE, Account]:
         """
         账户字典
         """
@@ -300,17 +309,42 @@ class Portfolio(object, metaclass=PropertyReprMeta):
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
         self._accounts[account_type].finance_repay(amount)
 
-    def _on_trade(self, event):
-        capital_gains_tax_calaulator = self._capital_gains_tax_calculators[self.get_account_type(event.trade.order_book_id)]
-        capital_gains_tax_calaulator.on_trade(event.trade)
-
     def _on_settlement(self, event):
-        trading_dt = self._env.trading_dt.date()
-        for account_type, capital_gains_tax_calculator in self._capital_gains_tax_calculators.items():
-            # 获取资本利得税并进行现金扣除
-            # FIXME: 可能存在剩余现金不足以扣除税费，应该如何处理？
-            tax = capital_gains_tax_calculator.calc(trading_dt)
-            self._accounts[account_type].tax_deduction(tax)
+        tax_amount = self._capital_gains_tax_calculator.calc(self._env.trading_dt.date())
+        if tax_amount > 0:
+            # 1. 优先扣除股票账户现金，如果没有设置股票账户或者股票账户现金不够扣除时，扣除期货账户
+            # 2. 股票和期货现金都不够扣除，或者股票账户不够扣除，但是没设置期货账户时，扣除股票账户
+            # 3. 允许扣除之后股票账户资金为负数
+            if self.stock_account is None:
+                self.future_account.pay_taxes(tax_amount, TAX_TYPE.CAPITAL_GAINS)
+            else:
+                if self.future_account is None or self.future_account.cash < 0 or self.stock_account.cash >= tax_amount:
+                    self.stock_account.pay_taxes(tax_amount, TAX_TYPE.CAPITAL_GAINS)
+                else:
+                    futures_tax = min(tax_amount - self.stock_account.cash, self.future_account.cash)
+                    stock_tax = tax_amount - futures_tax
+                    self.stock_account.pay_taxes(stock_tax, TAX_TYPE.CAPITAL_GAINS)
+                    self.future_account.pay_taxes(futures_tax, TAX_TYPE.CAPITAL_GAINS)
+            
+            self._env.event_bus.publish_event(Event(
+                EVENT.PORTFOLIO_EVENT, portfolio_event_type=PORTFOLIO_EVENT_TYPE.PAY_TAXES, delta_amount=tax_amount, 
+                trading_dt=self._env.trading_dt, remark=TAX_TYPE.CAPITAL_GAINS.value
+            ))
+
+    def _collect_portfolio_event(self, event):
+        order_book_id = getattr(event, "order_book_id", None)
+        delta_quantity = getattr(event, "delta_quantity", 0)
+        delta_amount = getattr(event, "delta_amount", 0)
+        remark = getattr(event, "remark", None)
+        self._portfolio_event.append(PortfolioEvent(
+            type=event.portfolio_event_type, 
+            order_book_id=order_book_id, 
+            delta_quantity=delta_quantity, 
+            delta_amount=delta_amount,
+            datetime=event.trading_dt,
+            trading_date=event.trading_dt.date(),
+            remark=remark,
+        ))
 
 
 class MixedPositions(Mapping):
@@ -342,3 +376,66 @@ class MixedPositions(Mapping):
     def __iter__(self):
         for account in self._accounts.values():
             yield from account.positions.keys()
+
+
+class CapitalGainsTaxCalculator:
+    """
+    计算 `金融商品转让增值税` + `附加税`，具体计算逻辑和公式如下：
+    定义: 
+        K: 年度可抵余额，K <= 0，每年年初重置为 0；
+        R: 月初为 0，当月所有的卖出交易中，卖出价扣除买入价（成本价）后加总的总额
+    """
+    def __init__(self):
+        self._K = self._R = 0
+        self._env = Environment.get_instance()
+        self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self._on_before_trading)
+        self._env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
+
+    def calc(self, trading_dt: date) -> float:
+        """
+        每月月底进行缴纳税额计算:
+        1) R + K > 0: 
+            a. tax = ((R + K) * 3%)[增值税] + ((R + K) * 3% * (3.5% + 1.5% + 1%))[附加税]
+            b. set R = K = 0
+        2) R + K <= 0:
+            K = K + R then set R = 0
+        3) 特别说明：
+            为了方便计算，此处将「增值税」和 「附加税」的费率统一为配置中的 base.capital_gain_tax_rate，用户可以进行自定义
+        """
+        if not self._is_end_of_month(trading_dt):
+            return 0
+        taxable_amount = self._R + self._K
+        if taxable_amount > 0:
+            tax = taxable_amount * self._env.config.base.capital_gain_tax_rate
+            self._K = self._R = 0
+            return tax
+        else:
+            self._K = taxable_amount
+            self._R = 0
+            return 0
+
+    def _is_end_of_month(self, trading_dt: date) -> bool:
+        next_trading_date = self._env.data_proxy.get_next_trading_date(trading_dt)
+        return next_trading_date.month != trading_dt.month
+    
+    def _is_start_of_year(self, trading_dt: date) -> bool:
+        if trading_dt.month != 1: # 减少交易日获取
+            return False
+        prev_trading_date = self._env.data_proxy.get_previous_trading_date(trading_dt)
+        return prev_trading_date.year != trading_dt.year
+
+    def _on_trade(self, event):
+        # 每有一笔卖出交易，则需要更新 self._R
+        trade = event.trade
+        if trade.position_effect not in (POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY):
+            return
+        sign = 1 if trade.position_direction == POSITION_DIRECTION.LONG else -1
+        avg_price = self._env.portfolio.get_position(trade.order_book_id, trade.position_direction).avg_price
+        self._R += (trade.last_price - avg_price) * trade.last_quantity * sign * trade.instrument.contract_multiplier
+
+    def _on_before_trading(self, event):
+        """
+        每年年初将 K 重置为 0
+        """
+        if self._is_start_of_year(event.trading_dt.date()):
+            self._K = 0

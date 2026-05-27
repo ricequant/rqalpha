@@ -111,6 +111,7 @@ class Trade(object):
     exec_id = property(lambda self: self._trade_id)
     frozen_price = property(lambda self: self._frozen_price)
     close_today_amount = property(lambda self: self._close_today_amount)
+    instrument = property(lambda self: self._ins)
 
     def __getattr__(self, item):
         try:

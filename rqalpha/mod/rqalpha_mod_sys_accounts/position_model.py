@@ -14,16 +14,18 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from datetime import date
+from datetime import date, datetime
 from typing import Optional, Deque, Tuple
 from collections import deque
 
 from decimal import Decimal, ROUND_HALF_UP
 from numpy import ndarray, isclose
+import pandas as pd
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, \
+    TRADING_CALENDAR_TYPE, PORTFOLIO_EVENT_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
@@ -54,7 +56,7 @@ class StockPosition(Position):
     __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     dividend_reinvestment = False
-    dividend_tax_rate: float = 0.
+    dividend_tax_enabled: bool = False
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
 
@@ -70,6 +72,9 @@ class StockPosition(Position):
         self._daily_dividend: float = 0.
         self._daily_split: float = 1.
         self._unadjusted_prev_close = None
+
+        # 历史现金分红记录：dict[date, float]
+        self._historical_dividends: pd.Series[int, float] = pd.Series(dtype=float)
 
     @property
     def unadjusted_prev_close(self) -> float:
@@ -151,12 +156,13 @@ class StockPosition(Position):
         delta_cash += self._handle_dividend_payable(trading_date)
         return delta_cash
 
-    def apply_trade(self, trade):
-        # type: (Trade) -> float
+    def apply_trade(self, trade: Trade) -> float:
         # 返回总资金的变化量
         delta_cash = super(StockPosition, self).apply_trade(trade)
         if trade.position_effect == POSITION_EFFECT.OPEN and self._market_tplus >= 1:  # type: ignore
             self._non_closable += trade.last_quantity
+        if trade.position_effect == POSITION_EFFECT.CLOSE:
+            self._handle_dividend_tax(trade.trading_datetime)
         return delta_cash
 
     def settlement(self, trading_date):
@@ -196,6 +202,13 @@ class StockPosition(Position):
                 self._trade_cost = -self.market_value  # 相当于卖掉了，所以给一个负成本
             self._quantity = self._old_quantity = 0
             self._queue.clear()
+        
+        # 更新历史分红记录
+        dividends = self._get_dividends_or_splits(self._all_dividends, trading_date, "book_closure_date")
+        if dividends is not None and len(dividends) != 0:
+            dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum()
+            book_closure_date = dividends["book_closure_date"][-1]
+            self._historical_dividends[book_closure_date] = dividend_per_share
         return delta_cash
 
     @cached_property
@@ -232,7 +245,7 @@ class StockPosition(Position):
         dividends = self._get_dividends_or_splits(self._all_dividends, trading_date, "ex_dividend_date")  # type: ignore[reportIncompatibleVariableOverride]
         if dividends is None or len(dividends) == 0:
             return 0
-        dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum() * (1 - self.dividend_tax_rate)
+        dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum()
         self._avg_price -= dividend_per_share
         # 前一天结算发生了除息, 此时 last_price 还是前一个交易日的收盘价，需要改为 除息后收盘价, 否则影响在before_trading中查看盈亏
         self._last_price -= dividend_per_share  # type: ignore
@@ -291,6 +304,43 @@ class StockPosition(Position):
         self._old_quantity = self._quantity = int((Decimal(self._quantity) * ratio_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
         self._queue.handle_split(ratio_decimal, self._quantity)
         return ratio
+    
+    def _get_dividend_tax(self, trading_date: date):
+        if self._historical_dividends.empty:
+            self._queue.clear_close_details()
+            return
+        tax = 0
+        while self._queue.close_details_queue:
+            buy_date, quantity = self._queue.close_details_queue.popleft()
+            tax += self._calc_dividend_tax(trading_date, buy_date, abs(quantity))
+        return tax
+
+    def _calc_dividend_tax(self, trading_date: date, buy_date: date, quantity: int):
+        """
+        按持股期限差异化税率计算红利税，税率如下:
+            - 持股期限 <= 1个月: 20%
+            - 1个月 < 持股期限 <= 1年: 10%
+            - 持股期限 > 1年: 免征
+        """
+        if buy_date >= (pd.to_datetime(trading_date) - pd.DateOffset(months=1)).date():
+            tax_rate = 0.2
+        elif buy_date >= (pd.to_datetime(trading_date) - pd.DateOffset(years=1)).date():
+            tax_rate = 0.1
+        else:
+            return 0
+        dividends = self._historical_dividends[self._historical_dividends.index >= convert_date_to_date_int(buy_date)]
+        return dividends.sum() * quantity * tax_rate
+    
+    def _handle_dividend_tax(self, trading_dt: datetime):
+        if self.dividend_tax_enabled:
+            dividend_tax = self._get_dividend_tax(trading_dt.date())
+            if dividend_tax > 0:
+                account = self._env.get_account(self.order_book_id)
+                account.pay_taxes(dividend_tax, TAX_TYPE.DIVIDEND)
+                self._env.event_bus.publish_event(Event(
+                    EVENT.PORTFOLIO_EVENT, portfolio_event_type=PORTFOLIO_EVENT_TYPE.PAY_TAXES, order_book_id=self.order_book_id, 
+                    delta_amount=dividend_tax, trading_dt=trading_dt, remark=TAX_TYPE.DIVIDEND.value
+                ))
 
 
 class FuturePosition(Position):

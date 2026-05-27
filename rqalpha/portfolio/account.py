@@ -20,7 +20,7 @@ from datetime import date
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
 from rqalpha.model import Order, OrderStyle, Trade, Instrument
@@ -94,6 +94,10 @@ class Account(metaclass=AccountMeta):
                     order_book_id=order_book_id, date=prev_date
                 ))
             self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price=init_price)
+
+        # 增值税和红利税
+        self._capital_gains_tax = 0
+        self._dividend_tax = 0
 
     def __repr__(self):
         positions_repr = {}
@@ -555,5 +559,25 @@ class Account(metaclass=AccountMeta):
         else:
             user_system_log.warn(f"{self.type} not support finance_repay")
 
-    def tax_deduction(self, amount: float):
+    @property
+    def capital_gains_tax(self) -> float:
+        """
+        资本收益税（包含增值税、附加税等）
+        """
+        return self._capital_gains_tax
+    
+    @property
+    def dividend_tax(self) -> float:
+        """
+        红利税
+        """
+        return self._dividend_tax
+
+    def pay_taxes(self, amount: float, tax_type: TAX_TYPE):
+        if tax_type == TAX_TYPE.CAPITAL_GAINS:
+            self._capital_gains_tax += amount
+        elif tax_type == TAX_TYPE.DIVIDEND:
+            self._dividend_tax += amount
         self._total_cash -= amount
+        if self._total_cash < 0:
+            user_system_log.warning("{} account's cash is insufficient to cover the taxes payable,and the cash balance has become negative.".format(self._type))
