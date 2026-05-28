@@ -16,6 +16,10 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import datetime
 from collections import defaultdict
+from copy import copy
+
+import numpy as np
+
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
@@ -31,8 +35,7 @@ from .slippage import SlippageDecider
 
 
 class AbstractMatcher:
-    def match(self, account, order, open_auction):
-        # type: (Account, Order, bool) -> None
+    def match(self, account: Account, order: Order, open_auction: bool) -> None:
         raise NotImplementedError
 
     def update(self, event):
@@ -40,14 +43,14 @@ class AbstractMatcher:
 
 
 class DefaultBarMatcher(AbstractMatcher):
-    def __init__(self, env, mod_config):
+    def __init__(self, env: Environment, mod_config):
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._turnover = defaultdict(int)
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._inactive_limit = mod_config.inactive_limit
         self._volume_limit = mod_config.volume_limit
-        self._env = env  # type: Environment
+        self._env: Environment = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
@@ -104,8 +107,7 @@ class DefaultBarMatcher(AbstractMatcher):
                 deal_price = self._deal_price_decider(order.order_book_id, order.side)
         return deal_price
 
-    def match(self, account, order, open_auction):
-        # type: (Account, Order, bool) -> None
+    def match(self, account: Account, order: Order, open_auction: bool) -> None:
         if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
             raise NotImplementedError
         order_book_id = order.order_book_id
@@ -237,14 +239,14 @@ class DefaultTickMatcher(AbstractMatcher):
     SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY)
     SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
 
-    def __init__(self, env, mod_config):
+    def __init__(self, env: Environment, mod_config):
         self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
         self._turnover = defaultdict(int)
         self._volume_percent = mod_config.volume_percent
         self._price_limit = mod_config.price_limit
         self._liquidity_limit = mod_config.liquidity_limit
         self._volume_limit = mod_config.volume_limit
-        self._env = env  # type: Environment
+        self._env: Environment = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
         # 每个交易日期内的上一个时刻的tick(第一个除外)
@@ -307,8 +309,7 @@ class DefaultTickMatcher(AbstractMatcher):
                 _last_tick = tick_list[0] if len(tick_list) == 2 else None
         return _last_tick
 
-    def match(self, account, order, open_auction):  # type: (Account, Order, bool) -> None
-
+    def match(self, account: Account, order: Order, open_auction: bool) -> None:
         # order 是否合法
         if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
             raise NotImplementedError
@@ -490,9 +491,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
         self._b_price = {}
         self._env.event_bus.prepend_listener(EVENT.TICK, self._pre_tick)
 
-    def match(self, account, order, open_auction):
-        # type: (Account, Order, bool) -> None
-        #
+    def match(self, account: Account, order: Order, open_auction: bool) -> None:
         """限价撮合：
         订单买价>卖x价
         买量>卖x量，按照卖x价成交，订单减去卖x量，继续撮合卖x+1，直至该tick中所有报价被买完。买完后若有剩余买量，则在下一个tick继续撮合。
@@ -639,3 +638,78 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
 
         self._a_price[order_book_id] = event.tick.asks
         self._b_price[order_book_id] = event.tick.bids
+
+
+class SignalMatcher(AbstractMatcher):
+    def __init__(self, env: Environment, mod_config):
+        self._env: Environment = env
+        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
+        self._price_limit = mod_config.price_limit
+
+    def match(self, account: Account, order: Order, open_auction: bool):
+        if order.position_effect == POSITION_EFFECT.EXERCISE:
+            return
+        order_book_id = order.order_book_id
+        price_board = self._env.price_board
+        tick_size = self._env.data_proxy.get_tick_size(order_book_id)
+
+        last_price = price_board.get_last_price(order_book_id)
+
+        if not is_valid_price(last_price):
+            instrument = self._env.data_proxy.get_active_instrument(order_book_id)
+            listed_date = instrument.listed_date.date()
+            if listed_date == self._env.trading_dt.date():
+                reason = _(
+                    "Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
+                    order_book_id=order_book_id,
+                    listed_date=listed_date,
+                )
+            else:
+                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
+                    order_book_id=order_book_id)
+            order.mark_rejected(reason)
+            self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
+            return
+
+        if order.type == ORDER_TYPE.LIMIT:
+            deal_price = order.frozen_price
+        elif isinstance(order.style, ALGO_ORDER_STYLES):
+            deal_price, v = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
+            if np.isnan(deal_price):
+                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
+                order.mark_rejected(reason)
+                return
+        else:
+            deal_price = last_price
+
+        if self._price_limit:
+            if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
+                order.mark_rejected(_(
+                    "Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price."
+                ).format(
+                    order_book_id=order.order_book_id,
+                    limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down",
+                ))
+                self._env.event_bus.publish_event(Event(
+                    EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)
+                ))
+                return
+        
+        ct_amount = account.calc_close_today_amount(order_book_id, order.quantity, order.position_direction, order.position_effect)
+        trade_price = self._slippage_decider.get_trade_price(order, deal_price)
+        trade = Trade.__from_create__(
+            order_id=order.order_id,
+            price=trade_price,
+            amount=order.quantity,
+            side=order.side,
+            position_effect=order.position_effect,
+            order_book_id=order_book_id,
+            frozen_price=order.frozen_price,
+            close_today_amount=ct_amount
+        )
+        order.fill(trade)
+
+        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))
+
+    def update(self, event):
+        pass
