@@ -15,29 +15,33 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-
-from copy import copy
-
-import numpy as np
+from typing import Dict
 
 from rqalpha.interface import AbstractBroker
 from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import is_valid_price
-from rqalpha.utils.price_limits import reaches_limit
 from rqalpha.core.events import EVENT, Event
-from rqalpha.model.trade import Trade
-from rqalpha.model.order import ALGO_ORDER_STYLES
-from rqalpha.const import SIDE, ORDER_TYPE, POSITION_EFFECT
+from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.const import POSITION_EFFECT, INSTRUMENT_TYPE, EXECUTION_PHASE
+from rqalpha.utils.functools import lru_cache
+from rqalpha.environment import Environment
 
-from .slippage import SlippageDecider
+from .matcher import AbstractMatcher, SignalMatcher
 
 
 class SignalBroker(AbstractBroker):
-    def __init__(self, env, mod_config):
-        self._env = env
-        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
-        self._price_limit = mod_config.price_limit
+    def __init__(self, env: Environment, mod_config):
+        self._signal_default_matcher: AbstractMatcher = SignalMatcher(env, mod_config)
+        self._env: Environment = env
+        self._matchers: Dict[INSTRUMENT_TYPE, AbstractMatcher] = {}
+
+    @lru_cache(1024)
+    def _get_matcher(self, order_book_id: str) -> AbstractMatcher:
+        instrument_type = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt).type
+        try:
+            return self._matchers[instrument_type]
+        except KeyError:
+            return self._matchers.setdefault(instrument_type, self._signal_default_matcher)
 
     def get_open_orders(self, order_book_id=None):
         return []
@@ -51,78 +55,12 @@ class SignalBroker(AbstractBroker):
             return
         order.active()
         self._env.event_bus.publish_event(Event(EVENT.ORDER_CREATION_PASS, account=account, order=order))
-        self._match(account, order)
+        open_auction = ExecutionContext.phase() == EXECUTION_PHASE.OPEN_AUCTION
+        self._get_matcher(order.order_book_id).match(account=account, order=order, open_auction=open_auction)
 
     def cancel_order(self, order):
-        user_system_log.warn(_(u"cancel_order function is not supported in signal mode"))
+        user_system_log.warning(_(u"cancel_order function is not supported in signal mode"))
         return None
 
-    def _match(self, account, order):
-        order_book_id = order.order_book_id
-        price_board = self._env.price_board
-        tick_size = self._env.data_proxy.get_tick_size(order_book_id)
-
-        last_price = price_board.get_last_price(order_book_id)
-
-        if not is_valid_price(last_price):
-            instrument = self._env.get_instrument(order_book_id)
-            listed_date = instrument.listed_date.date()
-            if listed_date == self._env.trading_dt.date():
-                reason = _(
-                    "Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
-                    order_book_id=order_book_id,
-                    listed_date=listed_date,
-                )
-            else:
-                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
-                    order_book_id=order_book_id)
-            order.mark_rejected(reason)
-            self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
-            return
-
-        if order.type == ORDER_TYPE.LIMIT:
-            deal_price = order.frozen_price
-        elif isinstance(order.style, ALGO_ORDER_STYLES):
-            deal_price, v = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
-            if np.isnan(deal_price):
-                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
-                order.mark_rejected(reason)
-                return
-        else:
-            deal_price = last_price
-
-        if self._price_limit:
-            if order.position_effect != POSITION_EFFECT.EXERCISE:
-                if reaches_limit(
-                    order_book_id,
-                    deal_price,
-                    order.side,
-                    price_board,
-                    tick_size,
-                ):
-                    order.mark_rejected(_(
-                        "Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price."
-                    ).format(
-                        order_book_id=order.order_book_id,
-                        limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down",
-                    ))
-                    self._env.event_bus.publish_event(Event(
-                        EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)
-                    ))
-                    return
-
-        ct_amount = account.calc_close_today_amount(order_book_id, order.quantity, order.position_direction, order.position_effect)
-        trade_price = self._slippage_decider.get_trade_price(order, deal_price)
-        trade = Trade.__from_create__(
-            order_id=order.order_id,
-            price=trade_price,
-            amount=order.quantity,
-            side=order.side,
-            position_effect=order.position_effect,
-            order_book_id=order_book_id,
-            frozen_price=order.frozen_price,
-            close_today_amount=ct_amount
-        )
-        order.fill(trade)
-
-        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))
+    def register_matcher(self, instrument_type: INSTRUMENT_TYPE, matcher: AbstractMatcher) -> None:
+        self._matchers[instrument_type] = matcher

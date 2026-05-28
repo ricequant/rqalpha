@@ -8,6 +8,8 @@ CHANGELOG
 - 回测结果图片和 Excel 报告新增年化双边换手倍数
 - `order_target_portfolio_smart` API 性能优化
 - `AbstractPosition` 类新增 property: instrument
+- 修复分红再投资未考虑交易费用的问题
+- 修复获取结算价时，只允许期货获取的问题，将品种范围扩增为: 期货、期权、现货
 
 
 6.1.4
