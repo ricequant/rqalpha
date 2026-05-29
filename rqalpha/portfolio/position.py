@@ -246,8 +246,8 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         else:
             self._trade_cost -= trade.last_price * trade.last_quantity
 
-    def apply_trade(self, trade: Trade) -> float:
-        # 返回总资金的变化量
+    def apply_trade(self, trade: Trade) -> Tuple[float, float]:
+        # return: (总资金的变化量, 增值税基变化量)
         self._update_costs(trade)
         if trade.position_effect == POSITION_EFFECT.OPEN:
             self._queue.handle_trade(trade.last_quantity, self._env.trading_dt.date())
@@ -257,13 +257,13 @@ class Position(AbstractPosition, metaclass=PositionMeta):
                 cost = self._quantity * self._avg_price + trade.last_quantity * trade.last_price
                 self._avg_price = cost / (self._quantity + trade.last_quantity)
             self._quantity += trade.last_quantity
-            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost
+            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost, 0
         elif trade.position_effect == POSITION_EFFECT.CLOSE:
             # 先平昨，后平今
             self._queue.handle_trade(-trade.last_quantity, self._env.trading_dt.date())
             self._old_quantity -= min(trade.last_quantity, self._old_quantity)
             self._quantity -= trade.last_quantity
-            return trade.last_price * trade.last_quantity - trade.transaction_cost
+            return trade.last_price * trade.last_quantity - trade.transaction_cost, 0
         else:
             raise NotImplementedError("{} does not support position effect {}".format(
                 self.__class__.__name__, trade.position_effect

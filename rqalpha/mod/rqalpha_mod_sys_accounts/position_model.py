@@ -83,23 +83,21 @@ class StockPosition(Position):
         return self._unadjusted_prev_close
 
     @property
-    def dividend_receivable(self):
-        # type: () -> float
+    def dividend_receivable(self) -> float:
         """
         应收分红
         """
         return sum(v for _, v in self._dividend_receivable)
 
     @property
-    def equity(self):
-        # type: () -> float
+    def equity(self) -> float:
         """
         持仓权益
         """
         return super(StockPosition, self).equity + self.dividend_receivable
 
     @property
-    def market_value_local(self):
+    def market_value_local(self) -> float:
         return self.market_value
 
     @property
@@ -117,8 +115,7 @@ class StockPosition(Position):
         ) + self._daily_dividend) * self._direction_factor
 
     @property
-    def closable(self):
-        # type: () -> int
+    def closable(self) -> int:
         order_quantity = sum(o.unfilled_quantity for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
@@ -141,8 +138,7 @@ class StockPosition(Position):
         })
         return state
 
-    def before_trading(self, trading_date):
-        # type: (date) -> float
+    def before_trading(self, trading_date: date) -> float:
         delta_cash = super(StockPosition, self).before_trading(trading_date)
         self._unadjusted_prev_close = self.last_price
         if self._quantity == 0 and not self._dividend_receivable:
@@ -156,17 +152,17 @@ class StockPosition(Position):
         delta_cash += self._handle_dividend_payable(trading_date)
         return delta_cash
 
-    def apply_trade(self, trade: Trade) -> float:
-        # 返回总资金的变化量
-        delta_cash = super(StockPosition, self).apply_trade(trade)
+    def apply_trade(self, trade: Trade) -> Tuple[float, float]:
+        # return: (总资金的变化量, 增值税基变化量)
+        delta_cash, delta_monthly_realized_pnl = super(StockPosition, self).apply_trade(trade)
         if trade.position_effect == POSITION_EFFECT.OPEN and self._market_tplus >= 1:  # type: ignore
             self._non_closable += trade.last_quantity
         if trade.position_effect == POSITION_EFFECT.CLOSE:
             self._handle_dividend_tax(trade.trading_datetime)
-        return delta_cash
+            delta_monthly_realized_pnl += (trade.last_price - self._avg_price) * trade.last_quantity
+        return delta_cash, delta_monthly_realized_pnl
 
-    def settlement(self, trading_date):
-        # type: (date) -> float
+    def settlement(self, trading_date: date) -> float:
         super(StockPosition, self).settlement(trading_date)
 
         if self._quantity == 0:
@@ -202,13 +198,6 @@ class StockPosition(Position):
                 self._trade_cost = -self.market_value  # 相当于卖掉了，所以给一个负成本
             self._quantity = self._old_quantity = 0
             self._queue.clear()
-        
-        # 更新历史分红记录
-        dividends = self._get_dividends_or_splits(self._all_dividends, trading_date, "book_closure_date")
-        if dividends is not None and len(dividends) != 0:
-            dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum()
-            book_closure_date = dividends["book_closure_date"][-1]
-            self._historical_dividends[book_closure_date] = dividend_per_share
         return delta_cash
 
     @cached_property
@@ -253,6 +242,10 @@ class StockPosition(Position):
         # FIXME: 这里隐含了获取的多条 dividend 的 payable_date 都相同的假设
         payable_date = _int_to_date(dividends["payable_date"][-1])
         self._dividend_receivable.append((payable_date, self._quantity * dividend_per_share))
+
+        # 更新历史分红记录
+        book_closure_date = dividends["book_closure_date"][-1]
+        self._historical_dividends[book_closure_date] = dividend_per_share
         return self._quantity * dividend_per_share
 
     def _handle_dividend_payable(self, trading_date: date) -> float:
@@ -353,13 +346,18 @@ class FuturePosition(Position):
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._quantity - self._old_quantity)
 
+    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
+        super(FuturePosition, self).__init__(order_book_id, direction, init_quantity, init_price)
+        
+        # 记录买入价到昨日结算价格之间的价差，用于计算增值税的 monthly_realized_pnl
+        self._price_gap = 0
+
     @cached_property
     def contract_multiplier(self):
         return self._instrument.contract_multiplier
     
     @property
-    def margin_rate(self):
-        # type: () -> float
+    def margin_rate(self) -> float:
         if self.direction == POSITION_DIRECTION.LONG:
             margin_ratio = self._instrument.get_long_margin_ratio(self._env.trading_dt.date())
         elif self.direction == POSITION_DIRECTION.SHORT:
@@ -367,37 +365,31 @@ class FuturePosition(Position):
         return margin_ratio * self._env.config.base.margin_multiplier
 
     @property
-    def equity(self):
-        # type: () -> float
+    def equity(self) -> float:
         """"""
         return self._quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
-    def margin(self):
-        # rtpe: () -> float
+    def margin(self) -> float:
         """
         保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
         """
         return self.margin_rate * self.market_value
 
     @property
-    def market_value(self):
-        # type: () -> float
+    def market_value(self) -> float:
         return self.contract_multiplier * super(FuturePosition, self).market_value
 
     @property
-    def trading_pnl(self):
-        # type: () -> float
+    def trading_pnl(self) -> float:
         return self.contract_multiplier * super(FuturePosition, self).trading_pnl
 
     @property
-    def position_pnl(self):
-        # type: () -> float
+    def position_pnl(self) -> float:
         return self.contract_multiplier * super(FuturePosition, self).position_pnl
 
     @property
-    def pnl(self):
-        # type: () -> float
+    def pnl(self) -> float:
         return super(FuturePosition, self).pnl * self.contract_multiplier
 
     def calc_close_today_amount(self, trade_amount, position_effect):
@@ -406,7 +398,8 @@ class FuturePosition(Position):
         else:
             return max(trade_amount - self._old_quantity, 0)
 
-    def apply_trade(self, trade):
+    def apply_trade(self, trade) -> Tuple[float, float]:
+        # return: (总资金的变化量, 增值税基变化量)
         if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
             self._transaction_cost += trade.transaction_cost
             self._quantity -= trade.last_quantity
@@ -416,11 +409,13 @@ class FuturePosition(Position):
             super(FuturePosition, self).apply_trade(trade)
 
         if trade.position_effect == POSITION_EFFECT.OPEN:
-            return -1 * trade.transaction_cost
+            return -1 * trade.transaction_cost, 0
         else:
-            return -1 * trade.transaction_cost + (
-                    trade.last_price - self._avg_price
-            ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
+            delta_cash = -1 * trade.transaction_cost + (trade.last_price - self._avg_price) * \
+                trade.last_quantity * self.contract_multiplier * self._direction_factor
+            delta_monthly_realized_pnl = (trade.last_price - self._avg_price + self._price_gap) * \
+                trade.last_quantity * self.contract_multiplier * self._direction_factor
+            return delta_cash, delta_monthly_realized_pnl
 
     @property
     def prev_close(self):
@@ -431,8 +426,7 @@ class FuturePosition(Position):
                 self._prev_close = super().prev_close
         return self._prev_close
 
-    def settlement(self, trading_date):
-        # type: (date) -> float
+    def settlement(self, trading_date) -> float:
         delta_cash = super(FuturePosition, self).settlement(trading_date)
         if self._quantity == 0:
             return delta_cash
@@ -446,9 +440,12 @@ class FuturePosition(Position):
             else:
                 self._last_price = settle_price
         delta_cash += self.equity
+
+        # 由于逐日盯市，仓位每天的 avg_price 都会变化，需要记录用于计算增值税的 monthly_realized_pnl
+        self._price_gap += self.last_price - self._avg_price
         self._avg_price = self.last_price
         if self._instrument.de_listed_at(next_date):
-            user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
+            user_system_log.warning(_(u"{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))
             account = self._env.get_account(self._order_book_id)

@@ -15,6 +15,7 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import operator
 from itertools import chain
 from datetime import date
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
@@ -111,9 +112,9 @@ class Account(metaclass=AccountMeta):
 
     def register_event(self):
         event_bus = self._env.event_bus
-        event_bus.add_listener(
-            EVENT.TRADE, lambda e: self.apply_trade(e.trade, e.order) if e.account == self else None
-        )
+        # event_bus.add_listener(
+        #     EVENT.TRADE, lambda e: self.apply_trade(e.trade, e.order) if e.account == self else None
+        # )
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
         event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
@@ -405,8 +406,8 @@ class Account(metaclass=AccountMeta):
         else:
             self._frozen_cash -= order.init_frozen_cash
 
-    def apply_trade(self, trade, order=None):
-        # type: (Trade, Optional[Order]) -> None
+    def apply_trade(self, trade: Trade, order: Optional[Order] = None) -> float:
+        # 返回增值税税基变化量
         if trade.exec_id in self._backward_trade_set:
             return
         order_book_id = trade.order_book_id
@@ -415,17 +416,28 @@ class Account(metaclass=AccountMeta):
                 self._frozen_cash -= trade.last_quantity / order.quantity * order.init_frozen_cash
             else:
                 self._frozen_cash -= order.init_frozen_cash
+        
+        def _apply(position_direction: POSITION_DIRECTION):
+            nonlocal delta_cash, delta_monthly_realized_pnl
+            apply_result = self._get_or_create_pos(order_book_id, position_direction).apply_trade(trade)
+            if isinstance(apply_result, tuple):
+                delta_cash += apply_result[0]
+                delta_monthly_realized_pnl += apply_result[1]
+            elif isinstance(apply_result, float):
+                # 向前兼容，会存在 mod 的不返回月度已实现交易变化量的情况
+                delta_cash += apply_result
+            else:
+                raise ValueError(f"Invalid apply result type: {type(apply_result)}")
+
+        delta_cash = delta_monthly_realized_pnl = 0
         if trade.position_effect == POSITION_EFFECT.MATCH:
-            delta_cash = self._get_or_create_pos(
-                order_book_id, POSITION_DIRECTION.LONG
-            ).apply_trade(trade) + self._get_or_create_pos(
-                order_book_id, POSITION_DIRECTION.SHORT
-            ).apply_trade(trade)
-            self._total_cash += delta_cash
+            for position_direction in (POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT):
+                _apply(position_direction)
         else:
-            delta_cash = self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
-            self._total_cash += delta_cash
+            _apply(trade.position_direction)
+        self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
+        return delta_monthly_realized_pnl
 
     def _iter_pos(self, *, direction: Optional[POSITION_DIRECTION] = None, market: Optional[MARKET] = None) -> Iterable[Position]:
         if direction:
