@@ -10,7 +10,7 @@ order_target_portfolio_smart 单元测试套件
 
 计算公式:
 目标数量 = (总资金 × 目标权重) / 股票价格
-实际下单数量会经过算法的最小单位调整、安全边距(safety)等机制处理
+实际下单数量会经过权重层约束、最小下单量和整手调整等机制处理
 """
 import pytest
 
@@ -230,8 +230,7 @@ def test_order_target_portfolio_smart_nan_limit_price_rejected(environment, on_h
 
 def test_order_target_portfolio_smart_custom_valuation_prices(environment, on_handle_bar, assert_submitted_orders):
     """测试自定义估值价格"""
-    # 注：某些参数组合会触发算法内部的 safety < 0 错误，这是算法设计的边界情况
-    # 这里测试一个更保守的场景来验证自定义估值价格功能
+    # 这里测试一个保守的场景来验证自定义估值价格功能
     order_target_portfolio_smart(
         {
             "000001.XSHE": 0.3,  # 用30%权重
@@ -326,6 +325,153 @@ def test_order_target_portfolio_smart_limit_and_valuation_prices(environment, on
 # TODO：测试资金不足的场景
 
 
+def _build_order_target_portfolio_stub(index):
+    """构造只包含调仓计算所需字段的 OrderTargetPortfolio。"""
+    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
+    otp._current_quantities = Series([0, 100, 80, 600, 500, 200], index=index, dtype=int)
+    otp._current_closable = Series([0, 100, 0, 300, 100, 200], index=index, dtype=int)
+    otp._tick_sizes = Series([0.01, 0.01, 0.01, 0.01, 0.01, 0.01], index=index, dtype=float)
+    otp._min_qty = Series([100, 100, 100, 100, 200, 100], index=index, dtype="int64")
+    otp._step_size = Series([100, 100, 100, 100, 100, 100], index=index, dtype="int64")
+    otp._suspended = Series([False, False, False, True, False, False], index=index, dtype=bool)
+    otp._prices = DataFrame(
+        {
+            "last": [10.0, 9.990005, 9.009995, 8.0, float("nan"), 6.0],
+            "limit_up": [11.0, 10.0, 10.0, 8.8, 7.0, 6.6],
+            "limit_down": [9.0, 9.0, 9.0, 7.2, 6.0, 5.4],
+        },
+        index=index,
+        dtype=float,
+    )
+    otp._prices_settle_ccy = otp._prices["last"]
+    otp._target_weights = Series(0.0, index=index, dtype=float)
+    return otp
+
+
+def _build_adjusting_weight_stub():
+    """构造权重上下界求解所需的最小调仓对象。"""
+    index = ["limit_down", "limit_up", "normal"]
+    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
+    otp._total_value = 1000.0
+    otp._current_quantities = Series([20, 0, 0], index=index, dtype=int)
+    otp._current_closable = Series([20, 0, 0], index=index, dtype=int)
+    otp._target_weights = Series([0.05, 0.50, 0.05], index=index, dtype=float)
+    otp._tick_sizes = Series([0.01, 0.01, 0.01], index=index, dtype=float)
+    otp._suspended = Series([False, False, False], index=index, dtype=bool)
+    otp._prices = DataFrame(
+        {
+            "last": [10.0, 11.0, 10.0],
+            "limit_up": [11.0, 11.0, 11.0],
+            "limit_down": [10.0, 9.0, 9.0],
+        },
+        index=index,
+        dtype=float,
+    )
+    otp._prices_settle_ccy = otp._prices["last"]
+    return otp
+
+
+def test_order_target_portfolio_adjusting_weights_allows_limit_down_buy_after_rescale():
+    """跌停票若重分配后需要买入，应继续承接目标权重。"""
+    otp = _build_adjusting_weight_stub()
+
+    target_weights, denials = otp._calc_adjusting_weights(POSITION_DIRECTION.LONG)
+
+    assert target_weights["limit_up"] == pytest.approx(0.0)
+    assert target_weights["limit_down"] == pytest.approx(0.30)
+    assert target_weights["normal"] == pytest.approx(0.30)
+    assert denials[DenialReason.limit_up_buy]["limit_up"]
+    assert not denials[DenialReason.limit_down_sell]["limit_down"]
+
+
+def test_order_target_portfolio_adjusting_weights_keeps_zero_target_out_of_distribution():
+    """目标权重为 0 的资产不承接其他标的无法买入的缺口。"""
+    index = ["limit_up", "zero_target", "normal"]
+    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
+    otp._total_value = 1000.0
+    otp._current_quantities = Series([0, 0, 0], index=index, dtype=int)
+    otp._current_closable = Series([0, 0, 0], index=index, dtype=int)
+    otp._target_weights = Series([0.50, 0.0, 0.10], index=index, dtype=float)
+    otp._tick_sizes = Series([0.01, 0.01, 0.01], index=index, dtype=float)
+    otp._suspended = Series([False, False, False], index=index, dtype=bool)
+    otp._prices = DataFrame(
+        {
+            "last": [11.0, 10.0, 10.0],
+            "limit_up": [11.0, 11.0, 11.0],
+            "limit_down": [9.0, 9.0, 9.0],
+        },
+        index=index,
+        dtype=float,
+    )
+    otp._prices_settle_ccy = otp._prices["last"]
+
+    target_weights, _ = otp._calc_adjusting_weights(POSITION_DIRECTION.LONG)
+
+    assert target_weights["limit_up"] == pytest.approx(0.0)
+    assert target_weights["zero_target"] == pytest.approx(0.0)
+    assert target_weights["normal"] == pytest.approx(0.60)
+
+
+def test_order_target_portfolio_adjusting_weights_returns_upper_when_target_unreachable():
+    """可买上界不足时返回最接近的上界解。"""
+    index = ["limit_up", "normal", "zero_target"]
+    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
+    otp._total_value = 1000.0
+    otp._current_quantities = Series([0, 10, 0], index=index, dtype=int)
+    otp._current_closable = Series([0, 10, 0], index=index, dtype=int)
+    otp._target_weights = Series([0.50, 0.40, 0.0], index=index, dtype=float)
+    otp._tick_sizes = Series([0.01, 0.01, 0.01], index=index, dtype=float)
+    otp._suspended = Series([False, False, False], index=index, dtype=bool)
+    otp._prices = DataFrame(
+        {
+            "last": [11.0, 10.0, 10.0],
+            "limit_up": [11.0, 10.0, 11.0],
+            "limit_down": [9.0, 9.0, 9.0],
+        },
+        index=index,
+        dtype=float,
+    )
+    otp._prices_settle_ccy = otp._prices["last"]
+
+    target_weights, denials = otp._calc_adjusting_weights(POSITION_DIRECTION.LONG)
+
+    assert target_weights["limit_up"] == pytest.approx(0.0)
+    assert target_weights["normal"] == pytest.approx(0.10)
+    assert target_weights["zero_target"] == pytest.approx(0.0)
+    assert denials[DenialReason.limit_up_buy]["limit_up"]
+
+
+def test_order_target_portfolio_cash_constraint_scales_only_buy_quantities():
+    """资金不足时保留卖出交易，仅按预算缩减买入调仓量。"""
+    index = ["sell", "buy_a", "buy_b"]
+    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
+    otp._cash_available = 100.0
+    otp._current_quantities = Series([100, 0, 0], index=index, dtype=int)
+    otp._current_closable = Series([100, 0, 0], index=index, dtype=int)
+    otp._tick_sizes = Series([0.01, 0.01, 0.01], index=index, dtype=float)
+    otp._min_qty = Series([1, 1, 1], index=index, dtype="int64")
+    otp._step_size = Series([1, 1, 1], index=index, dtype="int64")
+    otp._suspended = Series([False, False, False], index=index, dtype=bool)
+    otp._prices = DataFrame(
+        {
+            "last": [10.0, 10.0, 10.0],
+            "limit_up": [11.0, 11.0, 11.0],
+            "limit_down": [9.0, 9.0, 9.0],
+        },
+        index=index,
+        dtype=float,
+    )
+    prices = otp._prices["last"]
+    diff = Series([-10, 80, 20], index=index, dtype=float)
+    denials = {}
+    otp._estimate_transaction_costs = lambda diff, prices: 0.0
+
+    adjusted = otp._apply_cash_constraint(diff, denials, prices, POSITION_DIRECTION.LONG)
+
+    assert adjusted.to_dict() == {"sell": -10.0, "buy_a": 16.0, "buy_b": 4.0}
+    assert denials
+
+
 def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band():
     index = ["000001.XSHE", "000002.XSHE"]
     otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
@@ -345,7 +491,7 @@ def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band
         dtype=float,
     )
 
-    diff, denials = otp._calc_adjusting(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.LONG)
+    diff, denials = otp._calc_adjusting_quantities(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.LONG)
 
     assert diff.to_dict() == {"000001.XSHE": 0, "000002.XSHE": 0}
     assert denials[DenialReason.limit_up_buy].to_dict() == {
@@ -377,7 +523,7 @@ def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band
         dtype=float,
     )
 
-    diff, denials = otp._calc_adjusting(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.SHORT)
+    diff, denials = otp._calc_adjusting_quantities(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.SHORT)
 
     assert diff.to_dict() == {"000001.XSHE": 0, "000002.XSHE": 0}
     assert denials[DenialReason.limit_down_buy].to_dict() == {

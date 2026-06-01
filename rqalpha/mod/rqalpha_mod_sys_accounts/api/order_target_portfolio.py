@@ -2,7 +2,7 @@ from enum import Enum
 from operator import itemgetter
 from typing import Dict, Mapping, NamedTuple, Optional, Tuple, Union, cast
 
-from numpy import inf, isnan, sign
+from numpy import inf, isfinite, isinf, isnan, sign
 from numpy import round as np_round
 from pandas import DataFrame, Index, Series
 
@@ -207,10 +207,10 @@ class OrderTargetPortfolio:
         adjusting[(adjusting < 0) & (-adjusting > positions)] = -positions
         return adjusting, {DenialReason.less_than_half: less_than_half_denial}
 
-    def _calc_adjusting(
+    def _calc_adjusting_quantities(
         self, target_quantities: Series, direction: POSITION_DIRECTION
     ) -> Tuple[Series, Dict[DenialReason, Series]]:
-        """计算调仓数量并应用各类约束。
+        """计算数量层面的调仓量，并在股数 round 后做最终交易约束校验。
 
         Returns:
             (diff, denials): 调整后的数量变化和各类拒绝原因
@@ -223,15 +223,17 @@ class OrderTargetPortfolio:
             self._suspended  # 停牌
             | prices.isna()  # 无行情
         )
+        tradable = ~adjusting_denied
 
         # 记录各类拒绝原因（用于向用户报告）
         denials[DenialReason.suspended_buy] = (diff > 0) & self._suspended
         denials[DenialReason.suspended_sell] = (diff < 0) & self._suspended
         denials[DenialReason.no_price] = prices.isna() & (diff != 0)
 
-        # 涨跌停限制（方向相关）
-        limit_up = reaches_limit_up_vectorized(prices, limit_up, self._tick_sizes)
-        limit_down = reaches_limit_down_vectorized(prices, limit_down, self._tick_sizes)
+        # 权重目标落到股数后会经过 round 和最小下单量处理，实际买卖方向和数量可能变化；
+        # 因此数量层仍需对可交易标的做最终涨跌停校验。
+        limit_up = tradable & reaches_limit_up_vectorized(prices, limit_up, self._tick_sizes)
+        limit_down = tradable & reaches_limit_down_vectorized(prices, limit_down, self._tick_sizes)
         if direction == POSITION_DIRECTION.LONG:
             # 涨停不能开、跌停不能平
             limit_buy = (diff > 0) & limit_up
@@ -298,85 +300,219 @@ class OrderTargetPortfolio:
             return (self._min_qty[can_adjust] * prices[can_adjust] / self._total_value).min()
         return inf
 
-    MAX_ITERATIONS: int = 150
-    KP_INIT: float = 0.382  # 比例增益初始值（黄金分割比）
-    KP_MIN: float = 0.01  # 比例增益下限
-    KP_DECAY: float = 0.382  # 振荡时 kp 衰减因子
-    PRECISION: float = 0.0001  # 硬性精度要求（万分之一）
-    MAX_OSCILLATIONS: int = 10  # kp 达到下限后允许的最大振荡次数
+    def _current_weights(self, prices: Series) -> Series:
+        """按当前估值价格计算持仓权重。"""
+        if self._total_value <= 0:
+            return Series(0.0, index=self._target_weights.index, dtype=float)
+        return self._current_quantities.mul(prices, fill_value=0) / self._total_value
+
+    def _calc_weight_bounds(
+        self, direction: POSITION_DIRECTION, prices: Series
+    ) -> Tuple[Series, Series, Dict[DenialReason, Series]]:
+        """根据单票交易约束计算本次调仓允许到达的权重上下界。"""
+        index = self._target_weights.index
+        current_weights = self._current_weights(prices)
+
+        # 默认假设标的可以卖到 0，也可以买到任意权重，后续再把不可平仓、停牌、无行情、涨跌停等约束逐步收紧到 lower / upper 上。
+        upper = Series(inf, index=index, dtype=float)
+        constraint_masks: Dict[DenialReason, Series] = {}
+
+        # 不可平仓数量不能卖出，因此它对应的市值形成最低权重下界，例如当前持有 1000 股、只有 600 股可平，则剩余 400 股无论目标如何都必须保留。
+        remaining_after_closable = (self._current_quantities - self._current_closable).clip(lower=0)
+        lower = remaining_after_closable.mul(prices, fill_value=0) / self._total_value
+
+        last, limit_up, limit_down = itemgetter('last', 'limit_up', 'limit_down')(self._prices)
+        no_price = last.isna()
+        suspended_or_no_price = self._suspended | no_price
+        tradable = ~suspended_or_no_price
+
+        # 停牌或无行情时无法买卖，目标权重只能等于当前权重，将上下界同时钉在 current_weights，后续求解器就不会对这些标的生成调仓量。
+        lower[suspended_or_no_price] = current_weights[suspended_or_no_price]
+        upper[suspended_or_no_price] = current_weights[suspended_or_no_price]
+
+        limit_up_reached = tradable & reaches_limit_up_vectorized(last, limit_up, self._tick_sizes)
+        limit_down_reached = tradable & reaches_limit_down_vectorized(last, limit_down, self._tick_sizes)
+        if direction == POSITION_DIRECTION.LONG:
+            # 多头调仓中，涨停限制买入，所以最高权重不能超过当前权重；
+            # 跌停限制卖出，所以最低权重不能低于当前权重。
+            upper[limit_up_reached] = upper[limit_up_reached].clip(upper=current_weights[limit_up_reached])
+            lower[limit_down_reached] = lower[limit_down_reached].clip(lower=current_weights[limit_down_reached])
+        else:
+            # 空头方向的开平仓含义相反：跌停限制开空，涨停限制平空。
+            upper[limit_down_reached] = upper[limit_down_reached].clip(upper=current_weights[limit_down_reached])
+            lower[limit_up_reached] = lower[limit_up_reached].clip(lower=current_weights[limit_up_reached])
+
+        # 这里先记录原始约束 mask；是否真的构成本次拒单，还要结合目标方向判断。
+        # 例如多头下跌停只阻碍卖出，如果目标是增持，就不应被报告为 limit_down_sell。
+        # 方向过滤在 _calc_adjusting_weights 中基于 desired_weights 与 current_weights 完成。
+        constraint_masks[DenialReason.no_price] = no_price
+        constraint_masks[DenialReason.closable_exceeded] = (lower > 0) & (self._current_closable == 0)
+        if direction == POSITION_DIRECTION.LONG:
+            constraint_masks[DenialReason.limit_up_buy] = limit_up_reached
+            constraint_masks[DenialReason.limit_down_sell] = limit_down_reached
+        else:
+            constraint_masks[DenialReason.limit_down_buy] = limit_down_reached
+            constraint_masks[DenialReason.limit_up_sell] = limit_up_reached
+        return lower, upper, constraint_masks
+
+    @staticmethod
+    def _solve_bounded_scale(target_weights: Series, lower: Series, upper: Series, total_target_weight: float) -> float:
+        """求解统一缩放系数，使约束后的目标权重尽量保持原组合比例。
+
+        目标是找到 scale，使 sum(clip(target_weight * scale, lower, upper)) 接近目标总权重。
+        这里不反复试探 scale，而是把每个正目标权重标的的 lower / upper 转换成 scale 事件点：
+        lower / target_weight 表示该标的从下界固定状态进入随 scale 增长状态，
+        upper / target_weight 表示该标的触达上界并重新变为固定状态。
+        所有标的的事件点共同决定总权重函数的分段区间。
+        """
+        if total_target_weight <= lower.sum():
+            return 0.0
+
+        # 若所有资产都有有限上界，且目标总权重达到或超过上界总和，调用方可直接取各资产上界作为最接近的解。
+        if isfinite(upper).all():
+            upper_sum = upper.sum()
+            if total_target_weight >= upper_sum:
+                return inf
+
+        # 两个相邻事件点之间，各标的状态不变：一部分固定在 lower/upper，合计为 fixed_sum；
+        # 另一部分随 scale 增长，其原目标权重之和为 active_target。
+        # 因此区间内总权重可写为 fixed_sum + active_target * scale。
+        # 一旦目标总权重落入当前区间，就能直接解出 scale。
+        active_target = 0.0
+        fixed_sum = float(lower.sum())
+        prev_scale = 0.0
+        events = []
+        for order_book_id, weight in target_weights[target_weights > 0].items():
+            start = float(lower[order_book_id] / weight)
+            end = float(upper[order_book_id] / weight)
+            events.append((start, 'start', order_book_id, float(weight)))
+            if isfinite(end):
+                events.append((end, 'end', order_book_id, float(weight)))
+
+        sorted_events = sorted(events)
+        event_index = 0
+        while event_index < len(sorted_events):
+            scale = sorted_events[event_index][0]
+            current_total = fixed_sum + active_target * prev_scale
+            next_total = fixed_sum + active_target * scale
+            if active_target > 0 and current_total <= total_target_weight <= next_total:
+                return (total_target_weight - fixed_sum) / active_target
+
+            while event_index < len(sorted_events) and sorted_events[event_index][0] == scale:
+                _, kind, order_book_id, weight = sorted_events[event_index]
+                if kind == 'start':
+                    fixed_sum -= float(lower[order_book_id])
+                    active_target += weight
+                else:
+                    fixed_sum += float(upper[order_book_id])
+                    active_target -= weight
+                event_index += 1
+            prev_scale = scale
+
+        if active_target > 0:
+            return (total_target_weight - fixed_sum) / active_target
+        return inf
+
+    def _calc_adjusting_weights(self, direction: POSITION_DIRECTION) -> Tuple[Series, Dict[DenialReason, Series]]:
+        """计算权重层面的调仓目标。
+
+        该函数根据停牌、无行情、涨跌停、不可平仓等约束重新分配目标权重；
+        实际下单数量、整手、最小下单量和现金约束由后续数量层流程处理。
+        """
+        prices = self._prices_settle_ccy
+        total_target_weight = float(self._target_weights.sum())
+        lower, upper, constraint_masks = self._calc_weight_bounds(direction, prices)
+        scale = self._solve_bounded_scale(self._target_weights, lower, upper, total_target_weight)
+        if scale == inf:
+            # 目标总权重无法完全分配到可交易资产时，使用最接近的上界解。
+            # 这里不把权重分给原始目标为 0 的资产，避免凭空引入新持仓。
+            target_weights = lower.copy()
+            positive_target = self._target_weights > 0
+            target_weights[positive_target] = upper[positive_target]
+        else:
+            # 正常情况下先按统一 scale 保持原目标比例，再用上下界落实单票交易约束。
+            # 被上下界锁住的权重差额，会在仍未触达上界且原目标权重大于 0 的标的之间按原比例分配。
+            target_weights = (self._target_weights * scale).clip(lower=lower, upper=upper)
+
+        current_weights = self._current_weights(prices)
+        # desired_weights 只用于判断原始调整方向，不作为最终目标权重下单。
+        if scale == inf:
+            desired_weights = lower.copy()
+            positive_target = self._target_weights > 0
+            desired_weights[positive_target] = inf
+        else:
+            desired_weights = self._target_weights * scale
+        denials: Dict[DenialReason, Series] = {}
+        no_price = constraint_masks[DenialReason.no_price]
+        denials[DenialReason.no_price] = no_price & (desired_weights != current_weights)
+        denials[DenialReason.suspended_buy] = self._suspended & (desired_weights > current_weights)
+        denials[DenialReason.suspended_sell] = self._suspended & (desired_weights < current_weights)
+        denials[DenialReason.closable_exceeded] = constraint_masks[DenialReason.closable_exceeded] & (
+            desired_weights < lower
+        )
+
+        # denials 只记录确实阻碍本次目标调整方向的约束。
+        # 例如跌停标的若当前需要买入，它不应被标记为无法卖出。
+        for reason, mask in constraint_masks.items():
+            if reason in {DenialReason.no_price, DenialReason.closable_exceeded}:
+                continue
+            if reason in {DenialReason.limit_up_buy, DenialReason.limit_down_buy}:
+                denials[reason] = mask & (desired_weights > current_weights)
+            else:
+                denials[reason] = mask & (desired_weights < current_weights)
+        return target_weights, denials
+
+    def _apply_cash_constraint(
+        self, diff: Series, denials: Dict[DenialReason, Series], prices: Series, direction: POSITION_DIRECTION
+    ) -> Series:
+        """资金不足时按买入增量等比例收缩。
+
+        现金约束依赖数量层确定后的 diff、交易成本和卖出回款，因此在权重和数量约束之后处理。
+        这里保留卖出交易以释放资金，只缩减买入数量；该兜底主要处理交易成本、round、最小下单量等
+        后置因素造成的小额现金偏差。此时重新整体压低目标仓位会同时减少本来可执行的卖出和买入，
+        容易放大总仓位偏差；只缩减买入能保留已计算出的可执行调仓结果，通常误差更小。
+        同时该方式只需一次向量化缩放和一次数量层复查，避免现金不足时反复进入权重求解和数量约束循环。
+        """
+        transaction_costs = self._estimate_transaction_costs(diff, prices)
+        cash_consumed = (diff * prices).sum() + transaction_costs
+        if cash_consumed <= self._cash_available:
+            return diff
+
+        buy_mask = diff > 0
+        gross_buy_value = (diff[buy_mask] * prices[buy_mask]).sum()
+        if gross_buy_value <= 0:
+            return diff
+
+        sell_proceeds = -(diff[diff < 0] * prices[diff < 0]).sum()
+        buy_budget = max(float(self._cash_available + sell_proceeds - transaction_costs), 0.0)
+        scaled_diff = diff.copy()
+        scaled_diff[buy_mask] = (scaled_diff[buy_mask] * min(buy_budget / gross_buy_value, 1.0)).round(0)
+        adjusted_quantities = self._current_quantities.add(scaled_diff, fill_value=0)
+        cash_diff, cash_denials = self._calc_adjusting_quantities(adjusted_quantities, direction)
+        for reason, mask in cash_denials.items():
+            denials[reason] = denials.get(reason, Series(False, index=mask.index)) | mask
+        return cash_diff
 
     def __call__(self, direction: POSITION_DIRECTION = POSITION_DIRECTION.LONG) -> AdjustingResult:
-        """使用 P 控制器迭代求解最优调仓方案。
+        """按交易约束计算可执行的目标组合调整量。
 
         算法核心思路：
-        1. 通过 safety 系数缩放目标持仓量，用比例控制器（P-controller）调节 safety 使实际持仓比例逼近目标权重
-        2. 仅基于可调资产（排除停牌、涨跌停、不可平仓等）计算最小可调精度，无可调资产时立即退出
-        tips:
-        1. 误差定义：diff_proportion = 持仓市值 / (总资产 - 交易成本)，将手续费、税费、汇率成本纳入控制目标
-        2. 振荡抑制：检测误差符号翻转时降低比例增益 kp，防止在离散约束下来回震荡
+        1. 将停牌、无行情、涨跌停、不可平仓等限制转换为单票权重上下界。
+        2. 求解统一缩放系数，在约束内尽量保持原始目标权重比例。
+        3. 将目标权重转换为调仓数量，并应用整手、最小下单量和现金约束。
         """
         if self._current_quantities.empty and self._target_weights.empty:
             return AdjustingResult(adjustments=Series(dtype='float64'), denials=dict())
 
-        # 初始化 P 控制器状态
-        total_target_weight = self._target_weights.sum()
-        safety = 1.0  # 目标持仓缩放系数，通过迭代调节逼近目标权重
-        kp = self.KP_INIT  # 比例增益，控制每次 safety 调整幅度
-        prev_error = 0.0  # 上一次带符号误差，用于振荡检测
-        oscillation_count = 0  # 振荡次数，误差符号翻转时累加
-
-        # 历史最优可行解
-        best_error = inf
-        best_diff = Series(dtype='float64')
-        best_denials = None
         prices = self._prices_settle_ccy
-
-        for iteration in range(self.MAX_ITERATIONS):
-            # 1. 根据当前 safety 计算目标持仓量，并应用各类约束
-            target_quantities: Series = (self._total_value * safety * self._target_weights / prices).round(0)
-            diff, denials = self._calc_adjusting(target_quantities, direction)
-
-            # 2. 计算交易成本和现金消耗
-            transaction_costs = self._estimate_transaction_costs(diff, prices)
-            cash_consumed = (diff * prices).sum() + transaction_costs
-
-            # 3. 计算成本感知误差
-            # signed_error > 0 表示实际比例低于目标，需增大 safety；反之需减小
-            total_market_value = ((self._current_quantities.add(diff, fill_value=0)) * prices).sum()
-            diff_proportion = total_market_value / (self._total_value - transaction_costs)
-            signed_error = total_target_weight - diff_proportion
-            current_error = abs(signed_error)
-
-            # 4. 更新最优可行解
-            if current_error < best_error:
-                best_error = current_error
-                best_diff = diff
-                best_denials = denials
-
-            # 5. 振荡检测与 kp 衰减
-            if signed_error * prev_error < 0:
-                oscillation_count += 1
-                kp *= self.KP_DECAY
-                kp = max(kp, self.KP_MIN)
-
-            # 检查退出条件
-            min_adjustable = self._calc_min_adjustable(denials, prices)
-            if (
-                cash_consumed < self._cash_available
-                # 寻找基于当前可用现金下的最优解
-                # TODO: 分别计算 A H 股的可用资金
-                and (
-                        current_error < min_adjustable
-                        or current_error <= self.PRECISION
-                )
-            ) or (kp <= self.KP_MIN and oscillation_count > self.MAX_OSCILLATIONS):
-                break
-
-            # safety 调整量 = kp × 误差
-            safety += kp * signed_error
-            prev_error = signed_error
-
-        return AdjustingResult(adjustments=best_diff, denials=self._format_denials(best_denials or dict()))
+        target_weights, denials = self._calc_adjusting_weights(direction)
+        target_quantities = (self._total_value * target_weights / prices).round(0)
+        # 权重层先用交易约束重新分配目标权重；数量层仍需在股数 round 后做最终交易约束校验。
+        diff, round_denials = self._calc_adjusting_quantities(target_quantities, direction)
+        for reason, mask in round_denials.items():
+            denials[reason] = denials.get(reason, Series(False, index=mask.index)) | mask
+        diff = self._apply_cash_constraint(diff, denials, prices, direction)
+        return AdjustingResult(adjustments=diff, denials=self._format_denials(denials))
 
 
 @export_as_api
