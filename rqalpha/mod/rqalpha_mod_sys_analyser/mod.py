@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 from rqrisk import Risk, DAILY, WEEKLY, MONTHLY
 
-from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
+from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION, TAX_TYPE
 from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.environment import Environment
@@ -45,6 +45,7 @@ from rqalpha.api import export_as_api
 from rqalpha.const import TRADING_CALENDAR_TYPE
 from rqalpha.model import Instrument
 from rqalpha.model.order import Order
+from rqalpha.portfolio import PortfolioEvent
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
@@ -111,6 +112,8 @@ class AnalyserMod(AbstractMod):
         self._benchmark: Optional[List[Tuple[str, float]]] = None
 
         self._plot_store = None
+
+        self._portfolio_event: List[PortfolioEvent] = []
 
     def get_state(self):
         return jsonpickle.dumps({
@@ -253,6 +256,7 @@ class AnalyserMod(AbstractMod):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
+        self._env.event_bus.add_listener(EVENT.PORTFOLIO_EVENT, self._collect_portfolio_event)
 
     def _collect_trade(self, event):
         self._trades.append(self._to_trade_record(event.trade))
@@ -280,6 +284,9 @@ class AnalyserMod(AbstractMod):
                 )
                 if record is not None:
                     self._positions[account_type].append(record)
+
+    def _collect_portfolio_event(self, event):
+        self._portfolio_event.append(self._to_portfolio_event_record(event))
 
     def _symbol(self, order_book_id, trading_dt: datetime.datetime):
         return self._env.data_proxy.get_active_instrument(order_book_id, trading_dt).symbol
@@ -402,6 +409,21 @@ class AnalyserMod(AbstractMod):
             'last_price': self._safe_convert(trade.last_price),
             'order_id': trade.order_id,
             'transaction_cost': trade.transaction_cost,
+        }
+    
+    def _to_portfolio_event_record(self, portfolio_event):
+        tax_type = getattr(portfolio_event, "tax_type", np.nan)
+        if isinstance(tax_type, TAX_TYPE):
+            tax_type = tax_type.value
+        return {
+            "datetime": portfolio_event.trading_dt.strftime("%Y-%m-%d %H:%M:%S"),
+            "trading_date": portfolio_event.trading_dt.date().strftime("%Y-%m-%d"),
+            "type": portfolio_event.portfolio_event_type.value,
+            "order_book_id": getattr(portfolio_event, "order_book_id", np.nan),
+            "delta_quantity": getattr(portfolio_event, "delta_quantity", np.nan),
+            "delta_amount": getattr(portfolio_event, "delta_amount", np.nan),
+            "tax_type": tax_type,
+            "remark": getattr(portfolio_event, "remark", ""),
         }
 
     def _pressure_test(self, portfolio: pd.DataFrame, benchmark_portfolio: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
@@ -561,6 +583,11 @@ class AnalyserMod(AbstractMod):
             'trades': trades,
             'portfolio': total_portfolios,
         }
+
+        if self._portfolio_event:
+            portfolio_event = pd.DataFrame(self._portfolio_event)
+            portfolio_event = portfolio_event.set_index(pd.DatetimeIndex(portfolio_event["datetime"]))
+            result_dict["portfolio_event"] = portfolio_event
 
         if _all_trades_are_equities(trades):
             # 策略仅交易股票、指数、场内基金等品种时才计算换手率

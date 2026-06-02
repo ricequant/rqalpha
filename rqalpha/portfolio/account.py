@@ -171,8 +171,7 @@ class Account(metaclass=AccountMeta):
                 order.unfilled_quantity * order.quantity / order.init_frozen_cash for order in orders if
                 order.is_active())
 
-    def get_positions(self):
-        # type: () -> Iterable[Position]
+    def get_positions(self) -> Iterable[Position]:
         """
         获取所有持仓对象列表，
         """
@@ -207,48 +206,42 @@ class Account(metaclass=AccountMeta):
         return PositionProxyDict(self._positions)
 
     @property
-    def frozen_cash(self):
-        # type: () -> float
+    def frozen_cash(self) -> float:
         """
         冻结资金
         """
         return self._frozen_cash
 
     @property
-    def cash(self):
-        # type: () -> float
+    def cash(self) -> float:
         """
         可用资金
         """
         return self._total_cash - self.margin - self._frozen_cash
 
     @property
-    def market_value(self):
-        # type: () -> float
+    def market_value(self) -> float:
         """
         [float] 市值
         """
         return sum(p.market_value * (1 if p.direction == POSITION_DIRECTION.LONG else -1) for p in self._iter_pos())
 
     @property
-    def transaction_cost(self):
-        # type: () -> float
+    def transaction_cost(self) -> float:
         """
         总费用
         """
         return sum(p.transaction_cost for p in self._iter_pos())
 
     @property
-    def cash_liabilities(self):
-        # type: () -> float
+    def cash_liabilities(self) -> float:
         """
         现金负债
         """
         return self._cash_liabilities
 
     @property
-    def cash_liabilities_interest(self):
-        # type: () -> float
+    def cash_liabilities_interest(self) -> float:
         """
         现金负债当日的利息
         """
@@ -262,32 +255,28 @@ class Account(metaclass=AccountMeta):
         return sum(getattr(p, "margin", 0) for p in self._iter_pos())
 
     @property
-    def buy_margin(self):
-        # type: () -> float
+    def buy_margin(self) -> float:
         """
         多方向保证金
         """
         return sum(getattr(p, "margin", 0) for p in self._iter_pos(direction=POSITION_DIRECTION.LONG))
 
     @property
-    def sell_margin(self):
-        # type: () -> float
+    def sell_margin(self) -> float:
         """
         空方向保证金
         """
         return sum(getattr(p, "margin", 0) for p in self._iter_pos(POSITION_DIRECTION.SHORT))
 
     @property
-    def daily_pnl(self):
-        # type: () -> float
+    def daily_pnl(self) -> float:
         """
         当日盈亏
         """
         return self.trading_pnl + self.position_pnl - self.transaction_cost - self.cash_liabilities_interest
 
     @property
-    def position_equity(self):
-        # type: () -> float
+    def position_equity(self) -> float:
         """
         持仓总权益
         """
@@ -304,24 +293,21 @@ class Account(metaclass=AccountMeta):
         return total_value
 
     @property
-    def total_cash(self):
-        # type: () -> float
+    def total_cash(self) -> float:
         """
         账户总资金
         """
         return self._total_cash - self.margin
 
     @property
-    def position_pnl(self):
-        # type: () -> float
+    def position_pnl(self) -> float:
         """
         昨仓盈亏
         """
         return sum(p.position_pnl for p in self._iter_pos())
 
     @property
-    def trading_pnl(self):
-        # type: () -> float
+    def trading_pnl(self) -> float:
         """
         交易盈亏
         """
@@ -377,8 +363,7 @@ class Account(metaclass=AccountMeta):
             self._positions.clear()
             self._total_cash = 0
     
-    def _post_settlement(self, event):
-        # type: (EVENT) -> None
+    def _post_settlement(self, event: EVENT) -> None:
         """
         该事件必须在 post_settlement 中最后执行，若有其他事件要加入到 post_settlement 中，请使用 event_bus.prepend_listener 添加
         """
@@ -417,14 +402,12 @@ class Account(metaclass=AccountMeta):
         def _apply(position_direction: POSITION_DIRECTION):
             nonlocal delta_cash, delta_monthly_realized_pnl
             apply_result = self._get_or_create_pos(order_book_id, position_direction).apply_trade(trade)
-            if isinstance(apply_result, tuple):
+            try:
                 delta_cash += apply_result[0]
                 delta_monthly_realized_pnl += apply_result[1]
-            elif isinstance(apply_result, float):
+            except IndexError:
                 # 向前兼容，会存在 mod 的不返回月度已实现交易变化量的情况
                 delta_cash += apply_result
-            else:
-                raise ValueError(f"Invalid apply result type: {type(apply_result)}")
 
         delta_cash = delta_monthly_realized_pnl = 0
         if trade.position_effect == POSITION_EFFECT.MATCH:
@@ -506,8 +489,7 @@ class Account(metaclass=AccountMeta):
         fee = self._management_fee_calculator_func(self, self._management_fee_rate)
         return fee
 
-    def register_management_fee_calculator(self, calculator):
-        # type: (Callable[[Account, float], float]) -> None
+    def register_management_fee_calculator(self, calculator: Callable[["Account", float], float]):
         """
         设置管理费用计算逻辑
         该方法需要传入一个函数
@@ -523,14 +505,12 @@ class Account(metaclass=AccountMeta):
         """
         self._management_fee_calculator_func = calculator
 
-    def set_management_fee_rate(self, rate):
-        # type: (float) -> None
+    def set_management_fee_rate(self, rate: float) -> None:
         """管理费用计算费率"""
         self._management_fee_rate = rate
 
     @property
-    def management_fees(self):
-        # type: () -> float
+    def management_fees(self) -> float:
         """该账户的管理费用总计"""
         return self._management_fees
 
@@ -567,20 +547,6 @@ class Account(metaclass=AccountMeta):
                 pass
         else:
             user_system_log.warn(f"{self.type} not support finance_repay")
-
-    @property
-    def capital_gains_tax(self) -> float:
-        """
-        资本收益税（包含增值税、附加税等）
-        """
-        return self._capital_gains_tax
-    
-    @property
-    def dividend_tax(self) -> float:
-        """
-        红利税
-        """
-        return self._dividend_tax
 
     def pay_taxes(self, amount: float, tax_type: TAX_TYPE):
         if tax_type == TAX_TYPE.CAPITAL_GAINS:

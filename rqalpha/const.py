@@ -222,7 +222,6 @@ class MARKET(CustomEnum):
 
 
 class TAX_TYPE(CustomEnum):
-    STAMP = "stamp"                  # 印花税
     CAPITAL_GAINS = "capital_gains"  # 资本收益税（含增值税、附加税等）
     DIVIDEND = "dividend"            # 红利税
 

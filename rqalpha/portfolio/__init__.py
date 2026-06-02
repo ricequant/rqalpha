@@ -46,7 +46,8 @@ class PortfolioEvent(NamedTuple):
     delta_amount: float
     datetime: datetime_module.datetime
     trading_date: date
-    remark: Optional[str]
+    tax_type: Optional[TAX_TYPE]
+    remark: Optional[str] = None
 
 
 class CapitalGainsTaxMixin:
@@ -129,7 +130,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
         env.event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         env.event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
-        env.event_bus.add_listener(EVENT.PORTFOLIO_EVENT, self._collect_portfolio_event)
+        env.event_bus.add_listener(EVENT.PORTFOLIO_EVENT, self._pay_dividend_tax)
 
     @classmethod
     def _init_accounts(
@@ -389,23 +390,14 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
             
             self._env.event_bus.publish_event(Event(
                 EVENT.PORTFOLIO_EVENT, portfolio_event_type=PORTFOLIO_EVENT_TYPE.PAY_TAXES, delta_amount=tax_amount, 
-                trading_dt=self._env.trading_dt, remark=TAX_TYPE.CAPITAL_GAINS.value
+                trading_dt=self._env.trading_dt, tax_type=TAX_TYPE.CAPITAL_GAINS
             ))
 
-    def _collect_portfolio_event(self, event):
-        order_book_id = getattr(event, "order_book_id", None)
-        delta_quantity = getattr(event, "delta_quantity", 0)
-        delta_amount = getattr(event, "delta_amount", 0)
-        remark = getattr(event, "remark", None)
-        self._portfolio_event.append(PortfolioEvent(
-            type=event.portfolio_event_type, 
-            order_book_id=order_book_id, 
-            delta_quantity=delta_quantity, 
-            delta_amount=delta_amount,
-            datetime=event.trading_dt,
-            trading_date=event.trading_dt.date(),
-            remark=remark,
-        ))
+    def _pay_dividend_tax(self, event):
+        tax_type = getattr(event, "tax_type")
+        if tax_type == TAX_TYPE.DIVIDEND:
+            # 只有股票账户会扣除红利税
+            self.stock_account.pay_taxes(event.delta_amount, tax_type)
 
 
 class MixedPositions(Mapping):
