@@ -18,19 +18,20 @@
 from itertools import chain
 from collections.abc import Mapping
 from typing import Callable, Dict, List, Tuple, Union, NamedTuple, Optional
+import datetime as datetime_module
+from datetime import date
 
 import jsonpickle
 import numpy as np
 import six
-import datetime as datetime_module
-from datetime import date
 
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE, POSITION_EFFECT, TAX_TYPE, PORTFOLIO_EVENT_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.portfolio.account import Account
+from rqalpha.portfolio.capital_gains_tax import CapitalGainsTaxMixin
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
@@ -40,70 +41,14 @@ OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
 
 class PortfolioEvent(NamedTuple):
-    type: PORTFOLIO_EVENT_TYPE
-    order_book_id: Optional[str]
-    delta_quantity: int
-    delta_amount: float
     datetime: datetime_module.datetime
     trading_date: date
-    tax_type: Optional[TAX_TYPE]
+    event_category: str
+    specific_event: Optional[str]
+    order_book_id: Optional[str]
+    delta_quantity: int
+    delta_amount: int
     remark: Optional[str] = None
-
-
-class CapitalGainsTaxMixin:
-    """
-    计算 `金融商品转让增值税` + `附加税`，具体计算逻辑和公式如下：
-    定义: 
-        annual_deductible_balance: 年度可抵余额 <= 0，每年年初重置为 0；
-        monthly_realized_pnl: 月初为 0，当月所有的卖出交易中，卖出价扣除买入价（成本价）后加总的总额
-    """
-    def __init__(self):
-        self._annual_deductible_balance = 0
-        self._monthly_realized_pnl = 0
-        self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self._on_before_trading)
-
-    def calc_capital_gains_tax(self, trading_dt: date) -> float:
-        """
-        每月月底进行缴纳税额计算 (tax_basis = annual_deductible_balance + monthly_realized_pnl):
-        1) tax_basis > 0: 
-            a. tax = (tax_basis * 3%)[增值税] + (tax_basis * 3% * (3.5% + 1.5% + 1%))[附加税]
-            b. set annual_deductible_balance = monthly_realized_pnl = 0
-        2) tax_basis <= 0:
-            annual_deductible_balance = tax_basis then set monthly_realized_pnl = 0
-        3) 特别说明：
-            为了方便计算，此处将「增值税」和 「附加税」的费率统一为配置中的 base.capital_gain_tax_rate，用户可以进行自定义
-        """
-        if not self._is_end_of_month(trading_dt):
-            return 0
-        tax_basis = self._annual_deductible_balance + self._monthly_realized_pnl
-        if tax_basis > 0:
-            tax = tax_basis * self._env.config.base.capital_gain_tax_rate
-            self._monthly_realized_pnl = self._annual_deductible_balance = 0
-            return tax
-        else:
-            self._annual_deductible_balance = tax_basis
-            self._monthly_realized_pnl = 0
-            return 0
-
-    def _is_end_of_month(self, trading_dt: date) -> bool:
-        next_trading_date = self._env.data_proxy.get_next_trading_date(trading_dt)
-        return next_trading_date.month != trading_dt.month
-    
-    def _is_start_of_year(self, trading_dt: date) -> bool:
-        if trading_dt.month != 1: # 减少交易日获取
-            return False
-        prev_trading_date = self._env.data_proxy.get_previous_trading_date(trading_dt)
-        return prev_trading_date.year != trading_dt.year
-
-    def update_monthly_realized_pnl(self, delta_amount: float) -> None:
-        self._monthly_realized_pnl += delta_amount
-
-    def _on_before_trading(self, event):
-        """
-        每年年初将 K 重置为 0
-        """
-        if self._is_start_of_year(event.trading_dt.date()):
-            self._annual_deductible_balance = 0
 
 
 class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
@@ -126,11 +71,10 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
         self._env = env
         CapitalGainsTaxMixin.__init__(self)
-        self._portfolio_event: List[PortfolioEvent] = []
         env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
         env.event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         env.event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
-        env.event_bus.add_listener(EVENT.PORTFOLIO_EVENT, self._pay_dividend_tax)
+        env.event_bus.add_listener(EVENT.PAY_TAXES, self._pay_dividend_tax)
 
     @classmethod
     def _init_accounts(
@@ -372,7 +316,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         self.update_monthly_realized_pnl(delta_monthly_realized_pnl)
 
     def _on_settlement(self, event):
-        tax_amount = self.calc_capital_gains_tax(self._env.trading_dt.date())
+        tax_amount = self.calc_capital_gains_tax()
         if tax_amount > 0:
             # 1. 优先扣除股票账户现金，如果没有设置股票账户或者股票账户现金不够扣除时，扣除期货账户
             # 2. 股票和期货现金都不够扣除，或者股票账户不够扣除，但是没设置期货账户时，扣除股票账户
@@ -389,8 +333,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
                     self.future_account.pay_taxes(futures_tax, TAX_TYPE.CAPITAL_GAINS)
             
             self._env.event_bus.publish_event(Event(
-                EVENT.PORTFOLIO_EVENT, portfolio_event_type=PORTFOLIO_EVENT_TYPE.PAY_TAXES, delta_amount=tax_amount, 
-                trading_dt=self._env.trading_dt, tax_type=TAX_TYPE.CAPITAL_GAINS
+                EVENT.PAY_TAXES, delta_amount=tax_amount, trading_dt=self._env.trading_dt, tax_type=TAX_TYPE.CAPITAL_GAINS
             ))
 
     def _pay_dividend_tax(self, event):

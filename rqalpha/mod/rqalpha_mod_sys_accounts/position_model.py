@@ -25,7 +25,7 @@ import pandas as pd
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, \
-    TRADING_CALENDAR_TYPE, PORTFOLIO_EVENT_TYPE, TAX_TYPE
+    TRADING_CALENDAR_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
@@ -297,39 +297,37 @@ class StockPosition(Position):
         self._queue.handle_split(ratio_decimal, self._quantity)
         return ratio
 
-    def calc_dividend_tax(self, trading_date: date, buy_date: date, quantity: int):
-        """
-        按持股期限差异化税率计算红利税，税率如下:
-            - 持股期限 <= 1个月: 20%
-            - 1个月 < 持股期限 <= 1年: 10%
-            - 持股期限 > 1年: 免征
-        """
-        if buy_date >= (pd.to_datetime(trading_date) - pd.DateOffset(months=1)).date():
-            tax_rate = 0.2
-        elif buy_date >= (pd.to_datetime(trading_date) - pd.DateOffset(years=1)).date():
-            tax_rate = 0.1
-        else:
-            return 0
-        dividends = self._historical_dividends[self._historical_dividends.index >= convert_date_to_date_int(buy_date)]
-        return dividends.sum() * quantity * tax_rate
-
     def _after_position_queue_updated(self, trade: Trade, close_details: List[Tuple[date, int]]):
         if trade.position_effect == POSITION_EFFECT.CLOSE:
-            self.pay_dividend_tax(trade.trading_datetime, close_details)
+            self._pay_dividend_tax(trade.trading_datetime, close_details)
 
-    def pay_dividend_tax(self, trading_dt: datetime, close_details: List[Tuple[date, int]]):
+    def _pay_dividend_tax(self, trading_dt: datetime, close_details: List[Tuple[date, int]]):
         if not self.dividend_tax_enabled or self._historical_dividends.empty:
             return
-
         dividend_tax = 0
-        for buy_date, quantity in close_details:
-            dividend_tax += self.calc_dividend_tax(trading_dt.date(), buy_date, abs(quantity))
+        if close_details:
+            """
+            按持股期限差异化税率计算红利税，税率如下:
+                - 持股期限 <= 1个月: 20%
+                - 1个月 < 持股期限 <= 1年: 10%
+                - 持股期限 > 1年: 免征
+            """
+            target_month_ago_date = (pd.to_datetime(trading_dt) - pd.DateOffset(months=1)).date()
+            target_year_ago_date = (pd.to_datetime(trading_dt) - pd.DateOffset(years=1)).date()
+            for buy_date, quantity in close_details:
+                if buy_date >= target_month_ago_date:
+                    tax_rate = 0.2
+                elif buy_date >= target_year_ago_date:
+                    tax_rate = 0.1
+                else:
+                    continue
+                dividends = self._historical_dividends[self._historical_dividends.index >= convert_date_to_date_int(buy_date)]
+                dividend_tax += dividends.sum() * abs(quantity) * tax_rate
 
-        if dividend_tax > 0:
-            self._env.event_bus.publish_event(Event(
-                EVENT.PORTFOLIO_EVENT, portfolio_event_type=PORTFOLIO_EVENT_TYPE.PAY_TAXES, order_book_id=self.order_book_id,
-                delta_amount=dividend_tax, trading_dt=trading_dt, tax_type=TAX_TYPE.DIVIDEND
-            ))
+            if dividend_tax > 0:
+                self._env.event_bus.publish_event(Event(
+                    EVENT.PAY_TAXES, order_book_id=self.order_book_id, delta_amount=dividend_tax, trading_dt=trading_dt, tax_type=TAX_TYPE.DIVIDEND
+                ))
 
 
 class FuturePosition(Position):

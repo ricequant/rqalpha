@@ -224,7 +224,3 @@ class MARKET(CustomEnum):
 class TAX_TYPE(CustomEnum):
     CAPITAL_GAINS = "capital_gains"  # 资本收益税（含增值税、附加税等）
     DIVIDEND = "dividend"            # 红利税
-
-
-class PORTFOLIO_EVENT_TYPE(CustomEnum):
-    PAY_TAXES = "pay_taxes"

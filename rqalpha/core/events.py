@@ -173,8 +173,8 @@ class EVENT(Enum):
     # 用户事件，接受用户发送的信息
     USER = 'user'
 
-    # 用于触发 Portfolio 的非交易类但对现金或仓位产生变化的事件
-    PORTFOLIO_EVENT = 'portfolio_event'
+    # 扣税事件，目前包括红利税和增值税
+    PAY_TAXES = 'pay_taxes'
 
 
 def parse_event(event_str):

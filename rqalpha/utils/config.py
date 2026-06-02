@@ -121,7 +121,11 @@ def _check_capital_gain_tax_rate(base_config):
     # This check will be remove in a later version.
     if "capital_gain_tax_rate" not in base_config:
         init_logger()
-        system_log.warning(_(u"The strategy requires explicit configuration of base.capital_gain_tax_rate, which currently has a default value of 0 and will be changed to a non-zero value in a future version."))
+        system_log.warning(_(
+            u"The strategy requires explicit configuration of base.capital_gain_tax_rate, \
+                which currently has a default value of 0 and will be changed to a non-zero value in a future version.\
+                    (The configuration description can be found at https://www.ricequant.com/doc/rqalpha-plus/api/config)"
+            ))
 
 
 def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):

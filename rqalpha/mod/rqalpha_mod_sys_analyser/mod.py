@@ -113,7 +113,7 @@ class AnalyserMod(AbstractMod):
 
         self._plot_store = None
 
-        self._portfolio_event: List[PortfolioEvent] = []
+        self._portfolio_event = []
 
     def get_state(self):
         return jsonpickle.dumps({
@@ -256,7 +256,7 @@ class AnalyserMod(AbstractMod):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
-        self._env.event_bus.add_listener(EVENT.PORTFOLIO_EVENT, self._collect_portfolio_event)
+        self._env.event_bus.add_listener(EVENT.PAY_TAXES, self._on_pay_taxes)
 
     def _collect_trade(self, event):
         self._trades.append(self._to_trade_record(event.trade))
@@ -285,8 +285,18 @@ class AnalyserMod(AbstractMod):
                 if record is not None:
                     self._positions[account_type].append(record)
 
-    def _collect_portfolio_event(self, event):
-        self._portfolio_event.append(self._to_portfolio_event_record(event))
+    def _on_pay_taxes(self, event):
+        # 将扣税事件信息加入 self._portfolio_event 中
+        portfolio_event = PortfolioEvent(
+            datetime=event.trading_dt,
+            trading_date=event.trading_dt.date(),
+            event_category=event.event_type.value,
+            specific_event=event.tax_type.value,
+            order_book_id=getattr(event, "order_book_id", None),
+            delta_quantity=0,
+            delta_amount=event.delta_amount,
+        )
+        self._portfolio_event.append(self._to_portfolio_event_record(portfolio_event))
 
     def _symbol(self, order_book_id, trading_dt: datetime.datetime):
         return self._env.data_proxy.get_active_instrument(order_book_id, trading_dt).symbol
@@ -411,19 +421,16 @@ class AnalyserMod(AbstractMod):
             'transaction_cost': trade.transaction_cost,
         }
     
-    def _to_portfolio_event_record(self, portfolio_event):
-        tax_type = getattr(portfolio_event, "tax_type", np.nan)
-        if isinstance(tax_type, TAX_TYPE):
-            tax_type = tax_type.value
+    def _to_portfolio_event_record(self, portfolio_event: PortfolioEvent):
         return {
-            "datetime": portfolio_event.trading_dt.strftime("%Y-%m-%d %H:%M:%S"),
-            "trading_date": portfolio_event.trading_dt.date().strftime("%Y-%m-%d"),
-            "type": portfolio_event.portfolio_event_type.value,
-            "order_book_id": getattr(portfolio_event, "order_book_id", np.nan),
-            "delta_quantity": getattr(portfolio_event, "delta_quantity", np.nan),
-            "delta_amount": getattr(portfolio_event, "delta_amount", np.nan),
-            "tax_type": tax_type,
-            "remark": getattr(portfolio_event, "remark", ""),
+            "datetime": portfolio_event.datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            "trading_date": portfolio_event.trading_date.strftime("%Y-%m-%d"),
+            "event_category": portfolio_event.event_category,
+            "specific_event": portfolio_event.specific_event or np.nan,
+            "order_book_id": portfolio_event or np.nan,
+            "delta_quantity": portfolio_event.delta_quantity,
+            "delta_amount": portfolio_event.delta_amount,
+            "remark": portfolio_event.remark or "",
         }
 
     def _pressure_test(self, portfolio: pd.DataFrame, benchmark_portfolio: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
