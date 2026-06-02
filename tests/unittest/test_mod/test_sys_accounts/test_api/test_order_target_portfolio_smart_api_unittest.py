@@ -325,6 +325,11 @@ def test_order_target_portfolio_smart_limit_and_valuation_prices(environment, on
 # TODO：测试资金不足的场景
 
 
+def _set_trading_status(otp):
+    otp._no_price = otp._prices["last"].isna()
+    otp._tradable = ~(otp._suspended | otp._no_price)
+
+
 def _build_order_target_portfolio_stub(index):
     """构造只包含调仓计算所需字段的 OrderTargetPortfolio。"""
     otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
@@ -345,6 +350,7 @@ def _build_order_target_portfolio_stub(index):
     )
     otp._prices_settle_ccy = otp._prices["last"]
     otp._target_weights = Series(0.0, index=index, dtype=float)
+    _set_trading_status(otp)
     return otp
 
 
@@ -368,6 +374,7 @@ def _build_adjusting_weight_stub():
         dtype=float,
     )
     otp._prices_settle_ccy = otp._prices["last"]
+    _set_trading_status(otp)
     return otp
 
 
@@ -404,6 +411,7 @@ def test_order_target_portfolio_adjusting_weights_keeps_zero_target_out_of_distr
         dtype=float,
     )
     otp._prices_settle_ccy = otp._prices["last"]
+    _set_trading_status(otp)
 
     target_weights, _ = otp._calc_adjusting_weights(POSITION_DIRECTION.LONG)
 
@@ -432,6 +440,7 @@ def test_order_target_portfolio_adjusting_weights_returns_upper_when_target_unre
         dtype=float,
     )
     otp._prices_settle_ccy = otp._prices["last"]
+    _set_trading_status(otp)
 
     target_weights, denials = otp._calc_adjusting_weights(POSITION_DIRECTION.LONG)
 
@@ -465,6 +474,7 @@ def test_order_target_portfolio_cash_constraint_scales_only_buy_quantities():
     diff = Series([-10, 80, 20], index=index, dtype=float)
     denials = {}
     otp._estimate_transaction_costs = lambda diff, prices: 0.0
+    _set_trading_status(otp)
 
     adjusted = otp._apply_cash_constraint(diff, denials, prices, POSITION_DIRECTION.LONG)
 
@@ -490,6 +500,7 @@ def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band
         index=index,
         dtype=float,
     )
+    _set_trading_status(otp)
 
     diff, denials = otp._calc_adjusting_quantities(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.LONG)
 
@@ -522,6 +533,7 @@ def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band
         index=index,
         dtype=float,
     )
+    _set_trading_status(otp)
 
     diff, denials = otp._calc_adjusting_quantities(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.SHORT)
 

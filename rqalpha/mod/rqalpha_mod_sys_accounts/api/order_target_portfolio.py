@@ -173,6 +173,8 @@ class OrderTargetPortfolio:
                 raise RQApiNotSupportedError(_('frequency {} is not supported').format(env.config.base.frequency))
         else:
             raise RQApiNotSupportedError(_('not supported to be called in {} phase').format(phase))
+        self._no_price = self._prices['last'].isna()
+        self._tradable = ~(self._suspended | self._no_price)
         self._prices_settle_ccy = self._prices['last'] * exchange_rate_middle
         if self._prices_settle_ccy.isna().any():
             missing_prices = self._prices_settle_ccy[self._prices_settle_ccy.isna()]
@@ -218,22 +220,18 @@ class OrderTargetPortfolio:
         diff, denials = self._round_adjusting_odd_lots(target_quantities.sub(self._current_quantities, fill_value=0))
         prices, limit_up, limit_down = itemgetter('last', 'limit_up', 'limit_down')(self._prices)
 
-        # 构建完全不可调整的资产掩码（停牌、无行情）
-        adjusting_denied = (
-            self._suspended  # 停牌
-            | prices.isna()  # 无行情
-        )
-        tradable = ~adjusting_denied
+        # 完全不可调整的资产（停牌、无行情）先拒绝，后续再叠加涨跌停限制。
+        adjusting_denied = ~self._tradable
 
         # 记录各类拒绝原因（用于向用户报告）
         denials[DenialReason.suspended_buy] = (diff > 0) & self._suspended
         denials[DenialReason.suspended_sell] = (diff < 0) & self._suspended
-        denials[DenialReason.no_price] = prices.isna() & (diff != 0)
+        denials[DenialReason.no_price] = self._no_price & (diff != 0)
 
         # 权重目标落到股数后会经过 round 和最小下单量处理，实际买卖方向和数量可能变化；
         # 因此数量层仍需对可交易标的做最终涨跌停校验。
-        limit_up = tradable & reaches_limit_up_vectorized(prices, limit_up, self._tick_sizes)
-        limit_down = tradable & reaches_limit_down_vectorized(prices, limit_down, self._tick_sizes)
+        limit_up = self._tradable & reaches_limit_up_vectorized(prices, limit_up, self._tick_sizes)
+        limit_down = self._tradable & reaches_limit_down_vectorized(prices, limit_down, self._tick_sizes)
         if direction == POSITION_DIRECTION.LONG:
             # 涨停不能开、跌停不能平
             limit_buy = (diff > 0) & limit_up
@@ -318,20 +316,18 @@ class OrderTargetPortfolio:
         constraint_masks: Dict[DenialReason, Series] = {}
 
         # 不可平仓数量不能卖出，因此它对应的市值形成最低权重下界，例如当前持有 1000 股、只有 600 股可平，则剩余 400 股无论目标如何都必须保留。
-        remaining_after_closable = (self._current_quantities - self._current_closable).clip(lower=0)
-        lower = remaining_after_closable.mul(prices, fill_value=0) / self._total_value
+        unclosable = (self._current_quantities - self._current_closable).clip(lower=0)
+        lower = unclosable.mul(prices, fill_value=0) / self._total_value
 
         last, limit_up, limit_down = itemgetter('last', 'limit_up', 'limit_down')(self._prices)
-        no_price = last.isna()
-        suspended_or_no_price = self._suspended | no_price
-        tradable = ~suspended_or_no_price
+        untradable = ~self._tradable
 
         # 停牌或无行情时无法买卖，目标权重只能等于当前权重，将上下界同时钉在 current_weights，后续求解器就不会对这些标的生成调仓量。
-        lower[suspended_or_no_price] = current_weights[suspended_or_no_price]
-        upper[suspended_or_no_price] = current_weights[suspended_or_no_price]
+        lower[untradable] = current_weights[untradable]
+        upper[untradable] = current_weights[untradable]
 
-        limit_up_reached = tradable & reaches_limit_up_vectorized(last, limit_up, self._tick_sizes)
-        limit_down_reached = tradable & reaches_limit_down_vectorized(last, limit_down, self._tick_sizes)
+        limit_up_reached = self._tradable & reaches_limit_up_vectorized(last, limit_up, self._tick_sizes)
+        limit_down_reached = self._tradable & reaches_limit_down_vectorized(last, limit_down, self._tick_sizes)
         if direction == POSITION_DIRECTION.LONG:
             # 多头调仓中，涨停限制买入，所以最高权重不能超过当前权重；
             # 跌停限制卖出，所以最低权重不能低于当前权重。
@@ -345,7 +341,7 @@ class OrderTargetPortfolio:
         # 这里先记录原始约束 mask；是否真的构成本次拒单，还要结合目标方向判断。
         # 例如多头下跌停只阻碍卖出，如果目标是增持，就不应被报告为 limit_down_sell。
         # 方向过滤在 _calc_adjusting_weights 中基于 desired_weights 与 current_weights 完成。
-        constraint_masks[DenialReason.no_price] = no_price
+        constraint_masks[DenialReason.no_price] = self._no_price
         constraint_masks[DenialReason.closable_exceeded] = (lower > 0) & (self._current_closable == 0)
         if direction == POSITION_DIRECTION.LONG:
             constraint_masks[DenialReason.limit_up_buy] = limit_up_reached
@@ -381,32 +377,33 @@ class OrderTargetPortfolio:
         active_target = 0.0
         fixed_sum = float(lower.sum())
         prev_scale = 0.0
-        events = []
+        scale_breakpoints = []
         for order_book_id, weight in target_weights[target_weights > 0].items():
-            start = float(lower[order_book_id] / weight)
-            end = float(upper[order_book_id] / weight)
-            events.append((start, 'start', order_book_id, float(weight)))
-            if isfinite(end):
-                events.append((end, 'end', order_book_id, float(weight)))
+            weight = float(weight)
+            lower_weight = float(lower[order_book_id])
+            upper_weight = float(upper[order_book_id])
+            start = lower_weight / weight
+            scale_breakpoints.append((start, -lower_weight, weight))
+            if isfinite(upper_weight):
+                scale_breakpoints.append((upper_weight / weight, upper_weight, -weight))
 
-        sorted_events = sorted(events)
-        event_index = 0
-        while event_index < len(sorted_events):
-            scale = sorted_events[event_index][0]
+        sorted_scale_breakpoints = sorted(scale_breakpoints)
+        breakpoint_index = 0
+        while breakpoint_index < len(sorted_scale_breakpoints):
+            scale = sorted_scale_breakpoints[breakpoint_index][0]
             current_total = fixed_sum + active_target * prev_scale
             next_total = fixed_sum + active_target * scale
             if active_target > 0 and current_total <= total_target_weight <= next_total:
                 return (total_target_weight - fixed_sum) / active_target
 
-            while event_index < len(sorted_events) and sorted_events[event_index][0] == scale:
-                _, kind, order_book_id, weight = sorted_events[event_index]
-                if kind == 'start':
-                    fixed_sum -= float(lower[order_book_id])
-                    active_target += weight
-                else:
-                    fixed_sum += float(upper[order_book_id])
-                    active_target -= weight
-                event_index += 1
+            while (
+                breakpoint_index < len(sorted_scale_breakpoints)
+                and sorted_scale_breakpoints[breakpoint_index][0] == scale
+            ):
+                _, fixed_delta, active_delta = sorted_scale_breakpoints[breakpoint_index]
+                fixed_sum += fixed_delta
+                active_target += active_delta
+                breakpoint_index += 1
             prev_scale = scale
 
         if active_target > 0:
@@ -422,26 +419,23 @@ class OrderTargetPortfolio:
         prices = self._prices_settle_ccy
         total_target_weight = float(self._target_weights.sum())
         lower, upper, constraint_masks = self._calc_weight_bounds(direction, prices)
+        current_weights = self._current_weights(prices)
         scale = self._solve_bounded_scale(self._target_weights, lower, upper, total_target_weight)
+        # desired_weights 只用于判断原始调整方向，不作为最终目标权重下单。
         if scale == inf:
             # 目标总权重无法完全分配到可交易资产时，使用最接近的上界解。
             # 这里不把权重分给原始目标为 0 的资产，避免凭空引入新持仓。
             target_weights = lower.copy()
             positive_target = self._target_weights > 0
             target_weights[positive_target] = upper[positive_target]
+            desired_weights = lower.copy()
+            desired_weights[positive_target] = inf
         else:
             # 正常情况下先按统一 scale 保持原目标比例，再用上下界落实单票交易约束。
             # 被上下界锁住的权重差额，会在仍未触达上界且原目标权重大于 0 的标的之间按原比例分配。
-            target_weights = (self._target_weights * scale).clip(lower=lower, upper=upper)
-
-        current_weights = self._current_weights(prices)
-        # desired_weights 只用于判断原始调整方向，不作为最终目标权重下单。
-        if scale == inf:
-            desired_weights = lower.copy()
-            positive_target = self._target_weights > 0
-            desired_weights[positive_target] = inf
-        else:
             desired_weights = self._target_weights * scale
+            target_weights = desired_weights.clip(lower=lower, upper=upper)
+
         denials: Dict[DenialReason, Series] = {}
         no_price = constraint_masks[DenialReason.no_price]
         denials[DenialReason.no_price] = no_price & (desired_weights != current_weights)
