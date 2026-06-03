@@ -428,8 +428,7 @@ class OrderTargetPortfolio:
             target_weights = lower.copy()
             positive_target = self._target_weights > 0
             target_weights[positive_target] = upper[positive_target]
-            desired_weights = lower.copy()
-            desired_weights[positive_target] = inf
+            desired_weights = self._target_weights
         else:
             # 正常情况下先按统一 scale 保持原目标比例，再用上下界落实单票交易约束。
             # 被上下界锁住的权重差额，会在仍未触达上界且原目标权重大于 0 的标的之间按原比例分配。
