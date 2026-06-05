@@ -129,7 +129,15 @@ def _check_capital_gain_tax_rate(base_config):
 
 
 def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
-    _check_capital_gain_tax_rate(config_args["base"])
+    if click_type:
+        base_config = {
+            k.split('__', 1)[1]: v for k, v in config_args.items()
+            if k.startswith('base__') and v is not None and v != tuple()
+        }
+    else:
+        base_config = config_args.get("base", {})
+    _check_capital_gain_tax_rate(base_config)
+
     conf = default_config()
     deep_update(user_config(), conf)
     deep_update(project_config(), conf)

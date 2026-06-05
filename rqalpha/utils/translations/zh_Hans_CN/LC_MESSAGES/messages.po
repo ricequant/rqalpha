@@ -1864,4 +1864,3 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 #~ "Order Cancelled: current bar [{order_book_id}]"
 #~ " reach the limit_down price."
 #~ msgstr "订单被拒单: [{order_book_id}] 已跌停。"
-

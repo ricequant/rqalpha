@@ -17,9 +17,7 @@
 
 from itertools import chain
 from collections.abc import Mapping
-from typing import Callable, Dict, List, Tuple, Union, NamedTuple, Optional
-import datetime as datetime_module
-from datetime import date
+from typing import Callable, Dict, List, Tuple, Union
 
 import jsonpickle
 import numpy as np
@@ -38,17 +36,6 @@ from rqalpha.utils.logger import user_system_log
 from rqalpha.utils.repr import PropertyReprMeta
 
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
-
-
-class PortfolioEvent(NamedTuple):
-    datetime: datetime_module.datetime
-    trading_date: date
-    event_category: str
-    specific_event: Optional[str]
-    order_book_id: Optional[str]
-    delta_quantity: int
-    delta_amount: int
-    remark: Optional[str] = None
 
 
 class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
@@ -74,7 +61,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
         env.event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
         env.event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
-        env.event_bus.add_listener(EVENT.PAY_TAXES, self._pay_dividend_tax)
+        env.event_bus.add_listener(EVENT.PAY_TAXES, self._on_pay_taxes)
 
     @classmethod
     def _init_accounts(
@@ -99,6 +86,8 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         return jsonpickle.encode({
             'static_unit_net_value': self._static_unit_net_value,
             'units': self._units,
+            'annual_deductible_balance': self._annual_deductible_balance,
+            'monthly_realized_pnl': self._monthly_realized_pnl,
             'accounts': {
                 name: account.get_state() for name, account in self._accounts.items()
             }
@@ -109,6 +98,8 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         value = jsonpickle.decode(state)
         self._static_unit_net_value = value['static_unit_net_value']
         self._units = value['units']
+        self._annual_deductible_balance = value.get('annual_deductible_balance', 0)
+        self._monthly_realized_pnl = value.get('monthly_realized_pnl', 0)
         for k, v in value['accounts'].items():
             self._accounts[k].set_state(v)
 
@@ -126,9 +117,6 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
 
     def get_account(self, order_book_id):
         return self._accounts[self.get_account_type(order_book_id)]
-    
-    def get_portfolio_event(self):
-        return self._portfolio_event
 
     @property
     def accounts(self) -> Dict[DEFAULT_ACCOUNT_TYPE, Account]:
@@ -313,34 +301,46 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
 
     def _on_trade(self, event):
         delta_monthly_realized_pnl = event.account.apply_trade(event.trade, event.order)
-        self.update_monthly_realized_pnl(delta_monthly_realized_pnl)
+        self._add_monthly_realized_pnl(delta_monthly_realized_pnl)
 
     def _on_settlement(self, event):
         tax_amount = self.calc_capital_gains_tax()
         if tax_amount > 0:
+            self._env.event_bus.publish_event(Event(
+                EVENT.PAY_TAXES, delta_amount=tax_amount, trading_dt=self._env.trading_dt, tax_type=TAX_TYPE.CAPITAL_GAINS
+            ))
+
+    def _on_pay_taxes(self, event):
+        if event.tax_type == TAX_TYPE.DIVIDEND:
+            # 只有股票账户会扣除红利税
+            self.stock_account.pay_taxes(event.delta_amount, event.tax_type)
+        elif event.tax_type == TAX_TYPE.CAPITAL_GAINS:
             # 1. 优先扣除股票账户现金，如果没有设置股票账户或者股票账户现金不够扣除时，扣除期货账户
             # 2. 股票和期货现金都不够扣除，或者股票账户不够扣除，但是没设置期货账户时，扣除股票账户
             # 3. 允许扣除之后股票账户资金为负数
+            tax_amount = event.delta_amount
             if self.stock_account is None:
                 self.future_account.pay_taxes(tax_amount, TAX_TYPE.CAPITAL_GAINS)
             else:
                 if self.future_account is None or self.future_account.cash < 0 or self.stock_account.cash >= tax_amount:
                     self.stock_account.pay_taxes(tax_amount, TAX_TYPE.CAPITAL_GAINS)
                 else:
-                    futures_tax = min(tax_amount - self.stock_account.cash, self.future_account.cash)
+                    if self.stock_account.cash < 0:  # 可能存在股票账号现金已经为负数的情况
+                        futures_tax = self.future_account.cash
+                    else:
+                        futures_tax = min(tax_amount - self.stock_account.cash, self.future_account.cash)
                     stock_tax = tax_amount - futures_tax
                     self.stock_account.pay_taxes(stock_tax, TAX_TYPE.CAPITAL_GAINS)
                     self.future_account.pay_taxes(futures_tax, TAX_TYPE.CAPITAL_GAINS)
-            
-            self._env.event_bus.publish_event(Event(
-                EVENT.PAY_TAXES, delta_amount=tax_amount, trading_dt=self._env.trading_dt, tax_type=TAX_TYPE.CAPITAL_GAINS
-            ))
-
-    def _pay_dividend_tax(self, event):
-        tax_type = getattr(event, "tax_type")
-        if tax_type == TAX_TYPE.DIVIDEND:
-            # 只有股票账户会扣除红利税
-            self.stock_account.pay_taxes(event.delta_amount, tax_type)
+        else:
+            raise ValueError(f"Invalid tax type: {event.tax_type}")
+        self._env.event_bus.publish_event(Event(
+            EVENT.TAXES_PAID,
+            order_book_id=getattr(event, "order_book_id", None),
+            delta_amount=event.delta_amount,
+            trading_dt=event.trading_dt,
+            tax_type=event.tax_type,
+        ))
 
 
 class MixedPositions(Mapping):
@@ -372,4 +372,3 @@ class MixedPositions(Mapping):
     def __iter__(self):
         for account in self._accounts.values():
             yield from account.positions.keys()
-

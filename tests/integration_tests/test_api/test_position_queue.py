@@ -17,6 +17,7 @@
 
 from copy import deepcopy
 
+import pytest
 from numpy.testing import assert_equal
 from rqalpha.apis import *
 from rqalpha import run_func
@@ -448,92 +449,56 @@ def test_comprehensive_position_queue():
     run_func(config=config, init=init, handle_bar=handle_bar)
 
 
-def test_position_queue_handle_trade_does_not_add_close_details_for_open():
+@pytest.mark.parametrize("trades, expected_close_details, expected_queue", [
+    pytest.param(
+        [(100, date(2026, 5, 20), False)],
+        [[]],
+        [(date(2026, 5, 20), 100)],
+        id="open-does-not-add-close-details",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (50, date(2026, 5, 21), False), (-120, date(2026, 5, 22), False)],
+        [[], [],[(date(2026, 5, 20), -100),(date(2026, 5, 21), -20)]],
+        [(date(2026, 5, 21), 30)],
+        id="fifo-close-details",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (50, date(2026, 5, 21), False), (-80, date(2026, 5, 21), True)],
+        [[], [], [(date(2026, 5, 21), -50), (date(2026, 5, 20), -30)]],
+        [(date(2026, 5, 20), 70)],
+        id="close-today-details",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (-150, date(2026, 5, 21), False)],
+        [[], [(date(2026, 5, 20), -100)]],
+        [(date(2026, 5, 21), -50)],
+        id="close-before-reverse-open",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (-50, date(2026, 5, 21), False), (0, date(2026, 5, 22), False)],
+        [[], [(date(2026, 5, 20), -50)], []],
+        [(date(2026, 5, 20), 50)],
+        id="zero-quantity",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (50, date(2026, 5, 21), False), (-80, date(2026, 5, 22), False), (-10, date(2026, 5, 23), False)],
+        [[], [], [(date(2026, 5, 20), -80)], [(date(2026, 5, 20), -10)]],
+        [(date(2026, 5, 20), 10), (date(2026, 5, 21), 50)],
+        id="current-trade-only",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (100, date(2026, 5, 21), False), (-50, date(2026, 5, 22), False), (-80, date(2026, 5, 23), False)],
+        [[], [], [(date(2026, 5, 20), -50)], [(date(2026, 5, 20), -50), (date(2026, 5, 21), -30)]],
+        [(date(2026, 5, 21), 70)],
+        id="independent-close-details",
+    ),
+])
+def test_position_queue_handle_trade_close_details(trades, expected_close_details, expected_queue):
     queue = PositionQueue()
 
-    close_details = queue.handle_trade(100, date(2026, 5, 20))
+    for trade, expected_details in zip(trades, expected_close_details):
+        quantity, trading_date, close_today = trade
+        close_details = queue.handle_trade(quantity, trading_date, close_today=close_today)
+        assert_equal(close_details, expected_details)
 
-    assert_equal(close_details, [])
-    assert_equal(list(queue.queue), [(date(2026, 5, 20), 100)])
-
-
-def test_position_queue_handle_trade_returns_fifo_close_details():
-    queue = PositionQueue()
-    queue.handle_trade(100, date(2026, 5, 20))
-    queue.handle_trade(50, date(2026, 5, 21))
-
-    close_details = queue.handle_trade(-120, date(2026, 5, 22))
-
-    assert_equal(close_details, [
-        (date(2026, 5, 20), -100),
-        (date(2026, 5, 21), -20),
-    ])
-    assert_equal(list(queue.queue), [(date(2026, 5, 21), 30)])
-
-
-def test_position_queue_handle_trade_returns_close_today_details():
-    queue = PositionQueue()
-    queue.handle_trade(100, date(2026, 5, 20))
-    queue.handle_trade(50, date(2026, 5, 21))
-
-    close_details = queue.handle_trade(-80, date(2026, 5, 21), close_today=True)
-
-    assert_equal(close_details, [
-        (date(2026, 5, 21), -50),
-        (date(2026, 5, 20), -30),
-    ])
-    assert_equal(list(queue.queue), [(date(2026, 5, 20), 70)])
-
-
-def test_position_queue_handle_trade_returns_close_details_before_reverse_open():
-    queue = PositionQueue()
-    queue.handle_trade(100, date(2026, 5, 20))
-
-    close_details = queue.handle_trade(-150, date(2026, 5, 21))
-
-    assert_equal(close_details, [
-        (date(2026, 5, 20), -100),
-    ])
-    assert_equal(list(queue.queue), [(date(2026, 5, 21), -50)])
-
-
-def test_position_queue_handle_trade_returns_empty_close_details_for_zero_quantity():
-    queue = PositionQueue()
-    queue.handle_trade(100, date(2026, 5, 20))
-    first_close_details = queue.handle_trade(-50, date(2026, 5, 21))
-    assert_equal(first_close_details, [(date(2026, 5, 20), -50)])
-
-    close_details = queue.handle_trade(0, date(2026, 5, 22))
-
-    assert_equal(close_details, [])
-    assert_equal(list(queue.queue), [(date(2026, 5, 20), 50)])
-
-
-def test_position_queue_handle_trade_returns_close_details_only_for_current_trade():
-    queue = PositionQueue()
-    queue.handle_trade(100, date(2026, 5, 20))
-    queue.handle_trade(50, date(2026, 5, 21))
-    first_close_details = queue.handle_trade(-80, date(2026, 5, 22))
-
-    assert_equal(first_close_details, [(date(2026, 5, 20), -80)])
-
-    second_close_details = queue.handle_trade(-10, date(2026, 5, 23))
-    assert_equal(second_close_details, [(date(2026, 5, 20), -10)])
-
-
-def test_position_queue_handle_trade_returns_independent_close_details():
-    queue = PositionQueue()
-    queue.handle_trade(100, date(2026, 5, 20))
-    queue.handle_trade(100, date(2026, 5, 21))
-
-    first_close_details = queue.handle_trade(-50, date(2026, 5, 22))
-    second_close_details = queue.handle_trade(-80, date(2026, 5, 23))
-
-    assert_equal(first_close_details, [
-        (date(2026, 5, 20), -50),
-    ])
-    assert_equal(second_close_details, [
-        (date(2026, 5, 20), -50),
-        (date(2026, 5, 21), -30),
-    ])
-    assert_equal(list(queue.queue), [(date(2026, 5, 21), 70)])
+    assert_equal(list(queue.queue), expected_queue)

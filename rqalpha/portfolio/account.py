@@ -57,9 +57,9 @@ class Account(metaclass=AccountMeta):
     ]
 
     def __init__(
-            self, 
-            account_type: str, 
-            total_cash: float, 
+            self,
+            account_type: str,
+            total_cash: float,
             init_positions: Dict[str, int],
             financing_rate: float,
             env: Environment
@@ -362,7 +362,7 @@ class Account(metaclass=AccountMeta):
                 user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
             self._positions.clear()
             self._total_cash = 0
-    
+
     def _post_settlement(self, event: EVENT) -> None:
         """
         该事件必须在 post_settlement 中最后执行，若有其他事件要加入到 post_settlement 中，请使用 event_bus.prepend_listener 添加
@@ -391,21 +391,21 @@ class Account(metaclass=AccountMeta):
     def apply_trade(self, trade: Trade, order: Optional[Order] = None) -> float:
         # 返回增值税税基变化量
         if trade.exec_id in self._backward_trade_set:
-            return
+            return 0
         order_book_id = trade.order_book_id
         if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:
                 self._frozen_cash -= trade.last_quantity / order.quantity * order.init_frozen_cash
             else:
                 self._frozen_cash -= order.init_frozen_cash
-        
+
         def _apply(position_direction: POSITION_DIRECTION):
             nonlocal delta_cash, delta_monthly_realized_pnl
             apply_result = self._get_or_create_pos(order_book_id, position_direction).apply_trade(trade)
             try:
                 delta_cash += apply_result[0]
                 delta_monthly_realized_pnl += apply_result[1]
-            except IndexError:
+            except TypeError:
                 # 向前兼容，会存在 mod 的不返回月度已实现交易变化量的情况
                 delta_cash += apply_result
 

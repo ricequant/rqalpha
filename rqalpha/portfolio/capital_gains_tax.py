@@ -6,7 +6,7 @@ from rqalpha.core.events import EVENT
 class CapitalGainsTaxMixin:
     """
     计算 `金融商品转让增值税` + `附加税`，具体计算逻辑和公式如下：
-    定义: 
+    定义:
         annual_deductible_balance: 年度可抵余额 <= 0，每年年初重置为 0；
         monthly_realized_pnl: 月初为 0，当月所有的卖出交易中，卖出价扣除买入价（成本价）后加总的总额
     """
@@ -26,7 +26,7 @@ class CapitalGainsTaxMixin:
     def calc_capital_gains_tax(self) -> float:
         """
         每月月底进行缴纳税额计算 (tax_basis = annual_deductible_balance + monthly_realized_pnl):
-        1) tax_basis > 0: 
+        1) tax_basis > 0:
             a. tax = (tax_basis * 3%)[增值税] + (tax_basis * 3% * (3.5% + 1.5% + 1%))[附加税]
             b. set annual_deductible_balance = monthly_realized_pnl = 0
         2) tax_basis <= 0:
@@ -49,14 +49,12 @@ class CapitalGainsTaxMixin:
     def _is_end_of_month(self) -> bool:
         next_trading_date = self._env.data_proxy.get_next_trading_date(self._trading_dt)
         return next_trading_date.month != self._trading_dt.month
-    
+
     def _is_start_of_year(self) -> bool:
         if self._trading_dt.month != 1: # 减少交易日获取
             return False
         prev_trading_date = self._env.data_proxy.get_previous_trading_date(self._trading_dt)
         return prev_trading_date.year != self._trading_dt.year
 
-    def update_monthly_realized_pnl(self, delta_amount: float) -> None:
+    def _add_monthly_realized_pnl(self, delta_amount: float) -> None:
         self._monthly_realized_pnl += delta_amount
-
-    

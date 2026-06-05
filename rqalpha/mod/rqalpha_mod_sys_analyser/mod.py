@@ -23,7 +23,7 @@ import jsonpickle
 import datetime
 from operator import attrgetter, itemgetter
 from collections import defaultdict
-from typing import Dict, Optional, List, Tuple, Union, Iterable
+from typing import Dict, Optional, List, Tuple, Union, Iterable, NamedTuple
 try:
     from typing import Protocol
 except ImportError:
@@ -45,7 +45,6 @@ from rqalpha.api import export_as_api
 from rqalpha.const import TRADING_CALENDAR_TYPE
 from rqalpha.model import Instrument
 from rqalpha.model.order import Order
-from rqalpha.portfolio import PortfolioEvent
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
@@ -75,6 +74,17 @@ PRESSURE_TEST_PERIOD = {
 
 
 EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
+
+
+class PortfolioEventRecord(NamedTuple):
+    event_datetime: datetime.datetime
+    trading_date: datetime.date
+    event_category: str
+    order_book_id: Optional[str]
+    delta_quantity: int
+    delta_amount: int
+    remark: Optional[str] = None
+
 
 class PlotConfigProtocol(Protocol):
     open_close_points: bool
@@ -160,7 +170,7 @@ class AnalyserMod(AbstractMod):
 
             self._plot_store = PlotStore(env)
             export_as_api(self._plot_store.plot)
-    
+
     NULL_OID = {"null", "NULL"}
     NON_CN_CALENDAR_OIDS = {
         "930930.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND,
@@ -228,7 +238,7 @@ class AnalyserMod(AbstractMod):
         if self._benchmark is None:
             self._benchmark_daily_returns = list(np.full(len(trading_dates), np.nan))
             return
-        
+
         # generate benchmerk daily returns
         self._benchmark_daily_returns = np.zeros(len(trading_dates))
         weights = 0
@@ -243,7 +253,7 @@ class AnalyserMod(AbstractMod):
             weights += weight
 
         self._benchmark_daily_returns = self._benchmark_daily_returns / weights
-        
+
         # generate benchmark portfolio
         unit_net_value = (self._benchmark_daily_returns + 1).cumprod()
         self._total_benchmark_portfolios = {
@@ -256,7 +266,7 @@ class AnalyserMod(AbstractMod):
         self._env.event_bus.add_listener(EVENT.TRADE, self._collect_trade)
         self._env.event_bus.add_listener(EVENT.ORDER_CREATION_PASS, self._collect_order)
         self._env.event_bus.prepend_listener(EVENT.POST_SETTLEMENT, self._collect_daily)
-        self._env.event_bus.add_listener(EVENT.PAY_TAXES, self._on_pay_taxes)
+        self._env.event_bus.add_listener(EVENT.TAXES_PAID, self._on_taxes_paid)
 
     def _collect_trade(self, event):
         self._trades.append(self._to_trade_record(event.trade))
@@ -285,16 +295,16 @@ class AnalyserMod(AbstractMod):
                 if record is not None:
                     self._positions[account_type].append(record)
 
-    def _on_pay_taxes(self, event):
+    def _on_taxes_paid(self, event):
         # 将扣税事件信息加入 self._portfolio_event 中
-        portfolio_event = PortfolioEvent(
-            datetime=event.trading_dt,
+        portfolio_event = PortfolioEventRecord(
+            event_datetime=event.trading_dt,
             trading_date=event.trading_dt.date(),
             event_category=event.event_type.value,
-            specific_event=event.tax_type.value,
             order_book_id=getattr(event, "order_book_id", None),
             delta_quantity=0,
             delta_amount=event.delta_amount,
+            remark=event.tax_type.value,
         )
         self._portfolio_event.append(self._to_portfolio_event_record(portfolio_event))
 
@@ -374,10 +384,10 @@ class AnalyserMod(AbstractMod):
     LONG_ONLY_INS_TYPE = INST_TYPE_IN_STOCK_ACCOUNT + [INSTRUMENT_TYPE.CONVERTIBLE, INSTRUMENT_TYPE.BOND]
 
     def _to_position_record(
-        self, 
-        calendar_dt: datetime.datetime, 
-        order_book_id: str, 
-        long: Optional[AbstractPosition], 
+        self,
+        calendar_dt: datetime.datetime,
+        order_book_id: str,
+        long: Optional[AbstractPosition],
         short: Optional[AbstractPosition]
     ) -> Dict:
         position = long or short
@@ -420,14 +430,13 @@ class AnalyserMod(AbstractMod):
             'order_id': trade.order_id,
             'transaction_cost': trade.transaction_cost,
         }
-    
-    def _to_portfolio_event_record(self, portfolio_event: PortfolioEvent):
+
+    def _to_portfolio_event_record(self, portfolio_event: PortfolioEventRecord):
         return {
-            "datetime": portfolio_event.datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            "datetime": portfolio_event.event_datetime.strftime("%Y-%m-%d %H:%M:%S"),
             "trading_date": portfolio_event.trading_date.strftime("%Y-%m-%d"),
             "event_category": portfolio_event.event_category,
-            "specific_event": portfolio_event.specific_event or np.nan,
-            "order_book_id": portfolio_event or np.nan,
+            "order_book_id": portfolio_event.order_book_id or np.nan,
             "delta_quantity": portfolio_event.delta_quantity,
             "delta_amount": portfolio_event.delta_amount,
             "remark": portfolio_event.remark or "",

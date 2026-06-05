@@ -173,8 +173,10 @@ class EVENT(Enum):
     # 用户事件，接受用户发送的信息
     USER = 'user'
 
-    # 扣税事件，目前包括红利税和增值税
+    # 执行扣税，目前包括红利税和增值税
     PAY_TAXES = 'pay_taxes'
+    # 扣税完成
+    TAXES_PAID = "taxes_paid"
 
 
 def parse_event(event_str):
