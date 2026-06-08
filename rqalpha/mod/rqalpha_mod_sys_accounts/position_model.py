@@ -262,7 +262,7 @@ class StockPosition(Position):
 
         # 更新历史分红记录
         book_closure_date = dividends["book_closure_date"][-1]
-        self._historical_dividends[book_closure_date] = dividend_per_share
+        self._historical_dividends.loc[book_closure_date] = dividend_per_share
         return self._quantity * dividend_per_share
 
     def _handle_dividend_payable(self, trading_date: date) -> float:
