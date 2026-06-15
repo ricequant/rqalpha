@@ -17,9 +17,11 @@
 
 from copy import deepcopy
 
+import pytest
 from numpy.testing import assert_equal
 from rqalpha.apis import *
 from rqalpha import run_func
+from rqalpha.portfolio.position import PositionQueue
 
 __config__ = {
     "base": {
@@ -445,3 +447,58 @@ def test_comprehensive_position_queue():
             assert_equal(len(future_short_queue), 0)  # 应该为空
 
     run_func(config=config, init=init, handle_bar=handle_bar)
+
+
+@pytest.mark.parametrize("trades, expected_close_details, expected_queue", [
+    pytest.param(
+        [(100, date(2026, 5, 20), False)],
+        [[]],
+        [(date(2026, 5, 20), 100)],
+        id="open-does-not-add-close-details",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (50, date(2026, 5, 21), False), (-120, date(2026, 5, 22), False)],
+        [[], [],[(date(2026, 5, 20), -100),(date(2026, 5, 21), -20)]],
+        [(date(2026, 5, 21), 30)],
+        id="fifo-close-details",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (50, date(2026, 5, 21), False), (-80, date(2026, 5, 21), True)],
+        [[], [], [(date(2026, 5, 21), -50), (date(2026, 5, 20), -30)]],
+        [(date(2026, 5, 20), 70)],
+        id="close-today-details",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (-150, date(2026, 5, 21), False)],
+        [[], [(date(2026, 5, 20), -100)]],
+        [(date(2026, 5, 21), -50)],
+        id="close-before-reverse-open",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (-50, date(2026, 5, 21), False), (0, date(2026, 5, 22), False)],
+        [[], [(date(2026, 5, 20), -50)], []],
+        [(date(2026, 5, 20), 50)],
+        id="zero-quantity",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (50, date(2026, 5, 21), False), (-80, date(2026, 5, 22), False), (-10, date(2026, 5, 23), False)],
+        [[], [], [(date(2026, 5, 20), -80)], [(date(2026, 5, 20), -10)]],
+        [(date(2026, 5, 20), 10), (date(2026, 5, 21), 50)],
+        id="current-trade-only",
+    ),
+    pytest.param(
+        [(100, date(2026, 5, 20), False), (100, date(2026, 5, 21), False), (-50, date(2026, 5, 22), False), (-80, date(2026, 5, 23), False)],
+        [[], [], [(date(2026, 5, 20), -50)], [(date(2026, 5, 20), -50), (date(2026, 5, 21), -30)]],
+        [(date(2026, 5, 21), 70)],
+        id="independent-close-details",
+    ),
+])
+def test_position_queue_handle_trade_close_details(trades, expected_close_details, expected_queue):
+    queue = PositionQueue()
+
+    for trade, expected_details in zip(trades, expected_close_details):
+        quantity, trading_date, close_today = trade
+        close_details = queue.handle_trade(quantity, trading_date, close_today=close_today)
+        assert_equal(close_details, expected_details)
+
+    assert_equal(list(queue.queue), expected_queue)

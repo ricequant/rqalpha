@@ -15,12 +15,13 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
+import operator
 from itertools import chain
 from datetime import date
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
 import six
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
 from rqalpha.model import Order, OrderStyle, Trade, Instrument
@@ -56,9 +57,9 @@ class Account(metaclass=AccountMeta):
     ]
 
     def __init__(
-            self, 
-            account_type: str, 
-            total_cash: float, 
+            self,
+            account_type: str,
+            total_cash: float,
             init_positions: Dict[str, int],
             financing_rate: float,
             env: Environment
@@ -95,6 +96,10 @@ class Account(metaclass=AccountMeta):
                 ))
             self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price=init_price)
 
+        # 增值税和红利税
+        self._capital_gains_tax = 0
+        self._dividend_tax = 0
+
     def __repr__(self):
         positions_repr = {}
         for order_book_id, positions in self._positions.items():
@@ -107,9 +112,6 @@ class Account(metaclass=AccountMeta):
 
     def register_event(self):
         event_bus = self._env.event_bus
-        event_bus.add_listener(
-            EVENT.TRADE, lambda e: self.apply_trade(e.trade, e.order) if e.account == self else None
-        )
         event_bus.add_listener(EVENT.ORDER_PENDING_NEW, self._on_order_pending_new)
         event_bus.add_listener(EVENT.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
         event_bus.add_listener(EVENT.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
@@ -169,8 +171,7 @@ class Account(metaclass=AccountMeta):
                 order.unfilled_quantity * order.quantity / order.init_frozen_cash for order in orders if
                 order.is_active())
 
-    def get_positions(self):
-        # type: () -> Iterable[Position]
+    def get_positions(self) -> Iterable[Position]:
         """
         获取所有持仓对象列表，
         """
@@ -205,48 +206,42 @@ class Account(metaclass=AccountMeta):
         return PositionProxyDict(self._positions)
 
     @property
-    def frozen_cash(self):
-        # type: () -> float
+    def frozen_cash(self) -> float:
         """
         冻结资金
         """
         return self._frozen_cash
 
     @property
-    def cash(self):
-        # type: () -> float
+    def cash(self) -> float:
         """
         可用资金
         """
         return self._total_cash - self.margin - self._frozen_cash
 
     @property
-    def market_value(self):
-        # type: () -> float
+    def market_value(self) -> float:
         """
         [float] 市值
         """
         return sum(p.market_value * (1 if p.direction == POSITION_DIRECTION.LONG else -1) for p in self._iter_pos())
 
     @property
-    def transaction_cost(self):
-        # type: () -> float
+    def transaction_cost(self) -> float:
         """
         总费用
         """
         return sum(p.transaction_cost for p in self._iter_pos())
 
     @property
-    def cash_liabilities(self):
-        # type: () -> float
+    def cash_liabilities(self) -> float:
         """
         现金负债
         """
         return self._cash_liabilities
 
     @property
-    def cash_liabilities_interest(self):
-        # type: () -> float
+    def cash_liabilities_interest(self) -> float:
         """
         现金负债当日的利息
         """
@@ -260,32 +255,28 @@ class Account(metaclass=AccountMeta):
         return sum(getattr(p, "margin", 0) for p in self._iter_pos())
 
     @property
-    def buy_margin(self):
-        # type: () -> float
+    def buy_margin(self) -> float:
         """
         多方向保证金
         """
         return sum(getattr(p, "margin", 0) for p in self._iter_pos(direction=POSITION_DIRECTION.LONG))
 
     @property
-    def sell_margin(self):
-        # type: () -> float
+    def sell_margin(self) -> float:
         """
         空方向保证金
         """
         return sum(getattr(p, "margin", 0) for p in self._iter_pos(POSITION_DIRECTION.SHORT))
 
     @property
-    def daily_pnl(self):
-        # type: () -> float
+    def daily_pnl(self) -> float:
         """
         当日盈亏
         """
         return self.trading_pnl + self.position_pnl - self.transaction_cost - self.cash_liabilities_interest
 
     @property
-    def position_equity(self):
-        # type: () -> float
+    def position_equity(self) -> float:
         """
         持仓总权益
         """
@@ -302,24 +293,21 @@ class Account(metaclass=AccountMeta):
         return total_value
 
     @property
-    def total_cash(self):
-        # type: () -> float
+    def total_cash(self) -> float:
         """
         账户总资金
         """
         return self._total_cash - self.margin
 
     @property
-    def position_pnl(self):
-        # type: () -> float
+    def position_pnl(self) -> float:
         """
         昨仓盈亏
         """
         return sum(p.position_pnl for p in self._iter_pos())
 
     @property
-    def trading_pnl(self):
-        # type: () -> float
+    def trading_pnl(self) -> float:
         """
         交易盈亏
         """
@@ -374,9 +362,8 @@ class Account(metaclass=AccountMeta):
                 user_system_log.warn(_("Trigger Forced Liquidation, current total_value is 0"))
             self._positions.clear()
             self._total_cash = 0
-    
-    def _post_settlement(self, event):
-        # type: (EVENT) -> None
+
+    def _post_settlement(self, event: EVENT) -> None:
         """
         该事件必须在 post_settlement 中最后执行，若有其他事件要加入到 post_settlement 中，请使用 event_bus.prepend_listener 添加
         """
@@ -401,27 +388,36 @@ class Account(metaclass=AccountMeta):
         else:
             self._frozen_cash -= order.init_frozen_cash
 
-    def apply_trade(self, trade, order=None):
-        # type: (Trade, Optional[Order]) -> None
+    def apply_trade(self, trade: Trade, order: Optional[Order] = None) -> float:
+        # 返回增值税税基变化量
         if trade.exec_id in self._backward_trade_set:
-            return
+            return 0
         order_book_id = trade.order_book_id
         if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:
                 self._frozen_cash -= trade.last_quantity / order.quantity * order.init_frozen_cash
             else:
                 self._frozen_cash -= order.init_frozen_cash
+
+        def _apply(position_direction: POSITION_DIRECTION):
+            nonlocal delta_cash, delta_monthly_realized_pnl
+            apply_result = self._get_or_create_pos(order_book_id, position_direction).apply_trade(trade)
+            try:
+                delta_cash += apply_result[0]
+                delta_monthly_realized_pnl += apply_result[1]
+            except TypeError:
+                # 向前兼容，会存在 mod 的不返回月度已实现交易变化量的情况
+                delta_cash += apply_result
+
+        delta_cash = delta_monthly_realized_pnl = 0
         if trade.position_effect == POSITION_EFFECT.MATCH:
-            delta_cash = self._get_or_create_pos(
-                order_book_id, POSITION_DIRECTION.LONG
-            ).apply_trade(trade) + self._get_or_create_pos(
-                order_book_id, POSITION_DIRECTION.SHORT
-            ).apply_trade(trade)
-            self._total_cash += delta_cash
+            for position_direction in (POSITION_DIRECTION.LONG, POSITION_DIRECTION.SHORT):
+                _apply(position_direction)
         else:
-            delta_cash = self._get_or_create_pos(order_book_id, trade.position_direction).apply_trade(trade)
-            self._total_cash += delta_cash
+            _apply(trade.position_direction)
+        self._total_cash += delta_cash
         self._backward_trade_set.add(trade.exec_id)
+        return delta_monthly_realized_pnl
 
     def _iter_pos(self, *, direction: Optional[POSITION_DIRECTION] = None, market: Optional[MARKET] = None) -> Iterable[Position]:
         if direction:
@@ -493,8 +489,7 @@ class Account(metaclass=AccountMeta):
         fee = self._management_fee_calculator_func(self, self._management_fee_rate)
         return fee
 
-    def register_management_fee_calculator(self, calculator):
-        # type: (Callable[[Account, float], float]) -> None
+    def register_management_fee_calculator(self, calculator: Callable[["Account", float], float]):
         """
         设置管理费用计算逻辑
         该方法需要传入一个函数
@@ -510,14 +505,12 @@ class Account(metaclass=AccountMeta):
         """
         self._management_fee_calculator_func = calculator
 
-    def set_management_fee_rate(self, rate):
-        # type: (float) -> None
+    def set_management_fee_rate(self, rate: float) -> None:
         """管理费用计算费率"""
         self._management_fee_rate = rate
 
     @property
-    def management_fees(self):
-        # type: () -> float
+    def management_fees(self) -> float:
         """该账户的管理费用总计"""
         return self._management_fees
 
@@ -554,3 +547,12 @@ class Account(metaclass=AccountMeta):
                 pass
         else:
             user_system_log.warn(f"{self.type} not support finance_repay")
+
+    def pay_taxes(self, amount: float, tax_type: TAX_TYPE):
+        if tax_type == TAX_TYPE.CAPITAL_GAINS:
+            self._capital_gains_tax += amount
+        elif tax_type == TAX_TYPE.DIVIDEND:
+            self._dividend_tax += amount
+        self._total_cash -= amount
+        if self._total_cash < 0:
+            user_system_log.warning("{} account's cash is insufficient to cover the taxes payable,and the cash balance has become negative.".format(self._type))
