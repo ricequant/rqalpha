@@ -326,7 +326,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
                     self.stock_account.pay_taxes(tax_amount, TAX_TYPE.CAPITAL_GAINS)
                 else:
                     if self.stock_account.cash < 0:  # 可能存在股票账号现金已经为负数的情况
-                        futures_tax = self.future_account.cash
+                        futures_tax = min(tax_amount, self.future_account.cash)
                     else:
                         futures_tax = min(tax_amount - self.stock_account.cash, self.future_account.cash)
                     stock_tax = tax_amount - futures_tax

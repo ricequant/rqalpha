@@ -3,7 +3,9 @@ from math import isclose
 
 from rqalpha import run_func
 from rqalpha.apis import order_shares, get_position, order_value, buy_open, buy_close, sell_open, sell_close, withdraw
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, TAX_TYPE
+from rqalpha.core.events import EVENT, Event
+from rqalpha.portfolio import Portfolio
 
 
 def _capital_gains_tax_config(start_date, end_date, accounts):
@@ -52,6 +54,30 @@ def _assert_cash_unchanged(result, account_type, before_date, after_date):
         rel_tol=0,
         abs_tol=1e-4,
     )
+
+
+class _Account(object):
+    def __init__(self, cash):
+        self.cash = cash
+        self.taxes = []
+
+    def pay_taxes(self, amount, tax_type):
+        self.taxes.append((amount, tax_type))
+        self.cash -= amount
+
+
+class _EventBus(object):
+    def __init__(self):
+        self.events = []
+
+    def publish_event(self, event):
+        self.events.append(event)
+
+
+class _Env(object):
+    def __init__(self):
+        self.event_bus = _EventBus()
+        self.trading_dt = None
 
 
 def test_capital_gains_tax_with_stocks():
@@ -192,3 +218,31 @@ def test_capital_gains_tax_with_mul_type_2():
     _assert_capital_gains_tax_events(result, [("2025-11-28", tax_amount)])
     assert isclose(_cash(result, "future", "2025-11-28"), 0, rel_tol=0, abs_tol=1e-4)
     assert isclose(_cash(result, "stock", "2025-11-28"), 200 - tax_amount, rel_tol=0, abs_tol=1e-4)
+
+
+def test_capital_gains_tax_with_negative_stock_cash_caps_future_tax():
+    env = _Env()
+    portfolio = object.__new__(Portfolio)
+    portfolio._env = env
+    portfolio._accounts = {
+        "STOCK": _Account(-100),
+        "FUTURE": _Account(1000),
+    }
+
+    portfolio._on_pay_taxes(Event(
+        EVENT.PAY_TAXES,
+        delta_amount=100,
+        trading_dt=None,
+        tax_type=TAX_TYPE.CAPITAL_GAINS,
+    ))
+
+    assert portfolio.stock_account.taxes == [(0, TAX_TYPE.CAPITAL_GAINS)]
+    assert portfolio.future_account.taxes == [(100, TAX_TYPE.CAPITAL_GAINS)]
+    assert portfolio.stock_account.cash == -100
+    assert portfolio.future_account.cash == 900
+
+    assert len(env.event_bus.events) == 1
+    taxes_paid_event = env.event_bus.events[0]
+    assert taxes_paid_event.event_type == EVENT.TAXES_PAID
+    assert taxes_paid_event.delta_amount == 100
+    assert taxes_paid_event.tax_type == TAX_TYPE.CAPITAL_GAINS

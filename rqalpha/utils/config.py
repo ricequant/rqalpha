@@ -128,21 +128,26 @@ def _check_capital_gain_tax_rate(base_config):
             ))
 
 
-def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
-    if click_type:
-        base_config = {
-            k.split('__', 1)[1]: v for k, v in config_args.items()
-            if k.startswith('base__') and v is not None and v != tuple()
-        }
-    else:
-        base_config = config_args.get("base", {})
-    _check_capital_gain_tax_rate(base_config)
+def _has_capital_gain_tax_rate(is_provided: bool, *args):
+    if is_provided:
+        return is_provided
+    for config in args:
+        if "capital_gain_tax_rate" in config.get("base", {}):
+            return True
+    return False
 
+
+def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
     conf = default_config()
-    deep_update(user_config(), conf)
-    deep_update(project_config(), conf)
+    user_conf = user_config()
+    project_conf = project_config()
+    has_capital_gain_tax_rate = _has_capital_gain_tax_rate(False, user_conf, project_conf)
+    deep_update(user_conf, conf)
+    deep_update(project_conf, conf)
     if config_path is not None:
-        deep_update(load_yaml(config_path), conf)
+        config_file_conf = load_yaml(config_path)
+        has_capital_gain_tax_rate = _has_capital_gain_tax_rate(has_capital_gain_tax_rate, config_file_conf)
+        deep_update(config_file_conf, conf)
     if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
         # FIXME: ugly, we need this to get code
         conf['base']['strategy_file'] = config_args['base__strategy_file']
@@ -151,7 +156,9 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         conf['base']['strategy_file'] = config_args['base']['strategy_file']
 
     if user_funcs is None:
-        for k, v in code_config(conf, source_code).items():
+        code_conf = code_config(conf, source_code)
+        has_capital_gain_tax_rate = _has_capital_gain_tax_rate(has_capital_gain_tax_rate, code_conf)
+        for k, v in code_conf.items():
             if k in conf['whitelist']:
                 deep_update(v, conf[k])
 
@@ -161,6 +168,11 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         config_args[key] = mod_config_value_parse(v)
 
     if click_type:
+        has_capital_gain_tax_rate = has_capital_gain_tax_rate or (
+            "base__capital_gain_tax_rate" in config_args and
+            config_args["base__capital_gain_tax_rate"] is not None and
+            config_args["base__capital_gain_tax_rate"] != tuple()
+        )
         for k, v in config_args.items():
             # click multiple=True时传入tuple类型 无输入时为tuple()
             if v is None or (v == tuple()):
@@ -176,7 +188,11 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
                 sub_dict = sub_dict[p]
             sub_dict[key_path[-1]] = v
     else:
+        has_capital_gain_tax_rate = _has_capital_gain_tax_rate(has_capital_gain_tax_rate, config_args)
         deep_update(config_args, conf)
+
+    if not has_capital_gain_tax_rate:
+        _check_capital_gain_tax_rate({})
 
     config = RqAttrDict(conf)
 
