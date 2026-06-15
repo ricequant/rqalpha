@@ -35,6 +35,12 @@ from .slippage import SlippageDecider
 
 
 class AbstractMatcher:
+    def __init__(self, env: Environment, mod_config):
+        self._env: Environment = env
+        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
+        self._price_limit = mod_config.price_limit
+        self._partial_fill_on_insufficient_cash: bool = mod_config.partial_fill_on_insufficient_cash
+
     def match(self, account: Account, order: Order, open_auction: bool) -> None:
         raise NotImplementedError
 
@@ -44,13 +50,11 @@ class AbstractMatcher:
 
 class DefaultBarMatcher(AbstractMatcher):
     def __init__(self, env: Environment, mod_config):
-        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
+        super(DefaultBarMatcher, self).__init__(env, mod_config)
         self._turnover = defaultdict(int)
         self._volume_percent = mod_config.volume_percent
-        self._price_limit = mod_config.price_limit
         self._inactive_limit = mod_config.inactive_limit
         self._volume_limit = mod_config.volume_limit
-        self._env: Environment = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
@@ -111,7 +115,7 @@ class DefaultBarMatcher(AbstractMatcher):
         if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
             raise NotImplementedError
         order_book_id = order.order_book_id
-        instrument = self._env.get_instrument(order_book_id)
+        instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt.date())
         tick_size = self._env.data_proxy.get_tick_size(order_book_id)
 
         deal_price = self._get_deal_price(order, open_auction)
@@ -190,6 +194,27 @@ class DefaultBarMatcher(AbstractMatcher):
         else:
             price = self._slippage_decider.get_trade_price(order, deal_price)
 
+        def _calc_cost_money() -> float:
+            cost = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
+            cost += self._env.calc_transaction_cost(
+                instrument, price, fill, order.side, order.position_effect, order_id=order.order_id, close_today_quantity=ct_amount,
+            )
+            return cost
+
+        if order.position_effect == POSITION_EFFECT.OPEN:
+            if not self._partial_fill_on_insufficient_cash:
+                if self._slippage_decider.decider.rate != 0:
+                    # 标的价格经过滑点处理后，账户资金可能不够买入，需要进行验证
+                    cost_money = _calc_cost_money()
+                    if cost_money > account.cash + order.init_frozen_cash:
+                        reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+                                order_book_id=order_book_id, cost_money=cost_money, cash = account.cash + order.init_frozen_cash
+                                )
+                        order.mark_rejected(reason)
+                        return
+            else:
+                pass
+
         trade = Trade.__from_create__(
             order_id=order.order_id,
             price=price,
@@ -200,18 +225,6 @@ class DefaultBarMatcher(AbstractMatcher):
             frozen_price=order.frozen_price,
             close_today_amount=ct_amount
         )
-
-        if order.position_effect == POSITION_EFFECT.OPEN and self._slippage_decider.decider.rate != 0:
-            # 标的价格经过滑点处理后，账户资金可能不够买入，需要进行验证
-            cost_money = instrument.calc_cash_occupation(price, order.quantity, order.position_direction, order.trading_datetime.date())
-            cost_money += trade.transaction_cost
-            if cost_money > account.cash + order.init_frozen_cash:
-                reason = _(u"Order Cancelled: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-                        order_book_id=order_book_id, cost_money=cost_money, cash = account.cash + order.init_frozen_cash
-                        )
-                order.mark_rejected(reason)
-                return
-
         order.fill(trade)
         self._turnover[order.order_book_id] += fill
 
@@ -240,13 +253,11 @@ class DefaultTickMatcher(AbstractMatcher):
     SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
 
     def __init__(self, env: Environment, mod_config):
-        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
+        super(DefaultTickMatcher, self).__init__(env, mod_config)
         self._turnover = defaultdict(int)
         self._volume_percent = mod_config.volume_percent
-        self._price_limit = mod_config.price_limit
         self._liquidity_limit = mod_config.liquidity_limit
         self._volume_limit = mod_config.volume_limit
-        self._env: Environment = env
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
         # 每个交易日期内的上一个时刻的tick(第一个除外)
@@ -641,11 +652,6 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
 
 
 class SignalMatcher(AbstractMatcher):
-    def __init__(self, env: Environment, mod_config):
-        self._env: Environment = env
-        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
-        self._price_limit = mod_config.price_limit
-
     def match(self, account: Account, order: Order, open_auction: bool):
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             return

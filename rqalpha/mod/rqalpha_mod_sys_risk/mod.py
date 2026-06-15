@@ -27,7 +27,7 @@ class RiskManagerMod(AbstractMod):
             env.add_frontend_validator(PriceValidator(env))
         if mod_config.validate_is_trading:
             env.add_frontend_validator(IsTradingValidator(env))
-        if mod_config.validate_cash:
+        if mod_config.validate_cash and not env.config.mod.sys_simulation.partial_fill_on_insufficient_cash:
             env.add_frontend_validator(CashValidator(env))
         if mod_config.validate_self_trade:
             env.add_frontend_validator(SelfTradeValidator(env))
