@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-02 20:05+0800\n"
+"POT-Creation-Date: 2026-06-16 11:14+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -276,7 +276,7 @@ msgstr ""
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr ""
 
-#: rqalpha/data/bundle.py:623
+#: rqalpha/data/bundle.py:620
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
@@ -345,7 +345,7 @@ msgstr ""
 msgid "mod tear_down [END]   {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:442
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:462
 #, python-brace-format
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr ""
@@ -510,12 +510,12 @@ msgstr ""
 msgid "not supported to be called in {} phase"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:469
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:598
 #, python-brace-format
 msgid "price of {} is needed, which is not provided in the algo_or_prices"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:496
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:625
 msgid "Limit order price is invalid."
 msgstr ""
 
@@ -567,32 +567,32 @@ msgstr ""
 msgid "[sys_analyser] Generate report from strategy output file"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:155
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:165
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
 "instead"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:185
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:197
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:218
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:195
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:207
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:228
 #, python-brace-format
 msgid "benchmark {} missing data between backtest start date {} and end date {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:206
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:216
 #, python-brace-format
 msgid ""
 "benchmark {} available data start date {} >= backtest start date {} or "
 "end date {} <= backtest end date {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:327
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:337
 #, python-brace-format
 msgid "invalid init benchmark {}, should be in format 'order_book_id:weight'"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:332
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:342
 #, python-brace-format
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr ""
@@ -1022,12 +1022,12 @@ msgid ""
 "{frozen_price}"
 msgstr ""
 
-#: rqalpha/portfolio/__init__.py:298 rqalpha/portfolio/__init__.py:311
+#: rqalpha/portfolio/__init__.py:286 rqalpha/portfolio/__init__.py:299
 #, python-brace-format
 msgid "invalid account type {}, choose in {}"
 msgstr ""
 
-#: rqalpha/portfolio/__init__.py:302
+#: rqalpha/portfolio/__init__.py:290
 #, python-brace-format
 msgid "Cash add {}. units {} become to {}"
 msgstr ""
@@ -1187,38 +1187,38 @@ msgid ""
 "https://www.ricequant.com/doc/rqalpha-plus/api/config)"
 msgstr ""
 
-#: rqalpha/utils/config.py:209
+#: rqalpha/utils/config.py:233
 #, python-brace-format
 msgid "Invalid future info: underlying_symbol {} is illegal."
 msgstr ""
 
-#: rqalpha/utils/config.py:225
+#: rqalpha/utils/config.py:249
 msgid ""
 "Invalid future info: commission_type is suppose to be BY_MONEY or "
 "BY_VOLUME"
 msgstr ""
 
-#: rqalpha/utils/config.py:228
+#: rqalpha/utils/config.py:252
 #, python-brace-format
 msgid "Invalid future info: field {} is not valid"
 msgstr ""
 
-#: rqalpha/utils/config.py:258
+#: rqalpha/utils/config.py:282
 #, python-brace-format
 msgid "invalid init position {}, should be in format 'order_book_id:quantity'"
 msgstr ""
 
-#: rqalpha/utils/config.py:263
+#: rqalpha/utils/config.py:287
 #, python-brace-format
 msgid "invalid quantity for instrument {order_book_id}: {quantity}"
 msgstr ""
 
-#: rqalpha/utils/config.py:278
+#: rqalpha/utils/config.py:302
 #, python-brace-format
 msgid "unknown run type: {}"
 msgstr ""
 
-#: rqalpha/utils/config.py:291
+#: rqalpha/utils/config.py:315
 #, python-brace-format
 msgid "unknown persist mode: {}"
 msgstr ""
