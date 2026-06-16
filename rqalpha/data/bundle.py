@@ -26,6 +26,7 @@ from ctypes import c_bool
 
 import h5py
 import numpy as np
+import pandas as pd
 from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
@@ -435,48 +436,92 @@ class UpdateDayBarTask(DayBarTask):
                 sval.value = False
                 yield 1
             else:
+                full_update_list = []
+                incremental_update_dic = {}
+                min_last_date = START_DATE  # h5 中最小的 last_date，作为 rqdatac.get_price 的 start_date
                 is_futures = "futures" == os.path.basename(self._file_path).split(".")[0]
                 for order_book_id in self._order_book_ids:
                     # 特殊处理前复权合约，需要全量更新
                     is_pre = is_futures and "888" in order_book_id
-                    if order_book_id in h5 and not is_pre:
+                    if order_book_id not in h5 or is_pre:
+                        full_update_list.append(order_book_id)
+                    else:
                         try:
                             last_date = int(h5[order_book_id]['datetime'][-1] // 1000000)
-                        except OSError:
-                            system_log.error("File {} update failed, if it is using, please update later, "
-                                            "or you can delete then update again".format(self._file_path))
-                            sval.value = False
-                            yield 1
-                            break
                         except ValueError:
                             h5.pop(order_book_id)
-                            start_date = START_DATE
+                            full_update_list.append(order_book_id)
                         else:
-                            start_date = rqdatac.get_next_trading_date(last_date)
-                    else:
-                        start_date = START_DATE
-                    df = rqdatac.get_price(order_book_id, start_date, END_DATE, '1d',
-                                        adjust_type='none', fields=self._fields, expect_df=True, market=self._market)
-                    if not (df is None or df.empty):
-                        df = df[self._fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
-                        df = df.loc[order_book_id]
-                        df.reset_index(inplace=True)
-                        df['datetime'] = [convert_date_to_int(d) for d in df['date']]
-                        del df['date']
-                        df.set_index('datetime', inplace=True)
-                        if order_book_id in h5:
-                            data = np.array(
-                                [tuple(i) for i in chain(h5[order_book_id][:], df.to_records())],
-                                dtype=h5[order_book_id].dtype
-                            )
-                            del h5[order_book_id]
-                            h5.create_dataset(order_book_id, data=data, **self._h5_kwargs)
-                        else:
-                            h5.create_dataset(order_book_id, data=df.to_records(), **self._h5_kwargs)
-                    yield 1
+                            min_last_date = min(last_date, min_last_date)
+                            incremental_update_dic[order_book_id] = last_date
+                
+                if full_update_list:
+                    i, step = 0, 300
+                    while True:
+                        order_book_ids = full_update_list[i: i + step]
+                        df: pd.DataFrame = rqdatac.get_price(
+                            order_book_ids, START_DATE, END_DATE, '1d', adjust_type='none', 
+                            fields=self._fields, expect_df=True, market=self._market
+                        )
+                        if not (df is None or df.empty):
+                            df = self._transfrom_df(df)
+                            for order_book_id in df.index.levels[0]:
+                                if order_book_id in h5:
+                                    del h5[order_book_id]
+                                h5.create_dataset(order_book_id, data=df.loc[order_book_id].to_records(), **self._h5_kwargs)
+                            i += step
+                            yield len(order_book_ids)
+                            if i >= len(full_update_list):
+                                break
+                
+                today = datetime.date.today()
+                prev_trading_date = convert_date_to_int(rqdatac.get_previous_trading_date(today))
+                if min_last_date == today or (not rqdatac.is_trading_date(today) and min_last_date == prev_trading_date):
+                    yield len(incremental_update_dic.keys())
+                else:
+                    update_list = incremental_update_dic.keys()
+                    start_date = rqdatac.get_next_trading_date(min_last_date)
+                    i, step = 0, 300
+                    while True:
+                        order_book_ids = update_list[i: i+ step]
+                        df = rqdatac.get_price(
+                            order_book_ids, start_date, END_DATE, '1d', adjust_type='none',
+                            fields=self._fields, expect_df=True, market=self._market
+                        )
+
+                        if not (df is None or df.empty):
+                            df = self._transfrom_df(df)
+                            for order_book_id in df.index.levels[0]:
+                                try:
+                                    data = df.loc[order_book_id]
+                                except KeyError:
+                                    continue  # TODO: 需要引入 instrument 的退市日期来进行处理
+                                last_date = incremental_update_dic[order_book_id]
+                                data = data[data['datetime'] > last_date]
+                                data = np.array(
+                                    [tuple(i) for i in chain(h5[order_book_id][:], data.to_records())],
+                                    dtype=h5[order_book_id].dtype
+                                )
+                                del h5[order_book_id]
+                                h5.create_dataset(order_book_id, data=data, **self._h5_kwargs)
+
+                        i += step
+                        yield len(order_book_ids)
+                        if i >= len(update_list):
+                            break
+
             finally:
                 if h5:
                     h5.close()
+
+    def _transfrom_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df[self._fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
+        df.reset_index(inplace=True)
+        df['datetime'] = [convert_date_to_int(d) for d in df['date']]
+        del df['date']
+        df.set_index('datetime', inplace=True)
+        df.sort_index(inplace=True)
+        return df
 
 
 def process_init(args: Optional[Synchronized] = None, kwargs = None):
