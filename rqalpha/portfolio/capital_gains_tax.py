@@ -3,6 +3,9 @@ from datetime import date
 from rqalpha.core.events import EVENT
 
 
+DEFAULT_CAPITAL_GAINS_TAX_RATE = 0
+
+
 class CapitalGainsTaxMixin:
     """
     计算 `金融商品转让增值税` + `附加税`，具体计算逻辑和公式如下：
@@ -38,7 +41,8 @@ class CapitalGainsTaxMixin:
             return 0
         tax_basis = self._annual_deductible_balance + self._monthly_realized_pnl
         if tax_basis > 0:
-            tax = tax_basis * self._env.config.base.capital_gain_tax_rate
+            tax_rate = getattr(self._env.config.base, "capital_gain_tax_rate", DEFAULT_CAPITAL_GAINS_TAX_RATE)
+            tax = tax_basis * tax_rate
             self._monthly_realized_pnl = self._annual_deductible_balance = 0
             return tax
         else:
