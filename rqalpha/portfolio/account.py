@@ -403,11 +403,13 @@ class Account(metaclass=AccountMeta):
             nonlocal delta_cash, delta_monthly_realized_pnl
             apply_result = self._get_or_create_pos(order_book_id, position_direction).apply_trade(trade)
             try:
-                delta_cash += apply_result[0]
-                delta_monthly_realized_pnl += apply_result[1]
+                delta_cash_delta, delta_monthly_realized_pnl_delta = apply_result
             except TypeError:
                 # 向前兼容，会存在 mod 的不返回月度已实现交易变化量的情况
                 delta_cash += apply_result
+            else:
+                delta_cash += delta_cash_delta
+                delta_monthly_realized_pnl += delta_monthly_realized_pnl_delta
 
         delta_cash = delta_monthly_realized_pnl = 0
         if trade.position_effect == POSITION_EFFECT.MATCH:

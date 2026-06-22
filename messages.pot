@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-16 11:14+0800\n"
+"POT-Creation-Date: 2026-06-22 13:58+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -276,7 +276,7 @@ msgstr ""
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr ""
 
-#: rqalpha/data/bundle.py:620
+#: rqalpha/data/bundle.py:620 rqalpha/data/bundle/__init__.py:676
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
@@ -316,6 +316,10 @@ msgstr ""
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
+msgstr ""
+
+#: rqalpha/data/bundle/check_bundle.py:24
+msgid "当前目录缺少 trading_dates.npy 或 instruments.pk 文件，请先下载 base 数据!"
 msgstr ""
 
 #: rqalpha/mod/__init__.py:55
@@ -1051,7 +1055,7 @@ msgstr ""
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:520 rqalpha/portfolio/account.py:539
+#: rqalpha/portfolio/account.py:522 rqalpha/portfolio/account.py:541
 #, python-brace-format
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr ""
@@ -1181,10 +1185,10 @@ msgstr ""
 #: rqalpha/utils/config.py:125
 msgid ""
 "The strategy requires explicit configuration of "
-"base.capital_gain_tax_rate,                 which currently has a default"
-" value of 0 and will be changed to a non-zero value in a future version."
-"                    (The configuration description can be found at "
-"https://www.ricequant.com/doc/rqalpha-plus/api/config)"
+"base.capital_gain_tax_rate, which currently has a default value of 0 and "
+"will be changed to a non-zero value in a future version.(The "
+"configuration description can be found at https://www.ricequant.com/doc"
+"/rqalpha-plus/api/config)"
 msgstr ""
 
 #: rqalpha/utils/config.py:233
