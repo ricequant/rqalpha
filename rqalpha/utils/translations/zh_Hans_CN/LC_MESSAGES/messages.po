@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-16 11:14+0800\n"
+"POT-Creation-Date: 2026-06-22 13:58+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -292,7 +292,7 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/bundle.py:620
+#: rqalpha/data/bundle.py:620 rqalpha/data/bundle/__init__.py:676
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
@@ -1077,7 +1077,7 @@ msgstr "期货账户的现金在结算后变为负数"
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/account.py:520 rqalpha/portfolio/account.py:539
+#: rqalpha/portfolio/account.py:522 rqalpha/portfolio/account.py:541
 #, python-brace-format
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
@@ -1210,13 +1210,11 @@ msgstr "在执行 parse_user_config 时，产生异常: {e}"
 #, fuzzy
 msgid ""
 "The strategy requires explicit configuration of "
-"base.capital_gain_tax_rate,                 which currently has a default"
-" value of 0 and will be changed to a non-zero value in a future version."
-"                    (The configuration description can be found at "
-"https://www.ricequant.com/doc/rqalpha-plus/api/config)"
-msgstr ""
-"策略需要显式配置 base.capital_gain_tax_rate，其当前的默认值为 0，将在未来的版本中更改为非 0 值（该配置的说明可见 "
-"https://www.ricequant.com/doc/rqalpha-plus/api/config）"
+"base.capital_gain_tax_rate, which currently has a default value of 0 and "
+"will be changed to a non-zero value in a future version.(The "
+"configuration description can be found at https://www.ricequant.com/doc"
+"/rqalpha-plus/api/config)"
+msgstr "策略需要显式配置 base.capital_gain_tax_rate，其当前的默认值为 0，将在未来的版本中更改为非 0 值（该配置的说明可见https://www.ricequant.com/doc/rqalpha-plus/api/config）"
 
 #: rqalpha/utils/config.py:233
 #, python-brace-format

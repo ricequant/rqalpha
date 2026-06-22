@@ -123,8 +123,8 @@ def _check_capital_gain_tax_rate(base_config):
         init_logger()
         system_log.warning(_(
             u"The strategy requires explicit configuration of base.capital_gain_tax_rate, \
-                which currently has a default value of 0 and will be changed to a non-zero value in a future version.\
-                    (The configuration description can be found at https://www.ricequant.com/doc/rqalpha-plus/api/config)"
+which currently has a default value of 0 and will be changed to a non-zero value in a future version.\
+(The configuration description can be found at https://www.ricequant.com/doc/rqalpha-plus/api/config)"
             ))
 
 
