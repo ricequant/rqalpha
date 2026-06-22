@@ -22,7 +22,6 @@ class CapitalGainsTaxMixin:
         """
         每年年初将 K 重置为 0
         """
-        self._trading_dt = event.trading_dt
         if self._is_start_of_year():
             self._annual_deductible_balance = 0
 
@@ -51,23 +50,16 @@ class CapitalGainsTaxMixin:
             return 0
 
     def _is_end_of_month(self) -> bool:
-        trading_dt = self._get_trading_dt()
+        trading_dt = self._env.trading_dt
         next_trading_date = self._env.data_proxy.get_next_trading_date(trading_dt)
         return next_trading_date.month != trading_dt.month
 
     def _is_start_of_year(self) -> bool:
-        trading_dt = self._get_trading_dt()
+        trading_dt = self._env.trading_dt
         if trading_dt.month != 1: # 减少交易日获取
             return False
         prev_trading_date = self._env.data_proxy.get_previous_trading_date(trading_dt)
         return prev_trading_date.year != trading_dt.year
-
-    def _get_trading_dt(self):
-        trading_dt = getattr(self, "_trading_dt", None)
-        if trading_dt is None:
-            trading_dt = self._env.trading_dt
-            self._trading_dt = trading_dt
-        return trading_dt
 
     def _add_monthly_realized_pnl(self, delta_amount: float) -> None:
         self._monthly_realized_pnl += delta_amount
