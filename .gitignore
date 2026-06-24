@@ -13,8 +13,7 @@ rqalpha.system.log
 *.so
 *.pyc
 build/
-bundle/
-bundle
+/bundle/
 persist/
 .coverage
 .tox
