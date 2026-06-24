@@ -14,7 +14,6 @@
 
 from copy import deepcopy
 from datetime import date
-
 from rqalpha.apis import *
 from rqalpha import run_func
 from rqalpha.utils.dict_func import deep_update
@@ -102,3 +101,39 @@ def test_futures_de_listed():
             context.total_value = context.portfolio.total_value
 
     run_func(config=config, init=init, before_trading=before_trading, handle_bar=handle_bar)
+
+
+def test_futures_price_gap_reset_after_position_closed_and_reopened():
+    config = _config({
+        "base": {
+            "start_date": "2016-01-04",
+            "end_date": "2016-01-29",
+            "frequency": "1d",
+            "accounts": {
+                "future": 1000000,
+            },
+            "capital_gain_tax_rate": 0.0318,
+        },
+        "mod": {
+            "sys_transaction_cost": {
+                "futures_commission_multiplier": 0,
+            },
+            "sys_accounts": {
+                "futures_settlement_price_type": "settlement"
+            }
+        }
+    })
+
+    def init(context):
+        context.symbol = "IC1603"
+
+    def handle_bar(context, bar_dict):
+        if context.now.date() == date(2016, 1, 4):
+            buy_open(context.symbol, 1)
+        elif context.now.date() == date(2016, 1, 5):
+            sell_close(context.symbol, 1)
+            buy_open(context.symbol, 1)
+            sell_close(context.symbol, 1, close_today=True)
+
+    result = run_func(config=config, init=init, handle_bar=handle_bar)["sys_analyser"]
+    assert "portfolio_event" not in result

@@ -10,14 +10,14 @@ order_target_portfolio_smart 单元测试套件
 
 计算公式:
 目标数量 = (总资金 × 目标权重) / 股票价格
-实际下单数量会经过算法的最小单位调整、安全边距(safety)等机制处理
+实际下单数量会经过权重层约束、最小下单量和整手调整等机制处理
 """
 import pytest
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from typing import Dict, Tuple
 
-from pandas import DataFrame, Series, Timestamp
+from pandas import Timestamp
 
 from rqalpha.environment import Environment
 from rqalpha.model.order import MarketOrder, LimitOrder
@@ -26,12 +26,12 @@ from rqalpha.utils.config import parse_config
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
 from rqalpha.data.data_proxy import DataProxy
-from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION, POSITION_EFFECT, SIDE
+from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_EFFECT, SIDE
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import StockTransactionCostDecider
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_portfolio_smart
-from rqalpha.mod.rqalpha_mod_sys_accounts.api.order_target_portfolio import DenialReason, OrderTargetPortfolio
 from rqalpha.utils.exception import RQInvalidArgument
+from rqalpha.utils.testing.mocking import mock_bar
 from rqalpha.main import cleanup_resources
 
 
@@ -230,8 +230,7 @@ def test_order_target_portfolio_smart_nan_limit_price_rejected(environment, on_h
 
 def test_order_target_portfolio_smart_custom_valuation_prices(environment, on_handle_bar, assert_submitted_orders):
     """测试自定义估值价格"""
-    # 注：某些参数组合会触发算法内部的 safety < 0 错误，这是算法设计的边界情况
-    # 这里测试一个更保守的场景来验证自定义估值价格功能
+    # 这里测试一个保守的场景来验证自定义估值价格功能
     order_target_portfolio_smart(
         {
             "000001.XSHE": 0.3,  # 用30%权重
@@ -326,65 +325,130 @@ def test_order_target_portfolio_smart_limit_and_valuation_prices(environment, on
 # TODO：测试资金不足的场景
 
 
-def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band():
-    index = ["000001.XSHE", "000002.XSHE"]
-    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
-    otp._current_quantities = Series([0, 100], index=index, dtype=int)
-    otp._current_closable = Series([0, 100], index=index, dtype=int)
-    otp._tick_sizes = Series([0.01, 0.01], index=index, dtype=float)
-    otp._min_qty = Series([100, 100], index=index, dtype="int64")
-    otp._step_size = Series([100, 100], index=index, dtype="int64")
-    otp._suspended = Series([False, False], index=index, dtype=bool)
-    otp._prices = DataFrame(
-        {
-            "last": [9.990005, 9.009995],
-            "limit_up": [10.0, 10.0],
-            "limit_down": [9.0, 9.0],
-        },
-        index=index,
-        dtype=float,
+LIMIT_UP_BUY_DENIAL = "Order creation failed: cannot buy due to limit up"
+LIMIT_DOWN_SELL_DENIAL = "Order creation failed: cannot sell due to limit down"
+
+
+def _bar_patch(environment, bar_prices):
+    original_get_bar = environment.data_proxy.get_bar
+    bars = {}
+    for order_book_id, prices in bar_prices.items():
+        instrument = environment.data_proxy.instrument(order_book_id)
+        open_price = prices["open"]
+        bars[order_book_id] = mock_bar(
+            instrument,
+            open=open_price,
+            close=prices.get("close", open_price),
+            high=prices.get("high", open_price),
+            low=prices.get("low", open_price),
+            limit_up=prices.get("limit_up", open_price * 1.1),
+            limit_down=prices.get("limit_down", open_price * 0.9),
+        )
+
+    def get_bar(order_book_id, dt, frequency="1d"):
+        if order_book_id in bars:
+            return bars[order_book_id]
+        return original_get_bar(order_book_id, dt, frequency)
+
+    return patch.object(environment.data_proxy, "get_bar", side_effect=get_bar)
+
+
+def _reset_portfolio(environment, init_positions=()):
+    environment.broker = MagicMock()
+    environment.broker.get_open_orders.return_value = []
+    environment.portfolio = Portfolio(
+        starting_cash=config.base.accounts,  # type: ignore
+        init_positions=list(init_positions),
+        financing_rate=0.0,
+        env=environment,
     )
 
-    diff, denials = otp._calc_adjusting(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.LONG)
 
-    assert diff.to_dict() == {"000001.XSHE": 0, "000002.XSHE": 0}
-    assert denials[DenialReason.limit_up_buy].to_dict() == {
-        "000001.XSHE": True,
-        "000002.XSHE": False,
-    }
-    assert denials[DenialReason.limit_down_sell].to_dict() == {
-        "000001.XSHE": False,
-        "000002.XSHE": True,
-    }
+def test_order_target_portfolio_smart_allows_limit_down_buy_after_rescale(
+    environment, on_handle_bar, assert_submitted_orders
+):
+    """跌停票若重分配后需要买入，应继续承接目标权重。"""
+    limit_up_id = "000001.XSHE"
+    limit_down_id = "000004.XSHE"
 
-
-def test_order_target_portfolio_smart_rejects_unrounded_prices_in_last_tick_band_for_short():
-    index = ["000001.XSHE", "000002.XSHE"]
-    otp = OrderTargetPortfolio.__new__(OrderTargetPortfolio)
-    otp._current_quantities = Series([0, 100], index=index, dtype=int)
-    otp._current_closable = Series([0, 100], index=index, dtype=int)
-    otp._tick_sizes = Series([0.01, 0.01], index=index, dtype=float)
-    otp._min_qty = Series([100, 100], index=index, dtype="int64")
-    otp._step_size = Series([100, 100], index=index, dtype="int64")
-    otp._suspended = Series([False, False], index=index, dtype=bool)
-    otp._prices = DataFrame(
+    with _bar_patch(
+        environment,
         {
-            "last": [9.009995, 9.990005],
-            "limit_up": [10.0, 10.0],
-            "limit_down": [9.0, 9.0],
+            limit_up_id: {"open": 10.0, "limit_up": 10.0, "limit_down": 9.0},
+            limit_down_id: {"open": 10.0, "limit_up": 11.0, "limit_down": 10.0},
         },
-        index=index,
-        dtype=float,
-    )
+    ):
+        result = order_target_portfolio_smart({limit_up_id: 0.50, limit_down_id: 0.10})
 
-    diff, denials = otp._calc_adjusting(Series([100, 0], index=index, dtype=int), POSITION_DIRECTION.SHORT)
+    assert result[limit_up_id] == LIMIT_UP_BUY_DENIAL
+    assert_submitted_orders({
+        limit_down_id: (600000, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
+    })
 
-    assert diff.to_dict() == {"000001.XSHE": 0, "000002.XSHE": 0}
-    assert denials[DenialReason.limit_down_buy].to_dict() == {
-        "000001.XSHE": True,
-        "000002.XSHE": False,
+
+def test_order_target_portfolio_smart_keeps_zero_target_out_of_distribution(
+    environment, on_handle_bar, assert_submitted_orders
+):
+    """目标权重为 0 的资产不承接其他标的无法买入的缺口。"""
+    limit_up_id = "000001.XSHE"
+    zero_target_id = "000004.XSHE"
+    normal_id = "600000.XSHG"
+
+    with _bar_patch(
+        environment,
+        {
+            limit_up_id: {"open": 10.0, "limit_up": 10.0, "limit_down": 9.0},
+            zero_target_id: {"open": 10.0, "limit_up": 11.0, "limit_down": 9.0},
+            normal_id: {"open": 10.0, "limit_up": 11.0, "limit_down": 9.0},
+        },
+    ):
+        result = order_target_portfolio_smart({limit_up_id: 0.50, zero_target_id: 0.0, normal_id: 0.10})
+
+    assert result[limit_up_id] == LIMIT_UP_BUY_DENIAL
+    assert zero_target_id not in result
+    assert_submitted_orders({
+        normal_id: (600000, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
+    })
+
+
+def test_order_target_portfolio_smart_does_not_deny_unchanged_limit_up_position(
+    environment, on_handle_bar, assert_submitted_orders
+):
+    order_book_id = "000001.XSHE"
+
+    with _bar_patch(
+        environment,
+        {
+            order_book_id: {"open": 10.0, "limit_up": 10.0, "limit_down": 9.0},
+        },
+    ):
+        _reset_portfolio(environment, [(order_book_id, 100)])
+        target_weight = 100 * 10.0 / environment.portfolio.total_value
+
+        result = order_target_portfolio_smart({order_book_id: target_weight})
+
+    assert result == {}
+    assert_submitted_orders({})
+
+
+def test_order_target_portfolio_smart_rejects_prices_in_last_tick_band(
+    environment, on_handle_bar, assert_submitted_orders
+):
+    buy_id = "000001.XSHE"
+    sell_id = "000004.XSHE"
+
+    with _bar_patch(
+        environment,
+        {
+            buy_id: {"open": 9.990005, "limit_up": 10.0, "limit_down": 9.0},
+            sell_id: {"open": 9.009995, "limit_up": 10.0, "limit_down": 9.0},
+        },
+    ):
+        _reset_portfolio(environment, [(sell_id, 100)])
+        result = order_target_portfolio_smart({buy_id: 0.001, sell_id: 0.0})
+
+    assert result == {
+        buy_id: LIMIT_UP_BUY_DENIAL,
+        sell_id: LIMIT_DOWN_SELL_DENIAL,
     }
-    assert denials[DenialReason.limit_up_sell].to_dict() == {
-        "000001.XSHE": False,
-        "000002.XSHE": True,
-    }
+    assert_submitted_orders({})

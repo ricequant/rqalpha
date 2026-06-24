@@ -48,6 +48,9 @@ base:
   auto_update_bundle_path: ~
   # 一年交易日天数，默认使用DAYS_CNT.TRADING_DAYS_A_YEAR
   custom_trading_days_a_year: ~
+  # 商品转让增值税及其他税费的费率
+  # 当前版本默认值设置为 0 以向前兼容，将在后续版本中将默认值设置为 0.0318(该取值可见 CapitalGainsTaxMixin 类的说明)
+  capital_gain_tax_rate: 0
 
 extra:
   # 选择日期的输出等级，有 `verbose` | `info` | `warning` | `error` 等选项，您可以通过设置 `verbose` 来查看最详细的日志，

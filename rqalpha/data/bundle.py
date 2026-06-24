@@ -343,8 +343,7 @@ class GenerateFileTask(ProgressedTask):
         self._step = 100
 
     @property
-    def total_steps(self):
-        # type: () -> int
+    def total_steps(self) -> int:
         return self._step
 
     def __call__(self):
@@ -367,8 +366,7 @@ class DayBarTask(ProgressedTask):
         self._market = market
 
     @property
-    def total_steps(self):
-        # type: () -> int
+    def total_steps(self) -> int:
         return len(self._order_book_ids)
 
     def __call__(self):
@@ -513,9 +511,8 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
         gen_instruments, gen_trading_dates, gen_st_days,
         gen_suspended_days, gen_yield_curve, gen_share_transformation, gen_future_info
     )
-    kwargs = {}
     if enable_compression:
-        kwargs['compression'] = 9
+        h5_kwargs['compression'] = 9
     # windows上子进程需要执行rqdatac.init, 其他os则需要执行rqdatac.reset; rqdatac.init包含了rqdatac.reset的功能
     for file, order_book_id, field in day_bar_args:
         tasks.append(_DayBarTask(order_book_id, os.path.join(path, file), field, **h5_kwargs))

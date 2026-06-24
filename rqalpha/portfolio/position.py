@@ -20,7 +20,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Dict, Iterable, Tuple, Optional, Deque, List
 
-from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET, SIDE
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET
 from rqalpha.environment import Environment
 from rqalpha.utils.exception import InstrumentNotFound
 from rqalpha.interface import AbstractPosition
@@ -246,24 +246,26 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         else:
             self._trade_cost -= trade.last_price * trade.last_quantity
 
-    def apply_trade(self, trade: Trade) -> float:
-        # 返回总资金的变化量
+    def apply_trade(self, trade: Trade) -> Tuple[float, float]:
+        # return: (总资金的变化量, 增值税基变化量)
         self._update_costs(trade)
         if trade.position_effect == POSITION_EFFECT.OPEN:
-            self._queue.handle_trade(trade.last_quantity, self._env.trading_dt.date())
+            close_details = self._queue.handle_trade(trade.last_quantity, self._env.trading_dt.date())
+            self._after_position_queue_updated(trade, close_details)
             if self._quantity < 0:
                 self._avg_price = trade.last_price if self._quantity + trade.last_quantity > 0 else 0
             else:
                 cost = self._quantity * self._avg_price + trade.last_quantity * trade.last_price
                 self._avg_price = cost / (self._quantity + trade.last_quantity)
             self._quantity += trade.last_quantity
-            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost
+            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost, 0
         elif trade.position_effect == POSITION_EFFECT.CLOSE:
             # 先平昨，后平今
-            self._queue.handle_trade(-trade.last_quantity, self._env.trading_dt.date())
+            close_details = self._queue.handle_trade(-trade.last_quantity, self._env.trading_dt.date())
+            self._after_position_queue_updated(trade, close_details)
             self._old_quantity -= min(trade.last_quantity, self._old_quantity)
             self._quantity -= trade.last_quantity
-            return trade.last_price * trade.last_quantity - trade.transaction_cost
+            return trade.last_price * trade.last_quantity - trade.transaction_cost, 0
         else:
             raise NotImplementedError("{} does not support position effect {}".format(
                 self.__class__.__name__, trade.position_effect
@@ -297,6 +299,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     def instrument(self) -> Instrument:
         return self._instrument
 
+    def _after_position_queue_updated(self, trade: Trade, close_details: List[Tuple[date, int]]):
+        pass
+
 
 class PositionQueue:
     def __init__(self):
@@ -305,9 +310,10 @@ class PositionQueue:
     def set_sate(self, state: List[Tuple[date, int]]):
         self._queue = deque(state)
 
-    def handle_trade(self, delta_quantity, trading_date: date, close_today: bool = False):
+    def handle_trade(self, delta_quantity, trading_date: date, close_today: bool = False) -> List[Tuple[date, int]]:
+        close_details = []
         if delta_quantity == 0:
-            return
+            return close_details
         if self._queue and self._queue[0][1] * delta_quantity < 0:
             # 从正平仓到负或者从负平仓到正
             if close_today:
@@ -315,19 +321,23 @@ class PositionQueue:
                 d, qty_in_queue = self._queue[-1]
                 if d >= trading_date:
                     if abs(qty_in_queue) <= abs(delta_quantity):
+                        close_details.append((d, -qty_in_queue))
                         delta_quantity += qty_in_queue
                         self._queue.pop()
                     else:
+                        close_details.append((d, delta_quantity))
                         self._queue[-1] = (d, qty_in_queue + delta_quantity)
                         delta_quantity = 0
             while delta_quantity and self._queue:
                 d, qty_in_queue = self._queue[0]
                 if abs(qty_in_queue) <= abs(delta_quantity):
                     # 当前持仓批次全部平掉
+                    close_details.append((d, -qty_in_queue))
                     delta_quantity += qty_in_queue
                     self._queue.popleft()
                 else:
                     # 当前持仓批次部分平掉
+                    close_details.append((d, delta_quantity))
                     self._queue[0] = (d, qty_in_queue + delta_quantity)
                     delta_quantity = 0
             if delta_quantity != 0:
@@ -342,6 +352,7 @@ class PositionQueue:
             else:
                 # 当日首次开仓
                 self._queue.append((trading_date, delta_quantity))
+        return close_details
 
     def handle_split(self, ratio: Decimal, expected_quantity):
         self._queue = deque(

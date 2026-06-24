@@ -18,7 +18,7 @@
 from typing import Any
 
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT
-from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.interface import AbstractMod
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE
 from rqalpha.environment import Environment
@@ -30,12 +30,12 @@ from .validator import MarginInstrumentValidator
 
 
 class AccountMod(AbstractMod):
-
-    def start_up(self, env, mod_config):
-        # type: (Environment, Any) -> None
-
+    def start_up(self, env: Environment, mod_config: Any) -> None:
+        if mod_config.dividend_tax_rate != 0:
+            system_log.warning("Configuration sys_accounts.dividend_tax_rate is no longer available. \
+                                    Please use configuration sys_accounts.dividend_tax_enabled instead.")
         StockPosition.dividend_reinvestment = mod_config.dividend_reinvestment
-        StockPosition.dividend_tax_rate = mod_config.dividend_tax_rate
+        StockPosition.dividend_tax_enabled = mod_config.dividend_tax_enabled
         StockPosition.cash_return_by_stock_delisted = mod_config.cash_return_by_stock_delisted
         StockPosition.t_plus_enabled = mod_config.stock_t1
 
