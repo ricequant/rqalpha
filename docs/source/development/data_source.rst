@@ -253,6 +253,43 @@ RQAlpha 不限制本地运行的策略调使用哪些库，因此您可以直接
 
 至此，我们就可以直接在策略中使用 `get_csv_as_df` 函数了。
 
+Adanos 市场情绪扩展 API
+------------------------------------
+
+RQAlpha 内置了可选的 Adanos Market Sentiment API Mod，可用于查询 Reddit、X、News 和 Polymarket 的美股市场情绪信号。
+该 Mod 默认不会启用，只有在策略配置中显式开启后才会注入对应的扩展 API。
+
+..  code-block:: python3
+
+    from rqalpha.api import *
+
+
+    def handle_bar(context, bar_dict):
+        sentiment = adanos_sentiment("TSLA.US", source="reddit", days=7)
+        if sentiment["sentiment_score"] > 0:
+            logger.info(sentiment)
+
+
+    __config__ = {
+        "mod": {
+            "adanos_sentiment": {
+                "enabled": True,
+                "lib": "rqalpha.mod.rqalpha_mod_adanos_sentiment",
+                "api_key": "your-api-key",
+                "source": "reddit",
+            }
+        }
+    }
+
+API Key 也可以通过 ``ADANOS_API_KEY`` 环境变量提供。
+
+该 Mod 提供两个策略 API：
+
+*   :code:`adanos_sentiment(order_book_id, source=None, days=7)`: 查询单个美股。``order_book_id`` 可以是 ``"TSLA"`` 或 ``"TSLA.US"``。
+*   :code:`adanos_sentiment_compare(order_book_ids, source=None, days=7)`: 查询多个美股的情绪对比。``order_book_ids`` 可以是逗号分隔字符串或可迭代对象。
+
+支持的数据源为 ``reddit``, ``x``, ``news`` 和 ``polymarket``。
+
 替换已有数据源
 ====================================
 
