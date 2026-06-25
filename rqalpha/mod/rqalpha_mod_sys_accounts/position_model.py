@@ -14,16 +14,18 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
-from datetime import date
-from typing import Optional, Deque, Tuple
+from datetime import date, datetime
+from typing import List, Optional, Deque, Tuple
 from collections import deque
 
 from decimal import Decimal, ROUND_HALF_UP
 from numpy import ndarray, isclose
+import pandas as pd
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
-from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
+from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, \
+    TRADING_CALENDAR_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
@@ -54,7 +56,7 @@ class StockPosition(Position):
     __instrument_types__ = INST_TYPE_IN_STOCK_ACCOUNT
 
     dividend_reinvestment = False
-    dividend_tax_rate: float = 0.
+    dividend_tax_enabled: bool = False
     cash_return_by_stock_delisted = True
     t_plus_enabled = True
 
@@ -71,6 +73,9 @@ class StockPosition(Position):
         self._daily_split: float = 1.
         self._unadjusted_prev_close = None
 
+        # 历史现金分红记录：Series[date, dividend_per_share]
+        self._historical_dividends: pd.Series[int, float] = pd.Series(dtype=float)
+
     @property
     def unadjusted_prev_close(self) -> float:
         if self._unadjusted_prev_close is None:
@@ -78,23 +83,21 @@ class StockPosition(Position):
         return self._unadjusted_prev_close
 
     @property
-    def dividend_receivable(self):
-        # type: () -> float
+    def dividend_receivable(self) -> float:
         """
         应收分红
         """
         return sum(v for _, v in self._dividend_receivable)
 
     @property
-    def equity(self):
-        # type: () -> float
+    def equity(self) -> float:
         """
         持仓权益
         """
         return super(StockPosition, self).equity + self.dividend_receivable
 
     @property
-    def market_value_local(self):
+    def market_value_local(self) -> float:
         return self.market_value
 
     @property
@@ -112,8 +115,7 @@ class StockPosition(Position):
         ) + self._daily_dividend) * self._direction_factor
 
     @property
-    def closable(self):
-        # type: () -> int
+    def closable(self) -> int:
         order_quantity = sum(o.unfilled_quantity for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
@@ -126,18 +128,35 @@ class StockPosition(Position):
         self._dividend_receivable = state.get("dividend_receivable")
         self._pending_transform = state.get("pending_transform")
         self._non_closable = state.get("non_closable", 0)
+        self._historical_dividends = self._restore_historical_dividends(state.get("historical_dividends"))
 
     def get_state(self):
         state = super(StockPosition, self).get_state()
         state.update({
             "dividend_receivable": self._dividend_receivable,
             "pending_transform": self._pending_transform,
-            "non_closable": self._non_closable
+            "non_closable": self._non_closable,
+            "historical_dividends": [
+                (int(dividend_date), float(dividend_per_share))
+                for dividend_date, dividend_per_share in self._historical_dividends.items()
+            ],
         })
         return state
 
-    def before_trading(self, trading_date):
-        # type: (date) -> float
+    @staticmethod
+    def _restore_historical_dividends(historical_dividends):
+        if historical_dividends is None:
+            return pd.Series(dtype=float)
+        if isinstance(historical_dividends, pd.Series):
+            return historical_dividends
+        if isinstance(historical_dividends, dict):
+            historical_dividends = historical_dividends.items()
+        return pd.Series({
+            int(dividend_date): float(dividend_per_share)
+            for dividend_date, dividend_per_share in historical_dividends
+        }, dtype=float)
+
+    def before_trading(self, trading_date: date) -> float:
         delta_cash = super(StockPosition, self).before_trading(trading_date)
         self._unadjusted_prev_close = self.last_price
         if self._quantity == 0 and not self._dividend_receivable:
@@ -151,16 +170,16 @@ class StockPosition(Position):
         delta_cash += self._handle_dividend_payable(trading_date)
         return delta_cash
 
-    def apply_trade(self, trade):
-        # type: (Trade) -> float
-        # 返回总资金的变化量
-        delta_cash = super(StockPosition, self).apply_trade(trade)
+    def apply_trade(self, trade: Trade) -> Tuple[float, float]:
+        # return: (总资金的变化量, 增值税基变化量)
+        delta_cash, delta_monthly_realized_pnl = super(StockPosition, self).apply_trade(trade)
         if trade.position_effect == POSITION_EFFECT.OPEN and self._market_tplus >= 1:  # type: ignore
             self._non_closable += trade.last_quantity
-        return delta_cash
+        if trade.position_effect == POSITION_EFFECT.CLOSE:
+            delta_monthly_realized_pnl += (trade.last_price - self._avg_price) * trade.last_quantity
+        return delta_cash, delta_monthly_realized_pnl
 
-    def settlement(self, trading_date):
-        # type: (date) -> float
+    def settlement(self, trading_date: date) -> float:
         super(StockPosition, self).settlement(trading_date)
 
         if self._quantity == 0:
@@ -227,19 +246,23 @@ class StockPosition(Position):
         right_pos = events_dates.searchsorted(today_int, side="right")
         events = events[left_pos: right_pos]
         return events
-        
+
     def _handle_dividend_book_closure(self, trading_date: date, data_proxy: DataProxy) -> float:
         dividends = self._get_dividends_or_splits(self._all_dividends, trading_date, "ex_dividend_date")  # type: ignore[reportIncompatibleVariableOverride]
         if dividends is None or len(dividends) == 0:
             return 0
-        dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum() * (1 - self.dividend_tax_rate)
+        dividend_per_share: float = (dividends["dividend_cash_before_tax"] / dividends["round_lot"]).sum()
         self._avg_price -= dividend_per_share
         # 前一天结算发生了除息, 此时 last_price 还是前一个交易日的收盘价，需要改为 除息后收盘价, 否则影响在before_trading中查看盈亏
         self._last_price -= dividend_per_share  # type: ignore
-        
+
         # FIXME: 这里隐含了获取的多条 dividend 的 payable_date 都相同的假设
         payable_date = _int_to_date(dividends["payable_date"][-1])
         self._dividend_receivable.append((payable_date, self._quantity * dividend_per_share))
+
+        # 更新历史分红记录
+        book_closure_date = dividends["book_closure_date"][-1]
+        self._historical_dividends.loc[book_closure_date] = dividend_per_share
         return self._quantity * dividend_per_share
 
     def _handle_dividend_payable(self, trading_date: date) -> float:
@@ -248,7 +271,7 @@ class StockPosition(Position):
             return 0
         payable_value = 0.
         while self._dividend_receivable and self._dividend_receivable[0][0] <= trading_date:
-            _, dividend_value = self._dividend_receivable.popleft()            
+            _, dividend_value = self._dividend_receivable.popleft()
             payable_value += dividend_value
         if payable_value and self.dividend_reinvestment:
             last_price = self.last_price
@@ -263,7 +286,7 @@ class StockPosition(Position):
             return payable_value
         else:
             return payable_value
-    
+
     def _get_split_ratio(self, splits) -> Decimal:
         # rqalpha 6.1.0 修改了 bundle 的 splits_factor 的数据格式，需要向前兼容
         if 'split_coefficient_to' not in splits.dtype.names:
@@ -283,7 +306,7 @@ class StockPosition(Position):
         if splits is None or len(splits) == 0:
             return 1.
         ratio_decimal = self._get_split_ratio(splits)
-        
+
         ratio = float(ratio_decimal)
         self._avg_price /= ratio
         self._last_price /= ratio  # type: ignore
@@ -291,6 +314,38 @@ class StockPosition(Position):
         self._old_quantity = self._quantity = int((Decimal(self._quantity) * ratio_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
         self._queue.handle_split(ratio_decimal, self._quantity)
         return ratio
+
+    def _after_position_queue_updated(self, trade: Trade, close_details: List[Tuple[date, int]]):
+        if trade.position_effect == POSITION_EFFECT.CLOSE:
+            self._pay_dividend_tax(trade.trading_datetime, close_details)
+
+    def _pay_dividend_tax(self, trading_dt: datetime, close_details: List[Tuple[date, int]]):
+        if not self.dividend_tax_enabled or self._historical_dividends.empty:
+            return
+        dividend_tax = 0
+        if close_details:
+            """
+            按持股期限差异化税率计算红利税，税率如下:
+                - 持股期限 <= 1个月: 20%
+                - 1个月 < 持股期限 <= 1年: 10%
+                - 持股期限 > 1年: 免征
+            """
+            target_month_ago_date = (pd.to_datetime(trading_dt) - pd.DateOffset(months=1)).date()
+            target_year_ago_date = (pd.to_datetime(trading_dt) - pd.DateOffset(years=1)).date()
+            for buy_date, quantity in close_details:
+                if buy_date >= target_month_ago_date:
+                    tax_rate = 0.2
+                elif buy_date >= target_year_ago_date:
+                    tax_rate = 0.1
+                else:
+                    continue
+                dividends = self._historical_dividends[self._historical_dividends.index >= convert_date_to_date_int(buy_date)]
+                dividend_tax += dividends.sum() * abs(quantity) * tax_rate
+
+            if dividend_tax > 0:
+                self._env.event_bus.publish_event(Event(
+                    EVENT.PAY_TAXES, order_book_id=self.order_book_id, delta_amount=dividend_tax, trading_dt=trading_dt, tax_type=TAX_TYPE.DIVIDEND
+                ))
 
 
 class FuturePosition(Position):
@@ -303,13 +358,18 @@ class FuturePosition(Position):
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._quantity - self._old_quantity)
 
+    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
+        super(FuturePosition, self).__init__(order_book_id, direction, init_quantity, init_price)
+
+        # 记录买入价到昨日结算价格之间的价差，用于计算增值税的 monthly_realized_pnl
+        self._price_gap = 0
+
     @cached_property
     def contract_multiplier(self):
         return self._instrument.contract_multiplier
-    
+
     @property
-    def margin_rate(self):
-        # type: () -> float
+    def margin_rate(self) -> float:
         if self.direction == POSITION_DIRECTION.LONG:
             margin_ratio = self._instrument.get_long_margin_ratio(self._env.trading_dt.date())
         elif self.direction == POSITION_DIRECTION.SHORT:
@@ -317,37 +377,31 @@ class FuturePosition(Position):
         return margin_ratio * self._env.config.base.margin_multiplier
 
     @property
-    def equity(self):
-        # type: () -> float
+    def equity(self) -> float:
         """"""
         return self._quantity * (self.last_price - self._avg_price) * self.contract_multiplier * self._direction_factor
 
     @property
-    def margin(self):
-        # rtpe: () -> float
+    def margin(self) -> float:
         """
         保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
         """
         return self.margin_rate * self.market_value
 
     @property
-    def market_value(self):
-        # type: () -> float
+    def market_value(self) -> float:
         return self.contract_multiplier * super(FuturePosition, self).market_value
 
     @property
-    def trading_pnl(self):
-        # type: () -> float
+    def trading_pnl(self) -> float:
         return self.contract_multiplier * super(FuturePosition, self).trading_pnl
 
     @property
-    def position_pnl(self):
-        # type: () -> float
+    def position_pnl(self) -> float:
         return self.contract_multiplier * super(FuturePosition, self).position_pnl
 
     @property
-    def pnl(self):
-        # type: () -> float
+    def pnl(self) -> float:
         return super(FuturePosition, self).pnl * self.contract_multiplier
 
     def calc_close_today_amount(self, trade_amount, position_effect):
@@ -356,7 +410,8 @@ class FuturePosition(Position):
         else:
             return max(trade_amount - self._old_quantity, 0)
 
-    def apply_trade(self, trade):
+    def apply_trade(self, trade) -> Tuple[float, float]:
+        # return: (总资金的变化量, 增值税基变化量)
         if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
             self._transaction_cost += trade.transaction_cost
             self._quantity -= trade.last_quantity
@@ -366,11 +421,15 @@ class FuturePosition(Position):
             super(FuturePosition, self).apply_trade(trade)
 
         if trade.position_effect == POSITION_EFFECT.OPEN:
-            return -1 * trade.transaction_cost
+            return -1 * trade.transaction_cost, 0
         else:
-            return -1 * trade.transaction_cost + (
-                    trade.last_price - self._avg_price
-            ) * trade.last_quantity * self.contract_multiplier * self._direction_factor
+            delta_cash = -1 * trade.transaction_cost + (trade.last_price - self._avg_price) * \
+                trade.last_quantity * self.contract_multiplier * self._direction_factor
+            delta_monthly_realized_pnl = (trade.last_price - self._avg_price + self._price_gap) * \
+                trade.last_quantity * self.contract_multiplier * self._direction_factor
+            if self._quantity == 0:
+                self._price_gap = 0
+            return delta_cash, delta_monthly_realized_pnl
 
     @property
     def prev_close(self):
@@ -381,8 +440,7 @@ class FuturePosition(Position):
                 self._prev_close = super().prev_close
         return self._prev_close
 
-    def settlement(self, trading_date):
-        # type: (date) -> float
+    def settlement(self, trading_date) -> float:
         delta_cash = super(FuturePosition, self).settlement(trading_date)
         if self._quantity == 0:
             return delta_cash
@@ -396,9 +454,12 @@ class FuturePosition(Position):
             else:
                 self._last_price = settle_price
         delta_cash += self.equity
+
+        # 由于逐日盯市，仓位每天的 avg_price 都会变化，需要记录用于计算增值税的 monthly_realized_pnl
+        self._price_gap += self.last_price - self._avg_price
         self._avg_price = self.last_price
         if self._instrument.de_listed_at(next_date):
-            user_system_log.warn(_(u"{order_book_id} is expired, close all positions by system").format(
+            user_system_log.warning(_(u"{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))
             account = self._env.get_account(self._order_book_id)
@@ -409,9 +470,10 @@ class FuturePosition(Position):
             )
             self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=None))
             self._quantity = self._old_quantity = 0
+            self._price_gap = 0
             self._queue.clear()
         return delta_cash
-    
+
     def post_settlement(self):
         try:
             del self.__dict__["margin_ratio"]

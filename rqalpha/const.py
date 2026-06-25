@@ -219,3 +219,8 @@ TRADING_CALENDAR_TYPE.EXCHANGE = TRADING_CALENDAR_TYPE.CN_STOCK
 class MARKET(CustomEnum):
     CN = "CN"
     HK = "HK"
+
+
+class TAX_TYPE(CustomEnum):
+    CAPITAL_GAINS = "capital_gains"  # 资本收益税（含增值税、附加税等）
+    DIVIDEND = "dividend"            # 红利税

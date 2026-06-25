@@ -16,7 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from itertools import chain
-from datetime import date
 from collections.abc import Mapping
 from typing import Callable, Dict, List, Tuple, Union
 
@@ -24,14 +23,13 @@ import jsonpickle
 import numpy as np
 import six
 
-from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE
+from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
-from rqalpha.core.events import EVENT, EventBus
+from rqalpha.core.events import EVENT, Event
 from rqalpha.interface import AbstractPosition
 from rqalpha.model.order import Order, OrderStyle
 from rqalpha.portfolio.account import Account
-from rqalpha.data import DataProxy
-from rqalpha.utils import is_valid_price
+from rqalpha.portfolio.capital_gains_tax import CapitalGainsTaxMixin
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
@@ -40,7 +38,7 @@ from rqalpha.utils.repr import PropertyReprMeta
 OrderApiType = Callable[[str, Union[int, float], OrderStyle, bool], List[Order]]
 
 
-class Portfolio(object, metaclass=PropertyReprMeta):
+class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
     """
     投资组合，策略所有账户的集合
     """
@@ -59,7 +57,11 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         self._static_unit_net_value = 1
         self._units = sum(account.total_value for account in six.itervalues(self._accounts))
         self._env = env
+        CapitalGainsTaxMixin.__init__(self)
+        env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
         env.event_bus.prepend_listener(EVENT.PRE_BEFORE_TRADING, self._pre_before_trading)
+        env.event_bus.add_listener(EVENT.SETTLEMENT, self._on_settlement)
+        env.event_bus.add_listener(EVENT.PAY_TAXES, self._on_pay_taxes)
 
     @classmethod
     def _init_accounts(
@@ -84,6 +86,8 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         return jsonpickle.encode({
             'static_unit_net_value': self._static_unit_net_value,
             'units': self._units,
+            'annual_deductible_balance': self._annual_deductible_balance,
+            'monthly_realized_pnl': self._monthly_realized_pnl,
             'accounts': {
                 name: account.get_state() for name, account in self._accounts.items()
             }
@@ -94,14 +98,15 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         value = jsonpickle.decode(state)
         self._static_unit_net_value = value['static_unit_net_value']
         self._units = value['units']
+        self._annual_deductible_balance = value.get('annual_deductible_balance', 0)
+        self._monthly_realized_pnl = value.get('monthly_realized_pnl', 0)
         for k, v in value['accounts'].items():
             self._accounts[k].set_state(v)
 
     def get_positions(self):
         return list(chain(*(a.get_positions() for a in six.itervalues(self._accounts))))
 
-    def get_position(self, order_book_id, direction):
-        # type: (str, POSITION_DIRECTION) -> AbstractPosition
+    def get_position(self, order_book_id: str, direction: POSITION_DIRECTION) -> AbstractPosition:
         account = self._accounts[self.get_account_type(order_book_id)]
         return account.get_position(order_book_id, direction)
 
@@ -114,8 +119,7 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         return self._accounts[self.get_account_type(order_book_id)]
 
     @property
-    def accounts(self):
-        # type: () -> Dict[DEFAULT_ACCOUNT_TYPE, Account]
+    def accounts(self) -> Dict[DEFAULT_ACCOUNT_TYPE, Account]:
         """
         账户字典
         """
@@ -294,6 +298,49 @@ class Portfolio(object, metaclass=PropertyReprMeta):
         if account_type not in self._accounts:
             raise ValueError(_("invalid account type {}, choose in {}".format(account_type, list(self._accounts.keys()))))
         self._accounts[account_type].finance_repay(amount)
+
+    def _on_trade(self, event):
+        delta_monthly_realized_pnl = event.account.apply_trade(event.trade, event.order)
+        self._add_monthly_realized_pnl(delta_monthly_realized_pnl)
+
+    def _on_settlement(self, event):
+        tax_amount = self.calc_capital_gains_tax()
+        if tax_amount > 0:
+            self._env.event_bus.publish_event(Event(
+                EVENT.PAY_TAXES, delta_amount=tax_amount, trading_dt=self._env.trading_dt, tax_type=TAX_TYPE.CAPITAL_GAINS
+            ))
+
+    def _on_pay_taxes(self, event):
+        if event.tax_type == TAX_TYPE.DIVIDEND:
+            # 只有股票账户会扣除红利税
+            self.stock_account.pay_taxes(event.delta_amount, event.tax_type)
+        elif event.tax_type == TAX_TYPE.CAPITAL_GAINS:
+            # 1. 优先扣除股票账户现金，如果没有设置股票账户或者股票账户现金不够扣除时，扣除期货账户
+            # 2. 股票和期货现金都不够扣除，或者股票账户不够扣除，但是没设置期货账户时，扣除股票账户
+            # 3. 允许扣除之后股票账户资金为负数
+            tax_amount = event.delta_amount
+            if self.stock_account is None:
+                self.future_account.pay_taxes(tax_amount, TAX_TYPE.CAPITAL_GAINS)
+            else:
+                if self.future_account is None or self.future_account.cash < 0 or self.stock_account.cash >= tax_amount:
+                    self.stock_account.pay_taxes(tax_amount, TAX_TYPE.CAPITAL_GAINS)
+                else:
+                    if self.stock_account.cash < 0:  # 可能存在股票账号现金已经为负数的情况
+                        futures_tax = min(tax_amount, self.future_account.cash)
+                    else:
+                        futures_tax = min(tax_amount - self.stock_account.cash, self.future_account.cash)
+                    stock_tax = tax_amount - futures_tax
+                    self.stock_account.pay_taxes(stock_tax, TAX_TYPE.CAPITAL_GAINS)
+                    self.future_account.pay_taxes(futures_tax, TAX_TYPE.CAPITAL_GAINS)
+        else:
+            raise ValueError(f"Invalid tax type: {event.tax_type}")
+        self._env.event_bus.publish_event(Event(
+            EVENT.TAXES_PAID,
+            order_book_id=getattr(event, "order_book_id", None),
+            delta_amount=event.delta_amount,
+            trading_dt=event.trading_dt,
+            tax_type=event.tax_type,
+        ))
 
 
 class MixedPositions(Mapping):

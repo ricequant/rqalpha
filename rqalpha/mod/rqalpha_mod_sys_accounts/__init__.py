@@ -21,6 +21,8 @@ __config__ = {
     "stock_t1": True,
     # 是否开启自动分红再投资
     "dividend_reinvestment": False,
+    # 是否开启按持股期限差异化费率征收红利税
+    "dividend_tax_enabled": False,
     # 红利税，暂只支持固定税率
     "dividend_tax_rate": 0.0,
     # 当持仓股票退市时，是否按照退市价格返还现金

@@ -13,6 +13,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from copy import deepcopy
+from math import isclose
 
 from rqalpha.apis import *
 from rqalpha import run_func
@@ -179,6 +180,115 @@ def test_dividend_reinvestment_with_transaction():
             assert get_position(context.s1).quantity == 24200
             # 分红再投资的剩余现金为 2550 - (200 * 11.9187 + 5)
             assert context.stock_account.cash - 10000 == 161.25
-            
-    
+
+    run_func(config=config, init=init, handle_bar=handle_bar)
+
+
+def test_dividend_tax():
+    """
+    测试红利税
+    """
+    config = {
+        "base": {
+            "start_date": "2024-9-20",
+            "end_date": "2025-12-31",
+            "accounts": {
+                "stock": 100000,
+            }
+        },
+        "mod": {
+            "sys_accounts": {
+                "dividend_tax_enabled": True
+            }
+        }
+    }
+
+
+    def init(context):
+        context.s1 = "000001.XSHE"
+        context.s2 = "600000.XSHG"
+        context.fired = False
+
+    def handle_bar(context, bar_dict):
+        today = context.now.date()
+        if not context.fired:
+            order_shares(context.s1, 1000)
+            order_shares(context.s2, 1000)
+            context.fired = True
+        if today == date(2024, 10, 10):
+            # 20241010: 000001.XSHE 分红到账，每股分红 0.246 元，不进行扣税
+            assert isclose(context.stock_account.cash, context.cash + 0.246 * 1000)
+        elif today == date(2024, 10, 11):
+            # 持仓期限小于等于一个月，卖出票时应按 20% 税率收取红利税
+            order = order_shares(context.s1, -500)
+            assert isclose(context.stock_account.cash, context.cash + order.avg_price * 500 - order.transaction_cost - 0.246 * 500 * 0.2)
+        elif today == date(2025, 5, 20):
+            # 买入一批新的 000001.XSHE 仓位，买入后仓位组成为: {20240920: 500, 20250520: 500}
+            order_shares(context.s1, 500)
+        elif today == date(2025, 6, 12):
+            # 20250612: 000001.XSHE 分红到账，每股 0.362 元，不进行扣税
+            assert isclose(context.stock_account.cash, context.cash + 0.362 * 1000)
+        elif today == date(2025, 6, 13):
+            # 卖出 700 股，结果应该 500 股 20240920 的仓位 + 200 股 20250520 的仓位
+            order = order_shares(context.s1, -700)
+            dividend_tax_1 = (0.246 + 0.362) * 500 * 0.1  # 20240920 买入的仓位，税率为 10%
+            dividend_tax_2 = 0.362 * 200 * 0.2  # 20250520 买入的仓位，税率为 20%
+            assert isclose(context.stock_account.cash, context.cash + order.avg_price * 700 - order.transaction_cost - dividend_tax_1 - dividend_tax_2)
+        elif today == date(2025, 7, 16):
+            # 20250716: 600000.XSHG 分红到账，每股分红 0.41 元，不进行扣税
+            assert isclose(context.stock_account.cash, context.cash + 0.41 * 1000)
+        elif today == date(2025, 12, 30):
+            # 卖出全部的 600000.XSHG 仓位，持仓期限已经超过 1 年，不需要征收红利税
+            order = order_shares(context.s2, -1000)
+            assert isclose(context.stock_account.cash, context.cash + order.avg_price * 1000 - order.transaction_cost)
+
+        context.cash = context.stock_account.cash
+
+    run_func(config=config, init=init, handle_bar=handle_bar)
+
+
+def test_dividend_tax_after_position_state_restored():
+    """
+    测试分红记录被恢复后，后续卖出仍然会计算红利税
+    """
+    config = {
+        "base": {
+            "start_date": "2024-9-20",
+            "end_date": "2024-10-11",
+            "accounts": {
+                "stock": 100000,
+            }
+        },
+        "mod": {
+            "sys_accounts": {
+                "dividend_tax_enabled": True
+            },
+            "sys_analyser": {
+                "enabled": False
+            }
+        }
+    }
+
+    def init(context):
+        context.s1 = "000001.XSHE"
+        context.fired = False
+
+    def handle_bar(context, bar_dict):
+        today = context.now.date()
+        if not context.fired:
+            order_shares(context.s1, 1000)
+            context.fired = True
+        elif today == date(2024, 10, 10):
+            assert isclose(context.stock_account.cash, context.cash + 0.246 * 1000)
+            context.portfolio.set_state(context.portfolio.get_state())
+        elif today == date(2024, 10, 11):
+            order = order_shares(context.s1, -500)
+            dividend_tax = 0.246 * 500 * 0.2
+            assert isclose(
+                context.stock_account.cash,
+                context.cash + order.avg_price * 500 - order.transaction_cost - dividend_tax
+            )
+
+        context.cash = context.stock_account.cash
+
     run_func(config=config, init=init, handle_bar=handle_bar)

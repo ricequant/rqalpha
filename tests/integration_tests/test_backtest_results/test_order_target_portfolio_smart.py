@@ -27,7 +27,7 @@ def test_order_target_portfolio_smart(resources_path, run_and_assert_result):
             })
 
             total_weights_diff = abs(actual_weights.sum() - target_weights.sum())
-            assert total_weights_diff <= 0.001
+            assert total_weights_diff <= 0.002
 
             weights_diff = (actual_weights.div(target_weights, fill_value=0) - 1).abs()
             

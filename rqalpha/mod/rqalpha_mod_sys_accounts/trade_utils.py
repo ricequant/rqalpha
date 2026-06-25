@@ -45,7 +45,7 @@ def get_amount_from_value(value: float, ins: Instrument, price: float, env: Envi
         amount = round_order_quantity(ins, amount)
         while amount > 0:
             estimate_transaction_cost = estimate_transaction_cost_calculator(env, ins, amount, price)
-            if amount * price + estimate_transaction_cost > value:
+            if amount * price * exchange_rates.ask_reference + estimate_transaction_cost > value:
                 amount = round_order_quantity(ins, amount - ins.order_step_size)
             else:
                 return amount

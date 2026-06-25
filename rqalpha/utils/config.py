@@ -22,12 +22,13 @@ import pandas as pd
 import yaml
 import simplejson as json
 import six
+import click
 
 from rqalpha.const import RUN_TYPE, PERSIST_MODE, COMMISSION_TYPE
 from rqalpha.utils import RqAttrDict, logger
 from rqalpha.utils.i18n import gettext as _, set_locale
 from rqalpha.utils.dict_func import deep_update
-from rqalpha.utils.logger import system_log
+from rqalpha.utils.logger import system_log, init_logger
 from rqalpha.mod.utils import mod_config_value_parse
 
 
@@ -115,13 +116,38 @@ def dump_config(config_path, config, dumper=yaml.Dumper):
         stream.write(yaml.dump(config, Dumper=dumper))
 
 
+def _check_capital_gain_tax_rate(base_config):
+    # Check if capital_gain_tax_rate is explicitly set;if not,throw a warning.
+    # This check will be remove in a later version.
+    if "capital_gain_tax_rate" not in base_config:
+        init_logger()
+        system_log.warning(_(
+            u"The strategy requires explicit configuration of base.capital_gain_tax_rate, \
+which currently has a default value of 0 and will be changed to a non-zero value in a future version.\
+(The configuration description can be found at https://www.ricequant.com/doc/rqalpha-plus/api/config)"
+            ))
+
+
+def _has_capital_gain_tax_rate(is_provided: bool, *args):
+    if is_provided:
+        return is_provided
+    for config in args:
+        if "capital_gain_tax_rate" in config.get("base", {}):
+            return True
+    return False
+
+
 def parse_config(config_args, config_path=None, click_type=False, source_code=None, user_funcs=None):
     conf = default_config()
-    deep_update(user_config(), conf)
-    deep_update(project_config(), conf)
+    user_conf = user_config()
+    project_conf = project_config()
+    has_capital_gain_tax_rate = _has_capital_gain_tax_rate(False, user_conf, project_conf)
+    deep_update(user_conf, conf)
+    deep_update(project_conf, conf)
     if config_path is not None:
-        deep_update(load_yaml(config_path), conf)
-
+        config_file_conf = load_yaml(config_path)
+        has_capital_gain_tax_rate = _has_capital_gain_tax_rate(has_capital_gain_tax_rate, config_file_conf)
+        deep_update(config_file_conf, conf)
     if 'base__strategy_file' in config_args and config_args['base__strategy_file']:
         # FIXME: ugly, we need this to get code
         conf['base']['strategy_file'] = config_args['base__strategy_file']
@@ -130,7 +156,9 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         conf['base']['strategy_file'] = config_args['base']['strategy_file']
 
     if user_funcs is None:
-        for k, v in code_config(conf, source_code).items():
+        code_conf = code_config(conf, source_code)
+        has_capital_gain_tax_rate = _has_capital_gain_tax_rate(has_capital_gain_tax_rate, code_conf)
+        for k, v in code_conf.items():
             if k in conf['whitelist']:
                 deep_update(v, conf[k])
 
@@ -140,6 +168,11 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         config_args[key] = mod_config_value_parse(v)
 
     if click_type:
+        has_capital_gain_tax_rate = has_capital_gain_tax_rate or (
+            "base__capital_gain_tax_rate" in config_args and
+            config_args["base__capital_gain_tax_rate"] is not None and
+            config_args["base__capital_gain_tax_rate"] != tuple()
+        )
         for k, v in config_args.items():
             # click multiple=True时传入tuple类型 无输入时为tuple()
             if v is None or (v == tuple()):
@@ -155,7 +188,11 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
                 sub_dict = sub_dict[p]
             sub_dict[key_path[-1]] = v
     else:
+        has_capital_gain_tax_rate = _has_capital_gain_tax_rate(has_capital_gain_tax_rate, config_args)
         deep_update(config_args, conf)
+
+    if not has_capital_gain_tax_rate:
+        _check_capital_gain_tax_rate({})
 
     config = RqAttrDict(conf)
 
