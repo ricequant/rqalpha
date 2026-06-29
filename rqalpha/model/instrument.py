@@ -117,8 +117,7 @@ class Instrument(metaclass=PropertyReprMeta):
         return INSTRUMENT_TYPE[self._dict["type"]]  # type: ignore
 
     @cached_property
-    def exchange(self):
-        # type: () -> EXCHANGE
+    def exchange(self) -> EXCHANGE:
         """
         [str] 交易所。股票：’XSHE’ - 深交所, ‘XSHG’ - 上交所。期货：’DCE’ - 大连商品交易所, ‘SHFE’ - 上海期货交易所，
         ’CFFEX’ - 中国金融期货交易所, ‘CZCE’- 郑州商品交易所
@@ -126,8 +125,7 @@ class Instrument(metaclass=PropertyReprMeta):
         return self._dict["exchange"]
 
     @cached_property
-    def market_tplus(self):
-        # type: () -> int
+    def market_tplus(self) -> int:
         """
         [int] 合约卖出和买入操作需要间隔的最小交易日数，如A股为 1
         公募基金的 market_tplus 默认0
@@ -264,8 +262,7 @@ class Instrument(metaclass=PropertyReprMeta):
             )
 
     @cached_property
-    def maturity_date(self):
-        # type: () -> datetime
+    def maturity_date(self) -> datetime:
         """
         [datetime] 到期日
         """
@@ -367,8 +364,7 @@ class Instrument(metaclass=PropertyReprMeta):
                 trading_period.append(TimeRange(start, end))
         return trading_period
 
-    def during_continuous_auction(self, time):
-        # type: (time) -> bool
+    def during_continuous_auction(self, time) -> bool:
         """ 是否处于连续竞价时间段内 """
         for time_range in self.trading_hours:
             if time_range.start <= time <= time_range.end:
@@ -376,8 +372,7 @@ class Instrument(metaclass=PropertyReprMeta):
         return False
 
     @cached_property
-    def trading_code(self):
-        # type: () -> str
+    def trading_code(self) -> str:
         try:
             return self._dict["trading_code"]
         except (KeyError, ValueError):
@@ -443,8 +438,7 @@ class Instrument(metaclass=PropertyReprMeta):
         days = (self.maturity_date.date() - date).days
         return -1 if days < 0 else days
 
-    def tick_size(self):
-        # type: () -> float
+    def tick_size(self) -> float:
         if self.type in (INSTRUMENT_TYPE.CS, INSTRUMENT_TYPE.INDX):
             return 0.01
         elif self.type in ("ETF", "LOF", "REITs"):
@@ -468,8 +462,7 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         return Environment.get_instance().data_proxy.get_futures_trading_parameters(self.order_book_id, dt).short_margin_ratio
 
-    def calc_cash_occupation(self, price, quantity, direction, dt):
-        # type: (float, int, POSITION_DIRECTION, date) -> float
+    def calc_cash_occupation(self, price: float, quantity: int, direction: POSITION_DIRECTION, dt: date) -> float:
         if self.market != MARKET.CN:
             exchagne_rate = Environment.get_instance().data_proxy.get_exchange_rate(dt, self.market)
             price = price * exchagne_rate.ask_reference

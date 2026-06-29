@@ -14,6 +14,9 @@
 #         否则米筐科技有权追究相应的知识产权侵权责任。
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
+from typing import Callable
+from decimal import Decimal
+
 
 def mod_config_value_parse(value):
     if value in ["True", "true"]:
@@ -54,3 +57,22 @@ def inject_mod_commands():
                 import_mod(lib_name)
         except Exception as e:
             pass
+
+
+KSH_MIN_AMOUNT = 200
+BJSE_MIN_AMOUNT = 100
+
+
+def round_order_quantity(ins, quantity, method: Callable = int) -> int:
+    if ins.type == "CS" and ins.board_type == "KSH":
+        # KSH can buy(sell) 201, 202 shares
+        return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
+    elif ins.type == "CS" and ins.board_type == "BJS":
+        # BJSE can buy(sell) 101, 202 shares
+        return 0 if abs(quantity) < BJSE_MIN_AMOUNT else int(quantity)
+    else:
+        round_lot = ins.round_lot
+        try:
+            return method(Decimal(quantity) / Decimal(round_lot)) * round_lot
+        except ValueError:
+            raise

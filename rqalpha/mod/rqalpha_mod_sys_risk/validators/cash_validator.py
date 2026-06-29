@@ -17,7 +17,7 @@
 from typing import Optional
 
 from rqalpha.interface import AbstractFrontendValidator
-from rqalpha.const import POSITION_EFFECT
+from rqalpha.const import POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE
 from rqalpha.model.order import Order
 from rqalpha.portfolio.account import Account
 from rqalpha.environment import Environment
@@ -40,14 +40,15 @@ def validate_cash(env: Environment, order: Order, cash: float) -> Optional[str]:
 
 
 class CashValidator(AbstractFrontendValidator):
-    def __init__(self, env):
+    def __init__(self, env: Environment):
         self._env = env
+        self._partial_fill_on_insufficient_cash = getattr(env.config.base, "partial_fill_on_insufficient_cash", False)
 
     def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         return None
     
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
-        if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
+        if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN) or self._partial_fill_on_insufficient_cash:
             return None
         # TODO：分别计算 A H 股的可用资金
         return validate_cash(self._env, order, account.available_cash_for(order.instrument))

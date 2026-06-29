@@ -45,8 +45,6 @@ __config__ = {
     "inactive_limit": True,
     # 账户每日计提的费用，需按照(账户类型，费率)的格式传入，例如[("STOCK", 0.0001), ("FUTURE", 0.0001)]
     "management_fee": [],
-    # 开仓订单在资金不足时进入“尽量成交”逻辑
-    "partial_fill_on_insufficient_cash": False
 }
 
 

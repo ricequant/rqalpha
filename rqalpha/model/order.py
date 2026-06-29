@@ -151,8 +151,7 @@ class Order(object):
         return order
 
     @property
-    def order_id(self):
-        # type: () -> int
+    def order_id(self) -> int:
         """
         [int] 唯一标识订单的id
         """
@@ -203,8 +202,7 @@ class Order(object):
         return self._order_book_id
 
     @property
-    def side(self):
-        # type: () -> SIDE
+    def side(self) -> SIDE:
         """
         [SIDE] 订单方向
         """
@@ -223,8 +221,7 @@ class Order(object):
         return self._position_effect
 
     @property
-    def position_direction(self):
-        # type: () -> POSITION_DIRECTION
+    def position_direction(self) -> POSITION_DIRECTION:
         return get_position_direction(self._side, self._position_effect)
 
     @property
