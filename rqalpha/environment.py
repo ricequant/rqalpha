@@ -200,8 +200,7 @@ class Environment(object):
             )))
         return decider.calc(args)
 
-    def update_time(self, calendar_dt, trading_dt):
-        # type: (datetime, datetime) -> None
+    def update_time(self, calendar_dt: datetime, trading_dt: datetime):
         self.calendar_dt = calendar_dt
         self.trading_dt = trading_dt
 

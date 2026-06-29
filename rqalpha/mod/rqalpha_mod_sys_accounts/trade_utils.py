@@ -5,10 +5,7 @@ from rqalpha.environment import Environment
 from rqalpha.model.instrument import Instrument
 from rqalpha.const import SIDE, POSITION_EFFECT
 from rqalpha.interface import TransactionCostArgs
-
-
-KSH_MIN_AMOUNT = 200
-BJSE_MIN_AMOUNT = 100
+from rqalpha.mod.utils import round_order_quantity
 
 
 def estimate_transaction_cost_calculator(env: Environment, ins: Instrument, delta_quantity: Union[int, float], price: float) -> float:
@@ -19,21 +16,6 @@ def estimate_transaction_cost_calculator(env: Environment, ins: Instrument, delt
     return env.calc_transaction_cost(TransactionCostArgs(
         ins, price, abs(delta_quantity), side, position_effect,  # type: ignore
     )).total
-
-
-def round_order_quantity(ins, quantity, method: Callable = int) -> int:
-    if ins.type == "CS" and ins.board_type == "KSH":
-        # KSH can buy(sell) 201, 202 shares
-        return 0 if abs(quantity) < KSH_MIN_AMOUNT else int(quantity)
-    elif ins.type == "CS" and ins.board_type == "BJS":
-        # BJSE can buy(sell) 101, 202 shares
-        return 0 if abs(quantity) < BJSE_MIN_AMOUNT else int(quantity)
-    else:
-        round_lot = ins.round_lot
-        try:
-            return method(Decimal(quantity) / Decimal(round_lot)) * round_lot
-        except ValueError:
-            raise
 
 
 def get_amount_from_value(value: float, ins: Instrument, price: float, env: Environment, account_cash: float) -> int:

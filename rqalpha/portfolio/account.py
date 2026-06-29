@@ -100,6 +100,8 @@ class Account(metaclass=AccountMeta):
         self._capital_gains_tax = 0
         self._dividend_tax = 0
 
+        self._partial_fill_on_insufficient_cash = getattr(env.config.base, "partial_fill_on_insufficient_cash", False)
+
     def __repr__(self):
         positions_repr = {}
         for order_book_id, positions in self._positions.items():
@@ -150,7 +152,7 @@ class Account(metaclass=AccountMeta):
                 else:
                     position.set_state(positions_state[direction.lower()])
 
-    def fast_forward(self, orders=None, trades=None):
+    def fast_forward(self, orders: Optional[List[Order]] = None, trades: Optional[List[Trade]] = None):
         if trades:
             close_trades = []
             # 先处理开仓
@@ -168,8 +170,13 @@ class Account(metaclass=AccountMeta):
         # 计算 Frozen Cash
         if orders:
             self._frozen_cash = sum(
-                order.unfilled_quantity * order.quantity / order.init_frozen_cash for order in orders if
-                order.is_active())
+                self._remaining_frozen_cash_of_order(order) for order in orders if order.is_active()
+            )
+
+    def _remaining_frozen_cash_of_order(self, order: Order):
+        if order.init_frozen_cash == 0:
+            return 0
+        return order.unfilled_quantity / order.quantity * order.init_frozen_cash
 
     def get_positions(self) -> Iterable[Position]:
         """
@@ -478,13 +485,14 @@ class Account(metaclass=AccountMeta):
 
     def _frozen_cash_of_order(self, order):
         if order.position_effect == POSITION_EFFECT.OPEN:
+            if self._partial_fill_on_insufficient_cash:
+                return 0
             order_cost = order.instrument.calc_cash_occupation(order.frozen_price, order.quantity, order.position_direction, order.trading_datetime.date())
         else:
             order_cost = 0
         return order_cost + order.estimated_transaction_cost
 
-    def _management_fee(self):
-        # type: () -> float
+    def _management_fee(self) -> float:
         """计算账户管理费用"""
         if self._management_fee_rate == 0:
             return 0
