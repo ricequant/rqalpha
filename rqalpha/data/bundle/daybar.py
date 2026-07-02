@@ -10,7 +10,7 @@ import pandas as pd
 
 from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedTask
-from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
+from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date, to_date
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import system_log
 from rqalpha.data.bundle.utils import mark_update_failed, START_DATE, END_DATE
@@ -19,6 +19,7 @@ from rqalpha.data.bundle.utils import mark_update_failed, START_DATE, END_DATE
 class DayBarTask(ProgressedTask):
     def __init__(self, order_book_ids, file_path: str, fields: List[str], market="cn", **h5_kwargs):
         self._order_book_ids = order_book_ids
+        self._instruments = defaultdict(list)
         self._init_instruments(order_book_ids)
         self._file_path = file_path
         self._fields = fields
@@ -30,12 +31,14 @@ class DayBarTask(ProgressedTask):
         return len(self._order_book_ids)
     
     def _init_instruments(self, order_book_ids: List[str]):
-        self._instruments = defaultdict(list)
         ints = rqdatac.instruments(order_book_ids)
-        if not isinstance(ints, list):
-            ints = [ints]
-        for ins in ints:
-            self._instruments[ins.order_book_id].append(ins)
+        if ints is not None:
+            if not isinstance(ints, list):
+                ints = [ints]
+            for ins in ints:
+                self._instruments[ins.order_book_id].append(ins)
+        else:
+            raise RuntimeError(_("Get instruments failed."))
 
     def _transfrom_df(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df[self._fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
@@ -46,7 +49,7 @@ class DayBarTask(ProgressedTask):
         df.sort_index(inplace=True)
         return df
     
-    def _full_update(self, order_book_ids: List[str], h5: h5py.File):
+    def _fully_update(self, order_book_ids: List[str], h5: h5py.File):
         i, step = 0, 300
         while True:
             _oids = order_book_ids[i: i + step]
@@ -80,7 +83,7 @@ class GenerateDayBarTask(DayBarTask):
             yield 1
         else:
             with h5:
-                yield from self._full_update(self._order_book_ids, h5)
+                yield from self._fully_update(self._order_book_ids, h5)
 
 
 class UpdateDayBarTask(DayBarTask):
@@ -95,6 +98,15 @@ class UpdateDayBarTask(DayBarTask):
         else:
             return h5_fields == wanted_fields
         return False
+
+    def _get_de_listed_date(self, order_book_id: str) -> str:
+        instruments = self._instruments[order_book_id]
+        if len(instruments) == 1:
+            return instruments[0].de_listed_date
+        de_listed_dates = [i.de_listed_date for i in instruments]
+        if "0000-00-00" in de_listed_dates:  # 存在代码复用，并且其中一个状态为 Active
+            return "0000-00-00"
+        return np.array(de_listed_dates).max()
 
     def __call__(self):
         need_recreate_h5 = False
@@ -127,15 +139,15 @@ class UpdateDayBarTask(DayBarTask):
                         full_update_list.append(order_book_id)
                     else:
                         try:
-                            last_date = int(h5[order_book_id]['datetime'][-1] // 1000000)  # type: ignore
+                            last_date = convert_int_to_date(int(h5[order_book_id]['datetime'][-1])).date()  # type: ignore
                         except ValueError:
                             h5.pop(order_book_id)
                             full_update_list.append(order_book_id)
                         else:
-                            ins = self._instruments[order_book_id]
-                            de_listed_date = ins[0].de_listed_date if len(ins) == 1 else np.array([i.de_listed_date for i in ins]).max()
+                            de_listed_date = self._get_de_listed_date(order_book_id)
                             if de_listed_date != '0000-00-00':
-                                if convert_date_to_date_int(rqdatac.get_previous_trading_date(de_listed_date)) <= last_date:
+                                last_active_date = to_date(de_listed_date) if is_futures else rqdatac.get_previous_trading_date(de_listed_date)
+                                if last_active_date <= last_date:
                                     skip_update_list.append(order_book_id)
                                     continue
                             min_last_date = min(last_date, min_last_date or last_date)
@@ -145,11 +157,15 @@ class UpdateDayBarTask(DayBarTask):
                     yield (len(skip_update_list))
 
                 if full_update_list:
-                    yield from self._full_update(full_update_list, h5)
+                    yield from self._fully_update(full_update_list, h5)
+
+                if not incremental_update_dic:
+                    return
                 
                 today = datetime.date.today()
-                prev_trading_date = convert_date_to_int(rqdatac.get_previous_trading_date(today))
-                if min_last_date == today or (not rqdatac.is_trading_date(today) and min_last_date == prev_trading_date):
+                if min_last_date == today or (
+                    not rqdatac.is_trading_date(today) and min_last_date == rqdatac.get_previous_trading_date(today)
+                ):
                     yield len(incremental_update_dic.keys())
                 else:
                     incremental = pd.Series(incremental_update_dic).sort_values()
@@ -157,7 +173,7 @@ class UpdateDayBarTask(DayBarTask):
                     while True:
                         incremental_slice = incremental.iloc[i: i + step]
                         order_book_ids = incremental_slice.index.tolist()
-                        start_date = rqdatac.get_next_trading_date(int(incremental_slice.min()))
+                        start_date = rqdatac.get_next_trading_date(incremental_slice.min())
                         df = rqdatac.get_price(
                             order_book_ids, start_date, END_DATE, '1d', adjust_type='none',
                             fields=self._fields, expect_df=True, market=self._market
@@ -167,7 +183,7 @@ class UpdateDayBarTask(DayBarTask):
                             for order_book_id in df.index.get_level_values("order_book_id").unique():
                                 data = df.loc[order_book_id]
                                 last_date = incremental_update_dic[order_book_id]
-                                data = data[data.index > last_date * 1e6]
+                                data = data[data.index > convert_date_to_int(last_date)]
                                 if not data.empty:
                                     data = np.array(
                                         [tuple(i) for i in chain(h5[order_book_id][:], data.to_records())],

@@ -30,7 +30,7 @@ from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTa
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
-from rqalpha.data.bundle.utils import set_sval, sval, START_DATE, STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
+from rqalpha.data.bundle.utils import set_sval, sval, mark_update_failed, START_DATE, STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
 from rqalpha.data.bundle.daybar import GenerateDayBarTask, UpdateDayBarTask
 
 from rqalpha.data.bundle.automatic_update import AutomaticUpdateBundle
@@ -67,11 +67,14 @@ def gen_instruments(d):
 
 def gen_yield_curve(d):
     yield_curve: Optional[pd.DataFrame] = rqdatac.get_yield_curve(start_date=START_DATE, end_date=datetime.date.today())
-    if yield_curve is not None:
+    if yield_curve is not None and not yield_curve.empty:
         yield_curve.index = [convert_date_to_date_int(d) for d in yield_curve.index]
         yield_curve.index.name = 'date'
         with h5py.File(os.path.join(d, 'yield_curve.h5'), 'w') as f:
             f.create_dataset('data', data=yield_curve.to_records())
+    else:
+        system_log.error("Get yield curve data error.")
+        mark_update_failed()
 
 
 def gen_trading_dates(d):
