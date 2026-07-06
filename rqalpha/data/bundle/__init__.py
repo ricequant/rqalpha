@@ -30,7 +30,10 @@ from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTa
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
-from rqalpha.data.bundle.utils import set_sval, sval, mark_update_failed, START_DATE, STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
+from rqalpha.data.bundle.utils import (
+    set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, START_DATE,
+    STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
+)
 from rqalpha.data.bundle.daybar import GenerateDayBarTask, UpdateDayBarTask
 
 from rqalpha.data.bundle.automatic_update import AutomaticUpdateBundle
@@ -73,8 +76,7 @@ def gen_yield_curve(d):
         with h5py.File(os.path.join(d, 'yield_curve.h5'), 'w') as f:
             f.create_dataset('data', data=yield_curve.to_records())
     else:
-        system_log.error("Get yield curve data error.")
-        mark_update_failed()
+        log_and_mark_error(_("Get yield curve data error."))
 
 
 def gen_trading_dates(d):
@@ -119,7 +121,8 @@ class GenerateDividendBundle:
     def __call__(self):
         dividend = self._get_dividend()
         if dividend is None:
-            raise RuntimeError("Got no dividend data")
+            log_and_mark_error(_("Got no dividend data"))
+            return
         need_cols = ["dividend_cash_before_tax", "book_closure_date", "ex_dividend_date", "payable_date", "round_lot"]
         dividend = dividend[need_cols]
         dividend.reset_index(inplace=True)
@@ -148,7 +151,8 @@ class GenerateSplitBundle:
     def __call__(self):
         split = self._get_split()
         if split is None:
-            raise RuntimeError("Got no split data")
+            log_and_mark_error(_("Got no split data"))
+            return
         split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
         split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from']]
         split.reset_index(inplace=True)
@@ -176,7 +180,8 @@ class GenerateExFactorBundle:
     def __call__(self):
         ex_factor = self._get_ex_factor()
         if ex_factor is None:
-            raise RuntimeError("Got no ex factor data")
+            log_and_mark_error(_("Got no ex factor data"))
+            return
         ex_factor.reset_index(inplace=True)
         ex_factor['ex_date'] = [convert_date_to_int(d) for d in ex_factor['ex_date']]
         ex_factor.rename(columns={'ex_date': 'start_date'}, inplace=True)
@@ -196,7 +201,8 @@ class GenerateExFactorBundle:
 def gen_share_transformation(d):
     df = rqdatac.get_share_transformation()
     if df is None:
-        raise RuntimeError("Got no share transformation data")
+        log_and_mark_error(_("Got no share transformation data"))
+        return
     df.drop_duplicates("predecessor", inplace=True)
     df.set_index('predecessor', inplace=True)
     df["effective_date"] = df.effective_date.astype(str)
@@ -365,11 +371,14 @@ class GenerateFileTask(ProgressedTask):
         return self._step
 
     def __call__(self):
-        self._func(*self._args, **self._kwargs)
+        try:
+            self._func(*self._args, **self._kwargs)
+        except Exception as e:
+            log_and_mark_error(str(e))
         yield self._step
 
 
-def process_init(args: Optional[Synchronized] = None, kwargs = None):
+def process_init(args: Optional[Synchronized] = None, kwargs=None, errors=None):
     kwargs = kwargs or {}
     import warnings
     with warnings.catch_warnings(record=True):
@@ -377,10 +386,12 @@ def process_init(args: Optional[Synchronized] = None, kwargs = None):
         rqdatac.init(**kwargs)
     init_logger()
     # Initialize process shared variables
+    global sval
     if args:
-        global sval
         set_sval(args)
         sval = args
+    if errors is not None:
+        bind_error_list(errors)
 
 
 def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs) -> List[ProgressedTask]:
@@ -417,8 +428,10 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
 
 def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwargs):
     succeed = multiprocessing.Value(c_bool, True)
+    errors = reset_error_list()
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=process_init, initargs=(succeed, rqdatac_kwargs)
+            max_workers=concurrency, initializer=process_init,
+            initargs=(succeed, rqdatac_kwargs, errors)
     ) as executor:
         for task in tasks:
             executor.submit(task)

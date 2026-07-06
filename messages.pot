@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-02 14:37+0800\n"
+"POT-Creation-Date: 2026-07-06 15:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,31 +155,35 @@ msgid ""
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:87
+#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:90
 #, python-brace-format
 msgid "rqdatac init failed with error: {}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:66
+#: rqalpha/cmds/bundle.py:64 rqalpha/cmds/bundle.py:101
+msgid "Bundle data was not fully updated successfully. Details are as follows:"
+msgstr ""
+
+#: rqalpha/cmds/bundle.py:69
 msgid "Update bundle using RQDatac"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:77
+#: rqalpha/cmds/bundle.py:80
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:91
+#: rqalpha/cmds/bundle.py:94
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:100
+#: rqalpha/cmds/bundle.py:106
 msgid "Download bundle (monthly updated)"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:111
+#: rqalpha/cmds/bundle.py:117
 #, python-brace-format
 msgid ""
 "\n"
@@ -189,56 +193,56 @@ msgid ""
 "    Are you sure to continue?"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:129
+#: rqalpha/cmds/bundle.py:135
 #, python-brace-format
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:132
+#: rqalpha/cmds/bundle.py:138
 msgid "Check bundle"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:146
+#: rqalpha/cmds/bundle.py:152
 #, python-brace-format
 msgid "try {} ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:158
+#: rqalpha/cmds/bundle.py:164
 msgid "downloading ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:172
+#: rqalpha/cmds/bundle.py:178
 #, python-brace-format
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:193
+#: rqalpha/cmds/bundle.py:199
 msgid "corrupted files"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:194
+#: rqalpha/cmds/bundle.py:200
 msgid "remove files"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:197
+#: rqalpha/cmds/bundle.py:203
 msgid "remove success"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:199
+#: rqalpha/cmds/bundle.py:205
 msgid "corrupted files not remove"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:201
+#: rqalpha/cmds/bundle.py:207
 msgid "input error"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:203
+#: rqalpha/cmds/bundle.py:209
 msgid "bundle's day bar is incomplete, please update bundle"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:205
+#: rqalpha/cmds/bundle.py:211
 msgid "good bundle's day bar"
 msgstr ""
 
@@ -311,14 +315,35 @@ msgid ""
 "{}"
 msgstr ""
 
-#: rqalpha/data/bundle/automatic_update.py:94
+#: rqalpha/data/bundle/__init__.py:79
+msgid "Get yield curve data error."
+msgstr ""
+
+#: rqalpha/data/bundle/__init__.py:124
+msgid "Got no dividend data"
+msgstr ""
+
+#: rqalpha/data/bundle/__init__.py:154
+msgid "Got no split data"
+msgstr ""
+
+#: rqalpha/data/bundle/__init__.py:183
+msgid "Got no ex factor data"
+msgstr ""
+
+#: rqalpha/data/bundle/__init__.py:204
+msgid "Got no share transformation data"
+msgstr ""
+
+#: rqalpha/data/bundle/automatic_update.py:94 rqalpha/data/bundle/daybar.py:81
+#: rqalpha/data/bundle/daybar.py:129
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr ""
 
-#: rqalpha/data/bundle/daybar.py:41
+#: rqalpha/data/bundle/daybar.py:75 rqalpha/data/bundle/daybar.py:113
 msgid "Get instruments failed."
 msgstr ""
 
@@ -349,30 +374,30 @@ msgstr ""
 msgid "Insufficient prmissions for file {}."
 msgstr ""
 
-#: rqalpha/data/bundle/daybar_checker.py:110
+#: rqalpha/data/bundle/daybar_checker.py:111
 #, python-brace-format
 msgid ""
 "Failed to open {}. The file may be corrupted, the path may be invalid, or"
 " an underlying I/O error may have occurred."
 msgstr ""
 
-#: rqalpha/data/bundle/daybar_checker.py:129
+#: rqalpha/data/bundle/daybar_checker.py:131
 #, python-brace-format
 msgid "File {} does not contain any valid dataset"
 msgstr ""
 
-#: rqalpha/data/bundle/daybar_checker.py:156
+#: rqalpha/data/bundle/daybar_checker.py:158
 msgid "Detection complete: daybar data quality is good!"
 msgstr ""
 
-#: rqalpha/data/bundle/daybar_checker.py:159
+#: rqalpha/data/bundle/daybar_checker.py:161
 #, python-brace-format
 msgid ""
 "Detection complete: a total of {} files have issues. The specific files "
 "and order_book_ids as follows:"
 msgstr ""
 
-#: rqalpha/data/bundle/daybar_checker.py:174
+#: rqalpha/data/bundle/daybar_checker.py:176
 #, python-brace-format
 msgid "{}(total of {} anomaly): {}"
 msgstr ""

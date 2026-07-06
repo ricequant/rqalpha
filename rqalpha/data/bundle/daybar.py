@@ -12,8 +12,7 @@ from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date, to_date
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import system_log
-from rqalpha.data.bundle.utils import mark_update_failed, START_DATE, END_DATE
+from rqalpha.data.bundle.utils import START_DATE, END_DATE, log_and_mark_error
 
 
 class DayBarTask(ProgressedTask):
@@ -37,11 +36,9 @@ class DayBarTask(ProgressedTask):
                 ints = [ints]
             for ins in ints:
                 self._instruments[ins.order_book_id].append(ins)
-        else:
-            raise RuntimeError(_("Get instruments failed."))
 
     def _transfrom_df(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df[self._fields]  # Future order_book_id like SC888 will auto add 'dominant_id'
+        df = df.loc[:, self._fields].copy()  # Future order_book_id like SC888 will auto add 'dominant_id'
         df.reset_index(inplace=True)
         df['datetime'] = [convert_date_to_int(d) for d in df['date']]
         del df['date']
@@ -74,12 +71,15 @@ class DayBarTask(ProgressedTask):
 
 class GenerateDayBarTask(DayBarTask):
     def __call__(self):
+        if not self._instruments:
+            log_and_mark_error(_("Get instruments failed."))
+            yield 1
+            return
         try:
             h5 = h5py.File(self._file_path, "w")
         except OSError:
-            system_log.error("File {} update failed, if it is using, please update later, "
-                            "or you can delete then update again".format(self._file_path))
-            mark_update_failed()
+            log_and_mark_error(_("File {} update failed, if it is using, please update later, "
+                                 "or you can delete then update again").format(self._file_path))
             yield 1
         else:
             with h5:
@@ -106,9 +106,13 @@ class UpdateDayBarTask(DayBarTask):
         de_listed_dates = [i.de_listed_date for i in instruments]
         if "0000-00-00" in de_listed_dates:  # 存在代码复用，并且其中一个状态为 Active
             return "0000-00-00"
-        return np.array(de_listed_dates).max()
+        return max(de_listed_dates)
 
     def __call__(self):
+        if not self._instruments:
+            log_and_mark_error(_("Get instruments failed."))
+            yield 1
+            return
         need_recreate_h5 = False
         try:
             with h5py.File(self._file_path, 'r') as h5:
@@ -122,9 +126,8 @@ class UpdateDayBarTask(DayBarTask):
             try:
                 h5 = h5py.File(self._file_path, 'a')
             except OSError:
-                system_log.error("File {} update failed, if it is using, please update later, "
-                                "or you can delete then update again".format(self._file_path))
-                mark_update_failed()
+                log_and_mark_error(_("File {} update failed, if it is using, please update later, "
+                                     "or you can delete then update again").format(self._file_path))
                 yield 1
             else:
                 full_update_list = []

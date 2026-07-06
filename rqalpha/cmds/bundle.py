@@ -58,9 +58,12 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
 
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
     from rqalpha.data.bundle import update_bundle as update_bundle_
+    from rqalpha.data.bundle.utils import get_error_list
     succeed = update_bundle_(os.path.join(data_bundle_path, 'bundle'), True, compression, concurrency)
     if not succeed:
-        sys.exit(1)
+        click.echo(_("Bundle data was not fully updated successfully. Details are as follows:"))
+        for error in get_error_list():
+            click.echo(error)
 
 
 @cli.command(help=_("Update bundle using RQDatac"))
@@ -92,9 +95,12 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         return 1
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
+    from rqalpha.data.bundle.utils import get_error_list
     succeed = update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
     if not succeed:
-        sys.exit(1)
+        click.echo(_("Bundle data was not fully updated successfully. Details are as follows:"))
+        for error in get_error_list():
+            click.echo(error)
 
 
 @cli.command(help=_("Download bundle (monthly updated)"))
@@ -203,4 +209,3 @@ def check_bundle_data(data_bundle_path):
         click.echo(_("bundle's day bar is incomplete, please update bundle"))
     else:
         click.echo(_("good bundle's day bar"))
-
