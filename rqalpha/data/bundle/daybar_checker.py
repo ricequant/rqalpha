@@ -104,7 +104,7 @@ def check_daybar(data_bundle_path: str):
             error_file_dic[daybar] = _("File {} is being used by another process.").format(h5_file)
             continue
         except PermissionError: # 没有权限
-            error_file_dic[daybar] = _("Insufficient prmissions for file {}.").format(h5_file)
+            error_file_dic[daybar] = _("Insufficient permissions for file {}.").format(h5_file)
             continue
         except OSError:
             error_file_dic[daybar] = _(

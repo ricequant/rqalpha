@@ -60,6 +60,7 @@ class AutomaticUpdateBundle(object):
         """
         order_book_id = instrument.order_book_id
         start_date = self._start_date
+        h5 = None
         try:
             with self._file_lock.acquire():
                 h5 = h5py.File(self._file, "a")
@@ -94,7 +95,8 @@ class AutomaticUpdateBundle(object):
             raise OSError(_("File {} update failed, if it is using, please update later, "
                           "or you can delete then update again".format(self._file))) from e
         finally:
-            h5.close()
+            if h5:
+                h5.close()
 
     def _get_array(self, instrument: Instrument, start_date: Union[datetime.date, int]) -> Optional[np.ndarray]:
         df = self._api(instrument.order_book_id, start_date, self._env.config.base.end_date, self._fields)
