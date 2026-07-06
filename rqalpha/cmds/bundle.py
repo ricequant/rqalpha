@@ -64,6 +64,7 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         click.echo(_("Bundle data was not fully updated successfully. Details are as follows:"))
         for error in get_error_list():
             click.echo(error)
+        sys.exit(1)
 
 
 @cli.command(help=_("Update bundle using RQDatac"))
@@ -101,6 +102,7 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
         click.echo(_("Bundle data was not fully updated successfully. Details are as follows:"))
         for error in get_error_list():
             click.echo(error)
+        sys.exit(1)
 
 
 @cli.command(help=_("Download bundle (monthly updated)"))
