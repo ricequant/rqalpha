@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-22 13:58+0800\n"
+"POT-Creation-Date: 2026-07-06 16:47+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -162,16 +162,20 @@ msgstr ""
 "创建 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:85
+#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:91
 #, python-brace-format
 msgid "rqdatac init failed with error: {}"
 msgstr "rqdatac 初始化失败：{}"
 
-#: rqalpha/cmds/bundle.py:64
+#: rqalpha/cmds/bundle.py:64 rqalpha/cmds/bundle.py:102
+msgid "Bundle data was not fully updated successfully. Details are as follows:"
+msgstr "Bundle 数据未能全部更新成功，具体错误如下："
+
+#: rqalpha/cmds/bundle.py:70
 msgid "Update bundle using RQDatac"
 msgstr "使用 RQDatac 更新 Bundle"
 
-#: rqalpha/cmds/bundle.py:75
+#: rqalpha/cmds/bundle.py:81
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -180,15 +184,15 @@ msgstr ""
 "更新 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:89
+#: rqalpha/cmds/bundle.py:95
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr "bundle 不存在，执行 \"rqalpha create-bundle\" 以创建 bundle"
 
-#: rqalpha/cmds/bundle.py:98
+#: rqalpha/cmds/bundle.py:108
 msgid "Download bundle (monthly updated)"
 msgstr "下载（月度更新的）Bundle"
 
-#: rqalpha/cmds/bundle.py:109
+#: rqalpha/cmds/bundle.py:119
 #, python-brace-format
 msgid ""
 "\n"
@@ -203,25 +207,25 @@ msgstr ""
 "    该路径下的内容将会被移除.\n"
 "    确定继续吗?"
 
-#: rqalpha/cmds/bundle.py:127
+#: rqalpha/cmds/bundle.py:137
 #, python-brace-format
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr "数据下载成功: {bundle_path}"
 
-#: rqalpha/cmds/bundle.py:130
+#: rqalpha/cmds/bundle.py:140
 msgid "Check bundle"
 msgstr "检测 Bundle 数据"
 
-#: rqalpha/cmds/bundle.py:144
+#: rqalpha/cmds/bundle.py:154
 #, python-brace-format
 msgid "try {} ..."
 msgstr "尝试 {} ..."
 
-#: rqalpha/cmds/bundle.py:156
+#: rqalpha/cmds/bundle.py:166
 msgid "downloading ..."
 msgstr "下载中 ..."
 
-#: rqalpha/cmds/bundle.py:170
+#: rqalpha/cmds/bundle.py:180
 #, python-brace-format
 msgid ""
 "\n"
@@ -230,31 +234,31 @@ msgstr ""
 "\n"
 "下载失败，{} 秒后重试。"
 
-#: rqalpha/cmds/bundle.py:191
+#: rqalpha/cmds/bundle.py:201
 msgid "corrupted files"
 msgstr "已损坏的文件"
 
-#: rqalpha/cmds/bundle.py:192
+#: rqalpha/cmds/bundle.py:202
 msgid "remove files"
 msgstr "是否删除文件"
 
-#: rqalpha/cmds/bundle.py:195
+#: rqalpha/cmds/bundle.py:205
 msgid "remove success"
 msgstr "文件删除完毕"
 
-#: rqalpha/cmds/bundle.py:197
+#: rqalpha/cmds/bundle.py:207
 msgid "corrupted files not remove"
 msgstr "已损坏的文件尚未删除"
 
-#: rqalpha/cmds/bundle.py:199
+#: rqalpha/cmds/bundle.py:209
 msgid "input error"
 msgstr "输入异常"
 
-#: rqalpha/cmds/bundle.py:201
+#: rqalpha/cmds/bundle.py:211
 msgid "bundle's day bar is incomplete, please update bundle"
 msgstr "Bundle日线数据不完整，请及时更新bundle"
 
-#: rqalpha/cmds/bundle.py:203
+#: rqalpha/cmds/bundle.py:213
 msgid "good bundle's day bar"
 msgstr "Bundle日线数据良好"
 
@@ -292,13 +296,6 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/bundle.py:620 rqalpha/data/bundle/__init__.py:676
-#, python-brace-format
-msgid ""
-"File {} update failed, if it is using, please update later, or you can "
-"delete then update again"
-msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
-
 #: rqalpha/data/data_proxy.py:224 rqalpha/data/instruments_mixin.py:50
 #, python-brace-format
 msgid "No instrument found at {dt}: {id_or_sym}"
@@ -333,6 +330,97 @@ msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
 "{}"
 msgstr "读取 bundle 文件失败，请删除 {} 后尝试重新生成 bundle：{}"
+
+#: rqalpha/data/bundle/__init__.py:60
+msgid "Got instruments data error."
+msgstr "获取 instruments 失败"
+
+#: rqalpha/data/bundle/__init__.py:83
+msgid "Get yield curve data error."
+msgstr "获取 yield curve 数据失败"
+
+#: rqalpha/data/bundle/__init__.py:128
+msgid "Got no dividend data"
+msgstr "未获取到 dividend 数据"
+
+#: rqalpha/data/bundle/__init__.py:158
+msgid "Got no split data"
+msgstr "未获取到 split 数据"
+
+#: rqalpha/data/bundle/__init__.py:187
+msgid "Got no ex factor data"
+msgstr "未获取到 ex factor 数据"
+
+#: rqalpha/data/bundle/__init__.py:208
+msgid "Got no share transformation data"
+msgstr "未获取到 share transformation 数据"
+
+#: rqalpha/data/bundle/automatic_update.py:94 rqalpha/data/bundle/daybar.py:81
+#: rqalpha/data/bundle/daybar.py:129
+#, python-brace-format
+msgid ""
+"File {} update failed, if it is using, please update later, or you can "
+"delete then update again"
+msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
+
+#: rqalpha/data/bundle/daybar.py:75 rqalpha/data/bundle/daybar.py:113
+msgid "Get instruments failed."
+msgstr "获取 instruments 失败"
+
+#: rqalpha/data/bundle/daybar_checker.py:31
+#, python-brace-format
+msgid "Directory not found: {}"
+msgstr "未找到文件目录: {}"
+
+#: rqalpha/data/bundle/daybar_checker.py:34
+#, python-brace-format
+msgid ""
+"trading_dates.npy or instruments.pk is missing in {}. Please download the"
+" base data first."
+msgstr "当前目录 {} 缺少 trading_dates.npy 或 instruments.pk 文件，请先下载 base 数据"
+
+#: rqalpha/data/bundle/daybar_checker.py:42
+#, python-brace-format
+msgid "Missing files in directory {}: {}. Please update the bundle again."
+msgstr ""
+
+#: rqalpha/data/bundle/daybar_checker.py:104
+#, python-brace-format
+msgid "File {} is being used by another process."
+msgstr "文件 {} 被其他进程占用"
+
+#: rqalpha/data/bundle/daybar_checker.py:107
+#, python-brace-format
+msgid "Insufficient prmissions for file {}."
+msgstr "缺少文件 {} 的权限"
+
+#: rqalpha/data/bundle/daybar_checker.py:111
+#, python-brace-format
+msgid ""
+"Failed to open {}. The file may be corrupted, the path may be invalid, or"
+" an underlying I/O error may have occurred."
+msgstr "{} 无法正常打开,可能是文件损坏,路径异常或底层I/O错误"
+
+#: rqalpha/data/bundle/daybar_checker.py:131
+#, python-brace-format
+msgid "File {} does not contain any valid dataset"
+msgstr "文件 {} 不存在有效的 dataset"
+
+#: rqalpha/data/bundle/daybar_checker.py:158
+msgid "Detection complete: daybar data quality is good!"
+msgstr "检测结束：日线行情数据质量良好！"
+
+#: rqalpha/data/bundle/daybar_checker.py:161
+#, python-brace-format
+msgid ""
+"Detection complete: a total of {} files have issues. The specific files "
+"and order_book_ids as follows:"
+msgstr "检测结束：共有 {} 个文件存在问题，具体的标的如下："
+
+#: rqalpha/data/bundle/daybar_checker.py:176
+#, python-brace-format
+msgid "{}(total of {} anomaly): {}"
+msgstr "{}(共有{}个异常): {}"
 
 #: rqalpha/mod/__init__.py:55
 #, python-brace-format
@@ -1214,7 +1302,9 @@ msgid ""
 "will be changed to a non-zero value in a future version.(The "
 "configuration description can be found at https://www.ricequant.com/doc"
 "/rqalpha-plus/api/config)"
-msgstr "策略需要显式配置 base.capital_gain_tax_rate，其当前的默认值为 0，将在未来的版本中更改为非 0 值（该配置的说明可见https://www.ricequant.com/doc/rqalpha-plus/api/config）"
+msgstr ""
+"策略需要显式配置 base.capital_gain_tax_rate，其当前的默认值为 0，将在未来的版本中更改为非 0 "
+"值（该配置的说明可见https://www.ricequant.com/doc/rqalpha-plus/api/config）"
 
 #: rqalpha/utils/config.py:233
 #, python-brace-format
