@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-06 15:31+0800\n"
+"POT-Creation-Date: 2026-07-06 16:47+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -162,20 +162,20 @@ msgstr ""
 "创建 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:90
+#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:91
 #, python-brace-format
 msgid "rqdatac init failed with error: {}"
 msgstr "rqdatac 初始化失败：{}"
 
-#: rqalpha/cmds/bundle.py:64 rqalpha/cmds/bundle.py:101
+#: rqalpha/cmds/bundle.py:64 rqalpha/cmds/bundle.py:102
 msgid "Bundle data was not fully updated successfully. Details are as follows:"
 msgstr "Bundle 数据未能全部更新成功，具体错误如下："
 
-#: rqalpha/cmds/bundle.py:69
+#: rqalpha/cmds/bundle.py:70
 msgid "Update bundle using RQDatac"
 msgstr "使用 RQDatac 更新 Bundle"
 
-#: rqalpha/cmds/bundle.py:80
+#: rqalpha/cmds/bundle.py:81
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
@@ -184,15 +184,15 @@ msgstr ""
 "更新 bundle 依赖 rqdatac。您可以访问 https://www.ricequant.com/welcome/rqdata 以获取 "
 "rqdatac，或执行 \"rqalpha download-bundle\" 以下载月度更新的 bundle。"
 
-#: rqalpha/cmds/bundle.py:94
+#: rqalpha/cmds/bundle.py:95
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr "bundle 不存在，执行 \"rqalpha create-bundle\" 以创建 bundle"
 
-#: rqalpha/cmds/bundle.py:106
+#: rqalpha/cmds/bundle.py:108
 msgid "Download bundle (monthly updated)"
 msgstr "下载（月度更新的）Bundle"
 
-#: rqalpha/cmds/bundle.py:117
+#: rqalpha/cmds/bundle.py:119
 #, python-brace-format
 msgid ""
 "\n"
@@ -207,25 +207,25 @@ msgstr ""
 "    该路径下的内容将会被移除.\n"
 "    确定继续吗?"
 
-#: rqalpha/cmds/bundle.py:135
+#: rqalpha/cmds/bundle.py:137
 #, python-brace-format
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr "数据下载成功: {bundle_path}"
 
-#: rqalpha/cmds/bundle.py:138
+#: rqalpha/cmds/bundle.py:140
 msgid "Check bundle"
 msgstr "检测 Bundle 数据"
 
-#: rqalpha/cmds/bundle.py:152
+#: rqalpha/cmds/bundle.py:154
 #, python-brace-format
 msgid "try {} ..."
 msgstr "尝试 {} ..."
 
-#: rqalpha/cmds/bundle.py:164
+#: rqalpha/cmds/bundle.py:166
 msgid "downloading ..."
 msgstr "下载中 ..."
 
-#: rqalpha/cmds/bundle.py:178
+#: rqalpha/cmds/bundle.py:180
 #, python-brace-format
 msgid ""
 "\n"
@@ -234,31 +234,31 @@ msgstr ""
 "\n"
 "下载失败，{} 秒后重试。"
 
-#: rqalpha/cmds/bundle.py:199
+#: rqalpha/cmds/bundle.py:201
 msgid "corrupted files"
 msgstr "已损坏的文件"
 
-#: rqalpha/cmds/bundle.py:200
+#: rqalpha/cmds/bundle.py:202
 msgid "remove files"
 msgstr "是否删除文件"
 
-#: rqalpha/cmds/bundle.py:203
+#: rqalpha/cmds/bundle.py:205
 msgid "remove success"
 msgstr "文件删除完毕"
 
-#: rqalpha/cmds/bundle.py:205
+#: rqalpha/cmds/bundle.py:207
 msgid "corrupted files not remove"
 msgstr "已损坏的文件尚未删除"
 
-#: rqalpha/cmds/bundle.py:207
+#: rqalpha/cmds/bundle.py:209
 msgid "input error"
 msgstr "输入异常"
 
-#: rqalpha/cmds/bundle.py:209
+#: rqalpha/cmds/bundle.py:211
 msgid "bundle's day bar is incomplete, please update bundle"
 msgstr "Bundle日线数据不完整，请及时更新bundle"
 
-#: rqalpha/cmds/bundle.py:211
+#: rqalpha/cmds/bundle.py:213
 msgid "good bundle's day bar"
 msgstr "Bundle日线数据良好"
 
@@ -331,23 +331,27 @@ msgid ""
 "{}"
 msgstr "读取 bundle 文件失败，请删除 {} 后尝试重新生成 bundle：{}"
 
-#: rqalpha/data/bundle/__init__.py:79
+#: rqalpha/data/bundle/__init__.py:60
+msgid "Got instruments data error."
+msgstr "获取 instruments 失败"
+
+#: rqalpha/data/bundle/__init__.py:83
 msgid "Get yield curve data error."
 msgstr "获取 yield curve 数据失败"
 
-#: rqalpha/data/bundle/__init__.py:124
+#: rqalpha/data/bundle/__init__.py:128
 msgid "Got no dividend data"
 msgstr "未获取到 dividend 数据"
 
-#: rqalpha/data/bundle/__init__.py:154
+#: rqalpha/data/bundle/__init__.py:158
 msgid "Got no split data"
 msgstr "未获取到 split 数据"
 
-#: rqalpha/data/bundle/__init__.py:183
+#: rqalpha/data/bundle/__init__.py:187
 msgid "Got no ex factor data"
 msgstr "未获取到 ex factor 数据"
 
-#: rqalpha/data/bundle/__init__.py:204
+#: rqalpha/data/bundle/__init__.py:208
 msgid "Got no share transformation data"
 msgstr "未获取到 share transformation 数据"
 

@@ -55,7 +55,11 @@ class GenerateInstrumentsBundle:
         self._rqdata_func = rqdata_func
 
     def __call__(self):
-        instruments = [i.__dict__ for i in self._rqdata_func(self._order_book_ids)]
+        instruments = self._rqdata_func(self._order_book_ids)
+        if instruments is None or not instruments:
+            log_and_mark_error(_("Got instruments data error."))
+            return
+        instruments = [i.__dict__ for i in instruments]
         with open(self._file, "wb") as out:
             pickle.dump(instruments, out, protocol=2)
 

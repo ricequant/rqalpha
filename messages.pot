@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-06 15:31+0800\n"
+"POT-Creation-Date: 2026-07-06 16:47+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,35 +155,35 @@ msgid ""
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:90
+#: rqalpha/cmds/bundle.py:56 rqalpha/cmds/bundle.py:91
 #, python-brace-format
 msgid "rqdatac init failed with error: {}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:64 rqalpha/cmds/bundle.py:101
+#: rqalpha/cmds/bundle.py:64 rqalpha/cmds/bundle.py:102
 msgid "Bundle data was not fully updated successfully. Details are as follows:"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:69
+#: rqalpha/cmds/bundle.py:70
 msgid "Update bundle using RQDatac"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:80
+#: rqalpha/cmds/bundle.py:81
 msgid ""
 "rqdatac is required to update bundle. you can visit "
 "https://www.ricequant.com/welcome/rqdata to get rqdatac, or use \"rqalpha"
 " download-bundle\" to download monthly updated bundle."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:94
+#: rqalpha/cmds/bundle.py:95
 msgid "bundle not exist, use \"rqalpha create-bundle\" command instead"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:106
+#: rqalpha/cmds/bundle.py:108
 msgid "Download bundle (monthly updated)"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:117
+#: rqalpha/cmds/bundle.py:119
 #, python-brace-format
 msgid ""
 "\n"
@@ -193,56 +193,56 @@ msgid ""
 "    Are you sure to continue?"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:135
+#: rqalpha/cmds/bundle.py:137
 #, python-brace-format
 msgid "Data bundle download successfully in {bundle_path}"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:138
+#: rqalpha/cmds/bundle.py:140
 msgid "Check bundle"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:152
+#: rqalpha/cmds/bundle.py:154
 #, python-brace-format
 msgid "try {} ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:164
+#: rqalpha/cmds/bundle.py:166
 msgid "downloading ..."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:178
+#: rqalpha/cmds/bundle.py:180
 #, python-brace-format
 msgid ""
 "\n"
 "Download failed, retry in {} seconds."
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:199
+#: rqalpha/cmds/bundle.py:201
 msgid "corrupted files"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:200
+#: rqalpha/cmds/bundle.py:202
 msgid "remove files"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:203
+#: rqalpha/cmds/bundle.py:205
 msgid "remove success"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:205
+#: rqalpha/cmds/bundle.py:207
 msgid "corrupted files not remove"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:207
+#: rqalpha/cmds/bundle.py:209
 msgid "input error"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:209
+#: rqalpha/cmds/bundle.py:211
 msgid "bundle's day bar is incomplete, please update bundle"
 msgstr ""
 
-#: rqalpha/cmds/bundle.py:211
+#: rqalpha/cmds/bundle.py:213
 msgid "good bundle's day bar"
 msgstr ""
 
@@ -315,23 +315,27 @@ msgid ""
 "{}"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:79
+#: rqalpha/data/bundle/__init__.py:60
+msgid "Got instruments data error."
+msgstr ""
+
+#: rqalpha/data/bundle/__init__.py:83
 msgid "Get yield curve data error."
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:124
+#: rqalpha/data/bundle/__init__.py:128
 msgid "Got no dividend data"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:154
+#: rqalpha/data/bundle/__init__.py:158
 msgid "Got no split data"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:183
+#: rqalpha/data/bundle/__init__.py:187
 msgid "Got no ex factor data"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:204
+#: rqalpha/data/bundle/__init__.py:208
 msgid "Got no share transformation data"
 msgstr ""
 
