@@ -39,7 +39,7 @@ def check_daybar(data_bundle_path: str):
         if not os.path.exists(os.path.join(base_path, daybar_file)):
             missing_file_list.append(daybar_file)
     if missing_file_list:
-        click.echo(_("Missing files in directory {}: {}. Please update the bundle again.".format(base_path, ",".join(missing_file_list))))  # 
+        click.echo(_("Missing files in directory {}: {}. Please update the bundle again.".format(base_path, ",".join(missing_file_list))))  #
         return
 
     instruments = defaultdict(list)
@@ -48,7 +48,7 @@ def check_daybar(data_bundle_path: str):
             i["listed_date"] = max(_convert_string_date_to_int(i["listed_date"], START_DATE), START_DATE)
             i["de_listed_date"] = _convert_string_date_to_int(i["de_listed_date"])
             instruments[i["order_book_id"]].append(i)
-    
+
     # 获取所有的 trading_dates 并转化为 array
     trading_dates = np.load(os.path.join(base_path, "trading_dates.npy"))
     def _get_trading_dates(start_date: int, end_date: int) -> np.ndarray:
@@ -91,7 +91,7 @@ def check_daybar(data_bundle_path: str):
                 chunks.append(_get_trading_dates(i["listed_date"], min(end_date, last_active_date)))
         return np.concatenate(chunks)
 
-    # 1.检查日期唯一性和连续性 
+    # 1.检查日期唯一性和连续性
     # 2.日期字段应覆盖从上市至今/退市的所有交易日
     error_oid_dic = defaultdict(list)
     error_file_dic = {}
@@ -111,7 +111,7 @@ def check_daybar(data_bundle_path: str):
                 "Failed to open {}. The file may be corrupted, the path may be invalid, or an underlying I/O error may have occurred."
             ).format(h5_file)
             continue
-        
+
         dt_cache = {}
         latest_date = None
         with h5:

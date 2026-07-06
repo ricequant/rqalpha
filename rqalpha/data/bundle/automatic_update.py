@@ -50,7 +50,7 @@ class AutomaticUpdateBundle(object):
             if len(data) == 0:
                 return None
         return data
-    
+
     def _auto_update_task(self, instrument: Instrument) -> None:
         """
         在 rqalpha 策略运行过程中自动更新所需的日线数据
@@ -75,7 +75,7 @@ class AutomaticUpdateBundle(object):
                                 return
                     else:
                         del h5[order_book_id]
-                
+
                 arr = self._get_array(instrument, start_date)
                 if arr is None:
                     if order_book_id not in h5:
@@ -95,7 +95,7 @@ class AutomaticUpdateBundle(object):
                           "or you can delete then update again".format(self._file))) from e
         finally:
             h5.close()
-    
+
     def _get_array(self, instrument: Instrument, start_date: Union[datetime.date, int]) -> Optional[np.ndarray]:
         df = self._api(instrument.order_book_id, start_date, self._env.config.base.end_date, self._fields)
         if not (df is None or df.empty):

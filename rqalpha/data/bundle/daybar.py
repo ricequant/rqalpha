@@ -28,7 +28,7 @@ class DayBarTask(ProgressedTask):
     @property
     def total_steps(self) -> int:
         return len(self._order_book_ids)
-    
+
     def _init_instruments(self, order_book_ids: List[str]):
         ints = rqdatac.instruments(order_book_ids)
         if ints is not None:
@@ -45,7 +45,7 @@ class DayBarTask(ProgressedTask):
         df.set_index(['order_book_id', 'datetime'], inplace=True)
         df.sort_index(inplace=True)
         return df
-    
+
     def _fully_update(self, order_book_ids: List[str], h5: h5py.File):
         i, step = 0, 300
         while True:
@@ -155,7 +155,7 @@ class UpdateDayBarTask(DayBarTask):
                                     continue
                             min_last_date = min(last_date, min_last_date or last_date)
                             incremental_update_dic[order_book_id] = last_date
-                
+
                 if skip_update_list:
                     yield (len(skip_update_list))
 
@@ -164,7 +164,7 @@ class UpdateDayBarTask(DayBarTask):
 
                 if not incremental_update_dic:
                     return
-                
+
                 today = datetime.date.today()
                 if min_last_date == today or (
                     not rqdatac.is_trading_date(today) and min_last_date == rqdatac.get_previous_trading_date(today)
