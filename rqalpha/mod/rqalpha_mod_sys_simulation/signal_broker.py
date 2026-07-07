@@ -30,8 +30,8 @@ from .matcher import AbstractMatcher, SignalMatcher
 
 
 class SignalBroker(AbstractBroker):
-    def __init__(self, env: Environment, mod_config):
-        self._signal_default_matcher: AbstractMatcher = SignalMatcher(env, mod_config)
+    def __init__(self, env: Environment, mod_config, partial_fill_on_insufficient_cash: bool = False):
+        self._signal_default_matcher: AbstractMatcher = SignalMatcher(env, mod_config, partial_fill_on_insufficient_cash)
         self._env: Environment = env
         self._matchers: Dict[INSTRUMENT_TYPE, AbstractMatcher] = {}
 

@@ -34,23 +34,24 @@ from .matcher import DefaultBarMatcher, AbstractMatcher, CounterPartyOfferMatche
 
 
 class SimulationBroker(AbstractBroker, Persistable):
-    def __init__(self, env, mod_config):
-        self._env = env  # type: Environment
+    def __init__(self, env: Environment, mod_config, partial_fill_on_insufficient_cash: bool = False):
+        self._env: Environment = env
         self._mod_config = mod_config
+        self._partial_fill_on_insufficient_cash: bool = partial_fill_on_insufficient_cash
 
-        self._matchers = {}  # type: Dict[INSTRUMENT_TYPE, AbstractMatcher]
+        self._matchers: Dict[INSTRUMENT_TYPE, AbstractMatcher] = {}
 
         self._match_immediately = mod_config.matching_type in [MATCHING_TYPE.CURRENT_BAR_CLOSE, MATCHING_TYPE.VWAP]
 
-        self._open_orders = []  # type: List[Tuple[Account, Order]]
-        self._open_auction_orders = []  # type: List[Tuple[Account, Order]]
-        self._open_exercise_orders = []  # type: List[Tuple[Account, Order]]
+        self._open_orders: List[Tuple[Account, Order]] = []
+        self._open_auction_orders: List[Tuple[Account, Order]] = []
+        self._open_exercise_orders: List[Tuple[Account, Order]] = []
 
         self._frontend_validator = {}
 
         if self._mod_config.matching_type == MATCHING_TYPE.COUNTERPARTY_OFFER:
             for instrument_type in INSTRUMENT_TYPE:
-                self.register_matcher(instrument_type, CounterPartyOfferMatcher(self._env, self._mod_config))
+                self.register_matcher(instrument_type, CounterPartyOfferMatcher(self._env, self._mod_config, partial_fill_on_insufficient_cash))
 
         # 该事件会触发策略的before_trading函数
         self._env.event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
@@ -63,19 +64,21 @@ class SimulationBroker(AbstractBroker, Persistable):
         self._env.event_bus.add_listener(EVENT.PRE_SETTLEMENT, self.pre_settlement)
 
     @lru_cache(1024)
-    def _get_matcher(self, order_book_id):
-        # type: (str) -> AbstractMatcher
+    def _get_matcher(self, order_book_id: str) -> AbstractMatcher:
         instrument_type = self._env.data_proxy.instrument(order_book_id).type
         try:
             return self._matchers[instrument_type]
         except KeyError:
             if self._env.config.base.frequency == "tick":
-                return self._matchers.setdefault(instrument_type, DefaultTickMatcher(self._env, self._mod_config))
+                return self._matchers.setdefault(
+                    instrument_type, DefaultTickMatcher(self._env, self._mod_config, self._partial_fill_on_insufficient_cash)
+                )
             else:
-                return self._matchers.setdefault(instrument_type, DefaultBarMatcher(self._env, self._mod_config))
+                return self._matchers.setdefault(
+                    instrument_type, DefaultBarMatcher(self._env, self._mod_config, self._partial_fill_on_insufficient_cash)
+                )
 
-    def register_matcher(self, instrument_type, matcher):
-        # type: (INSTRUMENT_TYPE, AbstractMatcher) -> None
+    def register_matcher(self, instrument_type: INSTRUMENT_TYPE, matcher: AbstractMatcher) -> None:
         self._matchers[instrument_type] = matcher
 
     def get_open_orders(self, order_book_id=None):

@@ -1,102 +1,77 @@
 from copy import copy
-
-import numpy as np
+from typing import Optional
 
 from rqalpha.const import ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.core.events import EVENT, Event
 from rqalpha.model.order import Order, ALGO_ORDER_STYLES
-from rqalpha.model.trade import Trade
+from rqalpha.model.instrument import Instrument
 from rqalpha.portfolio.account import Account
-from rqalpha.environment import Environment
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.price_limits import reaches_limit
 from rqalpha.utils.i18n import gettext as _
-from .base import DefaultMatcher
-from ..slippage import SlippageDecider
+from .base import BaseMatcher, MatchFillResult
 
 
-class SignalMatcher(DefaultMatcher):
-    def __init__(self, env: Environment, mod_config):
-        self._env: Environment = env
-        self._slippage_decider = SlippageDecider(mod_config.slippage_model, mod_config.slippage)
-        self._price_limit = mod_config.price_limit
-        self._partial_fill_on_insufficient_cash: bool = getattr(env.config.base, "partial_fill_on_insufficient_cash", False)
+class SignalMatcher(BaseMatcher):
+    def _reject_order(self, account, order, reason):
+        super()._reject_order(account, order, reason)
+        self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
+
+    def _cancel_order(self, account, order, reason):
+        super()._cancel_order(account, order, reason)
+        self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
+
+    def _get_deal_price(self, order, open_auction):
+        last_price = self._env.price_board.get_last_price(order.order_book_id)
+        if not is_valid_price(last_price):
+            return last_price
+        if order.type == ORDER_TYPE.LIMIT:
+            return order.frozen_price
+        elif isinstance(order.style, ALGO_ORDER_STYLES):
+            deal_price, _ = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
+            return deal_price
+        return last_price
+
+    def _handle_invalid_price_order(self, instrument: Instrument, order: Order, account: Account):
+        # 信号模式下的无效价格分两种情况：
+        # 1.last_price 为无效价格，该情况下需要判断是否为 listed_date 当天
+        # 2.algo_order 情况下由于没有成交量导致的无效价格
+        if not is_valid_price(self._env.price_board.get_last_price(order.order_book_id)):
+            listed_date = instrument.listed_date.date()
+            if listed_date == self._env.trading_dt.date():
+                self._reject_order_of_listed_date(order, listed_date, account)
+            else:
+                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(order_book_id=order.order_book_id)
+                self._reject_order(account, order, reason)
+        else:
+            reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
+            self._reject_order(account, order, reason)
+
+    def _can_match_limit_order(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
+        if self._price_limit:
+            if reaches_limit(order.order_book_id, deal_price, order.side, self._env.price_board, tick_size):
+                reason = _("Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price.").format(
+                    order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down",
+                )
+                self._reject_order(account, order, reason)
+                return False
+        return True
+
+    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> MatchFillResult:
+        return MatchFillResult(quantity=order.quantity)
+
+    def _get_trade_price(self, order, deal_price, open_auction):
+        return self._slippage_decider.get_trade_price(order, deal_price)
+
+    def _after_trade(self, account: Account, order: Order, open_auction: bool, cash_cancel_reason: Optional[str] = None):
+        if cash_cancel_reason is not None:
+            self._cancel_order(account, order, cash_cancel_reason)
+            return
 
     def match(self, account: Account, order: Order, open_auction: bool):
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             return
-        order_book_id = order.order_book_id
-        instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
-        price_board = self._env.price_board
-        tick_size = self._env.data_proxy.get_tick_size(order_book_id)
-
-        last_price = price_board.get_last_price(order_book_id)
-        if not is_valid_price(last_price):
-            listed_date = instrument.listed_date.date()
-            if listed_date == self._env.trading_dt.date():
-                reason = self._get_listed_date_cancelled_reason(order_book_id, listed_date)
-            else:
-                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(order_book_id=order_book_id)
-            order.mark_rejected(reason)
-            self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
-            return
-        
-        if order.type == ORDER_TYPE.LIMIT:
-            deal_price = order.frozen_price
-        elif isinstance(order.style, ALGO_ORDER_STYLES):
-            deal_price, v = self._env.data_proxy.get_algo_bar(order.order_book_id, order.style, self._env.calendar_dt)
-            if np.isnan(deal_price):
-                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
-                order.mark_rejected(reason)
-                self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
-                return
-        else:
-            deal_price = last_price
-
-        if self._price_limit:
-            if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
-                order.mark_rejected(_("Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price.").format(
-                    order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down",
-                ))
-                self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
-                return
-            
-        trade_price = self._slippage_decider.get_trade_price(order, deal_price)
-        should_cancel_remaining = False
-        cash_cancel_reason = None
-        if order.position_effect == POSITION_EFFECT.OPEN:
-            fill, reason = self.resolve_open_fill(account, order, instrument, trade_price, order.quantity)
-            if reason is not None:
-                order.mark_rejected(reason)
-                self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
-                return
-            should_cancel_remaining = fill < order.quantity
-            if should_cancel_remaining:
-                cash_cancel_reason = _(u"Order Cancelled: not enough money to fill {order_book_id}, fill {filled_volume} actually").format(
-                    order_book_id=order.order_book_id, filled_volume=order.filled_quantity + fill
-                )
-        else:
-            fill = order.quantity
-
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
-        
-        trade = Trade.__from_create__(
-            order_id=order.order_id,
-            price=trade_price,
-            amount=fill,
-            side=order.side,
-            position_effect=order.position_effect,
-            order_book_id=order_book_id,
-            frozen_price=order.frozen_price,
-            close_today_amount=ct_amount
-        )
-        order.fill(trade)
-        self._env.event_bus.publish_event(Event(EVENT.TRADE, account=account, trade=trade, order=copy(order)))
-
-        if should_cancel_remaining:
-            order.mark_cancelled(cash_cancel_reason)
-            self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=copy(order)))
-            return
+        super().match(account, order, open_auction)
 
     def update(self, event):
         pass

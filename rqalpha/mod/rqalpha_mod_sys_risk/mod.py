@@ -17,6 +17,7 @@
 
 
 from rqalpha.interface import AbstractMod
+from rqalpha.const import RUN_TYPE
 
 from .validators import CashValidator, PriceValidator, IsTradingValidator, SelfTradeValidator
 
@@ -28,7 +29,8 @@ class RiskManagerMod(AbstractMod):
         if mod_config.validate_is_trading:
             env.add_frontend_validator(IsTradingValidator(env))
         if mod_config.validate_cash:
-            env.add_frontend_validator(CashValidator(env))
+            if not getattr(env.config.base, "partial_fill_on_insufficient_cash", False) or env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
+                env.add_frontend_validator(CashValidator(env))
         if mod_config.validate_self_trade:
             env.add_frontend_validator(SelfTradeValidator(env))
 

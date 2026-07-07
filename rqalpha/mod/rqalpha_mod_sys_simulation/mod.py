@@ -62,10 +62,11 @@ class SimulationMod(AbstractMod):
             user_system_log.warn(_(u"matching_type = 'next_bar' is abandoned when frequency == '1d',"
                                    u"Current matching_type is 'current_bar'."))
 
+        partial_fill_on_insufficient_cash: bool = getattr(env.config.base, "partial_fill_on_insufficient_cash", False)
         if mod_config.signal:
-            env.set_broker(SignalBroker(env, mod_config))
+            env.set_broker(SignalBroker(env, mod_config, partial_fill_on_insufficient_cash))
         else:
-            env.set_broker(SimulationBroker(env, mod_config))
+            env.set_broker(SimulationBroker(env, mod_config, partial_fill_on_insufficient_cash))
 
         if mod_config.management_fee:
             env.event_bus.add_listener(EVENT.POST_SYSTEM_INIT, self.register_management_fee_calculator)

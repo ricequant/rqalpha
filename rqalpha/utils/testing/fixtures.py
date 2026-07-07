@@ -148,11 +148,11 @@ class MatcherFixture(EnvironmentFixture):
 
     def init_fixture(self):
         from datetime import datetime
-        from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import DefaultMatcher
+        from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import BaseMatcher
 
         super(MatcherFixture, self).init_fixture()
 
-        print(DefaultMatcher, type(self.env_config["mod"]))
+        print(BaseMatcher, type(self.env_config["mod"]))
 
-        self.matcher = DefaultMatcher(self.env, self.env_config["mod"].sys_simulation)
+        self.matcher = BaseMatcher(self.env, self.env_config["mod"].sys_simulation)
         self.matcher.update(datetime(2018, 8, 16, 11, 5), datetime(2018, 8, 16, 11, 5))

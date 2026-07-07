@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-06 16:47+0800\n"
+"POT-Creation-Date: 2026-07-07 18:18+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -339,7 +339,7 @@ msgstr ""
 msgid "Got no share transformation data"
 msgstr ""
 
-#: rqalpha/data/bundle/automatic_update.py:94 rqalpha/data/bundle/daybar.py:81
+#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:81
 #: rqalpha/data/bundle/daybar.py:129
 #, python-brace-format
 msgid ""
@@ -375,7 +375,7 @@ msgstr ""
 
 #: rqalpha/data/bundle/daybar_checker.py:107
 #, python-brace-format
-msgid "Insufficient prmissions for file {}."
+msgid "Insufficient permissions for file {}."
 msgstr ""
 
 #: rqalpha/data/bundle/daybar_checker.py:111
@@ -928,97 +928,6 @@ msgid ""
 "trade: [{}...]"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:123
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:340
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:663
-#, python-brace-format
-msgid ""
-"Order Cancelled: current security [{order_book_id}] can not be traded in "
-"listed date [{listed_date}]"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:129
-#, python-brace-format
-msgid "Order Cancelled: {order_book_id} miss market data or bar no volume."
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:151
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:688
-#, python-brace-format
-msgid ""
-"Order Cancelled: current bar [{order_book_id}] reach the "
-"{limit_up_or_down} price."
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:159
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:679
-#, python-brace-format
-msgid "Order Cancelled: {order_book_id} bar no volume"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:172
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:419
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:570
-#, python-brace-format
-msgid ""
-"Order Cancelled: market order {order_book_id} volume {order_volume} due "
-"to volume limit"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:209
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:455
-#, python-brace-format
-msgid ""
-"Order Cancelled: not enough money to buy {order_book_id}, needs "
-"{cost_money:.2f}, cash {cash:.2f}"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:222
-#, python-brace-format
-msgid ""
-"Order Cancelled: market order {order_book_id} volume {order_volume} is "
-"larger than {volume_percent_limit} percent of current bar volume, fill "
-"{filled_volume} actually"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:347
-#, python-brace-format
-msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:377
-#, python-brace-format
-msgid ""
-"Order Cancelled: current tick [{order_book_id}] reach the "
-"{limit_up_or_down} price."
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:384
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:390
-#, python-brace-format
-msgid "Order Cancelled: [{order_book_id}] has no liquidity."
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:468
-#, python-brace-format
-msgid ""
-"Order Cancelled: market order {order_book_id} volume {order_volume} is "
-"larger than {volume_percent_limit} percent of current tick volume, fill "
-"{filled_volume} actually"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:612
-#, python-brace-format
-msgid ""
-"Order Cancelled: market order {order_book_id} fill {filled_volume} "
-"actually"
-msgstr ""
-
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher.py:668
-#, python-brace-format
-msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
-msgstr ""
-
 #: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:42
 msgid "invalid margin multiplier value: value range is (0, +∞]"
 msgstr ""
@@ -1035,7 +944,7 @@ msgid ""
 "matching_type is 'current_bar'."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:119
+#: rqalpha/mod/rqalpha_mod_sys_simulation/mod.py:120
 #, python-brace-format
 msgid "NO account_type = ({}) in {}"
 msgstr ""
@@ -1044,22 +953,22 @@ msgstr ""
 msgid "cancel_order function is not supported in signal mode"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:108
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:111
 #, python-brace-format
 msgid "unsupported position_effect {}"
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:129
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:132
 #, python-brace-format
 msgid "{order_id} order has been cancelled by user."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:145
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:148
 #, python-brace-format
 msgid "Order Rejected: {order_book_id} can not match. Market close."
 msgstr ""
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:185
+#: rqalpha/mod/rqalpha_mod_sys_simulation/simulation_broker.py:188
 #, python-brace-format
 msgid "{order_book_id} should be subscribed when frequency is tick."
 msgstr ""
@@ -1089,6 +998,98 @@ msgstr ""
 #: rqalpha/mod/rqalpha_mod_sys_simulation/slippage.py:102
 #, python-brace-format
 msgid "invalid slippage rate value {} which cause price <= 0"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:75
+#, python-brace-format
+msgid "Order Cancelled: {order_book_id} miss market data or bar no volume."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:90
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/signal_matcher.py:50
+#, python-brace-format
+msgid "Order Cancelled: {order_book_id} bar no volume"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:103
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:158
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:240
+#, python-brace-format
+msgid ""
+"Order Cancelled: market order {order_book_id} volume {order_volume} due "
+"to volume limit"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:56
+#, python-brace-format
+msgid ""
+"Order Cancelled: current security [{order_book_id}] can not be traded in "
+"listed date [{listed_date}]"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:78
+#, python-brace-format
+msgid ""
+"Order Cancelled: current {frequency} [{order_book_id}] reach the "
+"{limit_up_or_down} price."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:116
+#, python-brace-format
+msgid ""
+"Order {status_label}: not enough money to buy {order_book_id}, needs "
+"{cost_money:.2f}, cash {cash:.2f}"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:148
+#, python-brace-format
+msgid ""
+"Order {status_label}: not enough money to buy one lot of {order_book_id},"
+" needs {cost_money:.2f}, cash {cash:.2f}"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:176
+#, python-brace-format
+msgid ""
+"Order Cancelled: market order {order_book_id} volume {order_volume} is "
+"larger than {volume_percent_limit} percent of current {frequency} volume,"
+" fill {filled_volume} actually"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:227
+#, python-brace-format
+msgid ""
+"Order Cancelled: not enough money to fill {order_book_id}, fill "
+"{filled_volume} actually"
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/signal_matcher.py:47
+#, python-brace-format
+msgid "Order Cancelled: current bar [{order_book_id}] miss market data."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/signal_matcher.py:56
+#, python-brace-format
+msgid ""
+"Order Cancelled: current bar [{order_book_id}] reach the "
+"{limit_up_or_down} price."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:102
+#, python-brace-format
+msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:124
+#, python-brace-format
+msgid "Order Cancelled: [{order_book_id}] has no liquidity."
+msgstr ""
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:270
+#, python-brace-format
+msgid ""
+"Order Cancelled: market order {order_book_id} fill {filled_volume} "
+"actually"
 msgstr ""
 
 #: rqalpha/mod/rqalpha_mod_sys_transaction_cost/mod.py:34
@@ -1125,21 +1126,21 @@ msgstr ""
 msgid "invalid init position {order_book_id}: no valid price at {date}"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:205
+#: rqalpha/portfolio/account.py:212
 msgid ""
 "account.positions is deprecated, please use get_position/get_positions "
 "API instead"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:356
+#: rqalpha/portfolio/account.py:363
 msgid "Futures account's cash turns negative after settlement"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:362
+#: rqalpha/portfolio/account.py:369
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr ""
 
-#: rqalpha/portfolio/account.py:522 rqalpha/portfolio/account.py:541
+#: rqalpha/portfolio/account.py:530 rqalpha/portfolio/account.py:549
 #, python-brace-format
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr ""

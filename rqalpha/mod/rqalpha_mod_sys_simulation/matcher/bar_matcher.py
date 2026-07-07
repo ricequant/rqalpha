@@ -1,15 +1,20 @@
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
+from rqalpha.portfolio.account import Account
 from rqalpha.model.order import Order, ALGO_ORDER_STYLES
 from rqalpha.model.instrument import Instrument
 from rqalpha.mod.utils import round_order_quantity
 from rqalpha.utils.i18n import gettext as _
-from .base import DefaultMatcher
+from .base import BaseMatcher, MatchFillResult
 
 
-class DefaultBarMatcher(DefaultMatcher):
-    def __init__(self, env: Environment, mod_config):
-        super(DefaultBarMatcher, self).__init__(env, mod_config)
+class DefaultBarMatcher(BaseMatcher):
+    SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY)
+    SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
+
+    def __init__(self, env: Environment, mod_config, partial_fill_on_insufficient_cash: bool = False):
+        super(DefaultBarMatcher, self).__init__(env, mod_config, partial_fill_on_insufficient_cash)
+        self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
         decider_dict = {
@@ -42,9 +47,6 @@ class DefaultBarMatcher(DefaultMatcher):
     def _open_auction_deal_price_decider(self, order_book_id, _):
         return self._env.data_proxy.get_open_auction_bar(order_book_id, self._env.trading_dt).open
 
-    SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY)
-    SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
-
     def _get_bar_volume(self, order, open_auction=False):
         if open_auction:
             volume = self._env.data_proxy.get_open_auction_volume(order.order_book_id, self._env.trading_dt)
@@ -64,31 +66,29 @@ class DefaultBarMatcher(DefaultMatcher):
             else:
                 deal_price = self._deal_price_decider(order.order_book_id, order.side)
         return deal_price
-    
-    def _during_call_auction(self, instrument: Instrument, open_auction: bool) -> bool:
-        # bar 策略会由外部直接传入是否在 open_auction 阶段
-        return open_auction
-    
-    def _get_reject_reason_of_invalid_price(self, order, instrument):
+
+    def _handle_invalid_price_order(self, instrument: Instrument, order: Order, account: Account):
         listed_date = instrument.listed_date.date()
         if listed_date == self._env.trading_dt.date():
-            return self._get_listed_date_cancelled_reason(instrument.order_book_id, listed_date)
+            self._reject_order_of_listed_date(order, listed_date, account)
         elif isinstance(order.style, ALGO_ORDER_STYLES):
-            return _(u"Order Cancelled: {order_book_id} miss market data or bar no volume.").format(order_book_id=instrument.order_book_id)
-        return None
-    
-    def _can_match_limit_order(self, order: Order, deal_price: float, tick_size: float, open_auction: bool = False):
-        if not super()._can_match_limit_order(order, deal_price, tick_size):
+            reason = _(u"Order Cancelled: {order_book_id} miss market data or bar no volume.").format(
+                order_book_id=instrument.order_book_id
+            )
+            self._reject_order(account, order, reason)
+
+    def _can_match_limit_order(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
+        if not super()._can_match_limit_order(order, deal_price, tick_size, account):
             return False
         if self._inactive_limit:
             bar_volume = self._get_bar_volume(order, open_auction=open_auction)
             if bar_volume == 0:
                 reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
-                order.mark_cancelled(reason)
+                self._cancel_order(account, order, reason)
                 return False
         return True
-    
-    def _get_match_fill(self, order: Order, instrument: Instrument, open_auction: bool = False):
+
+    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> MatchFillResult:
         if self._volume_limit:
             volume = self._get_bar_volume(order, open_auction=open_auction)
             if volume == volume:
@@ -99,15 +99,21 @@ class DefaultBarMatcher(DefaultMatcher):
                         reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
                             order_book_id=order.order_book_id, order_volume=order.quantity
                         )
-                        return 0, reason
-                    return 0, None
+                        return MatchFillResult(0, reason)
+                    return MatchFillResult(0)
                 fill = min(order.unfilled_quantity, volume_limit)
             else:
                 fill = order.unfilled_quantity
         else:
             fill = order.unfilled_quantity
-        
-        return fill, None
+
+        return MatchFillResult(fill)
+
+    def match(self, account, order, open_auction):
+        # order 是否合法
+        if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
+            raise NotImplementedError
+        super().match(account, order, open_auction)
 
     def update(self, event):
         self._turnover.clear()
