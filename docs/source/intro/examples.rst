@@ -8,6 +8,63 @@
 
 在下面我们列举一些常用的算法范例，您可以通过RQAlpha运行，也可以直接登录 `Ricequant`_ 在线进行回测或模拟交易。
 
+FXMacroData macro calendar filter
+------------------------------------------------------
+
+The FXMacroData public release-calendar endpoint can be used to avoid opening
+new positions on high-impact macro announcement dates. The example below loads
+confirmed tier-one USD events before the backtest and checks the date in
+``handle_bar``.
+
+..  code-block:: python3
+    :linenos:
+
+    from datetime import datetime, timedelta, timezone
+    import json
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+
+
+    FXMD_CALENDAR_URL = "https://fxmacrodata.com/api/v1/calendar/{currency}"
+
+
+    def load_macro_blackout_dates(start_date, end_date):
+        params = urlencode({"start_date": start_date, "end_date": end_date})
+        url = FXMD_CALENDAR_URL.format(currency="USD") + "?" + params
+
+        with urlopen(url, timeout=20) as response:
+            payload = json.load(response)
+
+        blackout_dates = set()
+        for event in payload.get("data", []):
+            if not event.get("release_date_confirmed"):
+                continue
+            if int(event.get("market_tier") or 99) > 1:
+                continue
+
+            event_date = datetime.fromtimestamp(
+                int(event["announcement_datetime"]),
+                tz=timezone.utc,
+            ).date()
+            blackout_dates.add(event_date.isoformat())
+
+        return blackout_dates
+
+
+    def init(context):
+        context.s1 = "000001.XSHE"
+        context.blackout_dates = load_macro_blackout_dates(
+            "2026-07-01",
+            "2026-07-31",
+        )
+
+
+    def handle_bar(context, bar_dict):
+        if context.now.date().isoformat() in context.blackout_dates:
+            return
+
+        # Continue with signal generation and order placement here.
+
 .. _intro-examples-buy-and-hold:
 
 第一个策略-买入&持有
