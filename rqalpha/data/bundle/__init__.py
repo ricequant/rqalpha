@@ -54,16 +54,17 @@ class GenerateInstrumentsBundle:
         self._file = os.path.join(d, file_name)
         self._rqdata_func = rqdata_func
 
-    def __call__(self) -> bool:
-        # 更新指定标的的 instruments pkl 数据，并返回是否更新成功的标记
+    def __call__(self):
+        if sval is None:
+            succeed = multiprocessing.Value(c_bool, True)
+            set_sval(succeed)
         instruments = self._rqdata_func(self._order_book_ids)
         if instruments is None or not instruments:
             log_and_mark_error(_("Got instruments data error."))
-            return False
+            return
         instruments = [i.__dict__ for i in instruments]
         with open(self._file, "wb") as out:
             pickle.dump(instruments, out, protocol=2)
-        return True
 
 
 def gen_instruments(d):
@@ -71,7 +72,7 @@ def gen_instruments(d):
     for instrument_type in ["CS", "ETF", "LOF", "INDX", "Future", "Repo", "REITs", "FUND"]:
         order_book_ids.extend(rqdatac.all_instruments(instrument_type).order_book_id.tolist())
     order_book_ids = list(set(order_book_ids))
-    return GenerateInstrumentsBundle(d, order_book_ids)()
+    GenerateInstrumentsBundle(d, order_book_ids)()
 
 
 def gen_yield_curve(d):
