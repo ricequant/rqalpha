@@ -18,24 +18,21 @@ from rqalpha.data.bundle.utils import START_DATE, END_DATE, log_and_mark_error
 class DayBarTask(ProgressedTask):
     def __init__(self, order_book_ids, file_path: str, fields: List[str], market="cn", **h5_kwargs):
         self._order_book_ids = order_book_ids
-        self._instruments = defaultdict(list)
-        self._init_instruments(order_book_ids)
         self._file_path = file_path
         self._fields = fields
         self._h5_kwargs = h5_kwargs
         self._market = market
-
-    @property
-    def total_steps(self) -> int:
-        return len(self._order_book_ids)
-
-    def _init_instruments(self, order_book_ids: List[str]):
-        ints = rqdatac.instruments(order_book_ids)
+        self._instruments = defaultdict(list)
+        ints = rqdatac.instruments(order_book_ids, market=market)
         if ints is not None:
             if not isinstance(ints, list):
                 ints = [ints]
             for ins in ints:
                 self._instruments[ins.order_book_id].append(ins)
+
+    @property
+    def total_steps(self) -> int:
+        return len(self._order_book_ids)
 
     def _transfrom_df(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.loc[:, self._fields].copy()  # Future order_book_id like SC888 will auto add 'dominant_id'

@@ -55,11 +55,18 @@ class FakeRqdatac(object):
         self._instruments = instruments
         self._price_frames = list(price_frames or [])
         self.get_price_calls = []
+        self.instruments_calls = []
         self.get_previous_trading_date_calls = []
         self.get_next_trading_date_calls = []
         self.is_trading_date_calls = []
 
-    def instruments(self, order_book_ids):
+    def instruments(self, order_book_ids, market=None):
+        self.instruments_calls.append(
+            {
+                "order_book_ids": order_book_ids,
+                "market": market,
+            }
+        )
         if isinstance(order_book_ids, str):
             order_book_ids = [order_book_ids]
 
