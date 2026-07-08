@@ -31,7 +31,7 @@ from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_t
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
 from rqalpha.data.bundle.utils import (
-    set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, START_DATE,
+    set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, START_DATE, END_DATE,
     STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
 )
 from rqalpha.data.bundle.daybar import GenerateDayBarTask, UpdateDayBarTask

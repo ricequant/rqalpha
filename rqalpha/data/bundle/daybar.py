@@ -19,18 +19,18 @@ class DayBarTask(ProgressedTask):
     def __init__(self, order_book_ids, file_path: str, fields: List[str], market="cn", **h5_kwargs):
         self._order_book_ids = order_book_ids
         self._instruments = defaultdict(list)
-        self._init_instruments(order_book_ids)
         self._file_path = file_path
         self._fields = fields
         self._h5_kwargs = h5_kwargs
         self._market = market
+        self._init_instruments(order_book_ids)
 
     @property
     def total_steps(self) -> int:
         return len(self._order_book_ids)
 
     def _init_instruments(self, order_book_ids: List[str]):
-        ints = rqdatac.instruments(order_book_ids)
+        ints = rqdatac.instruments(order_book_ids, self._market)
         if ints is not None:
             if not isinstance(ints, list):
                 ints = [ints]
