@@ -50,16 +50,14 @@ def _get_oids_with_corporate_action_exclusions():
     return ints.order_book_id.tolist()
 
 
-def instruments_generator(d: str, instruments: Iterable, file_name: str = "instruments.pk") -> bool:
+def write_instruments(d: str, instruments: Iterable, file_name: str = "instruments.pk") -> bool:
     """
-    生成本地 instruments bundle 文件。
-    
-    将传入的 rqdatac Instrument 对象序列化后写入指定 bundle 目录，供本地数据源加载使用。
+    将已获取的 rqdatac Instrument 对象序列化后写入指定 bundle 目录，供本地数据源加载使用。
 
     :param d: bundle 目录路径
     :param instruments: 待写入 bundle 的 rqdatac Instrument 对象集合
     :param file_name: instruments bundle 文件名
-    :return: bool 是否生成成功
+    :return: bool 是否写入成功
     """
     if bundle_utils.sval is None:
         succeed = multiprocessing.Value(c_bool, True)
@@ -70,12 +68,15 @@ def instruments_generator(d: str, instruments: Iterable, file_name: str = "instr
         log_and_mark_error(_("Generate instruments failed!"))
     else:
         pkl_path = os.path.join(d, file_name)
-        pkl_path = os.path.join(d, file_name)
         tmp_file_name = "{}.tmp.{}".format(file_name, uuid.uuid4().hex)
         tmp_path = os.path.join(d, tmp_file_name)
-        with open(tmp_path, "wb") as out:
-            pickle.dump(instruments, out, protocol=2)
-        os.replace(tmp_path, pkl_path)
+        try:
+            with open(tmp_path, "wb") as out:
+                pickle.dump(instruments, out, protocol=2)
+            os.replace(tmp_path, pkl_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
     
     return bundle_utils.sval.value
 
@@ -89,7 +90,7 @@ def gen_instruments(d: str):
     if instruments is None:
         log_and_mark_error(_("Got instruments failed!"))
         return
-    instruments_generator(d, instruments)
+    write_instruments(d, instruments)
 
 
 def gen_yield_curve(d):
