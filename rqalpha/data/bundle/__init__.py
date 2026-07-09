@@ -17,6 +17,7 @@ import json
 import os
 import pickle
 import re
+import uuid
 from typing import Optional, List, Iterable, Tuple, Callable
 import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
@@ -30,6 +31,7 @@ from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTa
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
+from rqalpha.data.bundle import utils as bundle_utils
 from rqalpha.data.bundle.utils import (
     set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, START_DATE, END_DATE,
     STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
@@ -48,31 +50,39 @@ def _get_oids_with_corporate_action_exclusions():
     return ints.order_book_id.tolist()
 
 
-class GenerateInstrumentsBundle:
-    def __init__(self, d: str, order_book_ids: List[str], file_name: str = "instruments.pk", rqdata_func: Callable = rqdatac.instruments):
-        self._order_book_ids = order_book_ids
-        self._file = os.path.join(d, file_name)
-        self._rqdata_func = rqdata_func
+def gen_instruments(d: str, order_book_ids: Optional[List[str]] = None, file_name: str = "instruments.pk", rqdata_func: Callable = rqdatac.instruments):
+    """
+    本地 instruments bundle 文件生成函数。
+    
+    :param d: bundle 路径
+    :param order_book_ids: 指定需要生成 instruments 的标的列表，若不传入则默认生成 'CS', 'ETF', 'LOF', 'INDX', 'Future', 'Repo', 'REITs', 'FUND' 品种的全部标的
+    :param file_name: instruments 的 bundle 文件名
+    :param rqdata_func: 获取 instruments 的方法，默认为 rqdatac.instruments
 
-    def __call__(self):
-        if sval is None:
-            succeed = multiprocessing.Value(c_bool, True)
-            set_sval(succeed)
-        instruments = self._rqdata_func(self._order_book_ids)
-        if instruments is None or not instruments:
-            log_and_mark_error(_("Got instruments data error."))
-            return
+    :return: bool 是否更新成功
+    """
+    if order_book_ids is None:
+        order_book_ids = []
+        for instrument_type in ["CS", "ETF", "LOF", "INDX", "Future", "Repo", "REITs", "FUND"]:
+            order_book_ids.extend(rqdatac.all_instruments(instrument_type).order_book_id.tolist())
+        order_book_ids = list(set(order_book_ids))
+    if bundle_utils.sval is None:
+        succeed = multiprocessing.Value(c_bool, True)
+        set_sval(succeed)
+
+    instruments = rqdata_func(order_book_ids)
+    if instruments is None or not instruments:
+        log_and_mark_error(_("Got instruments data failed!"))
+    else:
         instruments = [i.__dict__ for i in instruments]
-        with open(self._file, "wb") as out:
+        pkl_path = os.path.join(d, file_name)
+        tmp_file_name = "{}.tmp.{}".format(file_name, uuid.uuid4().hex)
+        tmp_path = os.path.join(d, tmp_file_name)
+        with open(tmp_path, "wb") as out:
             pickle.dump(instruments, out, protocol=2)
-
-
-def gen_instruments(d):
-    order_book_ids = []
-    for instrument_type in ["CS", "ETF", "LOF", "INDX", "Future", "Repo", "REITs", "FUND"]:
-        order_book_ids.extend(rqdatac.all_instruments(instrument_type).order_book_id.tolist())
-    order_book_ids = list(set(order_book_ids))
-    GenerateInstrumentsBundle(d, order_book_ids)()
+        os.replace(tmp_path, pkl_path)
+    
+    return bundle_utils.sval.value
 
 
 def gen_yield_curve(d):
