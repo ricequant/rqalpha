@@ -31,7 +31,6 @@ from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTa
 from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
-from rqalpha.data.bundle import utils as bundle_utils
 from rqalpha.data.bundle.utils import (
     set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, START_DATE, END_DATE,
     STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
@@ -50,35 +49,27 @@ def _get_oids_with_corporate_action_exclusions():
     return ints.order_book_id.tolist()
 
 
-def write_instruments(d: str, instruments: Iterable, file_name: str = "instruments.pk") -> bool:
+def write_instruments(d: str, instruments: Iterable, file_name: str = "instruments.pk"):
     """
     将已获取的 rqdatac Instrument 对象序列化后写入指定 bundle 目录，供本地数据源加载使用。
 
     :param d: bundle 目录路径
     :param instruments: 待写入 bundle 的 rqdatac Instrument 对象集合
     :param file_name: instruments bundle 文件名
-    :return: bool 是否写入成功
     """
-    if bundle_utils.sval is None:
-        succeed = multiprocessing.Value(c_bool, True)
-        set_sval(succeed)
-
+    if not instruments:  # 预防传入空列表
+        raise RuntimeError(_("Invalid instruments list!"))
     instruments = [i.__dict__ for i in instruments]
-    if not instruments:
-        log_and_mark_error(_("Generate instruments failed!"))
-    else:
-        pkl_path = os.path.join(d, file_name)
-        tmp_file_name = "{}.tmp.{}".format(file_name, uuid.uuid4().hex)
-        tmp_path = os.path.join(d, tmp_file_name)
-        try:
-            with open(tmp_path, "wb") as out:
-                pickle.dump(instruments, out, protocol=2)
-            os.replace(tmp_path, pkl_path)
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-    
-    return bundle_utils.sval.value
+    pkl_path = os.path.join(d, file_name)
+    tmp_file_name = "{}.tmp.{}".format(file_name, uuid.uuid4().hex)
+    tmp_path = os.path.join(d, tmp_file_name)
+    try:
+        with open(tmp_path, "wb") as out:
+            pickle.dump(instruments, out, protocol=2)
+        os.replace(tmp_path, pkl_path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def gen_instruments(d: str):
@@ -88,20 +79,18 @@ def gen_instruments(d: str):
     order_book_ids = list(set(order_book_ids))
     instruments = rqdatac.instruments(order_book_ids)
     if instruments is None:
-        log_and_mark_error(_("Got instruments failed!"))
-        return
+        raise RuntimeError(_("Got instruments failed!"))
     write_instruments(d, instruments)
 
 
 def gen_yield_curve(d):
     yield_curve: Optional[pd.DataFrame] = rqdatac.get_yield_curve(start_date=START_DATE, end_date=datetime.date.today())
-    if yield_curve is not None and not yield_curve.empty:
-        yield_curve.index = [convert_date_to_date_int(d) for d in yield_curve.index]
-        yield_curve.index.name = 'date'
-        with h5py.File(os.path.join(d, 'yield_curve.h5'), 'w') as f:
-            f.create_dataset('data', data=yield_curve.to_records())
-    else:
-        log_and_mark_error(_("Get yield curve data error."))
+    if yield_curve is None or yield_curve.empty:
+        raise RuntimeError(_("Get yield curve data error."))
+    yield_curve.index = [convert_date_to_date_int(d) for d in yield_curve.index]
+    yield_curve.index.name = 'date'
+    with h5py.File(os.path.join(d, 'yield_curve.h5'), 'w') as f:
+        f.create_dataset('data', data=yield_curve.to_records())
 
 
 def gen_trading_dates(d):
@@ -146,8 +135,7 @@ class GenerateDividendBundle:
     def __call__(self):
         dividend = self._get_dividend()
         if dividend is None:
-            log_and_mark_error(_("Got no dividend data"))
-            return
+            raise RuntimeError(_("Got no dividend data"))
         need_cols = ["dividend_cash_before_tax", "book_closure_date", "ex_dividend_date", "payable_date", "round_lot"]
         dividend = dividend[need_cols]
         dividend.reset_index(inplace=True)
@@ -176,8 +164,7 @@ class GenerateSplitBundle:
     def __call__(self):
         split = self._get_split()
         if split is None:
-            log_and_mark_error(_("Got no split data"))
-            return
+            raise RuntimeError(_("Got no split data"))
         split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
         split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from']]
         split.reset_index(inplace=True)
@@ -205,8 +192,7 @@ class GenerateExFactorBundle:
     def __call__(self):
         ex_factor = self._get_ex_factor()
         if ex_factor is None:
-            log_and_mark_error(_("Got no ex factor data"))
-            return
+            raise RuntimeError(_("Got no ex factor data"))
         ex_factor.reset_index(inplace=True)
         ex_factor['ex_date'] = [convert_date_to_int(d) for d in ex_factor['ex_date']]
         ex_factor.rename(columns={'ex_date': 'start_date'}, inplace=True)
@@ -226,8 +212,7 @@ class GenerateExFactorBundle:
 def gen_share_transformation(d):
     df = rqdatac.get_share_transformation()
     if df is None:
-        log_and_mark_error(_("Got no share transformation data"))
-        return
+        raise RuntimeError(_("Got no share transformation data"))
     df.drop_duplicates("predecessor", inplace=True)
     df.set_index('predecessor', inplace=True)
     df["effective_date"] = df.effective_date.astype(str)

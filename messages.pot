@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-06 16:47+0800\n"
+"POT-Creation-Date: 2026-07-09 19:40+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -315,39 +315,43 @@ msgid ""
 "{}"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:60
-msgid "Got instruments data error."
+#: rqalpha/data/bundle/__init__.py:61
+msgid "Invalid instruments list!"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:83
+#: rqalpha/data/bundle/__init__.py:82
+msgid "Got instruments failed!"
+msgstr ""
+
+#: rqalpha/data/bundle/__init__.py:89
 msgid "Get yield curve data error."
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:128
+#: rqalpha/data/bundle/__init__.py:138
 msgid "Got no dividend data"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:158
+#: rqalpha/data/bundle/__init__.py:167
 msgid "Got no split data"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:187
+#: rqalpha/data/bundle/__init__.py:195
 msgid "Got no ex factor data"
 msgstr ""
 
-#: rqalpha/data/bundle/__init__.py:208
+#: rqalpha/data/bundle/__init__.py:215
 msgid "Got no share transformation data"
 msgstr ""
 
-#: rqalpha/data/bundle/automatic_update.py:94 rqalpha/data/bundle/daybar.py:81
-#: rqalpha/data/bundle/daybar.py:129
+#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:78
+#: rqalpha/data/bundle/daybar.py:126
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr ""
 
-#: rqalpha/data/bundle/daybar.py:75 rqalpha/data/bundle/daybar.py:113
+#: rqalpha/data/bundle/daybar.py:72 rqalpha/data/bundle/daybar.py:110
 msgid "Get instruments failed."
 msgstr ""
 
@@ -375,7 +379,7 @@ msgstr ""
 
 #: rqalpha/data/bundle/daybar_checker.py:107
 #, python-brace-format
-msgid "Insufficient prmissions for file {}."
+msgid "Insufficient permissions for file {}."
 msgstr ""
 
 #: rqalpha/data/bundle/daybar_checker.py:111

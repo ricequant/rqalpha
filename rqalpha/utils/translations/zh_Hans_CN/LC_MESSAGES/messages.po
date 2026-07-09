@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-06 16:47+0800\n"
+"POT-Creation-Date: 2026-07-09 19:40+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -331,39 +331,43 @@ msgid ""
 "{}"
 msgstr "读取 bundle 文件失败，请删除 {} 后尝试重新生成 bundle：{}"
 
-#: rqalpha/data/bundle/__init__.py:60
-msgid "Got instruments data error."
+#: rqalpha/data/bundle/__init__.py:61
+msgid "Invalid instruments list!"
+msgstr "无效的 instruments 列表！"
+
+#: rqalpha/data/bundle/__init__.py:82
+msgid "Got instruments failed!"
 msgstr "获取 instruments 失败"
 
-#: rqalpha/data/bundle/__init__.py:83
+#: rqalpha/data/bundle/__init__.py:89
 msgid "Get yield curve data error."
 msgstr "获取 yield curve 数据失败"
 
-#: rqalpha/data/bundle/__init__.py:128
+#: rqalpha/data/bundle/__init__.py:138
 msgid "Got no dividend data"
 msgstr "未获取到 dividend 数据"
 
-#: rqalpha/data/bundle/__init__.py:158
+#: rqalpha/data/bundle/__init__.py:167
 msgid "Got no split data"
 msgstr "未获取到 split 数据"
 
-#: rqalpha/data/bundle/__init__.py:187
+#: rqalpha/data/bundle/__init__.py:195
 msgid "Got no ex factor data"
 msgstr "未获取到 ex factor 数据"
 
-#: rqalpha/data/bundle/__init__.py:208
+#: rqalpha/data/bundle/__init__.py:215
 msgid "Got no share transformation data"
 msgstr "未获取到 share transformation 数据"
 
-#: rqalpha/data/bundle/automatic_update.py:94 rqalpha/data/bundle/daybar.py:81
-#: rqalpha/data/bundle/daybar.py:129
+#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:78
+#: rqalpha/data/bundle/daybar.py:126
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
 
-#: rqalpha/data/bundle/daybar.py:75 rqalpha/data/bundle/daybar.py:113
+#: rqalpha/data/bundle/daybar.py:72 rqalpha/data/bundle/daybar.py:110
 msgid "Get instruments failed."
 msgstr "获取 instruments 失败"
 
@@ -391,7 +395,7 @@ msgstr "文件 {} 被其他进程占用"
 
 #: rqalpha/data/bundle/daybar_checker.py:107
 #, python-brace-format
-msgid "Insufficient prmissions for file {}."
+msgid "Insufficient permissions for file {}."
 msgstr "缺少文件 {} 的权限"
 
 #: rqalpha/data/bundle/daybar_checker.py:111
@@ -1954,4 +1958,7 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 #~ "Order Cancelled: current bar [{order_book_id}]"
 #~ " reach the limit_down price."
 #~ msgstr "订单被拒单: [{order_book_id}] 已跌停。"
+
+#~ msgid "Got instruments data error."
+#~ msgstr "获取 instruments 失败"
 
