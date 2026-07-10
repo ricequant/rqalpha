@@ -49,20 +49,30 @@ def _get_oids_with_corporate_action_exclusions():
     return ints.order_book_id.tolist()
 
 
-def write_instruments(d: str, instruments: Iterable, file_name: str = "instruments.pk"):
+def write_instruments(data_bundle_path: str, instruments: Iterable, file_name: str = "instruments.pk"):
     """
     将已获取的 rqdatac Instrument 对象序列化后写入指定 bundle 目录，供本地数据源加载使用。
 
-    :param d: bundle 目录路径
+    :param data_bundle_path: bundle 目录路径
     :param instruments: 待写入 bundle 的 rqdatac Instrument 对象集合
     :param file_name: instruments bundle 文件名
     """
     if not instruments:  # 预防传入空列表
         raise RuntimeError(_("Invalid instruments list!"))
     instruments = [i.__dict__ for i in instruments]
-    pkl_path = os.path.join(d, file_name)
+    pkl_path = os.path.join(data_bundle_path, file_name)
+    tmp_dir = os.path.dirname(pkl_path) or os.curdir
+    tmp_file_prefix = "{}.tmp.".format(os.path.basename(pkl_path))
+    for tmp_file_name in os.listdir(tmp_dir):
+        tmp_path = os.path.join(tmp_dir, tmp_file_name)
+        if (
+            tmp_file_name.startswith(tmp_file_prefix)
+            and os.path.getmtime(tmp_path) <= (datetime.datetime.now() - datetime.timedelta(days=1)).timestamp()
+        ):
+            os.remove(tmp_path)
+
     tmp_file_name = "{}.tmp.{}".format(file_name, uuid.uuid4().hex)
-    tmp_path = os.path.join(d, tmp_file_name)
+    tmp_path = os.path.join(data_bundle_path, tmp_file_name)
     try:
         with open(tmp_path, "wb") as out:
             pickle.dump(instruments, out, protocol=2)
@@ -72,7 +82,7 @@ def write_instruments(d: str, instruments: Iterable, file_name: str = "instrumen
             os.remove(tmp_path)
 
 
-def gen_instruments(d: str):
+def gen_instruments(data_bundle_path: str):
     order_book_ids = []
     for instrument_type in ["CS", "ETF", "LOF", "INDX", "Future", "Repo", "REITs", "FUND"]:
         order_book_ids.extend(rqdatac.all_instruments(instrument_type).order_book_id.tolist())
@@ -80,55 +90,55 @@ def gen_instruments(d: str):
     instruments = rqdatac.instruments(order_book_ids)
     if instruments is None:
         raise RuntimeError(_("Got instruments failed!"))
-    write_instruments(d, instruments)
+    write_instruments(data_bundle_path, instruments)
 
 
-def gen_yield_curve(d):
+def gen_yield_curve(data_bundle_path: str):
     yield_curve: Optional[pd.DataFrame] = rqdatac.get_yield_curve(start_date=START_DATE, end_date=datetime.date.today())
     if yield_curve is None or yield_curve.empty:
         raise RuntimeError(_("Get yield curve data error."))
     yield_curve.index = [convert_date_to_date_int(d) for d in yield_curve.index]
     yield_curve.index.name = 'date'
-    with h5py.File(os.path.join(d, 'yield_curve.h5'), 'w') as f:
+    with h5py.File(os.path.join(data_bundle_path, 'yield_curve.h5'), 'w') as f:
         f.create_dataset('data', data=yield_curve.to_records())
 
 
-def gen_trading_dates(d):
+def gen_trading_dates(data_bundle_path: str):
     dates = rqdatac.get_trading_dates(start_date=START_DATE, end_date='2999-01-01')
     dates = np.array([convert_date_to_date_int(d) for d in dates])
-    np.save(os.path.join(d, 'trading_dates.npy'), dates, allow_pickle=False)
+    np.save(os.path.join(data_bundle_path, 'trading_dates.npy'), dates, allow_pickle=False)
 
 
-def gen_st_days(d):
+def gen_st_days(data_bundle_path: str):
     from rqdatac.client import get_client
     stocks = rqdatac.all_instruments('CS').order_book_id.tolist()
     st_days = get_client().execute('get_st_days', stocks, START_DATE,
                                    convert_date_to_date_int(datetime.date.today()))
-    with h5py.File(os.path.join(d, 'st_stock_days.h5'), 'w') as h5:
+    with h5py.File(os.path.join(data_bundle_path, 'st_stock_days.h5'), 'w') as h5:
         for order_book_id, days in st_days.items():
             h5[order_book_id] = days
 
 
-def gen_suspended_days(d):
+def gen_suspended_days(data_bundle_path: str):
     from rqdatac.client import get_client
     stocks = rqdatac.all_instruments('CS').order_book_id.tolist()
     suspended_days = get_client().execute('get_suspended_days', stocks, START_DATE,
                                           convert_date_to_date_int(datetime.date.today()))
-    with h5py.File(os.path.join(d, 'suspended_days.h5'), 'w') as h5:
+    with h5py.File(os.path.join(data_bundle_path, 'suspended_days.h5'), 'w') as h5:
         for order_book_id, days in suspended_days.items():
             h5[order_book_id] = days
 
 
 class GenerateDividendBundle:
-    def __init__(self, d: str):
-        self.d = d
+    def __init__(self, data_bundle_path: str):
+        self.data_bundle_path = data_bundle_path
 
     def _get_dividend(self):
         order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_dividend(order_book_ids)
 
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
-        with h5py.File(os.path.join(self.d, 'dividends.h5'), "w") as h5:
+        with h5py.File(os.path.join(self.data_bundle_path, 'dividends.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
 
@@ -149,15 +159,15 @@ class GenerateDividendBundle:
 
 
 class GenerateSplitBundle:
-    def __init__(self, d: str):
-        self.d = d
+    def __init__(self, data_bundle_path: str):
+        self.data_bundle_path = data_bundle_path
 
     def _get_split(self):
         order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_split(order_book_ids)
     
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
-        with h5py.File(os.path.join(self.d, 'split_factor.h5'), "w") as h5:
+        with h5py.File(os.path.join(self.data_bundle_path, 'split_factor.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
     
@@ -177,15 +187,15 @@ class GenerateSplitBundle:
 
     
 class GenerateExFactorBundle:
-    def __init__(self, d: str):
-        self.d = d
+    def __init__(self, data_bundle_path: str):
+        self.data_bundle_path = data_bundle_path
     
     def _get_ex_factor(self):
         order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_ex_factor(order_book_ids)
 
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
-        with h5py.File(os.path.join(self.d, 'ex_cum_factor.h5'), "w") as h5:
+        with h5py.File(os.path.join(self.data_bundle_path, 'ex_cum_factor.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
     
@@ -209,7 +219,7 @@ class GenerateExFactorBundle:
         ) for order_book_id in ex_factor.index.levels[0]))  # type: ignore
 
 
-def gen_share_transformation(d):
+def gen_share_transformation(data_bundle_path: str):
     df = rqdatac.get_share_transformation()
     if df is None:
         raise RuntimeError(_("Got no share transformation data"))
@@ -218,13 +228,13 @@ def gen_share_transformation(d):
     df["effective_date"] = df.effective_date.astype(str)
     df["predecessor_delisted_date"] = df.predecessor_delisted_date.astype(str)
 
-    json_file = os.path.join(d, 'share_transformation.json')
+    json_file = os.path.join(data_bundle_path, 'share_transformation.json')
     with open(json_file, 'w') as f:
         f.write(df.to_json(orient='index'))
 
 
-def gen_future_info(d):
-    future_info_file = os.path.join(d, 'future_info.json')
+def gen_future_info(data_bundle_path: str):
+    future_info_file = os.path.join(data_bundle_path, 'future_info.json')
 
     def _need_to_recreate():
         if not os.path.exists(future_info_file):
@@ -365,7 +375,7 @@ def gen_future_info(d):
             future_dict['tick_size'] = instruemnts_data.tick_size()  # type: ignore
         all_futures_info.append(future_dict)
 
-    with open(os.path.join(d, 'future_info.json'), 'w') as f:
+    with open(future_info_file, 'w') as f:
         json.dump(all_futures_info, f, separators=(',', ':'), indent=2)
 
 
