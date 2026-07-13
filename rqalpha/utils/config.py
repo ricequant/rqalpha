@@ -208,6 +208,8 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
         config.base.data_bundle_path = os.path.join(os.path.expanduser(rqalpha_path), "bundle")
 
     config.base.run_type = parse_run_type(config.base.run_type)
+    if config.base.run_type == RUN_TYPE.LIVE_TRADING and config.base.partial_fill_on_insufficient_cash:
+        raise ValueError(_("partial_fill_on_insufficient_cash is not supported in live trading"))
     config.base.accounts = parse_accounts(config.base.accounts)
     config.base.init_positions = parse_init_positions(config.base.init_positions)
     config.base.persist_mode = parse_persist_mode(config.base.persist_mode)
