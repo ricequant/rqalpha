@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Optional
+from typing import Dict
 
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
 from rqalpha.environment import Environment
@@ -12,7 +12,7 @@ from rqalpha.portfolio.account import Account
 from rqalpha.utils import is_valid_price
 from rqalpha.mod.utils import round_order_quantity
 from rqalpha.utils.i18n import gettext as _
-from .base import BaseMatcher
+from .base import BaseMatcher, OrderRejected, OrderCancelled, OrderNotMatchable
 
 
 class DefaultTickMatcher(BaseMatcher):
@@ -85,7 +85,7 @@ class DefaultTickMatcher(BaseMatcher):
                 _last_tick = tick_list[0] if len(tick_list) == 2 else None
         return _last_tick
 
-    def _get_deal_price(self, order: Order, instrument: Instrument, open_auction: bool) -> Optional[float]:
+    def _get_deal_price(self, order: Order, instrument: Instrument, open_auction: bool) -> float:
         _cur_tick = self._cur_tick.get(order.order_book_id)
         # 判断订单在交易时间下处于那个阶段
         if open_auction:
@@ -99,32 +99,13 @@ class DefaultTickMatcher(BaseMatcher):
 
         listed_date = instrument.listed_date.date()
         if listed_date == self._env.trading_dt.date():
-            self._reject_order_of_listed_date(order, listed_date)
+            raise OrderRejected(self._listed_date_reject_reason(order, listed_date))
         else:
             # TODO：这里报错信息比较模糊，可以根据撮合类型给出更明确的提示，比如是否是熔断了，是否是涨跌停了
             reason = _(u"Order Cancelled: current tick [{order_book_id}] miss market data.").format(
                 order_book_id=order.order_book_id
             )
-            order.mark_rejected(reason)
-        return None
-
-    def _can_match_limit_order(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
-        if not super()._can_match_limit_order(order, deal_price, tick_size, account):
-            return False
-        if self._liquidity_limit:
-            price_board = self._env.price_board
-            order_book_id = order.order_book_id
-            if order.type == ORDER_TYPE.LIMIT:
-                if (order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0) or \
-                    (order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0):
-                    return False
-            else:
-                if (order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0) or \
-                    (order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0):
-                    reason = _("Order Cancelled: [{order_book_id}] has no liquidity.").format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    return False
-        return True
+            raise OrderRejected(reason)
 
     def _get_tick_volume_limit(self, order: Order, instrument: Instrument) -> int:
         order_book_id = order.order_book_id
@@ -144,20 +125,19 @@ class DefaultTickMatcher(BaseMatcher):
 
         return round_order_quantity(instrument, volume_limit)
 
-    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> Optional[int]:
+    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> int:
         if self._liquidity_limit:
             price_board = self._env.price_board
             order_book_id = order.order_book_id
             if order.type == ORDER_TYPE.LIMIT:
                 if (order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0) or \
                     (order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0):
-                    return None
+                    raise OrderNotMatchable("Current tick has no liquidity.")
             else:
                 if (order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0) or \
                     (order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0):
                     reason = _("Order Cancelled: [{order_book_id}] has no liquidity.").format(order_book_id=order.order_book_id)
-                    order.mark_rejected(reason)
-                    return None
+                    raise OrderRejected(reason)
 
         _volume_limit_flag = self._volume_limit
         if open_auction:
@@ -172,9 +152,8 @@ class DefaultTickMatcher(BaseMatcher):
                     reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
                         order_book_id=order.order_book_id, order_volume=order.quantity
                     )
-                    order.mark_cancelled(reason)
-                    return None
-                return None
+                    raise OrderCancelled(reason)
+                raise OrderNotMatchable("Current tick liquidity is 0.")
 
             # 实际成交数量
             if self._volume_limit:
@@ -198,7 +177,7 @@ class DefaultTickMatcher(BaseMatcher):
                 filled_volume=order.filled_quantity,
                 volume_percent_limit=self._volume_percent * 100.0
             )
-            order.mark_cancelled(reason)
+            raise OrderCancelled(reason)
 
     def match(self, account, order, open_auction):
         if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
@@ -228,7 +207,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
         self._b_price = {}
         self._env.event_bus.prepend_listener(EVENT.TICK, self._pre_tick)
 
-    def _get_deal_price(self, order: Order, instrument: Instrument, open_auction: bool) -> Optional[float]:
+    def _get_deal_price(self, order: Order, instrument: Instrument, open_auction: bool) -> float:
         self._pop_volume_and_price(order)
 
         order_book_id = order.order_book_id
@@ -236,36 +215,37 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             deal_price = self._cur_tick[order_book_id].last
         elif order.side == SIDE.BUY:
             if len(self._a_volume[order_book_id]) == 0:
-                return None
+                raise OrderNotMatchable("Current counterparty offer is unavailable.")
             deal_price = self._a_price[order_book_id][0]
         else:
             if len(self._b_volume[order_book_id]) == 0:
-                return None
+                raise OrderNotMatchable("Current counterparty offer is unavailable.")
             deal_price = self._b_price[order_book_id][0]
 
-        return deal_price if is_valid_price(deal_price) else None
+        if is_valid_price(deal_price):
+            return deal_price
+        raise OrderNotMatchable("Current counterparty offer has no valid price.")
 
-    def _can_match_limit_order(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
+    def _validate_order_price_limit(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
         if order.type == ORDER_TYPE.LIMIT:
             if order.side == SIDE.BUY and order.price < deal_price:
-                return False
+                raise OrderNotMatchable("The order price does not cross the counterparty offer.")
             if order.side == SIDE.SELL and order.price > deal_price:
-                return False
-        return True
+                raise OrderNotMatchable("The order price does not cross the counterparty offer.")
 
-    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> Optional[int]:
+    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> int:
         order_book_id = order.order_book_id
 
         if order.side == SIDE.BUY:
             if len(self._a_volume[order_book_id]) == 0:
-                return None
+                raise OrderNotMatchable("Current counterparty offer is unavailable.")
             amount = self._a_volume[order_book_id][0]
         else:
             if len(self._b_volume[order_book_id]) == 0:
-                return None
+                raise OrderNotMatchable("Current counterparty offer is unavailable.")
             amount = self._b_volume[order_book_id][0]
         if amount != amount or amount <= 0:
-            return None
+            raise OrderNotMatchable("Current counterparty offer has no liquidity.")
 
         if open_auction or self._volume_limit:
             volume_limit = self._get_tick_volume_limit(order, instrument)
@@ -274,9 +254,8 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
                     reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
                         order_book_id=order.order_book_id, order_volume=order.quantity
                     )
-                    order.mark_cancelled(reason)
-                    return None
-                return None
+                    raise OrderCancelled(reason)
+                raise OrderNotMatchable("Current counterparty offer liquidity is 0.")
 
             if self._volume_limit:
                 if open_auction:
@@ -302,8 +281,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             reason = _("Order Cancelled: market order {order_book_id} fill {filled_volume} actually").format(
                 order_book_id=order.order_book_id, filled_volume=order.filled_quantity
             )
-            order.mark_cancelled(reason)
-            return
+            raise OrderCancelled(reason)
         self.match(account, order, open_auction)
 
     def _pop_volume_and_price(self, order):

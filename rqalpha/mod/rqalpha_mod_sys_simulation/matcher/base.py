@@ -1,6 +1,5 @@
 import datetime
 from collections import defaultdict
-from typing import Optional
 
 from rqalpha.const import ORDER_TYPE, SIDE, POSITION_EFFECT
 from rqalpha.environment import Environment
@@ -21,6 +20,18 @@ class AbstractMatcher:
 
     def update(self, event):
         raise NotImplementedError
+
+
+class OrderRejected(Exception):
+    pass
+
+
+class OrderCancelled(Exception):
+    pass
+
+
+class OrderNotMatchable(Exception):
+    pass
 
 
 class BaseMatcher(AbstractMatcher):
@@ -44,48 +55,41 @@ class BaseMatcher(AbstractMatcher):
         self._inactive_limit = mod_config.inactive_limit
         self._volume_limit = mod_config.volume_limit
 
-    def _get_deal_price(self, order: Order, instrument: Instrument, open_auction: bool) -> Optional[float]:
+    def _get_deal_price(self, order: Order, instrument: Instrument, open_auction: bool) -> float:
         """
         获取订单成交价。
-        返回合法成交价；无法获取时，子类可按场景更新订单状态，并返回 None。
+        返回合法成交价；无法获取时，子类按场景抛出相应异常。
         """
         raise NotImplementedError
 
-    def _reject_order_of_listed_date(self, order: Order, listed_date: datetime.date):
-        reason = _(u"Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
+    def _listed_date_reject_reason(self, order: Order, listed_date: datetime.date):
+        return _(u"Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
             order_book_id=order.order_book_id, listed_date=listed_date
         )
-        order.mark_rejected(reason)
 
-    def _can_match_limit_order(
-        self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False
-    ) -> bool:
+    def _validate_order_price_limit(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
         """
-        校验订单是否满足当前成交价、限价和涨跌停规则。
-        不能撮合时返回 False。限价单保持当前状态；市价或算法单触及涨跌停时标记为拒单。
+        校验订单价格是否满足限价穿透和涨跌停规则。
+        限价单暂不可撮合时抛出 OrderNotMatchable；市价或算法单触及涨跌停时抛出 OrderRejected。
         """
         price_board = self._env.price_board
         if order.type == ORDER_TYPE.LIMIT:
-            if order.side == SIDE.BUY and order.price < deal_price:
-                return False
-            if order.side == SIDE.SELL and order.price > deal_price:
-                return False
+            if (order.side == SIDE.BUY and order.price < deal_price) or (order.side == SIDE.SELL and order.price > deal_price):
+                raise OrderNotMatchable("The price exceeds the limit-up or limit-down threshold.")
             # 是否限制涨跌停不成交
             if self._price_limit:
                 if reaches_limit(order.order_book_id, deal_price, order.side, price_board, tick_size):
-                    return False
+                    raise OrderNotMatchable("The price reaches the limit-up or limit-down threshold.")
         else:
             if self._price_limit:
                 if reaches_limit(order.order_book_id, deal_price, order.side, price_board, tick_size):
                     reason = _(
-                        "Order Cancelled: current {frequency} [{order_book_id}] reach the {limit_up_or_down} price."
+                        "Order Rejected: current {frequency} [{order_book_id}] reach the {limit_up_or_down} price."
                     ).format(
                         frequency="tick" if self._env.config.base.frequency == "tick" else "bar",
                         order_book_id=order.order_book_id,
                         limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
-                    order.mark_rejected(reason)
-                    return False
-        return True
+                    raise OrderRejected(reason)
 
     def _during_call_auction(self, instrument: Instrument, open_auction: bool) -> bool:
         """
@@ -97,10 +101,10 @@ class BaseMatcher(AbstractMatcher):
             return instrument.during_call_auction(self._env.calendar_dt)
         return open_auction
 
-    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> Optional[int]:
+    def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> int:
         """
-        返回当前 bar、tick 或盘口流动性下的最大可成交量。
-        没有可成交数量时返回 None；子类可按场景更新订单状态。
+        返回该订单在本轮撮合中、受当前 bar、tick 或盘口流动性限制后的最大可成交量。
+        没有可成交数量时，子类按场景抛出相应异常。
         """
         raise NotImplementedError
 
@@ -113,11 +117,11 @@ class BaseMatcher(AbstractMatcher):
             return deal_price
         return self._slippage_decider.get_trade_price(order, deal_price)
 
-    def _resolve_open_fill(self, account: Account, order: Order, instrument: Instrument, price: float, fill: int) -> Optional[int]:
+    def _resolve_open_fill(self, account: Account, order: Order, instrument: Instrument, price: float, fill: int) -> int:
         """
         根据执行价和可用资金（含本订单冻结资金）确定开仓订单的实际成交量。
-        - 未启用部分成交时，仅在非零滑点下重新校验完整订单所需资金；不足则拒单或取消并返回 None。
-        - 启用部分成交时，返回不超过 fill 的最大合法下单数量；不足一手时拒单或取消并返回 None。
+        - 未启用部分成交时，仅在非零滑点下重新校验完整订单所需资金；不足则拒单或取消。
+        - 启用部分成交时，返回不超过 fill 的最大合法下单数量；不足一手时拒单或取消。
         """
 
         def _calc_required_cash(order: Order, instrument: Instrument, price: float, fill: int):
@@ -141,10 +145,9 @@ class BaseMatcher(AbstractMatcher):
                                 status_label=status_label, order_book_id=instrument.order_book_id, cost_money=required_cash, cash = available_cash
                                 )
                     if status_label == "Cancelled":
-                        order.mark_cancelled(reason)
+                        raise OrderCancelled(reason)
                     else:
-                        order.mark_rejected(reason)
-                    return None
+                        raise OrderRejected(reason)
             return fill
 
         else:
@@ -178,11 +181,9 @@ class BaseMatcher(AbstractMatcher):
                 status_label=status_label, order_book_id=order.order_book_id, cost_money=min_required_cash, cash=available_cash
             )
             if status_label == "Cancelled":
-                order.mark_cancelled(reason)
+                raise OrderCancelled(reason)
             else:
-                order.mark_rejected(reason)
-
-            return None
+                raise OrderRejected(reason)
 
     def _publish_trade(self, account: Account, order: Order, price: float, amount: int, open_auction: bool, close_today_amount: int):
         trade = Trade.__from_create__(
@@ -214,40 +215,37 @@ class BaseMatcher(AbstractMatcher):
 
         open_auction = self._during_call_auction(instrument, open_auction)
 
-        # 1. 获取订单成交价
-        deal_price = self._get_deal_price(order, instrument, open_auction)
-        if deal_price is None:
-            return
-        # 2. 校验限价条件和涨跌停规则
-        if not self._can_match_limit_order(order, deal_price, tick_size, account, open_auction):
-            return
-        # 3. 获取在当前流动性下订单的最大可成交量
-        fill = self._get_liquidity_limited_fill(order, instrument, open_auction)
-        if fill is None:
-            return
+        try:
+            # 1. 获取订单成交价
+            deal_price = self._get_deal_price(order, instrument, open_auction)
+            # 2. 校验限价条件和涨跌停规则
+            self._validate_order_price_limit(order, deal_price, tick_size, account, open_auction)
+            # 3. 获取在当前流动性下订单的最大可成交量
+            fill = self._get_liquidity_limited_fill(order, instrument, open_auction)
 
-        price = self._get_execution_price(order, deal_price, open_auction)
-        cash_cancel_reason = None
-        # 4. 对开仓订单，依据可用资金确定实际成交量
-        if order.position_effect == POSITION_EFFECT.OPEN:
-            open_fill = self._resolve_open_fill(account=account, order=order, instrument=instrument, price=price, fill=fill)
-            if open_fill is None:
-                return
-            if open_fill < fill:
-                cash_cancel_reason = _(u"Order Cancelled: not enough money to fill {order_book_id}, fill {filled_volume} actually").format(
-                    order_book_id=order.order_book_id, filled_volume=order.filled_quantity + open_fill
-                )
-            fill = open_fill
+            price = self._get_execution_price(order, deal_price, open_auction)
+            cash_cancel_reason = None
+            # 4. 对开仓订单，依据可用资金确定实际成交量
+            if order.position_effect == POSITION_EFFECT.OPEN:
+                open_fill = self._resolve_open_fill(account=account, order=order, instrument=instrument, price=price, fill=fill)
+                if open_fill < fill:
+                    cash_cancel_reason = _(u"Order Cancelled: not enough money to fill {order_book_id}, fill {filled_volume} actually").format(
+                        order_book_id=order.order_book_id, filled_volume=order.filled_quantity + open_fill
+                    )
+                fill = open_fill
 
-        # 5. 计算平今数量
-        ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
-
-        # 6. 生成 Trade 并发布成交事件
-        self._publish_trade(account, order, price, fill, open_auction, ct_amount)
-
-        # 7. 处理未完全成交的剩余订单
-        if cash_cancel_reason is not None:
-            order.mark_cancelled(cash_cancel_reason)
+            # 5. 计算平今数量
+            ct_amount = account.calc_close_today_amount(order_book_id, fill, order.position_direction, order.position_effect)
+            # 6. 生成 Trade 并发布成交事件
+            self._publish_trade(account, order, price, fill, open_auction, ct_amount)
+            # 7. 处理未完全成交的剩余订单
+            if cash_cancel_reason is not None:
+                raise OrderCancelled(cash_cancel_reason)
+            if order.unfilled_quantity != 0:
+                self._handle_unfilled_order(account, order, open_auction)
+        except OrderRejected as e:
+            order.mark_rejected(str(e))
+        except OrderCancelled as e:
+            order.mark_cancelled(str(e))
+        except OrderNotMatchable as e:
             return
-        if order.unfilled_quantity != 0:
-            self._handle_unfilled_order(account, order, open_auction)

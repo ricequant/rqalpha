@@ -269,6 +269,21 @@ def test_tick_matcher_rejects_invalid_price(monkeypatch):
     assert order.status == ORDER_STATUS.REJECTED
 
 
+def test_tick_matcher_rejects_market_order_without_liquidity(monkeypatch):
+    env = FakeEnv(frequency="tick", price_board=FakePriceBoard(last=10.0, a1=0.0))
+    monkeypatch.setattr(Environment, "_env", env)
+    matcher = DefaultTickMatcher(
+        env,
+        make_mod_config(MATCHING_TYPE.NEXT_TICK_LAST, liquidity_limit=True),
+    )
+    order = make_order(100)
+
+    matcher.match(FakeAccount(), order, open_auction=False)
+
+    assert trade_events(env) == []
+    assert order.status == ORDER_STATUS.REJECTED
+
+
 def test_counterparty_offer_uses_order_book_price_without_slippage_or_common_limits(monkeypatch):
     price_board = FakePriceBoard(last=10.0, a1=0.0, b1=0.0, limit_up=10.0)
     env = FakeEnv(frequency="tick", price_board=price_board)
@@ -370,6 +385,21 @@ def test_signal_matcher_fills_market_order_immediately(fake_env):
 def test_signal_matcher_rejects_invalid_price(fake_env):
     fake_env.price_board.last = 0.0
     matcher = SignalMatcher(fake_env, make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE))
+    order = make_order(100)
+
+    matcher.match(FakeAccount(), order, open_auction=False)
+
+    assert trade_events(fake_env) == []
+    assert order.status == ORDER_STATUS.REJECTED
+
+
+def test_signal_matcher_rejects_order_at_price_limit(fake_env):
+    fake_env.price_board.last = 10.0
+    fake_env.price_board.limit_up = 10.0
+    matcher = SignalMatcher(
+        fake_env,
+        make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE, price_limit=True),
+    )
     order = make_order(100)
 
     matcher.match(FakeAccount(), order, open_auction=False)

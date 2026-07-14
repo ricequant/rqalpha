@@ -393,6 +393,7 @@ class GenerateFileTask(ProgressedTask):
     def __call__(self):
         try:
             self._func(*self._args, **self._kwargs)
+            raise RuntimeError("TEST")
         except Exception as e:
             log_and_mark_error(str(e))
         yield self._step
