@@ -45,7 +45,7 @@ class CashValidator(AbstractFrontendValidator):
 
     def validate_cancellation(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         return None
-    
+
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         if (account is None) or (order.position_effect != POSITION_EFFECT.OPEN):
             return None

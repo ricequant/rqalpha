@@ -34,14 +34,6 @@ class SignalMatcher(BaseMatcher):
             raise OrderRejected(reason)
         return deal_price
 
-    def _validate_order_price_limit(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
-        if self._price_limit:
-            if reaches_limit(order.order_book_id, deal_price, order.side, self._env.price_board, tick_size):
-                reason = _("Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price.").format(
-                    order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down",
-                )
-                raise OrderRejected(reason)
-
     def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> int:
         return order.quantity
 
@@ -55,6 +47,13 @@ class SignalMatcher(BaseMatcher):
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             return
         super().match(account, order, open_auction)
+        if not order.is_final() and order.unfilled_quantity != 0:
+            # 在 signal 模式中，所有不符合交易条件的情况都应该拒单，不会将订单留到下一个 bar 中
+            # 执行父类的 matcher，存在使用限价单并且价格等于涨跌停价时，订单不执行但是状态保留 Active，需要在此处直接执行拒单
+            reason = _("Order Cancelled: current bar [{order_book_id}] reach the {limit_up_or_down} price.").format(
+                order_book_id=order.order_book_id, limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down",
+            )
+            order.mark_rejected(reason)
 
     def update(self, event):
         pass

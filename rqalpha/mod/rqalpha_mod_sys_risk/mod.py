@@ -18,18 +18,27 @@
 
 from rqalpha.interface import AbstractMod
 from rqalpha.const import RUN_TYPE
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.logger import user_system_log
 
 from .validators import CashValidator, PriceValidator, IsTradingValidator, SelfTradeValidator
 
 
 class RiskManagerMod(AbstractMod):
     def start_up(self, env, mod_config):
+        partial_fill_on_insufficient_cash = getattr(env.config.base, "partial_fill_on_insufficient_cash", False)
+        if partial_fill_on_insufficient_cash and not mod_config.validate_cash:
+            user_system_log.warning(_(
+                "partial_fill_on_insufficient_cash is enabled while validate_cash is disabled; "
+                "please verify this configuration."
+            ))
+
         if mod_config.validate_price:
             env.add_frontend_validator(PriceValidator(env))
         if mod_config.validate_is_trading:
             env.add_frontend_validator(IsTradingValidator(env))
         if mod_config.validate_cash:
-            if not getattr(env.config.base, "partial_fill_on_insufficient_cash", False) or env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
+            if not partial_fill_on_insufficient_cash or env.config.base.run_type == RUN_TYPE.LIVE_TRADING:
                 env.add_frontend_validator(CashValidator(env))
         if mod_config.validate_self_trade:
             env.add_frontend_validator(SelfTradeValidator(env))

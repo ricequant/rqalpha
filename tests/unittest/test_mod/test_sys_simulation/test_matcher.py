@@ -225,6 +225,106 @@ def test_bar_matcher_leaves_non_crossed_limit_order_active(fake_env):
     assert order.status == ORDER_STATUS.ACTIVE
 
 
+def test_matcher_reduces_cash_limited_fill_by_order_step_for_transaction_cost(fake_env):
+    matcher = DefaultBarMatcher(
+        fake_env,
+        make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE),
+        partial_fill_on_insufficient_cash=True,
+    )
+    fake_env.calc_transaction_cost = lambda _args: TransactionCost(
+        commission=5,
+        tax=0,
+        other_fees=0,
+    )
+    order = make_order(200)
+
+    cash_fill = matcher._resolve_open_fill(
+        account=SimpleNamespace(cash=2000),
+        order=order,
+        instrument=fake_env.instrument,
+        price=10,
+        fill=200,
+    )
+
+    assert cash_fill == 100
+
+
+def test_matcher_keeps_affordable_fill_without_cash_clipping(fake_env, monkeypatch):
+    matcher = DefaultBarMatcher(
+        fake_env,
+        make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE),
+        partial_fill_on_insufficient_cash=True,
+    )
+    quantities = []
+
+    def calc_cash_occupation(price, quantity, _direction, _dt):
+        quantities.append(quantity)
+        return price * quantity
+
+    monkeypatch.setattr(fake_env.instrument, "calc_cash_occupation", calc_cash_occupation)
+    order = make_order(200)
+
+    cash_fill = matcher._resolve_open_fill(
+        account=SimpleNamespace(cash=3000),
+        order=order,
+        instrument=fake_env.instrument,
+        price=10,
+        fill=200,
+    )
+
+    assert cash_fill == 200
+    assert quantities == [200]
+
+
+def test_matcher_uses_cash_occupation_to_estimate_cash_limited_fill(fake_env, monkeypatch):
+    matcher = DefaultBarMatcher(
+        fake_env,
+        make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE),
+        partial_fill_on_insufficient_cash=True,
+    )
+    monkeypatch.setattr(
+        fake_env.instrument,
+        "calc_cash_occupation",
+        lambda price, quantity, _direction, _dt: price * quantity * 2,
+    )
+    order = make_order(300)
+
+    cash_fill = matcher._resolve_open_fill(
+        account=SimpleNamespace(cash=2000),
+        order=order,
+        instrument=fake_env.instrument,
+        price=10,
+        fill=300,
+    )
+
+    assert cash_fill == 100
+
+
+def test_matcher_rechecks_only_unfilled_quantity_after_partial_fill(fake_env):
+    matcher = DefaultBarMatcher(
+        fake_env,
+        make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE),
+    )
+    order = make_order(200)
+    order.set_frozen_cash(2000)
+    order.fill(SimpleNamespace(
+        last_quantity=100,
+        position_effect=POSITION_EFFECT.OPEN,
+        last_price=10,
+        transaction_cost=0,
+    ))
+
+    cash_fill = matcher._resolve_open_fill(
+        account=SimpleNamespace(cash=500),
+        order=order,
+        instrument=fake_env.instrument,
+        price=13,
+        fill=100,
+    )
+
+    assert cash_fill == 100
+
+
 def test_bar_matcher_returns_early_on_invalid_price(fake_env):
     fake_env.bar.close = 0.0
     matcher = DefaultBarMatcher(fake_env, make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE))
@@ -284,7 +384,7 @@ def test_tick_matcher_rejects_market_order_without_liquidity(monkeypatch):
     assert order.status == ORDER_STATUS.REJECTED
 
 
-def test_counterparty_offer_uses_order_book_price_without_slippage_or_common_limits(monkeypatch):
+def test_counterparty_offer_rejects_order_at_price_limit(monkeypatch):
     price_board = FakePriceBoard(last=10.0, a1=0.0, b1=0.0, limit_up=10.0)
     env = FakeEnv(frequency="tick", price_board=price_board)
     monkeypatch.setattr(Environment, "_env", env)
@@ -313,11 +413,8 @@ def test_counterparty_offer_uses_order_book_price_without_slippage_or_common_lim
 
     matcher.match(FakeAccount(), order, open_auction=False)
 
-    trades = trade_events(env)
-    assert len(trades) == 1
-    assert trades[0].trade.last_quantity == 100
-    assert trades[0].trade.last_price == 10.0
-    assert order.status == ORDER_STATUS.FILLED
+    assert trade_events(env) == []
+    assert order.status == ORDER_STATUS.REJECTED
 
 
 def test_counterparty_offer_leaves_non_crossed_limit_order_active(monkeypatch):

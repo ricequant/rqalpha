@@ -45,7 +45,7 @@ class SlippageDecider(object):
         except (ImportError, AttributeError):
             raise RuntimeError(_("Missing SlippageModel {}").format(module_name))
 
-        self.decider = slippage_cls(rate)  # type: BaseSlippage
+        self.decider: BaseSlippage = slippage_cls(rate)
 
     def get_trade_price(self, order, price):
         return self.decider.get_trade_price(order, price)
@@ -53,8 +53,7 @@ class SlippageDecider(object):
 
 class BaseSlippage(with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
-    def get_trade_price(self, order, price):
-        # type: (Order, float) -> float
+    def get_trade_price(self, order: Order, price: float) -> float:
         raise NotImplementedError
 
 
@@ -66,8 +65,7 @@ class PriceRatioSlippage(BaseSlippage):
         else:
             raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is [0, 1)")))
 
-    def get_trade_price(self, order, price):
-        # type: (Order, float) -> float
+    def get_trade_price(self, order: Order, price: float) -> float:
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             raise NotImplementedError("PriceRatioSlippage cannot handle exercise order")
         temp_price = price + price * self.rate * (1 if order.side == SIDE.BUY else -1)
@@ -89,8 +87,7 @@ class TickSizeSlippage(BaseSlippage):
         else:
             raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is greater than 0")))
 
-    def get_trade_price(self, order, price):
-        # type: (Order, float) -> float
+    def get_trade_price(self, order: Order, price: float) -> float:
         if order.position_effect == POSITION_EFFECT.EXERCISE:
             raise NotImplementedError("TickSizeSlippage cannot handle exercise order")
         tick_size = Environment.get_instance().data_proxy.instrument(order.order_book_id).tick_size()
@@ -110,7 +107,7 @@ class LimitPriceSlippage(BaseSlippage):
     def __init__(self, _):
         pass
 
-    def get_trade_price(self, order, price):  # type: (Order, float) -> float
+    def get_trade_price(self, order: Order, price: float) -> float:
         if order.type == ORDER_TYPE.LIMIT:
             return order.price
         else:

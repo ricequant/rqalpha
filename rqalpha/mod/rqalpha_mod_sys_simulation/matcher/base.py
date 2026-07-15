@@ -1,5 +1,6 @@
 import datetime
 from collections import defaultdict
+from math import ceil
 
 from rqalpha.const import ORDER_TYPE, SIDE, POSITION_EFFECT
 from rqalpha.environment import Environment
@@ -22,15 +23,18 @@ class AbstractMatcher:
         raise NotImplementedError
 
 
-class OrderRejected(Exception):
-    pass
-
-
-class OrderCancelled(Exception):
-    pass
-
-
 class OrderNotMatchable(Exception):
+    """本次撮合无法继续，直接抛出时订单保持 Active"""
+    pass
+
+
+class OrderRejected(OrderNotMatchable):
+    """订单不可接受，进入 REJECTED"""
+    pass
+
+
+class OrderCancelled(OrderNotMatchable):
+    """订单已进入撮合流程但被终止，进入 CANCELLED"""
     pass
 
 
@@ -67,30 +71,6 @@ class BaseMatcher(AbstractMatcher):
             order_book_id=order.order_book_id, listed_date=listed_date
         )
 
-    def _validate_order_price_limit(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
-        """
-        校验订单价格是否满足限价穿透和涨跌停规则。
-        限价单暂不可撮合时抛出 OrderNotMatchable；市价或算法单触及涨跌停时抛出 OrderRejected。
-        """
-        price_board = self._env.price_board
-        if order.type == ORDER_TYPE.LIMIT:
-            if (order.side == SIDE.BUY and order.price < deal_price) or (order.side == SIDE.SELL and order.price > deal_price):
-                raise OrderNotMatchable("The price exceeds the limit-up or limit-down threshold.")
-            # 是否限制涨跌停不成交
-            if self._price_limit:
-                if reaches_limit(order.order_book_id, deal_price, order.side, price_board, tick_size):
-                    raise OrderNotMatchable("The price reaches the limit-up or limit-down threshold.")
-        else:
-            if self._price_limit:
-                if reaches_limit(order.order_book_id, deal_price, order.side, price_board, tick_size):
-                    reason = _(
-                        "Order Rejected: current {frequency} [{order_book_id}] reach the {limit_up_or_down} price."
-                    ).format(
-                        frequency="tick" if self._env.config.base.frequency == "tick" else "bar",
-                        order_book_id=order.order_book_id,
-                        limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down")
-                    raise OrderRejected(reason)
-
     def _during_call_auction(self, instrument: Instrument, open_auction: bool) -> bool:
         """
         判断当前撮合是否处于集合竞价时段。
@@ -120,70 +100,68 @@ class BaseMatcher(AbstractMatcher):
     def _resolve_open_fill(self, account: Account, order: Order, instrument: Instrument, price: float, fill: int) -> int:
         """
         根据执行价和可用资金（含本订单冻结资金）确定开仓订单的实际成交量。
-        - 未启用部分成交时，仅在非零滑点下重新校验完整订单所需资金；不足则拒单或取消。
-        - 启用部分成交时，返回不超过 fill 的最大合法下单数量；不足一手时拒单或取消。
+        - 未启用部分成交时，重新校验剩余订单的实际资金占用；不足则拒单或取消。
+        - 启用部分成交时，先按资金占用估算数量，再按下单步长扣减至费用也足够的数量。
         """
 
-        def _calc_required_cash(order: Order, instrument: Instrument, price: float, fill: int):
+        def _calc_required_cash(quantity: int) -> float:
             transaction_cost: TransactionCost = self._env.calc_transaction_cost(
-                TransactionCostArgs(instrument, price, fill, order.side, order.position_effect)
+                TransactionCostArgs(instrument, price, quantity, order.side, order.position_effect)
             )
             cash_occupation = instrument.calc_cash_occupation(
-                price, fill, order.position_direction, order.trading_datetime.date()
+                price, quantity, order.position_direction, order.trading_datetime.date()
             )
             return cash_occupation + transaction_cost.total
 
-        available_cash = account.cash + order.init_frozen_cash
+        remaining_frozen_cash = order.init_frozen_cash * order.unfilled_quantity / order.quantity
+        available_cash = account.cash + remaining_frozen_cash
 
         if not self._partial_fill_on_insufficient_cash:
-            if self._slippage_decider.decider.rate != 0:
-                # 执行价经滑点调整后，账户资金可能不足，需要重新校验。
-                required_cash = _calc_required_cash(order, instrument, price, order.quantity)
-                if required_cash > available_cash:
-                    status_label = "Cancelled" if order.filled_quantity != 0 else "Rejected"
-                    reason = _(u"Order {status_label}: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-                                status_label=status_label, order_book_id=instrument.order_book_id, cost_money=required_cash, cash = available_cash
-                                )
-                    if status_label == "Cancelled":
-                        raise OrderCancelled(reason)
-                    else:
-                        raise OrderRejected(reason)
+            required_cash = _calc_required_cash(order.unfilled_quantity)
+            if required_cash > available_cash:
+                status_label = "Cancelled" if order.filled_quantity != 0 else "Rejected"
+                reason = _(u"Order {status_label}: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+                    status_label=status_label,
+                    order_book_id=instrument.order_book_id,
+                    cost_money=required_cash,
+                    cash=available_cash,
+                )
+                if status_label == "Cancelled":
+                    raise OrderCancelled(reason)
+                else:
+                    raise OrderRejected(reason)
             return fill
 
-        else:
-            min_quantity = instrument.min_order_quantity
-            step = instrument.order_step_size
-            if fill >= min_quantity and (fill - min_quantity) % step == 0:
-                required_cash = _calc_required_cash(order, instrument, price, fill)
-                if required_cash <= available_cash:
-                    return fill
+        min_quantity = instrument.min_order_quantity
+        step = instrument.order_step_size
+        if fill >= min_quantity and (fill - min_quantity) % step == 0:
+            required_cash = _calc_required_cash(fill)
+            if required_cash <= available_cash:
+                return fill
 
+        cash_per_unit = instrument.calc_cash_occupation(price, 1, order.position_direction, order.trading_datetime.date())
+        max_quantity = min(fill, ceil(available_cash / cash_per_unit))
+        if max_quantity < min_quantity:
             cash_fill = 0
-            low = 0
-            high = (fill - min_quantity) // step
-            while low <= high:
-                mid = (low + high) // 2
-                candidate_fill = min_quantity + mid * step
-                required_cash = _calc_required_cash(order, instrument, price, candidate_fill)
-                if required_cash <= available_cash:
-                    cash_fill = candidate_fill
-                    low = mid + 1
-                else:
-                    high = mid - 1
+        else:
+            cash_fill = min_quantity + (max_quantity - min_quantity) // step * step
 
-            if cash_fill > 0:
+        last_required_cash = None
+        while cash_fill >= min_quantity:
+            last_required_cash = _calc_required_cash(cash_fill)
+            if last_required_cash <= available_cash:
                 return cash_fill
+            cash_fill -= step
 
-            min_required_cash = _calc_required_cash(order, instrument, price, min_quantity)
-            # 已有成交时，后续因资金不足终止撮合应取消剩余订单。
-            status_label = "Cancelled" if order.filled_quantity != 0 else "Rejected"
-            reason = _(u"Order {status_label}: not enough money to buy one lot of {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
-                status_label=status_label, order_book_id=order.order_book_id, cost_money=min_required_cash, cash=available_cash
-            )
-            if status_label == "Cancelled":
-                raise OrderCancelled(reason)
-            else:
-                raise OrderRejected(reason)
+        min_required_cash = last_required_cash if last_required_cash is not None else _calc_required_cash(min_quantity)
+        # 已有成交时，后续因资金不足终止撮合应取消剩余订单。
+        status_label = "Cancelled" if order.filled_quantity != 0 else "Rejected"
+        reason = _(u"Order {status_label}: not enough money to buy one lot of {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+            status_label=status_label, order_book_id=order.order_book_id, cost_money=min_required_cash, cash=available_cash
+        )
+        if status_label == "Cancelled":
+            raise OrderCancelled(reason)
+        raise OrderRejected(reason)
 
     def _publish_trade(self, account: Account, order: Order, price: float, amount: int, open_auction: bool, close_today_amount: int):
         trade = Trade.__from_create__(
@@ -212,14 +190,29 @@ class BaseMatcher(AbstractMatcher):
         order_book_id = order.order_book_id
         instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
         tick_size = self._env.data_proxy.get_tick_size(order_book_id)
-
+        price_board = self._env.price_board
         open_auction = self._during_call_auction(instrument, open_auction)
 
         try:
             # 1. 获取订单成交价
             deal_price = self._get_deal_price(order, instrument, open_auction)
             # 2. 校验限价条件和涨跌停规则
-            self._validate_order_price_limit(order, deal_price, tick_size, account, open_auction)
+            if order.type == ORDER_TYPE.LIMIT:
+                if (order.side == SIDE.BUY and order.price < deal_price) or (order.side == SIDE.SELL and order.price > deal_price):
+                    raise OrderNotMatchable("The price exceeds the limit-up or limit-down threshold.")
+                if self._price_limit:
+                    if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
+                        raise OrderNotMatchable("The price reaches the limit-up or limit-down threshold.")
+            else:
+                if self._price_limit:
+                    if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
+                        reason = _("Order Rejected: current {frequency} [{order_book_id}] reach the {limit_up_or_down} price.").format(
+                            frequency="tick" if self._env.config.base.frequency == "tick" else "bar",
+                            order_book_id=order.order_book_id,
+                            limit_up_or_down="limit_up" if order.side == SIDE.BUY else "limit_down"
+                        )
+                        raise OrderRejected(reason)
+
             # 3. 获取在当前流动性下订单的最大可成交量
             fill = self._get_liquidity_limited_fill(order, instrument, open_auction)
 
@@ -247,5 +240,5 @@ class BaseMatcher(AbstractMatcher):
             order.mark_rejected(str(e))
         except OrderCancelled as e:
             order.mark_cancelled(str(e))
-        except OrderNotMatchable as e:
+        except OrderNotMatchable:
             return

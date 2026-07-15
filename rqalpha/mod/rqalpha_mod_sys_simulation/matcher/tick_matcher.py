@@ -226,13 +226,6 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             return deal_price
         raise OrderNotMatchable("Current counterparty offer has no valid price.")
 
-    def _validate_order_price_limit(self, order: Order, deal_price: float, tick_size: float, account: Account, open_auction: bool = False):
-        if order.type == ORDER_TYPE.LIMIT:
-            if order.side == SIDE.BUY and order.price < deal_price:
-                raise OrderNotMatchable("The order price does not cross the counterparty offer.")
-            if order.side == SIDE.SELL and order.price > deal_price:
-                raise OrderNotMatchable("The order price does not cross the counterparty offer.")
-
     def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> int:
         order_book_id = order.order_book_id
 

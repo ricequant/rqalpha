@@ -165,7 +165,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
         当前最新价
         """
         raise NotImplementedError
-    
+
     @property
     @abc.abstractmethod
     def instrument(self) -> Instrument:
@@ -320,27 +320,27 @@ class AbstractDataSource(object):
 
         :return: `numpy.ndarray` | `None`
             返回分红信息的结构化数组，包含以下字段:
-            
+
             =========================   ===================================================
-            字段名                       类型和描述  
+            字段名                       类型和描述
             =========================   ===================================================
             book_closure_date           '<i8' - 股权登记日，格式为 YYYYMMDD 的整数
-            announcement_date           '<i8' - 公告日期，格式为 YYYYMMDD 的整数  
+            announcement_date           '<i8' - 公告日期，格式为 YYYYMMDD 的整数
             dividend_cash_before_tax    '<f8' - 税前现金分红，单位为元
             ex_dividend_date            '<i8' - 除权除息日，格式为 YYYYMMDD 的整数
             payable_date                '<i8' - 分红派息日，格式为 YYYYMMDD 的整数
             round_lot                   '<f8' - 分红最小单位，例如：10 代表每 10 股派发
             =========================   ===================================================
-            
+
             数据示例::
-            
+
                 array([(19910430, 19910430, 3.   , 19910502, 19910502, 10.),
                        (19920320, 19920314, 2.   , 19920323, 19920323, 10.),
                        (19930521, 19930509, 3.   , 19930524, 19930524, 10.)],
-                      dtype=[('book_closure_date', '<i8'), ('announcement_date', '<i8'), 
-                             ('dividend_cash_before_tax', '<f8'), ('ex_dividend_date', '<i8'), 
+                      dtype=[('book_closure_date', '<i8'), ('announcement_date', '<i8'),
+                             ('dividend_cash_before_tax', '<f8'), ('ex_dividend_date', '<i8'),
                              ('payable_date', '<i8'), ('round_lot', '<f8')])
-            
+
             如果该合约没有分红记录，则返回 None
         """
         raise NotImplementedError
@@ -354,25 +354,25 @@ class AbstractDataSource(object):
 
         :return: `numpy.ndarray` | `None`
             返回拆股信息的结构化数组，包含以下字段:
-            
+
             =========================   ===================================================
-            字段名                       类型和描述  
+            字段名                       类型和描述
             =========================   ===================================================
             ex_date                     '<i8' - 除权日，格式为 YYYYMMDDHHMMSS 的整数
             split_factor                '<f8' - 拆股比例，表示每股拆分后的股数
             =========================   ===================================================
-            
+
             数据示例::
-            
+
                 array([(19910502000000, 1.4 ), (19920323000000, 1.5 ),
                        (19930524000000, 1.85), (19940711000000, 1.5 ),
                        (19950925000000, 1.2 ), (19960527000000, 2.  )],
                       dtype=[('ex_date', '<i8'), ('split_factor', '<f8')])
-            
+
             其中 split_factor 表示拆股倍数：
             - 1.5 表示每 1 股拆为 1.5 股（即 2 拆 3）
-            - 2.0 表示每 1 股拆为 2 股（即 1 拆 2） 
-            
+            - 2.0 表示每 1 股拆为 2 股（即 1 拆 2）
+
             如果该合约没有拆股记录，则返回 None
         """
         raise NotImplementedError
@@ -399,7 +399,7 @@ class AbstractDataSource(object):
             datetime, open, limit_up, limit_down, volume, total_turnover
         """
         raise NotImplementedError
-    
+
     def get_open_auction_volume(self, instrument, dt):
         """
         获取指定资产当日的集合竞价成交量
@@ -428,15 +428,15 @@ class AbstractDataSource(object):
         raise NotImplementedError
 
     def history_bars(
-        self, 
-        instrument: Instrument, 
-        bar_count: Optional[int], 
-        frequency: str, 
-        fields: Union[str, List[str], None], 
-        dt: datetime, 
+        self,
+        instrument: Instrument,
+        bar_count: Optional[int],
+        frequency: str,
+        fields: Union[str, List[str], None],
+        dt: datetime,
         skip_suspended: bool = True,
-        include_now: bool = False, 
-        adjust_type: str = 'pre', 
+        include_now: bool = False,
+        adjust_type: str = 'pre',
         adjust_orig: Optional[datetime] = None
     ) -> Optional[numpy.ndarray]:
         """
@@ -537,7 +537,7 @@ class AbstractDataSource(object):
         :type instrument: :class:`~Instrument`
 
         :param datetime.datetime dt: 交易日
-        
+
         :return: :class:`FuturesTradingParameters`
         """
         raise NotImplementedError
@@ -722,7 +722,7 @@ class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
         :return: `Optional[str]`
         """
         raise NotImplementedError
-    
+
     @abc.abstractmethod
     def validate_cancellation(self, order: Order, account: Optional['Account'] = None) -> Optional[str]:
         """

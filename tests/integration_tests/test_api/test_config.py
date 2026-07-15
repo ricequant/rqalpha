@@ -68,7 +68,7 @@ def test_futures_info():
             }
         }
     })
-    
+
     def init(context):
         context.f1 = "SC1809"
         subscribe_event(EVENT.TRADE, on_trade)
@@ -94,6 +94,7 @@ def test_futures_info():
     run_func(config=config, init=init, handle_bar=handle_bar)
 
 
+
 def test_init_position():
     config = _config({
         "base": {
@@ -103,7 +104,7 @@ def test_init_position():
             "init_positions": "000006.XSHE:10000"
         }
     })
-    
+
     def before_trading(context):
         if context.now.date() == date(2018, 4, 2):
             # 首个交易日，持仓价格应为昨收

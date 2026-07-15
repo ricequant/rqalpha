@@ -67,7 +67,7 @@ class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
         cost_commission = args.price * args.quantity * self.commission_rate * self.commission_multiplier
         order_id = args.order_id
         if order_id is None:
-            return max(cost_commission, self.min_commission) 
+            return max(cost_commission, self.min_commission)
         commission = self.commission_map[order_id]
         if cost_commission > commission:
             if commission == self.min_commission:
@@ -97,7 +97,7 @@ class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
         commission = maximum(delta_quantities.abs() * prices * self.commission_rate * self.commission_multiplier, self.min_commission)
         tax = delta_quantities.abs() * prices * self.tax_rate * (delta_quantities < 0)
         return commission + tax
-        
+
 
 class FuturesTransactionCostDecider(AbstractTransactionCostDecider):
     def __init__(self, commission_multiplier):
