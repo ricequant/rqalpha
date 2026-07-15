@@ -22,6 +22,7 @@ from typing import Optional, List, Iterable, Tuple
 import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
 from ctypes import c_bool
+from time import sleep
 
 import h5py
 import numpy as np
@@ -41,6 +42,7 @@ from rqalpha.data.bundle.automatic_update import AutomaticUpdateBundle
 
 
 CORPORATE_ACTION_EXCLUSIONS = ["Future", "Option", "Spot"]
+INSTRUMENTS_RETRY_COUNT = 5
 
 
 def _get_oids_with_corporate_action_exclusions():
@@ -76,7 +78,18 @@ def write_instruments(data_bundle_path: str, instruments: Iterable, file_name: s
     try:
         with open(tmp_path, "wb") as out:
             pickle.dump(instruments, out, protocol=2)
-        os.replace(tmp_path, pkl_path)
+        i = 0
+        while True:
+            try:
+                os.replace(tmp_path, pkl_path)
+                break
+            except PermissionError as e:
+                # 可能存在多进程同时执行，replace 时有其他进程正在读取目标文件的情况
+                if i < INSTRUMENTS_RETRY_COUNT:
+                    sleep(0.1)
+                    i += 1
+                else:
+                    raise e
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
@@ -165,12 +178,12 @@ class GenerateSplitBundle:
     def _get_split(self):
         order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_split(order_book_ids)
-    
+
     def _write(self, data_iter: Iterable[Tuple[str, np.ndarray]]):
         with h5py.File(os.path.join(self.data_bundle_path, 'split_factor.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
-    
+
     def __call__(self):
         split = self._get_split()
         if split is None:
@@ -185,11 +198,11 @@ class GenerateSplitBundle:
             order_book_id, split.loc[order_book_id].to_records()
         ) for order_book_id in split.index.levels[0]])  # type: ignore
 
-    
+
 class GenerateExFactorBundle:
     def __init__(self, data_bundle_path: str):
         self.data_bundle_path = data_bundle_path
-    
+
     def _get_ex_factor(self):
         order_book_ids = _get_oids_with_corporate_action_exclusions()
         return rqdatac.get_ex_factor(order_book_ids)
@@ -198,7 +211,7 @@ class GenerateExFactorBundle:
         with h5py.File(os.path.join(self.data_bundle_path, 'ex_cum_factor.h5'), "w") as h5:
             for order_book_id, data in data_iter:
                 h5.create_dataset(order_book_id, data=data)
-    
+
     def __call__(self):
         ex_factor = self._get_ex_factor()
         if ex_factor is None:
@@ -244,7 +257,7 @@ def gen_future_info(data_bundle_path: str):
                 all_futures_info = json.load(f)
                 if "margin_rate" not in all_futures_info[0]:
                     return True
-    
+
     def update_margin_rate(file):
         all_instruments_data = rqdatac.all_instruments("Future")
         with open(file, "r") as f:
@@ -361,7 +374,7 @@ def gen_future_info(data_bundle_path: str):
             except AttributeError:
                 # FIXME: why get_dominant return None???
                 continue
-            
+
             dominant_indexer = commission_df["order_book_id"] == dominant
             if not dominant_indexer.any():
                 # S0301：大豆期货的最后一个合约，该合约出现在 instrument 中，但取不到 commission，这种情况忽略掉
