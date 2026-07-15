@@ -29,8 +29,7 @@ class RiskManagerMod(AbstractMod):
         partial_fill_on_insufficient_cash = getattr(env.config.base, "partial_fill_on_insufficient_cash", False)
         if partial_fill_on_insufficient_cash and not mod_config.validate_cash:
             user_system_log.warning(_(
-                "partial_fill_on_insufficient_cash is enabled while validate_cash is disabled; "
-                "please verify this configuration."
+                "partial_fill_on_insufficient_cash is enabled, while validate_cash has been explicitly disabled. Please confirm that this configuration is intended."
             ))
 
         if mod_config.validate_price:
