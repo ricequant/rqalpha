@@ -132,7 +132,7 @@ class DefaultTickMatcher(BaseMatcher):
             if order.type == ORDER_TYPE.LIMIT:
                 if (order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0) or \
                     (order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0):
-                    raise OrderNotMatchable("Current tick has no liquidity.")
+                    raise OrderNotMatchable(_("Current tick has no liquidity."))
             else:
                 if (order.side == SIDE.BUY and price_board.get_a1(order_book_id) == 0) or \
                     (order.side == SIDE.SELL and price_board.get_b1(order_book_id) == 0):
@@ -153,7 +153,7 @@ class DefaultTickMatcher(BaseMatcher):
                         order_book_id=order.order_book_id, order_volume=order.quantity
                     )
                     raise OrderCancelled(reason)
-                raise OrderNotMatchable("Current tick liquidity is 0.")
+                raise OrderNotMatchable(_("Current tick liquidity is 0."))
 
             # 实际成交数量
             if self._volume_limit:
@@ -215,30 +215,30 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             deal_price = self._cur_tick[order_book_id].last
         elif order.side == SIDE.BUY:
             if len(self._a_volume[order_book_id]) == 0:
-                raise OrderNotMatchable("Current counterparty offer is unavailable.")
+                raise OrderNotMatchable(_("Current counterparty offer is unavailable."))
             deal_price = self._a_price[order_book_id][0]
         else:
             if len(self._b_volume[order_book_id]) == 0:
-                raise OrderNotMatchable("Current counterparty offer is unavailable.")
+                raise OrderNotMatchable(_("Current counterparty offer is unavailable."))
             deal_price = self._b_price[order_book_id][0]
 
         if is_valid_price(deal_price):
             return deal_price
-        raise OrderNotMatchable("Current counterparty offer has no valid price.")
+        raise OrderNotMatchable(_("Current counterparty offer has no valid price."))
 
     def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> int:
         order_book_id = order.order_book_id
 
         if order.side == SIDE.BUY:
             if len(self._a_volume[order_book_id]) == 0:
-                raise OrderNotMatchable("Current counterparty offer is unavailable.")
+                raise OrderNotMatchable(_("Current counterparty offer is unavailable."))
             amount = self._a_volume[order_book_id][0]
         else:
             if len(self._b_volume[order_book_id]) == 0:
-                raise OrderNotMatchable("Current counterparty offer is unavailable.")
+                raise OrderNotMatchable(_("Current counterparty offer is unavailable."))
             amount = self._b_volume[order_book_id][0]
         if amount != amount or amount <= 0:
-            raise OrderNotMatchable("Current counterparty offer has no liquidity.")
+            raise OrderNotMatchable(_("Current counterparty offer has no liquidity."))
 
         if open_auction or self._volume_limit:
             volume_limit = self._get_tick_volume_limit(order, instrument)
@@ -248,7 +248,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
                         order_book_id=order.order_book_id, order_volume=order.quantity
                     )
                     raise OrderCancelled(reason)
-                raise OrderNotMatchable("Current counterparty offer liquidity is 0.")
+                raise OrderNotMatchable(_("Current counterparty offer liquidity is 0."))
 
             if self._volume_limit:
                 if open_auction:

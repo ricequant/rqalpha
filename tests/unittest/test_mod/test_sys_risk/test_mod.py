@@ -42,8 +42,8 @@ def test_warns_when_partial_fill_is_enabled_without_cash_validation(monkeypatch)
     )
 
     assert warnings == [
-        "partial_fill_on_insufficient_cash is enabled while validate_cash is disabled; "
-        "please verify this configuration."
+        "partial_fill_on_insufficient_cash is enabled, while validate_cash has been explicitly "
+        "disabled. Please confirm that this configuration is intended."
     ]
 
 

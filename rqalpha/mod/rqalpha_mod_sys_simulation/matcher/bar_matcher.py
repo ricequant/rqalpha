@@ -79,7 +79,7 @@ class DefaultBarMatcher(BaseMatcher):
                 order_book_id=instrument.order_book_id
             )
             raise OrderRejected(reason)
-        raise OrderNotMatchable("Current bar missing market data.")
+        raise OrderNotMatchable(_("Current bar missing market data."))
 
     def _get_liquidity_limited_fill(self, order: Order, instrument: Instrument, open_auction: bool = False) -> int:
         if self._inactive_limit:
@@ -99,7 +99,7 @@ class DefaultBarMatcher(BaseMatcher):
                             order_book_id=order.order_book_id, order_volume=order.quantity
                         )
                         raise OrderCancelled(reason)
-                    raise OrderNotMatchable("Current liquidity is 0.")
+                    raise OrderNotMatchable(_("Current liquidity is 0."))
                 fill = min(order.unfilled_quantity, volume_limit)
             else:
                 fill = order.unfilled_quantity

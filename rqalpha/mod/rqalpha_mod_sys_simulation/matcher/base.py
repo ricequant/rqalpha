@@ -43,7 +43,7 @@ class BaseMatcher(AbstractMatcher):
     撮合主流程：
     1. 获取订单成交价。
     2. 校验限价条件和涨跌停规则。
-    3. 依据当前 bar、tick 或盘口流动性确定最大可成交量。
+    3. 获取在当前流动性下订单的最大可成交量。
     4. 对开仓订单，依据可用资金确定实际成交量。
     5. 计算平今数量。
     6. 生成 Trade 并发布成交事件。
@@ -139,6 +139,10 @@ class BaseMatcher(AbstractMatcher):
             if required_cash <= available_cash:
                 return fill
 
+        # TODO: 未来可将计算逻辑修改为求解 cash_fill 未知数的不等式，假设 cash_fill 为 q，不等式如下：
+        # q * cash_per_unit + transaction_cost(q) <= available_cash
+        # q ∈ {min_quantity + k * order_step_size}
+        # q <= fill
         cash_per_unit = instrument.calc_cash_occupation(price, 1, order.position_direction, order.trading_datetime.date())
         max_quantity = min(fill, ceil(available_cash / cash_per_unit))
         if max_quantity < min_quantity:
@@ -199,10 +203,10 @@ class BaseMatcher(AbstractMatcher):
             # 2. 校验限价条件和涨跌停规则
             if order.type == ORDER_TYPE.LIMIT:
                 if (order.side == SIDE.BUY and order.price < deal_price) or (order.side == SIDE.SELL and order.price > deal_price):
-                    raise OrderNotMatchable("The price exceeds the limit-up or limit-down threshold.")
+                    raise OrderNotMatchable(_("The limit order price does not cross the current market price."))
                 if self._price_limit:
                     if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):
-                        raise OrderNotMatchable("The price reaches the limit-up or limit-down threshold.")
+                        raise OrderNotMatchable(_("The price reaches the limit-up or limit-down threshold."))
             else:
                 if self._price_limit:
                     if reaches_limit(order_book_id, deal_price, order.side, price_board, tick_size):

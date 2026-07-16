@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-15 18:24+0800\n"
+"POT-Creation-Date: 2026-07-16 13:54+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -924,7 +924,9 @@ msgid ""
 "partial_fill_on_insufficient_cash is enabled, while validate_cash has "
 "been explicitly disabled. Please confirm that this configuration is "
 "intended."
-msgstr "已启用 partial_fill_on_insufficient_cash 配置，同时检测到当前显式关闭了 validate_cash 配置，请确认该配置是否符合预期"
+msgstr ""
+"已启用 partial_fill_on_insufficient_cash 配置，同时检测到当前显式关闭了 validate_cash "
+"配置，请确认该配置是否符合预期"
 
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/cash_validator.py:34
 #, python-brace-format
@@ -1036,6 +1038,11 @@ msgstr "无效的 滑点 设置: 该值导致了调整后的价格为负。"
 msgid "Order Rejected: {order_book_id} miss market data or bar no volume."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据或无成交量。"
 
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:82
+#, python-brace-format
+msgid "Current bar missing market data."
+msgstr "当前 bar 缺失市场数据。"
+
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:88
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/signal_matcher.py:33
 #, python-brace-format
@@ -1050,6 +1057,10 @@ msgid ""
 "Order Cancelled: market order {order_book_id} volume {order_volume} due "
 "to volume limit"
 msgstr "订单被撤销: 订单 [{order_book_id}] 的下单量 {order_volume} 超过了成交量限制。"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:102
+msgid "Current liquidity is 0."
+msgstr "当前流动性为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:114
 #, fuzzy, python-brace-format
@@ -1075,21 +1086,29 @@ msgid ""
 "{cost_money:.2f}, cash {cash:.2f}"
 msgstr "订单创建失败: 可用资金不足。当前资金: {cash:.2f}，{order_book_id} 下单所需资金: {cost_money:.2f}"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:159
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:163
 #, python-brace-format
 msgid ""
 "Order {status_label}: not enough money to buy one lot of {order_book_id},"
 " needs {cost_money:.2f}, cash {cash:.2f}"
 msgstr "订单创建失败: 可用资金不足。当前资金: {cash:.2f}，{order_book_id} 下单所需资金: {cost_money:.2f}"
 
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:206
+msgid "The limit order price does not cross the current market price."
+msgstr "限价单价格未穿透当前市场价格"
+
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:209
+msgid "The price reaches the limit-up or limit-down threshold."
+msgstr "当前价格触及涨跌停板"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:213
 #, python-brace-format
 msgid ""
 "Order Rejected: current {frequency} [{order_book_id}] reach the "
 "{limit_up_or_down} price."
 msgstr "订单被拒单：[{order_book_id}] 已触及涨跌停价：{limit_up_or_down}。"
 
-#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:225
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/base.py:229
 #, python-brace-format
 msgid ""
 "Order Cancelled: not enough money to fill {order_book_id}, fill "
@@ -1113,10 +1132,18 @@ msgstr "订单被拒单：[{order_book_id}] 已触及涨跌停价：{limit_up_or
 msgid "Order Cancelled: current tick [{order_book_id}] miss market data."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据。"
 
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:135
+msgid "Current tick has no liquidity."
+msgstr "当前 tick 没有流动性"
+
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:139
 #, python-brace-format
 msgid "Order Cancelled: [{order_book_id}] has no liquidity."
 msgstr "合约 [{order_book_id}] 流动性不足，拒单。"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:156
+msgid "Current tick liquidity is 0."
+msgstr "当前 tick 流动性为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:172
 #, python-brace-format
@@ -1127,6 +1154,25 @@ msgid ""
 msgstr ""
 "{order_book_id} 下单量 {order_volume} 超过当前 Bar 成交量的 "
 "{volume_percent_limit}%，实际成交 {filled_volume}"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:218
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:222
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:234
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:238
+msgid "Current counterparty offer is unavailable."
+msgstr "当前对手方报价不可用"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:227
+msgid "Current counterparty offer has no valid price."
+msgstr "当前对手方报价没有有效价格"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:241
+msgid "Current counterparty offer has no liquidity."
+msgstr "当前对手方报价没有流动性"
+
+#: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:251
+msgid "Current counterparty offer liquidity is 0."
+msgstr "当前对手方报价流动性为 0"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/tick_matcher.py:274
 #, python-brace-format
