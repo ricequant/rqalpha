@@ -24,6 +24,7 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 import logbook
 import six
 from rqalpha import const
+from rqalpha.const import MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.core.executor import Executor
 from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_context import StrategyContext
@@ -53,7 +54,14 @@ def _adjust_start_date(config, data_proxy):
     config.base.start_date = max(start, config.base.start_date)
     config.base.end_date = min(end, config.base.end_date)
 
-    config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
+    market = config.base.market
+    if market == MARKET.CN:
+        trading_calendar_type = TRADING_CALENDAR_TYPE.CN_STOCK
+    elif market == MARKET.HK:
+        trading_calendar_type = TRADING_CALENDAR_TYPE.HK_STOCK
+    else:
+        raise ValueError(f"Invalid market: {market}")
+    config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date, trading_calendar_type)
     if len(config.base.trading_calendar) == 0:
         raise patch_user_exc(
             ValueError(
@@ -150,7 +158,7 @@ def run(config, source_code=None, user_funcs=None):
             env.set_data_source(BaseDataSource(config.base))
         if not hasattr(env, "price_board"):
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
-            env.price_board = BarDictPriceBoard()
+            env.set_price_board(BarDictPriceBoard())
         env.set_data_proxy(DataProxy(env.data_source, env.price_board))
 
         _adjust_start_date(env.config, env.data_proxy)
@@ -168,7 +176,7 @@ def run(config, source_code=None, user_funcs=None):
         if not hasattr(env, "portfolio"):
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(
-                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate, env                
+                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate, env
             ))
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))

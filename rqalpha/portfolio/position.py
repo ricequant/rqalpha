@@ -64,26 +64,32 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     # 用于注册该 Position 类型适用的 instrument_type
     __instrument_types__ = []
 
-    def __new__(cls, order_book_id, direction, init_quantity=0, init_price=None):
+    def __new__(cls, order_book_id, direction, init_quantity=0, init_price=None, target_instrument: Optional[Instrument]=None):
         if cls == Position:
             ins_type = Environment.get_instance().data_proxy.instrument(order_book_id).type
             try:
                 position_cls = POSITION_TYPE_MAP[ins_type]
             except KeyError:
                 raise NotImplementedError("")
-            return position_cls.__new__(position_cls, order_book_id, direction, init_quantity, init_price)
+            return position_cls.__new__(position_cls, order_book_id, direction, init_quantity, init_price, target_instrument)
         else:
             return object.__new__(cls)
 
-    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
+    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None, target_instrument: Optional[Instrument]=None):
         self._env = Environment.get_instance()
 
         self._order_book_id = order_book_id
-        instruments = self._env.data_proxy.get_instrument_history(order_book_id, self._env.trading_dt)
-        if not instruments:
-            raise InstrumentNotFound(_("No instruments found at {dt}: {id_or_sym}").format(dt=self._env.trading_dt, id_or_sym=order_book_id))
-        # 获取已上市合约中的最新一个，即使该合约已退市也能获取到，这是为了兼容 get_position 可获取已退市合约的 position 对象的历史行为
-        self._instrument = instruments[-1]
+        if target_instrument:
+            # 支持创建还未上市的标的的仓位，可用于类似港股派发未上市股票等类似的场景中
+            if target_instrument.de_listed_date < self._env.trading_dt:
+                raise InstrumentNotFound(_(f"Instrument delisted: {target_instrument}"))
+            self._instrument = target_instrument
+        else:
+            instruments = self._env.data_proxy.get_instrument_history(order_book_id, self._env.trading_dt)
+            if not instruments:
+                raise InstrumentNotFound(_("No instruments found at {dt}: {id_or_sym}").format(dt=self._env.trading_dt, id_or_sym=order_book_id))
+            # 获取已上市合约中的最新一个，即使该合约已退市也能获取到，这是为了兼容 get_position 可获取已退市合约的 position 对象的历史行为
+            self._instrument = instruments[-1]
         self._direction = direction
 
         self._quantity = init_quantity
@@ -179,6 +185,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         if not is_valid_price(self._last_price):
             self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
             if not is_valid_price(self._last_price):
+                # 如果是未上市的仓位，则直接返回 0
+                if self._instrument.listed_date > self._env.trading_dt:
+                    return 0
                 user_system_log.warn("invalid last price of {}: {}".format(self._order_book_id, self._last_price))
         return self._last_price
 

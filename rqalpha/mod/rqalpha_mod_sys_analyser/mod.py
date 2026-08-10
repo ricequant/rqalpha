@@ -23,31 +23,28 @@ import jsonpickle
 import datetime
 from operator import attrgetter, itemgetter
 from collections import defaultdict
-from typing import Dict, Optional, List, Tuple, Union, Iterable, NamedTuple
-try:
-    from typing import Protocol
-except ImportError:
-    from typing_extensions import Protocol
+from typing import Dict, Optional, List, Tuple, Union, Iterable, NamedTuple, Protocol
 
 import numpy as np
 import pandas as pd
 from rqrisk import Risk, DAILY, WEEKLY, MONTHLY
 
-from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION, TAX_TYPE
+from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSITION_DIRECTION
 from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.environment import Environment
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, RqAttrDict, resample_monthly
+from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, resample_monthly
 from rqalpha.utils.datetime_func import convert_int_to_date, convert_date_to_int
 from rqalpha.utils.logger import user_system_log
 from rqalpha.api import export_as_api
 from rqalpha.const import TRADING_CALENDAR_TYPE
 from rqalpha.model import Instrument
-from rqalpha.model.order import Order
 from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
+
+from .utils import _all_trades_are_equities
 
 
 def _get_yearly_risk_free_rates(
@@ -59,21 +56,12 @@ def _get_yearly_risk_free_rates(
         start_date = datetime.date(year + 1, 1, 1)
 
 
-def _all_trades_are_equities(trades: pd.DataFrame) -> bool:
-    if trades.empty or "order_book_id" not in trades.columns:
-        return False
-    return trades["order_book_id"].map(lambda oid: isinstance(oid, str) and EQUITIES_OID_RE.match(oid) is not None).all()
-
-
 PRESSURE_TEST_PERIOD = {
     "打击壳价值": (datetime.date(2016, 11, 1), datetime.date(2018, 2, 1)),
     "公募基金抱团": (datetime.date(2020, 10, 9), datetime.date(2021, 3, 1)),
     "行业风格切换": (datetime.date(2021, 9, 1), datetime.date(2021, 12, 31)),
     "小盘踩踏危机": (datetime.date(2024, 1, 5), datetime.date(2024, 2, 8)),
 }
-
-
-EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
 
 
 class PortfolioEventRecord(NamedTuple):

@@ -16,13 +16,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from inspect import signature
-from typing import Callable, Union, Iterable
+from typing import Callable, Union, Iterable, Protocol, cast
 from functools import wraps, lru_cache as origin_lru_cache
-
-try:
-    from typing import Protocol, cast
-except ImportError:
-    from typing_extensions import Protocol, cast
 
 from rqalpha.const import INSTRUMENT_TYPE
 

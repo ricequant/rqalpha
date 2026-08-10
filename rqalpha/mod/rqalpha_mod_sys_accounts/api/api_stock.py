@@ -143,8 +143,8 @@ def _order_value(account: Account, position: AbstractPosition, order_book_id: st
     ins = assure_active_ins_for_order_api(order_book_id)
     if ins is None:
         return
-    
-    amount = get_amount_from_value(cash_amount, ins, price, env, account.cash)
+
+    amount = get_amount_from_value(cash_amount, ins, price, env, account.cash, account.market)
     if amount == 0 and zero_amount_as_exception:
         reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
         env.order_creation_failed(order_book_id=order_book_id, reason=reason)

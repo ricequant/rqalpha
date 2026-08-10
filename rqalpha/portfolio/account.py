@@ -66,6 +66,7 @@ class Account(metaclass=AccountMeta):
     ):
         self._type = account_type
         self._env = env
+        self._market = MARKET(getattr(env.config.base, "market", MARKET.CN))
 
         # 现金项币种均为人民币
         self._total_cash = total_cash  # 包含保证金的总资金
@@ -326,6 +327,10 @@ class Account(metaclass=AccountMeta):
         """
         return self.cash
 
+    @property
+    def market(self) -> MARKET:
+        return self._market
+
     def _on_before_trading(self, _):
         for order_book_id, positions in list(self._positions.items()):
             if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
@@ -336,8 +341,8 @@ class Account(metaclass=AccountMeta):
             _, amount = self._pending_deposit_withdraw.pop(0)
             self._total_cash += amount
 
-        # 涉及到资金变动，此处只处理中国市场的持仓
-        for position in self._iter_pos(market=MARKET.CN):
+        # 涉及到资金变动，此处只处理与账户交易市场相同的持仓
+        for position in self._iter_pos(market=self._market):
             self._total_cash += position.before_trading(trading_date)
 
         # 负债自增利息
@@ -347,8 +352,8 @@ class Account(metaclass=AccountMeta):
     def _on_settlement(self, event):
         trading_date = self._env.trading_dt.date()
 
-        # 涉及到资金变动，此处只处理中国市场的持仓
-        for position in self._iter_pos(market=MARKET.CN):
+        # 涉及到资金变动，此处只处理与账户交易市场相同的持仓
+        for position in self._iter_pos(market=self._market):
             delta_cash = position.settlement(trading_date)
             self._total_cash += delta_cash
 
@@ -438,15 +443,16 @@ class Account(metaclass=AccountMeta):
         else:
             return pos_iter
 
-    def _init_position(self, order_book_id: str, direction: POSITION_DIRECTION, init_quantity: int, init_price: Optional[float] = None) -> Position:
-        return Position(order_book_id, direction, init_quantity, init_price)
+    def _init_position(self, order_book_id: str, direction: POSITION_DIRECTION, init_quantity: int, init_price: Optional[float] = None, target_instrument: Optional[Instrument] = None) -> Position:
+        return Position(order_book_id, direction, init_quantity, init_price, target_instrument)
 
     def _get_or_create_pos(
             self,
             order_book_id: str,
             direction: Union[POSITION_DIRECTION, str],
             init_quantity: int = 0,
-            init_price : Optional[float] = None
+            init_price : Optional[float] = None,
+            target_instrument: Optional[Instrument] = None,
     ) -> Position:
         if order_book_id not in self._positions:
             if direction == POSITION_DIRECTION.LONG:
@@ -456,8 +462,8 @@ class Account(metaclass=AccountMeta):
             if not init_price:
                 init_price = self._env.get_last_price(order_book_id)
             positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: self._init_position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
-                POSITION_DIRECTION.SHORT: self._init_position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
+                POSITION_DIRECTION.LONG: self._init_position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price, target_instrument),
+                POSITION_DIRECTION.SHORT: self._init_position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price, target_instrument)
             })
             if hasattr(positions[direction], "margin") and hasattr(self.__class__, "_margin"):
                 # black magic: improve performance for pure stock strategy

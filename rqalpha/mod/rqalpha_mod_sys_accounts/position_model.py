@@ -15,22 +15,24 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from datetime import date, datetime
-from typing import List, Optional, Deque, Tuple
-from collections import deque
+from typing import List, Optional, Deque, Tuple, Dict
+from collections import deque, defaultdict
 
 from decimal import Decimal, ROUND_HALF_UP
 from numpy import ndarray, isclose
+from numpy.lib.recfunctions import append_fields
 import pandas as pd
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
+from rqalpha.model.instrument import Instrument
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, \
     TRADING_CALENDAR_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
-from rqalpha.utils.datetime_func import convert_date_to_date_int
+from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_int_to_date
 from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
@@ -62,8 +64,8 @@ class StockPosition(Position):
 
     calendar_type = TRADING_CALENDAR_TYPE.CN_STOCK
 
-    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
-        super(StockPosition, self).__init__(order_book_id, direction, init_quantity, init_price)
+    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None, target_instrument: Optional[Instrument]=None):
+        super(StockPosition, self).__init__(order_book_id, direction, init_quantity, init_price, target_instrument)
         self._dividend_receivable: Deque[Tuple[date, float]] = deque()
         self._pending_transform = None
         self._non_closable = 0
@@ -72,6 +74,7 @@ class StockPosition(Position):
         self._daily_dividend: float = 0.
         self._daily_split: float = 1.
         self._unadjusted_prev_close = None
+        self._split_share_lock: defaultdict[date, int] = defaultdict(int)  # Dict[payable_date, quantity]，拆股产生的股份锁定信息，在 payable_date 之前不可卖出的新增数量
 
         # 历史现金分红记录：Series[date, dividend_per_share]
         self._historical_dividends: pd.Series[int, float] = pd.Series(dtype=float)
@@ -119,15 +122,17 @@ class StockPosition(Position):
         order_quantity = sum(o.unfilled_quantity for o in self._open_orders if o.position_effect in (
             POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
         ))
+        split_locked_quantity = sum([i for i in self._split_share_lock.values()])
         if self.t_plus_enabled:
-            return self._quantity - order_quantity - self._non_closable
-        return self._quantity - order_quantity
+            return self._quantity - order_quantity - self._non_closable - split_locked_quantity
+        return self._quantity - order_quantity - split_locked_quantity
 
     def set_state(self, state):
         super(StockPosition, self).set_state(state)
         self._dividend_receivable = state.get("dividend_receivable")
         self._pending_transform = state.get("pending_transform")
         self._non_closable = state.get("non_closable", 0)
+        self._split_share_lock = defaultdict(int, state.get("split_share_lock") or {})
         self._historical_dividends = self._restore_historical_dividends(state.get("historical_dividends"))
 
     def get_state(self):
@@ -136,6 +141,7 @@ class StockPosition(Position):
             "dividend_receivable": self._dividend_receivable,
             "pending_transform": self._pending_transform,
             "non_closable": self._non_closable,
+            "split_share_lock": self._split_share_lock,
             "historical_dividends": [
                 (int(dividend_date), float(dividend_per_share))
                 for dividend_date, dividend_per_share in self._historical_dividends.items()
@@ -158,6 +164,7 @@ class StockPosition(Position):
 
     def before_trading(self, trading_date: date) -> float:
         delta_cash = super(StockPosition, self).before_trading(trading_date)
+        self._handle_split_locked(trading_date)
         self._unadjusted_prev_close = self.last_price
         if self._quantity == 0 and not self._dividend_receivable:
             return delta_cash
@@ -195,6 +202,11 @@ class StockPosition(Position):
                 pass
             else:
                 if transform_data is not None:
+                    """
+                    代码转换处理的流程:
+                    1. 需要考虑买入旧代码仓位时的成本，因此在构建新代码的仓位时，需要使用成本价 avg_price 和 conversion_ratio 进行初始化
+                    2. 在构建时花费的现金需要补充回来，具体的金额为旧仓位的 market_value_local + 成本与现价差异
+                    """
                     successor, conversion_ratio = transform_data
                     self._env.portfolio.get_account(successor).apply_trade(Trade.__from_create__(
                         order_id=None,
@@ -210,9 +222,12 @@ class StockPosition(Position):
                         successor_position.update_last_price(self._last_price / conversion_ratio)
                     # 把购买 successor 消耗的 cash 补充回来
                     delta_cash = self.market_value_local
-            if self.cash_return_by_stock_delisted:
-                delta_cash = self.market_value_local
-                self._trade_cost = -self.market_value  # 相当于卖掉了，所以给一个负成本
+                    delta_cash += (self.avg_price - self.last_price) * self.quantity
+                else:
+                    # 退市返回现金的操作只有在没有换代码的情况下执行
+                    if self.cash_return_by_stock_delisted:
+                        delta_cash = self.market_value_local
+                        self._trade_cost = -self.market_value  # 相当于卖掉了，所以给一个负成本
             self._quantity = self._old_quantity = 0
             self._queue.clear()
         return delta_cash
@@ -233,6 +248,13 @@ class StockPosition(Position):
             return None
         splits = splits.copy()
         splits["ex_date"] = splits["ex_date"] // 1000000
+        if "payable_date" not in splits.dtype.names:
+            # 旧 Bundle 没有 payable_date 信息，需要兼容，默认等于 ex_date，即不锁仓
+            splits = append_fields(
+                splits, "payable_date", splits["ex_date"], usemask=False, asrecarray=False
+            )
+        else:
+            splits["payable_date"] = splits["payable_date"] // 1000000
         return splits
 
     def _get_dividends_or_splits(self, events: Optional[ndarray], trading_date: date, date_field: str):
@@ -276,7 +298,7 @@ class StockPosition(Position):
         if payable_value and self.dividend_reinvestment:
             last_price = self.last_price
             account = self._env.get_account(self._order_book_id)
-            amount = get_amount_from_value(payable_value, self._instrument, last_price, self._env, account.cash)
+            amount = get_amount_from_value(payable_value, self._instrument, last_price, self._env, account.cash, account.market)
             if amount > 0:
                 trade = Trade.__from_create__(
                     None, last_price, amount, SIDE.BUY, POSITION_EFFECT.OPEN, self._order_book_id,
@@ -310,10 +332,24 @@ class StockPosition(Position):
         ratio = float(ratio_decimal)
         self._avg_price /= ratio
         self._last_price /= ratio  # type: ignore
+
+        quantity_before_split = self._quantity
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = int((Decimal(self._quantity) * ratio_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
         self._queue.handle_split(ratio_decimal, self._quantity)
+
+        payable_date = convert_int_to_date(splits["payable_date"][-1]).date()
+        changes_in_quantity = self._quantity - quantity_before_split
+        if (changes_in_quantity > 0) and (payable_date > trading_date):
+            # 属于拆股行为，并且 payable_date 在 trading_date 之后的 split 事件，新拆出来的股份在 payable_date 之前不可卖出
+            self._split_share_lock[payable_date] += self._quantity - quantity_before_split
+
         return ratio
+
+    def _handle_split_locked(self, trading_date: date):
+        for payable_date in list(self._split_share_lock):
+            if payable_date <= trading_date:
+                self._split_share_lock.pop(payable_date)
 
     def _after_position_queue_updated(self, trade: Trade, close_details: List[Tuple[date, int]]):
         if trade.position_effect == POSITION_EFFECT.CLOSE:
@@ -358,8 +394,8 @@ class FuturePosition(Position):
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._quantity - self._old_quantity)
 
-    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
-        super(FuturePosition, self).__init__(order_book_id, direction, init_quantity, init_price)
+    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None, target_instrument: Optional[Instrument]=None):
+        super(FuturePosition, self).__init__(order_book_id, direction, init_quantity, init_price, target_instrument)
 
         # 记录买入价到昨日结算价格之间的价差，用于计算增值税的 monthly_realized_pnl
         self._price_gap = 0

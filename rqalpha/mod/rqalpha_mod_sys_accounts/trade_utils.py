@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from rqalpha.environment import Environment
 from rqalpha.model.instrument import Instrument
-from rqalpha.const import SIDE, POSITION_EFFECT
+from rqalpha.const import SIDE, POSITION_EFFECT, MARKET
 from rqalpha.interface import TransactionCostArgs
 from rqalpha.mod.utils import round_order_quantity
 
@@ -18,8 +18,8 @@ def estimate_transaction_cost_calculator(env: Environment, ins: Instrument, delt
     )).total
 
 
-def get_amount_from_value(value: float, ins: Instrument, price: float, env: Environment, account_cash: float) -> int:
-    exchange_rates = env.data_proxy.get_exchange_rate(env.trading_dt.date(), ins.market)
+def get_amount_from_value(value: float, ins: Instrument, price: float, env: Environment, account_cash: float, market: MARKET = MARKET.CN) -> int:
+    exchange_rates = env.data_proxy.get_exchange_rate(env.trading_dt.date(), ins.market, market)
     exchange_rate_middle = (exchange_rates.bid_reference + exchange_rates.ask_reference) / 2
     amount = int(Decimal(value) / Decimal(price * exchange_rate_middle))
     if value > 0:

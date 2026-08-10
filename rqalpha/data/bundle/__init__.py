@@ -19,9 +19,7 @@ import pickle
 import re
 import uuid
 from typing import Optional, List, Iterable, Tuple
-import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
-from ctypes import c_bool
 from time import sleep
 
 import h5py
@@ -189,10 +187,11 @@ class GenerateSplitBundle:
         if split is None:
             raise RuntimeError(_("Got no split data"))
         split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
-        split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from']]
+        split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from', 'payable_date']]
         split.reset_index(inplace=True)
         split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)  # type: ignore
-        split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]
+        for dt_field in ('ex_date', 'payable_date'):
+            split[dt_field] = [convert_date_to_int(d) for d in split[dt_field]]
         split.set_index(['order_book_id', 'ex_date'], inplace=True)
         self._write([(
             order_book_id, split.loc[order_book_id].to_records()
@@ -418,11 +417,7 @@ def process_init(args: Optional[Synchronized] = None, kwargs=None, errors=None):
         # catch warning: rqdatac is already inited. Settings will be changed
         rqdatac.init(**kwargs)
     init_logger()
-    # Initialize process shared variables
-    global sval
-    if args:
-        set_sval(args)
-        sval = args
+    # Initialize process shared error list
     if errors is not None:
         bind_error_list(errors)
 
@@ -460,15 +455,14 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
 
 
 def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwargs):
-    succeed = multiprocessing.Value(c_bool, True)
     errors = reset_error_list()
     with ProgressedProcessPoolExecutor(
             max_workers=concurrency, initializer=process_init,
-            initargs=(succeed, rqdatac_kwargs, errors)
+            initargs=(None, rqdatac_kwargs, errors)
     ) as executor:
         for task in tasks:
             executor.submit(task)
-    return succeed.value
+    return errors
 
 
 def update_bundle(path, create, enable_compression=False, concurrency=1, rqdata_kwargs=None, **h5_kwargs):

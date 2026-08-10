@@ -150,7 +150,7 @@ class Environment(object):
                 if not v.can_cancel_order(order, account):
                     return False
         return True
-    
+
     def order_creation_failed(self, order_book_id, reason):
         user_system_log.warn(reason)
         self.event_bus.publish_event(Event(EVENT.ORDER_CREATION_REJECT, order_book_id=order_book_id, reason=reason))
@@ -219,7 +219,7 @@ class Environment(object):
                 if not v.can_submit_order(order, account):
                     return False
         return True
-    
+
     @cached_property
     def trading_days_a_year(self):
         self._trading_days_a_year = getattr(self.config.base, 'custom_trading_days_a_year', DAYS_CNT.TRADING_DAYS_A_YEAR)

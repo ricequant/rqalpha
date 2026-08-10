@@ -58,8 +58,7 @@ class ExchangeTradingCalendarStore(AbstractCalendarStore):
     def __init__(self, f):
         self._f = f
 
-    def get_trading_calendar(self):
-        # type: () -> pandas.DatetimeIndex
+    def get_trading_calendar(self) -> pandas.DatetimeIndex:
         return pandas.to_datetime([str(d) for d in np.load(self._f, allow_pickle=False)])
 
 
