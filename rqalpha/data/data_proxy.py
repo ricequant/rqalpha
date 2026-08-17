@@ -21,7 +21,7 @@ from typing import Union, List, Sequence, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from rqalpha.const import INSTRUMENT_TYPE, EXECUTION_PHASE, MARKET
+from rqalpha.const import INSTRUMENT_TYPE, EXECUTION_PHASE, MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
@@ -42,17 +42,17 @@ from .instruments_mixin import InstrumentsMixin
 
 
 class DataProxy(TradingDatesMixin, InstrumentsMixin):
-    def __init__(self, data_source: AbstractDataSource, price_board: AbstractPriceBoard):
+    def __init__(self, data_source: AbstractDataSource, price_board: AbstractPriceBoard, market: MARKET = MARKET.CN):
         self._data_source = data_source
         self._price_board = price_board
-        TradingDatesMixin.__init__(self, data_source)
+        TradingDatesMixin.__init__(self, data_source, market=market)
         InstrumentsMixin.__init__(self, data_source)
 
     def __getattr__(self, item):
         return getattr(self._data_source, item)
 
     def get_trading_minutes_for(self, order_book_id, dt):
-        instrument = self.instruments(order_book_id)
+        instrument = self.get_active_instrument(order_book_id, dt)
         minutes = self._data_source.get_trading_minutes_for(instrument, dt)
         return [] if minutes is None else minutes
 
@@ -81,21 +81,21 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         获取股票/基金分红信息
 
         :param str order_book_id: 合约代码
-        
+
         :return: `numpy.ndarray` | `None`
             返回分红信息的结构化数组，包含以下字段:
-            
+
             =========================   ===================================================
-            字段名                       描述  
+            字段名                       描述
             =========================   ===================================================
             book_closure_date           股权登记日，格式为 YYYYMMDD 的整数
-            announcement_date           公告日期，格式为 YYYYMMDD 的整数  
+            announcement_date           公告日期，格式为 YYYYMMDD 的整数
             dividend_cash_before_tax    税前现金分红，单位为元
             ex_dividend_date            除权除息日，格式为 YYYYMMDD 的整数
             payable_date                分红派息日，格式为 YYYYMMDD 的整数
             round_lot                   分红最小单位，例如：10 代表每 10 股派发
             =========================   ===================================================
-            
+
             如果该合约没有分红记录，则返回 None
         """
         instrument = self.instrument_not_none(order_book_id)
@@ -106,17 +106,17 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         获取股票拆股信息
 
         :param str order_book_id: 合约代码
-        
+
         :return: `numpy.ndarray` | `None`
             返回拆股信息的结构化数组，包含以下字段:
-            
+
             =========================   ===================================================
-            字段名                       描述  
+            字段名                       描述
             =========================   ===================================================
             ex_date                     除权日，格式为 YYYYMMDDHHMMSS 的整数（时分秒通常为000000）
             split_factor                拆股比例，例如：1.5 表示每股拆为 1.5 股
             =========================   ===================================================
-            
+
             如果该合约没有拆股记录，则返回 None
         """
         instrument = self.instrument_not_none(order_book_id)
@@ -190,7 +190,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
                 "datetime", "open", "limit_up", "limit_down", "volume", "total_turnover"
             ]}
         return PartialBarObject(instrument, bar)
-    
+
     def get_open_auction_volume(self, order_book_id, dt):
         instrument = self.instruments(order_book_id)
         volume = self._data_source.get_open_auction_volume(instrument, dt)
@@ -211,12 +211,12 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         self,
         order_book_id: str,
         bar_count: Optional[int],
-        frequency: str, 
-        field: Union[str, List[str], None], 
+        frequency: str,
+        field: Union[str, List[str], None],
         dt: datetime,
-        skip_suspended: bool = True, 
-        include_now: bool = False, 
-        adjust_type: str = 'pre', 
+        skip_suspended: bool = True,
+        include_now: bool = False,
+        adjust_type: str = 'pre',
         adjust_orig: Optional[datetime] = None
     ):
         instruments = self.get_instrument_history(order_book_id, dt)
@@ -318,5 +318,5 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         bar = self._data_source.get_algo_bar(id_or_ins, order_style.start_min, order_style.end_min, dt)
         return (bar[order_style.TYPE], bar["volume"]) if bar else (np.nan, 0)
 
-    def get_exchange_rate(self, date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+    def get_exchange_rate(self, date: date, local: MARKET, settlement: Optional[MARKET] = None) -> ExchangeRate:
         return self._data_source.get_exchange_rate(date, local, settlement)

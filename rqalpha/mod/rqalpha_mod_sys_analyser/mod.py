@@ -44,7 +44,7 @@ from .plot.consts import DefaultPlot, PLOT_TEMPLATE
 from .plot.utils import max_ddd as _max_ddd
 from .plot_store import PlotStore
 
-from .utils import _all_trades_are_equities
+from .utils import all_trades_are_equities
 
 
 def _get_yearly_risk_free_rates(
@@ -593,7 +593,7 @@ class AnalyserMod(AbstractMod):
             portfolio_event = portfolio_event.set_index(pd.DatetimeIndex(portfolio_event["datetime"]))
             result_dict["portfolio_event"] = portfolio_event
 
-        if _all_trades_are_equities(trades):
+        if all_trades_are_equities(trades):
             # 策略仅交易股票、指数、场内基金等品种时才计算换手率
             trades_values = trades.last_price * trades.last_quantity
             market_values = total_portfolios.market_value.dropna()

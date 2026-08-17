@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 
 from rqalpha.model.instrument import Instrument
 from rqalpha.const import INSTRUMENT_TYPE, POSITION_DIRECTION, DEFAULT_ACCOUNT_TYPE, EXCHANGE
+from rqalpha.interface import ExchangeRate
 
 
 class TestInstrument(unittest.TestCase):
@@ -328,6 +329,14 @@ class TestInstrument(unittest.TestCase):
         mock_trading_params.long_margin_ratio = 0.08
         mock_trading_params.short_margin_ratio = 0.08
         mock_data_proxy.get_futures_trading_parameters.return_value = mock_trading_params
+        mock_data_proxy.get_exchange_rate.return_value = ExchangeRate(
+            bid_reference=1.0,
+            ask_reference=1.0,
+            bid_settlement_sh=1.0,
+            ask_settlement_sh=1.0,
+            bid_settlement_sz=1.0,
+            ask_settlement_sz=1.0,
+        )
         mock_env.return_value.data_proxy = mock_data_proxy
 
         # 测试股票资金占用

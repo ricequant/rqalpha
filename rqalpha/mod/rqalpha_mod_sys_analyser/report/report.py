@@ -34,7 +34,7 @@ from rqalpha.const import DAYS_CNT
 
 from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
 from rqalpha.mod.rqalpha_mod_sys_analyser.report.excel_template import generate_xlsx_reports
-from rqalpha.mod.rqalpha_mod_sys_analyser.utils import _all_trades_are_equities
+from rqalpha.mod.rqalpha_mod_sys_analyser.utils import all_trades_are_equities
 
 
 def _returns(unit_net_value: Series):
@@ -55,7 +55,7 @@ def _yearly_indicators(
         trades: DataFrame,
 ):
     data = defaultdict(list)
-    can_calc_turnover = _all_trades_are_equities(trades)
+    can_calc_turnover = all_trades_are_equities(trades)
 
     for year, p_year_returns in p_returns.groupby(p_returns.index.year):  # noqa
         year_slice = p_returns.index.year == year  # noqa

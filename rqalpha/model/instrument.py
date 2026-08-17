@@ -327,6 +327,8 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         该合约在指定日期是否已上市
         """
+        if not isinstance(dt, datetime):  # 可能传进来的是个 datetime.date
+            return self.listed_date.date() <= dt
         return self.listed_date <= dt
 
     def de_listed_at(self, dt: datetime) -> bool:
@@ -463,11 +465,8 @@ class Instrument(metaclass=PropertyReprMeta):
         return Environment.get_instance().data_proxy.get_futures_trading_parameters(self.order_book_id, dt).short_margin_ratio
 
     def calc_cash_occupation(self, price: float, quantity: int, direction: POSITION_DIRECTION, dt: date) -> float:
-        env = Environment.get_instance()
-        market = MARKET(env.config.base.market)
-        if self.market != market:
-            exchange_rate = env.data_proxy.get_exchange_rate(dt, local=self.market, settlement=market)
-            price = price * exchange_rate.ask_reference
+        exchange_rate = Environment.get_instance().data_proxy.get_exchange_rate(dt, local=self.market)
+        price = price * exchange_rate.ask_reference
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:

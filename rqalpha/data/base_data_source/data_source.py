@@ -86,9 +86,9 @@ class BaseDataSource(AbstractDataSource):
         INSTRUMENT_TYPE.PUBLIC_FUND, INSTRUMENT_TYPE.REITs
     )
 
-    def __init__(self, base_config) -> None:
+    def __init__(self, base_config, market: MARKET = MARKET.CN) -> None:
         path = base_config.data_bundle_path
-        self._market = MARKET(getattr(base_config, "market", MARKET.CN))
+        self._market = market
         custom_future_info = getattr(base_config, "future_info", {})
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
@@ -151,9 +151,9 @@ class BaseDataSource(AbstractDataSource):
         2. 交易市场为其他时，只允许注册 market 与交易市场相同的 Instruments
         """
         if self._market == MARKET.CN:
-            allowed = (MARKET.CN, MARKET.HK)
+            allowed = {MARKET.CN, MARKET.HK}
         else:
-            allowed = (self._market, )
+            allowed = {self._market}
         for ins in instruments:
             if ins.market in allowed:
                 self._id_instrument_map.setdefault(ins.order_book_id, {})[ins.listed_date] = ins
@@ -448,7 +448,8 @@ class BaseDataSource(AbstractDataSource):
         ask_settlement_sz=1
     )
 
-    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: Optional[MARKET] = None) -> ExchangeRate:
+        settlement = settlement or self._market
         if local == settlement:
             return self.exchange_rate_1
         else:

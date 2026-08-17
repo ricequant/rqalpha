@@ -31,7 +31,7 @@ from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_t
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
 from rqalpha.data.bundle.utils import (
-    set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, START_DATE, END_DATE,
+    set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, get_error_list, START_DATE, END_DATE,
     STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
 )
 from rqalpha.data.bundle.daybar import GenerateDayBarTask, UpdateDayBarTask
@@ -187,11 +187,10 @@ class GenerateSplitBundle:
         if split is None:
             raise RuntimeError(_("Got no split data"))
         split['split_factor'] = split['split_coefficient_to'] / split['split_coefficient_from']
-        split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from', 'payable_date']]
+        split = split[['split_factor', 'split_coefficient_to', 'split_coefficient_from']]
         split.reset_index(inplace=True)
         split.rename(columns={'ex_dividend_date': 'ex_date'}, inplace=True)  # type: ignore
-        for dt_field in ('ex_date', 'payable_date'):
-            split[dt_field] = [convert_date_to_int(d) for d in split[dt_field]]
+        split['ex_date'] = [convert_date_to_int(d) for d in split['ex_date']]
         split.set_index(['order_book_id', 'ex_date'], inplace=True)
         self._write([(
             order_book_id, split.loc[order_book_id].to_records()
@@ -457,12 +456,11 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
 def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwargs):
     errors = reset_error_list()
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=process_init,
-            initargs=(None, rqdatac_kwargs, errors)
+        max_workers=concurrency, initializer=process_init, initargs=(None, rqdatac_kwargs, errors)
     ) as executor:
         for task in tasks:
             executor.submit(task)
-    return errors
+    return get_error_list()
 
 
 def update_bundle(path, create, enable_compression=False, concurrency=1, rqdata_kwargs=None, **h5_kwargs):

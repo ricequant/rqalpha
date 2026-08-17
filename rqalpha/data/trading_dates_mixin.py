@@ -33,10 +33,9 @@ def _to_timestamp(d: Union[datetime.date, str, int, float]) -> pd.Timestamp:
 
 
 class TradingDatesMixin(object):
-    def __init__(self, data_source: AbstractDataSource):
+    def __init__(self, data_source: AbstractDataSource, market: MARKET = MARKET.CN):
         self._data_source = data_source
         self._trading_calendars: Optional[Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]] = None
-        market = MARKET(getattr(Environment.get_instance().config.base, "market", "CN"))
         if market == MARKET.CN:
             self._default_trading_calendar_type = TRADING_CALENDAR_TYPE.CN_STOCK
         elif market == MARKET.HK:
