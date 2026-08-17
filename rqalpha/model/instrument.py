@@ -327,7 +327,7 @@ class Instrument(metaclass=PropertyReprMeta):
         """
         该合约在指定日期是否已上市
         """
-        if not isinstance(dt, datetime):  # 可能传进来的是个 datetime.date
+        if not isinstance(dt, datetime):  # 兼容 datetime.date
             return self.listed_date.date() <= dt
         return self.listed_date <= dt
 
@@ -338,6 +338,8 @@ class Instrument(metaclass=PropertyReprMeta):
         if self.type in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
             return dt.date() > self.de_listed_date.date()
         else:
+            if not isinstance(dt, datetime):
+                return dt >= self.de_listed_date.date()
             return dt >= self.de_listed_date
 
     STOCK_TRADING_PERIOD = [
