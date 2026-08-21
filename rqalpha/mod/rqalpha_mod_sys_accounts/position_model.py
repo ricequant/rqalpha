@@ -15,24 +15,22 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 from datetime import date, datetime
-from typing import List, Optional, Deque, Tuple, Dict
-from collections import deque, defaultdict
+from typing import List, Optional, Deque, Tuple
+from collections import deque
 
 from decimal import Decimal, ROUND_HALF_UP
 from numpy import ndarray, isclose
-from numpy.lib.recfunctions import append_fields
 import pandas as pd
 
 from rqalpha.interface import TransactionCost
 from rqalpha.model.trade import Trade
-from rqalpha.model.instrument import Instrument
 from rqalpha.const import POSITION_DIRECTION, SIDE, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, \
     TRADING_CALENDAR_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.portfolio.position import Position, PositionProxy
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, is_valid_price
-from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_int_to_date
+from rqalpha.utils.datetime_func import convert_date_to_date_int
 from rqalpha.utils.logger import user_system_log, system_log
 from rqalpha.utils.class_helper import deprecated_property
 from rqalpha.utils.i18n import gettext as _
@@ -321,7 +319,6 @@ class StockPosition(Position):
         self._avg_price /= ratio
         self._last_price /= ratio  # type: ignore
 
-        quantity_before_split = self._quantity
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = int((Decimal(self._quantity) * ratio_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
         self._queue.handle_split(ratio_decimal, self._quantity)

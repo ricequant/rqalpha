@@ -22,7 +22,7 @@ from rqalpha.model.order import Order
 from rqalpha.portfolio.account import Account
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.environment import Environment
-from rqalpha.utils.exception import InstrumentNotFound
+from rqalpha.utils.exception import InstrumentNotFound, MultipleInstrumentFound
 
 
 class IsTradingValidator(AbstractFrontendValidator):
@@ -32,7 +32,7 @@ class IsTradingValidator(AbstractFrontendValidator):
     def validate_submission(self, order: Order, account: Optional[Account] = None) -> Optional[str]:
         try:
             instrument = self._env.data_proxy.get_active_instrument(order.order_book_id, self._env.trading_dt)
-        except InstrumentNotFound as e:
+        except (InstrumentNotFound, MultipleInstrumentFound) as e:
             return _(u"Order Creation Failed: {order_book_id} is not listing!").format(
                 order_book_id=order.order_book_id)
 

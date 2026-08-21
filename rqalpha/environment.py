@@ -79,8 +79,6 @@ class Environment(object):
         from rqalpha.core.strategy_universe import StrategyUniverse
         self._universe = StrategyUniverse()
 
-        self._portfolio_factory = None
-
     @classmethod
     def get_instance(cls):
         """
@@ -228,9 +226,3 @@ class Environment(object):
         if self._trading_days_a_year is None:
             self._trading_days_a_year = DAYS_CNT.TRADING_DAYS_A_YEAR
         return self._trading_days_a_year
-
-    def set_portfolio_factory(self, factory):
-        self._portfolio_factory = factory
-
-    def get_portfolio_factory(self):
-        return self._portfolio_factory

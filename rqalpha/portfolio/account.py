@@ -96,8 +96,7 @@ class Account(metaclass=AccountMeta):
                 raise ValueError(_("invalid init position {order_book_id}: no valid price at {date}").format(
                     order_book_id=order_book_id, date=prev_date
                 ))
-            instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
-            self._get_or_create_pos(instrument, position_direction, init_quantity, init_price=init_price)
+            self._get_or_create_pos(order_book_id, position_direction, init_quantity, init_price=init_price)
 
         # 增值税和红利税
         self._capital_gains_tax = 0
@@ -148,9 +147,8 @@ class Account(metaclass=AccountMeta):
 
         self._positions.clear()
         for order_book_id, positions_state in state['positions'].items():
-            instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
             for direction in POSITION_DIRECTION:
-                position = self._get_or_create_pos(instrument, direction)
+                position = self._get_or_create_pos(order_book_id, direction)
                 if direction in positions_state.keys():
                     position.set_state(positions_state[direction])
                 else:
@@ -210,12 +208,19 @@ class Account(metaclass=AccountMeta):
                 if instruments:
                     instrument = instruments[-1]  # 已退市的合约
                 else:
-                    instrument = self._env.data_proxy.get_instrument_history(order_book_id)[0]  # 待上市的合约
+                    instruments = self._env.data_proxy.get_instrument_history(order_book_id)
+                    if not instruments:
+                        raise
+                    instrument = instruments[0]  # 待上市的合约
+                user_system_log.warning(
+                    _("{order_book_id} is not active on {trading_dt}, historical instrument information will be used to return an empty position.").format(
+                        order_book_id=order_book_id, trading_dt=self._env.trading_dt
+                    )
+                )
             return self._init_position(instrument, direction, 0, None)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction, position_effect):
-        instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
-        return self._get_or_create_pos(instrument, position_direction).calc_close_today_amount(trade_amount, position_effect)
+        return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount, position_effect)
 
     @property
     def type(self):
@@ -345,9 +350,12 @@ class Account(metaclass=AccountMeta):
     def market(self) -> MARKET:
         return self._market
 
+    def _is_position_empty(self, position) -> bool:
+        return position.quantity == 0 and position.equity == 0
+
     def _on_before_trading(self, _):
         for order_book_id, positions in list(self._positions.items()):
-            if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
+            if all(self._is_position_empty(p) for p in six.itervalues(positions)):
                 del self._positions[order_book_id]
 
         trading_date = self._env.trading_dt.date()
@@ -419,7 +427,6 @@ class Account(metaclass=AccountMeta):
         if trade.exec_id in self._backward_trade_set:
             return 0
         order_book_id = trade.order_book_id
-        instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
         if order and trade.position_effect != POSITION_EFFECT.MATCH:
             if trade.last_quantity != order.quantity:
                 self._frozen_cash -= trade.last_quantity / order.quantity * order.init_frozen_cash
@@ -428,7 +435,7 @@ class Account(metaclass=AccountMeta):
 
         def _apply(position_direction: POSITION_DIRECTION):
             nonlocal delta_cash, delta_monthly_realized_pnl
-            apply_result = self._get_or_create_pos(instrument, position_direction).apply_trade(trade)
+            apply_result = self._get_or_create_pos(order_book_id, position_direction).apply_trade(trade)
             try:
                 delta_cash_delta, delta_monthly_realized_pnl_delta = apply_result
             except TypeError:
@@ -463,13 +470,13 @@ class Account(metaclass=AccountMeta):
 
     def _get_or_create_pos(
             self,
-            instrument: Instrument,
+            order_book_id: str,
             direction: Union[POSITION_DIRECTION, str],
             init_quantity: int = 0,
             init_price : Optional[float] = None,
     ) -> Position:
-        order_book_id = instrument.order_book_id
         if order_book_id not in self._positions:
+            instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
             if direction == POSITION_DIRECTION.LONG:
                 long_quantity, short_quantity = init_quantity, 0
             else:

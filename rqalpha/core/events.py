@@ -178,6 +178,9 @@ class EVENT(Enum):
     # 扣税完成
     TAXES_PAID = "taxes_paid"
 
+    # 初始化 portfolio
+    INIT_PORTFOLIO = 'init_portfolio'
+
 
 def parse_event(event_str):
     return EVENT[event_str.upper()]

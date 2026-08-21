@@ -171,8 +171,24 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
 
     @lru_cache(512)
     def get_bar(self, order_book_id: str, dt: date, frequency: str = '1d') -> BarObject:
-        instrument = self.instruments(order_book_id)
         if dt is None:
+            instruments = self.get_instrument_history(order_book_id)
+            if not instruments:
+                raise InstrumentNotFound(_("No instrument found: {order_book_id}").format(order_book_id=order_book_id))
+            instrument = instruments[-1]
+            return BarObject(instrument, NANDict, dt)
+        try:
+            instrument = self.get_active_instrument(order_book_id, dt)
+        except InstrumentNotFound:
+            # 如果没有任何一个活跃的 instrument，那么优先获取最近的已退市合约，再没有则获取最近的待上市合约
+            instruments = self.get_instrument_history(order_book_id, dt)
+            if not instruments:
+                instruments = self.get_pending_listing_instrument(order_book_id, dt)
+                if not instruments:
+                    raise InstrumentNotFound(_("No instrument found at {dt}: {order_book_id}").format(dt=dt, order_book_id=order_book_id))
+                instrument = instruments[0]
+            else:
+                instrument = instruments[-1]
             return BarObject(instrument, NANDict, dt)
         bar = self._data_source.get_bar(instrument, dt, frequency)
         if bar:

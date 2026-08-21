@@ -29,7 +29,7 @@ from rqalpha.environment import Environment
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
 from rqalpha.utils.typing import DateLike
-from rqalpha.utils.exception import RQInvalidArgument, InstrumentNotFound
+from rqalpha.utils.exception import RQInvalidArgument, InstrumentNotFound, MultipleInstrumentFound
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that
 from rqalpha.api import export_as_api
@@ -66,7 +66,7 @@ def assure_order_book_id(id_or_ins):
         return id_or_ins.order_book_id
     try:
         return Environment.get_instance().data_proxy.assure_order_book_id(id_or_ins)
-    except InstrumentNotFound as e:
+    except (InstrumentNotFound, MultipleInstrumentFound) as e:
         raise RQInvalidArgument(_("instrument {} not found").format(id_or_ins))
 
 
@@ -74,7 +74,7 @@ def assure_active_ins_for_order_api(order_book_id: str) -> Optional[Instrument]:
     env = Environment.get_instance()
     try:
         return env.data_proxy.get_active_instrument(order_book_id, env.trading_dt)
-    except InstrumentNotFound as e:
+    except (InstrumentNotFound, MultipleInstrumentFound) as e:
         reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(order_book_id=order_book_id)
         user_system_log.warn(reason)
         env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))

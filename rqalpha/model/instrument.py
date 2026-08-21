@@ -18,7 +18,7 @@
 import re
 import copy
 from datetime import datetime, time, date
-from typing import Dict, Callable, Optional
+from typing import Dict, Callable, Optional, Union
 from methodtools import lru_cache
 
 import numpy as np
@@ -316,14 +316,14 @@ class Instrument(metaclass=PropertyReprMeta):
         else:
             raise NotImplementedError
 
-    def active_at(self, dt: datetime) -> bool:
+    def active_at(self, dt: Union[date, datetime]) -> bool:
         """
         该合约在指定日期是否在交易
         """
         # 原有命名 listing_at 不合理，listing 一般表示“正在挂牌”的过程中
         return self.listed_at(dt) and not self.de_listed_at(dt)
 
-    def listed_at(self, dt: datetime) -> bool:
+    def listed_at(self, dt: Union[date, datetime]) -> bool:
         """
         该合约在指定日期是否已上市
         """
@@ -331,12 +331,13 @@ class Instrument(metaclass=PropertyReprMeta):
             return self.listed_date.date() <= dt
         return self.listed_date <= dt
 
-    def de_listed_at(self, dt: datetime) -> bool:
+    def de_listed_at(self, dt: Union[date, datetime]) -> bool:
         """
         该合约在指定日期是否已退市
         """
         if self.type in (INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION):
-            return dt.date() > self.de_listed_date.date()
+            trading_date = dt.date() if isinstance(dt, datetime) else dt
+            return trading_date > self.de_listed_date.date()
         else:
             if not isinstance(dt, datetime):
                 return dt >= self.de_listed_date.date()
@@ -467,8 +468,9 @@ class Instrument(metaclass=PropertyReprMeta):
         return Environment.get_instance().data_proxy.get_futures_trading_parameters(self.order_book_id, dt).short_margin_ratio
 
     def calc_cash_occupation(self, price: float, quantity: int, direction: POSITION_DIRECTION, dt: date) -> float:
-        exchange_rate = Environment.get_instance().data_proxy.get_exchange_rate(dt, local=self.market)
-        price = price * exchange_rate.ask_reference
+        if self.market != MARKET.CN:  # A股默认不需要换汇
+            exchange_rate = Environment.get_instance().data_proxy.get_exchange_rate(dt, local=self.market)
+            price = price * exchange_rate.ask_reference
         if self.type in INST_TYPE_IN_STOCK_ACCOUNT:
             return price * quantity
         elif self.type == INSTRUMENT_TYPE.FUTURE:

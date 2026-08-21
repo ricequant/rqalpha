@@ -166,10 +166,12 @@ def run(config, source_code=None, user_funcs=None):
 
         assert env.broker is not None
         assert env.event_source is not None
+
+        # broker, event_source 已就绪，相关 Mod 可以创建并注册 Portfolio。如果没有 Mod 注册，则使用默认 Portfolio
+        env.event_bus.publish_event(Event(EVENT.INIT_PORTFOLIO))
         if not hasattr(env, "portfolio"):
             from rqalpha.portfolio import Portfolio
-            portfolio_factory = env.get_portfolio_factory() or Portfolio
-            env.set_portfolio(portfolio_factory(
+            env.set_portfolio(Portfolio(
                 config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate, env
             ))
 

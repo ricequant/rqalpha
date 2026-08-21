@@ -221,7 +221,12 @@ class BaseDataSource(AbstractDataSource):
 
     @lru_cache(None)
     def _all_day_bars_of(self, instrument):
-        return self._day_bar_stores[instrument.type, instrument.market].get_bars(instrument.order_book_id)
+        bars = self._day_bar_stores[instrument.type, instrument.market].get_bars(instrument.order_book_id)
+        listed_date = np.uint64(convert_date_to_int(instrument.listed_date))
+        de_listed_date = np.uint64(convert_date_to_int(instrument.de_listed_date))
+        if instrument.type in {INSTRUMENT_TYPE.FUTURE, INSTRUMENT_TYPE.OPTION}:
+            return bars[(bars["datetime"] >= listed_date) & (bars["datetime"] <= de_listed_date)]
+        return bars[(bars["datetime"] >= listed_date) & (bars["datetime"] < de_listed_date)]
 
     @lru_cache(None)
     def _filtered_day_bars(self, instrument):
