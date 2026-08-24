@@ -16,21 +16,19 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import abc
-from typing import List, Optional, Sequence, Iterable
+from typing import List, Optional, Sequence
 
 import numpy as np
 import pandas
 
-from rqalpha.model.instrument import Instrument
 from rqalpha.utils.typing import DateLike
-from rqalpha.const import INSTRUMENT_TYPE
 
 from .deprecated import AbstractInstrumentStore
 
+
 class AbstractDayBarStore:
     @abc.abstractmethod
-    def get_bars(self, order_book_id):
-        # type: (str) -> np.ndarray
+    def get_bars(self, order_book_id: str) -> np.ndarray:
         raise NotImplementedError
 
     def get_date_range(self, order_book_id):
@@ -39,23 +37,20 @@ class AbstractDayBarStore:
 
 class AbstractCalendarStore:
     @abc.abstractmethod
-    def get_trading_calendar(self):
-        # type: () -> pandas.DatetimeIndex
+    def get_trading_calendar(self) -> pandas.DatetimeIndex:
         raise NotImplementedError
 
 
 class AbstractDateSet:
     @abc.abstractmethod
-    def contains(self, order_book_id, dates):
-        # type: (str, Sequence[DateLike]) -> Optional[List[bool]]
+    def contains(self, order_book_id: str, dates: Sequence[DateLike]) -> Optional[List[bool]]:
         # 若 DateSet 中不包含该 order_book_id 的信息则返回 None，否则返回 List[bool]
         raise NotImplementedError
 
 
 class AbstractDividendStore:
     @abc.abstractmethod
-    def get_dividend(self, order_book_id):
-        # type: (str) -> np.ndarray
+    def get_dividend(self, order_book_id: str) -> np.ndarray:
         raise NotImplementedError
 
 

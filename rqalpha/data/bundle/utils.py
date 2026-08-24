@@ -49,14 +49,7 @@ def get_error_list() -> List[str]:
     return errors
 
 
-def mark_update_failed(message: Optional[str] = None) -> None:
-    if sval is not None:
-        sval.value = False
-
-    if message is not None and error_queue is not None:
-        error_queue.put(str(message))
-
-
-def log_and_mark_error(error_message: str):
+def log_and_mark_error(error_message: Optional[str] = None):
     system_log.error(error_message)
-    mark_update_failed(error_message)
+    if error_message is not None and error_queue is not None:
+        error_queue.put(str(error_message))

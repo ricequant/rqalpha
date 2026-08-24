@@ -10,7 +10,7 @@ def test_get_amount_from_value_uses_ask_exchange_rate_for_buying_power():
     env = SimpleNamespace(
         trading_dt=datetime(2026, 1, 5),
         data_proxy=SimpleNamespace(
-            get_exchange_rate=lambda _date, _market: ExchangeRate(
+            get_exchange_rate=lambda _date, _local = MARKET.CN: ExchangeRate(
                 bid_reference=1,
                 ask_reference=2,
                 bid_settlement_sh=1,

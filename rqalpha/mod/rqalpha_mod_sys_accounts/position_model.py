@@ -62,8 +62,8 @@ class StockPosition(Position):
 
     calendar_type = TRADING_CALENDAR_TYPE.CN_STOCK
 
-    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
-        super(StockPosition, self).__init__(order_book_id, direction, init_quantity, init_price)
+    def __init__(self, instrument, direction, init_quantity=0, init_price=None):
+        super(StockPosition, self).__init__(instrument, direction, init_quantity, init_price)
         self._dividend_receivable: Deque[Tuple[date, float]] = deque()
         self._pending_transform = None
         self._non_closable = 0
@@ -195,6 +195,11 @@ class StockPosition(Position):
                 pass
             else:
                 if transform_data is not None:
+                    """
+                    代码转换处理的流程:
+                    1. 需要考虑买入旧代码仓位时的成本，因此在构建新代码的仓位时，需要使用成本价 avg_price 和 conversion_ratio 进行初始化
+                    2. 在构建时花费的现金需要补充回来，具体的金额为旧仓位的 market_value_local + 成本与现价差异
+                    """
                     successor, conversion_ratio = transform_data
                     self._env.portfolio.get_account(successor).apply_trade(Trade.__from_create__(
                         order_id=None,
@@ -210,9 +215,12 @@ class StockPosition(Position):
                         successor_position.update_last_price(self._last_price / conversion_ratio)
                     # 把购买 successor 消耗的 cash 补充回来
                     delta_cash = self.market_value_local
-            if self.cash_return_by_stock_delisted:
-                delta_cash = self.market_value_local
-                self._trade_cost = -self.market_value  # 相当于卖掉了，所以给一个负成本
+                    delta_cash += (self.avg_price - self.last_price) * self.quantity
+                else:
+                    # 退市返回现金的操作只有在没有换代码的情况下执行
+                    if self.cash_return_by_stock_delisted:
+                        delta_cash = self.market_value_local
+                        self._trade_cost = -self.market_value  # 相当于卖掉了，所以给一个负成本
             self._quantity = self._old_quantity = 0
             self._queue.clear()
         return delta_cash
@@ -310,9 +318,11 @@ class StockPosition(Position):
         ratio = float(ratio_decimal)
         self._avg_price /= ratio
         self._last_price /= ratio  # type: ignore
+
         # int(6000 * 1.15) -> 6899
         self._old_quantity = self._quantity = int((Decimal(self._quantity) * ratio_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
         self._queue.handle_split(ratio_decimal, self._quantity)
+
         return ratio
 
     def _after_position_queue_updated(self, trade: Trade, close_details: List[Tuple[date, int]]):
@@ -358,8 +368,8 @@ class FuturePosition(Position):
     old_quantity = property(lambda self: self._old_quantity)
     today_quantity = property(lambda self: self._quantity - self._old_quantity)
 
-    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
-        super(FuturePosition, self).__init__(order_book_id, direction, init_quantity, init_price)
+    def __init__(self, instrument, direction, init_quantity=0, init_price=None):
+        super(FuturePosition, self).__init__(instrument, direction, init_quantity, init_price)
 
         # 记录买入价到昨日结算价格之间的价差，用于计算增值税的 monthly_realized_pnl
         self._price_gap = 0

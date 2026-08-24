@@ -16,14 +16,14 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from typing import List, Optional, Iterable, Dict, Union
-from datetime import datetime
+from datetime import datetime, date
 
 from typing_extensions import deprecated
 
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.exception import InstrumentNotFound
+from rqalpha.utils.exception import InstrumentNotFound, MultipleInstrumentFound
 from rqalpha.const import INSTRUMENT_TYPE
 
 from rqalpha.interface import AbstractDataSource
@@ -40,7 +40,8 @@ class InstrumentsMixin:
         :param id_or_sym: 合约代码或 order_book_id
         :param dt: 指定时间点
         :returns: 合约对象
-        :raises InstrumentNotFound: 找不到合约或找到多个合约时抛出
+        :raises InstrumentNotFound: 找不到合约时抛出
+        :raises MultipleInstrumentFound: 找到多个合约时抛出
         """
         candidates = []
         for instrument in self._data_source.get_instruments(id_or_syms=[id_or_sym]):
@@ -49,7 +50,7 @@ class InstrumentsMixin:
         if not candidates:
             raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_sym))
         if len(candidates) > 1:
-            raise InstrumentNotFound(_("Multiple instruments found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_sym))
+            raise MultipleInstrumentFound(_("Multiple instruments found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_sym))
         return candidates[0]
 
     @lru_cache(2048)
