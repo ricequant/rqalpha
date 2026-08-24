@@ -85,19 +85,3 @@ class InstrumentsMixinUnitTestCase(RQAlphaTestCase):
 
         self.data_source.get_instruments.assert_called_once_with(id_or_syms=[order_book_id])
 
-    def test_get_pending_listing_instrument_sorts_and_excludes_retired_instruments(self):
-        order_book_id = "000001.XSHE"
-        dt = date(2024, 1, 2)
-        retired_instrument = self._make_instrument(order_book_id, "2000-01-01", "2020-01-01")
-        first_pending_instrument = self._make_instrument(order_book_id, "2025-01-01", "2999-12-31")
-        second_pending_instrument = self._make_instrument(order_book_id, "2026-01-01", "2999-12-31")
-        self.data_source.get_instruments.return_value = [
-            second_pending_instrument,
-            retired_instrument,
-            first_pending_instrument,
-        ]
-
-        instruments = self.instruments_mixin.get_pending_listing_instrument(order_book_id, dt)
-
-        self.assertEqual(instruments, [first_pending_instrument, second_pending_instrument])
-        self.data_source.get_instruments.assert_called_once_with(id_or_syms=[order_book_id])

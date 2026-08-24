@@ -350,12 +350,9 @@ class Account(metaclass=AccountMeta):
     def market(self) -> MARKET:
         return self._market
 
-    def _is_position_empty(self, position) -> bool:
-        return position.quantity == 0 and position.equity == 0
-
     def _on_before_trading(self, _):
         for order_book_id, positions in list(self._positions.items()):
-            if all(self._is_position_empty(p) for p in six.itervalues(positions)):
+            if not any(positions.values()):
                 del self._positions[order_book_id]
 
         trading_date = self._env.trading_dt.date()

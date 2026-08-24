@@ -88,16 +88,6 @@ class InstrumentsMixin:
         """
         return list(self._data_source.get_instruments(id_or_syms=id_or_syms))
 
-    def get_pending_listing_instrument(self, id_or_sym: str, dt: Union[date, datetime]) -> List[Instrument]:
-        """获取指定时间点即将上市的合约列表
-
-        :param id_or_sym: 合约代码或 order_book_id
-        :param dt: 指定时间点
-        :returns: 合约对象列表
-        """
-        result = [ins for ins in self._data_source.get_instruments(id_or_syms=[id_or_sym]) if not ins.listed_at(dt)]
-        return sorted(result, key=lambda ins: ins.listed_date)
-
     def get_all_instruments(self, types: List[INSTRUMENT_TYPE], dt: Optional[datetime] = None) -> List[Instrument]:
         """获取指定类型的所有合约。
 

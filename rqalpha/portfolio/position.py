@@ -107,6 +107,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         if init_quantity:
             self._queue.handle_trade(init_quantity, self._env.trading_dt.date())
 
+    def __bool__(self):
+        return bool(self.quantity != 0 or self.equity != 0)
+
     @property
     def order_book_id(self) -> str:
         return self._order_book_id
