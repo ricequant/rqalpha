@@ -29,7 +29,7 @@ from rqalpha.environment import Environment
 from rqalpha.const import INSTRUMENT_TYPE, EXC_TYPE
 from rqalpha.utils import unwrapper
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME, InstrumentNotFound
+from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME, InstrumentNotFound, MultipleInstrumentFound
 from rqalpha.utils.logger import user_system_log
 
 
@@ -73,7 +73,7 @@ def assure_active_instrument(id_or_ins) -> Instrument:
         env = Environment.get_instance()
         try:
             ins = env.data_proxy.get_active_instrument(id_or_ins, env.trading_dt)
-        except InstrumentNotFound as e:
+        except (InstrumentNotFound, MultipleInstrumentFound) as e:
             return _raise()
         return ins
     else:
@@ -110,7 +110,7 @@ def assure_order_book_id(order_book_id: str, expected_type: Optional[INSTRUMENT_
     env = Environment.get_instance()
     try:
         order_book_id = env.data_proxy.assure_order_book_id(order_book_id, expected_type)
-    except InstrumentNotFound as e:
+    except (InstrumentNotFound, MultipleInstrumentFound) as e:
         raise RQInvalidArgument(_("invalid order_book_id: {order_book_id}").format(order_book_id=order_book_id))
     return order_book_id
 

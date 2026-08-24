@@ -18,12 +18,7 @@ from collections import ChainMap
 import os
 from datetime import date, datetime, timedelta
 from itertools import chain, repeat
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast, Tuple
-
-try:
-    from typing import Protocol, runtime_checkable
-except ImportError:
-    from typing_extensions import Protocol, runtime_checkable
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Union, cast, Tuple, Protocol, runtime_checkable
 
 import numpy as np
 import pandas as pd
@@ -42,8 +37,8 @@ from rqalpha.data.base_data_source.adjust import FIELDS_REQUIRE_ADJUSTMENT, adju
 from rqalpha.data.base_data_source.storage_interface import (AbstractCalendarStore, AbstractDateSet,
                                 AbstractDayBarStore, AbstractDividendStore,
                                 AbstractInstrumentStore, AbstractSimpleFactorStore)
-from rqalpha.data.base_data_source.storages import (DateSet, SecuritiesDayBarStore, INDXDayBarStore, 
-                       FutureDayBarStore, DividendStore, ExchangeTradingCalendarStore, 
+from rqalpha.data.base_data_source.storages import (DateSet, SecuritiesDayBarStore, INDXDayBarStore,
+                       FutureDayBarStore, DividendStore, ExchangeTradingCalendarStore,
                        FutureInfoStore, ShareTransformationStore, SimpleFactorStore,
                        YieldCurveStore, FuturesTradingParameters, load_instruments_from_pkl)
 
@@ -91,15 +86,16 @@ class BaseDataSource(AbstractDataSource):
         INSTRUMENT_TYPE.PUBLIC_FUND, INSTRUMENT_TYPE.REITs
     )
 
-    def __init__(self, base_config) -> None:
+    def __init__(self, base_config, market: MARKET = MARKET.CN) -> None:
         path = base_config.data_bundle_path
+        self._market = market
         custom_future_info = getattr(base_config, "future_info", {})
         if not os.path.exists(path):
             raise RuntimeError('bundle path {} not exist'.format(os.path.abspath(path)))
 
         def _p(name):
             return os.path.join(path, name)
-        
+
         # static registered storages
         self._future_info_store = FutureInfoStore(_p("future_info.json"), custom_future_info)
         self._yield_curve = YieldCurveStore(_p('yield_curve.h5'))
@@ -149,11 +145,21 @@ class BaseDataSource(AbstractDataSource):
         self._day_bar_stores[instrument_type, market] = store
 
     def register_instruments(self, instruments: Iterable[Instrument]):
+        """
+        注册 Instruments, 根据市场不同会有不同的限制条件:
+        1. 交易市场为 MARKET.CN 时，允许注册 market 为 MARKET.CN 和 MARKET.HK 的 Instruments
+        2. 交易市场为其他时，只允许注册 market 与交易市场相同的 Instruments
+        """
+        if self._market == MARKET.CN:
+            allowed = {MARKET.CN, MARKET.HK}
+        else:
+            allowed = {self._market}
         for ins in instruments:
-            self._id_instrument_map.setdefault(ins.order_book_id, {})[ins.listed_date] = ins
-            self._sym_instrument_map.setdefault(ins.symbol, {})[ins.listed_date] = ins
-            self._grouped_instruments.setdefault(ins.type, []).append(ins)
-    
+            if ins.market in allowed:
+                self._id_instrument_map.setdefault(ins.order_book_id, {})[ins.listed_date] = ins
+                self._sym_instrument_map.setdefault(ins.symbol, {})[ins.listed_date] = ins
+                self._grouped_instruments.setdefault(ins.type, []).append(ins)
+
     def register_dividend_store(self, instrument_type: INSTRUMENT_TYPE, dividend_store: AbstractDividendStore, market: MARKET = MARKET.CN):
         self._dividend_stores[instrument_type, market] = dividend_store
 
@@ -166,8 +172,7 @@ class BaseDataSource(AbstractDataSource):
     def register_ex_factor_store(self, instrument_type: INSTRUMENT_TYPE, ex_factor_store: AbstractSimpleFactorStore, market: MARKET = MARKET.CN):
         self._ex_factor_stores[instrument_type, market] = ex_factor_store
 
-    def append_suspend_date_set(self, date_set):
-        # type: (AbstractDateSet) -> None
+    def append_suspend_date_set(self, date_set: AbstractDateSet) -> None:
         self._suspend_days.append(date_set)
 
     @lru_cache(2048)
@@ -278,7 +283,7 @@ class BaseDataSource(AbstractDataSource):
             return None
         # 考虑代码复用的情况，需要过滤掉不在上市日期范围内到数据
         factors = factors[
-            (factors["start_date"] >= convert_dt_to_int(instrument.listed_date)) & 
+            (factors["start_date"] >= convert_dt_to_int(instrument.listed_date)) &
             (factors["start_date"] <= convert_dt_to_int(instrument.de_listed_date))
         ]
         if len(factors) == 0:
@@ -315,15 +320,15 @@ class BaseDataSource(AbstractDataSource):
         return bars
 
     def history_bars(
-        self, 
-        instrument: Instrument, 
-        bar_count: Optional[int], 
-        frequency: str, 
-        fields: Union[str, List[str], None], 
-        dt: datetime, 
+        self,
+        instrument: Instrument,
+        bar_count: Optional[int],
+        frequency: str,
+        fields: Union[str, List[str], None],
+        dt: datetime,
         skip_suspended: bool = True,
-        include_now: bool = False, 
-        adjust_type: str = 'pre', 
+        include_now: bool = False,
+        adjust_type: str = 'pre',
         adjust_orig: Optional[datetime] = None
     ) -> Optional[np.ndarray]:
 
@@ -348,7 +353,7 @@ class BaseDataSource(AbstractDataSource):
                 monday = dt - timedelta(days=dt.weekday())
                 monday = np.uint64(convert_date_to_int(monday))
                 i = bars['datetime'].searchsorted(monday, side='left')
-            
+
             if bar_count is None:
                 left = 0
             else:
@@ -443,7 +448,8 @@ class BaseDataSource(AbstractDataSource):
         ask_settlement_sz=1
     )
 
-    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: Optional[MARKET] = None) -> ExchangeRate:
+        settlement = settlement or self._market
         if local == settlement:
             return self.exchange_rate_1
         else:

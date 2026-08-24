@@ -1,4 +1,4 @@
-from typing import Union, Callable
+from typing import Union
 from decimal import Decimal
 
 from rqalpha.environment import Environment

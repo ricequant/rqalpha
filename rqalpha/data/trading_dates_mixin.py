@@ -22,9 +22,10 @@ import pandas as pd
 import numpy as np
 
 from rqalpha.utils.functools import lru_cache
-from rqalpha.const import TRADING_CALENDAR_TYPE
+from rqalpha.const import TRADING_CALENDAR_TYPE, MARKET
 from rqalpha.utils.typing import DateLike
 from rqalpha.interface import AbstractDataSource
+from rqalpha.environment import Environment
 
 
 def _to_timestamp(d: Union[datetime.date, str, int, float]) -> pd.Timestamp:
@@ -32,16 +33,23 @@ def _to_timestamp(d: Union[datetime.date, str, int, float]) -> pd.Timestamp:
 
 
 class TradingDatesMixin(object):
-    def __init__(self, data_source: AbstractDataSource):
+    def __init__(self, data_source: AbstractDataSource, market: MARKET = MARKET.CN):
         self._data_source = data_source
         self._trading_calendars: Optional[Dict[TRADING_CALENDAR_TYPE, pd.DatetimeIndex]] = None
+        if market == MARKET.CN:
+            self._default_trading_calendar_type = TRADING_CALENDAR_TYPE.CN_STOCK
+        elif market == MARKET.HK:
+            self._default_trading_calendar_type = TRADING_CALENDAR_TYPE.HK_STOCK
+        else:
+            raise ValueError(f"Invalid exchange market: {market}")
 
-    def get_trading_calendar(self, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK) -> pd.DatetimeIndex:
+    def get_trading_calendar(self, trading_calendar_type: Optional[TRADING_CALENDAR_TYPE] = None) -> pd.DatetimeIndex:
         if self._trading_calendars is None:
             self._trading_calendars = self._data_source.get_trading_calendars()
+        trading_calendar_type = trading_calendar_type or self._default_trading_calendar_type
         return self._trading_calendars[trading_calendar_type]
 
-    def get_trading_dates(self, start_date, end_date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
+    def get_trading_dates(self, start_date, end_date, trading_calendar_type: Optional[TRADING_CALENDAR_TYPE] = None):
         # 只需要date部分
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         start_date = _to_timestamp(start_date)
@@ -51,7 +59,7 @@ class TradingDatesMixin(object):
         return trading_dates[left:right]
 
     @lru_cache(64)
-    def get_previous_trading_date(self, date: DateLike, n=1, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK) -> pd.Timestamp:
+    def get_previous_trading_date(self, date: DateLike, n=1, trading_calendar_type: Optional[TRADING_CALENDAR_TYPE] = None) -> pd.Timestamp:
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date))
         if pos >= n:
@@ -60,7 +68,7 @@ class TradingDatesMixin(object):
             return trading_dates[0]
 
     @lru_cache(64)
-    def get_next_trading_date(self, date, n=1, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
+    def get_next_trading_date(self, date, n=1, trading_calendar_type: Optional[TRADING_CALENDAR_TYPE] = None) -> pd.Timestamp:
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(date), side='right')
         if pos + n > len(trading_dates):
@@ -68,7 +76,7 @@ class TradingDatesMixin(object):
         else:
             return trading_dates[pos + n - 1]
 
-    def is_trading_date(self, date: datetime.date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
+    def is_trading_date(self, date: datetime.date, trading_calendar_type: Optional[TRADING_CALENDAR_TYPE] = None) -> bool:
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(pd.Timestamp(date))
         return pos < len(trading_dates) and trading_dates[pos].date() == date
@@ -80,7 +88,7 @@ class TradingDatesMixin(object):
     def get_future_trading_date(self, dt: datetime.datetime) -> pd.Timestamp:
         return self._get_future_trading_date(dt.replace(minute=0, second=0, microsecond=0))
 
-    def get_n_trading_dates_until(self, dt, n, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
+    def get_n_trading_dates_until(self, dt, n, trading_calendar_type: Optional[TRADING_CALENDAR_TYPE] = None):
         trading_dates = self.get_trading_calendar(trading_calendar_type)
         pos = trading_dates.searchsorted(_to_timestamp(dt), side='right')
         if pos >= n:
@@ -88,7 +96,7 @@ class TradingDatesMixin(object):
 
         return trading_dates[:pos]
 
-    def count_trading_dates(self, start_date, end_date, trading_calendar_type: TRADING_CALENDAR_TYPE = TRADING_CALENDAR_TYPE.CN_STOCK):
+    def count_trading_dates(self, start_date, end_date, trading_calendar_type: Optional[TRADING_CALENDAR_TYPE] = None) -> int:
         start_date = _to_timestamp(start_date)
         end_date = _to_timestamp(end_date)
         trading_dates = self.get_trading_calendar(trading_calendar_type)
@@ -109,7 +117,7 @@ class TradingDatesMixin(object):
             return trading_dates[pos + 1]
 
         return td
-    
+
     def batch_get_trading_date(self, dt_index: pd.DatetimeIndex):
         # 获取 numpy.array 中所有时间所在的交易日
         # 认为晚八点后为第二个交易日，认为晚八点至次日凌晨四点为夜盘

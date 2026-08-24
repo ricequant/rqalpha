@@ -12,7 +12,12 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from rqalpha.utils.testing import DataProxyFixture, RQAlphaTestCase
+from datetime import date, datetime
+from unittest.mock import Mock
+
+from rqalpha.data.instruments_mixin import InstrumentsMixin
+from rqalpha.utils.exception import InstrumentNotFound, MultipleInstrumentFound
+from rqalpha.utils.testing import DataProxyFixture, RQAlphaTestCase, mock_instrument
 
 
 class InstrumentMixinTestCase(DataProxyFixture, RQAlphaTestCase):
@@ -43,3 +48,40 @@ class InstrumentMixinTestCase(DataProxyFixture, RQAlphaTestCase):
     def test_is_night_trading(self):
         assert not self.data_proxy.is_night_trading(["TF1912"])
         assert self.data_proxy.is_night_trading(["AG1912", "000001.XSHE"])
+
+
+class InstrumentsMixinUnitTestCase(RQAlphaTestCase):
+    def init_fixture(self):
+        self.data_source = Mock()
+        self.instruments_mixin = InstrumentsMixin(self.data_source)
+
+    @staticmethod
+    def _make_instrument(order_book_id, listed_date, de_listed_date):
+        return mock_instrument(
+            order_book_id,
+            listed_date=listed_date,
+            de_listed_date=de_listed_date,
+        )
+
+    def test_get_active_instrument_raises_not_found_without_candidate(self):
+        order_book_id = "UNKNOWN.XSHE"
+        dt = datetime(2024, 1, 2)
+        self.data_source.get_instruments.return_value = []
+
+        with self.assertRaises(InstrumentNotFound):
+            self.instruments_mixin.get_active_instrument(order_book_id, dt)
+
+        self.data_source.get_instruments.assert_called_once_with(id_or_syms=[order_book_id])
+
+    def test_get_active_instrument_raises_for_multiple_candidates(self):
+        order_book_id = "000001.XSHE"
+        dt = datetime(2024, 1, 2)
+        first_instrument = self._make_instrument(order_book_id, "2020-01-01", "2999-12-31")
+        second_instrument = self._make_instrument(order_book_id, "2023-01-01", "2999-12-31")
+        self.data_source.get_instruments.return_value = [first_instrument, second_instrument]
+
+        with self.assertRaises(MultipleInstrumentFound):
+            self.instruments_mixin.get_active_instrument(order_book_id, dt)
+
+        self.data_source.get_instruments.assert_called_once_with(id_or_syms=[order_book_id])
+

@@ -29,6 +29,7 @@ from rqalpha.utils import is_valid_price
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.exception import InstrumentNotFound
 from rqalpha.portfolio.position import Position, PositionProxyDict
 from rqalpha.mod.rqalpha_mod_sys_accounts.position_model import FuturePosition
 
@@ -66,6 +67,7 @@ class Account(metaclass=AccountMeta):
     ):
         self._type = account_type
         self._env = env
+        self._market = MARKET(getattr(env.config.base, "market", MARKET.CN))
 
         # 现金项币种均为人民币
         self._total_cash = total_cash  # 包含保证金的总资金
@@ -197,7 +199,25 @@ class Account(metaclass=AccountMeta):
         try:
             return self._positions[order_book_id][direction]
         except KeyError:
-            return self._init_position(order_book_id, direction, 0, None)
+            # 用户获取的仓位可能是非 Active 的标的，因此需要支持获取已退市或待上市的合约
+            # 优先级为：上市中的合约 -> 已退市的合约 -> 待上市的合约
+            try:
+                instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)  # 上市中的合约
+            except InstrumentNotFound:
+                instruments = self._env.data_proxy.get_instrument_history(order_book_id, self._env.trading_dt)
+                if instruments:
+                    instrument = instruments[-1]  # 已退市的合约
+                else:
+                    instruments = self._env.data_proxy.get_instrument_history(order_book_id)
+                    if not instruments:
+                        raise
+                    instrument = instruments[0]  # 待上市的合约
+                user_system_log.warning(
+                    _("{order_book_id} is not active on {trading_dt}, historical instrument information will be used to return an empty position.").format(
+                        order_book_id=order_book_id, trading_dt=self._env.trading_dt
+                    )
+                )
+            return self._init_position(instrument, direction, 0, None)
 
     def calc_close_today_amount(self, order_book_id, trade_amount, position_direction, position_effect):
         return self._get_or_create_pos(order_book_id, position_direction).calc_close_today_amount(trade_amount, position_effect)
@@ -326,9 +346,13 @@ class Account(metaclass=AccountMeta):
         """
         return self.cash
 
+    @property
+    def market(self) -> MARKET:
+        return self._market
+
     def _on_before_trading(self, _):
         for order_book_id, positions in list(self._positions.items()):
-            if all(p.quantity == 0 and p.equity == 0 for p in six.itervalues(positions)):
+            if not any(positions.values()):
                 del self._positions[order_book_id]
 
         trading_date = self._env.trading_dt.date()
@@ -336,8 +360,8 @@ class Account(metaclass=AccountMeta):
             _, amount = self._pending_deposit_withdraw.pop(0)
             self._total_cash += amount
 
-        # 涉及到资金变动，此处只处理中国市场的持仓
-        for position in self._iter_pos(market=MARKET.CN):
+        # 涉及到资金变动，此处只处理与账户交易市场相同的持仓
+        for position in self._iter_pos(market=self._market):
             self._total_cash += position.before_trading(trading_date)
 
         # 负债自增利息
@@ -347,8 +371,8 @@ class Account(metaclass=AccountMeta):
     def _on_settlement(self, event):
         trading_date = self._env.trading_dt.date()
 
-        # 涉及到资金变动，此处只处理中国市场的持仓
-        for position in self._iter_pos(market=MARKET.CN):
+        # 涉及到资金变动，此处只处理与账户交易市场相同的持仓
+        for position in self._iter_pos(market=self._market):
             delta_cash = position.settlement(trading_date)
             self._total_cash += delta_cash
 
@@ -438,17 +462,18 @@ class Account(metaclass=AccountMeta):
         else:
             return pos_iter
 
-    def _init_position(self, order_book_id: str, direction: POSITION_DIRECTION, init_quantity: int, init_price: Optional[float] = None) -> Position:
-        return Position(order_book_id, direction, init_quantity, init_price)
+    def _init_position(self, instrument: Instrument, direction: POSITION_DIRECTION, init_quantity: int, init_price: Optional[float] = None) -> Position:
+        return Position(instrument, direction, init_quantity, init_price)
 
     def _get_or_create_pos(
             self,
             order_book_id: str,
             direction: Union[POSITION_DIRECTION, str],
             init_quantity: int = 0,
-            init_price : Optional[float] = None
+            init_price : Optional[float] = None,
     ) -> Position:
         if order_book_id not in self._positions:
+            instrument = self._env.data_proxy.get_active_instrument(order_book_id, self._env.trading_dt)
             if direction == POSITION_DIRECTION.LONG:
                 long_quantity, short_quantity = init_quantity, 0
             else:
@@ -456,8 +481,8 @@ class Account(metaclass=AccountMeta):
             if not init_price:
                 init_price = self._env.get_last_price(order_book_id)
             positions = self._positions.setdefault(order_book_id, {
-                POSITION_DIRECTION.LONG: self._init_position(order_book_id, POSITION_DIRECTION.LONG, long_quantity, init_price),
-                POSITION_DIRECTION.SHORT: self._init_position(order_book_id, POSITION_DIRECTION.SHORT, short_quantity, init_price)
+                POSITION_DIRECTION.LONG: self._init_position(instrument, POSITION_DIRECTION.LONG, long_quantity, init_price),
+                POSITION_DIRECTION.SHORT: self._init_position(instrument, POSITION_DIRECTION.SHORT, short_quantity, init_price)
             })
             if hasattr(positions[direction], "margin") and hasattr(self.__class__, "_margin"):
                 # black magic: improve performance for pure stock strategy

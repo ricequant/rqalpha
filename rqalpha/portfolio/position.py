@@ -18,7 +18,7 @@
 from collections import UserDict, deque
 from datetime import date
 from decimal import Decimal
-from typing import Dict, Iterable, Tuple, Optional, Deque, List
+from typing import Dict, Iterable, Tuple, Optional, Deque, List, Union
 
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET
 from rqalpha.environment import Environment
@@ -64,26 +64,31 @@ class Position(AbstractPosition, metaclass=PositionMeta):
     # 用于注册该 Position 类型适用的 instrument_type
     __instrument_types__ = []
 
-    def __new__(cls, order_book_id, direction, init_quantity=0, init_price=None):
+    def __new__(cls, instrument, direction, init_quantity=0, init_price=None):
         if cls == Position:
-            ins_type = Environment.get_instance().data_proxy.instrument(order_book_id).type
+            env = Environment.get_instance()
+            if isinstance(instrument, str):  # FIXME: 此前的参数为 order_book_id，是一个 str 类型，需要先向前兼容后逐步去掉对 str 的支持
+                instrument = env.data_proxy.get_instrument_history(instrument)[-1]
             try:
-                position_cls = POSITION_TYPE_MAP[ins_type]
+                position_cls = POSITION_TYPE_MAP[instrument.type]
             except KeyError:
                 raise NotImplementedError("")
-            return position_cls.__new__(position_cls, order_book_id, direction, init_quantity, init_price)
+            return position_cls.__new__(position_cls, instrument, direction, init_quantity, init_price)
         else:
             return object.__new__(cls)
 
-    def __init__(self, order_book_id, direction, init_quantity=0, init_price=None):
+    def __init__(self, instrument: Union[Instrument, str], direction: POSITION_DIRECTION, init_quantity=0, init_price=None):
         self._env = Environment.get_instance()
 
-        self._order_book_id = order_book_id
-        instruments = self._env.data_proxy.get_instrument_history(order_book_id, self._env.trading_dt)
-        if not instruments:
-            raise InstrumentNotFound(_("No instruments found at {dt}: {id_or_sym}").format(dt=self._env.trading_dt, id_or_sym=order_book_id))
-        # 获取已上市合约中的最新一个，即使该合约已退市也能获取到，这是为了兼容 get_position 可获取已退市合约的 position 对象的历史行为
-        self._instrument = instruments[-1]
+        if isinstance(instrument, str):  # FIXME: 此前的参数为 order_book_id，是一个 str 类型，需要先向前兼容后逐步去掉对 str 的支持
+            instruments = self._env.data_proxy.get_instrument_history(instrument, self._env.trading_dt)
+            if not instruments:
+                raise InstrumentNotFound(_("No instruments found at {dt}: {id_or_sym}").format(dt=self._env.trading_dt, id_or_sym=instrument))
+            # 获取已上市合约中的最新一个，即使该合约已退市也能获取到，这是为了兼容 get_position 可获取已退市合约的 position 对象的历史行为
+            instrument = instruments[-1]
+
+        self._instrument = instrument
+        self._order_book_id = instrument.order_book_id
         self._direction = direction
 
         self._quantity = init_quantity
@@ -101,6 +106,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         self._queue = PositionQueue()
         if init_quantity:
             self._queue.handle_trade(init_quantity, self._env.trading_dt.date())
+
+    def __bool__(self):
+        return bool(self.quantity != 0 or self.equity != 0)
 
     @property
     def order_book_id(self) -> str:
@@ -179,6 +187,9 @@ class Position(AbstractPosition, metaclass=PositionMeta):
         if not is_valid_price(self._last_price):
             self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
             if not is_valid_price(self._last_price):
+                # 如果是未上市的仓位，则直接返回 0
+                if self._instrument.listed_date > self._env.trading_dt:
+                    return 0
                 user_system_log.warn("invalid last price of {}: {}".format(self._order_book_id, self._last_price))
         return self._last_price
 
