@@ -24,6 +24,7 @@ import jsonpickle.ext.numpy as jsonpickle_numpy
 import logbook
 import six
 from rqalpha import const
+from rqalpha.const import MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.core.executor import Executor
 from rqalpha.core.strategy import Strategy
 from rqalpha.core.strategy_context import StrategyContext
@@ -52,7 +53,6 @@ def _adjust_start_date(config, data_proxy):
 
     config.base.start_date = max(start, config.base.start_date)
     config.base.end_date = min(end, config.base.end_date)
-
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
         raise patch_user_exc(
@@ -146,12 +146,13 @@ def run(config, source_code=None, user_funcs=None):
         mod_handler.set_env(env)
         mod_handler.start_up()
 
+        market = MARKET(getattr(env.config.base, "market", "CN"))
         if not hasattr(env, "data_source"):
-            env.set_data_source(BaseDataSource(config.base))
+            env.set_data_source(BaseDataSource(config.base, market=market))
         if not hasattr(env, "price_board"):
             from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
-            env.price_board = BarDictPriceBoard()
-        env.set_data_proxy(DataProxy(env.data_source, env.price_board))
+            env.set_price_board(BarDictPriceBoard())
+        env.set_data_proxy(DataProxy(env.data_source, env.price_board, market=market))
 
         _adjust_start_date(env.config, env.data_proxy)
 
@@ -165,10 +166,13 @@ def run(config, source_code=None, user_funcs=None):
 
         assert env.broker is not None
         assert env.event_source is not None
+
+        # broker, event_source 已就绪，相关 Mod 可以创建并注册 Portfolio。如果没有 Mod 注册，则使用默认 Portfolio
+        env.event_bus.publish_event(Event(EVENT.INIT_PORTFOLIO))
         if not hasattr(env, "portfolio"):
             from rqalpha.portfolio import Portfolio
             env.set_portfolio(Portfolio(
-                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate, env                
+                config.base.accounts, config.base.init_positions, config.mod.sys_accounts.financing_rate, env
             ))
 
         env.event_bus.publish_event(Event(EVENT.POST_SYSTEM_INIT))

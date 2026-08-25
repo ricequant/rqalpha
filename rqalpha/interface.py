@@ -572,7 +572,7 @@ class AbstractDataSource(object):
         # 格式: (date, VWAP, TWAP, volume) -> 案例 (20200102, 16.79877183, 16.83271429, 144356044)
         raise NotImplementedError
 
-    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: MARKET = MARKET.CN) -> ExchangeRate:
+    def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: Optional[MARKET] = None) -> ExchangeRate:
         raise NotImplementedError
 
 class AbstractBroker(with_metaclass(abc.ABCMeta)):

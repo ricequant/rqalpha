@@ -6,6 +6,8 @@ version: 0.1.6
 whitelist: [base, extra, validator, mod]
 
 base:
+  # 交易市场，当前支持 'CN' 和 'HK'，注意当开启 'HK' 时，回测将无法交易 A股 市场的任何标的
+  market: CN
   # 数据源所存储的文件路径
   data_bundle_path: ~
   # 启动的策略文件路径
@@ -35,7 +37,7 @@ base:
   init_positions: {}
   # 根据价格最小变动单位调整发单价格
   round_price: false
-  # 用户自定义的期货合约数据，用于设置期货手续菲费率
+  # 用户自定义的期货合约数据，用于设置期货手续费费率
   future_info: {}
   # 强平
   forced_liquidation: true

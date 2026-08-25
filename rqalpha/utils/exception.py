@@ -60,7 +60,7 @@ class CustomError(object):
             for k, v in local_variables.items():
                 content.append('    --> %s = %s' % (k, _repr(v)))
             content.append('')
-        
+
         exc_name = self.exc_type.__name__ if self.exc_type else "Exception"
         content.append("%s: %s" % (exc_name, self.msg))
 
@@ -142,14 +142,14 @@ class RQDatacVersionTooLow(RuntimeError):
 # Based on Python 3.11's ExceptionGroup behavior
 class BaseExceptionGroup(BaseException):
     """A base class for grouping multiple exceptions."""
-    
+
     def __init__(self, message, exceptions):
         if not isinstance(message, str):
             raise TypeError(f"ExceptionGroup message must be a string, not {type(message).__name__}")
-        
+
         if not exceptions:
             raise ValueError("second argument (exceptions) must be a non-empty sequence")
-            
+
         # Convert to list and validate exceptions
         exceptions_list = []
         for exc in exceptions:
@@ -160,31 +160,31 @@ class BaseExceptionGroup(BaseException):
                 exceptions_list.append(exc())
             else:
                 raise ValueError(f"Item {exc!r} of second argument is not an exception")
-        
+
         self.message = message
         self.exceptions = tuple(exceptions_list)
         super().__init__(message)
-    
+
     def __str__(self):
         if len(self.exceptions) == 1:
             return f"{self.message} (1 sub-exception)"
         return f"{self.message} ({len(self.exceptions)} sub-exceptions)"
-    
+
     def __repr__(self):
         return f"{self.__class__.__name__}({self.message!r}, {list(self.exceptions)!r})"
-    
+
     def split(self, condition):
         """Split the exception group based on a condition.
-        
+
         Args:
             condition: A callable that takes an exception and returns True/False,
                       or an exception type/tuple of types.
-        
+
         Returns:
             A tuple of (matching_group, non_matching_group).
             Either element can be None if no exceptions match that category.
         """
-        if isinstance(condition, type) or (isinstance(condition, tuple) and 
+        if isinstance(condition, type) or (isinstance(condition, tuple) and
                                          all(isinstance(t, type) for t in condition)):
             # Handle exception type(s)
             def check_condition(exc):
@@ -195,10 +195,10 @@ class BaseExceptionGroup(BaseException):
                 return bool(result)
         else:
             raise TypeError("condition must be a callable or exception type(s)")
-        
+
         matching = []
         non_matching = []
-        
+
         for exc in self.exceptions:
             if isinstance(exc, BaseExceptionGroup):
                 # Recursively split nested groups
@@ -212,22 +212,22 @@ class BaseExceptionGroup(BaseException):
                     matching.append(exc)
                 else:
                     non_matching.append(exc)
-        
+
         matching_group = None
         if matching:
             matching_group = self.derive(matching)
-            
+
         non_matching_group = None
         if non_matching:
             non_matching_group = self.derive(non_matching)
-            
+
         return (matching_group, non_matching_group)
-    
+
     def subgroup(self, condition):
         """Return a subgroup containing only exceptions that match the condition."""
         matching_group, _ = self.split(condition)
         return matching_group
-    
+
     def derive(self, exceptions):
         """Create a new exception group with the same message but different exceptions."""
         if not exceptions:
@@ -244,25 +244,29 @@ def format_exception_group(exc_group, indent=""):
     """Format an ExceptionGroup for display."""
     if not isinstance(exc_group, BaseExceptionGroup):
         return str(exc_group)
-    
+
     lines = [f"{indent}{exc_group.__class__.__name__}: {exc_group.message}"]
-    
+
     for i, exc in enumerate(exc_group.exceptions):
         is_last = (i == len(exc_group.exceptions) - 1)
         prefix = "└─ " if is_last else "├─ "
         child_indent = "   " if is_last else "│  "
-        
+
         if isinstance(exc, BaseExceptionGroup):
             lines.append(f"{indent}{prefix}{format_exception_group(exc, indent + child_indent)}")
         else:
             exc_str = f"{exc.__class__.__name__}: {exc}"
             lines.append(f"{indent}{prefix}{exc_str}")
-    
+
     return "\n".join(lines)
 
 
 #  Internal exceptions
 class InstrumentNotFound(LookupError):
+    pass
+
+
+class MultipleInstrumentFound(LookupError):
     pass
 
 

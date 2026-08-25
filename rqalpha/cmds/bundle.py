@@ -59,10 +59,10 @@ def create_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
     os.makedirs(os.path.join(data_bundle_path, 'bundle'), exist_ok=True)
     from rqalpha.data.bundle import update_bundle as update_bundle_
     from rqalpha.data.bundle.utils import get_error_list
-    succeed = update_bundle_(os.path.join(data_bundle_path, 'bundle'), True, compression, concurrency)
-    if not succeed:
+    errors = update_bundle_(os.path.join(data_bundle_path, 'bundle'), True, compression, concurrency)
+    if errors:
         click.echo(_("Bundle data was not fully updated successfully. Details are as follows:"))
-        for error in get_error_list():
+        for error in errors:
             click.echo(error)
         sys.exit(1)
 
@@ -97,10 +97,10 @@ def update_bundle(data_bundle_path, rqdatac_uri, compression, concurrency):
 
     from rqalpha.data.bundle import update_bundle as update_bundle_
     from rqalpha.data.bundle.utils import get_error_list
-    succeed = update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
-    if not succeed:
+    errors = update_bundle_(os.path.join(data_bundle_path, 'bundle'), False, compression, concurrency)
+    if errors:
         click.echo(_("Bundle data was not fully updated successfully. Details are as follows:"))
-        for error in get_error_list():
+        for error in errors:
             click.echo(error)
         sys.exit(1)
 

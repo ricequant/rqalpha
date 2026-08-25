@@ -34,19 +34,11 @@ from rqalpha.const import DAYS_CNT
 
 from rqalpha.mod.rqalpha_mod_sys_analyser.plot.utils import max_dd as _max_dd
 from rqalpha.mod.rqalpha_mod_sys_analyser.report.excel_template import generate_xlsx_reports
-
-
-EQUITIES_OID_RE = re.compile(r"^\d{6}\.(XSHE|XSHG|BJSE)$")
+from rqalpha.mod.rqalpha_mod_sys_analyser.utils import all_trades_are_equities
 
 
 def _returns(unit_net_value: Series):
     return (unit_net_value / unit_net_value.shift(1).fillna(1)).fillna(0) - 1
-
-
-def _all_trades_are_equities(trades: DataFrame) -> bool:
-    if trades.empty or "order_book_id" not in trades.columns:
-        return False
-    return trades["order_book_id"].map(lambda oid: isinstance(oid, str) and EQUITIES_OID_RE.match(oid) is not None).all()
 
 
 def _calc_trade_values(trades: DataFrame) -> Series:
@@ -63,7 +55,7 @@ def _yearly_indicators(
         trades: DataFrame,
 ):
     data = defaultdict(list)
-    can_calc_turnover = _all_trades_are_equities(trades)
+    can_calc_turnover = all_trades_are_equities(trades)
 
     for year, p_year_returns in p_returns.groupby(p_returns.index.year):  # noqa
         year_slice = p_returns.index.year == year  # noqa

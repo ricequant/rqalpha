@@ -28,7 +28,8 @@ from rqalpha.apis import names
 from rqalpha.environment import Environment
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.utils import is_valid_price
-from rqalpha.utils.exception import RQInvalidArgument, InstrumentNotFound
+from rqalpha.utils.typing import DateLike
+from rqalpha.utils.exception import RQInvalidArgument, InstrumentNotFound, MultipleInstrumentFound
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.arg_checker import apply_rules, verify_that, assure_that
 from rqalpha.api import export_as_api
@@ -65,7 +66,7 @@ def assure_order_book_id(id_or_ins):
         return id_or_ins.order_book_id
     try:
         return Environment.get_instance().data_proxy.assure_order_book_id(id_or_ins)
-    except InstrumentNotFound as e:
+    except (InstrumentNotFound, MultipleInstrumentFound) as e:
         raise RQInvalidArgument(_("instrument {} not found").format(id_or_ins))
 
 
@@ -73,7 +74,7 @@ def assure_active_ins_for_order_api(order_book_id: str) -> Optional[Instrument]:
     env = Environment.get_instance()
     try:
         return env.data_proxy.get_active_instrument(order_book_id, env.trading_dt)
-    except InstrumentNotFound as e:
+    except (InstrumentNotFound, MultipleInstrumentFound) as e:
         reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(order_book_id=order_book_id)
         user_system_log.warn(reason)
         env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))
@@ -124,8 +125,7 @@ def calc_open_close_style(price, style, price_or_style):
     EXECUTION_PHASE.AFTER_TRADING,
     EXECUTION_PHASE.SCHEDULED,
 )
-def get_open_orders():
-    # type: () -> List[Order]
+def get_open_orders() -> List[Order]:
     """
     获取当日未成交订单数据
     """
@@ -215,8 +215,7 @@ def submit_order(
     EXECUTION_PHASE.GLOBAL,
 )
 @apply_rules(verify_that("order").is_instance_of(Order))
-def cancel_order(order):
-    # type: (Order) -> Order
+def cancel_order(order: Order) -> Order:
     """
     撤单
 
@@ -263,9 +262,7 @@ def update_universe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterabl
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
-def subscribe(id_or_symbols):
-    # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
-
+def subscribe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None:
     """
     订阅合约行情。
 
@@ -304,9 +301,7 @@ def subscribe(id_or_symbols):
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(verify_that("id_or_symbols").are_valid_instruments())
-def unsubscribe(id_or_symbols):
-    # type: (Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None
-
+def unsubscribe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[Instrument]]) -> None:
     """
     取消订阅合约行情。取消订阅会导致合约池内合约的减少，如果当前合约池中没有任何合约，则策略直接退出。
 
@@ -343,8 +338,7 @@ def unsubscribe(id_or_symbols):
     verify_that("date").is_valid_date(ignore_none=True),
     verify_that("tenor").is_in(names.VALID_TENORS, ignore_none=True),
 )
-def get_yield_curve(date=None, tenor=None):
-    # type: (Optional[Union[str, date, datetime, pd.Timestamp]], str) -> pd.DataFrame
+def get_yield_curve(date: Optional[Union[str, DateLike]] = None, tenor: Optional[str] = None) -> pd.DataFrame:
     """
     获取某个国家市场指定日期的收益率曲线水平。
 
@@ -406,15 +400,14 @@ def get_yield_curve(date=None, tenor=None):
     verify_that("adjust_type").is_in({"pre", "none", "post"}),
 )
 def history_bars(
-        order_book_id,
-        bar_count,
-        frequency,
-        fields=None,
-        skip_suspended=True,
-        include_now=False,
-        adjust_type="pre",
-):
-    # type:(str, int, str, Optional[Union[str, List[str]]], Optional[bool], Optional[bool], Optional[str]) -> np.ndarray
+        order_book_id: str,
+        bar_count: int,
+        frequency: str,
+        fields: Optional[Union[str, List[str]]] = None,
+        skip_suspended: bool = True,
+        include_now: bool = False,
+        adjust_type: str = "pre",
+) -> np.ndarray:
     """
     获取指定合约的历史 k 线行情，同时支持日以及分钟历史数据。不能在init中调用。
 
@@ -531,8 +524,7 @@ def history_bars(
     verify_that("order_book_id", pre_check=True).is_active_instrument(),
     verify_that('count').is_instance_of(int).is_greater_than(0)
 )
-def history_ticks(order_book_id, count):
-    # type: (str, int) -> List[TickObject]
+def history_ticks(order_book_id: str, count: int) -> List[TickObject]:
     """
     获取指定合约历史（不晚于当前时间的）tick 对象，仅支持在 tick 级别的策略（回测、模拟交易、实盘）中调用。
 
@@ -567,8 +559,7 @@ def history_ticks(order_book_id, count):
     ),
     verify_that("date").is_valid_date(ignore_none=True),
 )
-def all_instruments(type=None, date=None):
-    # type: (str, Union[str, datetime, date]) -> pd.DataFrame
+def all_instruments(type: Optional[str] = None, date: Optional[Union[str, datetime, date]] = None) -> pd.DataFrame:
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 
@@ -790,8 +781,7 @@ def instruments_history(
     verify_that("start_date").is_valid_date(ignore_none=False),
     verify_that("end_date").is_valid_date(ignore_none=False),
 )
-def get_trading_dates(start_date, end_date):
-    # type: (Union[str, date, datetime, pd.Timestamp], Union[str, date, datetime, pd.Timestamp]) -> pd.DatetimeIndex
+def get_trading_dates(start_date: Union[str, DateLike], end_date: Union[str, DateLike]) -> pd.DatetimeIndex:
     """
     获取某个国家市场的交易日列表（起止日期加入判断）。目前仅支持中国市场。
 
@@ -807,8 +797,7 @@ def get_trading_dates(start_date, end_date):
     verify_that("date").is_valid_date(ignore_none=False),
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
 )
-def get_previous_trading_date(date, n=1):
-    # type: (Union[str, date, datetime, pd.Timestamp], Optional[int]) -> date
+def get_previous_trading_date(date: Union[str, DateLike], n: int = 1) -> date:
     """
     获取指定日期的之前的第 n 个交易日。
 
@@ -832,8 +821,7 @@ def get_previous_trading_date(date, n=1):
     verify_that("date").is_valid_date(ignore_none=False),
     verify_that("n").is_instance_of(int).is_greater_or_equal_than(1),
 )
-def get_next_trading_date(date, n=1):
-    # type: (Union[str, date, datetime, pd.Timestamp], Optional[int]) -> date
+def get_next_trading_date(date: Union[str, DateLike], n: int = 1) -> date:
     """
     获取指定日期之后的第 n 个交易日
 
@@ -862,8 +850,7 @@ def get_next_trading_date(date, n=1):
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(verify_that("id_or_symbol").is_valid_order_book_id())
-def current_snapshot(id_or_symbol):
-    # type: (Union[str, Instrument]) -> Optional[TickObject]
+def current_snapshot(id_or_symbol: Union[str, Instrument]) -> Optional[TickObject]:
     """
     获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。
     市场快照数据记录了每日从开盘到当前的数据信息，可以理解为一个动态的day bar数据。
@@ -904,8 +891,7 @@ def current_snapshot(id_or_symbol):
 
 
 @export_as_api
-def get_positions():
-    # type: () -> List[Position]
+def get_positions() -> List[Position]:
     """
     获取所有持仓对象列表。
 
@@ -957,8 +943,7 @@ def get_position(order_book_id: str, direction: POSITION_DIRECTION = POSITION_DI
     verify_that("event_type").is_instance_of(EVENT),
     verify_that("handler").is_instance_of(types.FunctionType),
 )
-def subscribe_event(event_type, handler):
-    # type: (EVENT, Callable[[StrategyContext, Event], None]) -> None
+def subscribe_event(event_type: EVENT, handler: Callable[[StrategyContext, Event], None]) -> None:
     """
     订阅框架内部事件，注册事件处理函数
 
@@ -1019,8 +1004,7 @@ def deposit(account_type: str, amount: float, receiving_days: int = 0):
     verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
     verify_that("amount").is_number(),
 )
-def withdraw(account_type, amount):
-    # type: (str, float) -> None
+def withdraw(account_type: str, amount: float) -> None:
     """
     出金（减少账户资金）
 
@@ -1044,7 +1028,7 @@ def withdraw(account_type, amount):
     verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
     verify_that("amount", pre_check=True).is_instance_of((int, float)).is_greater_than(0),
 )
-def finance(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
+def finance(amount: float, account_type: DEFAULT_ACCOUNT_TYPE = DEFAULT_ACCOUNT_TYPE.STOCK) -> None:
     """
     融资
 
@@ -1067,7 +1051,7 @@ def finance(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
     verify_that("account_type").is_in(DEFAULT_ACCOUNT_TYPE),
     verify_that("amount", pre_check=True).is_instance_of((int, float)).is_greater_than(0),
 )
-def repay(amount, account_type=DEFAULT_ACCOUNT_TYPE.STOCK):
+def repay(amount: float, account_type: DEFAULT_ACCOUNT_TYPE = DEFAULT_ACCOUNT_TYPE.STOCK) -> None:
     """
     还款
 

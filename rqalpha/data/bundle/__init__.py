@@ -19,9 +19,7 @@ import pickle
 import re
 import uuid
 from typing import Optional, List, Iterable, Tuple
-import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
-from ctypes import c_bool
 from time import sleep
 
 import h5py
@@ -33,7 +31,7 @@ from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_t
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
 from rqalpha.data.bundle.utils import (
-    set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, START_DATE, END_DATE,
+    set_sval, sval, bind_error_list, reset_error_list, log_and_mark_error, get_error_list, START_DATE, END_DATE,
     STOCK_FIELDS, FUTURES_FIELDS, INDEX_FIELDS, FUND_FIELDS
 )
 from rqalpha.data.bundle.daybar import GenerateDayBarTask, UpdateDayBarTask
@@ -418,11 +416,7 @@ def process_init(args: Optional[Synchronized] = None, kwargs=None, errors=None):
         # catch warning: rqdatac is already inited. Settings will be changed
         rqdatac.init(**kwargs)
     init_logger()
-    # Initialize process shared variables
-    global sval
-    if args:
-        set_sval(args)
-        sval = args
+    # Initialize process shared error list
     if errors is not None:
         bind_error_list(errors)
 
@@ -460,15 +454,13 @@ def gather_tasks(path: str, create: bool, enable_compression: bool, **h5_kwargs)
 
 
 def run_tasks(tasks: List[ProgressedTask], concurrency: int = 1, **rqdatac_kwargs):
-    succeed = multiprocessing.Value(c_bool, True)
     errors = reset_error_list()
     with ProgressedProcessPoolExecutor(
-            max_workers=concurrency, initializer=process_init,
-            initargs=(succeed, rqdatac_kwargs, errors)
+        max_workers=concurrency, initializer=process_init, initargs=(None, rqdatac_kwargs, errors)
     ) as executor:
         for task in tasks:
             executor.submit(task)
-    return succeed.value
+    return get_error_list()
 
 
 def update_bundle(path, create, enable_compression=False, concurrency=1, rqdata_kwargs=None, **h5_kwargs):
