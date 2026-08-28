@@ -410,6 +410,7 @@ class GenerateFileTask(ProgressedTask):
 
 
 def process_init(args: Optional[Synchronized] = None, kwargs=None, errors=None):
+    import hdf5plugin
     kwargs = kwargs or {}
     import warnings
     with warnings.catch_warnings(record=True):
