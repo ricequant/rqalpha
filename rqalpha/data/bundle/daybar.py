@@ -2,7 +2,7 @@ import datetime
 import os
 import h5py
 from itertools import chain
-from typing import Optional, List
+from typing import Optional, List, Union
 from collections import defaultdict
 
 import numpy as np
@@ -12,16 +12,20 @@ from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedTask
 from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date, to_date
 from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.typing import DateLike
 from rqalpha.data.bundle.utils import START_DATE, END_DATE, log_and_mark_error
 
 
 class DayBarTask(ProgressedTask):
-    def __init__(self, order_book_ids, file_path: str, fields: List[str], market="cn", **h5_kwargs):
+    def __init__(
+        self, order_book_ids, file_path: str, fields: List[str], market="cn", start_date: Optional[Union[DateLike, int]] = None, **h5_kwargs
+    ):
         self._order_book_ids = order_book_ids
         self._file_path = file_path
         self._fields = fields
         self._h5_kwargs = h5_kwargs
         self._market = market
+        self._start_date = start_date or START_DATE
         self._instruments = defaultdict(list)
         ints = rqdatac.instruments(order_book_ids, market=market)
         if ints is not None:
@@ -48,7 +52,7 @@ class DayBarTask(ProgressedTask):
         while True:
             _oids = order_book_ids[i: i + step]
             df: Optional[pd.DataFrame] = rqdatac.get_price(
-                _oids, START_DATE, END_DATE, '1d', adjust_type='none',
+                _oids, self._start_date, END_DATE, '1d', adjust_type='none',
                 fields=self._fields, expect_df=True, market=self._market
             )
             if not (df is None or df.empty):
@@ -117,7 +121,9 @@ class UpdateDayBarTask(DayBarTask):
         except (OSError, RuntimeError):
             need_recreate_h5 = True
         if need_recreate_h5:
-            yield from GenerateDayBarTask(self._order_book_ids, self._file_path, self._fields, self._market, **self._h5_kwargs)()
+            yield from GenerateDayBarTask(
+                self._order_book_ids, self._file_path, self._fields, self._market, self._start_date, **self._h5_kwargs
+            )()
         else:
             h5 = None
             try:
