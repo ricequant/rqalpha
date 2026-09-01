@@ -51,15 +51,17 @@ def make_args(instrument, *, quantity=1000, price=10, side=SIDE.BUY, order_id=No
     )
 
 
-def make_decider(*, subtype_configured=True):
-    return ETFTransactionCostDecider(
-        default_profile=CommissionProfile(commission_rate=0.0008, min_commission=5),
-        subtype_profiles={
-            "bond": CommissionProfile(commission_rate=0.0002, min_commission=1),
-            "money": CommissionProfile(commission_rate=0, min_commission=0),
-        },
-        subtype_configured=subtype_configured,
-    )
+def make_decider():
+    with patch(
+        "rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders.Environment.get_instance"
+    ):
+        return ETFTransactionCostDecider(
+            default_profile=CommissionProfile(commission_rate=0.0008, min_commission=5),
+            subtype_profiles={
+                "bond": CommissionProfile(commission_rate=0.0002, min_commission=1),
+                "money": CommissionProfile(commission_rate=0, min_commission=0),
+            },
+        )
 
 
 @pytest.mark.parametrize("fund_type", ["Bond", "BondIndex", "ShortBond"])
@@ -84,14 +86,13 @@ def test_other_known_fund_types_use_default_profile(fund_type):
     assert cost.commission == 8
 
 
-@pytest.mark.parametrize("fund_type", [None, "Unknown"])
-def test_missing_or_unknown_fund_type_fails_when_subtype_is_configured(fund_type):
-    with pytest.raises(ValueError, match="fund_type.*510300.XSHG"):
-        make_decider().calc(make_args(make_etf(fund_type)))
+def test_missing_fund_type_fails():
+    with pytest.raises(KeyError, match="fund_type"):
+        make_decider().calc(make_args(make_etf(None)))
 
 
-def test_missing_fund_type_uses_default_when_no_subtype_is_configured():
-    cost = make_decider(subtype_configured=False).calc(make_args(make_etf(None)))
+def test_unknown_fund_type_uses_default_profile():
+    cost = make_decider().calc(make_args(make_etf("Unknown")))
 
     assert cost.commission == 8
 
@@ -107,6 +108,53 @@ def test_partial_fills_charge_minimum_commission_once_per_order():
     assert first.commission == 1
     assert second.commission == 4.2
     assert another_order.commission == 1
+
+
+def test_zero_rate_charges_nonzero_minimum_once_per_order():
+    with patch(
+        "rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders.Environment.get_instance"
+    ):
+        decider = ETFTransactionCostDecider(
+            default_profile=CommissionProfile(commission_rate=0, min_commission=5),
+            subtype_profiles={
+                "bond": CommissionProfile(commission_rate=0, min_commission=5),
+                "money": CommissionProfile(commission_rate=0, min_commission=5),
+            },
+        )
+    instrument = make_etf("Stock")
+
+    costs = [
+        decider.calc(make_args(instrument, quantity=100, price=10, order_id=1)).commission
+        for _ in range(3)
+    ]
+
+    assert costs == [5, 0, 0]
+
+
+def test_shared_commission_calculation_preserves_legacy_stock_zero_multiplier_behavior():
+    with patch(
+        "rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders.Environment.get_instance"
+    ):
+        decider = StockTransactionCostDecider(
+            commission_multiplier=0,
+            min_commission=5,
+            tax_multiplier=1,
+            pit_tax=False,
+            event_bus=Mock(),
+        )
+    stock = Instrument({
+        "order_book_id": "000001.XSHE",
+        "symbol": "平安银行",
+        "type": "CS",
+        "exchange": "XSHE",
+    })
+
+    costs = [
+        decider.calc(make_args(stock, quantity=100, price=10, order_id=1)).commission
+        for _ in range(3)
+    ]
+
+    assert costs == [5, 5, 5]
 
 
 def test_etf_sell_never_charges_stock_stamp_tax():
@@ -125,7 +173,11 @@ def test_batch_estimate_uses_each_etf_profile():
     quantities = Series({"510300.XSHG": -1000, "511010.XSHG": 1000, "511880.XSHG": -1000})
     prices = Series({"510300.XSHG": 10, "511010.XSHG": 10, "511880.XSHG": 10})
 
-    costs = make_decider().batch_estimate_for_instruments(quantities, prices, instruments)
+    decider = make_decider()
+    decider.env = Mock()
+    decider.env.data_proxy.get_active_instruments.return_value = instruments.to_dict()
+
+    costs = decider.batch_estimate(quantities, prices)
 
     assert costs.to_dict() == {
         "510300.XSHG": 8,
@@ -175,21 +227,6 @@ def test_smart_portfolio_estimate_falls_back_for_calc_only_custom_etf_decider():
         "113000.XSHG": INSTRUMENT_TYPE.CONVERTIBLE,
         "511880.XSHG": INSTRUMENT_TYPE.ETF,
     })
-    portfolio._instruments = Series({
-        "000001.XSHE": Instrument({
-            "order_book_id": "000001.XSHE",
-            "symbol": "股票",
-            "type": "CS",
-            "exchange": "XSHE",
-        }),
-        "113000.XSHG": Instrument({
-            "order_book_id": "113000.XSHG",
-            "symbol": "转债",
-            "type": "Convertible",
-            "exchange": "XSHG",
-        }),
-        "511880.XSHG": make_etf("Money", "511880.XSHG"),
-    })
     portfolio._exchange_rates = {}
 
     costs = portfolio._estimate_transaction_costs(
@@ -202,14 +239,16 @@ def test_smart_portfolio_estimate_falls_back_for_calc_only_custom_etf_decider():
 
 def test_smart_portfolio_estimate_uses_etf_subtype_profile():
     env = Mock()
-    env.get_transaction_cost_decider.return_value = make_decider()
+    decider = make_decider()
+    decider.env = env
+    env.data_proxy.get_active_instruments.return_value = {
+        "511010.XSHG": make_etf("BondIndex", "511010.XSHG")
+    }
+    env.get_transaction_cost_decider.return_value = decider
     portfolio = object.__new__(OrderTargetPortfolio)
     portfolio._env = env
     portfolio._market = Series({"511010.XSHG": MARKET.CN})
     portfolio._instrument_types = Series({"511010.XSHG": INSTRUMENT_TYPE.ETF})
-    portfolio._instruments = Series({
-        "511010.XSHG": make_etf("BondIndex", "511010.XSHG"),
-    })
     portfolio._exchange_rates = {}
 
     costs = portfolio._estimate_transaction_costs(
@@ -255,13 +294,12 @@ def test_all_none_etf_config_inherits_effective_stock_profile():
 
     etf_decider = deciders[INSTRUMENT_TYPE.ETF]
     default_cost = etf_decider.calc(make_args(make_etf("Stock"), quantity=1000, price=10))
-    missing_type_cost = etf_decider.calc(make_args(make_etf(None), quantity=1000, price=10))
-
     assert default_cost.commission == 16
-    assert missing_type_cost.commission == 16
+    with pytest.raises(KeyError, match="fund_type"):
+        etf_decider.calc(make_args(make_etf(None), quantity=1000, price=10))
 
 
-def test_startup_without_etf_config_uses_legacy_stock_profile():
+def test_startup_without_etf_config_inherits_stock_profile():
     config = make_mod_config({})
     del config.etf_commission
     env = Mock()
@@ -274,7 +312,7 @@ def test_startup_without_etf_config_uses_legacy_stock_profile():
     with patch("rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders.Environment.get_instance", return_value=env):
         TransactionCostMod().start_up(env, config)
 
-    cost = deciders[INSTRUMENT_TYPE.ETF].calc(make_args(make_etf(None), quantity=1000, price=10))
+    cost = deciders[INSTRUMENT_TYPE.ETF].calc(make_args(make_etf("Stock"), quantity=1000, price=10))
     assert cost.commission == 16
 
 

@@ -119,8 +119,10 @@ class Instrument(metaclass=PropertyReprMeta):
     @cached_property
     def fund_type(self) -> Optional[str]:
         """
-        [str] ETF 基金类型。旧版本 bundle 或自定义数据源可能不包含该字段，此时返回 None。
+        [str] ETF 基金类型。
         """
+        if self.type == INSTRUMENT_TYPE.ETF:
+            return self._dict["fund_type"]
         return self._dict.get("fund_type")
 
     @cached_property

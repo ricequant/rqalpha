@@ -801,7 +801,7 @@ Instrument - 交易标的
 
     ..  py:attribute:: fund_type（基金专用）
 
-        【str or None】基金类型。ETF 常见取值包括 ``Bond``、``BondIndex``、``ShortBond``、``Money``、``Stock``、``Hybrid``、``StockIndex``、``Related``、``QDII`` 和 ``Other``。旧版本数据中没有该字段时返回 ``None``。
+        【str or None】基金类型。ETF 常见取值包括 ``Bond``、``BondIndex``、``ShortBond``、``Money``、``Stock``、``Hybrid``、``StockIndex``、``Related``、``QDII`` 和 ``Other``。ETF 数据不包含该字段时抛出 ``KeyError``；其他品种缺少该字段时返回 ``None``。
 
     ..  py:attribute:: sector_code（股票专用）
 

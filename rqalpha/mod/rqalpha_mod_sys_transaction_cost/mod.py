@@ -17,8 +17,9 @@
 
 from math import isfinite
 from numbers import Real
-from typing import Mapping
+from typing import AbstractSet, Any, Dict, FrozenSet, Mapping, Optional, Tuple
 
+from rqalpha.environment import Environment
 from rqalpha.interface import AbstractMod
 from rqalpha.const import INSTRUMENT_TYPE
 from rqalpha.utils.exception import patch_user_exc
@@ -34,11 +35,11 @@ from .deciders import (
 )
 
 
-_PROFILE_FIELDS = frozenset({"commission_rate", "min_commission"})
-_ETF_SUBTYPES = frozenset({"bond", "money"})
+_PROFILE_FIELDS: FrozenSet[str] = frozenset({"commission_rate", "min_commission"})
+_ETF_SUBTYPES: FrozenSet[str] = frozenset({"bond", "money"})
 
 
-def _to_mapping(value, path):
+def _to_mapping(value: Any, path: str) -> Mapping[str, Any]:
     if isinstance(value, RqAttrDict):
         value = value.convert_to_dict()
     if not isinstance(value, Mapping):
@@ -46,36 +47,43 @@ def _to_mapping(value, path):
     return value
 
 
-def _validate_keys(value, allowed_keys, path):
+def _validate_keys(
+    value: Mapping[str, Any], allowed_keys: AbstractSet[str], path: str
+) -> None:
     unknown_keys = set(value) - set(allowed_keys)
     if unknown_keys:
         raise ValueError("unknown {} config field(s): {}".format(path, ", ".join(sorted(unknown_keys))))
 
 
-def _validate_profile(profile, path):
+def _validate_profile(profile: Any, path: str) -> Dict[str, Optional[float]]:
     profile = _to_mapping(profile, path)
     _validate_keys(profile, _PROFILE_FIELDS, path)
+    result: Dict[str, Optional[float]] = {}
     for field in _PROFILE_FIELDS:
         value = profile.get(field)
         if value is None:
+            result[field] = None
             continue
         if isinstance(value, bool) or not isinstance(value, Real) or not isfinite(value) or value < 0:
             raise ValueError("{}.{} must be a finite non-negative number or None".format(path, field))
-    return profile
+        result[field] = float(value)
+    return result
 
 
-def _overlay_profile(base, override):
+def _overlay_profile(
+    base: CommissionProfile, override: Mapping[str, Optional[float]]
+) -> CommissionProfile:
+    commission_rate = override.get("commission_rate")
+    min_commission = override.get("min_commission")
     return CommissionProfile(
-        commission_rate=(
-            base.commission_rate if override.get("commission_rate") is None else override["commission_rate"]
-        ),
-        min_commission=(
-            base.min_commission if override.get("min_commission") is None else override["min_commission"]
-        ),
+        commission_rate=base.commission_rate if commission_rate is None else commission_rate,
+        min_commission=base.min_commission if min_commission is None else min_commission,
     )
 
 
-def _resolve_etf_commission(etf_commission, stock_profile):
+def _resolve_etf_commission(
+    etf_commission: Any, stock_profile: CommissionProfile
+) -> Tuple[CommissionProfile, Dict[str, CommissionProfile]]:
     etf_commission = _to_mapping(etf_commission, "etf_commission")
     _validate_keys(etf_commission, {"default", "subtypes"}, "etf_commission")
 
@@ -84,19 +92,17 @@ def _resolve_etf_commission(etf_commission, stock_profile):
 
     subtype_configs = _to_mapping(etf_commission.get("subtypes", {}), "etf_commission.subtypes")
     _validate_keys(subtype_configs, _ETF_SUBTYPES, "etf_commission.subtypes")
-    subtype_profiles = {}
-    subtype_configured = False
+    subtype_profiles: Dict[str, CommissionProfile] = {}
     for subtype in _ETF_SUBTYPES:
         config = _validate_profile(
             subtype_configs.get(subtype, {}), "etf_commission.subtypes.{}".format(subtype)
         )
-        subtype_configured = subtype_configured or any(value is not None for value in config.values())
         subtype_profiles[subtype] = _overlay_profile(default_profile, config)
-    return default_profile, subtype_profiles, subtype_configured
+    return default_profile, subtype_profiles
 
 
 class TransactionCostMod(AbstractMod):
-    def start_up(self, env, mod_config):
+    def start_up(self, env: Environment, mod_config: RqAttrDict) -> None:
         stock_commission_multiplier = mod_config.stock_commission_multiplier
         futures_commission_multiplier = mod_config.futures_commission_multiplier
 
@@ -116,7 +122,7 @@ class TransactionCostMod(AbstractMod):
             commission_rate=0.0008 * stock_commission_multiplier,
             min_commission=stock_min_commission,
         )
-        default_etf_profile, etf_subtype_profiles, etf_subtype_configured = _resolve_etf_commission(
+        default_etf_profile, etf_subtype_profiles = _resolve_etf_commission(
             getattr(mod_config, "etf_commission", {}), stock_profile
         )
 
@@ -131,12 +137,11 @@ class TransactionCostMod(AbstractMod):
         env.set_transaction_cost_decider(INSTRUMENT_TYPE.ETF, ETFTransactionCostDecider(
             default_etf_profile,
             etf_subtype_profiles,
-            etf_subtype_configured,
         ))
 
         env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, FuturesTransactionCostDecider(
             futures_commission_multiplier
         ))
 
-    def tear_down(self, code, exception=None):
+    def tear_down(self, code: int, exception: Optional[Exception] = None) -> None:
         pass

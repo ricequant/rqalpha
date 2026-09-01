@@ -119,7 +119,6 @@ class OrderTargetPortfolio:
             if i.type not in SUPPORTED_INSTRUMENT_TYPES:
                 raise RQApiNotSupportedError(_('instrument type {} is not supported').format(i.type))
 
-        self._instruments = Series(instruments, dtype='object')
         self._instrument_types = Series(
             {i.order_book_id: i.type for i in instruments.values()}, dtype='object'
         )
@@ -301,12 +300,7 @@ class OrderTargetPortfolio:
                 if cost_index.empty:
                     continue
                 decider = self._trans_cost_decider(instrument_type, market)
-                if instrument_type == INSTRUMENT_TYPE.ETF:
-                    cost = decider.batch_estimate_for_instruments(
-                        diff[cost_index], prices[cost_index], self._instruments[cost_index]
-                    )
-                else:
-                    cost = decider.batch_estimate(diff[cost_index], prices[cost_index])
+                cost = decider.batch_estimate(diff[cost_index], prices[cost_index])
                 costs += cost.sum()
             if market != MARKET.CN:
                 # 汇率成本

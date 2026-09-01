@@ -185,22 +185,6 @@ class TestInstrument(unittest.TestCase):
         etf_inst = self.instruments['159001.XSHE']
         self.assertEqual(etf_inst.account_type, DEFAULT_ACCOUNT_TYPE.STOCK)
 
-    def test_fund_type(self):
-        etf = Instrument({
-            "order_book_id": "511010.XSHG",
-            "symbol": "国债 ETF",
-            "type": "ETF",
-            "fund_type": "BondIndex",
-        })
-        legacy_etf = Instrument({
-            "order_book_id": "510300.XSHG",
-            "symbol": "沪深 300 ETF",
-            "type": "ETF",
-        })
-
-        self.assertEqual(etf.fund_type, "BondIndex")
-        self.assertIsNone(legacy_etf.fund_type)
-
     def test_tick_size(self):
         """测试最小价格变动单位"""
         # 股票
