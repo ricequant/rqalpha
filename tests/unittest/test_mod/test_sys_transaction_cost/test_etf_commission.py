@@ -4,7 +4,7 @@ import pytest
 from pandas import Series
 
 from rqalpha.const import INSTRUMENT_TYPE, MARKET, POSITION_EFFECT, SIDE
-from rqalpha.interface import AbstractTransactionCostDecider, TransactionCost, TransactionCostArgs
+from rqalpha.interface import TransactionCost, TransactionCostArgs
 from rqalpha.model.instrument import Instrument
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.order_target_portfolio import OrderTargetPortfolio
 from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import (
@@ -137,66 +137,39 @@ class FixedBatchDecider(AbstractStockTransactionCostDecider):
         return Series(self.cost, index=delta_quantities.index, dtype=float)
 
 
-def test_smart_portfolio_groups_by_type_and_rejects_unsupported_type():
+def test_smart_portfolio_uses_etf_decider_only_for_etfs():
     env = Mock()
     deciders = {
         (INSTRUMENT_TYPE.CS, MARKET.CN): FixedBatchDecider(1),
         (INSTRUMENT_TYPE.ETF, MARKET.CN): FixedBatchDecider(2),
-        (INSTRUMENT_TYPE.LOF, MARKET.CN): FixedBatchDecider(3),
     }
     env.get_transaction_cost_decider.side_effect = lambda instrument_type, market: deciders[
         instrument_type, market
     ]
     portfolio = object.__new__(OrderTargetPortfolio)
     portfolio._env = env
-    portfolio._market = Series({order_book_id: MARKET.CN for order_book_id in ("stock", "etf", "lof")})
+    portfolio._market = Series({
+        order_book_id: MARKET.CN
+        for order_book_id in ("stock", "etf", "lof", "convertible")
+    })
     portfolio._instrument_types = Series({
         "stock": INSTRUMENT_TYPE.CS,
         "etf": INSTRUMENT_TYPE.ETF,
         "lof": INSTRUMENT_TYPE.LOF,
+        "convertible": INSTRUMENT_TYPE.CONVERTIBLE,
     })
     portfolio._exchange_rates = {}
 
     costs = portfolio._estimate_transaction_costs(
-        Series({"stock": -1000, "etf": -1000, "lof": -1000}),
-        Series({"stock": 10, "etf": 10, "lof": 10}),
+        Series({"stock": -1000, "etf": -1000, "lof": -1000, "convertible": -1000}),
+        Series({"stock": 10, "etf": 10, "lof": 10, "convertible": 10}),
     )
 
-    assert costs == 6
+    assert costs == 5
     assert env.get_transaction_cost_decider.call_args_list == [
         call(INSTRUMENT_TYPE.CS, MARKET.CN),
         call(INSTRUMENT_TYPE.ETF, MARKET.CN),
-        call(INSTRUMENT_TYPE.LOF, MARKET.CN),
     ]
-
-    unsupported = object.__new__(OrderTargetPortfolio)
-    unsupported._env = env
-    unsupported._market = Series({"convertible": MARKET.CN})
-    unsupported._instrument_types = Series({"convertible": INSTRUMENT_TYPE.CONVERTIBLE})
-    unsupported._exchange_rates = {}
-    with pytest.raises(NotImplementedError, match="Convertible"):
-        unsupported._estimate_transaction_costs(
-            Series({"convertible": 1000}), Series({"convertible": 10})
-        )
-
-    class CalcOnlyDecider(AbstractTransactionCostDecider):
-        def calc(self, args):
-            return TransactionCost.zero()
-
-    for instrument_type in (INSTRUMENT_TYPE.ETF, INSTRUMENT_TYPE.LOF):
-        env.get_transaction_cost_decider.side_effect = lambda requested_type, market: {
-            (INSTRUMENT_TYPE.CS, MARKET.CN): deciders[INSTRUMENT_TYPE.CS, MARKET.CN],
-            (instrument_type, MARKET.CN): CalcOnlyDecider(),
-        }[requested_type, market]
-        calc_only = object.__new__(OrderTargetPortfolio)
-        calc_only._env = env
-        calc_only._market = Series({"instrument": MARKET.CN})
-        calc_only._instrument_types = Series({"instrument": instrument_type})
-        calc_only._exchange_rates = {}
-
-        assert calc_only._estimate_transaction_costs(
-            Series({"instrument": 1000}), Series({"instrument": 10})
-        ) == 1
 
 
 def make_mod_config(etf_commission):
