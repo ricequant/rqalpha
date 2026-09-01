@@ -14,7 +14,7 @@
 
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, FrozenSet, Mapping, NamedTuple, Tuple
+from typing import Dict, FrozenSet, Mapping, MutableMapping, NamedTuple, Optional
 
 from pandas import Series
 from numpy import maximum
@@ -39,22 +39,36 @@ class CommissionProfile(NamedTuple):
     min_commission: float
 
 
-def _calculate_commission(
-    cost_commission: float,
-    commission: float,
-    is_first_trade: bool,
-) -> Tuple[float, float]:
-    if cost_commission > commission:
+class CommissionMixin:
+    commission_map: MutableMapping[int, float]
+
+    def _is_first_trade(self, order_id: int, min_commission: float) -> bool:
+        return order_id not in self.commission_map
+
+    def _calculate_commission(
+        self,
+        cost_commission: float,
+        min_commission: float,
+        order_id: Optional[int],
+    ) -> float:
+        if order_id is None:
+            return max(cost_commission, min_commission)
+
+        is_first_trade = self._is_first_trade(order_id, min_commission)
+        commission = self.commission_map.get(order_id, min_commission)
+        if cost_commission > commission:
+            self.commission_map[order_id] = 0
+            if is_first_trade:
+                return cost_commission
+            return cost_commission - commission
+
+        self.commission_map[order_id] = commission - cost_commission
         if is_first_trade:
-            return cost_commission, 0
-        return cost_commission - commission, 0
-
-    if is_first_trade:
-        return commission, commission - cost_commission
-    return 0, commission - cost_commission
+            return commission
+        return 0
 
 
-class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
+class StockTransactionCostDecider(CommissionMixin, AbstractStockTransactionCostDecider):
     def __init__(self, commission_multiplier, min_commission, tax_multiplier, pit_tax, event_bus):
         self.commission_rate = 0.0008
         self.commission_multiplier = commission_multiplier
@@ -87,15 +101,10 @@ class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
             4.2 如果commission 不等于 min_commission， 说明不是第一笔trade, 之前的trade中min_commission已经收过了，所以返回0.
         """
         cost_commission = args.price * args.quantity * self.commission_rate * self.commission_multiplier
-        if args.order_id is None:
-            return max(cost_commission, self.min_commission)
+        return self._calculate_commission(cost_commission, self.min_commission, args.order_id)
 
-        commission = self.commission_map[args.order_id]
-        cost, remaining_commission = _calculate_commission(
-            cost_commission, commission, commission == self.min_commission
-        )
-        self.commission_map[args.order_id] = remaining_commission
-        return cost
+    def _is_first_trade(self, order_id: int, min_commission: float) -> bool:
+        return self.commission_map[order_id] == min_commission
 
     def _calc_tax(self, args: TransactionCostArgs) -> float:
         if args.side == SIDE.BUY or args.instrument.type != INSTRUMENT_TYPE.CS:
@@ -112,7 +121,7 @@ class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
         return commission + tax
 
 
-class ETFTransactionCostDecider(AbstractStockTransactionCostDecider):
+class ETFTransactionCostDecider(CommissionMixin, AbstractStockTransactionCostDecider):
     _BOND_FUND_TYPES: FrozenSet[str] = frozenset({"Bond", "BondIndex", "ShortBond"})
 
     def __init__(
@@ -136,16 +145,7 @@ class ETFTransactionCostDecider(AbstractStockTransactionCostDecider):
     def _calc_commission(self, args: TransactionCostArgs) -> float:
         profile = self._get_profile(args.instrument)
         cost_commission = args.price * args.quantity * profile.commission_rate
-        if args.order_id is None:
-            return max(cost_commission, profile.min_commission)
-
-        is_first_trade = args.order_id not in self.commission_map
-        commission = self.commission_map.get(args.order_id, profile.min_commission)
-        cost, remaining_commission = _calculate_commission(
-            cost_commission, commission, is_first_trade
-        )
-        self.commission_map[args.order_id] = remaining_commission
-        return cost
+        return self._calculate_commission(cost_commission, profile.min_commission, args.order_id)
 
     def calc(self, args: TransactionCostArgs) -> TransactionCost:
         return TransactionCost(commission=self._calc_commission(args), tax=0, other_fees=0)

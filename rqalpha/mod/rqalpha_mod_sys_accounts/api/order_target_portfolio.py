@@ -268,22 +268,32 @@ class OrderTargetPortfolio:
     def _trans_cost_decider(
         self, instrument_type: INSTRUMENT_TYPE, market: MARKET
     ) -> AbstractStockTransactionCostDecider:
-        decider = self._env.get_transaction_cost_decider(instrument_type, market)
-        if not isinstance(decider, AbstractStockTransactionCostDecider):
-            if instrument_type == INSTRUMENT_TYPE.ETF:
-                # Custom ETF deciders registered through the public transaction
-                # cost API may only implement ``calc``. Smart portfolio
-                # adjustment historically estimated every security with the
-                # stock decider, so preserve that fallback for such deciders.
-                decider = self._env.get_transaction_cost_decider(INSTRUMENT_TYPE.CS, market)
-        if not isinstance(decider, AbstractStockTransactionCostDecider):
-            raise RuntimeError(
-                'transaction cost decider for instrument type {} and market {} is not a subclass of '
-                'AbstractStockTransactionCostDecider'.format(
-                    instrument_type, market
+        try:
+            decider = self._env.get_transaction_cost_decider(instrument_type, market)
+        except KeyError:
+            raise NotImplementedError(
+                "transaction cost estimation is not supported for instrument type {} and market {}".format(
+                    instrument_type.value, market.value
                 )
+            ) from None
+        if isinstance(decider, AbstractStockTransactionCostDecider):
+            return decider
+        # Custom deciders registered through the public API are only required
+        # to implement calc. Preserve the historical smart-order estimate for
+        # such deciders by using the stock batch decider.
+        try:
+            stock_decider = self._env.get_transaction_cost_decider(INSTRUMENT_TYPE.CS, market)
+        except KeyError:
+            pass
+        else:
+            if isinstance(stock_decider, AbstractStockTransactionCostDecider):
+                return stock_decider
+        raise NotImplementedError(
+            "transaction cost estimation is not supported by the decider for instrument type {} "
+            "and market {}".format(
+                instrument_type.value, market.value
             )
-        return decider
+        )
 
     def _estimate_transaction_costs(self, diff: Series, prices: Series) -> float:
         """估算交易成本（手续费 + 汇率成本）。"""
@@ -291,14 +301,11 @@ class OrderTargetPortfolio:
         costs = 0.0
         for market, group in self._market.groupby(by=self._market):
             instrument_types = self._instrument_types[group.index]
-            etf_index = instrument_types[instrument_types == INSTRUMENT_TYPE.ETF].index
-            legacy_index = instrument_types[instrument_types != INSTRUMENT_TYPE.ETF].index
-            for instrument_type, cost_index in (
-                (INSTRUMENT_TYPE.CS, legacy_index),
-                (INSTRUMENT_TYPE.ETF, etf_index),
+            for instrument_type, instrument_type_group in instrument_types.groupby(
+                by=instrument_types, sort=False
             ):
-                if cost_index.empty:
-                    continue
+                instrument_type = cast(INSTRUMENT_TYPE, instrument_type)
+                cost_index = instrument_type_group.index
                 decider = self._trans_cost_decider(instrument_type, market)
                 cost = decider.batch_estimate(diff[cost_index], prices[cost_index])
                 costs += cost.sum()
