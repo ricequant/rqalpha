@@ -117,6 +117,13 @@ class Instrument(metaclass=PropertyReprMeta):
         return INSTRUMENT_TYPE[self._dict["type"]]  # type: ignore
 
     @cached_property
+    def fund_type(self) -> Optional[str]:
+        """
+        [str] ETF 基金类型。旧版本 bundle 或自定义数据源可能不包含该字段，此时返回 None。
+        """
+        return self._dict.get("fund_type")
+
+    @cached_property
     def exchange(self) -> EXCHANGE:
         """
         [str] 交易所。股票：’XSHE’ - 深交所, ‘XSHG’ - 上交所。期货：’DCE’ - 大连商品交易所, ‘SHFE’ - 上海期货交易所，

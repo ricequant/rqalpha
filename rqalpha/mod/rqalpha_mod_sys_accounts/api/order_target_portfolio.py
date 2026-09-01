@@ -119,6 +119,10 @@ class OrderTargetPortfolio:
             if i.type not in SUPPORTED_INSTRUMENT_TYPES:
                 raise RQApiNotSupportedError(_('instrument type {} is not supported').format(i.type))
 
+        self._instruments = Series(instruments, dtype='object')
+        self._instrument_types = Series(
+            {i.order_book_id: i.type for i in instruments.values()}, dtype='object'
+        )
         self._market = Series({i.order_book_id: i.market for i in instruments.values()}, dtype='object')
         self._tick_sizes = Series({i: env.data_proxy.get_tick_size(i) for i in index}, dtype=float)
         self._min_qty = Series(
@@ -262,12 +266,22 @@ class OrderTargetPortfolio:
         return denial_reason_details
 
     @lru_cache(maxsize=8)
-    def _trans_cost_decider(self, market: MARKET) -> AbstractStockTransactionCostDecider:
-        decider = self._env.get_transaction_cost_decider(INSTRUMENT_TYPE.CS, market)
+    def _trans_cost_decider(
+        self, instrument_type: INSTRUMENT_TYPE, market: MARKET
+    ) -> AbstractStockTransactionCostDecider:
+        decider = self._env.get_transaction_cost_decider(instrument_type, market)
+        if not isinstance(decider, AbstractStockTransactionCostDecider):
+            if instrument_type == INSTRUMENT_TYPE.ETF:
+                # Custom ETF deciders registered through the public transaction
+                # cost API may only implement ``calc``. Smart portfolio
+                # adjustment historically estimated every security with the
+                # stock decider, so preserve that fallback for such deciders.
+                decider = self._env.get_transaction_cost_decider(INSTRUMENT_TYPE.CS, market)
         if not isinstance(decider, AbstractStockTransactionCostDecider):
             raise RuntimeError(
-                'transaction cost decider for market {} is not a subclass of AbstractStockTransactionCostDecider'.format(
-                    market
+                'transaction cost decider for instrument type {} and market {} is not a subclass of '
+                'AbstractStockTransactionCostDecider'.format(
+                    instrument_type, market
                 )
             )
         return decider
@@ -277,8 +291,23 @@ class OrderTargetPortfolio:
         delta_mv = diff * prices
         costs = 0.0
         for market, group in self._market.groupby(by=self._market):
-            # 税费等成本
-            costs += self._trans_cost_decider(market).batch_estimate(diff[group.index], prices[group.index]).sum()  # type: ignore
+            instrument_types = self._instrument_types[group.index]
+            etf_index = instrument_types[instrument_types == INSTRUMENT_TYPE.ETF].index
+            legacy_index = instrument_types[instrument_types != INSTRUMENT_TYPE.ETF].index
+            for instrument_type, cost_index in (
+                (INSTRUMENT_TYPE.CS, legacy_index),
+                (INSTRUMENT_TYPE.ETF, etf_index),
+            ):
+                if cost_index.empty:
+                    continue
+                decider = self._trans_cost_decider(instrument_type, market)
+                if instrument_type == INSTRUMENT_TYPE.ETF:
+                    cost = decider.batch_estimate_for_instruments(
+                        diff[cost_index], prices[cost_index], self._instruments[cost_index]
+                    )
+                else:
+                    cost = decider.batch_estimate(diff[cost_index], prices[cost_index])
+                costs += cost.sum()
             if market != MARKET.CN:
                 # 汇率成本
                 exchange_rate = self._exchange_rates[market]  # type: ignore

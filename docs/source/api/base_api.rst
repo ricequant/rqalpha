@@ -799,6 +799,10 @@ Instrument - 交易标的
 
         【int】股票：一手对应多少股，中国A股一手是100股。期货：一律为1。
 
+    ..  py:attribute:: fund_type（基金专用）
+
+        【str or None】基金类型。ETF 常见取值包括 ``Bond``、``BondIndex``、``ShortBond``、``Money``、``Stock``、``Hybrid``、``StockIndex``、``Related``、``QDII`` 和 ``Other``。旧版本数据中没有该字段时返回 ``None``。
+
     ..  py:attribute:: sector_code（股票专用）
 
         【str】板块缩写代码，全球通用标准定义

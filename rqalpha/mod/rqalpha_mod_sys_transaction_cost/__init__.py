@@ -24,6 +24,23 @@ __config__ = {
     "stock_commission_multiplier": 1,
     # 期货佣金倍率,即在默认的手续费率基础上按该倍数进行调整，期货默认佣金因合约而异
     "futures_commission_multiplier": 1,
+    # ETF 佣金配置。None 表示逐字段继承股票的有效费率配置，0 表示显式零费率/零最低佣金
+    "etf_commission": {
+        "default": {
+            "commission_rate": None,
+            "min_commission": None,
+        },
+        "subtypes": {
+            "bond": {
+                "commission_rate": None,
+                "min_commission": None,
+            },
+            "money": {
+                "commission_rate": None,
+                "min_commission": None,
+            },
+        },
+    },
     # 印花倍率，即在默认的印花税基础上按该倍数进行调整，股票默认印花税为千分之一，单边收取
     "tax_multiplier": 1,
     # 是否使用回测当时时间点对应的真实印花税率
