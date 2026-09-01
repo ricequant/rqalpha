@@ -14,6 +14,7 @@
 
 from collections import defaultdict
 from datetime import datetime
+from typing import Dict, FrozenSet, Mapping, MutableMapping, NamedTuple, Optional
 
 from pandas import Series
 from numpy import maximum
@@ -22,6 +23,7 @@ from rqalpha.interface import AbstractTransactionCostDecider, TransactionCostArg
 from rqalpha.environment import Environment
 from rqalpha.const import SIDE, HEDGE_TYPE, COMMISSION_TYPE, POSITION_EFFECT, INSTRUMENT_TYPE
 from rqalpha.core.events import EVENT
+from rqalpha.model.instrument import Instrument
 
 
 STOCK_PIT_TAX_CHANGE_DATE = datetime(2023, 8, 28)
@@ -32,7 +34,41 @@ class AbstractStockTransactionCostDecider(AbstractTransactionCostDecider):
         raise NotImplementedError
 
 
-class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
+class CommissionProfile(NamedTuple):
+    commission_rate: float
+    min_commission: float
+
+
+class CommissionMixin:
+    commission_map: MutableMapping[int, float]
+
+    def _calculate_commission(
+        self,
+        cost_commission: float,
+        min_commission: float,
+        order_id: Optional[int],
+    ) -> float:
+        if order_id is None:
+            return max(cost_commission, min_commission)
+
+        commission = self.commission_map[order_id]
+        if cost_commission > commission:
+            if commission == min_commission:
+                self.commission_map[order_id] = 0
+                return cost_commission
+            else:
+                self.commission_map[order_id] = 0
+                return cost_commission - commission
+        else:
+            if commission == min_commission:
+                self.commission_map[order_id] -= cost_commission
+                return commission
+            else:
+                self.commission_map[order_id] -= cost_commission
+                return 0
+
+
+class StockTransactionCostDecider(CommissionMixin, AbstractStockTransactionCostDecider):
     def __init__(self, commission_multiplier, min_commission, tax_multiplier, pit_tax, event_bus):
         self.commission_rate = 0.0008
         self.commission_multiplier = commission_multiplier
@@ -65,24 +101,7 @@ class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
             4.2 如果commission 不等于 min_commission， 说明不是第一笔trade, 之前的trade中min_commission已经收过了，所以返回0.
         """
         cost_commission = args.price * args.quantity * self.commission_rate * self.commission_multiplier
-        order_id = args.order_id
-        if order_id is None:
-            return max(cost_commission, self.min_commission)
-        commission = self.commission_map[order_id]
-        if cost_commission > commission:
-            if commission == self.min_commission:
-                self.commission_map[order_id] = 0
-                return cost_commission
-            else:
-                self.commission_map[order_id] = 0
-                return cost_commission - commission
-        else:
-            if commission == self.min_commission:
-                self.commission_map[order_id] -= cost_commission
-                return commission
-            else:
-                self.commission_map[order_id] -= cost_commission
-                return 0
+        return self._calculate_commission(cost_commission, self.min_commission, args.order_id)
 
     def _calc_tax(self, args: TransactionCostArgs) -> float:
         if args.side == SIDE.BUY or args.instrument.type != INSTRUMENT_TYPE.CS:
@@ -97,6 +116,51 @@ class StockTransactionCostDecider(AbstractStockTransactionCostDecider):
         commission = maximum(delta_quantities.abs() * prices * self.commission_rate * self.commission_multiplier, self.min_commission)
         tax = delta_quantities.abs() * prices * self.tax_rate * (delta_quantities < 0)
         return commission + tax
+
+
+class ETFTransactionCostDecider(CommissionMixin, AbstractStockTransactionCostDecider):
+    _BOND_FUND_TYPES: FrozenSet[str] = frozenset({"Bond", "BondIndex", "ShortBond"})
+
+    def __init__(
+        self,
+        default_profile: CommissionProfile,
+        subtype_profiles: Mapping[str, CommissionProfile],
+    ) -> None:
+        self.default_profile: CommissionProfile = default_profile
+        self.subtype_profiles: Dict[str, CommissionProfile] = dict(subtype_profiles)
+        self.commission_map: Dict[int, float] = {}
+        self.env: Environment = Environment.get_instance()
+
+    def _get_profile(self, instrument: Instrument) -> CommissionProfile:
+        fund_type = instrument.fund_type
+        if fund_type in self._BOND_FUND_TYPES:
+            return self.subtype_profiles["bond"]
+        if fund_type == "Money":
+            return self.subtype_profiles["money"]
+        return self.default_profile
+
+    def _calc_commission(self, args: TransactionCostArgs) -> float:
+        profile = self._get_profile(args.instrument)
+        cost_commission = args.price * args.quantity * profile.commission_rate
+        if args.order_id is not None:
+            self.commission_map.setdefault(args.order_id, profile.min_commission)
+        return self._calculate_commission(cost_commission, profile.min_commission, args.order_id)
+
+    def calc(self, args: TransactionCostArgs) -> TransactionCost:
+        return TransactionCost(commission=self._calc_commission(args), tax=0, other_fees=0)
+
+    def batch_estimate(self, delta_quantities: Series, prices: Series) -> Series:
+        instruments = self.env.data_proxy.get_active_instruments(
+            delta_quantities.index, self.env.trading_dt
+        )
+        costs: Dict[str, float] = {}
+        for order_book_id in delta_quantities.index:
+            profile = self._get_profile(instruments[order_book_id])
+            costs[order_book_id] = max(
+                abs(delta_quantities[order_book_id]) * prices[order_book_id] * profile.commission_rate,
+                profile.min_commission,
+            )
+        return Series(costs, dtype=float)
 
 
 class FuturesTransactionCostDecider(AbstractTransactionCostDecider):
