@@ -71,14 +71,17 @@ def _validate_profile(profile: Any, path: str) -> Dict[str, Optional[float]]:
 
 
 def _overlay_profile(
-    base: CommissionProfile, override: Mapping[str, Optional[float]]
+    base: CommissionProfile, override: Mapping[str, Optional[float]], path: str
 ) -> CommissionProfile:
     commission_rate = override.get("commission_rate")
     min_commission = override.get("min_commission")
-    return CommissionProfile(
+    profile = CommissionProfile(
         commission_rate=base.commission_rate if commission_rate is None else commission_rate,
         min_commission=base.min_commission if min_commission is None else min_commission,
     )
+    if profile.commission_rate == 0 and profile.min_commission > 0:
+        raise ValueError("{}.min_commission must be 0 when commission_rate is 0".format(path))
+    return profile
 
 
 def _resolve_etf_commission(
@@ -88,7 +91,7 @@ def _resolve_etf_commission(
     _validate_keys(etf_commission, {"default", "subtypes"}, "etf_commission")
 
     default_config = _validate_profile(etf_commission.get("default", {}), "etf_commission.default")
-    default_profile = _overlay_profile(stock_profile, default_config)
+    default_profile = _overlay_profile(stock_profile, default_config, "etf_commission.default")
 
     subtype_configs = _to_mapping(etf_commission.get("subtypes", {}), "etf_commission.subtypes")
     _validate_keys(subtype_configs, _ETF_SUBTYPES, "etf_commission.subtypes")
@@ -97,7 +100,9 @@ def _resolve_etf_commission(
         config = _validate_profile(
             subtype_configs.get(subtype, {}), "etf_commission.subtypes.{}".format(subtype)
         )
-        subtype_profiles[subtype] = _overlay_profile(default_profile, config)
+        subtype_profiles[subtype] = _overlay_profile(
+            default_profile, config, "etf_commission.subtypes.{}".format(subtype)
+        )
     return default_profile, subtype_profiles
 
 

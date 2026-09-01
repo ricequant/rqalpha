@@ -32,6 +32,7 @@ RQAlpha 交易税费 Mod，实现了不同市场不同交易标的的税费计�
         "stock_commission_multiplier": 1,
         "futures_commission_multiplier": 1,
         # ETF 最终佣金费率和最低佣金。None 表示逐字段继承上层配置，0 是有效的显式值
+        # 最终 commission_rate 为 0 时，min_commission 也必须为 0
         # 优先级：bond/money subtype > default > 股票有效配置
         # Bond/BondIndex/ShortBond 使用 bond，Money 使用 money，其余 ETF 类型使用 default
         # ETF 数据必须包含 fund_type；使用旧 bundle 时需先更新 bundle

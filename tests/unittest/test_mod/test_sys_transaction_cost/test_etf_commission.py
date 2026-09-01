@@ -87,13 +87,6 @@ def test_commission_state_handles_etf_profiles_and_preserves_stock_behavior():
     ] == [1, 4.2]
     assert bond_decider.calc(make_args(bond, quantity=100, order_id=2)).commission == 1
 
-    zero_rate_decider = make_decider(CommissionProfile(0, 5))
-    stock_etf = make_instrument()
-    assert [
-        zero_rate_decider.calc(make_args(stock_etf, quantity=100, order_id=1)).commission
-        for _ in range(3)
-    ] == [5, 0, 0]
-
     with patch(
         "rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders.Environment.get_instance"
     ):
@@ -210,7 +203,7 @@ def test_etf_config_resolves_inheritance_per_field():
         "default": {"commission_rate": 0.0005, "min_commission": None},
         "subtypes": {
             "bond": {"commission_rate": None, "min_commission": 0},
-            "money": {"commission_rate": 0, "min_commission": None},
+            "money": {"commission_rate": 0, "min_commission": 0},
         },
     })[INSTRUMENT_TYPE.ETF]
     assert {
@@ -218,7 +211,7 @@ def test_etf_config_resolves_inheritance_per_field():
             make_args(make_instrument(fund_type=fund_type), quantity=100)
         ).commission
         for fund_type in ("Stock", "Bond", "Money")
-    } == {"Stock": 3, "Bond": 0.5, "Money": 3}
+    } == {"Stock": 3, "Bond": 0.5, "Money": 0}
 
     with pytest.raises(KeyError, match="fund_type"):
         configured.calc(make_args(make_instrument(fund_type=None)))
@@ -228,6 +221,11 @@ def test_invalid_etf_configs_are_rejected():
     cases = [
         ({"default": {"commission_rate": -0.1}, "subtypes": {}}, "commission_rate"),
         ({"default": {"commission_rate": float("nan")}, "subtypes": {}}, "commission_rate"),
+        ({"default": {"commission_rate": 0, "min_commission": 1}, "subtypes": {}}, "min_commission"),
+        ({
+            "default": {"commission_rate": 0.0005, "min_commission": 1},
+            "subtypes": {"money": {"commission_rate": 0}},
+        }, "min_commission"),
         ({"default": {"typo": 1}, "subtypes": {}}, "typo"),
         ({"default": {}, "subtypes": {"gold": {}}}, "gold"),
     ]

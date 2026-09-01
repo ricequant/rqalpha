@@ -42,9 +42,6 @@ class CommissionProfile(NamedTuple):
 class CommissionMixin:
     commission_map: MutableMapping[int, float]
 
-    def _is_first_trade(self, order_id: int, min_commission: float) -> bool:
-        return order_id not in self.commission_map
-
     def _calculate_commission(
         self,
         cost_commission: float,
@@ -54,18 +51,21 @@ class CommissionMixin:
         if order_id is None:
             return max(cost_commission, min_commission)
 
-        is_first_trade = self._is_first_trade(order_id, min_commission)
-        commission = self.commission_map.get(order_id, min_commission)
+        commission = self.commission_map[order_id]
         if cost_commission > commission:
-            self.commission_map[order_id] = 0
-            if is_first_trade:
+            if commission == min_commission:
+                self.commission_map[order_id] = 0
                 return cost_commission
-            return cost_commission - commission
-
-        self.commission_map[order_id] = commission - cost_commission
-        if is_first_trade:
-            return commission
-        return 0
+            else:
+                self.commission_map[order_id] = 0
+                return cost_commission - commission
+        else:
+            if commission == min_commission:
+                self.commission_map[order_id] -= cost_commission
+                return commission
+            else:
+                self.commission_map[order_id] -= cost_commission
+                return 0
 
 
 class StockTransactionCostDecider(CommissionMixin, AbstractStockTransactionCostDecider):
@@ -102,9 +102,6 @@ class StockTransactionCostDecider(CommissionMixin, AbstractStockTransactionCostD
         """
         cost_commission = args.price * args.quantity * self.commission_rate * self.commission_multiplier
         return self._calculate_commission(cost_commission, self.min_commission, args.order_id)
-
-    def _is_first_trade(self, order_id: int, min_commission: float) -> bool:
-        return self.commission_map[order_id] == min_commission
 
     def _calc_tax(self, args: TransactionCostArgs) -> float:
         if args.side == SIDE.BUY or args.instrument.type != INSTRUMENT_TYPE.CS:
@@ -145,6 +142,8 @@ class ETFTransactionCostDecider(CommissionMixin, AbstractStockTransactionCostDec
     def _calc_commission(self, args: TransactionCostArgs) -> float:
         profile = self._get_profile(args.instrument)
         cost_commission = args.price * args.quantity * profile.commission_rate
+        if args.order_id is not None:
+            self.commission_map.setdefault(args.order_id, profile.min_commission)
         return self._calculate_commission(cost_commission, profile.min_commission, args.order_id)
 
     def calc(self, args: TransactionCostArgs) -> TransactionCost:
