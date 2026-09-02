@@ -24,14 +24,34 @@ RQAlpha 交易税费 Mod，实现了不同市场不同交易标的的税费计�
 .. code-block:: python
 
     {
-        # 股票最小手续费，单位元
-        "cn_stock_min_commission": 5,
+        # 股票最小手续费，单位元；cn_stock_min_commission 是兼容旧配置的废弃字段
+        "stock_min_commission": 5,
+        "cn_stock_min_commission": None,
         # 佣金倍率，即在默认的手续费率基础上按该倍数进行调整，股票的默认佣金为万八，期货默认佣金因合约而异
         "commission_multiplier": None,
         "stock_commission_multiplier": 1,
         "futures_commission_multiplier": 1,
+        # ETF 最终佣金费率和最低佣金。None 表示逐字段继承上层配置，0 是有效的显式值
+        # 最终 commission_rate 为 0 时，min_commission 也必须为 0
+        # 优先级：bond/money subtype > default > 股票有效配置
+        # Bond/BondIndex/ShortBond 使用 bond，Money 使用 money，其余 ETF 类型使用 default
+        # ETF 数据必须包含 fund_type；使用旧 bundle 时需先更新 bundle
+        "etf_commission": {
+            "default": {
+                "commission_rate": None,
+                "min_commission": None,
+            },
+            "subtypes": {
+                "bond": {
+                    "commission_rate": None,
+                    "min_commission": None,
+                },
+                "money": {
+                    "commission_rate": None,
+                    "min_commission": None,
+                },
+            },
+        },
         # 印花倍率，即在默认的印花税基础上按该倍数进行调整，股票默认印花税为千分之一，单边收取
         "tax_multiplier": 1,
     }
-
-
