@@ -68,6 +68,43 @@ Mod开发环境搭建
         def tear_down(self, success, exception=None):
             print(">>> HelloWorldMod.tear_down")
 
+自定义 Portfolio 初始化
+------------------------
+
+当 Mod 需要创建或替换默认的 :code:`Portfolio` 时，应在 :code:`start_up` 中监听 :code:`EVENT.INIT_PORTFOLIO`，而不是直接创建 Portfolio。
+
+:code:`EVENT.INIT_PORTFOLIO` 会在数据源、DataProxy、Broker 和事件源初始化完成后触发，此时默认 Portfolio 尚未创建。在监听函数中通过 :code:`env.set_portfolio` 注册自定义 Portfolio 后，框架将不再创建默认 Portfolio。自定义实现需要与 RQAlpha 所使用的 Portfolio 接口保持兼容。
+
+.. code-block:: python3
+
+    from rqalpha.core.events import EVENT
+    from rqalpha.interface import AbstractMod
+    from rqalpha.portfolio import Portfolio
+
+
+    class CustomPortfolio(Portfolio):
+        pass
+
+
+    class CustomPortfolioMod(AbstractMod):
+        def start_up(self, env, mod_config):
+            self._env = env
+            env.event_bus.add_listener(
+                EVENT.INIT_PORTFOLIO, self._init_portfolio
+            )
+
+        def _init_portfolio(self, event):
+            config = self._env.config
+            self._env.set_portfolio(CustomPortfolio(
+                config.base.accounts,
+                config.base.init_positions,
+                config.mod.sys_accounts.financing_rate,
+                self._env,
+            ))
+
+        def tear_down(self, code, exception=None):
+            pass
+
 我们第一个 Mod 就写好了，接下来我们需要写一个 :code:`setup.py` 以便我们以PyPI的形式发布以及安装。
 
 PyPI方式安装Mod
