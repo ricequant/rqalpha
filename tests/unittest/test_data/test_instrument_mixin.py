@@ -84,4 +84,3 @@ class InstrumentsMixinUnitTestCase(RQAlphaTestCase):
             self.instruments_mixin.get_active_instrument(order_book_id, dt)
 
         self.data_source.get_instruments.assert_called_once_with(id_or_syms=[order_book_id])
-
