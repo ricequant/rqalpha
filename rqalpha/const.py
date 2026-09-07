@@ -216,9 +216,22 @@ class TRADING_CALENDAR_TYPE(CustomEnum):
 # backward compatible
 TRADING_CALENDAR_TYPE.EXCHANGE = TRADING_CALENDAR_TYPE.CN_STOCK
 
-class MARKET(CustomEnum):
+class MarketEnumMeta(CustomEnumMeta):
+    def __getitem__(cls, item):
+        if isinstance(item, str):
+            item = item.upper()
+        return super(MarketEnumMeta, cls).__getitem__(item)
+
+
+class MARKET(CustomEnum, metaclass=MarketEnumMeta):
     CN = "CN"
     HK = "HK"
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            return cls._value2member_map_.get(value.upper())
+        return None
 
 
 class TAX_TYPE(CustomEnum):
