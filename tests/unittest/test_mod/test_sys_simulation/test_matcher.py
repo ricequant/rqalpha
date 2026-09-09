@@ -214,6 +214,26 @@ def test_bar_matcher_fills_market_order_by_volume_limit_and_cancels_remainder(fa
     assert order.status == ORDER_STATUS.CANCELLED
 
 
+def test_bar_matcher_uses_explicit_open_auction_volume(fake_env):
+    fake_env.bar.volume = 900
+    matcher = DefaultBarMatcher(
+        fake_env,
+        make_mod_config(
+            MATCHING_TYPE.CURRENT_BAR_CLOSE,
+            volume_limit=True,
+        ),
+    )
+    order = make_order(1000)
+
+    matcher.match(FakeAccount(), order, open_auction=True)
+
+    trades = trade_events(fake_env)
+    assert len(trades) == 1
+    assert trades[0].trade.last_quantity == 900
+    assert order.filled_quantity == 900
+    assert order.status == ORDER_STATUS.CANCELLED
+
+
 def test_bar_matcher_leaves_non_crossed_limit_order_active(fake_env):
     matcher = DefaultBarMatcher(fake_env, make_mod_config(MATCHING_TYPE.CURRENT_BAR_CLOSE))
     order = make_order(100, style=LimitOrder(9.9))

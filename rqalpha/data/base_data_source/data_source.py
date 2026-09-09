@@ -252,6 +252,10 @@ class BaseDataSource(AbstractDataSource):
             bar = dict.fromkeys(self.OPEN_AUCTION_BAR_FIELDS, np.nan)
         else:
             bar = {k: day_bar[k] if k in day_bar.dtype.names else np.nan for k in self.OPEN_AUCTION_BAR_FIELDS}
+            # Day-bar liquidity covers the full session and is unavailable at auction time.
+            for field in ("volume", "total_turnover"):
+                if field in bar:
+                    bar[field] = np.nan
         bar["last"] = bar["open"]  # type: ignore
         return bar
 
@@ -431,8 +435,10 @@ class BaseDataSource(AbstractDataSource):
         raise NotImplementedError("open source rqalpha not support algo order")
 
     def get_open_auction_volume(self, instrument: Instrument, dt: datetime):
-        volume = self.get_open_auction_bar(instrument, dt)['volume']
-        return volume
+        auction_bar = self.get_open_auction_bar(instrument, dt)
+        if auction_bar is None:
+            return np.nan
+        return auction_bar.get("volume", np.nan)
 
     # deprecated
     def register_instruments_store(self, instruments_store, market: MARKET = MARKET.CN):
