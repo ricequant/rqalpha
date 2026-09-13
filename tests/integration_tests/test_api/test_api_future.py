@@ -121,6 +121,7 @@ def test_future_order_to():
             order_to(context.f1, 2)
             assert get_position(context.f1).quantity == 2
         elif context.counter == 2:
+            assert order_to(context.f1, 2) == []
             order_to(context.f1, -2)
             assert get_position(context.f1, POSITION_DIRECTION.SHORT).quantity == 2
             order_to(context.f1, 1)
