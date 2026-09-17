@@ -81,14 +81,14 @@ def assure_active_instrument(id_or_ins) -> Instrument:
 
 
 def assure_listed_instrument(id_or_ins) -> Instrument:
-    """确保合约已上市（可以是已退市的），用于历史数据查询"""
+    """确保合约已上市（可以是已退市的），用于历史数据查询，其中指数可能在上市前就已经有行情数据，因此不需要在这里做检查"""
     def _raise():
         raise RQInvalidArgument(_(
             u"invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
         ).format(id_or_ins, type(id_or_ins)))
 
     if isinstance(id_or_ins, Instrument):
-        if not id_or_ins.listed:
+        if id_or_ins.type != INSTRUMENT_TYPE.INDX and not id_or_ins.listed:
             return _raise()
         return id_or_ins
     elif isinstance(id_or_ins, six.string_types):
@@ -98,6 +98,8 @@ def assure_listed_instrument(id_or_ins) -> Instrument:
             return _raise()
         # 找一个已经上市的（可以是已退市的）
         for ins in instruments:
+            if ins.type == INSTRUMENT_TYPE.INDX:
+                return ins
             if ins.listed_at(env.trading_dt):
                 return ins
         # 都还没上市

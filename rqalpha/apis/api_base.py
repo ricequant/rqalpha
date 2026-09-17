@@ -422,6 +422,8 @@ def history_bars(
     T日handle_bar                T日day bar
     =========================   ===================================================
 
+    指数在上市前可能已经有行情数据，因此查询时点早于指数上市日期时，同样可以获取到该指数的历史行情。
+
     分钟回测获取日历史数据
 
     =========================   ===================================================
@@ -1061,4 +1063,3 @@ def repay(amount: float, account_type: DEFAULT_ACCOUNT_TYPE = DEFAULT_ACCOUNT_TY
     """
     env = Environment.get_instance()
     return env.portfolio.finance_repay(amount * -1, account_type)
-
