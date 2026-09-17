@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-16 13:54+0800\n"
+"POT-Creation-Date: 2026-09-17 17:00+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -49,24 +49,24 @@ msgstr ""
 "rqdatac 初始化失败，部分扩展 API 可能无法使用，错误信息：{}。您可以访问 "
 "https://www.ricequant.com/welcome/rqdata 获取 rqdatac"
 
-#: rqalpha/main.py:216
+#: rqalpha/main.py:220
 msgid "system restored"
 msgstr "系统已恢复"
 
-#: rqalpha/main.py:248
+#: rqalpha/main.py:252
 msgid "strategy run successfully, normal exit"
 msgstr "策略运行成功，正常退出"
 
-#: rqalpha/main.py:255
+#: rqalpha/main.py:259
 msgid "strategy execute exception"
 msgstr "策略运行产生异常"
 
-#: rqalpha/apis/api_base.py:69
+#: rqalpha/apis/api_base.py:70
 #, python-brace-format
 msgid "instrument {} not found"
 msgstr "未找到 Instrument: {}"
 
-#: rqalpha/apis/api_base.py:77
+#: rqalpha/apis/api_base.py:78
 #: rqalpha/mod/rqalpha_mod_sys_risk/validators/is_trading_validator.py:36
 #, python-brace-format
 msgid "Order Creation Failed: {order_book_id} is not listing!"
@@ -91,7 +91,7 @@ msgstr "期货指数连续合约[99] 在实盘模拟中暂不支持。"
 msgid "Order Creation Failed: [{order_book_id}] No market data"
 msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 
-#: rqalpha/apis/api_base.py:291 rqalpha/apis/api_base.py:327
+#: rqalpha/apis/api_base.py:288 rqalpha/apis/api_base.py:322
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
@@ -142,7 +142,7 @@ msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
 msgstr "在API get_fundamentals 中,财务数据开始日期 {} 不应晚于上一交易日 {}"
 
 #: rqalpha/apis/api_rqdatac.py:1197 rqalpha/apis/api_rqdatac.py:1262
-#: rqalpha/utils/arg_checker.py:352
+#: rqalpha/utils/arg_checker.py:376
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, quarter should be in form of '2012q3', "
@@ -296,35 +296,35 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/data_proxy.py:224 rqalpha/data/instruments_mixin.py:50
+#: rqalpha/data/data_proxy.py:231 rqalpha/data/instruments_mixin.py:51
 #, python-brace-format
 msgid "No instrument found at {dt}: {id_or_sym}"
 msgstr "未找到 Instrument：{id_or_sym}（日期：{dt}）"
 
-#: rqalpha/data/instruments_mixin.py:52
+#: rqalpha/data/instruments_mixin.py:53
 #, python-brace-format
 msgid "Multiple instruments found at {dt}: {id_or_sym}"
 msgstr "存在多个 Instrument 对象：{id_or_sym}（日期：{dt}）"
 
-#: rqalpha/data/instruments_mixin.py:116 rqalpha/data/instruments_mixin.py:137
+#: rqalpha/data/instruments_mixin.py:117 rqalpha/data/instruments_mixin.py:138
 #, python-brace-format
 msgid "No instrument found: {}"
 msgstr "未找到 Instrument: {}"
 
-#: rqalpha/data/base_data_source/storages.py:81
+#: rqalpha/data/base_data_source/storages.py:80
 msgid ""
 "The bundle data you are using is too old, please update it to lastest "
 "before using"
 msgstr "您所使用的 Bundle 数据过旧，请将其更新至最新后再进行使用"
 
-#: rqalpha/data/base_data_source/storages.py:97
-#: rqalpha/data/base_data_source/storages.py:123
+#: rqalpha/data/base_data_source/storages.py:96
+#: rqalpha/data/base_data_source/storages.py:122
 #, python-brace-format
 msgid "unsupported future instrument {}"
 msgstr "不支持的期货标的{}"
 
-#: rqalpha/data/base_data_source/storages.py:180
-#: rqalpha/data/base_data_source/storages.py:190
+#: rqalpha/data/base_data_source/storages.py:179
+#: rqalpha/data/base_data_source/storages.py:189
 #, python-brace-format
 msgid ""
 "open data bundle failed, you can remove {} and try to regenerate bundle: "
@@ -335,39 +335,39 @@ msgstr "读取 bundle 文件失败，请删除 {} 后尝试重新生成 bundle�
 msgid "Invalid instruments list!"
 msgstr "无效的 instruments 列表！"
 
-#: rqalpha/data/bundle/__init__.py:92
+#: rqalpha/data/bundle/__init__.py:103
 msgid "Got instruments failed!"
 msgstr "获取 instruments 失败"
 
-#: rqalpha/data/bundle/__init__.py:99
+#: rqalpha/data/bundle/__init__.py:110
 msgid "Get yield curve data error."
 msgstr "获取 yield curve 数据失败"
 
-#: rqalpha/data/bundle/__init__.py:148
+#: rqalpha/data/bundle/__init__.py:159
 msgid "Got no dividend data"
 msgstr "未获取到 dividend 数据"
 
-#: rqalpha/data/bundle/__init__.py:177
+#: rqalpha/data/bundle/__init__.py:188
 msgid "Got no split data"
 msgstr "未获取到 split 数据"
 
-#: rqalpha/data/bundle/__init__.py:205
+#: rqalpha/data/bundle/__init__.py:216
 msgid "Got no ex factor data"
 msgstr "未获取到 ex factor 数据"
 
-#: rqalpha/data/bundle/__init__.py:225
+#: rqalpha/data/bundle/__init__.py:236
 msgid "Got no share transformation data"
 msgstr "未获取到 share transformation 数据"
 
-#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:78
-#: rqalpha/data/bundle/daybar.py:126
+#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:82
+#: rqalpha/data/bundle/daybar.py:132
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
 
-#: rqalpha/data/bundle/daybar.py:72 rqalpha/data/bundle/daybar.py:110
+#: rqalpha/data/bundle/daybar.py:76 rqalpha/data/bundle/daybar.py:114
 msgid "Get instruments failed."
 msgstr "获取 instruments 失败"
 
@@ -455,7 +455,7 @@ msgstr "mod 关闭 [开始] {}"
 msgid "mod tear_down [END]   {}"
 msgstr "mod 关闭 [结束]   {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:462
+#: rqalpha/mod/rqalpha_mod_sys_accounts/position_model.py:472
 #, python-brace-format
 msgid "{order_book_id} is expired, close all positions by system"
 msgstr "{order_book_id} 已退市/交割，系统自动平仓"
@@ -612,22 +612,22 @@ msgstr "未提供 {} 的价格"
 msgid "instrument type {} is not supported"
 msgstr "不支持的标的类型: {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:173
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:176
 #, python-brace-format
 msgid "frequency {} is not supported"
 msgstr "不支持回测频率: {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:175
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:178
 #, python-brace-format
 msgid "not supported to be called in {} phase"
 msgstr "不支持在 {} 阶段调用"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:598
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:614
 #, python-brace-format
 msgid "price of {} is needed, which is not provided in the algo_or_prices"
 msgstr "需要 {} 的价格，但在 algo_or_prices 中未提供"
 
-#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:625
+#: rqalpha/mod/rqalpha_mod_sys_accounts/api/order_target_portfolio.py:641
 msgid "Limit order price is invalid."
 msgstr "限价单价格不能为 nan。"
 
@@ -679,32 +679,32 @@ msgstr "在图表上显示周度指标和收益曲线"
 msgid "[sys_analyser] Generate report from strategy output file"
 msgstr "【sys_analyser】使用策略输出的文件生成报告"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:165
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:153
 msgid ""
 "config 'base.benchmark' is deprecated, use 'mod.sys_analyser.benchmark' "
 "instead"
 msgstr "配置'base.benchmark'已被弃用，使用'mod.sys_analyser.benchmark'代替"
 
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:183
 #: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:195
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:207
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:228
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:216
 #, python-brace-format
 msgid "benchmark {} missing data between backtest start date {} and end date {}"
 msgstr "基准标的 {} 在回测起始日期 {} 结束日期 {} 间缺失数据"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:216
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:204
 #, python-brace-format
 msgid ""
 "benchmark {} available data start date {} >= backtest start date {} or "
 "end date {} <= backtest end date {}"
 msgstr "基准标的 {} 的可用行情数据开始日期 {} >= 回测起始日期 {} 或结束日期 {} <= 回测结束日期 {}"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:337
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:325
 #, python-brace-format
 msgid "invalid init benchmark {}, should be in format 'order_book_id:weight'"
 msgstr "无效的初始基准 {}，格式应为 'order_book_id:weight'"
 
-#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:342
+#: rqalpha/mod/rqalpha_mod_sys_analyser/mod.py:330
 #, python-brace-format
 msgid "invalid weight for instrument {order_book_id}: {weight}"
 msgstr "标的 {order_book_id} 的权重无效: {weight}"
@@ -1039,7 +1039,6 @@ msgid "Order Rejected: {order_book_id} miss market data or bar no volume."
 msgstr "订单被拒单: [{order_book_id}] 当前缺失市场数据或无成交量。"
 
 #: rqalpha/mod/rqalpha_mod_sys_simulation/matcher/bar_matcher.py:82
-#, python-brace-format
 msgid "Current bar missing market data."
 msgstr "当前 bar 缺失市场数据。"
 
@@ -1181,7 +1180,7 @@ msgid ""
 "actually"
 msgstr "订单取消：标的 {order_book_id} 实际成交 {filled_volume}"
 
-#: rqalpha/mod/rqalpha_mod_sys_transaction_cost/mod.py:34
+#: rqalpha/mod/rqalpha_mod_sys_transaction_cost/mod.py:115
 msgid ""
 "invalid commission multiplier or tax multiplier value: value range is [0,"
 " +∞)"
@@ -1212,31 +1211,38 @@ msgstr "不合法的账户类型 {}， 请在以下账户类型中选择 {}"
 msgid "Cash add {}. units {} become to {}"
 msgstr "入金{}元，份额由{}变动为{}"
 
-#: rqalpha/portfolio/account.py:94
+#: rqalpha/portfolio/account.py:96
 #, python-brace-format
 msgid "invalid init position {order_book_id}: no valid price at {date}"
 msgstr "初始持仓 {order_book_id} 不合法：无法获取到该标 {date} 的价格"
 
-#: rqalpha/portfolio/account.py:212
+#: rqalpha/portfolio/account.py:216
+#, python-brace-format
+msgid ""
+"{order_book_id} is not active on {trading_dt}, historical instrument "
+"information will be used to return an empty position."
+msgstr ""
+
+#: rqalpha/portfolio/account.py:232
 msgid ""
 "account.positions is deprecated, please use get_position/get_positions "
 "API instead"
 msgstr "account.positions 已过时，请使用 get_position/get_positions API 代替"
 
-#: rqalpha/portfolio/account.py:363
+#: rqalpha/portfolio/account.py:387
 msgid "Futures account's cash turns negative after settlement"
 msgstr "期货账户的现金在结算后变为负数"
 
-#: rqalpha/portfolio/account.py:369
+#: rqalpha/portfolio/account.py:393
 msgid "Trigger Forced Liquidation, current total_value is 0"
 msgstr "触发强制清算，当前总权益为 0"
 
-#: rqalpha/portfolio/account.py:530 rqalpha/portfolio/account.py:549
+#: rqalpha/portfolio/account.py:555 rqalpha/portfolio/account.py:574
 #, python-brace-format
 msgid "insufficient cash, current {}, target withdrawal {}"
 msgstr "现金不足，当前现金 {}，目标出金 {}"
 
-#: rqalpha/portfolio/position.py:84
+#: rqalpha/portfolio/position.py:86
 #, fuzzy, python-brace-format
 msgid "No instruments found at {dt}: {id_or_sym}"
 msgstr "未找到 Instrument：{id_or_sym}（日期：{dt}）"
@@ -1261,78 +1267,82 @@ msgid ""
 "order_book_id/instrument, got {} (type: {})"
 msgstr "不合法的 order_book_id/instrument，应传入已上市的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:114
+#: rqalpha/utils/arg_checker.py:119
 #, python-brace-format
 msgid "invalid order_book_id: {order_book_id}"
 msgstr "无效的 order_book_id：{order_book_id}"
 
-#: rqalpha/utils/arg_checker.py:133
+#: rqalpha/utils/arg_checker.py:138
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expect a value of type {}, got {} "
 "(type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望类型为 {} 的值，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:169
+#: rqalpha/utils/arg_checker.py:171 rqalpha/utils/arg_checker.py:177
+msgid "quoted order_book_id/instrument"
+msgstr "有行情的合约代码/Instrument"
+
+#: rqalpha/utils/arg_checker.py:193
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a number, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望一个数字，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:192
+#: rqalpha/utils/arg_checker.py:216
 #, python-brace-format
 msgid "function {}: invalid {} argument, valid: {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，有效值为：{}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:206
+#: rqalpha/utils/arg_checker.py:230
 #, python-brace-format
 msgid "function {}: invalid {} argument, valid fields are {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，有效字段为 {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:218
+#: rqalpha/utils/arg_checker.py:242
 #, python-brace-format
 msgid "function {}: invalid field {}, valid fields are {}, got {} (type: {})"
 msgstr "函数 {}：无效的字段 {}，有效字段为 {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:224 rqalpha/utils/arg_checker.py:239
+#: rqalpha/utils/arg_checker.py:248 rqalpha/utils/arg_checker.py:263
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expect a string or a list of string, "
 "got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望字符串或字符串列表，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:266 rqalpha/utils/arg_checker.py:271
+#: rqalpha/utils/arg_checker.py:290 rqalpha/utils/arg_checker.py:295
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a valid date, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望一个有效的日期，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:282
+#: rqalpha/utils/arg_checker.py:306
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value >= {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 >= {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:292
+#: rqalpha/utils/arg_checker.py:316
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value > {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 > {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:302
+#: rqalpha/utils/arg_checker.py:326
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value <= {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 <= {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:313
+#: rqalpha/utils/arg_checker.py:337
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value < {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 < {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:330
+#: rqalpha/utils/arg_checker.py:354
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, interval should be in form of '1d', "
 "'3m', '4q', '2y', got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，interval 应为 '1d'、'3m'、'4q'、'2y' 的形式，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:366
+#: rqalpha/utils/arg_checker.py:390
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, should be entity like "
@@ -1341,7 +1351,7 @@ msgstr ""
 "函数 {}：无效的 {} 参数，应为类似 Fundamentals.balance_sheet.total_equity 的实体，实际获得 "
 "{}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:385
+#: rqalpha/utils/arg_checker.py:409
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
@@ -1412,14 +1422,14 @@ msgstr "未知的策略类型：{}"
 msgid "unknown persist mode: {}"
 msgstr "未知的持久化模式：{}"
 
-#: rqalpha/utils/functools.py:68
+#: rqalpha/utils/functools.py:63
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expected an order_book_id or instrument"
 " with types {}, got {} (type: {})"
 msgstr "函数 {}：不合法的参数 {}，应传入具有 {} 类型的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
-#: rqalpha/utils/functools.py:73
+#: rqalpha/utils/functools.py:68
 #, python-brace-format
 msgid "function {} is not supported, please check your account or mod config"
 msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启了包含该 API 实现的 Mod"

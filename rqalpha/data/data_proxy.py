@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from rqalpha.const import INSTRUMENT_TYPE, EXECUTION_PHASE, MARKET, TRADING_CALENDAR_TYPE
-from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
+from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period, INST_TYPE_WITH_PRE_LISTED_QUOTES
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
@@ -225,7 +225,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
             # 指数在上市前可能已经有行情数据，因此不对指数的上市日期做限制
             instruments = [
                 instrument for instrument in self.get_instrument_history(order_book_id)
-                if instrument.type == INSTRUMENT_TYPE.INDX
+                if instrument.type in INST_TYPE_WITH_PRE_LISTED_QUOTES
             ]
         if len(instruments) == 0:
             raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=order_book_id))

@@ -142,6 +142,11 @@ INST_TYPE_IN_STOCK_ACCOUNT = [
     INSTRUMENT_TYPE.REITs
 ]
 
+# 指数由指数公司计算并发布，其行情可能早于 listed_date，这类合约在上市前也可能有行情
+INST_TYPE_WITH_PRE_LISTED_QUOTES = [
+    INSTRUMENT_TYPE.INDX,
+]
+
 
 def is_night_trading(universe):
     # for compatible
