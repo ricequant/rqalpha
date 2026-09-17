@@ -169,14 +169,13 @@ class ArgumentChecker(ArgumentCheckerBase):
             if isinstance(value, Instrument):
                 if not _is_quoted(value, env.trading_dt):
                     self.raise_instrument_error(func_name, value, _("quoted order_book_id/instrument"))
-                return
-            if isinstance(value, six.string_types):
+            elif isinstance(value, str):
                 for instrument in env.data_proxy.get_instrument_history(value):
                     if _is_quoted(instrument, env.trading_dt):
                         return
                 self.raise_instrument_error(func_name, value, _("quoted order_book_id/instrument"))
-                return
-            self.raise_invalid_instrument_error(func_name, value)
+            else:
+                self.raise_invalid_instrument_error(func_name, value)
 
         self._rules.append(check_is_quoted)
         return self
