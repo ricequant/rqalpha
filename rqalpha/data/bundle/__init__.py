@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedProcessPoolExecutor, ProgressedTask
-from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_date_to_int
+from rqalpha.utils.datetime_func import china_today, convert_date_to_date_int, convert_date_to_int
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import init_logger, system_log
 from rqalpha.data.bundle.utils import (
@@ -105,7 +105,7 @@ def gen_instruments(data_bundle_path: str):
 
 
 def gen_yield_curve(data_bundle_path: str):
-    yield_curve: Optional[pd.DataFrame] = rqdatac.get_yield_curve(start_date=START_DATE, end_date=datetime.date.today())
+    yield_curve: Optional[pd.DataFrame] = rqdatac.get_yield_curve(start_date=START_DATE, end_date=china_today())
     if yield_curve is None or yield_curve.empty:
         raise RuntimeError(_("Get yield curve data error."))
     yield_curve.index = [convert_date_to_date_int(d) for d in yield_curve.index]
@@ -124,7 +124,7 @@ def gen_st_days(data_bundle_path: str):
     from rqdatac.client import get_client
     stocks = rqdatac.all_instruments('CS').order_book_id.tolist()
     st_days = get_client().execute('get_st_days', stocks, START_DATE,
-                                   convert_date_to_date_int(datetime.date.today()))
+                                   convert_date_to_date_int(china_today()))
     with h5py.File(os.path.join(data_bundle_path, 'st_stock_days.h5'), 'w') as h5:
         for order_book_id, days in st_days.items():
             h5[order_book_id] = days
@@ -134,7 +134,7 @@ def gen_suspended_days(data_bundle_path: str):
     from rqdatac.client import get_client
     stocks = rqdatac.all_instruments('CS').order_book_id.tolist()
     suspended_days = get_client().execute('get_suspended_days', stocks, START_DATE,
-                                          convert_date_to_date_int(datetime.date.today()))
+                                          convert_date_to_date_int(china_today()))
     with h5py.File(os.path.join(data_bundle_path, 'suspended_days.h5'), 'w') as h5:
         for order_book_id, days in suspended_days.items():
             h5[order_book_id] = days

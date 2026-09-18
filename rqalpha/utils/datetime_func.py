@@ -100,3 +100,19 @@ def to_date(date: Union[str, datetime.date, datetime.datetime]) -> datetime.date
         return date
     else:
         raise RQInvalidArgument("unknown date value: {}".format(date))
+
+
+# 中国市场时区（北京时间，东八区）。中国自 1991 年起不再使用夏令时，因此固定 UTC+8 偏移即可
+CHINA_TIMEZONE = datetime.timezone(datetime.timedelta(hours=8))
+
+
+def china_now() -> datetime.datetime:
+    """获取当前中国市场时区（北京时间）的时间
+    返回带 tzinfo 的 datetime，其取值与运行机器的本地时区无关。
+    """
+    return datetime.datetime.now(CHINA_TIMEZONE)
+
+
+def china_today() -> datetime.date:
+    """获取当前中国市场时区（北京时间）的日期"""
+    return china_now().date()
