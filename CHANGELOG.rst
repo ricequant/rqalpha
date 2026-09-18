@@ -9,6 +9,10 @@ CHANGELOG
 
 - 修复 ``history_bars`` 无法获取指数上市前行情的问题
 
+**[For Mod 开发者] 接口变更指引**
+
+- ``DataProxy.history_bars`` 首个参数由 ``order_book_id`` 改为 ``id_or_ins``，可传入 ``order_book_id`` 字符串或 ``Instrument`` 对象；以 ``order_book_id=`` 关键字调用的 Mod 需改用 ``id_or_ins=``。传入 ``Instrument`` 时直接使用该合约，不再按查询时点重新定位合约（需要「按 dt 选择合约、含指数上市前行情放宽」的行为时，请继续传入字符串）。
+
 
 6.4.0
 ==================

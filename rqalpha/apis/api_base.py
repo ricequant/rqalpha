@@ -478,6 +478,7 @@ def history_bars(
         [Out]
         [ 8.69  8.7   8.71  8.81  8.81]
     """
+    instrument = cast(Instrument, order_book_id)
     env = Environment.get_instance()
     dt = env.calendar_dt
 
@@ -508,7 +509,7 @@ def history_bars(
         fields = ["datetime", "open", "high", "low", "close", "volume"]
 
     return env.data_proxy.history_bars(
-        order_book_id,
+        instrument,
         bar_count,
         frequency,
         fields,

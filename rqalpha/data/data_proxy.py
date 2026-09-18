@@ -231,6 +231,8 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
             instrument = instruments[-1]
         elif isinstance(id_or_ins, Instrument):
             instrument = id_or_ins
+        else:
+            raise ValueError(f"Invalid type of id_or_ins: {type(id_or_ins)}")
         if adjust_orig is None:
             adjust_orig = dt
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
