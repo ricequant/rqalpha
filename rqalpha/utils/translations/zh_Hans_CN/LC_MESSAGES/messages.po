@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-17 17:00+0800\n"
+"POT-Creation-Date: 2026-09-17 17:59+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -142,7 +142,7 @@ msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
 msgstr "在API get_fundamentals 中,财务数据开始日期 {} 不应晚于上一交易日 {}"
 
 #: rqalpha/apis/api_rqdatac.py:1197 rqalpha/apis/api_rqdatac.py:1262
-#: rqalpha/utils/arg_checker.py:376
+#: rqalpha/utils/arg_checker.py:378
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, quarter should be in form of '2012q3', "
@@ -1267,82 +1267,85 @@ msgid ""
 "order_book_id/instrument, got {} (type: {})"
 msgstr "不合法的 order_book_id/instrument，应传入已上市的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:119
+#: rqalpha/utils/arg_checker.py:118
+#, python-brace-format
+msgid ""
+"invalid order_book_id/instrument, expected a quoted "
+"order_book_id/instrument, got {} (type: {})"
+msgstr "不合法的 order_book_id/instrument，应传入有行情的合约代码或 Instrument 对象，实际传入了 {}（类型：{}）"
+
+#: rqalpha/utils/arg_checker.py:140
 #, python-brace-format
 msgid "invalid order_book_id: {order_book_id}"
 msgstr "无效的 order_book_id：{order_book_id}"
 
-#: rqalpha/utils/arg_checker.py:138
+#: rqalpha/utils/arg_checker.py:159
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expect a value of type {}, got {} "
 "(type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望类型为 {} 的值，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:171 rqalpha/utils/arg_checker.py:177
-msgid "quoted order_book_id/instrument"
-msgstr "有行情的合约代码/Instrument"
-
-#: rqalpha/utils/arg_checker.py:193
+#: rqalpha/utils/arg_checker.py:195
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a number, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望一个数字，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:216
+#: rqalpha/utils/arg_checker.py:218
 #, python-brace-format
 msgid "function {}: invalid {} argument, valid: {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，有效值为：{}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:230
+#: rqalpha/utils/arg_checker.py:232
 #, python-brace-format
 msgid "function {}: invalid {} argument, valid fields are {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，有效字段为 {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:242
+#: rqalpha/utils/arg_checker.py:244
 #, python-brace-format
 msgid "function {}: invalid field {}, valid fields are {}, got {} (type: {})"
 msgstr "函数 {}：无效的字段 {}，有效字段为 {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:248 rqalpha/utils/arg_checker.py:263
+#: rqalpha/utils/arg_checker.py:250 rqalpha/utils/arg_checker.py:265
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expect a string or a list of string, "
 "got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望字符串或字符串列表，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:290 rqalpha/utils/arg_checker.py:295
+#: rqalpha/utils/arg_checker.py:292 rqalpha/utils/arg_checker.py:297
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a valid date, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望一个有效的日期，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:306
+#: rqalpha/utils/arg_checker.py:308
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value >= {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 >= {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:316
+#: rqalpha/utils/arg_checker.py:318
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value > {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 > {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:326
+#: rqalpha/utils/arg_checker.py:328
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value <= {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 <= {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:337
+#: rqalpha/utils/arg_checker.py:339
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value < {}, got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，期望值 < {}，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:354
+#: rqalpha/utils/arg_checker.py:356
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, interval should be in form of '1d', "
 "'3m', '4q', '2y', got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，interval 应为 '1d'、'3m'、'4q'、'2y' 的形式，实际获得 {}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:390
+#: rqalpha/utils/arg_checker.py:392
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, should be entity like "
@@ -1351,7 +1354,7 @@ msgstr ""
 "函数 {}：无效的 {} 参数，应为类似 Fundamentals.balance_sheet.total_equity 的实体，实际获得 "
 "{}（类型：{}）"
 
-#: rqalpha/utils/arg_checker.py:409
+#: rqalpha/utils/arg_checker.py:411
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
@@ -2043,4 +2046,3 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 #~ " validate_cash is disabled; please verify"
 #~ " this configuration."
 #~ msgstr ""
-

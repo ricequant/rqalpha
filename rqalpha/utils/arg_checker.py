@@ -111,6 +111,27 @@ def _is_quoted(instrument: Instrument, dt: datetime.datetime) -> bool:
     return instrument.type in INST_TYPE_WITH_PRE_LISTED_QUOTES or instrument.listed_at(dt)
 
 
+def assure_quoted_instrument(id_or_ins) -> Instrument:
+    """确保合约在 trading_dt 时点有行情（可以是已退市的），指数的行情可能早于其上市日期"""
+    def _raise():
+        raise RQInvalidArgument(_(
+            u"invalid order_book_id/instrument, expected a quoted order_book_id/instrument, got {} (type: {})"
+        ).format(id_or_ins, type(id_or_ins)))
+
+    if isinstance(id_or_ins, Instrument):
+        if not _is_quoted(id_or_ins, Environment.get_instance().trading_dt):
+            return _raise()
+        return id_or_ins
+    elif isinstance(id_or_ins, str):
+        env = Environment.get_instance()
+        for ins in env.data_proxy.get_instrument_history(id_or_ins):
+            if _is_quoted(ins, env.trading_dt):
+                return ins
+        return _raise()
+    else:
+        return _raise()
+
+
 def assure_order_book_id(order_book_id: str, expected_type: Optional[INSTRUMENT_TYPE] = None):
     env = Environment.get_instance()
     try:
@@ -160,24 +181,6 @@ class ArgumentChecker(ArgumentCheckerBase):
     def is_listed_instrument(self):
         """只要求合约已上市（可以是已退市的），用于历史数据查询"""
         self._rules.append(lambda func_name, value: assure_listed_instrument(value))
-        return self
-
-    def is_quoted_instrument(self):
-        """只要求合约在 trading_dt 时点有行情（可以是已退市的），指数的行情可能早于其上市日期"""
-        def check_is_quoted(func_name, value):
-            env = Environment.get_instance()
-            if isinstance(value, Instrument):
-                if not _is_quoted(value, env.trading_dt):
-                    self.raise_instrument_error(func_name, value, _("quoted order_book_id/instrument"))
-            elif isinstance(value, str):
-                for instrument in env.data_proxy.get_instrument_history(value):
-                    if _is_quoted(instrument, env.trading_dt):
-                        return
-                self.raise_instrument_error(func_name, value, _("quoted order_book_id/instrument"))
-            else:
-                self.raise_invalid_instrument_error(func_name, value)
-
-        self._rules.append(check_is_quoted)
         return self
 
     def is_valid_order_book_id(self, expected_type: Optional[INSTRUMENT_TYPE] = None):
@@ -429,6 +432,11 @@ class ArgumentConverter(ArgumentCheckerBase):
     def is_active_instrument(self):
         """验证并转换为上市中的 Instrument 对象"""
         self._rules.append(assure_active_instrument)
+        return self
+
+    def is_quoted_instrument(self):
+        """验证并转换为 trading_dt 时点有行情的 Instrument 对象（指数的行情可能早于其上市日期）"""
+        self._rules.append(assure_quoted_instrument)
         return self
 
     def is_valid_order_book_id(self):

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-17 17:00+0800\n"
+"POT-Creation-Date: 2026-09-17 17:59+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -137,7 +137,7 @@ msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
 msgstr ""
 
 #: rqalpha/apis/api_rqdatac.py:1197 rqalpha/apis/api_rqdatac.py:1262
-#: rqalpha/utils/arg_checker.py:376
+#: rqalpha/utils/arg_checker.py:378
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, quarter should be in form of '2012q3', "
@@ -1239,89 +1239,92 @@ msgid ""
 "order_book_id/instrument, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:119
+#: rqalpha/utils/arg_checker.py:118
+#, python-brace-format
+msgid ""
+"invalid order_book_id/instrument, expected a quoted "
+"order_book_id/instrument, got {} (type: {})"
+msgstr ""
+
+#: rqalpha/utils/arg_checker.py:140
 #, python-brace-format
 msgid "invalid order_book_id: {order_book_id}"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:138
+#: rqalpha/utils/arg_checker.py:159
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expect a value of type {}, got {} "
 "(type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:171 rqalpha/utils/arg_checker.py:177
-msgid "quoted order_book_id/instrument"
-msgstr ""
-
-#: rqalpha/utils/arg_checker.py:193
+#: rqalpha/utils/arg_checker.py:195
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a number, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:216
+#: rqalpha/utils/arg_checker.py:218
 #, python-brace-format
 msgid "function {}: invalid {} argument, valid: {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:230
+#: rqalpha/utils/arg_checker.py:232
 #, python-brace-format
 msgid "function {}: invalid {} argument, valid fields are {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:242
+#: rqalpha/utils/arg_checker.py:244
 #, python-brace-format
 msgid "function {}: invalid field {}, valid fields are {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:248 rqalpha/utils/arg_checker.py:263
+#: rqalpha/utils/arg_checker.py:250 rqalpha/utils/arg_checker.py:265
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, expect a string or a list of string, "
 "got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:290 rqalpha/utils/arg_checker.py:295
+#: rqalpha/utils/arg_checker.py:292 rqalpha/utils/arg_checker.py:297
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a valid date, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:306
+#: rqalpha/utils/arg_checker.py:308
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value >= {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:316
+#: rqalpha/utils/arg_checker.py:318
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value > {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:326
+#: rqalpha/utils/arg_checker.py:328
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value <= {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:337
+#: rqalpha/utils/arg_checker.py:339
 #, python-brace-format
 msgid "function {}: invalid {} argument, expect a value < {}, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:354
+#: rqalpha/utils/arg_checker.py:356
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, interval should be in form of '1d', "
 "'3m', '4q', '2y', got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:390
+#: rqalpha/utils/arg_checker.py:392
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, should be entity like "
 "Fundamentals.balance_sheet.total_equity, got {} (type: {})"
 msgstr ""
 
-#: rqalpha/utils/arg_checker.py:409
+#: rqalpha/utils/arg_checker.py:411
 #, python-brace-format
 msgid ""
 "function {}: invalid {} argument, frequency should be in form of '1m', "
