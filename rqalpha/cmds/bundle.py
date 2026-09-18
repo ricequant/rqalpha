@@ -17,7 +17,6 @@ import shutil
 import tarfile
 import tempfile
 import time
-import datetime
 import dateutil
 import sys
 
@@ -26,6 +25,7 @@ import requests
 import six
 import h5py
 
+from rqalpha.utils.datetime_func import china_today
 from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.cmds.entry import cli
@@ -147,7 +147,7 @@ CDN_URL = 'http://bundle.assets.ricequant.com/bundles_v4/rqbundle_%04d%02d.tar.b
 
 
 def get_exactly_url():
-    day = datetime.date.today()
+    day = china_today()
     proxy_uri = os.environ.get('RQALPHA_PROXY')
     while True:  # get exact url
         url = CDN_URL % (day.year, day.month)

@@ -1,4 +1,3 @@
-import datetime
 import os
 import h5py
 from itertools import chain
@@ -10,7 +9,7 @@ import pandas as pd
 
 from rqalpha.apis.api_rqdatac import rqdatac
 from rqalpha.utils.concurrent import ProgressedTask
-from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date, to_date
+from rqalpha.utils.datetime_func import china_today, convert_date_to_int, convert_int_to_date, to_date
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.typing import DateLike
 from rqalpha.data.bundle.utils import START_DATE, END_DATE, log_and_mark_error
@@ -168,9 +167,10 @@ class UpdateDayBarTask(DayBarTask):
                 if not incremental_update_dic:
                     return
 
-                today = datetime.date.today()
-                if min_last_date == today or (
-                    not rqdatac.is_trading_date(today) and min_last_date == rqdatac.get_previous_trading_date(today)
+                current_date = china_today()
+                if min_last_date == current_date or (
+                    not rqdatac.is_trading_date(current_date)
+                    and min_last_date == rqdatac.get_previous_trading_date(current_date)
                 ):
                     yield len(incremental_update_dic.keys())
                 else:
