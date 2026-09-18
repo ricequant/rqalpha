@@ -389,7 +389,7 @@ def get_yield_curve(date: Optional[Union[str, DateLike]] = None, tenor: Optional
     EXECUTION_PHASE.SCHEDULED,
 )
 @apply_rules(
-    verify_that("order_book_id", pre_check=True).is_listed_instrument(),
+    assure_that("order_book_id").is_quoted_instrument(),
     verify_that("bar_count").is_instance_of(int).is_greater_than(0),
     verify_that("frequency", pre_check=True).is_valid_frequency(),
     verify_that("fields").are_valid_fields(
@@ -421,6 +421,8 @@ def history_bars(
     T日before_trading            T-1日day bar
     T日handle_bar                T日day bar
     =========================   ===================================================
+
+    指数在上市前可能已经有行情数据，因此查询时点早于指数上市日期时，同样可以获取到该指数的历史行情。
 
     分钟回测获取日历史数据
 
@@ -476,7 +478,7 @@ def history_bars(
         [Out]
         [ 8.69  8.7   8.71  8.81  8.81]
     """
-    order_book_id = assure_order_book_id(order_book_id)
+    instrument = cast(Instrument, order_book_id)
     env = Environment.get_instance()
     dt = env.calendar_dt
 
@@ -507,7 +509,7 @@ def history_bars(
         fields = ["datetime", "open", "high", "low", "close", "volume"]
 
     return env.data_proxy.history_bars(
-        order_book_id,
+        instrument,
         bar_count,
         frequency,
         fields,
@@ -1061,4 +1063,3 @@ def repay(amount: float, account_type: DEFAULT_ACCOUNT_TYPE = DEFAULT_ACCOUNT_TY
     """
     env = Environment.get_instance()
     return env.portfolio.finance_repay(amount * -1, account_type)
-

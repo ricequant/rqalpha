@@ -171,7 +171,7 @@ class AnalyserMod(AbstractMod):
         # trading_dates 需要比需求的日期多一天，因为首日也需要计算收益率
         bars_s, returns_s, e = itemgetter(0, 1, -1)(trading_dates)
         bars = self._env.data_proxy.history_bars(
-            order_book_id=ins.order_book_id,
+            id_or_ins=ins,
             bar_count=None,
             frequency="1d",
             field=["datetime", "close"],
