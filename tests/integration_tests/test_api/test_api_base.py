@@ -720,3 +720,32 @@ def test_deposit_withdraw_before_and_after_trading():
             assert context.portfolio.unit_net_value == unit_net_value
 
     run_func(config=config, init=init, handle_bar=handle_bar, after_trading=after_trading, before_trading=before_trading)
+
+
+def test_get_bars_before_index_listed_date():
+    # 指数可能在 listed_date 之前就已经有行情，测试上市前行情的获取
+    config = {
+        "base": {
+            "start_date": "2014-01-04",
+            "end_date": "2014-01-10",
+        }
+    }
+
+    def init(context):
+        context.index = "801760.INDX"
+        context.fired = False
+
+    def handle_bar(context, bar_dict):
+        if not context.fired:
+            instrument = instruments(context.index)
+            assert not instrument.listed
+            bars = history_bars(context.index, 5, "1d")
+            listed_ts = int(instrument.listed_date.strftime("%Y%m%d%H%M%S"))
+            assert bars["datetime"].tolist() == [
+                20131230000000, 20131231000000, 20140102000000, 20140103000000, 20140106000000
+            ]
+            assert all(dt < listed_ts for dt in bars["datetime"])
+            assert bars["close"].tolist() == [859.79, 859.95, 869.63, 883.52, 864.4]
+            context.fired = True
+
+    run_func(config=config, init=init, handle_bar=handle_bar)

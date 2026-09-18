@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from rqalpha.const import INSTRUMENT_TYPE, EXECUTION_PHASE, MARKET, TRADING_CALENDAR_TYPE
-from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period
+from rqalpha.utils import risk_free_helper, TimeRange, merge_trading_period, INST_TYPE_WITH_PRE_LISTED_QUOTES
 from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
@@ -210,7 +210,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
 
     def history_bars(
         self,
-        order_book_id: str,
+        id_or_ins: Union[str, Instrument],
         bar_count: Optional[int],
         frequency: str,
         field: Union[str, List[str], None],
@@ -220,10 +220,19 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         adjust_type: str = 'pre',
         adjust_orig: Optional[datetime] = None
     ):
-        instruments = self.get_instrument_history(order_book_id, dt)
-        if len(instruments) == 0:
-            raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=order_book_id))
-        instrument = instruments[-1]
+        if isinstance(id_or_ins, str):
+            instruments_history = self.get_instrument_history(id_or_ins)
+            # 优先取查询时点已上市的合约；指数在上市前可能已经有行情数据，因此放宽到允许上市前行情的类型
+            instruments = [ins for ins in instruments_history if ins.listed_at(dt)] or [
+                ins for ins in instruments_history if ins.type in INST_TYPE_WITH_PRE_LISTED_QUOTES
+            ]
+            if not instruments:
+                raise InstrumentNotFound(_("No instrument found at {dt}: {id_or_sym}").format(dt=dt, id_or_sym=id_or_ins))
+            instrument = instruments[-1]
+        elif isinstance(id_or_ins, Instrument):
+            instrument = id_or_ins
+        else:
+            raise ValueError(f"Invalid type of id_or_ins: {type(id_or_ins)}")
         if adjust_orig is None:
             adjust_orig = dt
         return self._data_source.history_bars(instrument, bar_count, frequency, field, dt,
