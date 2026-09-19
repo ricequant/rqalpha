@@ -183,14 +183,17 @@ class AnalyserMod(AbstractMod):
                 _("benchmark {} missing data between backtest start date {} and end date {}").format(
                     ins.order_book_id, returns_s, e)
             )
+        # 本地 bundle 数据源返回 numpy structured array，自定义数据源（如 xtdata）可能返回
+        # pandas DataFrame；统一转换为 DataFrame，保证后续行列访问方式一致
+        bars = pd.DataFrame(bars)
         left = bars['datetime'].searchsorted(np.uint64(convert_date_to_int(bars_s)), side='left')
-        bars = bars[left:]
+        bars = bars.iloc[left:]
         try:
             calendar_type = self.NON_CN_CALENDAR_OIDS[ins.order_book_id]
         except KeyError:
             # A 股交易日历的标的，验证其价格的完整性
             if len(bars) == len(trading_dates):
-                if convert_int_to_date(bars[1]['datetime']) != returns_s:
+                if convert_int_to_date(bars['datetime'].iloc[1]) != returns_s:
                     raise RuntimeError(_(
                         "benchmark {} missing data between backtest start date {} and end date {}").format(ins.order_book_id, returns_s, e)
                     )
@@ -199,7 +202,10 @@ class AnalyserMod(AbstractMod):
                 if len(bars) == 0:
                     (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
                 else:
-                    (available_s, available_e) = (convert_int_to_date(bars[0]['datetime']).date(), convert_int_to_date(bars[-1]['datetime']).date())
+                    (available_s, available_e) = (
+                        convert_int_to_date(bars['datetime'].iloc[0]).date(),
+                        convert_int_to_date(bars['datetime'].iloc[-1]).date(),
+                    )
                 raise RuntimeError(
                     _("benchmark {} available data start date {} >= backtest start date {} or end date {} <= backtest end "
                     "date {}").format(ins.order_book_id, available_s, returns_s, available_e, e)
