@@ -97,7 +97,7 @@ class OrderTargetPortfolio:
     ):
         quantities, closable = {}, {}
         for position in account.get_positions():
-            if position.quantity > 0:  # 可能存在已经退市但是还有未到账分红的仓位
+            if position.quantity != 0 and position.closable != 0:  # 可能存在已经退市但是还有未到账分红的仓位
                 quantities[position.order_book_id] = position.quantity
                 closable[position.order_book_id] = position.closable
         current_quantities = Series(quantities, dtype=int)
