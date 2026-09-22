@@ -118,7 +118,8 @@ class StructuredTextFormat:
                         df[col] = pd.to_datetime(df[col])
                     elif dtype_str == 'category':
                         df[col] = df[col].astype('category')
-                    elif dtype_str in ['int64', 'int32', 'float64', 'float32', 'bool', 'object']:
+                    elif dtype_str in ['int64', 'int32', 'float64', 'float32', 'bool', 'object',
+                                       'str', 'string']:
                         df[col] = df[col].astype(dtype_str)
                 except (ValueError, TypeError):
                     pass  # Keep original dtype if conversion fails
@@ -294,6 +295,26 @@ def _filter_integration_result(result: dict) -> dict:
     return filtered_data
 
 
+def _normalize_dtypes(df: DataFrame) -> DataFrame:
+    """抹平 pandas 2.x / 3.x 的 dtype 差异，使同一套快照可跨大版本比对。
+
+    - 字符串列：3.x 默认推断为 StringDtype，2.x 为 object
+    - datetime：3.x 按输入粒度推断 s/us，2.x 固定为 ns
+    """
+    df = df.copy()
+    if isinstance(df.index.dtype, pd.StringDtype):
+        df.index = df.index.astype(object)
+    elif hasattr(df.index, "as_unit") and getattr(df.index.dtype, "kind", None) == "M":
+        df.index = df.index.as_unit("ns")
+    for col in df.columns:
+        dtype = df[col].dtype
+        if isinstance(dtype, pd.StringDtype):
+            df[col] = df[col].astype(object)
+        elif hasattr(df[col], "as_unit") and getattr(dtype, "kind", None) == "M":
+            df[col] = df[col].as_unit("ns")
+    return df
+
+
 def _assert_dafaframe(result: DataFrame, expected_result: DataFrame, exclude_columns: Optional[list] = None):
     if result.empty:
         assert expected_result.empty
@@ -301,7 +322,7 @@ def _assert_dafaframe(result: DataFrame, expected_result: DataFrame, exclude_col
     if exclude_columns:
         result = result.drop(exclude_columns, axis=1)
         expected_result = expected_result.drop(exclude_columns, axis=1)
-    assert_frame_equal(result, expected_result, atol=1e-7)
+    assert_frame_equal(_normalize_dtypes(result), _normalize_dtypes(expected_result), atol=1e-7)
 
 
 def _assert_result(result: dict, expected_result: dict):

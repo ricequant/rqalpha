@@ -21,7 +21,6 @@ import codecs
 import pandas as pd
 import yaml
 import simplejson as json
-import six
 import click
 
 from rqalpha.const import RUN_TYPE, PERSIST_MODE, COMMISSION_TYPE
@@ -100,7 +99,7 @@ def code_config(config, source_code=None):
         scope = {'define_parameter': noop}
 
         code = compile(source_code, config["base"]["strategy_file"], 'exec')
-        six.exec_(code, scope)
+        exec(code, scope)
 
         return scope.get('__config__', {})
     except Exception as e:
@@ -216,7 +215,7 @@ def parse_config(config_args, config_path=None, click_type=False, source_code=No
     config.base.future_info = parse_future_info(config.base.future_info)
 
     if config.extra.context_vars:
-        if isinstance(config.extra.context_vars, six.string_types):
+        if isinstance(config.extra.context_vars, str):
             config.extra.context_vars = json.loads(config.extra.context_vars)
 
     if config.base.frequency == "1d":
@@ -240,9 +239,9 @@ def parse_future_info(future_info):
             ):
                 new_info.setdefault(underlying_symbol, {})[field] = float(value)
             elif field == "commission_type":
-                if isinstance(value, six.string_types) and value.upper() == "BY_MONEY":
+                if isinstance(value, str) and value.upper() == "BY_MONEY":
                     new_info.setdefault(underlying_symbol, {})[field] = COMMISSION_TYPE.BY_MONEY
-                elif isinstance(value, six.string_types) and value.upper() == "BY_VOLUME":
+                elif isinstance(value, str) and value.upper() == "BY_VOLUME":
                     new_info.setdefault(underlying_symbol, {})[field] = COMMISSION_TYPE.BY_VOLUME
                 elif isinstance(value, COMMISSION_TYPE):
                     new_info.setdefault(underlying_symbol, {})[field] = value
@@ -292,7 +291,7 @@ def parse_init_positions(positions):
 
 
 def parse_run_type(rt_str):
-    assert isinstance(rt_str, six.string_types)
+    assert isinstance(rt_str, str)
     mapping = {
         "b": RUN_TYPE.BACKTEST,
         "p": RUN_TYPE.PAPER_TRADING,
@@ -305,7 +304,7 @@ def parse_run_type(rt_str):
 
 
 def parse_persist_mode(persist_mode):
-    assert isinstance(persist_mode, six.string_types)
+    assert isinstance(persist_mode, str)
     mapping = {
         "real_time": PERSIST_MODE.REAL_TIME,
         "on_crash": PERSIST_MODE.ON_CRASH,

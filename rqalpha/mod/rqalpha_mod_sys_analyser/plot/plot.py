@@ -121,7 +121,8 @@ class ReturnPlot(SubPlot):
 
     def _plot_spots_on_returns(self, ax, positions: Sequence[int], info: SpotInfo):
         ax.plot(
-            self._returns.index[positions], self._returns[positions],
+            # positions 是位置下标，pandas 3.0 起 Series[整数] 按标签解析，必须走 iloc
+            self._returns.index[positions], self._returns.iloc[positions],
             info.marker, color=info.color, markersize=info.markersize, alpha=info.alpha, label=info.label
         )
 
@@ -229,9 +230,10 @@ def plot_result(
         benchmark_portfolio = result_dict["benchmark_portfolio"]
         plot_template = plot_template_cls(portfolio.unit_net_value, benchmark_portfolio.unit_net_value)
         ex_returns = plot_template.geometric_excess_returns
+        ex_nav = (ex_returns + 1).values
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
-            _compact_index_range(_max_dd(ex_returns + 1, portfolio.index)),
-            _compact_index_range(_max_ddd(ex_returns + 1, portfolio.index)),
+            _compact_index_range(_max_dd(ex_nav, portfolio.index)),
+            _compact_index_range(_max_ddd(ex_nav, portfolio.index)),
         )
         indicators = plot_template.INDICATORS + plot_template.EXCESS_INDICATORS
 

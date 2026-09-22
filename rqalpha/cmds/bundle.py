@@ -22,7 +22,6 @@ import sys
 
 import click
 import requests
-import six
 import h5py
 
 from rqalpha.utils.datetime_func import china_today
@@ -134,7 +133,7 @@ def download_bundle(data_bundle_path, confirm):
     tar.extractall(data_bundle_path)
     tar.close()
     os.remove(tmp)
-    six.print_(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
+    print(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
 @cli.command(help=_("Check bundle"))
@@ -151,7 +150,7 @@ def get_exactly_url():
     proxy_uri = os.environ.get('RQALPHA_PROXY')
     while True:  # get exact url
         url = CDN_URL % (day.year, day.month)
-        six.print_(_(u"try {} ...").format(url))
+        print(_(u"try {} ...").format(url))
         r = requests.get(url, stream=True, proxies={'http': proxy_uri, 'https': proxy_uri})
         if r.status_code == 200:
             return url, int(r.headers.get('content-length'))
@@ -177,7 +176,7 @@ def download(out, total_length, url):
                     return True  # Download complete . exit
             except requests.exceptions.RequestException:
                 if i < retry_times - 1:
-                    six.print_(_("\nDownload failed, retry in {} seconds.".format(retry_interval)))
+                    print(_("\nDownload failed, retry in {} seconds.".format(retry_interval)))
                     time.sleep(retry_interval)
                 else:
                     raise

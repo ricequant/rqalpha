@@ -16,7 +16,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import os
-import re
 import pandas
 import pickle
 import jsonpickle
@@ -440,14 +439,16 @@ class AnalyserMod(AbstractMod):
 
         data = defaultdict(list)
         for title, (start, end) in PRESSURE_TEST_PERIOD.items():
-            p_period_returns = p_returns.loc[start: end]
+            # pandas 3.0 起对 datetime.date 切片发出 Pandas4Warning，pandas 4 将移除该行为
+            p_period_returns = p_returns.loc[pd.Timestamp(start): pd.Timestamp(end)]
             if (p_period_returns is None or p_period_returns.empty):
                 continue
             # 当且仅当回测周期完整包含压力测试的一个区间时才展示该区间的表现
             if len(p_period_returns) != len(env.data_proxy.get_trading_dates(start, end)):
                 continue
             if benchmark_portfolio is not None:
-                b_period_returns = _returns(benchmark_portfolio.unit_net_value).loc[start: end]
+                b_period_returns = _returns(benchmark_portfolio.unit_net_value).loc[
+                    pd.Timestamp(start): pd.Timestamp(end)]
             else:
                 b_period_returns = pd.Series(index=p_period_returns.index)
             risk_free_rate = env.data_proxy.get_risk_free_rate(start, end)
@@ -605,8 +606,10 @@ class AnalyserMod(AbstractMod):
                 summary["turnover"] = np.nan
                 summary["annualized_twoside_turnover"] = np.nan
             avg_daily_turnover = (trades_values.groupby(trades.index.date).sum() / market_values / 2)
-            with pd.option_context('mode.use_inf_as_na', True):
-                summary["avg_daily_turnover"] = avg_daily_turnover.fillna(0).mean()
+            # pandas 3.0 移除了 mode.use_inf_as_na 选项，改为显式把 inf 视作缺失值
+            summary["avg_daily_turnover"] = (
+                avg_daily_turnover.replace([np.inf, -np.inf], np.nan).fillna(0).mean()
+            )
         else:
             summary["turnover"] = np.nan
             summary["annualized_twoside_turnover"] = np.nan
@@ -623,7 +626,7 @@ class AnalyserMod(AbstractMod):
             result_dict['benchmark_portfolio'] = benchmark_portfolios
             # 超额收益最长回撤持续期
             ex_returns = total_portfolios.unit_net_value / benchmark_portfolios.unit_net_value - 1
-            max_ddd = _max_ddd(ex_returns + 1, total_portfolios.index)
+            max_ddd = _max_ddd((ex_returns + 1).values, total_portfolios.index)
             result_dict["summary"]["excess_max_drawdown_duration"] = max_ddd
             result_dict["summary"]["excess_max_drawdown_duration_start_date"] = str(max_ddd.start_date)
             result_dict["summary"]["excess_max_drawdown_duration_end_date"] = str(max_ddd.end_date)

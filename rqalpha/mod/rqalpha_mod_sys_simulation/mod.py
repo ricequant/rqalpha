@@ -13,7 +13,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 
-import six
 from rqalpha.core.events import EVENT
 from rqalpha.utils.logger import user_system_log
 
@@ -91,7 +90,7 @@ class SimulationMod(AbstractMod):
             else:
                 raise ValueError("frequency only support ['1d', '1m', 'tick']")
 
-        assert isinstance(me_str, six.string_types)
+        assert isinstance(me_str, str)
         me_str = me_str.lower()
         if me_str == "current_bar":
             return MATCHING_TYPE.CURRENT_BAR_CLOSE

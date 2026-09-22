@@ -141,16 +141,18 @@ def test_smart_portfolio_uses_etf_decider_only_for_etfs():
     ]
     portfolio = object.__new__(OrderTargetPortfolio)
     portfolio._env = env
+    # 与 order_target_portfolio 生产代码保持一致：枚举值必须显式声明 object，
+    # 否则 pandas 3.0 会推断成 StringDtype 并让枚举比较静默失效
     portfolio._market = Series({
         order_book_id: MARKET.CN
         for order_book_id in ("stock", "etf", "lof", "convertible")
-    })
+    }, dtype='object')
     portfolio._instrument_types = Series({
         "stock": INSTRUMENT_TYPE.CS,
         "etf": INSTRUMENT_TYPE.ETF,
         "lof": INSTRUMENT_TYPE.LOF,
         "convertible": INSTRUMENT_TYPE.CONVERTIBLE,
-    })
+    }, dtype='object')
     portfolio._exchange_rates = {}
 
     costs = portfolio._estimate_transaction_costs(

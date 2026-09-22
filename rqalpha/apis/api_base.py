@@ -22,7 +22,6 @@ from typing import Callable, List, Optional, Union, Iterable, cast, Dict
 
 import pandas as pd
 import numpy as np
-import six
 
 from rqalpha.apis import names
 from rqalpha.environment import Environment
@@ -276,7 +275,7 @@ def subscribe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[Inst
 
     """
     current_universe = Environment.get_instance().get_universe()
-    if isinstance(id_or_symbols, six.string_types):
+    if isinstance(id_or_symbols, str):
         order_book_id = instruments(id_or_symbols).order_book_id
         current_universe.add(order_book_id)
     elif isinstance(id_or_symbols, Instrument):
@@ -309,7 +308,7 @@ def unsubscribe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[In
 
     """
     current_universe = Environment.get_instance().get_universe()
-    if isinstance(id_or_symbols, six.string_types):
+    if isinstance(id_or_symbols, str):
         order_book_id = instruments(id_or_symbols).order_book_id
         current_universe.discard(order_book_id)
     elif isinstance(id_or_symbols, Instrument):
@@ -589,7 +588,7 @@ def all_instruments(type: Optional[str] = None, date: Optional[Union[str, dateti
         dt = min(dt, env.trading_dt)
 
     if type is not None:
-        if isinstance(type, six.string_types):
+        if isinstance(type, str):
             type = [type]
 
         types = set()
@@ -962,7 +961,7 @@ def subscribe_event(event_type: EVENT, handler: Callable[[StrategyContext, Event
 
 @export_as_api
 def symbol(order_book_id, sep=", "):
-    if isinstance(order_book_id, six.string_types):
+    if isinstance(order_book_id, str):
         return "{}[{}]".format(order_book_id, Environment.get_instance().get_instrument(order_book_id).symbol)
     else:
         s = sep.join(symbol(item) for item in order_book_id)

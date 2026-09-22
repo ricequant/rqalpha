@@ -22,7 +22,6 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Union, cas
 
 import numpy as np
 import pandas as pd
-import six
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE, MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.interface import AbstractDataSource, ExchangeRate
@@ -265,7 +264,7 @@ class BaseDataSource(AbstractDataSource):
     def _are_fields_valid(fields, valid_fields):
         if fields is None:
             return True
-        if isinstance(fields, six.string_types):
+        if isinstance(fields, str):
             return fields in valid_fields
         for field in fields:
             if field not in valid_fields:

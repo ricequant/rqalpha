@@ -15,7 +15,6 @@
 import sys
 import inspect
 import datetime
-import six
 import pandas as pd
 from typing import Iterable, Optional, List, Callable, Dict, Any, Union
 from functools import wraps
@@ -69,7 +68,7 @@ def assure_active_instrument(id_or_ins) -> Instrument:
         if not id_or_ins.listed:
             return _raise()
         return id_or_ins
-    elif isinstance(id_or_ins, six.string_types):
+    elif isinstance(id_or_ins, str):
         env = Environment.get_instance()
         try:
             ins = env.data_proxy.get_active_instrument(id_or_ins, env.trading_dt)
@@ -91,7 +90,7 @@ def assure_listed_instrument(id_or_ins) -> Instrument:
         if not id_or_ins.listed:
             return _raise()
         return id_or_ins
-    elif isinstance(id_or_ins, six.string_types):
+    elif isinstance(id_or_ins, str):
         env = Environment.get_instance()
         instruments = env.data_proxy.get_instrument_history(id_or_ins)
         if not instruments:
@@ -165,7 +164,7 @@ class ArgumentChecker(ArgumentCheckerBase):
 
     def _is_valid_instrument(self, func_name, value):
         instrument = None
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             instrument = Environment.get_instance().get_instrument(value)
         elif isinstance(value, Instrument):
             instrument = value
@@ -226,7 +225,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         valid_fields = set(valid_fields)
 
         def check_are_valid_fields(func_name, fields):
-            if isinstance(fields, six.string_types):
+            if isinstance(fields, str):
                 if fields not in valid_fields:
                     raise RQInvalidArgument(
                         _(u"function {}: invalid {} argument, valid fields are {}, got {} (type: {})").format(
@@ -255,7 +254,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         return self
 
     def _are_valid_instruments(self, func_name, values):
-        if isinstance(values, (six.string_types, Instrument)):
+        if isinstance(values, (str, Instrument)):
             self._is_valid_instrument(func_name, values)
         elif isinstance(values, list):
             for v in values:
@@ -283,7 +282,7 @@ class ArgumentChecker(ArgumentCheckerBase):
                 return None
             if isinstance(value, (datetime.date, pd.Timestamp)):
                 return
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 try:
                     v = parse_date(value)
                     return
@@ -344,7 +343,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         return self
 
     def _is_valid_interval(self, func_name, value):
-        valid = isinstance(value, six.string_types) and value[-1] in {'d', 'm', 'q', 'y'}
+        valid = isinstance(value, str) and value[-1] in {'d', 'm', 'q', 'y'}
         if valid:
             try:
                 valid = int(value[:-1]) > 0
@@ -366,7 +365,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         if value is None:
             valid = True
         else:
-            valid = isinstance(value, six.string_types) and value[-2] == 'q'
+            valid = isinstance(value, str) and value[-2] == 'q'
             if valid:
                 try:
                     valid =  1990 <= int(value[:-2]) <= 2099 and 1 <= int(value[-1]) <= 4
@@ -399,7 +398,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         return self
 
     def _is_valid_frequency(self, func_name, value):
-        valid = isinstance(value, six.string_types) and value[-1] in ("d", "m", "w")
+        valid = isinstance(value, str) and value[-1] in ("d", "m", "w")
         if valid:
             try:
                 valid = int(value[:-1]) > 0
@@ -479,7 +478,7 @@ def get_call_args(func, args, kwargs, traceback=None):
     try:
         return inspect.getcallargs(unwrapper(func), *args, **kwargs)
     except TypeError as e:
-        six.reraise(RQTypeError, RQTypeError(*e.args), traceback)
+        raise RQTypeError(*e.args).with_traceback(traceback)
 
 
 class ApiArgumentsChecker(object):
@@ -550,8 +549,7 @@ class ApiArgumentsChecker(object):
             try:
                 self._apply_checkers(self.post_check_rules, func.__name__, call_args)
             except RQInvalidArgument as e:
-                six.reraise(RQInvalidArgument, e, tb)
-                return
+                raise e.with_traceback(tb)
 
             if getattr(e, EXC_EXT_NAME, EXC_TYPE.NOTSET) == EXC_TYPE.NOTSET:
                 patch_system_exc(e)

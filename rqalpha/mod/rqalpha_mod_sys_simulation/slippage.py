@@ -20,8 +20,6 @@ import abc
 import importlib
 from rqalpha.utils import is_valid_price
 
-from six import with_metaclass
-
 from rqalpha.const import SIDE
 from rqalpha.utils.exception import patch_user_exc
 from rqalpha.environment import Environment
@@ -51,7 +49,7 @@ class SlippageDecider(object):
         return self.decider.get_trade_price(order, price)
 
 
-class BaseSlippage(with_metaclass(abc.ABCMeta)):
+class BaseSlippage(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_trade_price(self, order: Order, price: float) -> float:
         raise NotImplementedError

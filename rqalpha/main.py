@@ -16,13 +16,13 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
+import io
 import sys
 from pprint import pformat
 from itertools import chain
 
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import logbook
-import six
 from rqalpha import const
 from rqalpha.const import MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.core.executor import Executor
@@ -290,11 +290,11 @@ def enable_profiler(env, scope):
 
 
 def output_profile_result(env):
-    stdout_trap = six.StringIO()
+    stdout_trap = io.StringIO()
     env.profile_deco.print_stats(stdout_trap)
     profile_output = stdout_trap.getvalue()
     profile_output = profile_output.rstrip()
-    six.print_(profile_output)
+    print(profile_output)
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))
 
 

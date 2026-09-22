@@ -39,6 +39,11 @@ class CustomEnum(str, Enum, metaclass=CustomEnumMeta):
         return "%s.%s" % (
             self.__class__.__name__, self._name_)
 
+    def __str__(self):
+        # pandas 3.0 起字符串列默认推断为 StringDtype，与枚举成员做向量化比较时会先把标量 str() 化。
+        # 若不返回 value，``series == INSTRUMENT_TYPE.CS`` 会静默地全为 False。repr 保持原样不变。
+        return self.value
+
 
 # noinspection PyPep8Naming
 class EXECUTION_PHASE(CustomEnum):
