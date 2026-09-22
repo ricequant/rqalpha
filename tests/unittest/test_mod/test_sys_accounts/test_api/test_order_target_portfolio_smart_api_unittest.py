@@ -14,6 +14,7 @@ order_target_portfolio_smart 单元测试套件
 """
 import pytest
 
+from datetime import date
 from unittest.mock import MagicMock, patch
 from typing import Dict, Tuple
 
@@ -26,10 +27,11 @@ from rqalpha.utils.config import parse_config
 from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.bar_dict_price_board import BarDictPriceBoard
 from rqalpha.data.data_proxy import DataProxy
-from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_EFFECT, SIDE
+from rqalpha.const import EXECUTION_PHASE, INSTRUMENT_TYPE, MARKET, POSITION_DIRECTION, POSITION_EFFECT, SIDE
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.mod.rqalpha_mod_sys_transaction_cost.deciders import StockTransactionCostDecider
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_portfolio_smart
+from rqalpha.mod.rqalpha_mod_sys_accounts.position_model import StockPosition
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.utils.testing.mocking import mock_bar
 from rqalpha.main import cleanup_resources
@@ -452,3 +454,65 @@ def test_order_target_portfolio_smart_rejects_prices_in_last_tick_band(
         sell_id: LIMIT_DOWN_SELL_DENIAL,
     }
     assert_submitted_orders({})
+
+
+# ---------------------------------------------------------------------------
+# 已退市但仍有未到账分红的零持仓（quantity == 0 且 equity > 0）
+# ---------------------------------------------------------------------------
+
+DELISTED_ID = "000003.XSHE"  # PT金田A，2002 年退市：当日无行情、不在市
+DIVIDEND_RECEIVABLE = 5000.0
+
+
+def _mock_delisted_dividend_position(environment, order_book_id=DELISTED_ID, dividend=DIVIDEND_RECEIVABLE):
+    """mock 一个已退市、但仍挂着未到账分红的零持仓仓位。
+
+    真实场景：股票退市时 settlement 会把 quantity 清零并返还现金，但
+    position.dividend_receivable 仍保留应收分红，因此
+    StockPosition.equity = 0 + dividend_receivable > 0，
+    Account.get_positions() 依然会返回该仓位；而它已退市，当日取不到行情，
+    order_target_portfolio_smart 不应把它当作可调仓标的。
+    """
+    account = environment.portfolio.stock_account
+    position = StockPosition(order_book_id, POSITION_DIRECTION.LONG, 0, init_price=8.0)
+    position._dividend_receivable.append((date(2026, 12, 31), dividend))
+    account._positions[order_book_id] = {POSITION_DIRECTION.LONG: position}
+    return position
+
+
+def test_order_target_portfolio_smart_ignores_delisted_zero_quantity_position(
+    environment, on_handle_bar, assert_submitted_orders
+):
+    """已退市零持仓不参与调仓"""
+    _reset_portfolio(environment)  # 必须在 mock 持仓之前，它会重建 portfolio
+    _mock_delisted_dividend_position(environment)
+
+    result = order_target_portfolio_smart({"000004.XSHE": 0.1})
+
+    # 退市零持仓不进 index、不下单、不产生拒单
+    assert DELISTED_ID not in result
+    assert_submitted_orders({
+        # 总资产 10,005,000 = 10,000,000 现金 + 5,000 应收分红（仍计入总资产）
+        # 目标数量 = 10,005,000 × 0.1 / 10.53 ≈ 95,014.2，整手调整后 95,000
+        "000004.XSHE": (95000, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
+    })
+    # 应收分红没有被调仓逻辑吞掉
+    assert environment.portfolio.total_value == 10005000.0
+
+
+def test_order_target_portfolio_smart_does_not_require_valuation_price_for_delisted_position(
+    environment, on_handle_bar, assert_submitted_orders
+):
+    """已退市零持仓不应要求提供估值价格"""
+    _reset_portfolio(environment)
+    _mock_delisted_dividend_position(environment)
+
+    result = order_target_portfolio_smart(
+        {"000004.XSHE": 0.1},
+        valuation_prices={"000004.XSHE": 10.53},  # 只给真正要调仓的标的
+    )
+
+    assert DELISTED_ID not in result
+    assert_submitted_orders({
+        "000004.XSHE": (95000, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
+    })
