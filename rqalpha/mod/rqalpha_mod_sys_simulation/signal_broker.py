@@ -64,7 +64,7 @@ class SignalBroker(AbstractBroker):
                 self._env.event_bus.publish_event(Event(EVENT.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
 
     def cancel_order(self, order):
-        user_system_log.warning(_(u"cancel_order function is not supported in signal mode"))
+        user_system_log.warning(_("cancel_order function is not supported in signal mode"))
         return None
 
     def register_matcher(self, instrument_type: INSTRUMENT_TYPE, matcher: AbstractMatcher) -> None:

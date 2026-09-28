@@ -75,7 +75,7 @@ class DefaultBarMatcher(BaseMatcher):
         if listed_date == self._env.trading_dt.date():
             raise OrderRejected(self._listed_date_reject_reason(order, listed_date))
         elif isinstance(order.style, ALGO_ORDER_STYLES):
-            reason = _(u"Order Rejected: {order_book_id} miss market data or bar no volume.").format(
+            reason = _("Order Rejected: {order_book_id} miss market data or bar no volume.").format(
                 order_book_id=instrument.order_book_id
             )
             raise OrderRejected(reason)
@@ -85,7 +85,7 @@ class DefaultBarMatcher(BaseMatcher):
         if self._inactive_limit:
             bar_volume = self._get_bar_volume(order, open_auction=open_auction)
             if bar_volume == 0:
-                reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
+                reason = _("Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
                 raise OrderCancelled(reason)
 
         if self._volume_limit:
@@ -95,7 +95,7 @@ class DefaultBarMatcher(BaseMatcher):
                 volume_limit = round_order_quantity(instrument, volume_limit)
                 if volume_limit <= 0:
                     if order.type == ORDER_TYPE.MARKET:
-                        reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
+                        reason = _("Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
                             order_book_id=order.order_book_id, order_volume=order.quantity
                         )
                         raise OrderCancelled(reason)
@@ -111,8 +111,8 @@ class DefaultBarMatcher(BaseMatcher):
     def _handle_unfilled_order(self, account: Account, order: Order, open_auction: bool):
         if order.type == ORDER_TYPE.MARKET:
             reason = _(
-                u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
-                u" larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
+                "Order Cancelled: market order {order_book_id} volume {order_volume} is"
+                " larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually"
             ).format(
                 order_book_id=order.order_book_id,
                 order_volume=order.quantity,

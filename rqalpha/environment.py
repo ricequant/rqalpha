@@ -86,7 +86,7 @@ class Environment(object):
         """
         if Environment._env is None:
             raise EnvironmentNotInitialized(
-                _(u"Environment has not been created. Please Use `Environment.get_instance()` after RQAlpha init"))
+                _("Environment has not been created. Please Use `Environment.get_instance()` after RQAlpha init"))
         return Environment._env
 
     def set_data_proxy(self, data_proxy):
@@ -195,7 +195,7 @@ class Environment(object):
         try:
             decider = self.get_transaction_cost_decider(ins.type, ins.market)
         except KeyError:
-            raise NotImplementedError(_(u"No such transaction cost decider, order_book_id = {}".format(
+            raise NotImplementedError(_("No such transaction cost decider, order_book_id = {}".format(
                 ins.order_book_id
             )))
         return decider.calc(args)

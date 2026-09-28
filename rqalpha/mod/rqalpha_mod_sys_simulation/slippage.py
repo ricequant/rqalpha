@@ -16,8 +16,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 
-import abc
 import importlib
+from abc import ABC, abstractmethod
 from rqalpha.utils import is_valid_price
 
 from rqalpha.const import SIDE
@@ -49,8 +49,8 @@ class SlippageDecider(object):
         return self.decider.get_trade_price(order, price)
 
 
-class BaseSlippage(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
+class BaseSlippage(ABC):
+    @abstractmethod
     def get_trade_price(self, order: Order, price: float) -> float:
         raise NotImplementedError
 
@@ -61,7 +61,7 @@ class PriceRatioSlippage(BaseSlippage):
         if 0 <= rate < 1:
             self.rate = rate
         else:
-            raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is [0, 1)")))
+            raise patch_user_exc(ValueError(_("invalid slippage rate value: value range is [0, 1)")))
 
     def get_trade_price(self, order: Order, price: float) -> float:
         if order.position_effect == POSITION_EFFECT.EXERCISE:
@@ -83,7 +83,7 @@ class TickSizeSlippage(BaseSlippage):
         if 0 <= rate:
             self.rate = rate
         else:
-            raise patch_user_exc(ValueError(_(u"invalid slippage rate value: value range is greater than 0")))
+            raise patch_user_exc(ValueError(_("invalid slippage rate value: value range is greater than 0")))
 
     def get_trade_price(self, order: Order, price: float) -> float:
         if order.position_effect == POSITION_EFFECT.EXERCISE:
@@ -94,7 +94,7 @@ class TickSizeSlippage(BaseSlippage):
 
         if price <= 0:
             raise patch_user_exc(ValueError(_(
-                u"invalid slippage rate value {} which cause price <= 0"
+                "invalid slippage rate value {} which cause price <= 0"
             ).format(self.rate)))
 
         return price

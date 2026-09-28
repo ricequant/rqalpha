@@ -284,8 +284,8 @@ class OrderTargetPortfolio:
         costs = 0.0
         for market, group in self._market.groupby(by=self._market):
             instrument_types = self._instrument_types[group.index]
-            etf_index = instrument_types[instrument_types == INSTRUMENT_TYPE.ETF].index
-            non_etf_index = instrument_types[instrument_types != INSTRUMENT_TYPE.ETF].index
+            etf_index = instrument_types[instrument_types == INSTRUMENT_TYPE.ETF.value].index
+            non_etf_index = instrument_types[instrument_types != INSTRUMENT_TYPE.ETF.value].index
             for instrument_type, cost_index in (
                 (INSTRUMENT_TYPE.CS, non_etf_index),
                 (INSTRUMENT_TYPE.ETF, etf_index),

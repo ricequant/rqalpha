@@ -321,12 +321,12 @@ class AnalyserMod(AbstractMod):
                 order_book_id, weight = s.split(':')
             except ValueError:
                 raise RuntimeError(
-                    _(u"invalid init benchmark {}, should be in format 'order_book_id:weight'").format(s))
+                    _("invalid init benchmark {}, should be in format 'order_book_id:weight'").format(s))
 
             try:
                 result.append((order_book_id, float(weight)))
             except ValueError:
-                raise RuntimeError(_(u"invalid weight for instrument {order_book_id}: {weight}").format(
+                raise RuntimeError(_("invalid weight for instrument {order_book_id}: {weight}").format(
                     order_book_id=order_book_id, weight=weight))
         return result
 
@@ -716,7 +716,9 @@ class AnalyserMod(AbstractMod):
             positions_weight_df["weight"] = positions_weight_df["market_value"] / positions_weight_df["total_value"]
             positions_weight_df = positions_weight_df.groupby(by="date")["weight"].describe()
         else:
-            positions_weight_df = pd.DataFrame(columns=["count", "mean", "std", "min", "25%", "50%", "75%", "max"])
+            positions_weight_df = pd.DataFrame(
+                columns=["count", "mean", "std", "min", "25%", "50%", "75%", "max"], dtype=float
+            )
         positions_weight_df = positions_weight_df.reindex(total_portfolios.index).fillna(value=0)
         result_dict["positions_weight"] = positions_weight_df
         result_dict["yearly_risk_free_rates"] = dict(_get_yearly_risk_free_rates(data_proxy, start_date, end_date))

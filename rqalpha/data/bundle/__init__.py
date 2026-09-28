@@ -265,7 +265,7 @@ def gen_future_info(data_bundle_path: str):
                 if "order_book_id" in future_info:
                     future_info["margin_rate"] = all_instruments_data[all_instruments_data["order_book_id"] == future_info["order_book_id"]].iloc[0].margin_rate
                 elif "underlying_symbol" in future_info:
-                    dominant = rqdatac.futures.get_dominant(future_info["underlying_symbol"])[-1]  # type: ignore
+                    dominant = rqdatac.futures.get_dominant(future_info["underlying_symbol"]).iloc[-1]  # type: ignore
                     future_info["margin_rate"] = all_instruments_data[all_instruments_data["order_book_id"] == dominant].iloc[0].margin_rate
                 new_all_futures_info.append(future_info)
         os.remove(file)

@@ -103,7 +103,7 @@ def code_config(config, source_code=None):
 
         return scope.get('__config__', {})
     except Exception as e:
-        system_log.error(_(u"in parse_user_config, exception: {e}").format(e=e))
+        system_log.error(_("in parse_user_config, exception: {e}").format(e=e))
         return {}
 
 
@@ -121,7 +121,7 @@ def _check_capital_gain_tax_rate(base_config):
     if "capital_gain_tax_rate" not in base_config:
         init_logger()
         system_log.warning(_(
-            u"The strategy requires explicit configuration of base.capital_gain_tax_rate, \
+            "The strategy requires explicit configuration of base.capital_gain_tax_rate, \
 which currently has a default value of 0 and will be changed to a non-zero value in a future version.\
 (The configuration description can be found at https://www.ricequant.com/doc/rqalpha-plus/api/config)"
             ))
@@ -265,9 +265,6 @@ def parse_accounts(accounts):
         starting_cash = float(starting_cash)
         a[account_type.upper()] = starting_cash
 
-    # if len(a) == 0:
-    #     raise RuntimeError(_(u"None account type has been selected."))
-
     return a
 
 
@@ -280,12 +277,12 @@ def parse_init_positions(positions):
         try:
             order_book_id, quantity = s.split(':')
         except ValueError:
-            raise RuntimeError(_(u"invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
+            raise RuntimeError(_("invalid init position {}, should be in format 'order_book_id:quantity'").format(s))
 
         try:
             result.append((order_book_id, float(quantity)))
         except ValueError:
-            raise RuntimeError(_(u"invalid quantity for instrument {order_book_id}: {quantity}").format(
+            raise RuntimeError(_("invalid quantity for instrument {order_book_id}: {quantity}").format(
                 order_book_id=order_book_id, quantity=quantity))
     return result
 
@@ -300,7 +297,7 @@ def parse_run_type(rt_str):
     try:
         return mapping[rt_str]
     except KeyError:
-        raise RuntimeError(_(u"unknown run type: {}").format(rt_str))
+        raise RuntimeError(_("unknown run type: {}").format(rt_str))
 
 
 def parse_persist_mode(persist_mode):
@@ -313,4 +310,4 @@ def parse_persist_mode(persist_mode):
     try:
         return mapping[persist_mode]
     except KeyError:
-        raise RuntimeError(_(u"unknown persist mode: {}").format(persist_mode))
+        raise RuntimeError(_("unknown persist mode: {}").format(persist_mode))

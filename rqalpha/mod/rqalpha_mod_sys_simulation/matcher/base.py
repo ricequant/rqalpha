@@ -67,7 +67,7 @@ class BaseMatcher(AbstractMatcher):
         raise NotImplementedError
 
     def _listed_date_reject_reason(self, order: Order, listed_date: datetime.date):
-        return _(u"Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
+        return _("Order Cancelled: current security [{order_book_id}] can not be traded in listed date [{listed_date}]").format(
             order_book_id=order.order_book_id, listed_date=listed_date
         )
 
@@ -120,7 +120,7 @@ class BaseMatcher(AbstractMatcher):
             required_cash = _calc_required_cash(order.unfilled_quantity)
             if required_cash > available_cash:
                 status_label = "Cancelled" if order.filled_quantity != 0 else "Rejected"
-                reason = _(u"Order {status_label}: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+                reason = _("Order {status_label}: not enough money to buy {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
                     status_label=status_label,
                     order_book_id=instrument.order_book_id,
                     cost_money=required_cash,
@@ -160,7 +160,7 @@ class BaseMatcher(AbstractMatcher):
         min_required_cash = last_required_cash if last_required_cash is not None else _calc_required_cash(min_quantity)
         # 已有成交时，后续因资金不足终止撮合应取消剩余订单。
         status_label = "Cancelled" if order.filled_quantity != 0 else "Rejected"
-        reason = _(u"Order {status_label}: not enough money to buy one lot of {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
+        reason = _("Order {status_label}: not enough money to buy one lot of {order_book_id}, needs {cost_money:.2f}, cash {cash:.2f}").format(
             status_label=status_label, order_book_id=order.order_book_id, cost_money=min_required_cash, cash=available_cash
         )
         if status_label == "Cancelled":
@@ -226,7 +226,7 @@ class BaseMatcher(AbstractMatcher):
             if order.position_effect == POSITION_EFFECT.OPEN:
                 open_fill = self._resolve_open_fill(account=account, order=order, instrument=instrument, price=price, fill=fill)
                 if open_fill < fill:
-                    cash_cancel_reason = _(u"Order Cancelled: not enough money to fill {order_book_id}, fill {filled_volume} actually").format(
+                    cash_cancel_reason = _("Order Cancelled: not enough money to fill {order_book_id}, fill {filled_volume} actually").format(
                         order_book_id=order.order_book_id, filled_volume=order.filled_quantity + open_fill
                     )
                 fill = open_fill

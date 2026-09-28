@@ -74,7 +74,7 @@ def assure_active_ins_for_order_api(order_book_id: str) -> Optional[Instrument]:
     try:
         return env.data_proxy.get_active_instrument(order_book_id, env.trading_dt)
     except (InstrumentNotFound, MultipleInstrumentFound) as e:
-        reason = _(u"Order Creation Failed: {order_book_id} is not listing!").format(order_book_id=order_book_id)
+        reason = _("Order Creation Failed: {order_book_id} is not listing!").format(order_book_id=order_book_id)
         user_system_log.warn(reason)
         env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))
 
@@ -173,16 +173,16 @@ def submit_order(
     if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == "Future":
         if "88" in order_book_id:
             raise RQInvalidArgument(
-                _(u"Main Future contracts[88] are not supported in paper trading.")
+                _("Main Future contracts[88] are not supported in paper trading.")
             )
         if "99" in order_book_id:
             raise RQInvalidArgument(
-                _(u"Index Future contracts[99] are not supported in paper trading.")
+                _("Index Future contracts[99] are not supported in paper trading.")
             )
     style = cal_style(price, style, price_or_style)
     market_price = env.get_last_price(order_book_id)
     if not is_valid_price(market_price):
-        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+        reason = _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         env.order_creation_failed(order_book_id, reason)
         return
 
@@ -284,7 +284,7 @@ def subscribe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[Inst
         for item in id_or_symbols:
             current_universe.add(assure_order_book_id(item))
     else:
-        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
+        raise RQInvalidArgument(_("unsupported order_book_id type"))
     verify_that("id_or_symbols")._are_valid_instruments("subscribe", id_or_symbols)
     Environment.get_instance().update_universe(current_universe)
 
@@ -318,7 +318,7 @@ def unsubscribe(id_or_symbols: Union[str, Instrument, Iterable[str], Iterable[In
             i = assure_order_book_id(item)
             current_universe.discard(i)
     else:
-        raise RQInvalidArgument(_(u"unsupported order_book_id type"))
+        raise RQInvalidArgument(_("unsupported order_book_id type"))
 
     Environment.get_instance().update_universe(current_universe)
 

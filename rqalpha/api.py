@@ -16,6 +16,7 @@ import inspect
 import sys
 from types import FunctionType
 from functools import wraps
+from typing import Optional
 
 from rqalpha.utils import unwrapper
 from rqalpha.utils.exception import (
@@ -25,6 +26,8 @@ from rqalpha.utils.exception import (
     RQInvalidArgument,
 )
 from rqalpha.const import EXC_TYPE
+from rqalpha.utils.typing import ApiFunc
+
 
 __all__ = []
 
@@ -78,7 +81,7 @@ def register_api(name, func):
     __all__.append(name)
 
 
-def export_as_api(func, name=None):
+def export_as_api(func: ApiFunc, name: Optional[str] = None) -> ApiFunc:
     if name is None:
         name = func.__name__
     __all__.append(name)

@@ -115,7 +115,7 @@ def download_bundle(data_bundle_path, confirm):
         data_bundle_path = os.path.abspath(os.path.join(data_bundle_path, './bundle/'))
     if (confirm and os.path.exists(data_bundle_path) and data_bundle_path != default_bundle_path and
             os.listdir(data_bundle_path)):
-        click.confirm(_(u"""
+        click.confirm(_("""
     [WARNING]
     Target bundle path {data_bundle_path} is not empty.
     The content of this folder will be REMOVED before updating.
@@ -133,7 +133,7 @@ def download_bundle(data_bundle_path, confirm):
     tar.extractall(data_bundle_path)
     tar.close()
     os.remove(tmp)
-    print(_(u"Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
+    print(_("Data bundle download successfully in {bundle_path}").format(bundle_path=data_bundle_path))
 
 
 @cli.command(help=_("Check bundle"))
@@ -150,7 +150,7 @@ def get_exactly_url():
     proxy_uri = os.environ.get('RQALPHA_PROXY')
     while True:  # get exact url
         url = CDN_URL % (day.year, day.month)
-        print(_(u"try {} ...").format(url))
+        print(_("try {} ...").format(url))
         r = requests.get(url, stream=True, proxies={'http': proxy_uri, 'https': proxy_uri})
         if r.status_code == 200:
             return url, int(r.headers.get('content-length'))
@@ -162,7 +162,7 @@ def download(out, total_length, url):
     retry_interval = 3
     retry_times = 5
     proxy_uri = os.environ.get('RQALPHA_PROXY')
-    with click.progressbar(length=total_length, label=_(u"downloading ...")) as bar:
+    with click.progressbar(length=total_length, label=_("downloading ...")) as bar:
         for i in range(retry_times):
             try:
                 headers = {'Range': "bytes={}-".format(bar.pos)}

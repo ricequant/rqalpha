@@ -310,8 +310,8 @@ def _normalize_dtypes(df: DataFrame) -> DataFrame:
         dtype = df[col].dtype
         if isinstance(dtype, pd.StringDtype):
             df[col] = df[col].astype(object)
-        elif hasattr(df[col], "as_unit") and getattr(dtype, "kind", None) == "M":
-            df[col] = df[col].as_unit("ns")
+        elif getattr(dtype, "kind", None) == "M" and hasattr(df[col].dt, "as_unit"):
+            df[col] = df[col].dt.as_unit("ns")
     return df
 
 

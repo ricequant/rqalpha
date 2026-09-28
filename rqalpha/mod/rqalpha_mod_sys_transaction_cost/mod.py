@@ -112,8 +112,8 @@ class TransactionCostMod(AbstractMod):
         futures_commission_multiplier = mod_config.futures_commission_multiplier
 
         if stock_commission_multiplier < 0 or mod_config.tax_multiplier < 0:
-            raise patch_user_exc(ValueError(_(u"invalid commission multiplier or tax multiplier"
-                                              u" value: value range is [0, +∞)")))
+            raise patch_user_exc(ValueError(_("invalid commission multiplier or tax multiplier"
+                                              " value: value range is [0, +∞)")))
 
         stock_min_commission = mod_config.cn_stock_min_commission
         if stock_min_commission is not None:

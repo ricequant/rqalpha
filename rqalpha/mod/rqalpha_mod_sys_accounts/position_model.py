@@ -469,7 +469,7 @@ class FuturePosition(Position):
         self._price_gap += self.last_price - self._avg_price
         self._avg_price = self.last_price
         if self._instrument.de_listed_at(next_date):
-            user_system_log.warning(_(u"{order_book_id} is expired, close all positions by system").format(
+            user_system_log.warning(_("{order_book_id} is expired, close all positions by system").format(
                 order_book_id=self._order_book_id
             ))
             account = self._env.get_account(self._order_book_id)
