@@ -52,7 +52,7 @@ class ModHandler(object):
                 lib_name = "rqalpha.mod.rqalpha_mod_" + mod_name
             else:
                 lib_name = "rqalpha_mod_" + mod_name
-            system_log.debug(_(u"loading mod {}").format(lib_name))
+            system_log.debug(_("loading mod {}").format(lib_name))
             mod_module = import_mod(lib_name)
             if mod_module is None:
                 del self._mod_list[idx]
@@ -70,18 +70,18 @@ class ModHandler(object):
 
     def start_up(self):
         for mod_name, mod_config in self._mod_list:
-            system_log.debug(_(u"mod start_up [START] {}\n{}").format(mod_name, mod_config))
+            system_log.debug(_("mod start_up [START] {}\n{}").format(mod_name, mod_config))
             self._mod_dict[mod_name].start_up(self._env, mod_config)
-            system_log.debug(_(u"mod start_up [END]   {}").format(mod_name))
+            system_log.debug(_("mod start_up [END]   {}").format(mod_name))
 
     def tear_down(self, *args):
         result = {}
         exceptions = []
         for mod_name, __ in reversed(self._mod_list):
             try:
-                system_log.debug(_(u"mod tear_down [START] {}").format(mod_name))
+                system_log.debug(_("mod tear_down [START] {}").format(mod_name))
                 ret = self._mod_dict[mod_name].tear_down(*args)
-                system_log.debug(_(u"mod tear_down [END]   {}").format(mod_name))
+                system_log.debug(_("mod tear_down [END]   {}").format(mod_name))
             except Exception as e:
                 exc_type, exc_val, exc_tb = sys.exc_info()
                 exceptions.append(create_custom_exception(exc_type, exc_val, exc_tb, self._env.config.base.strategy_file))

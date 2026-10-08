@@ -21,7 +21,6 @@ from typing import Callable, Dict, List, Tuple, Union
 
 import jsonpickle
 import numpy as np
-import six
 
 from rqalpha.const import DEFAULT_ACCOUNT_TYPE, POSITION_DIRECTION, RUN_TYPE, TAX_TYPE
 from rqalpha.environment import Environment
@@ -55,7 +54,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
     ):
         self._accounts = self._init_accounts(starting_cash, init_positions, financing_rate, env)
         self._static_unit_net_value = 1
-        self._units = sum(account.total_value for account in six.itervalues(self._accounts))
+        self._units = sum(account.total_value for account in self._accounts.values())
         self._env = env
         CapitalGainsTaxMixin.__init__(self)
         env.event_bus.add_listener(EVENT.TRADE, self._on_trade)
@@ -104,7 +103,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
             self._accounts[k].set_state(v)
 
     def get_positions(self):
-        return list(chain(*(a.get_positions() for a in six.itervalues(self._accounts))))
+        return list(chain(*(a.get_positions() for a in self._accounts.values())))
 
     def get_position(self, order_book_id: str, direction: POSITION_DIRECTION) -> AbstractPosition:
         account = self._accounts[self.get_account_type(order_book_id)]
@@ -174,7 +173,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         """
         [float] 当日盈亏
         """
-        return sum(account.daily_pnl for account in six.itervalues(self._accounts))
+        return sum(account.daily_pnl for account in self._accounts.values())
 
     @property
     def daily_returns(self):
@@ -208,7 +207,7 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         """
         [float]总权益
         """
-        return sum(account.total_value for account in six.itervalues(self._accounts))
+        return sum(account.total_value for account in self._accounts.values())
 
     @property
     def portfolio_value(self):
@@ -230,21 +229,21 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         """
         [float] 可用资金
         """
-        return sum(account.cash for account in six.itervalues(self._accounts))
+        return sum(account.cash for account in self._accounts.values())
 
     @property
     def transaction_cost(self):
         """
         [float] 交易成本（税费）
         """
-        return sum(account.transaction_cost for account in six.itervalues(self._accounts))
+        return sum(account.transaction_cost for account in self._accounts.values())
 
     @property
     def market_value(self):
         """
         [float] 市值
         """
-        return sum(account.market_value for account in six.itervalues(self._accounts))
+        return sum(account.market_value for account in self._accounts.values())
 
     @property
     def pnl(self):
@@ -265,14 +264,14 @@ class Portfolio(CapitalGainsTaxMixin, metaclass=PropertyReprMeta):
         """
         [float] 冻结资金
         """
-        return sum(account.frozen_cash for account in six.itervalues(self._accounts))
+        return sum(account.frozen_cash for account in self._accounts.values())
 
     @property
     def cash_liabilities(self):
         """
         [float] 现金负债
         """
-        return sum(account.cash_liabilities for account in six.itervalues(self._accounts))
+        return sum(account.cash_liabilities for account in self._accounts.values())
 
     def _pre_before_trading(self, _):
         self._static_unit_net_value = self.unit_net_value
@@ -358,7 +357,7 @@ class MixedPositions(Mapping):
 
     def __repr__(self):
         keys = []
-        for account in six.itervalues(self._accounts):
+        for account in self._accounts.values():
             keys += [
                 order_book_id for order_book_id, position in account.positions.items()
                 if getattr(position, "quantity", 0) > 0 or
@@ -367,7 +366,7 @@ class MixedPositions(Mapping):
         return str(sorted(keys))
 
     def __len__(self):
-        return sum(len(account.positions) for account in six.itervalues(self._accounts))
+        return sum(len(account.positions) for account in self._accounts.values())
 
     def __iter__(self):
         for account in self._accounts.values():

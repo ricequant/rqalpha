@@ -17,7 +17,6 @@ import os
 import shutil
 
 import click
-import six
 
 from rqalpha.utils.i18n import gettext as _
 from .entry import cli
@@ -32,17 +31,17 @@ def examples(directory):
     try:
         dest_path = os.path.abspath(os.path.join(directory, "examples"))
         shutil.copytree(source_dir, dest_path)
-        six.print_(source_dir, dest_path)
+        print(source_dir, dest_path)
     except OSError as e:
         if e.errno == errno.EEXIST:
-            six.print_("Folder examples exists.")
+            print("Folder examples exists.")
 
 
 @cli.command(help=_("Output Version Info"))
 @click.option('-v', '--version', is_flag=True)
 def version(**kwargs):
     from rqalpha import __version__
-    six.print_("Current Version: ", __version__)
+    print("Current Version: ", __version__)
 
 
 @cli.command(help=_("Generate default config file"))
@@ -51,4 +50,4 @@ def generate_config(directory):
     default_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config.yml")
     target_config_path = os.path.abspath(os.path.join(directory, 'config.yml'))
     shutil.copy(default_config, target_config_path)
-    six.print_("Config file has been generated in", target_config_path)
+    print("Config file has been generated in", target_config_path)

@@ -14,8 +14,6 @@
 
 import codecs
 
-import six
-
 from rqalpha.interface import AbstractStrategyLoader
 from rqalpha.utils.strategy_loader_help import compile_strategy
 
@@ -44,6 +42,6 @@ class UserFuncStrategyLoader(AbstractStrategyLoader):
         self._user_funcs = user_funcs
 
     def load(self, scope):
-        for user_func in six.itervalues(self._user_funcs):
+        for user_func in self._user_funcs.values():
             user_func.__globals__.update(scope)
         return self._user_funcs

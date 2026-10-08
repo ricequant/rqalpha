@@ -18,7 +18,6 @@ import pandas as pd
 from typing import Union
 from collections import namedtuple
 
-import six
 from dateutil.parser import parse
 
 from rqalpha.utils.functools import lru_cache
@@ -92,7 +91,7 @@ def convert_date_time_ms_int_to_datetime(date_int, time_int):
 
 
 def to_date(date: Union[str, datetime.date, datetime.datetime]) -> datetime.date:
-    if isinstance(date, six.string_types):
+    if isinstance(date, str):
         return parse(date).date()
     elif isinstance(date, datetime.datetime):
         return date.date()

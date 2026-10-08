@@ -15,7 +15,8 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-from typing import Union, Iterable
+from typing import Union, Iterable, Callable, TypeVar
+from typing_extensions import ParamSpec  # Python 3.8/3.9 的 typing 里没有 ParamSpec
 from datetime import date, datetime
 
 import pandas
@@ -26,3 +27,11 @@ from rqalpha.const import POSITION_DIRECTION
 DateLike = Union[date, datetime, pandas.Timestamp]
 StrOrIter = Union[str, Iterable[str]]
 POSITION_DIRECTION_TYPE = Union[str, POSITION_DIRECTION]
+
+
+# 装饰器签名相关
+P = ParamSpec("P")  # 占位"参数列表"
+R = TypeVar("R")  # 占位"返回类型"
+
+ApiFunc = Callable[P, R]  # 某个签名的可调用对象
+SignaturePreserving = Callable[[Callable[P, R]], Callable[P, R]]  # 「保持签名的装饰器」：装饰后被装饰对象的签名与返回类型都不变，用于装饰器工厂的返回类型标注

@@ -16,20 +16,20 @@ __all__ = ['StructuredTextFormat', 'assert_result']
 class StructuredTextFormat:
     """
     A specialized text format for serializing structured data containing DataFrames and dictionaries.
-    
+
     The StructuredTextFormat (STF) is a general-purpose serializer for structured data that automatically
     handles pandas DataFrames and Python dictionaries with full type preservation.
-    
+
     Format Specification:
     ====================
-    
+
     The format uses an ini-like structure with sections, where each section contains:
     1. Section header: [section_name]  (case-sensitive)
     2. Object type: DataFrame, dict, list, etc.
     3. Metadata: Compact JSON with structural information
     4. Content: Serialized data (CSV for DataFrames, JSON for other types)
     5. Empty line separator between sections
-    
+
     Example:
     --------
     [portfolio]
@@ -39,12 +39,12 @@ class StructuredTextFormat:
     2025-01-01 00:00:00,100.5,1000
     2025-01-02 00:00:00,101.2,1500
     2025-01-03 00:00:00,99.8,800
-    
+
     [summary]
     dict
     {}
     {"total_returns":0.15,"volatility":0.25,"sharpe":0.8}
-    
+
     Features:
     ---------
     - Human-readable text format
@@ -54,7 +54,7 @@ class StructuredTextFormat:
     - General-purpose: no business logic hardcoded
     - Round-trip serialization fidelity
     """
-    
+
     @staticmethod
     def _dataframe_to_csv_with_metadata(df: DataFrame) -> Tuple[str, dict, str]:
         """Convert DataFrame to CSV string with metadata"""
@@ -75,7 +75,7 @@ class StructuredTextFormat:
             df_copy.index = [str(idx) for idx in df_copy.index]
             df_copy.to_csv(csv_buffer, index=True, lineterminator='\n')
             csv_data = csv_buffer.getvalue().strip()
-        
+
         return object_type, metadata, csv_data
 
     @staticmethod
@@ -105,10 +105,10 @@ class StructuredTextFormat:
             if metadata.get("index_name"):
                 df.index.name = metadata["index_name"]
             return df
-        
+
         csv_buffer = StringIO(csv_data)
         df = pd.read_csv(csv_buffer, index_col=0, dtype={'order_book_id': 'str'})
-        
+
         # Restore dtypes
         for col, dtype_str in metadata.get("dtypes", {}).items():
             if col in df.columns:
@@ -118,11 +118,12 @@ class StructuredTextFormat:
                         df[col] = pd.to_datetime(df[col])
                     elif dtype_str == 'category':
                         df[col] = df[col].astype('category')
-                    elif dtype_str in ['int64', 'int32', 'float64', 'float32', 'bool', 'object']:
+                    elif dtype_str in ['int64', 'int32', 'float64', 'float32', 'bool', 'object',
+                                       'str', 'string']:
                         df[col] = df[col].astype(dtype_str)
                 except (ValueError, TypeError):
                     pass  # Keep original dtype if conversion fails
-        
+
         # Restore index dtype and name
         index_dtype = metadata.get("index_dtype")
         if index_dtype:
@@ -134,11 +135,11 @@ class StructuredTextFormat:
             except (ValueError, TypeError):
                 # Keep original index dtype if conversion fails
                 pass
-        
+
         # Restore index name
         if metadata.get("index_name"):
             df.index.name = metadata["index_name"]
-        
+
         return df
 
 
@@ -146,18 +147,18 @@ class StructuredTextFormat:
     def dumps(cls, obj: dict) -> str:
         """
         Serialize dictionary to STF string.
-        
+
         Args:
             obj: Dictionary to serialize. Each key-value pair becomes a section.
-            
+
         Returns:
             STF formatted string
         """
         sections = []
-        
+
         for section_name, section_data in obj.items():
             section_lines = [f"[{section_name}]"]
-            
+
             if isinstance(section_data, DataFrame):
                 # DataFrame as CSV with metadata
                 object_type, metadata, csv_data = cls._dataframe_to_csv_with_metadata(section_data)
@@ -172,9 +173,9 @@ class StructuredTextFormat:
                 section_lines.append(object_type)
                 section_lines.append(json.dumps(metadata, separators=(',', ':')))
                 section_lines.append(json.dumps(section_data, separators=(',', ':'), default=str, indent=4))
-            
+
             sections.append('\n'.join(section_lines))
-        
+
         # Join sections with empty lines
         return '\n\n'.join(sections)
 
@@ -182,43 +183,43 @@ class StructuredTextFormat:
     def loads(cls, s: str) -> dict:
         """
         Deserialize STF string to dictionary.
-        
+
         Args:
             s: STF formatted string
-            
+
         Returns:
             Deserialized dictionary
         """
         # Split into sections by empty lines
         sections = s.split('\n\n')
-        
+
         result = {}
-        
+
         for section in sections:
             if not section.strip():
                 continue
-                
+
             lines = section.strip().split('\n')
             if len(lines) < 3:  # Must have at least: header, type, metadata
                 raise ValueError(f"Invalid section: {section}")
-                
+
             # Parse section header [section_name]
             header = lines[0]
             if not header.startswith('[') or not header.endswith(']'):
                 raise ValueError(f"Invalid section header: {header}")
-                
+
             section_name = header[1:-1]  # Remove brackets
-                
+
             # Parse object type (second line)
             object_type = lines[1].strip()
-            
+
             # Parse metadata (third line)
             metadata = json.loads(lines[2])
-            
+
             # Parse data content (fourth line and beyond)
             data_lines = lines[3:]
             data_content = '\n'.join(data_lines)
-            
+
             # Parse data based on object type
             if object_type == "DataFrame":
                 # Parse DataFrame with metadata
@@ -228,14 +229,14 @@ class StructuredTextFormat:
                 result[section_name] = json.loads(data_content)
             else:
                 raise NotImplementedError(f"Unsupported object type: {object_type}")
-        
+
         return result
 
-    @classmethod  
+    @classmethod
     def dump(cls, obj: dict, fp) -> None:
         """
         Serialize object to STF format and write to file.
-        
+
         Args:
             obj: Dictionary to serialize
             fp: File-like object to write to
@@ -246,10 +247,10 @@ class StructuredTextFormat:
     def load(cls, fp) -> dict:
         """
         Load and deserialize STF format from file.
-        
+
         Args:
             fp: File-like object to read from
-            
+
         Returns:
             Deserialized dictionary
         """
@@ -260,17 +261,17 @@ def _filter_integration_result(result: dict) -> dict:
     """Filter and prepare integration test result for STF serialization"""
     if "sys_analyser" not in result:
         return result
-    
+
     sys_analyser = result["sys_analyser"]
-    
+
     # Keep specified fields
     keep_fields = [
-        'trades', 'stock_positions', 'future_positions', 
+        'trades', 'stock_positions', 'future_positions',
         'stock_account', 'future_account', 'portfolio', 'summary'
     ]
-    
+
     filtered_data = {}
-    
+
     for field in keep_fields:
         if field in sys_analyser:
             if field == 'summary':
@@ -290,8 +291,28 @@ def _filter_integration_result(result: dict) -> dict:
                 filtered_data[field] = {k: v for k, v in sys_analyser[field].items() if k in important_fields}
             else:
                 filtered_data[field] = sys_analyser[field]
-    
+
     return filtered_data
+
+
+def _normalize_dtypes(df: DataFrame) -> DataFrame:
+    """抹平 pandas 2.x / 3.x 的 dtype 差异，使同一套快照可跨大版本比对。
+
+    - 字符串列：3.x 默认推断为 StringDtype，2.x 为 object
+    - datetime：3.x 按输入粒度推断 s/us，2.x 固定为 ns
+    """
+    df = df.copy()
+    if isinstance(df.index.dtype, pd.StringDtype):
+        df.index = df.index.astype(object)
+    elif hasattr(df.index, "as_unit") and getattr(df.index.dtype, "kind", None) == "M":
+        df.index = df.index.as_unit("ns")
+    for col in df.columns:
+        dtype = df[col].dtype
+        if isinstance(dtype, pd.StringDtype):
+            df[col] = df[col].astype(object)
+        elif getattr(dtype, "kind", None) == "M" and hasattr(df[col].dt, "as_unit"):
+            df[col] = df[col].dt.as_unit("ns")
+    return df
 
 
 def _assert_dafaframe(result: DataFrame, expected_result: DataFrame, exclude_columns: Optional[list] = None):
@@ -301,13 +322,13 @@ def _assert_dafaframe(result: DataFrame, expected_result: DataFrame, exclude_col
     if exclude_columns:
         result = result.drop(exclude_columns, axis=1)
         expected_result = expected_result.drop(exclude_columns, axis=1)
-    assert_frame_equal(result, expected_result, atol=1e-7)
+    assert_frame_equal(_normalize_dtypes(result), _normalize_dtypes(expected_result), atol=1e-7)
 
 
 def _assert_result(result: dict, expected_result: dict):
     actual = _filter_integration_result(result)
     expected = expected_result
-    
+
     # Both should be DataFrames now
     _assert_dafaframe(actual["trades"], expected["trades"], exclude_columns=["order_id", "exec_id"])
 
@@ -320,7 +341,7 @@ def _assert_result(result: dict, expected_result: dict):
     ]:
         if field in expected:
             _assert_dafaframe(actual[field], expected[field])
-    
+
     actual_summary_keys = set(actual["summary"])
     expected_summary_keys = set(expected["summary"])
     assert actual_summary_keys == expected_summary_keys
@@ -328,16 +349,16 @@ def _assert_result(result: dict, expected_result: dict):
     for summary_field in expected["summary"]:
         actual_val = actual["summary"][summary_field]
         expected_val = expected["summary"][summary_field]
-        
+
         # Handle NaN values - use math.isnan for proper comparison
         import math
         if (isinstance(actual_val, float) and math.isnan(actual_val)) and \
            (isinstance(expected_val, float) and math.isnan(expected_val)):
             continue
-        
+
         if isinstance(expected_val, float):
             assert math.isclose(actual_val, expected_val, rel_tol=1e-7)
-        else:   
+        else:
             assert actual_val == expected_val
 
 
@@ -356,8 +377,8 @@ def assert_result(result: dict, expected_result_file: str):
         with open(expected_result_file, "w", encoding='utf-8') as f:
             StructuredTextFormat.dump(filtered_result, f)
         return
-    
+
     with open(expected_result_file, "r", encoding='utf-8') as f:
         expected_result = StructuredTextFormat.load(f)
-    
-    _assert_result(result, expected_result)    
+
+    _assert_result(result, expected_result)

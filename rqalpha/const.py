@@ -216,6 +216,7 @@ class TRADING_CALENDAR_TYPE(CustomEnum):
 # backward compatible
 TRADING_CALENDAR_TYPE.EXCHANGE = TRADING_CALENDAR_TYPE.CN_STOCK
 
+
 class MarketEnumMeta(CustomEnumMeta):
     def __getitem__(cls, item):
         if isinstance(item, str):

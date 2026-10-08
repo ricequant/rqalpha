@@ -13,7 +13,6 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 
-import six
 from rqalpha.core.events import EVENT
 from rqalpha.utils.logger import user_system_log
 
@@ -39,7 +38,7 @@ class SimulationMod(AbstractMod):
         mod_config.matching_type = self.parse_matching_type(mod_config.matching_type, env.config.base.frequency)
 
         if env.config.base.margin_multiplier <= 0:
-            raise patch_user_exc(ValueError(_(u"invalid margin multiplier value: value range is (0, +∞]")))
+            raise patch_user_exc(ValueError(_("invalid margin multiplier value: value range is (0, +∞]")))
 
         if env.config.base.frequency == "tick":
             if mod_config.matching_type not in [
@@ -59,8 +58,8 @@ class SimulationMod(AbstractMod):
 
         if env.config.base.frequency == "1d" and mod_config.matching_type == MATCHING_TYPE.NEXT_BAR_OPEN:
             mod_config.matching_type = MATCHING_TYPE.CURRENT_BAR_CLOSE
-            user_system_log.warn(_(u"matching_type = 'next_bar' is abandoned when frequency == '1d',"
-                                   u"Current matching_type is 'current_bar'."))
+            user_system_log.warn(_("matching_type = 'next_bar' is abandoned when frequency == '1d',"
+                                   "Current matching_type is 'current_bar'."))
 
         partial_fill_on_insufficient_cash: bool = getattr(env.config.base, "partial_fill_on_insufficient_cash", False)
         if mod_config.signal:
@@ -91,7 +90,7 @@ class SimulationMod(AbstractMod):
             else:
                 raise ValueError("frequency only support ['1d', '1m', 'tick']")
 
-        assert isinstance(me_str, six.string_types)
+        assert isinstance(me_str, str)
         me_str = me_str.lower()
         if me_str == "current_bar":
             return MATCHING_TYPE.CURRENT_BAR_CLOSE

@@ -14,7 +14,6 @@
 
 import sys
 import traceback
-import six
 
 from rqalpha.utils.exception import patch_user_exc, CustomError, CustomException
 
@@ -22,7 +21,7 @@ from rqalpha.utils.exception import patch_user_exc, CustomError, CustomException
 def compile_strategy(source_code, strategy, scope):
     try:
         code = compile(source_code, strategy, 'exec')
-        six.exec_(code, scope)
+        exec(code, scope)
         return scope
     except Exception as e:
         exc_type, exc_val, exc_tb = sys.exc_info()
@@ -31,7 +30,7 @@ def compile_strategy(source_code, strategy, scope):
             msg = str(exc_val)
         except Exception as e1:
             msg = ""
-            six.print_(e1)
+            print(e1)
 
         error = CustomError()
         error.set_msg(msg)

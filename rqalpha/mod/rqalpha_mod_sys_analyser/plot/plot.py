@@ -99,7 +99,7 @@ class IndicatorArea(SubPlot):
         if self._strategy_name:
             p = TitlePlot(self._strategy_name, len(self._indicators), self._template)
             p.plot(ax)
-        
+
 
 class ReturnPlot(SubPlot):
     height: int = PLOT_AREA_HEIGHT
@@ -121,7 +121,8 @@ class ReturnPlot(SubPlot):
 
     def _plot_spots_on_returns(self, ax, positions: Sequence[int], info: SpotInfo):
         ax.plot(
-            self._returns.index[positions], self._returns[positions],
+            # positions 是位置下标，pandas 3.0 起 Series[整数] 按标签解析，必须走 iloc
+            self._returns.index[positions], self._returns.iloc[positions],
             info.marker, color=info.color, markersize=info.markersize, alpha=info.alpha, label=info.label
         )
 
@@ -184,9 +185,9 @@ class WaterMark:
 
     def plot(self, fig: Figure):
         fig.figimage(
-            self.logo_img, 
+            self.logo_img,
             xo = (self.img_width * self.dpi - self.logo_img.shape[1]) / 2,
-            yo = (PLOT_AREA_HEIGHT * self.dpi - self.logo_img.shape[0]) / 2, 
+            yo = (PLOT_AREA_HEIGHT * self.dpi - self.logo_img.shape[0]) / 2,
             alpha=0.4
             )
 
@@ -229,9 +230,10 @@ def plot_result(
         benchmark_portfolio = result_dict["benchmark_portfolio"]
         plot_template = plot_template_cls(portfolio.unit_net_value, benchmark_portfolio.unit_net_value)
         ex_returns = plot_template.geometric_excess_returns
+        ex_nav = (ex_returns + 1).values
         ex_max_dd_ddd = "MaxDD {}\nMaxDDD {}".format(
-            _compact_index_range(_max_dd(ex_returns + 1, portfolio.index)),
-            _compact_index_range(_max_ddd(ex_returns + 1, portfolio.index)),
+            _compact_index_range(_max_dd(ex_nav, portfolio.index)),
+            _compact_index_range(_max_ddd(ex_nav, portfolio.index)),
         )
         indicators = plot_template.INDICATORS + plot_template.EXCESS_INDICATORS
 
@@ -263,8 +265,8 @@ def plot_result(
     ]
     if open_close_points and not result_dict["trades"].empty:
         trades: pd.DataFrame = result_dict["trades"]
-        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.CLOSE, portfolio.index), CLOSE_POINT))
-        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.OPEN, portfolio.index), OPEN_POINT))
+        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.CLOSE.name, portfolio.index), CLOSE_POINT))
+        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.OPEN.name, portfolio.index), OPEN_POINT))
 
     sub_plots = [IndicatorArea(indicators, ChainMap(summary, {
         "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(
@@ -276,7 +278,7 @@ def plot_result(
     )]
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))
-    
+
     if strategy_name:
         for p in sub_plots:
             if (isinstance(p, IndicatorArea)): p.height += PLOT_TITLE_HEIGHT
@@ -284,7 +286,7 @@ def plot_result(
     _plot(summary["strategy_file"], sub_plots, strategy_name)
 
     system_log.debug(f"Matplotlib backend: {pyplot.get_backend()}")
-    
+
     if save:
         file_path = save
         if os.path.isdir(save):

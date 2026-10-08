@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-17 17:59+0800\n"
+"POT-Creation-Date: 2026-09-21 17:06+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -92,56 +92,50 @@ msgstr ""
 msgid "unsupported order_book_id type"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:50
+#: rqalpha/apis/api_rqdatac.py:51
 msgid "rqdatac is not available, extension apis will not function properly"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:106
+#: rqalpha/apis/api_rqdatac.py:80
+#, python-brace-format
+msgid ""
+"{}: `expect_df` should be passed explicitly. In a future version, "
+"omitting it will raise an error."
+msgstr ""
+
+#: rqalpha/apis/api_rqdatac.py:136
 #, python-brace-format
 msgid "in get_split, start_date {} is no earlier than the previous test day {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:144
+#: rqalpha/apis/api_rqdatac.py:172
 #, python-brace-format
 msgid "in index_components, date {} is no earlier than test date {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:191
+#: rqalpha/apis/api_rqdatac.py:218
 #, python-brace-format
 msgid "in index_weights, date {} is no earlier than previous test date {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:398
+#: rqalpha/apis/api_rqdatac.py:422
 #, python-brace-format
 msgid "in get_price, end_date {} is no earlier than the previous test day {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:406
+#: rqalpha/apis/api_rqdatac.py:430
 #, python-brace-format
 msgid "in get_price, start_date {} is no earlier than the previous test day {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:411
+#: rqalpha/apis/api_rqdatac.py:435
 #, python-brace-format
 msgid "in get_price, start_date {} > end_date {}"
 msgstr ""
 
-#: rqalpha/apis/api_rqdatac.py:877
+#: rqalpha/apis/api_rqdatac.py:896
 #, python-brace-format
 msgid "'{0}' future does not exist"
-msgstr ""
-
-#: rqalpha/apis/api_rqdatac.py:1163
-#, python-brace-format
-msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
-msgstr ""
-
-#: rqalpha/apis/api_rqdatac.py:1197 rqalpha/apis/api_rqdatac.py:1262
-#: rqalpha/utils/arg_checker.py:378
-#, python-brace-format
-msgid ""
-"function {}: invalid {} argument, quarter should be in form of '2012q3', "
-"got {} (type: {})"
 msgstr ""
 
 #: rqalpha/cmds/bundle.py:35
@@ -280,7 +274,7 @@ msgstr ""
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr ""
 
-#: rqalpha/data/data_proxy.py:231 rqalpha/data/instruments_mixin.py:51
+#: rqalpha/data/data_proxy.py:230 rqalpha/data/instruments_mixin.py:51
 #, python-brace-format
 msgid "No instrument found at {dt}: {id_or_sym}"
 msgstr ""
@@ -343,15 +337,15 @@ msgstr ""
 msgid "Got no share transformation data"
 msgstr ""
 
-#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:82
-#: rqalpha/data/bundle/daybar.py:132
+#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:81
+#: rqalpha/data/bundle/daybar.py:131
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr ""
 
-#: rqalpha/data/bundle/daybar.py:76 rqalpha/data/bundle/daybar.py:114
+#: rqalpha/data/bundle/daybar.py:75 rqalpha/data/bundle/daybar.py:113
 msgid "Get instruments failed."
 msgstr ""
 
@@ -1315,6 +1309,13 @@ msgstr ""
 msgid ""
 "function {}: invalid {} argument, interval should be in form of '1d', "
 "'3m', '4q', '2y', got {} (type: {})"
+msgstr ""
+
+#: rqalpha/utils/arg_checker.py:378
+#, python-brace-format
+msgid ""
+"function {}: invalid {} argument, quarter should be in form of '2012q3', "
+"got {} (type: {})"
 msgstr ""
 
 #: rqalpha/utils/arg_checker.py:392

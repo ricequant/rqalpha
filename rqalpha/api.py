@@ -16,6 +16,7 @@ import inspect
 import sys
 from types import FunctionType
 from functools import wraps
+from typing import Optional
 
 from rqalpha.utils import unwrapper
 from rqalpha.utils.exception import (
@@ -25,12 +26,14 @@ from rqalpha.utils.exception import (
     RQInvalidArgument,
 )
 from rqalpha.const import EXC_TYPE
+from rqalpha.utils.typing import ApiFunc, P, R
+
 
 __all__ = []
 
 
-def decorate_api_exc(func):
-    f = func
+def decorate_api_exc(func: ApiFunc[P, R]) -> ApiFunc[P, R]:
+    f: Optional[ApiFunc[P, R]] = func
     exception_checked = False
     while True:
         if getattr(f, "_rq_exception_checked", False):
@@ -46,11 +49,11 @@ def decorate_api_exc(func):
     return func
 
 
-def api_exc_patch(func):
+def api_exc_patch(func: ApiFunc[P, R]) -> ApiFunc[P, R]:
     if isinstance(func, FunctionType):
 
         @wraps(func)
-        def deco(*args, **kwargs):
+        def deco(*args: P.args, **kwargs: P.kwargs) -> R:
             try:
                 return func(*args, **kwargs)
             except RQInvalidArgument:
@@ -62,7 +65,7 @@ def api_exc_patch(func):
                         ret = inspect.getcallargs(unwrapper(func), *args, **kwargs)
                     except TypeError:
                         t, v, tb = exc_info
-                        raise patch_user_exc(v.with_traceback(tb))
+                        raise patch_user_exc(e.with_traceback(tb))
 
                 if getattr(e, EXC_EXT_NAME, EXC_TYPE.NOTSET) == EXC_TYPE.NOTSET:
                     patch_system_exc(e)
@@ -78,7 +81,7 @@ def register_api(name, func):
     __all__.append(name)
 
 
-def export_as_api(func, name=None):
+def export_as_api(func: ApiFunc[P, R], name: Optional[str] = None) -> ApiFunc[P, R]:
     if name is None:
         name = func.__name__
     __all__.append(name)

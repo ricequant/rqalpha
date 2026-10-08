@@ -54,10 +54,10 @@ def test_negative_benchmark():
         env = Environment.get_instance()
         df = pd.DataFrame(env.mod_dict["sys_analyser"]._total_benchmark_portfolios)
         df['date'] = pd.to_datetime(df['date'])
-        benchmark_portfolio = df.set_index('date').sort_index()        
+        benchmark_portfolio = df.set_index('date').sort_index()
 
         assert isclose(
-            (benchmark_portfolio / benchmark_portfolio.shift(1, fill_value=1) - 1)["unit_net_value"].values, 
+            (benchmark_portfolio / benchmark_portfolio.shift(1, fill_value=1) - 1)["unit_net_value"].values,
             array([-0.01407232, -0.02530206,  0.00501645, -0.03016987,  0.01004613])
         ).all()
 

@@ -16,13 +16,13 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 import datetime
+import io
 import sys
 from pprint import pformat
 from itertools import chain
 
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import logbook
-import six
 from rqalpha import const
 from rqalpha.const import MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.core.executor import Executor
@@ -57,8 +57,8 @@ def _adjust_start_date(config, data_proxy):
     if len(config.base.trading_calendar) == 0:
         raise patch_user_exc(
             ValueError(
-                _(u"There is no data between {start_date} and {end_date}. Please check your"
-                  u" data bundle or select other backtest period.").format(
+                _("There is no data between {start_date} and {end_date}. Please check your"
+                  " data bundle or select other backtest period.").format(
                     start_date=origin_start_date, end_date=origin_end_date)))
     config.base.start_date = config.base.trading_calendar[0].date()
     config.base.end_date = config.base.trading_calendar[-1].date()
@@ -76,7 +76,7 @@ def init_persist_helper(env, ucontext, executor, config):
         return None
     persist_provider = env.persist_provider
     if persist_provider is None:
-        raise RuntimeError(_(u"Missing persist provider. You need to set persist_provider before use persist"))
+        raise RuntimeError(_("Missing persist provider. You need to set persist_provider before use persist"))
     persist_helper = PersistHelper(persist_provider, env.event_bus, config.base.persist_mode)
     for key, obj in chain([
         ('user_context', ucontext),
@@ -249,14 +249,14 @@ def run(config, source_code=None, user_funcs=None):
         if persist_helper and env.config.base.persist_mode == const.PERSIST_MODE.ON_NORMAL_EXIT:
             persist_helper.persist()
         result = mod_handler.tear_down(const.EXIT_CODE.EXIT_SUCCESS)
-        system_log.debug(_(u"strategy run successfully, normal exit"))
+        system_log.debug(_("strategy run successfully, normal exit"))
         return result
     finally:
         cleanup_resources(env)
 
 
 def _exception_handler(e):
-    user_system_log.exception(_(u"strategy execute exception"))
+    user_system_log.exception(_("strategy execute exception"))
     user_system_log.error(e.error)
     if not is_user_exc(e.error.exc_val):
         return const.EXIT_CODE.EXIT_INTERNAL_ERROR
@@ -290,11 +290,11 @@ def enable_profiler(env, scope):
 
 
 def output_profile_result(env):
-    stdout_trap = six.StringIO()
+    stdout_trap = io.StringIO()
     env.profile_deco.print_stats(stdout_trap)
     profile_output = stdout_trap.getvalue()
     profile_output = profile_output.rstrip()
-    six.print_(profile_output)
+    print(profile_output)
     env.event_bus.publish_event(Event(EVENT.ON_LINE_PROFILER_RESULT, result=profile_output))
 
 

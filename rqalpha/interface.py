@@ -20,7 +20,6 @@ from datetime import datetime, date
 from typing import Any, Union, Optional, Iterable, Dict, List, Sequence, TYPE_CHECKING, NamedTuple
 
 import numpy
-from six import with_metaclass
 import pandas
 
 from rqalpha.utils.typing import DateLike
@@ -34,7 +33,7 @@ if TYPE_CHECKING:
 
 
 
-class AbstractPosition(with_metaclass(abc.ABCMeta)):
+class AbstractPosition(metaclass=abc.ABCMeta):
     """
     仓位接口，主要用于构建仓位信息
 
@@ -175,7 +174,7 @@ class AbstractPosition(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
+class AbstractStrategyLoader(metaclass=abc.ABCMeta):
     """
     策略加载器，其主要作用是加载策略，并将策略运行所需要的域环境传递给策略执行代码。
 
@@ -196,7 +195,7 @@ class AbstractStrategyLoader(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class AbstractEventSource(with_metaclass(abc.ABCMeta)):
+class AbstractEventSource(metaclass=abc.ABCMeta):
     """
     事件源接口。RQAlpha 从此对象中获取事件，驱动整个事件循环。
 
@@ -228,7 +227,7 @@ class AbstractEventSource(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class AbstractPriceBoard(with_metaclass(abc.ABCMeta)):
+class AbstractPriceBoard(metaclass=abc.ABCMeta):
     """
     RQAlpha多个地方需要使用最新「行情」，不同的数据源其最新价格获取的方式不尽相同
 
@@ -575,7 +574,7 @@ class AbstractDataSource(object):
     def get_exchange_rate(self, trading_date: date, local: MARKET, settlement: Optional[MARKET] = None) -> ExchangeRate:
         raise NotImplementedError
 
-class AbstractBroker(with_metaclass(abc.ABCMeta)):
+class AbstractBroker(metaclass=abc.ABCMeta):
     """
     券商接口。
 
@@ -615,7 +614,7 @@ class AbstractBroker(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class AbstractMod(with_metaclass(abc.ABCMeta)):
+class AbstractMod(metaclass=abc.ABCMeta):
     """
     扩展模块接口。
     """
@@ -641,7 +640,7 @@ class AbstractMod(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class AbstractPersistProvider(with_metaclass(abc.ABCMeta)):
+class AbstractPersistProvider(metaclass=abc.ABCMeta):
     """
     持久化服务提供者接口。
 
@@ -683,7 +682,7 @@ class AbstractPersistProvider(with_metaclass(abc.ABCMeta)):
         raise NotImplementedError
 
 
-class Persistable(with_metaclass(abc.ABCMeta)):
+class Persistable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_state(self):
         """
@@ -708,7 +707,7 @@ class Persistable(with_metaclass(abc.ABCMeta)):
         return NotImplemented
 
 
-class AbstractFrontendValidator(with_metaclass(abc.ABCMeta)):
+class AbstractFrontendValidator(metaclass=abc.ABCMeta):
     """
     前端风控接口，下撤单请求在到达券商代理模块前会经过前端风控。
 
@@ -757,7 +756,7 @@ class TransactionCost(NamedTuple):
         return cls(commission=0, tax=0, other_fees=0)
 
 
-class AbstractTransactionCostDecider((with_metaclass(abc.ABCMeta))):
+class AbstractTransactionCostDecider(metaclass=abc.ABCMeta):
     """
     订单税费计算接口，通过实现次接口可以定义不同市场、不同合约的个性化税费计算逻辑。
     """
