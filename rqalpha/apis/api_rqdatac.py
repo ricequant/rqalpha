@@ -977,6 +977,15 @@ def get_instrument_industry(order_book_ids: Union[str, List[str]], source: str =
     return rqdatac.get_instrument_industry(order_book_ids, source, level, env.calendar_dt)
 
 
+# 聚合代码优先于普通 str 分支；类型系统无法表达排除这三个字面量的 str。
+@overload
+def get_stock_connect(  # type: ignore[overload-overlap]
+    order_book_ids: Literal["all_connect", "shanghai_connect", "shenzhen_connect"], count: int = 1,
+    fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> pd.DataFrame:
+    ...
+
+
 @overload
 def get_stock_connect(
     order_book_ids: Union[str, List[str]], count: int = 1,
@@ -1042,6 +1051,7 @@ def get_stock_connect(
     当 expect_df 为 False 时，返回值的类型如下：
         *  单个order_book_id，多个fields的时候返回pandas DataFrame
         *  单个order_book_id，单个field返回pandas Series
+        *  all_connect、shanghai_connect、shenzhen_connect 指定单个field时返回pandas DataFrame
         *  如果传入order_book_id list，并指定多个fields，将因为尝试构建 panel 而报错
 
     :return:

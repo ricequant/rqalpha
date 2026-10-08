@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 
 import pandas as pd
 from typing_extensions import assert_type
@@ -43,6 +43,16 @@ def check_signatures() -> None:
     assert_type(get_factor("000001.XSHE", "pe_ratio", count=5, expect_df=True), pd.DataFrame)
     assert_type(get_stock_connect("000001.XSHE", fields="shares_holding", expect_df=False), pd.Series)
     assert_type(get_stock_connect("000001.XSHE", fields="shares_holding", expect_df=True), pd.DataFrame)
+
+    # 聚合代码仍是字符串，但单字段查询返回 DataFrame。
+    assert_type(get_stock_connect("all_connect", fields="shares_holding", expect_df=False), pd.DataFrame)
+    assert_type(get_stock_connect("shanghai_connect", fields="shares_holding", expect_df=False), pd.DataFrame)
+    assert_type(get_stock_connect("shenzhen_connect", fields="shares_holding", expect_df=False), pd.DataFrame)
+    assert_type(get_stock_connect("all_connect", fields="shares_holding"), pd.DataFrame)
+    assert_type(get_stock_connect("shanghai_connect", 5, "shares_holding", False), pd.DataFrame)
+    assert_type(get_stock_connect("shenzhen_connect", fields="holding_ratio", expect_df=True), pd.DataFrame)
+    connect: Literal["all_connect", "shanghai_connect", "shenzhen_connect"] = "all_connect"
+    assert_type(get_stock_connect(connect, fields="shares_holding", expect_df=False), pd.DataFrame)
 
     # warn_unused_ignores 会保证这些错误参数确实被类型检查器拒绝。
     exported("invalid")  # type: ignore[arg-type]
