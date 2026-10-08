@@ -16,7 +16,7 @@ import sys
 import inspect
 import datetime
 import pandas as pd
-from typing import Iterable, Optional, List, Callable, Dict, Any, Union
+from typing import Iterable, Optional, List, Callable, Dict, Any, Union, cast
 from functools import wraps
 from contextlib import contextmanager
 
@@ -30,6 +30,7 @@ from rqalpha.utils import unwrapper, INST_TYPE_WITH_PRE_LISTED_QUOTES
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME, InstrumentNotFound, MultipleInstrumentFound
 from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.typing import ApiFunc, P, R
 
 
 main_contract_warning_flag = True
@@ -513,7 +514,7 @@ class ApiArgumentsChecker(object):
 
     def _apply_converters(self, get_call_args: Callable[[], Dict[str, Any]]):
         """应用所有转换器，返回转换后的参数字典"""
-        converted = {}
+        converted: Dict[str, Any] = {}
         if not self._converters:
             return converted
         # lazy evaluate call_args, avoid unnecessary evaluation
@@ -557,16 +558,17 @@ class ApiArgumentsChecker(object):
             raise
 
 
-def apply_rules(*rules: ArgumentCheckerBase):
+def apply_rules(*rules: ArgumentCheckerBase) -> Callable[[ApiFunc[P, R]], ApiFunc[P, R]]:
     checker = ApiArgumentsChecker(rules)
 
-    def decorator(func):
+    def decorator(func: ApiFunc[P, R]) -> ApiFunc[P, R]:
         @wraps(func)
-        def api_rule_check_wrapper(*args, **kwargs):
+        def api_rule_check_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             with checker.check(func, args, kwargs) as update_kwargs:
                 # 将转换后的参数注入 kwargs
-                if update_kwargs:                
-                    return func(**update_kwargs)
+                if update_kwargs:
+                    # 转换后用完整的参数字典调用，仅在这里放宽参数检查。
+                    return cast(Callable[..., R], func)(**update_kwargs)
                 else:
                     return func(*args, **kwargs)
 

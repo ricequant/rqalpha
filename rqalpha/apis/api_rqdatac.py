@@ -16,7 +16,6 @@ import datetime
 from functools import lru_cache, wraps
 import inspect
 from typing import Any, Union, Optional, Iterable, List, Callable, overload, Literal, cast
-from typing_extensions import ParamSpec
 
 from dateutil.parser import parse
 import pandas as pd
@@ -35,7 +34,7 @@ from rqalpha.apis.api_base import assure_order_book_id
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.logger import user_log, user_system_log
 from rqalpha.utils import check_items_in_container
-from rqalpha.utils.typing import ApiFunc
+from rqalpha.utils.typing import ApiFunc, P, R
 
 
 try:
@@ -64,7 +63,7 @@ except ImportError:
 _EXPECT_DF_WARNED = set()
 
 
-def require_explicit_expect_df(func: ApiFunc) -> ApiFunc:
+def require_explicit_expect_df(func: ApiFunc[P, R]) -> ApiFunc[P, R]:
     """过渡期装饰器：提醒调用方显式传入 ``expect_df``。
 
     用 ``bind_partial`` 判断是否显式传入——它不会填充默认值，因此无论调用方用位置参数
@@ -74,7 +73,7 @@ def require_explicit_expect_df(func: ApiFunc) -> ApiFunc:
     func_name = func.__name__
 
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         try:
             arguments = sig.bind_partial(*args, **kwargs).arguments
         except TypeError:
@@ -616,7 +615,7 @@ def get_securities_margin(
         start_dt = dt
     else:
         start_dt = data_proxy.get_previous_trading_date(dt, count - 1)
-    
+
     overall_code = {"XSHG", "XSHE", "sh", "sz"}
     if isinstance(order_book_ids, str):
         if order_book_ids not in overall_code:
@@ -877,6 +876,38 @@ def get_price_change_rate(
     return rqdatac.get_price_change_rate(order_book_ids, start_date, end_date, expect_df=expect_df)
 
 
+@overload
+def get_factor(
+    order_book_ids: str, factors: str, count: int = 1,
+    universe: Optional[Union[str, List[str]]] = None, expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+
+@overload
+def get_factor(
+    order_book_ids: Union[str, List[str]], factors: Union[str, List[str]], count: int = 1,
+    universe: Optional[Union[str, List[str]]] = None, *, expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_factor(
+    order_book_ids: Union[str, List[str]], factors: Union[str, List[str]], count: int,
+    universe: Optional[Union[str, List[str]]], expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_factor(
+    order_book_ids: Union[str, List[str]], factors: Union[str, List[str]], count: int = 1,
+    universe: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
+
 @export_as_api
 @require_explicit_expect_df
 @apply_rules(verify_that('universe').are_valid_instruments(ignore_none=True))
@@ -886,7 +917,7 @@ def get_factor(
         count: int = 1,
         universe: Optional[Union[str, List[str]]] = None,
         expect_df: bool = False
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, pd.Series]:
     """
     获取股票截止T-1日的因子数据
 
@@ -946,6 +977,52 @@ def get_instrument_industry(order_book_ids: Union[str, List[str]], source: str =
     return rqdatac.get_instrument_industry(order_book_ids, source, level, env.calendar_dt)
 
 
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int = 1,
+    fields: Literal[None] = None, expect_df: bool = False
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: str, count: int = 1, *, fields: str, expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: str, count: int, fields: str, expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int = 1,
+    fields: Optional[Union[str, List[str]]] = None, *, expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int,
+    fields: Optional[Union[str, List[str]]], expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int = 1,
+    fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
+
 @export_as_api
 @require_explicit_expect_df
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
@@ -953,7 +1030,7 @@ def get_instrument_industry(order_book_ids: Union[str, List[str]], source: str =
 def get_stock_connect(
         order_book_ids: Union[str, List[str]], count: int = 1,
         fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, pd.Series]:
     """
     获取截止T-1日A股股票在香港上市交易的持股情况
 

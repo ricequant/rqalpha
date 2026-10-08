@@ -10,6 +10,10 @@ def _frame(unit):
     return pd.DataFrame({"dt": index, "x": [1.0, 2.0]}, index=index)
 
 
+@pytest.mark.skipif(
+    not hasattr(pd.DatetimeIndex, "as_unit"),
+    reason="当前 pandas 不支持 DatetimeIndex.as_unit",
+)
 def test_normalize_datetime_unit():
     result = _frame("us")
     expected = _frame("ns")

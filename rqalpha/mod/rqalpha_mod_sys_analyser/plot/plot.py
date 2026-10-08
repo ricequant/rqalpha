@@ -99,7 +99,7 @@ class IndicatorArea(SubPlot):
         if self._strategy_name:
             p = TitlePlot(self._strategy_name, len(self._indicators), self._template)
             p.plot(ax)
-        
+
 
 class ReturnPlot(SubPlot):
     height: int = PLOT_AREA_HEIGHT
@@ -185,9 +185,9 @@ class WaterMark:
 
     def plot(self, fig: Figure):
         fig.figimage(
-            self.logo_img, 
+            self.logo_img,
             xo = (self.img_width * self.dpi - self.logo_img.shape[1]) / 2,
-            yo = (PLOT_AREA_HEIGHT * self.dpi - self.logo_img.shape[0]) / 2, 
+            yo = (PLOT_AREA_HEIGHT * self.dpi - self.logo_img.shape[0]) / 2,
             alpha=0.4
             )
 
@@ -265,8 +265,8 @@ def plot_result(
     ]
     if open_close_points and not result_dict["trades"].empty:
         trades: pd.DataFrame = result_dict["trades"]
-        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.CLOSE, portfolio.index), CLOSE_POINT))
-        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.OPEN, portfolio.index), OPEN_POINT))
+        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.CLOSE.name, portfolio.index), CLOSE_POINT))
+        spots_on_returns.append((trading_dates_index(trades, POSITION_EFFECT.OPEN.name, portfolio.index), OPEN_POINT))
 
     sub_plots = [IndicatorArea(indicators, ChainMap(summary, {
         "max_dd_ddd": "MaxDD {}\nMaxDDD {}".format(
@@ -278,7 +278,7 @@ def plot_result(
     )]
     if "plots" in result_dict:
         sub_plots.append(UserPlot(result_dict["plots"]))
-    
+
     if strategy_name:
         for p in sub_plots:
             if (isinstance(p, IndicatorArea)): p.height += PLOT_TITLE_HEIGHT
@@ -286,7 +286,7 @@ def plot_result(
     _plot(summary["strategy_file"], sub_plots, strategy_name)
 
     system_log.debug(f"Matplotlib backend: {pyplot.get_backend()}")
-    
+
     if save:
         file_path = save
         if os.path.isdir(save):
