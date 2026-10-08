@@ -168,8 +168,13 @@ class AnalyserMod(AbstractMod):
     }
 
     def _get_one_benchmark_daily_returns(self, ins: Instrument, trading_dates: pd.DatetimeIndex):
-        # trading_dates 需要比需求的日期多一天，因为首日也需要计算收益率
-        bars_s, returns_s, e = itemgetter(0, 1, -1)(trading_dates)
+        # 通常需要额外一天计算首日收益；交易日历起点没有前一交易日。
+        bars_s, e = itemgetter(0, -1)(trading_dates)
+        no_previous_trading_date = (
+            bars_s == pd.Timestamp(self._env.config.base.start_date)
+            and bars_s == self._env.data_proxy.get_trading_calendar()[0]
+        )
+        returns_s = bars_s if no_previous_trading_date else trading_dates[1]
         bars = self._env.data_proxy.history_bars(
             id_or_ins=ins,
             bar_count=None,
@@ -190,11 +195,14 @@ class AnalyserMod(AbstractMod):
         except KeyError:
             # A 股交易日历的标的，验证其价格的完整性
             if len(bars) == len(trading_dates):
-                if convert_int_to_date(bars[1]['datetime']) != returns_s:
+                if not np.array_equal(bars['datetime'], convert_date_to_int(trading_dates)):
                     raise RuntimeError(_(
                         "benchmark {} missing data between backtest start date {} and end date {}").format(ins.order_book_id, returns_s, e)
                     )
-                return (bars['close'] / np.roll(bars['close'], 1) - 1.0)[1: ]
+                daily_returns = bars['close'][1:] / bars['close'][:-1] - 1.0
+                if no_previous_trading_date:
+                    return np.concatenate(([0.0], daily_returns))
+                return daily_returns
             else:
                 if len(bars) == 0:
                     (available_s, available_e) = (ins.listed_date, ins.de_listed_date)
@@ -217,7 +225,11 @@ class AnalyserMod(AbstractMod):
                         ins.order_book_id, returns_s, e)
                 )
             close_series[close_series == 0] = np.nan  # 针对脏数据的处理，这部分本来应当在 rqdata 做
-            return close_series.reindex(merged_calendar).ffill().loc[trading_dates].pct_change().iloc[1: ].values
+            aligned_close = close_series.reindex(merged_calendar).ffill().loc[trading_dates]
+            daily_returns = aligned_close.pct_change().iloc[1:].values
+            if no_previous_trading_date:
+                return np.concatenate(([0.0], daily_returns))
+            return daily_returns
 
     def generate_benchmark_daily_returns_and_portfolio(self, event):
         _s = self._env.config.base.start_date
