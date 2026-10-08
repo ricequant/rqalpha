@@ -1,10 +1,9 @@
 from pathlib import Path
 
-import pytest
+from mypy import api as mypy_api
 
 
 def test_api_decorators_preserve_signatures(tmp_path):
-    mypy_api = pytest.importorskip("mypy.api")
     project_root = Path(__file__).resolve().parents[3]
     sample = Path(__file__).with_name("typing_samples") / "decorator_signatures.py"
     config = tmp_path / "mypy.ini"
