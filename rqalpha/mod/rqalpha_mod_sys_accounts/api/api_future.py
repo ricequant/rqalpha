@@ -45,25 +45,25 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style) -> U
 
     amount = int(amount)
     if amount == 0:
-        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(
+        reason = _("Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(
             order_book_id=order_book_id
         )
         env.order_creation_failed(order_book_id=order_book_id, reason=reason)
         return None
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
-        raise RQInvalidArgument(_(u"Limit order price should not be nan."))
+        raise RQInvalidArgument(_("Limit order price should not be nan."))
     ins = assure_active_ins_for_order_api(order_book_id)
     if ins is None:
         return
     if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == INSTRUMENT_TYPE.FUTURE:
         if "88" in order_book_id:
-            raise RQInvalidArgument(_(u"Main Future contracts[88] are not supported in paper trading."))
+            raise RQInvalidArgument(_("Main Future contracts[88] are not supported in paper trading."))
         if "99" in order_book_id:
-            raise RQInvalidArgument(_(u"Index Future contracts[99] are not supported in paper trading."))
+            raise RQInvalidArgument(_("Index Future contracts[99] are not supported in paper trading."))
 
     price = env.get_last_price(order_book_id)
     if not is_valid_price(price):
-        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+        reason = _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         env.order_creation_failed(order_book_id=order_book_id, reason=reason)
         return
 
@@ -85,7 +85,7 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style) -> U
         else:
             quantity, old_quantity = position.quantity, position.old_quantity
             if amount > quantity:
-                reason = _(u"Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
+                reason = _("Order Creation Failed: close amount {amount} is larger than position quantity {quantity}").format(
                     amount=amount, quantity=quantity)
                 env.order_creation_failed(order_book_id=order_book_id, reason=reason)
                 return []

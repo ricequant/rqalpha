@@ -60,8 +60,8 @@ def instype_singledispatch(func):
     def rq_invalid_argument(arg):
         if registry:
             return RQInvalidArgument(_(
-                u"function {}: invalid {} argument, "
-                u"expected an order_book_id or instrument with types {}, got {} (type: {})"
+                "function {}: invalid {} argument, "
+                "expected an order_book_id or instrument with types {}, got {} (type: {})"
             ).format(funcname, argname, [getattr(i, "name", str(i)) for i in registry], arg, type(arg)))
         else:
             return RQApiNotSupportedError(_(

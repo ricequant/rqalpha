@@ -33,11 +33,11 @@ class IsTradingValidator(AbstractFrontendValidator):
         try:
             instrument = self._env.data_proxy.get_active_instrument(order.order_book_id, self._env.trading_dt)
         except (InstrumentNotFound, MultipleInstrumentFound) as e:
-            return _(u"Order Creation Failed: {order_book_id} is not listing!").format(
+            return _("Order Creation Failed: {order_book_id} is not listing!").format(
                 order_book_id=order.order_book_id)
 
         if instrument.type == 'CS' and self._env.data_proxy.is_suspended(order.order_book_id, self._env.trading_dt):
-            reason = _(u"Order Creation Failed: security {order_book_id} is suspended on {date}").format(
+            reason = _("Order Creation Failed: security {order_book_id} is suspended on {date}").format(
                 order_book_id=order.order_book_id,
                 date=self._env.trading_dt.date()
             )

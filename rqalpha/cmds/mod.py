@@ -16,7 +16,6 @@
 import os
 from importlib import import_module
 
-import six
 import click
 
 from rqalpha.utils.i18n import gettext as _
@@ -60,8 +59,8 @@ def mod(cmd, params):
             "status"
         ]
 
-        six.print_(tabulate(table, headers=headers, tablefmt="psql"))
-        six.print_("You can use `rqalpha mod list/enable/disable` to manage your mods")
+        print(tabulate(table, headers=headers, tablefmt="psql"))
+        print("You can use `rqalpha mod list/enable/disable` to manage your mods")
 
     def change_mod_status(mod_list, enabled):
         for mod_name in mod_list:

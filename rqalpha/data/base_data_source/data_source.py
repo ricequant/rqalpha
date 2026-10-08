@@ -22,7 +22,6 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Union, cas
 
 import numpy as np
 import pandas as pd
-import six
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.const import INSTRUMENT_TYPE, MARKET, TRADING_CALENDAR_TYPE
 from rqalpha.interface import AbstractDataSource, ExchangeRate
@@ -265,7 +264,7 @@ class BaseDataSource(AbstractDataSource):
     def _are_fields_valid(fields, valid_fields):
         if fields is None:
             return True
-        if isinstance(fields, six.string_types):
+        if isinstance(fields, str):
             return fields in valid_fields
         for field in fields:
             if field not in valid_fields:
@@ -295,7 +294,7 @@ class BaseDataSource(AbstractDataSource):
 
     def _update_weekly_trading_date_index(self, idx):
         env = Environment.get_instance()
-        if env.data_proxy.is_trading_date(idx):
+        if env.data_proxy.is_trading_date(idx.date()):  # is_trading_date 只认 date，传 Timestamp 恒为 False
             return idx
         return env.data_proxy.get_previous_trading_date(idx)
 
@@ -307,7 +306,7 @@ class BaseDataSource(AbstractDataSource):
         if isinstance(nead_fields, str):
             nead_fields = [nead_fields]
         hows = {field: BAR_RESAMPLE_FIELD_METHODS[field] for field in nead_fields if field in BAR_RESAMPLE_FIELD_METHODS}
-        df_bars = df_bars.resample('W-Fri').agg(hows)  # type: ignore
+        df_bars = df_bars.resample('W-FRI').agg(hows)  # type: ignore
         df_bars.index = df_bars.index.map(self._update_weekly_trading_date_index)
         df_bars = cast(pd.DataFrame, df_bars[~df_bars.index.duplicated(keep='first')])
         df_bars.sort_index(inplace=True)

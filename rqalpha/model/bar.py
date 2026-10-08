@@ -15,7 +15,6 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
-import six
 from datetime import datetime
 import numpy as np
 
@@ -346,7 +345,7 @@ class BarMap(object):
         return len(Environment.get_instance().get_universe())
 
     def __getitem__(self, key):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise patch_user_exc(ValueError('invalid key {} (use order_book_id please)'.format(key)))
 
         instrument = self._data_proxy.instrument(key)
@@ -369,7 +368,7 @@ class BarMap(object):
                 raise
             except Exception as e:
                 system_log.exception(e)
-                raise patch_user_exc(KeyError(_(u"id_or_symbols {} does not exist").format(key)))
+                raise patch_user_exc(KeyError(_("id_or_symbols {} does not exist").format(key)))
             if bar is None:
                 return BarObject(instrument, NANDict, self._dt)
             else:

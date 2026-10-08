@@ -592,27 +592,31 @@ scheduler.run_monthly - 每月运行
 
         #scheduler调用的函数需要包括context, bar_dict两个参数
         def query_fundamental(context, bar_dict):
-                # 查询revenue前十名的公司的股票并且他们的pe_ratio在25和30之间。打fundamentals的时候会有auto-complete方便写查询代码。
-            fundamental_df = get_fundamentals(
-                query(
-                    fundamentals.income_statement.revenue, fundamentals.eod_derivative_indicator.pe_ratio
-                ).filter(
-                    fundamentals.eod_derivative_indicator.pe_ratio > 25
-                ).filter(
-                    fundamentals.eod_derivative_indicator.pe_ratio < 30
-                ).order_by(
-                    fundamentals.income_statement.revenue.desc()
-                ).limit(
-                    10
-                )
-            )
+            # 待筛选的股票池。get_factor / get_pit_financials_ex 需要显式给出候选标的
+            stocks = index_components('000300.XSHG')
+
+            # 取静态市盈率因子（估值指标），expect_df=True 时以 (order_book_id, date) 为索引返回
+            pe_ratio = get_factor(stocks, 'pe_ratio_lyr', count=1, expect_df=True)['pe_ratio_lyr']
+            pe_ratio = pe_ratio.groupby(level='order_book_id').last()
+
+            # 筛出 pe_ratio 在 25 和 30 之间的股票
+            candidates = pe_ratio[(pe_ratio > 25) & (pe_ratio < 30)].index.tolist()
+
+            # 取这些股票最新一期的营业收入（三大表），以 (order_book_id, quarter) 为索引返回
+            revenue = get_pit_financials_ex(candidates, ['revenue'], 1)['revenue']
+            revenue = revenue.groupby(level='order_book_id').last()
+
+            # 按营业收入降序取前 10 名
+            fundamental_df = revenue.sort_values(ascending=False).head(10).to_frame('revenue')
 
             # 将查询结果dataframe的fundamental_df存放在context里面以备后面只需：
             context.fundamental_df = fundamental_df
 
             # 实时打印日志看下查询结果，会有我们精心处理的数据表格显示：
             logger.info(context.fundamental_df)
-            update_universe(context.fundamental_df.columns.values)
+
+            # 用筛选出的标的更新股票池
+            update_universe(fundamental_df.index.tolist())
 
          # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
         def init(context):

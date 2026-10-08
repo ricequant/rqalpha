@@ -22,9 +22,8 @@ dependencies = [
     'requests',
     'numpy < 2.0.0 ; python_version <= "3.11"',
     'numpy >=2.0.0 ; python_version >= "3.12"',
-    'pandas >=1.0.5, <3.0.0',
+    'pandas >=1.0.5, <4.0.0',  # pandas 版本自带 Requires-Python 分流，无需按版本去切分
     'python-dateutil',
-    'six',
     'logbook',
     'click >=7.0.0',
     'jsonpickle',

@@ -102,7 +102,7 @@ class DefaultTickMatcher(BaseMatcher):
             raise OrderRejected(self._listed_date_reject_reason(order, listed_date))
         else:
             # TODO：这里报错信息比较模糊，可以根据撮合类型给出更明确的提示，比如是否是熔断了，是否是涨跌停了
-            reason = _(u"Order Cancelled: current tick [{order_book_id}] miss market data.").format(
+            reason = _("Order Cancelled: current tick [{order_book_id}] miss market data.").format(
                 order_book_id=order.order_book_id
             )
             raise OrderRejected(reason)
@@ -149,7 +149,7 @@ class DefaultTickMatcher(BaseMatcher):
             if volume_limit <= 0:
                 # 集合竞价无法撤单
                 if order.type == ORDER_TYPE.MARKET:
-                    reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
+                    reason = _("Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
                         order_book_id=order.order_book_id, order_volume=order.quantity
                     )
                     raise OrderCancelled(reason)
@@ -169,8 +169,8 @@ class DefaultTickMatcher(BaseMatcher):
     def _handle_unfilled_order(self, account: Account, order: Order, open_auction: bool):
         if order.type == ORDER_TYPE.MARKET:
             reason = _(
-                u"Order Cancelled: market order {order_book_id} volume {order_volume} is"
-                u" larger than {volume_percent_limit} percent of current tick volume, fill {filled_volume} actually"
+                "Order Cancelled: market order {order_book_id} volume {order_volume} is"
+                " larger than {volume_percent_limit} percent of current tick volume, fill {filled_volume} actually"
             ).format(
                 order_book_id=order.order_book_id,
                 order_volume=order.quantity,
@@ -244,7 +244,7 @@ class CounterPartyOfferMatcher(DefaultTickMatcher):
             volume_limit = self._get_tick_volume_limit(order, instrument)
             if volume_limit <= 0:
                 if order.type == ORDER_TYPE.MARKET:
-                    reason = _(u"Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
+                    reason = _("Order Cancelled: market order {order_book_id} volume {order_volume} due to volume limit").format(
                         order_book_id=order.order_book_id, order_volume=order.quantity
                     )
                     raise OrderCancelled(reason)
