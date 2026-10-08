@@ -15,9 +15,8 @@
 import sys
 import inspect
 import datetime
-import six
 import pandas as pd
-from typing import Iterable, Optional, List, Callable, Dict, Any, Union
+from typing import Iterable, Optional, List, Callable, Dict, Any, Union, cast
 from functools import wraps
 from contextlib import contextmanager
 
@@ -31,6 +30,7 @@ from rqalpha.utils import unwrapper, INST_TYPE_WITH_PRE_LISTED_QUOTES
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.exception import patch_system_exc, EXC_EXT_NAME, InstrumentNotFound, MultipleInstrumentFound
 from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.typing import ApiFunc, P, R
 
 
 main_contract_warning_flag = True
@@ -54,7 +54,7 @@ class ArgumentCheckerBase(object):
 
     def raise_instrument_error(self, func_name, value, instrument_info):
         raise RQInvalidArgument(_(
-            u"function {}: invalid {} argument, expected a {}, got {} (type: {})"
+            "function {}: invalid {} argument, expected a {}, got {} (type: {})"
         ).format(func_name, self._arg_name, instrument_info, value, type(value)))
 
 
@@ -62,14 +62,14 @@ class ArgumentCheckerBase(object):
 def assure_active_instrument(id_or_ins) -> Instrument:
     def _raise():
         raise RQInvalidArgument(_(
-            u"invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
+            "invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
         ).format(id_or_ins, type(id_or_ins)))
 
     if isinstance(id_or_ins, Instrument):
         if not id_or_ins.listed:
             return _raise()
         return id_or_ins
-    elif isinstance(id_or_ins, six.string_types):
+    elif isinstance(id_or_ins, str):
         env = Environment.get_instance()
         try:
             ins = env.data_proxy.get_active_instrument(id_or_ins, env.trading_dt)
@@ -84,14 +84,14 @@ def assure_listed_instrument(id_or_ins) -> Instrument:
     """确保合约已上市（可以是已退市的），用于历史数据查询"""
     def _raise():
         raise RQInvalidArgument(_(
-            u"invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
+            "invalid order_book_id/instrument, expected a listed order_book_id/instrument, got {} (type: {})"
         ).format(id_or_ins, type(id_or_ins)))
 
     if isinstance(id_or_ins, Instrument):
         if not id_or_ins.listed:
             return _raise()
         return id_or_ins
-    elif isinstance(id_or_ins, six.string_types):
+    elif isinstance(id_or_ins, str):
         env = Environment.get_instance()
         instruments = env.data_proxy.get_instrument_history(id_or_ins)
         if not instruments:
@@ -115,7 +115,7 @@ def assure_quoted_instrument(id_or_ins) -> Instrument:
     """确保合约在 trading_dt 时点有行情（可以是已退市的），指数的行情可能早于其上市日期"""
     def _raise():
         raise RQInvalidArgument(_(
-            u"invalid order_book_id/instrument, expected a quoted order_book_id/instrument, got {} (type: {})"
+            "invalid order_book_id/instrument, expected a quoted order_book_id/instrument, got {} (type: {})"
         ).format(id_or_ins, type(id_or_ins)))
 
     if isinstance(id_or_ins, Instrument):
@@ -156,7 +156,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         def check_is_instance_of(func_name, value):
             if not isinstance(value, types):
                 raise RQInvalidArgument(
-                    _(u"function {}: invalid {} argument, expect a value of type {}, got {} (type: {})").format(
+                    _("function {}: invalid {} argument, expect a value of type {}, got {} (type: {})").format(
                         func_name, self._arg_name, types, value, type(value)
                     ))
 
@@ -165,7 +165,7 @@ class ArgumentChecker(ArgumentCheckerBase):
 
     def _is_valid_instrument(self, func_name, value):
         instrument = None
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             instrument = Environment.get_instance().get_instrument(value)
         elif isinstance(value, Instrument):
             instrument = value
@@ -192,7 +192,7 @@ class ArgumentChecker(ArgumentCheckerBase):
             v = float(value)
         except (ValueError, TypeError):
             raise RQInvalidArgument(
-                _(u"function {}: invalid {} argument, expect a number, got {} (type: {})").format(
+                _("function {}: invalid {} argument, expect a number, got {} (type: {})").format(
                     func_name, self._arg_name, value, type(value))
             )
 
@@ -215,7 +215,7 @@ class ArgumentChecker(ArgumentCheckerBase):
 
             if value not in valid_values:
                 raise RQInvalidArgument(
-                    _(u"function {}: invalid {} argument, valid: {}, got {} (type: {})").format(
+                    _("function {}: invalid {} argument, valid: {}, got {} (type: {})").format(
                         func_name, self._arg_name, repr(valid_values), value, type(value))
                 )
 
@@ -226,10 +226,10 @@ class ArgumentChecker(ArgumentCheckerBase):
         valid_fields = set(valid_fields)
 
         def check_are_valid_fields(func_name, fields):
-            if isinstance(fields, six.string_types):
+            if isinstance(fields, str):
                 if fields not in valid_fields:
                     raise RQInvalidArgument(
-                        _(u"function {}: invalid {} argument, valid fields are {}, got {} (type: {})").format(
+                        _("function {}: invalid {} argument, valid fields are {}, got {} (type: {})").format(
                             func_name, self._arg_name, repr(valid_fields), fields, type(fields)
                         ))
                 return
@@ -241,13 +241,13 @@ class ArgumentChecker(ArgumentCheckerBase):
                 invalid_fields = [field for field in fields if field not in valid_fields]
                 if invalid_fields:
                     raise RQInvalidArgument(
-                        _(u"function {}: invalid field {}, valid fields are {}, got {} (type: {})").format(
+                        _("function {}: invalid field {}, valid fields are {}, got {} (type: {})").format(
                             func_name, invalid_fields, repr(valid_fields), fields, type(fields)
                         ))
                 return
 
             raise RQInvalidArgument(
-                _(u"function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
+                _("function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
                     func_name, self._arg_name, repr(fields), type(fields)
                 ))
 
@@ -255,14 +255,14 @@ class ArgumentChecker(ArgumentCheckerBase):
         return self
 
     def _are_valid_instruments(self, func_name, values):
-        if isinstance(values, (six.string_types, Instrument)):
+        if isinstance(values, (str, Instrument)):
             self._is_valid_instrument(func_name, values)
         elif isinstance(values, list):
             for v in values:
                 self._is_valid_instrument(func_name, v)
         else:
             raise RQInvalidArgument(
-                _(u"function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
+                _("function {}: invalid {} argument, expect a string or a list of string, got {} (type: {})").format(
                     func_name, self._arg_name, repr(values), type(values)
                 ))
 
@@ -283,18 +283,18 @@ class ArgumentChecker(ArgumentCheckerBase):
                 return None
             if isinstance(value, (datetime.date, pd.Timestamp)):
                 return
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 try:
                     v = parse_date(value)
                     return
                 except ValueError:
                     raise RQInvalidArgument(
-                        _(u"function {}: invalid {} argument, expect a valid date, got {} (type: {})").format(
+                        _("function {}: invalid {} argument, expect a valid date, got {} (type: {})").format(
                             func_name, self._arg_name, value, type(value)
                         ))
 
             raise RQInvalidArgument(
-                _(u"function {}: invalid {} argument, expect a valid date, got {} (type: {})").format(
+                _("function {}: invalid {} argument, expect a valid date, got {} (type: {})").format(
                     func_name, self._arg_name, value, type(value)
                 ))
 
@@ -305,7 +305,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         def check_greater_or_equal_than(func_name, value):
             if isinstance(value, (int, float)) and value < low:
                 raise RQInvalidArgument(
-                    _(u"function {}: invalid {} argument, expect a value >= {}, got {} (type: {})").format(
+                    _("function {}: invalid {} argument, expect a value >= {}, got {} (type: {})").format(
                         func_name, self._arg_name, low, value, type(value)
                     ))
         self._rules.append(check_greater_or_equal_than)
@@ -315,7 +315,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         def check_greater_than(func_name, value):
             if isinstance(value, (int, float)) and value <= low:
                 raise RQInvalidArgument(
-                    _(u"function {}: invalid {} argument, expect a value > {}, got {} (type: {})").format(
+                    _("function {}: invalid {} argument, expect a value > {}, got {} (type: {})").format(
                         func_name, self._arg_name, low, value, type(value)
                     ))
         self._rules.append(check_greater_than)
@@ -325,7 +325,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         def check_less_or_equal_than(func_name, value):
             if isinstance(value, (int, float)) and value > high:
                 raise RQInvalidArgument(
-                    _(u"function {}: invalid {} argument, expect a value <= {}, got {} (type: {})").format(
+                    _("function {}: invalid {} argument, expect a value <= {}, got {} (type: {})").format(
                         func_name, self._arg_name, high, value, type(value)
                     ))
 
@@ -336,7 +336,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         def check_less_than(func_name, value):
             if isinstance(value, (int, float)) and value >= high:
                 raise RQInvalidArgument(
-                    _(u"function {}: invalid {} argument, expect a value < {}, got {} (type: {})").format(
+                    _("function {}: invalid {} argument, expect a value < {}, got {} (type: {})").format(
                         func_name, self._arg_name, high, value, type(value)
                     ))
 
@@ -344,7 +344,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         return self
 
     def _is_valid_interval(self, func_name, value):
-        valid = isinstance(value, six.string_types) and value[-1] in {'d', 'm', 'q', 'y'}
+        valid = isinstance(value, str) and value[-1] in {'d', 'm', 'q', 'y'}
         if valid:
             try:
                 valid = int(value[:-1]) > 0
@@ -353,8 +353,8 @@ class ArgumentChecker(ArgumentCheckerBase):
 
         if not valid:
             raise RQInvalidArgument(
-                _(u"function {}: invalid {} argument, interval should be in form of '1d', '3m', '4q', '2y', "
-                  u"got {} (type: {})").format(
+                _("function {}: invalid {} argument, interval should be in form of '1d', '3m', '4q', '2y', "
+                  "got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))
 
@@ -366,7 +366,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         if value is None:
             valid = True
         else:
-            valid = isinstance(value, six.string_types) and value[-2] == 'q'
+            valid = isinstance(value, str) and value[-2] == 'q'
             if valid:
                 try:
                     valid =  1990 <= int(value[:-2]) <= 2099 and 1 <= int(value[-1]) <= 4
@@ -375,8 +375,8 @@ class ArgumentChecker(ArgumentCheckerBase):
 
         if not valid:
             raise RQInvalidArgument(
-                _(u"function {}: invalid {} argument, quarter should be in form of '2012q3', "
-                  u"got {} (type: {})").format(
+                _("function {}: invalid {} argument, quarter should be in form of '2012q3', "
+                  "got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))
 
@@ -389,8 +389,8 @@ class ArgumentChecker(ArgumentCheckerBase):
         for e in entities:
             if not isinstance(e, InstrumentedAttribute):
                 raise RQInvalidArgument(
-                    _(u"function {}: invalid {} argument, should be entity like "
-                      u"Fundamentals.balance_sheet.total_equity, got {} (type: {})").format(
+                    _("function {}: invalid {} argument, should be entity like "
+                      "Fundamentals.balance_sheet.total_equity, got {} (type: {})").format(
                         func_name, self.arg_name, e, type(e)
                     ))
 
@@ -399,7 +399,7 @@ class ArgumentChecker(ArgumentCheckerBase):
         return self
 
     def _is_valid_frequency(self, func_name, value):
-        valid = isinstance(value, six.string_types) and value[-1] in ("d", "m", "w")
+        valid = isinstance(value, str) and value[-1] in ("d", "m", "w")
         if valid:
             try:
                 valid = int(value[:-1]) > 0
@@ -408,8 +408,8 @@ class ArgumentChecker(ArgumentCheckerBase):
 
         if not valid:
             raise RQInvalidArgument(
-                _(u"function {}: invalid {} argument, frequency should be in form of "
-                  u"'1m', '5m', '1d', '1w' got {} (type: {})").format(
+                _("function {}: invalid {} argument, frequency should be in form of "
+                  "'1m', '5m', '1d', '1w' got {} (type: {})").format(
                     func_name, self.arg_name, value, type(value)
                 ))
 
@@ -479,7 +479,7 @@ def get_call_args(func, args, kwargs, traceback=None):
     try:
         return inspect.getcallargs(unwrapper(func), *args, **kwargs)
     except TypeError as e:
-        six.reraise(RQTypeError, RQTypeError(*e.args), traceback)
+        raise RQTypeError(*e.args).with_traceback(traceback)
 
 
 class ApiArgumentsChecker(object):
@@ -514,7 +514,7 @@ class ApiArgumentsChecker(object):
 
     def _apply_converters(self, get_call_args: Callable[[], Dict[str, Any]]):
         """应用所有转换器，返回转换后的参数字典"""
-        converted = {}
+        converted: Dict[str, Any] = {}
         if not self._converters:
             return converted
         # lazy evaluate call_args, avoid unnecessary evaluation
@@ -550,8 +550,7 @@ class ApiArgumentsChecker(object):
             try:
                 self._apply_checkers(self.post_check_rules, func.__name__, call_args)
             except RQInvalidArgument as e:
-                six.reraise(RQInvalidArgument, e, tb)
-                return
+                raise e.with_traceback(tb)
 
             if getattr(e, EXC_EXT_NAME, EXC_TYPE.NOTSET) == EXC_TYPE.NOTSET:
                 patch_system_exc(e)
@@ -559,16 +558,17 @@ class ApiArgumentsChecker(object):
             raise
 
 
-def apply_rules(*rules: ArgumentCheckerBase):
+def apply_rules(*rules: ArgumentCheckerBase) -> Callable[[ApiFunc[P, R]], ApiFunc[P, R]]:
     checker = ApiArgumentsChecker(rules)
 
-    def decorator(func):
+    def decorator(func: ApiFunc[P, R]) -> ApiFunc[P, R]:
         @wraps(func)
-        def api_rule_check_wrapper(*args, **kwargs):
+        def api_rule_check_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             with checker.check(func, args, kwargs) as update_kwargs:
                 # 将转换后的参数注入 kwargs
-                if update_kwargs:                
-                    return func(**update_kwargs)
+                if update_kwargs:
+                    # 转换后用完整的参数字典调用，仅在这里放宽参数检查。
+                    return cast(Callable[..., R], func)(**update_kwargs)
                 else:
                     return func(*args, **kwargs)
 

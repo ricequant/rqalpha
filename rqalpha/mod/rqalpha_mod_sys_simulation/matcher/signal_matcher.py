@@ -16,7 +16,7 @@ class SignalMatcher(BaseMatcher):
             if listed_date == self._env.trading_dt.date():
                 raise OrderRejected(self._listed_date_reject_reason(order, listed_date))
             else:
-                reason = _(u"Order Cancelled: current bar [{order_book_id}] miss market data.").format(
+                reason = _("Order Cancelled: current bar [{order_book_id}] miss market data.").format(
                     order_book_id=order.order_book_id
                 )
                 raise OrderRejected(reason)
@@ -30,7 +30,7 @@ class SignalMatcher(BaseMatcher):
             deal_price = last_price
 
         if not is_valid_price(deal_price):
-            reason = _(u"Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
+            reason = _("Order Cancelled: {order_book_id} bar no volume").format(order_book_id=order.order_book_id)
             raise OrderRejected(reason)
         return deal_price
 

@@ -108,7 +108,7 @@ class ExecutionContext(object):
                 phase = cls.stack.top.phase
                 if phase not in phases:
                     raise patch_user_exc(
-                        RuntimeError(_(u"You cannot call %s when executing %s") % (func.__name__, phase.value)))
+                        RuntimeError(_("You cannot call %s when executing %s") % (func.__name__, phase.value)))
                 return func(*args, **kwargs)
             return wrapper
         return decorator

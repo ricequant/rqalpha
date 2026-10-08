@@ -20,7 +20,6 @@ from itertools import chain
 from datetime import date
 from typing import Callable, Dict, Iterable, List, Optional, Union, Tuple
 
-import six
 from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, DEFAULT_ACCOUNT_TYPE, DAYS_CNT, MARKET, TAX_TYPE
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT
@@ -399,7 +398,7 @@ class Account(metaclass=AccountMeta):
         该事件必须在 post_settlement 中最后执行，若有其他事件要加入到 post_settlement 中，请使用 event_bus.prepend_listener 添加
         """
         for order_book_id, positions in list(self._positions.items()):
-            for position in six.itervalues(positions):
+            for position in positions.values():
                 if isinstance(position, FuturePosition):
                     position.post_settlement()
 
@@ -505,7 +504,7 @@ class Account(metaclass=AccountMeta):
         for order_book_id, positions in self._positions.items():
             price = self._env.get_last_price(order_book_id)
             if price == price:
-                for position in six.itervalues(positions):
+                for position in positions.values():
                     position.update_last_price(price)
 
     def _frozen_cash_of_order(self, order):

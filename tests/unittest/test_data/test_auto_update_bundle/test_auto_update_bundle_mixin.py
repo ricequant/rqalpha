@@ -68,8 +68,8 @@ class AutomaticUpdateBundleTestCase(DataProxyFixture, RQAlphaTestCase):
         ).read())
 
         s_df = pickle_data.loc["000001.XSHE"]
-        assert s_volume == s_df[s_df.index.date == datetime.date(2023, 12, 28)].volume[0]
+        assert s_volume == s_df[s_df.index.date == datetime.date(2023, 12, 28)].volume.iloc[0]
         f_df = pickle_data.loc['A2401']
         # 期货由于有夜盘，open_auction_info 的时间为前一个交易日的晚上，即从 pickle 文件中获取时，date 应该提前一个交易日
-        assert f_volume == f_df[f_df.index.date == datetime.date(2023, 12, 27)].volume[0]
+        assert f_volume == f_df[f_df.index.date == datetime.date(2023, 12, 27)].volume.iloc[0]
         

@@ -65,7 +65,7 @@ def _get_account_position(order_book_id: str):
         account = Environment.get_instance().portfolio.accounts[DEFAULT_ACCOUNT_TYPE.STOCK]
     except KeyError:
         raise KeyError(_(
-                u"order_book_id: {order_book_id} needs stock account, please set and try again!"
+                "order_book_id: {order_book_id} needs stock account, please set and try again!"
             ).format(order_book_id=order_book_id))
     position = account.get_position(order_book_id, POSITION_DIRECTION.LONG)
     return account, position
@@ -86,10 +86,10 @@ def _get_order_style_price(order_book_id, style):
 def _submit_order(order_book_id: str, amount, side, position_effect, style, current_quantity, auto_switch_order_value, zero_amount_as_exception=True):
     env = Environment.get_instance()
     if isinstance(style, LimitOrder) and np.isnan(style.get_limit_price()):
-        raise RQInvalidArgument(_(u"Limit order price should not be nan."))
+        raise RQInvalidArgument(_("Limit order price should not be nan."))
     price = env.data_proxy.get_last_price(order_book_id)
     if not is_valid_price(price):
-        reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+        reason = _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         env.order_creation_failed(order_book_id=order_book_id, reason=reason)
         return
     ins = assure_active_ins_for_order_api(order_book_id)
@@ -102,7 +102,7 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style, curr
 
     if amount == 0:
         if zero_amount_as_exception:
-            reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+            reason = _("Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
             env.order_creation_failed(order_book_id=ins.order_book_id, reason=reason)
         return
     order = Order.__from_create__(ins.order_book_id, abs(amount), side, style, position_effect)
@@ -131,13 +131,13 @@ def _order_value(account: Account, position: AbstractPosition, order_book_id: st
         # FIXME: 这里提前用了成交价计算数量，不太合理。可以考虑改成针对算法单不做验资风控，而是在撮合的时候成交尽量多的数量。
         price, __ = env.data_proxy.get_algo_bar(order_book_id, style, env.calendar_dt)
         if not is_valid_price(price):
-            reason = _(u"Order Creation Failed: [{order_book_id}] has no valid algo price").format(order_book_id=order_book_id)
+            reason = _("Order Creation Failed: [{order_book_id}] has no valid algo price").format(order_book_id=order_book_id)
             env.order_creation_failed(order_book_id=order_book_id, reason=reason)
             return
     else:
         price = env.data_proxy.get_last_price(order_book_id)
         if not is_valid_price(price):
-            reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+            reason = _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
             env.order_creation_failed(order_book_id=order_book_id, reason=reason)
             return
     ins = assure_active_ins_for_order_api(order_book_id)
@@ -146,7 +146,7 @@ def _order_value(account: Account, position: AbstractPosition, order_book_id: st
 
     amount = get_amount_from_value(cash_amount, ins, price, env, account.cash)
     if amount == 0 and zero_amount_as_exception:
-        reason = _(u"Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
+        reason = _("Order Creation Failed: 0 order quantity, order_book_id={order_book_id}").format(order_book_id=ins.order_book_id)
         env.order_creation_failed(order_book_id=order_book_id, reason=reason)
         return
 
@@ -350,7 +350,7 @@ def order_target_portfolio(
         order_book_id = ins.order_book_id
         last_price = env.data_proxy.get_last_price(order_book_id)
         if not is_valid_price(last_price):
-            reason = _(u"Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
+            reason = _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
             env.order_creation_failed(order_book_id=order_book_id, reason=reason)
             continue
 
@@ -732,7 +732,7 @@ def get_dividend(order_book_id, start_date):
     if start_date > dt:
         raise RQInvalidArgument(
             _(
-                u"in get_dividend, start_date {} is later than the previous test day {}"
+                "in get_dividend, start_date {} is later than the previous test day {}"
             ).format(start_date, dt)
         )
     order_book_id = assure_order_book_id(order_book_id)

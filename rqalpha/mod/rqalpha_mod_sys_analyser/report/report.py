@@ -145,7 +145,6 @@ def _gen_positions_weight(df):
 
 
 def generate_report(result_dict, output_path):
-    from six import StringIO
 
     try:
         os.mkdir(output_path)

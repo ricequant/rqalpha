@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-17 17:59+0800\n"
+"POT-Creation-Date: 2026-09-21 17:06+0800\n"
 "PO-Revision-Date: 2016-10-24 21:20+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans_CN\n"
@@ -95,59 +95,53 @@ msgstr "订单创建失败: 当前合约[{order_book_id}]没有市场数据。"
 msgid "unsupported order_book_id type"
 msgstr "不支持该 order_book_id 类型"
 
-#: rqalpha/apis/api_rqdatac.py:50
+#: rqalpha/apis/api_rqdatac.py:51
 msgid "rqdatac is not available, extension apis will not function properly"
 msgstr ""
 "rqdatac 不存在，扩展 API 无法使用，您可以访问 https://www.ricequant.com/welcome/rqdata 获取"
 " rqdatac"
 
-#: rqalpha/apis/api_rqdatac.py:106
+#: rqalpha/apis/api_rqdatac.py:80
+#, python-brace-format
+msgid ""
+"{}: `expect_df` should be passed explicitly. In a future version, "
+"omitting it will raise an error."
+msgstr "{}：`expect_df` 需要显式传入。后续版本中若未显式传入，将会报错。"
+
+#: rqalpha/apis/api_rqdatac.py:136
 #, python-brace-format
 msgid "in get_split, start_date {} is no earlier than the previous test day {}"
 msgstr "get_spit 中 start_date {} 晚于策略运行前一日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:144
+#: rqalpha/apis/api_rqdatac.py:172
 #, python-brace-format
 msgid "in index_components, date {} is no earlier than test date {}"
 msgstr "index_compoments 中，date {} 晚于策略当前运行日期 {}"
 
-#: rqalpha/apis/api_rqdatac.py:191
+#: rqalpha/apis/api_rqdatac.py:218
 #, python-brace-format
 msgid "in index_weights, date {} is no earlier than previous test date {}"
 msgstr "在API index_weights 中, 参数date={} 不应晚于上一交易日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:398
+#: rqalpha/apis/api_rqdatac.py:422
 #, python-brace-format
 msgid "in get_price, end_date {} is no earlier than the previous test day {}"
 msgstr "在API get_price 中, 当前参数end_date={} 不应晚于上一交易日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:406
+#: rqalpha/apis/api_rqdatac.py:430
 #, python-brace-format
 msgid "in get_price, start_date {} is no earlier than the previous test day {}"
 msgstr "在API get_price中, 参数start_date={} 不应晚于上一交易日 {}"
 
-#: rqalpha/apis/api_rqdatac.py:411
+#: rqalpha/apis/api_rqdatac.py:435
 #, python-brace-format
 msgid "in get_price, start_date {} > end_date {}"
 msgstr "在API get_price 中,当前参数 start_date={} 大于 end_date={}"
 
-#: rqalpha/apis/api_rqdatac.py:877
+#: rqalpha/apis/api_rqdatac.py:896
 #, python-brace-format
 msgid "'{0}' future does not exist"
 msgstr "期货品种 '{0}' 不存在"
-
-#: rqalpha/apis/api_rqdatac.py:1163
-#, python-brace-format
-msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
-msgstr "在API get_fundamentals 中,财务数据开始日期 {} 不应晚于上一交易日 {}"
-
-#: rqalpha/apis/api_rqdatac.py:1197 rqalpha/apis/api_rqdatac.py:1262
-#: rqalpha/utils/arg_checker.py:378
-#, python-brace-format
-msgid ""
-"function {}: invalid {} argument, quarter should be in form of '2012q3', "
-"got {} (type: {})"
-msgstr "函数 {}：参数 {} 不合法，季度应为形如 '2012q3' 的字符串，传入的是 {}（类型：{}）"
 
 #: rqalpha/cmds/bundle.py:35
 msgid "create bundle using RQDatac"
@@ -296,7 +290,7 @@ msgstr "策略暂停中，取消执行 {}({}, {})"
 msgid "deprecated parameter[bar_dict] in before_trading function."
 msgstr "[Deprecated]在before_trading函数中，第二个参数bar_dict已经不再使用了。"
 
-#: rqalpha/data/data_proxy.py:231 rqalpha/data/instruments_mixin.py:51
+#: rqalpha/data/data_proxy.py:230 rqalpha/data/instruments_mixin.py:51
 #, python-brace-format
 msgid "No instrument found at {dt}: {id_or_sym}"
 msgstr "未找到 Instrument：{id_or_sym}（日期：{dt}）"
@@ -359,15 +353,15 @@ msgstr "未获取到 ex factor 数据"
 msgid "Got no share transformation data"
 msgstr "未获取到 share transformation 数据"
 
-#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:82
-#: rqalpha/data/bundle/daybar.py:132
+#: rqalpha/data/bundle/automatic_update.py:95 rqalpha/data/bundle/daybar.py:81
+#: rqalpha/data/bundle/daybar.py:131
 #, python-brace-format
 msgid ""
 "File {} update failed, if it is using, please update later, or you can "
 "delete then update again"
 msgstr "{} 文件更新失败，如果其正在使用中，请稍后再进行更新，或者您可以将其删除后再重新更新"
 
-#: rqalpha/data/bundle/daybar.py:76 rqalpha/data/bundle/daybar.py:114
+#: rqalpha/data/bundle/daybar.py:75 rqalpha/data/bundle/daybar.py:113
 msgid "Get instruments failed."
 msgstr "获取 instruments 失败"
 
@@ -1345,6 +1339,13 @@ msgid ""
 "'3m', '4q', '2y', got {} (type: {})"
 msgstr "函数 {}：无效的 {} 参数，interval 应为 '1d'、'3m'、'4q'、'2y' 的形式，实际获得 {}（类型：{}）"
 
+#: rqalpha/utils/arg_checker.py:378
+#, python-brace-format
+msgid ""
+"function {}: invalid {} argument, quarter should be in form of '2012q3', "
+"got {} (type: {})"
+msgstr "函数 {}：参数 {} 不合法，季度应为形如 '2012q3' 的字符串，传入的是 {}（类型：{}）"
+
 #: rqalpha/utils/arg_checker.py:392
 #, python-brace-format
 msgid ""
@@ -2046,3 +2047,7 @@ msgstr "不支持 API {}。请确保您设置了该 API 所需的账户并开启
 #~ " validate_cash is disabled; please verify"
 #~ " this configuration."
 #~ msgstr ""
+
+#~ msgid "in get_fundamentals entry_date {} is no earlier than test date {}"
+#~ msgstr "在API get_fundamentals 中,财务数据开始日期 {} 不应晚于上一交易日 {}"
+

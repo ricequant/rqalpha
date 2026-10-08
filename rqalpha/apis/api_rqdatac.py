@@ -13,10 +13,10 @@
 #         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 import datetime
-from functools import lru_cache
-from typing import Union, Optional, Iterable, List
+from functools import lru_cache, wraps
+import inspect
+from typing import Any, Union, Optional, Iterable, List, Callable, overload, Literal, cast
 
-import six
 from dateutil.parser import parse
 import pandas as pd
 
@@ -32,8 +32,10 @@ from rqalpha.utils.arg_checker import apply_rules, verify_that
 from rqalpha.utils.exception import RQInvalidArgument
 from rqalpha.apis.api_base import assure_order_book_id
 from rqalpha.utils.i18n import gettext as _
-from rqalpha.utils.logger import user_log
+from rqalpha.utils.logger import user_log, user_system_log
 from rqalpha.utils import check_items_in_container
+from rqalpha.utils.typing import ApiFunc, P, R
+
 
 try:
     import rqdatac
@@ -53,7 +55,41 @@ except ImportError:
     rqdatac = DummyRQDatac()
 
 
-def to_date(date):
+# ----------------------------------expect_df 过渡期处理------------------------------------
+# `expect_df` 目前仍是可选参数，未显式传入时沿用函数自身的默认值。但 pandas 0.25.0 起 Panel 已被移除，
+# rqdatac 收到 expect_df=False 时会直接报错，因此调用方应当显式指定该参数。
+#
+# TODO(2026-12-31): 该日期之后发布的版本中，未显式传入 expect_df 将直接报错。
+_EXPECT_DF_WARNED = set()
+
+
+def require_explicit_expect_df(func: ApiFunc[P, R]) -> ApiFunc[P, R]:
+    """过渡期装饰器：提醒调用方显式传入 ``expect_df``。
+
+    用 ``bind_partial`` 判断是否显式传入——它不会填充默认值，因此无论调用方用位置参数
+    还是关键字参数传入都能正确识别。装饰器本身只告警，不改写入参。
+    """
+    sig = inspect.signature(func)
+    func_name = func.__name__
+
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            arguments = sig.bind_partial(*args, **kwargs).arguments
+        except TypeError:
+            return func(*args, **kwargs)
+        if "expect_df" not in arguments:
+            if func_name not in _EXPECT_DF_WARNED:
+                _EXPECT_DF_WARNED.add(func_name)
+                user_system_log.warning(_(
+                    "{}: `expect_df` should be passed explicitly. In a future version, omitting it will raise an error."
+                ).format(func_name))
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def to_date(date: Union[str, datetime.date, datetime.datetime]) -> datetime.date:
     if isinstance(date, datetime.datetime):
         return date.date()
     if isinstance(date, datetime.date):
@@ -67,8 +103,7 @@ def to_date(date):
 
 @export_as_api
 @apply_rules(verify_that('start_date').is_valid_date())
-def get_split(order_book_ids, start_date=None):
-    # type: (Union[str, List[str]], Optional[Union[str, datetime.date]]) -> pd.DataFrame
+def get_split(order_book_ids: Union[str, List[str]], start_date: Optional[Union[str, datetime.date]] = None) -> pd.DataFrame:
     """
     获取某只股票到策略当前日期前一天的拆分情况（包含起止日期）。
 
@@ -106,7 +141,7 @@ def get_split(order_book_ids, start_date=None):
         raise RQInvalidArgument(_('in get_split, start_date {} is no earlier than the previous test day {}').format(
             start_date, dt
         ))
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         order_book_ids = [order_book_ids]
     order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
     return rqdatac.get_split(order_book_ids, start_date, dt)
@@ -114,9 +149,7 @@ def get_split(order_book_ids, start_date=None):
 
 @export_as_api
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True))
-def index_components(order_book_id, date=None):
-    # type: (str, Optional[Union[str, datetime.date]]) -> List[str]
-
+def index_components(order_book_id: str, date: Optional[Union[str, datetime.date]] = None) -> List[str]:
     """
     获取某一指数的股票构成列表，也支持指数的历史构成查询。
 
@@ -150,8 +183,7 @@ def index_components(order_book_id, date=None):
 
 @export_as_api
 @apply_rules(verify_that('date').is_valid_date(ignore_none=True))
-def index_weights(order_book_id, date=None):
-    # type: (str, Optional[Union[str, datetime.date]]) -> pd.Series
+def index_weights(order_book_id: str, date: Optional[Union[str, datetime.date]] = None) -> pd.Series:
     """
     获取T-1日的指数权重
 
@@ -196,8 +228,7 @@ def index_weights(order_book_id, date=None):
 
 
 @export_as_api
-def concept(*concept_names):
-    # type: (*str) -> List[str]
+def concept(*concept_names: str) -> List[str]:
     """
     获取T日的概念股列表
 
@@ -239,8 +270,7 @@ def concept(*concept_names):
 
 
 @export_as_api
-def get_margin_stocks(exchange=None, margin_type="all"):
-    # type: (str, str) -> List[str]
+def get_margin_stocks(exchange: Optional[str] = None, margin_type: str = "all") -> List[str]:
     """
     获取某个日期深证、上证融资融券股票列表。
 
@@ -302,6 +332,58 @@ def get_margin_stocks(exchange=None, margin_type="all"):
     return list(set(symbols))
 
 
+@overload
+def get_price(
+    order_book_ids: str,
+    start_date: Union[datetime.date, str],
+    end_date: Optional[Union[datetime.date, datetime.datetime, str]] = None,
+    frequency: str = '1d',
+    fields: Literal[None] = None,
+    adjust_type: str = 'pre',
+    skip_suspended: bool = False,
+    expect_df: Literal[False] = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
+@overload
+def get_price(
+    order_book_ids: str,
+    start_date: Union[datetime.date, str],
+    end_date: Optional[Union[datetime.date, datetime.datetime, str]] = None,
+    frequency: str = '1d',
+    fields: str = cast(str, ...),
+    adjust_type: str = 'pre',
+    skip_suspended: bool = False,
+    expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+@overload
+def get_price(
+    order_book_ids: Union[str, Iterable[str]],
+    start_date: Union[datetime.date, str],
+    end_date: Optional[Union[datetime.date, datetime.datetime, str]] = None,
+    frequency: str = '1d',
+    fields: Optional[Iterable[str]] = None,
+    adjust_type: str = 'pre',
+    skip_suspended: bool = False,
+    *,
+    expect_df: Literal[True]
+) -> pd.DataFrame: ...
+
+@overload
+def get_price(
+    order_book_ids: Union[str, Iterable[str]],
+    start_date: Union[datetime.date, str],
+    end_date: Optional[Union[datetime.date, datetime.datetime, str]] = None,
+    frequency: str = '1d',
+    fields: Optional[Iterable[str]] = None,
+    adjust_type: str = 'pre',
+    skip_suspended: bool = False,
+    expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
 @export_as_api
 @ExecutionContext.enforce_phase(
     EXECUTION_PHASE.ON_INIT,
@@ -310,6 +392,7 @@ def get_margin_stocks(exchange=None, margin_type="all"):
     EXECUTION_PHASE.AFTER_TRADING,
     EXECUTION_PHASE.SCHEDULED
 )
+@require_explicit_expect_df
 @apply_rules(verify_that('order_book_ids').are_valid_instruments(),
              verify_that('start_date').is_valid_date(ignore_none=False),
              verify_that('end_date').is_valid_date(ignore_none=True),
@@ -318,15 +401,15 @@ def get_margin_stocks(exchange=None, margin_type="all"):
              verify_that('adjust_type').is_in(['pre', 'post', 'none', 'internal']),
              verify_that('skip_suspended').is_instance_of(bool))
 def get_price(
-        order_book_ids,  # type: Union[str, Iterable[str]]
-        start_date,  # type: Union[datetime.date, str]
-        end_date=None,  # type: Optional[Union[datetime.date, datetime.datetime, str]]
-        frequency='1d',  # type: Optional[str]
-        fields=None,  # type: Optional[Iterable[str]]
-        adjust_type='pre',  # type: Optional[str]
-        skip_suspended=False,  # type: Optional[bool]
-        expect_df=False  # type: Optional[bool]
-):  # type: (...) -> Union[pd.DataFrame, pd.Panel, pd.Series]
+        order_book_ids: Union[str, Iterable[str]],
+        start_date: Union[datetime.date, str],
+        end_date: Optional[Union[datetime.date, datetime.datetime, str]] = None,
+        frequency: str = '1d',
+        fields: Optional[Iterable[str]] = None,
+        adjust_type: str = 'pre',
+        skip_suspended: bool = False,
+        expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
     """
     获取指定合约或合约列表的历史行情（包含起止日期，日线或分钟线），不能在'handle_bar'函数中进行调用。
 
@@ -339,16 +422,14 @@ def get_price(
     :param fields: 期望返回的字段名称，如 open，close 等
     :param adjust_type: 权息修复方案。前复权 - pre，后复权 - post，不复权 - none
     :param skip_suspended: 是否跳过停牌数据。默认为False，不跳过，用停牌前数据进行补齐。True则为跳过停牌期。注意，当设置为True时，函数order_book_id只支持单个合约传入
-    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+    :param expect_df: 是否始终返回 MultiIndex DataFrame。该参数需显式传入；未显式传入时暂按历史默认值处理并给出告警，2026-12-31 之后发布的版本中将改为必填
 
     当 expect_df 为 False 时，返回值的类型如下
 
         *   传入一个order_book_id，多个fields，函数会返回一个pandas DataFrame
         *   传入一个order_book_id，一个field，函数会返回pandas Series
         *   传入多个order_book_id，一个field，函数会返回一个pandas DataFrame
-        *   传入多个order_book_id，函数会返回一个pandas Panel
-
-
+        *   如果传入order_book_id list，并指定多个fields，将因为尝试构建 panel 而报错
         =========================   =========================   ==============================================================================
         参数                         类型                        说明
         =========================   =========================   ==============================================================================
@@ -367,7 +448,7 @@ def get_price(
         prev_settlement             float                       昨日结算价（仅限期货日线数据）
         open_interest               float                       累计持仓量（期货专用）
         basis_spread                float                       基差点数（股指期货专用，股指期货收盘价-标的指数收盘价）
-        trading_date                pandas.TimeStamp             交易日期（仅限期货分钟线数据），对应期货夜盘的情况
+        trading_date                pandas.Timestamp             交易日期（仅限期货分钟线数据），对应期货夜盘的情况
         =========================   =========================   ==============================================================================
 
     :example:
@@ -412,7 +493,7 @@ def get_price(
             start_date, end_date
         ))
 
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         order_book_ids = assure_order_book_id(order_book_ids)
     else:
         order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
@@ -422,22 +503,45 @@ def get_price(
                              skip_suspended=skip_suspended, expect_df=expect_df)
 
 
+@overload
+def get_securities_margin(
+    order_book_ids: Union[str, Iterable[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, expect_df: Literal[True] = True
+) -> pd.DataFrame:
+    ...
+
+# 不传 fields（或传 None）时不能落到下面那条 Series 分支，否则"取全字段"会被误判成 Series
+@overload
+def get_securities_margin(
+    order_book_ids: str, count: int = 1, fields: Literal[None] = None, expect_df: Literal[False] = False
+) -> Union[pd.Series, pd.DataFrame]:
+    ...
+
+@overload
+def get_securities_margin(
+    order_book_ids: str, count: int = 1, fields: str = cast(str, ...), expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+@overload
+def get_securities_margin(
+    order_book_ids: Union[str, Iterable[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, expect_df: bool = True
+) -> Union[pd.Series, pd.DataFrame]:
+    ...
+
 @export_as_api
+@require_explicit_expect_df
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_MARGIN_FIELDS, ignore_none=True))
 def get_securities_margin(
-        order_book_ids,  # type: Union[str, Iterable[str]]
-        count=1,  # type: Optional[int]
-        fields=None,  # type: Optional[str]
-        expect_df=True  # type: Optional[bool]
-):  # type: (...) -> Union[pd.Series, pd.DataFrame]
+    order_book_ids: Union[str, Iterable[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, expect_df: bool = True
+) -> Union[pd.Series, pd.DataFrame]:
     """
     获取融资融券信息。包括 `深证融资融券数据 <http://www.szse.cn/main/disclosure/rzrqxx/rzrqjy/>`_ 以及 `上证融资融券数据 <http://www.sse.com.cn/market/othersdata/margin/detail/>`_ 情况。既包括个股数据，也包括市场整体数据。需要注意，融资融券的开始日期为2010年3月31日。
 
     :param order_book_ids: 可输入order_book_id, order_book_id list, symbol, symbol list。另外，输入'XSHG'或'sh'代表整个上证整体情况；'XSHE'或'sz'代表深证整体情况
     :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
     :param fields: 期望返回的字段，默认为所有字段。见下方列表
-    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+    :param expect_df: 是否始终返回 MultiIndex DataFrame。该参数需显式传入；未显式传入时暂按历史默认值处理并给出告警，2026-12-31 之后发布的版本中将改为必填
 
     =========================   ===================================================
     fields                      字段名
@@ -458,7 +562,7 @@ def get_securities_margin(
         *   多个order_book_id，单个field的时候返回DataFrame，index为date，column为order_book_id
         *   单个order_book_id，多个fields的时候返回DataFrame，index为date，column为fields
         *   单个order_book_id，单个field返回Series
-        *   多个order_book_id，多个fields的时候返回DataPanel Items axis为fields Major_axis axis为时间戳 Minor_axis axis为order_book_id
+        *   如果传入order_book_id list，并指定多个fields，将因为尝试构建 panel 而报错
 
     :example:
 
@@ -490,19 +594,6 @@ def get_securities_margin(
         #2016-08-04    3.833260e+11    4.776380e+11
         #2016-08-05    3.812751e+11    4.766928e+11
 
-    *   获取上证个股以及整个上证市场融资融券情况:
-
-    ..  code-block:: python3
-        :linenos:
-
-        logger.info(get_securities_margin(['XSHG', '601988.XSHG', '510050.XSHG'], count=5))
-        #[Out]
-        #<class 'pandas.core.panel.Panel'>
-        #Dimensions: 8 (items) x 5 (major_axis) x 3 (minor_axis)
-        #Items axis: margin_balance to total_balance
-        #Major_axis axis: 2016-08-01 00:00:00 to 2016-08-05 00:00:00
-        #Minor_axis axis: XSHG to 510050.XSHG
-
     *   获取50ETF融资偿还额情况
 
     ..  code-block:: python3
@@ -524,9 +615,9 @@ def get_securities_margin(
         start_dt = dt
     else:
         start_dt = data_proxy.get_previous_trading_date(dt, count - 1)
-    
+
     overall_code = {"XSHG", "XSHE", "sh", "sz"}
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         if order_book_ids not in overall_code:
             order_book_ids = assure_order_book_id(order_book_ids)
     else:
@@ -537,20 +628,42 @@ def get_securities_margin(
     return rqdatac.get_securities_margin(order_book_ids, start_dt, dt, fields=fields, expect_df=expect_df)
 
 
+@overload
+def get_shares(
+    order_book_ids: str, count: int = 1, fields: Literal[None] = None, expect_df: Literal[False] = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
+@overload
+def get_shares(
+    order_book_ids: str, count: int = 1, fields: str = cast(str, ...), expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+@overload
+def get_shares(
+    order_book_ids: Union[str, List[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, *, expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+@overload
+def get_shares(
+    order_book_ids: Union[str, List[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
 @export_as_api
+@require_explicit_expect_df
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_SHARE_FIELDS, ignore_none=True))
 def get_shares(
-        order_book_ids,  # type: Union[str, List[str]]
-        count=1,  # type: Optional[int]
-        fields=None,  # type: Optional[str]
-        expect_df=False  # type: Optional[bool]
-):  # type: (...) -> Union[pd.DataFrame, pd.Series]
+    order_book_ids: Union[str, List[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
     """
     :param order_book_ids: 可输入 order_book_id, order_book_id list, symbol, symbol list
     :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
     :param fields: 期望返回的字段，默认为所有字段。见下方列表
-    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+    :param expect_df: 是否始终返回 MultiIndex DataFrame。该参数需显式传入；未显式传入时暂按历史默认值处理并给出告警，2026-12-31 之后发布的版本中将改为必填
 
     =========================   ===================================================
     fields                      字段名
@@ -587,7 +700,7 @@ def get_shares(
     else:
         start_dt = env.data_proxy.get_previous_trading_date(dt, count - 1)
 
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         order_book_ids = assure_order_book_id(order_book_ids)
     else:
         order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
@@ -595,22 +708,44 @@ def get_shares(
     return rqdatac.get_shares(order_book_ids, start_dt, dt, fields=fields, expect_df=expect_df)
 
 
+@overload
+def get_turnover_rate(
+    order_book_ids: str, count: int = 1, fields: Literal[None] = None, expect_df: Literal[False] = False
+) -> Union[pd.Series, pd.DataFrame]:
+    ...
+
+@overload
+def get_turnover_rate(
+    order_book_ids: str, count: int = 1, fields: str = cast(str, ...), expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+@overload
+def get_turnover_rate(
+    order_book_ids: Union[str, List[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, *, expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+@overload
+def get_turnover_rate(
+    order_book_ids: Union[str, List[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.Series, pd.DataFrame]:
+    ...
+
 @export_as_api
+@require_explicit_expect_df
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_TURNOVER_FIELDS, ignore_none=True))
 def get_turnover_rate(
-        order_book_ids,  # type: Union[str, List[str]]
-        count=1,  # type: Optional[int]
-        fields=None,  # type: Optional[set]
-        expect_df=False  # type: Optional[bool]
-):  # type: (...) -> Union[pd.Series, pd.DataFrame, pd.Panel]
+    order_book_ids: Union[str, List[str]], count: int = 1, fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.Series, pd.DataFrame]:
     """
     获取截止T-1交易日的换手率数据
 
     :param order_book_ids: 可输入 order_book_id, order_book_id list, symbol, symbol list
     :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
     :param fields: 期望返回的字段，默认为所有字段。见下方列表
-    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+    :param expect_df: 是否始终返回 MultiIndex DataFrame。该参数需显式传入；未显式传入时暂按历史默认值处理并给出告警，2026-12-31 之后发布的版本中将改为必填
 
     =========================   ===================================================
     fields                      字段名
@@ -629,7 +764,7 @@ def get_turnover_rate(
 
         *   如果只传入一个order_book_id，多个fields，返回 `pandas.DataFrame`
         *   如果传入order_book_id list，并指定单个field，函数会返回一个 `pandas.DataFrame`
-        *   如果传入order_book_id list，并指定多个fields，函数会返回一个 `pandas.Panel`
+        *   如果传入order_book_id list，并指定多个fields，将因为尝试构建 panel 而报错
 
     :example:
 
@@ -662,7 +797,7 @@ def get_turnover_rate(
     else:
         start_dt = data_proxy.get_previous_trading_date(dt, count - 1)
 
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         order_book_ids = assure_order_book_id(order_book_ids)
     else:
         order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
@@ -670,19 +805,36 @@ def get_turnover_rate(
     return rqdatac.get_turnover_rate(order_book_ids, start_dt, dt, fields=fields, expect_df=expect_df)
 
 
+@overload
+def get_price_change_rate(
+    order_book_ids: str, count: int = 1, expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+@overload
+def get_price_change_rate(
+    order_book_ids: Union[str, List[str]], count: int = 1, *, expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+@overload
+def get_price_change_rate(
+    order_book_ids: Union[str, List[str]], count: int = 1, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
 @export_as_api
+@require_explicit_expect_df
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0))
 def get_price_change_rate(
-        order_book_ids,  # type: Union[str, List[str]]
-        count=1,  # type: Optional[int]
-        expect_df=False  # type: Optional[bool]
-):  # type: (...) -> Union[pd.DataFrame, pd.Series]
+    order_book_ids: Union[str, List[str]], count: int = 1, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
     """
     获取股票/指数截止T-1日的日涨幅
 
     :param order_book_ids: 可输入 order_book_id, order_book_id list, symbol, symbol list
     :param count: 回溯获取的数据个数。默认为当前能够获取到的最近的数据
-    :param expect_df: 是否期望始终返回 DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+    :param expect_df: 是否始终返回 MultiIndex DataFrame。该参数需显式传入；未显式传入时暂按历史默认值处理并给出告警，2026-12-31 之后发布的版本中将改为必填
 
     当 expect_df 为 False 时，返回值的类型如下：
 
@@ -709,7 +861,7 @@ def get_price_change_rate(
     env = Environment.get_instance()
     data_proxy = env.data_proxy
 
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         order_book_ids = assure_order_book_id(order_book_ids)
     else:
         order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
@@ -724,15 +876,48 @@ def get_price_change_rate(
     return rqdatac.get_price_change_rate(order_book_ids, start_date, end_date, expect_df=expect_df)
 
 
+@overload
+def get_factor(
+    order_book_ids: str, factors: str, count: int = 1,
+    universe: Optional[Union[str, List[str]]] = None, expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+
+@overload
+def get_factor(
+    order_book_ids: Union[str, List[str]], factors: Union[str, List[str]], count: int = 1,
+    universe: Optional[Union[str, List[str]]] = None, *, expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_factor(
+    order_book_ids: Union[str, List[str]], factors: Union[str, List[str]], count: int,
+    universe: Optional[Union[str, List[str]]], expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_factor(
+    order_book_ids: Union[str, List[str]], factors: Union[str, List[str]], count: int = 1,
+    universe: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
+
 @export_as_api
+@require_explicit_expect_df
 @apply_rules(verify_that('universe').are_valid_instruments(ignore_none=True))
 def get_factor(
-        order_book_ids,  # type: Union[str, List[str]]
-        factors,  # type: Union[str, List[str]]
-        count=1,  # type: Optional[int]
-        universe=None,  # type: Optional[Union[str, List[Union]]]
-        expect_df=False  # type: Optional[bool]
-):  # type: (...) -> pd.DataFrame
+        order_book_ids: Union[str, List[str]],
+        factors: Union[str, List[str]],
+        count: int = 1,
+        universe: Optional[Union[str, List[str]]] = None,
+        expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
     """
     获取股票截止T-1日的因子数据
 
@@ -740,7 +925,7 @@ def get_factor(
     :param factors: 因子名称，可查询 rqdatac.get_all_factor_names() 得到所有有效因子字段
     :param count: 获取多少个交易日的数据
     :param universe: 当获取横截面因子时，universe指定了因子计算时的股票池
-    :param expect_df: 默认为False。当设置为True时，总是返回 multi-index DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+    :param expect_df: 是否始终返回 MultiIndex DataFrame。该参数需显式传入；未显式传入时暂按历史默认值处理并给出告警，2026-12-31 之后发布的版本中将改为必填
     """
     env = Environment.get_instance()
     data_proxy = env.data_proxy
@@ -751,7 +936,7 @@ def get_factor(
     else:
         start_date = data_proxy.get_previous_trading_date(end_date, count - 1)
 
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         order_book_ids = assure_order_book_id(order_book_ids)
     else:
         order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
@@ -762,8 +947,7 @@ def get_factor(
 
 
 @export_as_api
-def get_industry(industry, source='citics'):
-    # type: (str, Optional[str]) -> List[str]
+def get_industry(industry: str, source: str = 'citics') -> List[str]:
     """
     通过传入行业名称、行业指数代码或者行业代号，拿到 T 日指定行业的股票列表
 
@@ -777,8 +961,7 @@ def get_industry(industry, source='citics'):
 
 
 @export_as_api
-def get_instrument_industry(order_book_ids, source='citics', level=1):
-    # type: (Union[str, List[str]], Optional[str], Optional[int]) -> pd.DataFrame
+def get_instrument_industry(order_book_ids: Union[str, List[str]], source: str = 'citics', level: int = 1) -> pd.DataFrame:
     """
     获取T日时股票行业分类
 
@@ -786,7 +969,7 @@ def get_instrument_industry(order_book_ids, source='citics', level=1):
     :param source: 默认为中信(citics)，可选聚源(gildata)
     :param level: 默认为1，可选 0 1 2 3，0表示返回所有级别
     """
-    if isinstance(order_book_ids, six.string_types):
+    if isinstance(order_book_ids, str):
         order_book_ids = assure_order_book_id(order_book_ids)
     else:
         order_book_ids = [assure_order_book_id(i) for i in order_book_ids]
@@ -794,23 +977,82 @@ def get_instrument_industry(order_book_ids, source='citics', level=1):
     return rqdatac.get_instrument_industry(order_book_ids, source, level, env.calendar_dt)
 
 
+# 聚合代码优先于普通 str 分支；类型系统无法表达排除这三个字面量的 str。
+@overload
+def get_stock_connect(  # type: ignore[overload-overlap]
+    order_book_ids: Literal["all_connect", "shanghai_connect", "shenzhen_connect"], count: int = 1,
+    fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int = 1,
+    fields: Literal[None] = None, expect_df: bool = False
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: str, count: int = 1, *, fields: str, expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: str, count: int, fields: str, expect_df: Literal[False] = False
+) -> pd.Series:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int = 1,
+    fields: Optional[Union[str, List[str]]] = None, *, expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int,
+    fields: Optional[Union[str, List[str]]], expect_df: Literal[True]
+) -> pd.DataFrame:
+    ...
+
+
+@overload
+def get_stock_connect(
+    order_book_ids: Union[str, List[str]], count: int = 1,
+    fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
+    ...
+
+
 @export_as_api
+@require_explicit_expect_df
 @apply_rules(verify_that('count').is_instance_of(int).is_greater_than(0),
              verify_that('fields').are_valid_fields(VALID_STOCK_CONNECT_FIELDS, ignore_none=True))
-def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
-    # type: (Union[str, List[str]], Optional[int], Optional[str], Optional[bool]) -> pd.DataFrame
+def get_stock_connect(
+        order_book_ids: Union[str, List[str]], count: int = 1,
+        fields: Optional[Union[str, List[str]]] = None, expect_df: bool = False
+) -> Union[pd.DataFrame, pd.Series]:
     """
     获取截止T-1日A股股票在香港上市交易的持股情况
 
     :param order_book_ids: 合约代码，可传入order_book_id, order_book_id list，这里输入的是A股编码
     :param count: 向前获取几个交易日
     :param fields: 持股量（shares_holding），持股比例（holding_ratio），默认为所有字段
-    :param expect_df: 默认为False。当设置为True时，总是返回 multi-index DataFrame。pandas 0.25.0 以上该参数应设为 True，以避免因试图构建 Panel 产生异常
+    :param expect_df: 是否始终返回 MultiIndex DataFrame。该参数需显式传入；未显式传入时暂按历史默认值处理并给出告警，2026-12-31 之后发布的版本中将改为必填
 
     当 expect_df 为 False 时，返回值的类型如下：
-        *  多个order_book_id，多个fields的时候返回pandas Panel
         *  单个order_book_id，多个fields的时候返回pandas DataFrame
         *  单个order_book_id，单个field返回pandas Series
+        *  all_connect、shanghai_connect、shenzhen_connect 指定单个field时返回pandas DataFrame
+        *  如果传入order_book_id list，并指定多个fields，将因为尝试构建 panel 而报错
 
     :return:
     """
@@ -830,8 +1072,10 @@ def get_stock_connect(order_book_ids, count=1, fields=None, expect_df=False):
 @apply_rules(verify_that('order_book_id').is_valid_order_book_id(),
              verify_that('quarter').is_valid_quarter(),
              verify_that('fields').are_valid_fields(VALID_CURRENT_PERFORMANCE_FIELDS, ignore_none=True))
-def current_performance(order_book_id, info_date=None, quarter=None, interval='1q', fields=None):
-    # type: (str, Optional[str], Optional[str], Optional[str], Optional[str, List[str]]) -> pd.DataFrame
+def current_performance(
+        order_book_id: str, info_date: Optional[str] = None, quarter: Optional[str] = None,
+        interval: str = '1q', fields: Optional[Union[str, List[str]]] = None
+) -> pd.DataFrame:
     """
     默认返回给定的 order_book_id 当前最近一期的快报数据
 
@@ -850,8 +1094,7 @@ def current_performance(order_book_id, info_date=None, quarter=None, interval='1
 
 @export_as_api
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
-def get_dominant_future(underlying_symbol, rule=0):
-    # type: (str, Optional[int]) -> Optional[str]
+def get_dominant_future(underlying_symbol: str, rule: int = 0) -> Optional[str]:
     """
     获取某一期货品种策略当前日期的主力合约代码。 合约首次上市时，以当日收盘同品种持仓量最大者作为从第二个交易日开始的主力合约。当同品种其他合约持仓量在收盘后超过当前主力合约1.1倍时，从第二个交易日开始进行主力合约的切换。日内不会进行主力合约的切换。
 
@@ -874,7 +1117,7 @@ def get_dominant_future(underlying_symbol, rule=0):
     if isinstance(ret, pd.Series) and ret.size == 1:
         return ret.item()
     else:
-        user_log.warn(_("\'{0}\' future does not exist").format(underlying_symbol))
+        user_log.warning(_("\'{0}\' future does not exist").format(underlying_symbol))
         return None
 
 
@@ -885,8 +1128,7 @@ class econ:
 
 @apply_rules(verify_that('reserve_type').is_in(['all', 'major', 'other']),
              verify_that('n').is_instance_of(int).is_greater_than(0))
-def _econ_get_reserve_ratio(reserve_type='all', n=1):
-    # type: (str, int) -> Optional[pd.DataFrame]
+def _econ_get_reserve_ratio(reserve_type: str = 'all', n: int = 1) -> Optional[pd.DataFrame]:
     """
     获取截止T日的存款准备金率
 
@@ -906,8 +1148,7 @@ def _econ_get_reserve_ratio(reserve_type='all', n=1):
 
 
 @apply_rules(verify_that('n').is_instance_of(int).is_greater_than(0))
-def _econ_get_money_supply(n=1):
-    # type: (int) -> Optional[pd.DataFrame]
+def _econ_get_money_supply(n: int = 1) -> Optional[pd.DataFrame]:
     """
     获取截止T日的货币供应量指标
 
@@ -936,8 +1177,7 @@ class futures:
 
 
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
-def _futures_get_dominant(underlying_symbol, rule=0):
-    # type: (str, Optional[int]) -> Optional[str]
+def _futures_get_dominant(underlying_symbol: str, rule: int = 0) -> Optional[str]:
     """
     获取某一期货品种策略当前日期的主力合约代码。 合约首次上市时，以当日收盘同品种持仓量最大者作为从第二个交易日开始的主力合约。当同品种其他合约持仓量在收盘后超过当前主力合约1.1倍时，从第二个交易日开始进行主力合约的切换。日内不会进行主力合约的切换。
 
@@ -965,8 +1205,7 @@ def _futures_get_dominant(underlying_symbol, rule=0):
 
 @apply_rules(verify_that('which').is_instance_of(str),
              verify_that('rank_by').is_in(['short', 'long']))
-def _futures_get_member_rank(which, count=1, rank_by='short'):
-    # type: (str, int, str) -> pd.DataFrame
+def _futures_get_member_rank(which: str, count: int = 1, rank_by: str = 'short') -> pd.DataFrame:
     """
     获取截止T-1日的期货或品种的会员排名情况
 
@@ -985,8 +1224,7 @@ def _futures_get_member_rank(which, count=1, rank_by='short'):
     return rqdatac.futures.get_member_rank(which, start_date=start_date, end_date=end_date, rank_by=rank_by)
 
 
-def _futures_get_warehouse_stocks(underlying_symbols, count=1):
-    # type: (Union[str, List[str]], int) -> pd.DataFrame
+def _futures_get_warehouse_stocks(underlying_symbols: Union[str, List[str]], count: int = 1) -> pd.DataFrame:
     """
     获取截止T-1日的期货仓单数据
 
@@ -1008,7 +1246,9 @@ VALID_ADJUST_TYPES = ['none', 'pre', 'post']
 VALID_ADJUST_METHODS = ['prev_close_spread', 'open_spread', 'prev_close_ratio', 'open_ratio']
 
 
-def _get_ex_factor(underlying_symbols, adjust_type, adjust_method, adjust_date):
+def _get_ex_factor(
+    underlying_symbols: Union[str, List[str]], adjust_type: str, adjust_method: str, adjust_date: pd.Timestamp
+) -> pd.Series:
     df = _get_all_future_factors_df().loc[underlying_symbols].reset_index()
     need_cols = ["underlying_symbol", "ex_date", "ex_factor"]
     factor = df[df["ex_date"] <= adjust_date].rename(columns={adjust_method: "ex_factor"})[need_cols]
@@ -1037,9 +1277,14 @@ DOMINANT_PRICE_ADJUST_FIELDS = [
 
 
 def _futures_get_dominant_price(
-        underlying_symbols, start_date=None, end_date=None, frequency="1d", fields=None, adjust_type="pre",
-        adjust_method="prev_close_spread"
-):
+        underlying_symbols: Union[str, List[str]],
+        start_date: Optional[Union[datetime.date, datetime.datetime, str]] = None,
+        end_date: Optional[Union[datetime.date, datetime.datetime, str]] = None,
+        frequency: str = "1d",
+        fields: Optional[Iterable[str]] = None,
+        adjust_type: str = "pre",
+        adjust_method: str = "prev_close_spread"
+) -> pd.DataFrame:
     """ 获取主力合约行情数据
 
     :param underlying_symbols: 期货合约品种，可传入 underlying_symbol, underlying_symbol list
@@ -1139,163 +1384,10 @@ futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
 
 
 @export_as_api
-@apply_rules(verify_that('entry_date').is_valid_date(ignore_none=True),
-             verify_that('interval').is_valid_interval(),
-             verify_that('report_quarter').is_instance_of(bool))
-def get_fundamentals(query, entry_date=None, interval='1d', report_quarter=False, expect_df=False, **kwargs):
-    user_log.warn('get_fundamentals is deprecated, use get_pit_financials_ex instead')
-
-    env = Environment.get_instance()
-    dt = env.calendar_dt.date()
-    if entry_date is None and 'date' in kwargs:
-        entry_date = kwargs.pop('date')
-    if kwargs:
-        raise RQInvalidArgument('unknown arguments: {}'.format(kwargs))
-
-    latest_query_day = dt - datetime.timedelta(days=1)
-
-    if entry_date:
-        entry_date = to_date(entry_date)
-        if entry_date <= latest_query_day:
-            query_date = entry_date
-        else:
-            raise RQInvalidArgument(
-                _('in get_fundamentals entry_date {} is no earlier than test date {}').format(entry_date, dt))
-    else:
-        query_date = latest_query_day
-
-    result = rqdatac.get_fundamentals(query, query_date, interval, report_quarter=report_quarter, expect_df=expect_df)
-    if result is None:
-        return pd.DataFrame()
-
-    if expect_df:
-        return result
-
-    if len(result.major_axis) == 1:
-        frame = result.major_xs(result.major_axis[0])
-        # research 与回测返回的Frame维度相反
-        return frame.T
-    return result
-
-
-@export_as_api
-@apply_rules(verify_that('interval').is_valid_interval())
-def get_financials(query, quarter=None, interval='4q', expect_df=False):
-    user_log.warn('get_financials is deprecated, use get_pit_finacials_ex instead')
-
-    if quarter is None:
-        valid = True
-    else:
-        valid = isinstance(quarter, six.string_types) and quarter[-2] == 'q'
-        if valid:
-            try:
-                valid = 1990 <= int(quarter[:-2]) <= 2050 and 1 <= int(quarter[-1]) <= 4
-            except ValueError:
-                valid = False
-    if not valid:
-        raise RQInvalidArgument(
-            _(u"function {}: invalid {} argument, quarter should be in form of '2012q3', "
-              u"got {} (type: {})").format(
-                'get_financials', 'quarter', quarter, type(quarter)
-            ))
-    env = Environment.get_instance()
-    dt = env.calendar_dt.date() - datetime.timedelta(days=1)  # Take yesterday's data as default
-    year = dt.year
-    mon = dt.month
-    day = dt.day
-    int_date = year * 10000 + mon * 100 + day
-    q = (mon - 4) // 3 + 1
-    y = year
-    if q <= 0:
-        y -= 1
-        q = 4
-    default_quarter = str(y) + 'q' + str(q)
-    if quarter is None or quarter > default_quarter:
-        quarter = default_quarter
-
-    include_date = False
-    for d in query.column_descriptions:
-        if d['name'] == 'announce_date':
-            include_date = True
-    if not include_date:
-        query = query.add_column(rqdatac.fundamentals.announce_date)
-
-    result = rqdatac.get_financials(query, quarter, interval, expect_df=expect_df)
-    if result is None:
-        return pd.DataFrame()
-    if isinstance(result, pd.Series):
-        return result
-    elif isinstance(result, pd.DataFrame):
-        result = result[(result['announce_date'] <= int_date) | pd.isnull(result['announce_date'])]
-        if not include_date:
-            del result['announce_date']
-    else:
-        d = dict()
-        for order_book_id in result.minor_axis:
-            df = result.minor_xs(order_book_id)
-            df = df[(df.announce_date < int_date) | (pd.isnull(df.announce_date))]
-            d[order_book_id] = df
-        pl = pd.Panel.from_dict(d, orient='minor')
-        if not include_date:
-            pl.drop('announce_date', axis=0, inplace=True)
-            if len(pl.items) == 1:
-                pl = pl[pl.items[0]]
-        return pl
-
-    return result
-
-
-@export_as_api
-@apply_rules(verify_that('if_adjusted').is_in([0, 1, '0', '1', 'all', 'ignore'], ignore_none=True))
-def get_pit_financials(fields, quarter=None, interval=None, order_book_ids=None, if_adjusted='all'):
-    if quarter is None:
-        valid = True
-    else:
-        valid = isinstance(quarter, six.string_types) and quarter[-2] == 'q'
-        if valid:
-            try:
-                valid = 1990 <= int(quarter[:-2]) <= 2050 and 1 <= int(quarter[-1]) <= 4
-            except ValueError:
-                valid = False
-    if not valid:
-        raise RQInvalidArgument(
-            _(u"function {}: invalid {} argument, quarter should be in form of '2012q3', "
-              u"got {} (type: {})").format(
-                'get_pit_financials', 'quarter', quarter, type(quarter)
-            ))
-
-    env = Environment.get_instance()
-    dt = env.calendar_dt.date()
-    year = dt.year
-    mon = dt.month
-    day = dt.day
-    int_date = year * 10000 + mon * 100 + day
-    q = (mon - 4) // 3 + 1
-    y = year
-    if q <= 0:
-        y -= 1
-        q = 4
-    default_quarter = str(y) + 'q' + str(q)
-    if quarter is None or quarter > default_quarter:
-        quarter = default_quarter
-    result = rqdatac.get_pit_financials(fields, quarter, interval, order_book_ids, if_adjusted,
-                                        max_info_date=int_date, market='cn')
-    if result is None:
-        return pd.DataFrame()
-
-    if if_adjusted == 'ignore':
-        result = result.reset_index().sort_values('info_date')
-        result = result.groupby(['order_book_id', 'end_date'], as_index=False).fillna(method='ffill')
-        result = result.drop(['info_date', 'if_adjusted'], axis=1)
-        result = result.drop_duplicates(['order_book_id', 'end_date'], keep='last')
-        result = result.set_index(['order_book_id', 'end_date']).sort_index()
-    return result
-
-
-@export_as_api
 @apply_rules(verify_that('statements').is_in(['all', 'latest'], ignore_none=True))
-def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
-    # type: (Union[str, List[str]], Union[str, List[str]], int, str) -> Optional[pd.DataFrame]
+def get_pit_financials_ex(
+    order_book_ids: Union[str, List[str]], fields: Union[str, List[str]], count: int, statements: str = 'latest'
+) -> Optional[pd.DataFrame]:
     """
     以给定一个报告期回溯的方式获取季度基础财务数据（三大表），即利润表（income_statement），资产负债表（balance_sheet），现金流量表（cash_flow_statement)。
 
@@ -1311,7 +1403,7 @@ def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
     env = Environment.get_instance()
 
     if count < 0:
-        user_log.warn("function get_pit_financials_ex : count must >= 0")
+        user_log.warning("function get_pit_financials_ex : count must >= 0")
         return None
 
     # 退市和未退市池
@@ -1378,6 +1470,6 @@ def get_pit_financials_ex(order_book_ids, fields, count, statements='latest'):
 
 @export_as_api
 @apply_rules(verify_that('entities').are_valid_query_entities())
-def query(*entities):
+def query(*entities: Any) -> Any:
     return rqdatac.query(*entities)
 

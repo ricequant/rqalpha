@@ -394,12 +394,12 @@ TushareKDataMod 的作用是使用 tushare 提供的k线数据替换 data_bundle
                 return super(TushareKDataSource, self).get_bar(instrument, dt, frequency)
             else:
                 # 注意传入的 fields 参数可能会有不同的数据类型
-                if isinstance(fields, six.string_types):
+                if isinstance(fields, str):
                     fields = [fields]
                 fields = [field for field in fields if field in bar_data.columns]
 
                 # 这样转换格式会导致返回值的格式与默认 DataSource 中该方法的返回值格式略有不同。欢迎有兴趣的开发者提交代码进行修改。
-                return bar_data[fields].as_matrix()
+                return bar_data[fields].values
 
 最后是 :code:`available_data_range` 函数
 
@@ -416,7 +416,6 @@ TushareKDataMod 的作用是使用 tushare 提供的k线数据替换 data_bundle
 
 .. code-block:: python3
 
-    import six
     import tushare as ts
     from datetime import date
     from dateutil.relativedelta import relativedelta
@@ -464,11 +463,11 @@ TushareKDataMod 的作用是使用 tushare 提供的k线数据替换 data_bundle
             if bar_data is None or bar_data.empty:
                 return super(TushareKDataSource, self).get_bar(instrument, dt, frequency)
             else:
-                if isinstance(fields, six.string_types):
+                if isinstance(fields, str):
                     fields = [fields]
                 fields = [field for field in fields if field in bar_data.columns]
 
-                return bar_data[fields].as_matrix()
+                return bar_data[fields].values
 
         def available_data_range(self, frequency):
             return date(2005, 1, 1), date.today() - relativedelta(days=1)
