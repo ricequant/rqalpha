@@ -2,6 +2,21 @@
 CHANGELOG
 ==================
 
+6.4.2
+==================
+
+**[新增功能]**
+
+- 支持 pandas 3.0: 依赖范围放宽至 ``<4.0.0``，适配索引访问、字符串类型及已移除的配置项
+
+**[改善内容]**
+
+- 新增 ``**expect_df**`` 显式传参告警：覆盖范围为 ``get_price``, ``get_securities_margin``, ``get_shares``, ``get_turnover_rate``, ``get_price_change_rate``, ``get_factor``, ``get_stock_connect``
+
+**[移除内容]**
+
+- 移除三个旧接口: 已移除在 rqdata 中不再支持的 ``get_fundamentals``, ``get_financials``, ``get_pit_financials``
+
 6.4.1
 ==================
 
