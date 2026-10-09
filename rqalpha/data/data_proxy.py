@@ -27,7 +27,7 @@ from rqalpha.data.trading_dates_mixin import TradingDatesMixin
 from rqalpha.model.bar import BarObject, NANDict, PartialBarObject
 from rqalpha.model.tick import TickObject
 from rqalpha.model.instrument import Instrument
-from rqalpha.model.order import ALGO_ORDER_STYLES
+from rqalpha.model.order import ALGO_ORDER_STYLES, VWAPOrder, TWAPOrder
 from rqalpha.utils.functools import lru_cache
 from rqalpha.utils.datetime_func import convert_int_to_datetime
 from rqalpha.utils.typing import DateLike, StrOrIter
@@ -315,8 +315,7 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         # type: (StrOrIter) -> bool
         return any((instrument.trade_at_night for instrument in self.instruments(sym_or_ids)))
 
-    def get_algo_bar(self, id_or_ins, order_style, dt):
-        # type: (Union[str, Instrument], Union[*ALGO_ORDER_STYLES], datetime) -> Tuple[float, int]
+    def get_algo_bar(self, id_or_ins: Union[str, Instrument], order_style: Union[VWAPOrder, TWAPOrder], dt: datetime) -> Tuple[float, int]:
         if not isinstance(order_style, ALGO_ORDER_STYLES):
             raise RuntimeError("get_algo_bar only support VWAPOrder and TWAPOrder")
         if not isinstance(id_or_ins, Instrument):
