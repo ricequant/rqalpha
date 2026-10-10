@@ -20,6 +20,7 @@ import io
 import sys
 from pprint import pformat
 from itertools import chain
+from typing import Tuple
 
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import logbook
@@ -33,6 +34,7 @@ from rqalpha.data.base_data_source import BaseDataSource
 from rqalpha.data.data_proxy import DataProxy
 from rqalpha.environment import Environment
 from rqalpha.core.events import EVENT, Event
+from rqalpha.core.hooks import HookRegistry, HookSpec, Waterfall
 from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.interface import Persistable
 from rqalpha.mod import ModHandler
@@ -47,12 +49,21 @@ from rqalpha.utils.persisit_helper import PersistHelper
 jsonpickle_numpy.register_handlers()
 
 
-def _adjust_start_date(config, data_proxy):
-    origin_start_date, origin_end_date = config.base.start_date, config.base.end_date
-    start, end = data_proxy.available_data_range(config.base.frequency)
+DateRange = Tuple[datetime.date, datetime.date]
+AVAILABLE_DATA_RANGE: "HookSpec[Waterfall[[str], DateRange]]" = HookSpec("available_data_range", Waterfall)
 
-    config.base.start_date = max(start, config.base.start_date)
-    config.base.end_date = min(end, config.base.end_date)
+
+def _adjust_start_date(config, data_proxy, hook_registry: HookRegistry):
+    def _restrict_range(current: DateRange, _: str) -> DateRange:
+        start, end = current
+        return max(start, config.base.start_date), min(end, config.base.end_date)
+    
+    hook = hook_registry.hook(AVAILABLE_DATA_RANGE)
+    hook.register(_restrict_range)
+    frequency = config.base.frequency
+    origin_start_date, origin_end_date = config.base.start_date, config.base.end_date
+    config.base.start_date, config.base.end_date = hook.apply(data_proxy.available_data_range(frequency), frequency)
+
     config.base.trading_calendar = data_proxy.get_trading_dates(config.base.start_date, config.base.end_date)
     if len(config.base.trading_calendar) == 0:
         raise patch_user_exc(
@@ -154,7 +165,7 @@ def run(config, source_code=None, user_funcs=None):
             env.set_price_board(BarDictPriceBoard())
         env.set_data_proxy(DataProxy(env.data_source, env.price_board, market=market))
 
-        _adjust_start_date(env.config, env.data_proxy)
+        _adjust_start_date(env.config, env.data_proxy, env.hook_registry)
 
         ctx = ExecutionContext(const.EXECUTION_PHASE.GLOBAL)
         ctx._push()
@@ -318,6 +329,9 @@ def cleanup_resources(env):
         for property_name in ['_id_instrument_map', '_sym_instrument_map', '_grouped_instruments']:
             if hasattr(env.data_source, property_name):
                 getattr(env.data_source, property_name).clear()
+
+    # 4. 清理 Hook
+    env.hook_registry.clear()
 
 
 def set_loggers(config):

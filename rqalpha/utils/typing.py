@@ -16,7 +16,7 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from typing import Union, Iterable, Callable, TypeVar
-from typing_extensions import ParamSpec  # Python 3.8/3.9 的 typing 里没有 ParamSpec
+from typing_extensions import ParamSpec, Concatenate  # Python 3.8/3.9 的 typing 里没有 ParamSpec
 from datetime import date, datetime
 
 import pandas
