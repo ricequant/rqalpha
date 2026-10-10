@@ -34,6 +34,8 @@ from rqalpha.utils.typing import DateLike, StrOrIter
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.interface import AbstractDataSource, AbstractPriceBoard, ExchangeRate
 from rqalpha.core.execution_context import ExecutionContext
+from rqalpha.core.hooks import HOOK
+from rqalpha.environment import Environment
 from rqalpha.utils.typing import DateLike
 from rqalpha.utils.exception import InstrumentNotFound
 from rqalpha.data.base_data_source.storages import FuturesTradingParameters
@@ -270,7 +272,8 @@ class DataProxy(TradingDatesMixin, InstrumentsMixin):
         return self._data_source.current_snapshot(instrument, frequency, dt)
 
     def available_data_range(self, frequency):
-        return self._data_source.available_data_range(frequency)
+        data_range = self._data_source.available_data_range(frequency)
+        return Environment.get_instance().hooks.apply(HOOK.DATA_AVAILABLE_RANGE, data_range, frequency=frequency)
 
     def get_futures_trading_parameters(self, order_book_id: str, dt: datetime.date) -> FuturesTradingParameters:
         instrument = self.instruments(order_book_id)

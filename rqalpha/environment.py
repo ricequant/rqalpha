@@ -24,6 +24,7 @@ from typing_extensions import deprecated
 
 import rqalpha
 from rqalpha.core.events import EventBus, Event, EVENT
+from rqalpha.core.hooks import HookDispatcher
 from rqalpha.const import INSTRUMENT_TYPE, DAYS_CNT, MARKET
 from rqalpha.utils.logger import system_log, user_log, user_system_log
 from rqalpha.core.global_var import GlobalVars
@@ -66,6 +67,7 @@ class Environment(object):
         self.user_log = user_log
         self.user_system_log = user_system_log
         self.event_bus = EventBus()
+        self.hooks = HookDispatcher()
         self.calendar_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
         self.trading_dt: datetime = datetime.combine(config.base.start_date, datetime.min.time())
 
