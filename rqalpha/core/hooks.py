@@ -8,12 +8,10 @@
         return value + delta
 
     hook = env.hook_registry.hook(ADJUST)
-    dispose = hook.register(add)
+    hook.register(add)
     result = hook.apply(10, 2)  # 12
-    dispose()
-
+    
 类型注解供静态检查器验证签名，不进行运行时签名检查。
-当前派发直接遍历回调列表，注销与清空应在派发之外进行。
 """
 
 from dataclasses import dataclass
@@ -125,8 +123,14 @@ class Waterfall(Generic[P, T], Hook[Callable[Concatenate[T, P], T]]):
 
 # more hook types in the future:
 #   FirstResult: (*args) -> Optional[R]，返回首个结果
+#       - 事前风控
+#       - Portfolio 工厂的扩展
+#       - 汇率等数据的注入
 #   Wrapper: func -> func，动态注册装饰器
-
+#   Dispatch: 替代现有的 instype_dispatch，实现 Mod 基于品种扩展执行逻辑
+#   Collect：收集回调的结果
+#       - Mod 贡献 RunInfo 中提供的信息
+#       - Mod 贡献回测结果
 
 H = TypeVar('H', bound=Hook)
 
