@@ -107,6 +107,72 @@ Mod开发环境搭建
 
 我们第一个 Mod 就写好了，接下来我们需要写一个 :code:`setup.py` 以便我们以PyPI的形式发布以及安装。
 
+通过 Hook 调整 API 结果
+------------------------
+
+每次运行都会创建独立的 :code:`env.hooks`，Mod 可以通过它向已有扩展点注册回调。
+数据代理的 :code:`available_data_range(frequency)` 会先查询数据源，再调用
+:code:`HOOK.DATA_AVAILABLE_RANGE`，将处理后的区间用于回测日期调整。
+DataProxy 在调用时通过 :code:`Environment.get_instance().hooks` 获取当前运行的调度器，
+因此调用此 API 前需要先创建 Environment。
+直接调用数据源的同名方法仍然返回原始区间。
+
+下面的 Mod 将可用区间与配置中的日期范围取交集，配置日期使用 :code:`YYYY-MM-DD` 格式：
+
+.. code-block:: python3
+
+    from datetime import date
+
+    from rqalpha.core.hooks import HOOK
+    from rqalpha.interface import AbstractMod
+
+
+    class DataRangeMod(AbstractMod):
+        def start_up(self, env, mod_config):
+            self._start = date.fromisoformat(mod_config.start_date)
+            self._end = date.fromisoformat(mod_config.end_date)
+            env.hooks.register(
+                HOOK.DATA_AVAILABLE_RANGE, self._available_data_range, priority=100
+            )
+
+        def _available_data_range(self, current_range, *, frequency):
+            start, end = current_range
+            return max(start, self._start), min(end, self._end)
+
+        def tear_down(self, code, exception=None):
+            pass
+
+注册和执行约定：
+
+* :code:`priority` 默认是 100，数值越小越先执行，同优先级按注册顺序执行。
+  这是回调优先级，与 Mod 自身的启动优先级分别控制；重复注册会重复执行。
+* 每个回调接收上一个回调的结果，第一个回调接收数据源的原始区间。
+  :code:`frequency` 通过关键字参数传入。不需要调整时，应返回收到的区间。
+* DataProxy 将数据源的返回值原样传给 hook，并返回最后一个回调的结果。
+  数据源或回调返回的 :code:`None` 也照常传递；没有回调时返回数据源的原始结果。
+* 回测日期调整需要收到有效的起止日期区间。区间取交集、空区间处理及其他业务校验由具体回调负责，
+  DataProxy 仅负责调用 hook。回调抛出的异常直接向外传播，后续回调不会执行。
+* :code:`apply` 使用本次调用开始时的回调快照，执行期间新增的回调从下次调用开始生效。
+  调度器不会缓存 API 结果，重复调用 API 会重新执行回调。
+
+.. important::
+
+    在 :code:`Mod.start_up` 中完成注册。首次区间查询发生在所有 Mod 启动和 DataProxy 创建之后，
+    在 :code:`INIT_PORTFOLIO` 和 :code:`POST_SYSTEM_INIT` 之前。回调首次执行时不能依赖 Portfolio，
+    在这两个事件中注册的回调无法影响首次日期调整。
+
+接入其他 API
+^^^^^^^^^^^^^
+
+为其他 API 增加 hook 时，在方法中显式调用 :code:`env.hooks.apply(point, result, **context)`，
+并返回处理后的结果。可以像 DataProxy 一样通过 :code:`Environment.get_instance()` 获取当前环境。
+内置扩展点统一定义在 :code:`rqalpha.core.hooks.HOOK` 中，Mod 自定义扩展点可使用带命名空间的字符串，
+例如 :code:`"my_mod.adjust_result"`。仅注册回调不会自动拦截某个方法，方法本身必须调用 :code:`apply`。
+
+每个扩展点需要说明结果类型、上下文参数和调用方的要求，具体业务逻辑由回调实现。
+通用 :code:`HookDispatcher` 不限制结果类型，也会将 :code:`None` 传给后续回调。
+现有事件监听继续通过 :code:`env.event_bus` 注册和发布。
+
 PyPI方式安装Mod
 ------------------------
 

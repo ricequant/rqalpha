@@ -13,7 +13,8 @@
 #         详细的授权流程，请联系 public@ricequant.com 获取。
 
 from enum import Enum
-from collections import defaultdict
+
+from rqalpha.core.hooks import HookDispatcher
 
 
 class Event(object):
@@ -25,28 +26,24 @@ class Event(object):
         return ' '.join('{}:{}'.format(k, v) for k, v in self.__dict__.items())
 
 
-class EventBus(object):
-    def __init__(self):
-        self._listeners = defaultdict(list)
-        self._user_listeners = defaultdict(list)
-
+class EventBus(HookDispatcher):
     def add_listener(self, event_type, listener, user=False):
         """
         为指定的事件类型注册处理函数
             注意！对于 Order/Trade/Position 等可能随时会被回收的对象，不应注册其绑定方法为事件处理函数
         """
-        (self._user_listeners if user else self._listeners)[event_type].append(listener)
+        self.register((event_type, bool(user)), listener)
 
     def prepend_listener(self, event_type, listener, user=False):
-        (self._user_listeners if user else self._listeners)[event_type].insert(0, listener)
+        self._register((event_type, bool(user)), listener, prepend=True)
 
     def publish_event(self, event):
-        for listener in self._listeners[event.event_type]:
-            # 如果返回 True ，那么消息不再传递下去
+        for listener in self._iter_callbacks((event.event_type, False)):
+            # 真值仅停止内部监听器的传播。
             if listener(event):
                 break
 
-        for listener in self._user_listeners[event.event_type]:
+        for listener in self._iter_callbacks((event.event_type, True)):
             listener(event)
 
 
