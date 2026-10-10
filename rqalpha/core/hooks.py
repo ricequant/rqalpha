@@ -1,3 +1,21 @@
+"""供框架与 Mod 协作的类型化扩展点。
+
+调用方在模块级声明共享的 HookSpec，Mod 通常在 start_up 中注册回调。调用方需显式执行 apply。例如：
+
+    ADJUST: "HookSpec[Waterfall[[int], int]]" = HookSpec("my_mod.adjust", Waterfall)
+
+    def add(value: int, delta: int) -> int:
+        return value + delta
+
+    hook = env.hook_registry.hook(ADJUST)
+    dispose = hook.register(add)
+    result = hook.apply(10, 2)  # 12
+    dispose()
+
+类型注解供静态检查器验证签名，不进行运行时签名检查。
+当前派发直接遍历回调列表，注销与清空应在派发之外进行。
+"""
+
 from dataclasses import dataclass
 from typing import Any, Callable, Generic, Optional, Type, TypeVar, cast, List
 
@@ -57,6 +75,12 @@ insert_0 = lambda lst, item: lst.insert(0, item)
 
 
 class Notify(Generic[T], Hook[Callable[[T], Optional[bool]]]):
+    """兼容旧事件的两阶段通知：先内部回调，再用户回调。
+
+    内部回调返回真值只会停止内部阶段，用户阶段忽略返回值。
+    追加到当前阶段的回调可参与本次通知。
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self._user_callbacks: List[_Registration[Callable[[T], Optional[bool]]]] = []
@@ -86,6 +110,12 @@ class Notify(Generic[T], Hook[Callable[[T], Optional[bool]]]):
 
 
 class Waterfall(Generic[P, T], Hook[Callable[Concatenate[T, P], T]]):
+    """按注册顺序传递结果：callback(current, *args, **kwargs) -> T。
+
+    每个回调接收上一步的结果，额外参数原样透传；None 也作为普通结果传递。
+    回调应始终返回约定类型的值；异常直接传播，后续回调不再执行。
+    """
+
     def apply(self, initial: T, /, *args: P.args, **kwargs: P.kwargs) -> T:
         value = initial
         for reg in self._callbacks:
