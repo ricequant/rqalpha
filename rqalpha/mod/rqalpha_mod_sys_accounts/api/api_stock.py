@@ -119,7 +119,7 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style, curr
 def _order_shares(order_book_id: str, amount, style, quantity, auto_switch_order_value, zero_amount_as_exception=True):
     side, position_effect = (SIDE.BUY, POSITION_EFFECT.OPEN) if amount > 0 else (SIDE.SELL, POSITION_EFFECT.CLOSE)
     return _submit_order(order_book_id, amount, side, position_effect, style, quantity, auto_switch_order_value, zero_amount_as_exception)
-    
+
 
 def _order_value(account: Account, position: AbstractPosition, order_book_id: str, cash_amount: float, style: OrderStyle, zero_amount_as_exception=True):
     env = Environment.get_instance()
@@ -233,12 +233,12 @@ stock_order_to = cast_singledispatch(order_to).register(INST_TYPE_IN_STOCK_ACCOU
     EXECUTION_PHASE.GLOBAL
 )
 @apply_rules(
-    assure_that('id_or_ins').is_valid_order_book_id(), 
-    verify_that('amount').is_number(), 
+    assure_that('id_or_ins').is_valid_order_book_id(),
+    verify_that('amount').is_number(),
     *common_rules
 )
 def order_lots(
-    id_or_ins: Union[str, Instrument], 
+    id_or_ins: Union[str, Instrument],
     amount: int,
     price_or_style: PRICE_OR_STYLE_TYPE = None,
     price: Optional[float] = None,
@@ -404,7 +404,7 @@ def order_target_portfolio(
             continue
         delta_quantity = (account_value * target_percent / close_price) - current_quantities.get(order_book_id, 0)
         delta_quantity = round_order_quantity(env.data_proxy.instrument(order_book_id), delta_quantity, method=round)
-        
+
         # 优先生成卖单，以便计算出剩余现金，进行买单数量的计算
         if delta_quantity == 0:
             continue

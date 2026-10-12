@@ -118,17 +118,26 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style) -> U
             )
         )
 
+    submitted_orders = []
     for o in orders:
         if env.can_submit_order(o):
             env.broker.submit_order(o)
-        else:
-            orders.remove(o)
+            submitted_orders.append(o)
 
     # 向前兼容，如果创建的order_list 只包含一个订单的话，直接返回对应的订单，否则返回列表
-    if len(orders) == 1:
-        return orders[0]
+    if len(submitted_orders) == 1:
+        return submitted_orders[0]
     else:
-        return orders
+        return submitted_orders
+
+
+def _submit_order_list(order_book_id: str, amount, side, position_effect, style) -> List[Order]:
+    result = _submit_order(order_book_id, amount, side, position_effect, style)
+    if result is None:
+        return []
+    if isinstance(result, list):
+        return result
+    return [result]
 
 
 def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, target: bool) -> List[Order]:
@@ -138,6 +147,8 @@ def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, t
     if target:
         # For order_to
         quantity -= (long_position.quantity - short_position.quantity)
+    if quantity == 0:
+        return []
     orders = []
 
     if quantity > 0:
@@ -153,28 +164,30 @@ def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, t
     old_to_be_closed, today_to_be_closed = position_to_be_closed.old_quantity, position_to_be_closed.today_quantity
     if old_to_be_closed > 0:
         # 平昨仓
-        orders.append(_submit_order(order_book_id, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style))
+        orders.extend(_submit_order_list(
+            order_book_id, min(quantity, old_to_be_closed), side, POSITION_EFFECT.CLOSE, style
+        ))
         quantity -= old_to_be_closed
     if quantity <= 0:
         return orders
     if today_to_be_closed > 0:
         # 平今仓
-        orders.append(_submit_order(
+        orders.extend(_submit_order_list(
             order_book_id, min(quantity, today_to_be_closed), side, POSITION_EFFECT.CLOSE_TODAY, style
         ))
         quantity -= today_to_be_closed
     if quantity <= 0:
         return orders
     # 开仓
-    orders.append(_submit_order(order_book_id, quantity, side, POSITION_EFFECT.OPEN, style))
+    orders.extend(_submit_order_list(order_book_id, quantity, side, POSITION_EFFECT.OPEN, style))
     return orders
 
 
 def future_order(
-    id_or_ins: Union[str, Instrument], 
-    quantity: int, 
-    price_or_style: PRICE_OR_STYLE_TYPE = None, 
-    price: Optional[float] = None, 
+    id_or_ins: Union[str, Instrument],
+    quantity: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
     order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else id_or_ins
@@ -182,10 +195,10 @@ def future_order(
 
 
 def future_order_to(
-    id_or_ins: Union[str, Instrument], 
-    quantity: int, 
-    price_or_style: PRICE_OR_STYLE_TYPE = None, 
-    price: Optional[float] = None, 
+    id_or_ins: Union[str, Instrument],
+    quantity: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
     style: Optional[OrderStyle] = None
 ) -> List[Order]:
     order_book_id = id_or_ins.order_book_id if isinstance(id_or_ins, Instrument) else id_or_ins
@@ -193,21 +206,21 @@ def future_order_to(
 
 
 def future_buy_open(
-    id_or_ins: str, 
-    amount: int, 
-    price_or_style: PRICE_OR_STYLE_TYPE = None, 
-    price: Optional[float] = None, 
+    id_or_ins: str,
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
     style: Optional[OrderStyle] = None
 ) -> Union[Order, List[Order], None]:
     return _submit_order(id_or_ins, amount, SIDE.BUY, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
 def future_buy_close(
-    id_or_ins: str, 
-    amount: int, 
-    price_or_style: PRICE_OR_STYLE_TYPE = None, 
-    price: Optional[float] = None, 
-    style: Optional[OrderStyle] = None, 
+    id_or_ins: str,
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None,
     close_today: bool = False
 ) -> Union[Order, List[Order], None]:
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
@@ -215,21 +228,21 @@ def future_buy_close(
 
 
 def future_sell_open(
-    id_or_ins: str, 
-    amount: int, 
-    price_or_style: PRICE_OR_STYLE_TYPE = None, 
-    price: Optional[float] = None, 
+    id_or_ins: str,
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
     style: Optional[OrderStyle] = None
 ) -> Union[Order, List[Order], None]:
     return _submit_order(id_or_ins, amount, SIDE.SELL, POSITION_EFFECT.OPEN, cal_style(price, style, price_or_style))
 
 
 def future_sell_close(
-    id_or_ins: str, 
-    amount: int, 
-    price_or_style: PRICE_OR_STYLE_TYPE = None, 
-    price: Optional[float] = None, 
-    style: Optional[OrderStyle] = None, 
+    id_or_ins: str,
+    amount: int,
+    price_or_style: PRICE_OR_STYLE_TYPE = None,
+    price: Optional[float] = None,
+    style: Optional[OrderStyle] = None,
     close_today: bool = False
 ) -> Union[Order, List[Order], None]:
     position_effect = POSITION_EFFECT.CLOSE_TODAY if close_today else POSITION_EFFECT.CLOSE
