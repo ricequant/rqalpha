@@ -198,6 +198,7 @@ class AnalyserMod(AbstractMod):
                 )
 
             start = max(start, convert_int_to_date(dates[1]).date())  # 首日收益需要前一交易日价格，因此从基准的第二条日线开始回测
+            end = min(end, convert_int_to_date(dates[-1]).date())
 
         return start, end
 
