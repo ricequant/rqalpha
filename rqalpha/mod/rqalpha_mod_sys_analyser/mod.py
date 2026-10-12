@@ -32,6 +32,7 @@ from rqalpha.const import EXIT_CODE, DEFAULT_ACCOUNT_TYPE, INSTRUMENT_TYPE, POSI
 from rqalpha.core.events import EVENT
 from rqalpha.interface import AbstractMod, AbstractPosition
 from rqalpha.environment import Environment
+from rqalpha.main import AVAILABLE_DATA_RANGE, DateRange
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils import INST_TYPE_IN_STOCK_ACCOUNT, resample_monthly
 from rqalpha.utils.datetime_func import convert_int_to_date, convert_date_to_int
@@ -154,6 +155,7 @@ class AnalyserMod(AbstractMod):
                     mod_config.benchmark = getattr(env.config.base, "benchmark")
             if mod_config.benchmark:
                 self._benchmark = self._parse_benchmark(mod_config.benchmark)
+                env.hook_registry.hook(AVAILABLE_DATA_RANGE).register(self._restrict_available_data_range)
 
             self._plot_store = PlotStore(env)
             export_as_api(self._plot_store.plot)
@@ -165,6 +167,41 @@ class AnalyserMod(AbstractMod):
         "930644.INDX": TRADING_CALENDAR_TYPE.SOUTHBOUND,  # 港股通中国内地企业综合指数
         "866012.RI": TRADING_CALENDAR_TYPE.SOUTHBOUND,  # 港股通等权指数
     }
+
+    def _restrict_available_data_range(self, current: DateRange, _frequency: str) -> DateRange:
+        if self._benchmark is None:
+            return current
+        start, end = current
+        config = self._env.config.base
+        data_proxy = self._env.data_proxy
+        query_end = min(end, config.end_date)
+        query_dt = datetime.datetime.combine(query_end, datetime.time.min)
+
+        for order_book_id, _weight in self._benchmark:
+            if order_book_id in self.NULL_OID:
+                continue
+
+            dates = data_proxy.history_bars(
+                id_or_ins=order_book_id,
+                bar_count=None,
+                frequency="1d",
+                field="datetime",
+                dt=query_dt,
+                skip_suspended=False,
+                adjust_type="none",
+            )
+            if dates is None or len(dates) == 0:
+                raise RuntimeError(
+                    _("benchmark {} missing data between backtest start date {} and end date {}").format(
+                        order_book_id, config.start_date, query_end
+                    )
+                )
+
+            # 首日收益需要前一交易日价格；这里只设日期下限，由框架统一对齐策略交易日历。
+            first_date = convert_int_to_date(dates[0]).date()
+            start = max(start, first_date + datetime.timedelta(days=1))
+
+        return start, end
 
     def _get_one_benchmark_daily_returns(self, ins: Instrument, trading_dates: pd.DatetimeIndex):
         # trading_dates 需要比需求的日期多一天，因为首日也需要计算收益率
