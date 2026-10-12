@@ -21,7 +21,7 @@ from rqalpha.main import AVAILABLE_DATA_RANGE, _adjust_start_date
 from rqalpha.mod.rqalpha_mod_sys_analyser import __config__, mod as analyser_module
 from rqalpha.utils import RqAttrDict
 from rqalpha.utils.datetime_func import convert_date_to_int
-from rqalpha.utils.exception import InstrumentNotFound, is_user_exc
+from rqalpha.utils.exception import InstrumentNotFound
 from rqalpha.utils.testing import mock_instrument
 
 
@@ -152,17 +152,17 @@ def test_benchmark_at_global_data_start(start_analyser):
 
 
 @pytest.mark.parametrize("benchmark", [
-    # 字符串配置：两个正权重基准，取数据首日较晚的那个。
+    # 字符串配置：两个正权重基准，取第二条日线日期较晚的那个。
     "000300.XSHG:0.5,000905.XSHG:0.5",
     # 反转基准顺序并加入负权重和现金项，日期下限应保持一致。
     "000905.XSHG:-1,000300.XSHG:2,null:1",
     # 字典配置：零权重基准仍按现有取数规则参与日期限制。
     {"000300.XSHG": 1, "000905.XSHG": 0},
 ])
-def test_multiple_benchmarks_use_latest_first_bar(start_analyser, benchmark):
-    """复合基准的数据首日分别为 1 月 2 日和 5 日，回测统一从 1 月 8 日开始。
+def test_multiple_benchmarks_use_latest_second_bar(start_analyser, benchmark):
+    """复合基准的第二条日线分别为 1 月 3 日和 8 日，回测统一从 1 月 8 日开始。
 
-    验证字符串和字典配置，以及顺序、权重和 null 项不会改变取最晚数据首日的规则。
+    验证字符串和字典配置，以及顺序、权重和 null 项不会改变取最晚可用起始日的规则。
     """
     env, _, _ = start_analyser(benchmark)
 
@@ -196,18 +196,48 @@ def test_no_real_benchmark_leaves_range_unchanged(start_analyser, benchmark):
     data_source.history_bars.assert_not_called()
 
 
-def test_hook_preserves_stricter_incoming_range(start_analyser):
-    """传入范围已比基准要求更严格时，保留其起止日期，且 Hook 不直接修改全局配置。"""
-    env, _, _ = start_analyser("000905.XSHG")
-    current = (date(2024, 1, 9), date(2024, 1, 9))
+@pytest.mark.parametrize("second_bar_date", [
+    pytest.param(date(2024, 1, 8), id="weekend"),
+    pytest.param(date(2024, 1, 9), id="weekend-and-holiday"),
+])
+def test_hook_uses_second_benchmark_bar(start_analyser, second_bar_date):
+    """仅有两条日线也足以计算首日收益，Hook 直接以第二条日线日期作为起始下限。
 
-    assert env.hook_registry.hook(AVAILABLE_DATA_RANGE).apply(current, "1d") == current
+    覆盖周末及模拟休市日造成的行情间隔，不经过框架的日期对齐。
+    """
+    env, _, data_source = start_analyser("000905.XSHG")
+    data_source.history_bars.side_effect = None
+    data_source.history_bars.return_value = np.array([
+        convert_date_to_int(date(2024, 1, 5)), convert_date_to_int(second_bar_date),
+    ], dtype="u8")
+    current = (date(2024, 1, 2), date(2024, 1, 10))
+
+    result = env.hook_registry.hook(AVAILABLE_DATA_RANGE).apply(current, "1d")
+
+    assert result == (second_bar_date, date(2024, 1, 10))
     assert env.config.base.start_date == date(2024, 1, 2)
 
 
-@pytest.mark.parametrize("data", [None, np.array([], dtype="u8")], ids=["none", "empty"])
-def test_benchmark_without_data_reports_instrument(start_analyser, data):
-    """行情返回 None 或空数组时，抛出包含基准代码的缺数错误，便于定位问题。"""
+@pytest.mark.parametrize("current_start, expected_start", [
+    pytest.param(date(2024, 1, 9), date(2024, 1, 9), id="trading-day"),
+    pytest.param(date(2024, 1, 6), date(2024, 1, 8), id="weekend"),
+])
+def test_hook_preserves_stricter_incoming_range(start_analyser, current_start, expected_start):
+    """起点取传入下限与基准第二条日线日期的较晚者，保留结束日，且不直接修改全局配置。"""
+    env, _, _ = start_analyser("000905.XSHG")
+    current = (current_start, date(2024, 1, 9))
+
+    assert env.hook_registry.hook(AVAILABLE_DATA_RANGE).apply(current, "1d") == (expected_start, current[1])
+    assert env.config.base.start_date == date(2024, 1, 2)
+
+
+@pytest.mark.parametrize("data", [
+    pytest.param(None, id="none"),
+    pytest.param(np.array([], dtype="u8"), id="empty"),
+    pytest.param(np.array([20240105000000], dtype="u8"), id="single-bar"),
+])
+def test_benchmark_with_insufficient_data_reports_instrument(start_analyser, data):
+    """行情返回 None、空数组或仅一条日线时，抛出包含基准代码的缺数错误。"""
     env, _, data_source = start_analyser("000905.XSHG")
     data_source.history_bars.side_effect = None
     data_source.history_bars.return_value = data
@@ -234,11 +264,9 @@ def test_unknown_benchmark_reports_instrument(start_analyser):
         _adjust_start_date(env.config, env.data_proxy, env.hook_registry)
 
 
-def test_no_trading_day_after_benchmark_first_bar(start_analyser):
-    """结束日恰为基准首个数据日时，顺延后没有可回测交易日，应报用户配置错误。"""
+def test_only_one_benchmark_bar_before_requested_end(start_analyser):
+    """结束日恰为基准首日时，只能查到一条日线，Hook 应直接报缺数错误。"""
     env, _, _ = start_analyser("000905.XSHG", end_date=date(2024, 1, 5))
 
-    with pytest.raises(ValueError) as caught:
-        _adjust_start_date(env.config, env.data_proxy, env.hook_registry)
-
-    assert is_user_exc(caught.value)
+    with pytest.raises(RuntimeError, match=r"000905\.XSHG"):
+        env.hook_registry.hook(AVAILABLE_DATA_RANGE).apply((date(2024, 1, 2), date(2024, 1, 5)), "1d")

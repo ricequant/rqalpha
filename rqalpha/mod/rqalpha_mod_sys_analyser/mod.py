@@ -190,16 +190,14 @@ class AnalyserMod(AbstractMod):
                 skip_suspended=False,
                 adjust_type="none",
             )
-            if dates is None or len(dates) == 0:
+            if dates is None or len(dates) < 2:
                 raise RuntimeError(
                     _("benchmark {} missing data between backtest start date {} and end date {}").format(
                         order_book_id, config.start_date, query_end
                     )
                 )
 
-            # 首日收益需要前一交易日价格；这里只设日期下限，由框架统一对齐策略交易日历。
-            first_date = convert_int_to_date(dates[0]).date()
-            start = max(start, first_date + datetime.timedelta(days=1))
+            start = max(start, convert_int_to_date(dates[1]).date())  # 首日收益需要前一交易日价格，因此从基准的第二条日线开始回测
 
         return start, end
 
