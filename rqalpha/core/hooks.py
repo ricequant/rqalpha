@@ -10,7 +10,7 @@
     hook = env.hook_registry.hook(ADJUST)
     hook.register(add)
     result = hook.apply(10, 2)  # 12
-    
+
 类型注解供静态检查器验证签名，不进行运行时签名检查。
 """
 
@@ -21,10 +21,10 @@ from rqalpha.utils.typing import ParamSpec, Concatenate
 
 
 __all__ = [
-    'Hook', 
-    'Notify', 
-    'Waterfall', 
-    'HookSpec', 
+    'Hook',
+    'Notify',
+    'Waterfall',
+    'HookSpec',
     'HookRegistry'
 ]
 
@@ -52,9 +52,9 @@ class Hook(Generic[C]):
 
     @classmethod
     def _do_register(
-        cls, 
-        callbacks: List[_Registration[C]], 
-        callback: C, 
+        cls,
+        callbacks: List[_Registration[C]],
+        callback: C,
         insert_func: Callable[[List[_Registration[C]], _Registration[C]], Any] = list.append
     ) -> Callable[[], None]:
         reg = _Registration(callback)
