@@ -57,7 +57,7 @@ def _adjust_start_date(config, data_proxy, hook_registry: HookRegistry):
     def _restrict_range(current: DateRange, _: str) -> DateRange:
         start, end = current
         return max(start, config.base.start_date), min(end, config.base.end_date)
-    
+
     hook = hook_registry.hook(AVAILABLE_DATA_RANGE)
     hook.register(_restrict_range)
     frequency = config.base.frequency
