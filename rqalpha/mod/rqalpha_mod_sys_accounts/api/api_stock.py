@@ -204,7 +204,8 @@ def stock_order_target_percent(id_or_ins: str, percent, price_or_style=None, pri
 stock_order_target_percent = cast_singledispatch(order_target_percent).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order_target_percent)
 
 
-def stock_order(id_or_ins: str, quantity, price_or_style=None, price=None, style=None) -> List[Order]:
+def stock_order(id_or_ins: Union[str, Instrument], quantity, price_or_style=None, price=None, style=None) -> List[Order]:
+    id_or_ins = cast(str, id_or_ins)
     result_order = stock_order_shares(id_or_ins, quantity, price, style, price_or_style)
     if result_order:
         return [result_order]
@@ -212,7 +213,8 @@ def stock_order(id_or_ins: str, quantity, price_or_style=None, price=None, style
 stock_order = cast_singledispatch(order).register(INST_TYPE_IN_STOCK_ACCOUNT)(stock_order)
 
 
-def stock_order_to(id_or_ins: str, quantity, price_or_style=None, price=None, style=None) -> List[Order]:
+def stock_order_to(id_or_ins:  Union[str, Instrument], quantity, price_or_style=None, price=None, style=None) -> List[Order]:
+    id_or_ins = cast(str, id_or_ins)
     position = Environment.get_instance().portfolio.get_position(id_or_ins, POSITION_DIRECTION.LONG)
     open_style, close_style = calc_open_close_style(price, style, price_or_style)
     quantity = quantity - position.quantity
