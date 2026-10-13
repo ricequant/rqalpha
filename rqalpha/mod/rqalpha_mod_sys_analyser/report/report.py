@@ -118,7 +118,7 @@ def _yearly_indicators(
 
 
 def _monthly_returns(p_returns: Series):
-    data = DataFrame(index=p_returns.index.year.unique(), columns=list(range(1, 13)))
+    data = DataFrame(index=p_returns.index.year.unique(), columns=list(range(1, 13)), dtype=float)
     for year, p_year_returns in p_returns.groupby(p_returns.index.year):
         for month, p_month_returns in p_year_returns.groupby(p_year_returns.index.month):
             data.loc[year, month] = (p_month_returns + 1).prod() - 1

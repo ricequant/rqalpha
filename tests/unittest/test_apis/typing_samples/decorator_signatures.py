@@ -1,10 +1,10 @@
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 import pandas as pd
 from typing_extensions import assert_type
 
 from rqalpha.api import api_exc_patch, decorate_api_exc, export_as_api
-from rqalpha.apis.api_rqdatac import get_factor, get_industry, get_stock_connect, require_explicit_expect_df
+from rqalpha.apis.api_rqdatac import econ, futures, get_factor, get_industry, get_stock_connect, require_explicit_expect_df
 from rqalpha.utils.arg_checker import apply_rules
 
 
@@ -39,6 +39,12 @@ def check_signatures() -> None:
     assert_type(checked(1, expect_df=True), str)
     assert_type(renamed(1, expect_df=True), str)
     assert_type(get_industry("银行"), List[str])
+    assert_type(econ.get_reserve_ratio(n=2), Optional[pd.DataFrame])
+    assert_type(econ.get_money_supply(n=2), Optional[pd.DataFrame])
+    assert_type(futures.get_dominant("RB"), Optional[str])
+    assert_type(futures.get_member_rank("RB"), pd.DataFrame)
+    assert_type(futures.get_warehouse_stocks(["RB"]), pd.DataFrame)
+    assert_type(futures.get_dominant_price("RB", fields=("close",)), Optional[pd.DataFrame])
     assert_type(get_factor("000001.XSHE", "pe_ratio", count=5, expect_df=False), pd.Series)
     assert_type(get_factor("000001.XSHE", "pe_ratio", count=5, expect_df=True), pd.DataFrame)
     assert_type(get_stock_connect("000001.XSHE", fields="shares_holding", expect_df=False), pd.Series)
@@ -64,5 +70,8 @@ def check_signatures() -> None:
     renamed("invalid", expect_df=True)  # type: ignore[arg-type]
     stacked(1, unexpected=True)  # type: ignore[call-arg]
     get_industry(1)  # type: ignore[arg-type]
+    econ.get_reserve_ratio(n="invalid")  # type: ignore[arg-type]
+    futures.get_dominant("RB", unknown_argument=1)  # type: ignore[call-arg]
+    futures.get_dominant_price("RB", fields=1)  # type: ignore[arg-type]
     get_factor("000001.XSHE", "pe_ratio", count="5", expect_df=False)  # type: ignore[call-overload]
     get_stock_connect("000001.XSHE", fields=1, expect_df=False)  # type: ignore[call-overload]

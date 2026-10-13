@@ -83,7 +83,7 @@ def environment():
 
     env.submit_order = MagicMock()
     yield env
-    
+
     cleanup_resources(env)
 
 
@@ -153,7 +153,7 @@ def test_order_target_portfolio_smart_small_weights(environment, on_handle_bar, 
         # 目标数量 = (10,000,000 × 0.001) / 11.70 = 10,000 / 11.70 ≈ 854.70
         # 经最小单位调整后的实际数量: 900 股
         "000001.XSHE": (900, SIDE.BUY, POSITION_EFFECT.OPEN, MarketOrder()),
-        
+
         # 000004.XSHE (*ST国华) 开盘价: 10.53 元
         # 目标数量 = (10,000,000 × 0.002) / 10.53 = 20,000 / 10.53 ≈ 1,899.36
         # 经最小单位调整后的实际数量: 1,900 股
@@ -289,7 +289,7 @@ def test_order_target_portfolio_smart_adjust_existing_positions(environment, on_
     order_target_portfolio_smart({
         "000001.XSHE": 0.1,  # 降至10%权重
     })
-    
+
     # 验证：由于测试环境没有真实持仓状态，会按新的10%权重重新计算
     assert_submitted_orders({
         # 计算依据：测试环境会重新按10%权重计算（因为没有持仓状态）
