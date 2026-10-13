@@ -447,7 +447,7 @@ def sell_close(
 @export_as_api
 @apply_rules(
     assure_that("id_or_ins").is_valid_order_book_id(),
-    verify_that("quantity").is_number(), 
+    verify_that("quantity").is_number(),
     *common_rules
 )
 @instype_singledispatch
@@ -470,6 +470,8 @@ def order(
           *   quantity 表示调仓量
           *   如果 quantity 为正数，则先平 Sell 方向仓位，再开 Buy 方向仓位
           *   如果 quantity 为负数，则先平 Buy 反向仓位，再开 Sell 方向仓位
+
+      :returns: 本次提交的订单列表。没有提交订单时返回空列表；订单是否成交请检查其状态。
 
       :param id_or_ins: 下单标的物
       :param quantity: 调仓量
@@ -495,7 +497,7 @@ def order(
 @export_as_api
 @apply_rules(
     assure_that("id_or_ins").is_valid_order_book_id(),
-    verify_that("quantity").is_number(), 
+    verify_that("quantity").is_number(),
     *common_rules
 )
 @instype_singledispatch
@@ -518,6 +520,8 @@ def order_to(
         *   quantity 表示调整至某个仓位
         *   quantity 如果为正数，则先平 SELL 方向仓位，再 BUY 方向开仓 quantity 手
         *   quantity 如果为负数，则先平 BUY 方向仓位，再 SELL 方向开仓 -quantity 手
+
+    :returns: 本次提交的订单列表。没有提交订单时返回空列表；订单是否成交请检查其状态。
 
     :param id_or_ins: 下单标的物
     :param int quantity: 调仓量
