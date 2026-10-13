@@ -87,6 +87,9 @@ ignore_missing_imports = true
 check_untyped_defs = true
 warn_unused_ignores = true
 
+[tool.ruff]
+line-length = 120
+
 [tool.ruff.lint]
 select = ["B909"]
 preview = true
