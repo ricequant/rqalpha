@@ -148,7 +148,7 @@ class OrderTargetPortfolio:
             self._exchange_rates[market] = pair
 
         phase = ExecutionContext.phase()
-        self._prices = DataFrame(index=index, columns=['last', 'limit_up', 'limit_down'], dtype=float)  # type: ignore
+        self._prices = DataFrame(index=index, columns=['last', 'limit_up', 'limit_down'], dtype=float)
         if phase == EXECUTION_PHASE.OPEN_AUCTION:
             # 集合竞价阶段，最近的价格是昨收
             if valuation_prices is not None:
@@ -298,7 +298,7 @@ class OrderTargetPortfolio:
                 costs += cost.sum()
             if market != MARKET.CN:
                 # 汇率成本
-                exchange_rate = self._exchange_rates[market]  # type: ignore
+                exchange_rate = self._exchange_rates[market]
                 buy_mask = (diff > 0) & (diff.index.isin(group.index))
                 sell_mask = (diff < 0) & (diff.index.isin(group.index))
                 costs += delta_mv[buy_mask].sum() * (exchange_rate.ask / exchange_rate.middle - 1)
@@ -396,6 +396,7 @@ class OrderTargetPortfolio:
         prev_scale = 0.0
         scale_breakpoints = []
         for order_book_id, weight in target_weights[target_weights > 0].items():
+            order_book_id = cast(str, order_book_id)
             weight = float(weight)
             lower_weight = float(lower[order_book_id])
             upper_weight = float(upper[order_book_id])
@@ -649,6 +650,7 @@ def order_target_portfolio_smart(
 
     # 先平
     for order_book_id, delta_quantity in cast(Series, (adjusting[adjusting < 0])).items():
+        order_book_id = cast(str, order_book_id)
         order = env.submit_order(
             Order.__from_create__(
                 order_book_id,

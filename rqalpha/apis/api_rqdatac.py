@@ -15,7 +15,7 @@
 import datetime
 from functools import lru_cache, wraps
 import inspect
-from typing import Any, Union, Optional, Iterable, List, Callable, overload, Literal, cast
+from typing import Any, Union, Optional, Iterable, List, Set, Callable, overload, Literal, cast
 
 from dateutil.parser import parse
 import pandas as pd
@@ -60,7 +60,7 @@ except ImportError:
 # rqdatac 收到 expect_df=False 时会直接报错，因此调用方应当显式指定该参数。
 #
 # TODO(2026-12-31): 该日期之后发布的版本中，未显式传入 expect_df 将直接报错。
-_EXPECT_DF_WARNED = set()
+_EXPECT_DF_WARNED: Set[str] = set()
 
 
 def require_explicit_expect_df(func: ApiFunc[P, R]) -> ApiFunc[P, R]:
@@ -136,6 +136,8 @@ def get_split(order_book_ids: Union[str, List[str]], start_date: Optional[Union[
     # order_book_id 支持list类型
     env = Environment.get_instance()
     dt = env.trading_dt.date() - datetime.timedelta(days=1)
+    if start_date is None:
+        raise RQInvalidArgument('unknown date value: {}'.format(start_date))
     start_date = to_date(start_date)
     if start_date > dt:
         raise RQInvalidArgument(_('in get_split, start_date {} is no earlier than the previous test day {}').format(
@@ -471,7 +473,7 @@ def get_price(
         #...
     """
     env = Environment.get_instance()
-    yesterday = env.trading_dt.date() - datetime.timedelta(days=1)
+    yesterday: datetime.date = env.trading_dt.date() - datetime.timedelta(days=1)
     if end_date is not None:
         end_date = to_date(end_date)
         if end_date > yesterday:
@@ -1121,11 +1123,6 @@ def get_dominant_future(underlying_symbol: str, rule: int = 0) -> Optional[str]:
         return None
 
 
-@export_as_api
-class econ:
-    pass
-
-
 @apply_rules(verify_that('reserve_type').is_in(['all', 'major', 'other']),
              verify_that('n').is_instance_of(int).is_greater_than(0))
 def _econ_get_reserve_ratio(reserve_type: str = 'all', n: int = 1) -> Optional[pd.DataFrame]:
@@ -1137,7 +1134,7 @@ def _econ_get_reserve_ratio(reserve_type: str = 'all', n: int = 1) -> Optional[p
     """
     df = rqdatac.econ.get_reserve_ratio(reserve_type)
     if df is None or df.empty:
-        return
+        return None
     df.sort_values(by=['effective_date', 'reserve_type'], ascending=[False, True], inplace=True)
     effective_date_unique = df['effective_date'].unique()
     if len(effective_date_unique) <= n:
@@ -1161,19 +1158,16 @@ def _econ_get_money_supply(n: int = 1) -> Optional[pd.DataFrame]:
     df = rqdatac.econ.get_money_supply(start_date, end_date)
 
     if df is None or df.empty:
-        return
+        return None
 
     df.sort_index(ascending=False, inplace=True)
     return df.head(n)
 
 
-econ.get_reserve_ratio = staticmethod(_econ_get_reserve_ratio)
-econ.get_money_supply = staticmethod(_econ_get_money_supply)
-
-
 @export_as_api
-class futures:
-    pass
+class econ:
+    get_reserve_ratio = staticmethod(_econ_get_reserve_ratio)
+    get_money_supply = staticmethod(_econ_get_money_supply)
 
 
 @apply_rules(verify_that('underlying_symbol').is_instance_of(str))
@@ -1284,7 +1278,7 @@ def _futures_get_dominant_price(
         fields: Optional[Iterable[str]] = None,
         adjust_type: str = "pre",
         adjust_method: str = "prev_close_spread"
-) -> pd.DataFrame:
+) -> Optional[pd.DataFrame]:
     """ 获取主力合约行情数据
 
     :param underlying_symbols: 期货合约品种，可传入 underlying_symbol, underlying_symbol list
@@ -1322,8 +1316,10 @@ def _futures_get_dominant_price(
     env = Environment.get_instance()
     if not isinstance(underlying_symbols, list):
         underlying_symbols = [underlying_symbols]
-    if fields and not isinstance(fields, list):
+    if isinstance(fields, str):
         fields = [fields]
+    elif fields is not None:
+        fields = list(fields)
     end_date = env.trading_dt if end_date is None else pd.to_datetime(end_date)
     start_date = end_date - datetime.timedelta(days=3) if start_date is None else pd.to_datetime(start_date)
     if start_date > end_date:
@@ -1349,7 +1345,7 @@ def _futures_get_dominant_price(
         fields=_fields, expect_df=True
     )
     if df is None:
-        return
+        return None
 
     df.reset_index(inplace=True)
     df['underlying_symbol'] = df['order_book_id'].str[:-2]
@@ -1377,10 +1373,12 @@ def _futures_get_dominant_price(
     return df[fields] if fields else df
 
 
-futures.get_dominant_price = staticmethod(_futures_get_dominant_price)
-futures.get_dominant = staticmethod(_futures_get_dominant)
-futures.get_member_rank = staticmethod(_futures_get_member_rank)
-futures.get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
+@export_as_api
+class futures:
+    get_dominant_price = staticmethod(_futures_get_dominant_price)
+    get_dominant = staticmethod(_futures_get_dominant)
+    get_member_rank = staticmethod(_futures_get_member_rank)
+    get_warehouse_stocks = staticmethod(_futures_get_warehouse_stocks)
 
 
 @export_as_api
@@ -1472,4 +1470,3 @@ def get_pit_financials_ex(
 @apply_rules(verify_that('entities').are_valid_query_entities())
 def query(*entities: Any) -> Any:
     return rqdatac.query(*entities)
-

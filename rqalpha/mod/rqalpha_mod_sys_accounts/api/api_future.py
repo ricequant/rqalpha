@@ -54,7 +54,7 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style) -> U
         raise RQInvalidArgument(_("Limit order price should not be nan."))
     ins = assure_active_ins_for_order_api(order_book_id)
     if ins is None:
-        return
+        return None
     if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == INSTRUMENT_TYPE.FUTURE:
         if "88" in order_book_id:
             raise RQInvalidArgument(_("Main Future contracts[88] are not supported in paper trading."))
@@ -65,9 +65,9 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style) -> U
     if not is_valid_price(price):
         reason = _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         env.order_creation_failed(order_book_id=order_book_id, reason=reason)
-        return
+        return None
 
-    orders = []
+    orders: List[Order] = []
     if position_effect in (POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.CLOSE):
         direction = POSITION_DIRECTION.LONG if side == SIDE.SELL else POSITION_DIRECTION.SHORT
         position = env.portfolio.get_position(order_book_id, direction)
@@ -118,7 +118,7 @@ def _submit_order(order_book_id: str, amount, side, position_effect, style) -> U
             )
         )
 
-    submitted_orders = []
+    submitted_orders: List[Order] = []
     for o in orders:
         if env.can_submit_order(o):
             env.broker.submit_order(o)
@@ -149,7 +149,7 @@ def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, t
         quantity -= (long_position.quantity - short_position.quantity)
     if quantity == 0:
         return []
-    orders = []
+    orders: List[Order] = []
 
     if quantity > 0:
         # 平空头，开多头

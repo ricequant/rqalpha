@@ -80,3 +80,23 @@ write_to = "rqalpha/_version.py"
 tag_regex = "^release/(?P<version>.*)$"
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
+
+[tool.mypy]
+files = [
+    "rqalpha/apis",
+    "rqalpha/mod/rqalpha_mod_sys_accounts/api",
+]
+follow_imports = "silent"
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
+
+[tool.ruff]
+include = [
+    "rqalpha/apis/**/*.py",
+    "rqalpha/mod/rqalpha_mod_sys_accounts/api/**/*.py",
+]
+
+[tool.ruff.lint]
+select = ["B909"]
+preview = true
