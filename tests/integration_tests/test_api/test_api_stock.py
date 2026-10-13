@@ -83,7 +83,7 @@ def test_order_lots(assert_order):
         order_price = bar_dict[context.s1].limit_up
         o = order_lots(context.s1, 1, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=100, price=order_price)
-    
+
     run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
@@ -97,7 +97,7 @@ def test_order_value(assert_order):
         # 5 块最小手续费
         o = order_value(context.s1, context.amount * order_price + 5, order_price)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, quantity=context.amount, price=order_price)
-    
+
     run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
@@ -108,7 +108,7 @@ def test_order_percent(assert_order):
     def handle_bar(context, bar_dict):
         o = order_percent(context.s1, 0.0001, bar_dict[context.s1].limit_up)
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
-    
+
     run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
@@ -121,7 +121,7 @@ def test_order_target_value(assert_order):
     def handle_bar(context, bar_dict):
         o = order_target_percent(context.s1, 0.02, style=LimitOrder(bar_dict[context.s1].limit_up))
         assert_order(o, side=SIDE.BUY, order_book_id=context.s1, price=bar_dict[context.s1].limit_up)
-    
+
     run_func(config=__config__, init=init, handle_bar=handle_bar)
 
 
@@ -210,7 +210,7 @@ def test_auto_switch_order_value():
     def handle_bar(context, _):
         order_shares("000001.XSHE", 200)
         assert context.portfolio.positions["000001.XSHE"].quantity == 100
-    
+
     run_func(config=config, handle_bar=handle_bar)
 
 

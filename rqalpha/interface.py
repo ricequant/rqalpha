@@ -446,7 +446,7 @@ class AbstractDataSource(object):
 
         :param int bar_count: 获取的历史数据数量，None 表示获取尽可能多的历史数据
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
-        :param str fields: 返回数据字段
+        :param `Optional[str, List[str]]` fields: 返回数据字段
 
         =========================   ===================================================
         fields                      字段名

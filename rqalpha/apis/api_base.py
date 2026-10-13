@@ -17,7 +17,7 @@
 from __future__ import division
 
 import types
-from datetime import date, datetime
+from datetime import date, datetime as _datetime
 from typing import Callable, List, Optional, Union, Iterable, cast, Dict
 
 import pandas as pd
@@ -77,6 +77,7 @@ def assure_active_ins_for_order_api(order_book_id: str) -> Optional[Instrument]:
         reason = _("Order Creation Failed: {order_book_id} is not listing!").format(order_book_id=order_book_id)
         user_system_log.warn(reason)
         env.event_bus.publish_event(Event(EVENT.ORDER_CANCELLATION_REJECT, order_book_id=order_book_id, reason=reason))
+        return None
 
 
 def cal_style(price, style, price_or_style=None):
@@ -168,7 +169,7 @@ def submit_order(
     order_book_id = cast(str, id_or_ins)
     ins = assure_active_ins_for_order_api(order_book_id)
     if ins is None:
-        return
+        return None
     env = Environment.get_instance()
     if env.config.base.run_type != RUN_TYPE.BACKTEST and ins.type == "Future":
         if "88" in order_book_id:
@@ -184,7 +185,7 @@ def submit_order(
     if not is_valid_price(market_price):
         reason = _("Order Creation Failed: [{order_book_id}] No market data").format(order_book_id=order_book_id)
         env.order_creation_failed(order_book_id, reason)
-        return
+        return None
 
     amount = int(amount)
 
@@ -201,6 +202,7 @@ def submit_order(
     if env.can_submit_order(order):
         env.broker.submit_order(order)
         return order
+    return None
 
 
 @export_as_api
@@ -560,7 +562,7 @@ def history_ticks(order_book_id: str, count: int) -> List[TickObject]:
     ),
     verify_that("date").is_valid_date(ignore_none=True),
 )
-def all_instruments(type: Optional[str] = None, date: Optional[Union[str, datetime, date]] = None) -> pd.DataFrame:
+def all_instruments(type: Optional[Union[str, Iterable[str]]] = None, date: Optional[Union[str, _datetime, date]] = None) -> pd.DataFrame:
     """
     获取某个国家市场的所有合约信息。使用者可以通过这一方法很快地对合约信息有一个快速了解，目前仅支持中国市场。
 

@@ -49,12 +49,25 @@ pytest tests/integration_tests/
 
 1. **Chinese comments OK**: Domain-specific logic can use Chinese comments
 2. **Follow PEP 8**: Standard Python style guide
-3. **Test before commit**: Run pytest to ensure tests pass
+3. **Test before commit**: Run pytest to ensure tests pass and follow the static-check workflow below for Python changes
 4. **If translatable strings change**: sync Babel artifacts using the commands in `babel.cfg`
    `pybabel extract -F babel.cfg --input-dirs rqalpha/ -o messages.pot`
    `pybabel update -i messages.pot -d rqalpha/utils/translations`
    update `rqalpha/utils/translations/zh_Hans_CN/LC_MESSAGES/messages.po` as needed, then run
    `pybabel compile -d rqalpha/utils/translations`
+
+### Static Checks for Python Changes
+
+1. Identify all added or modified Python files in the current change, including staged, unstaged, and untracked new files. Skip deleted files.
+2. From the repository root, pass those file paths explicitly to mypy and Ruff. Replace the example paths below with the actual changed files:
+
+   ```bash
+   python -m mypy path/to/changed_file.py path/to/another_changed_file.py
+   python -m ruff check path/to/changed_file.py path/to/another_changed_file.py
+   ```
+
+3. Focus on diagnostics in the changed files and fix issues introduced by the current change. Unrelated historical errors, including errors in unchanged files, may be deferred; briefly report any deferred errors rather than expanding the scope to clean up the whole repository.
+4. mypy checks types; Ruff currently enables B909 to detect collection mutation during iteration. Keep file and directory scope in the commands, not in `pyproject.toml`. Do not weaken check rules or add blanket suppressions to hide new errors.
 
 ## Key Architecture Points
 
