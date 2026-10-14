@@ -147,8 +147,6 @@ def _order(order_book_id: str, quantity: Union[int, float], style: OrderStyle, t
     if target:
         # For order_to
         quantity -= (long_position.quantity - short_position.quantity)
-    if quantity == 0:
-        return []
     orders: List[Order] = []
 
     if quantity > 0:
