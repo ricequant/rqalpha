@@ -5,6 +5,7 @@ import pytest
 
 from rqalpha.const import MARKET, MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, SIDE
 from rqalpha.core.events import EVENT, Event
+from rqalpha.core.hooks import HookRegistry
 from rqalpha.environment import Environment
 from rqalpha.interface import TransactionCost
 from rqalpha.model.order import LimitOrder, MarketOrder, Order
@@ -122,6 +123,7 @@ class FakeEnv:
                 partial_fill_on_insufficient_cash=partial_fill,
             )
         )
+        self.hook_registry = HookRegistry()
         self.event_bus = RecordingEventBus()
         self.price_board = price_board or FakePriceBoard()
         self.instrument = FakeInstrument()
