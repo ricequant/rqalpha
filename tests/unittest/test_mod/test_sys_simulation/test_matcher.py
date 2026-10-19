@@ -3,10 +3,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from rqalpha.const import MARKET, MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, SIDE
+from rqalpha.const import EXECUTION_PHASE, MARKET, MATCHING_TYPE, ORDER_STATUS, POSITION_EFFECT, SIDE
 from rqalpha.core.events import EVENT, Event
+from rqalpha.core.execution_context import ExecutionContext
 from rqalpha.environment import Environment
 from rqalpha.interface import TransactionCost
+from rqalpha.model.instrument import Instrument
 from rqalpha.model.order import LimitOrder, MarketOrder, Order
 from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import (
     CounterPartyOfferMatcher,
@@ -14,6 +16,7 @@ from rqalpha.mod.rqalpha_mod_sys_simulation.matcher import (
     DefaultTickMatcher,
     SignalMatcher,
 )
+from rqalpha.mod.rqalpha_mod_sys_simulation.simulation_broker import SimulationBroker
 
 
 ORDER_BOOK_ID = "000001.XSHE"
@@ -177,6 +180,20 @@ def fake_env(monkeypatch):
     return env
 
 
+@pytest.fixture
+def minute_env(fake_env):
+    fake_env.config.base.frequency = "1m"
+    fake_env.instrument = Instrument({
+        "order_book_id": ORDER_BOOK_ID,
+        "type": "CS",
+        "board_type": "MainBoard",
+        "round_lot": 100,
+        "listed_date": "2000-01-01",
+    })
+    fake_env.data_proxy.instrument_obj = fake_env.instrument
+    return fake_env
+
+
 def make_order(quantity, side=SIDE.BUY, style=None, position_effect=POSITION_EFFECT.OPEN):
     order = Order.__from_create__(
         ORDER_BOOK_ID,
@@ -223,6 +240,77 @@ def test_bar_matcher_leaves_non_crossed_limit_order_active(fake_env):
     assert trade_events(fake_env) == []
     assert order.filled_quantity == 0
     assert order.status == ORDER_STATUS.ACTIVE
+
+
+@pytest.mark.parametrize(
+    "frequency, matching_type, initial_dt, resume_dt, style, expected_price",
+    [
+        pytest.param("1m", MATCHING_TYPE.NEXT_BAR_OPEN, datetime(2020, 1, 2, 9, 30), datetime(2020, 1, 2, 9, 31), MarketOrder(), 9.5, id="before-open"),
+        pytest.param("1m", MATCHING_TYPE.NEXT_BAR_OPEN, datetime(2020, 1, 2, 11, 31), datetime(2020, 1, 2, 13, 1), LimitOrder(10.0), 9.5, id="lunch-break"),
+        pytest.param("1m", MATCHING_TYPE.NEXT_BAR_OPEN, datetime(2020, 1, 2, 15, 1), datetime(2020, 1, 3, 9, 31), MarketOrder(), 9.5, id="after-close"),
+        pytest.param("1m", MATCHING_TYPE.NEXT_BAR_OPEN, datetime(2020, 1, 2, 9, 31), None, MarketOrder(), 9.5, id="morning-start"),
+        pytest.param("1m", MATCHING_TYPE.NEXT_BAR_OPEN, datetime(2020, 1, 2, 11, 30), None, MarketOrder(), 9.5, id="morning-end"),
+        pytest.param("1d", MATCHING_TYPE.NEXT_BAR_OPEN, datetime(2020, 1, 2, 12, 0), None, MarketOrder(), 9.5, id="daily-next-open"),
+        pytest.param("1m", MATCHING_TYPE.CURRENT_BAR_CLOSE, datetime(2020, 1, 2, 12, 0), None, MarketOrder(), 10.0, id="minute-current-close"),
+    ],
+)
+def test_bar_matcher_trading_hours(minute_env, frequency, matching_type, initial_dt, resume_dt, style, expected_price):
+    minute_env.config.base.frequency = frequency
+    minute_env.calendar_dt = initial_dt
+    matcher = DefaultBarMatcher(minute_env, make_mod_config(matching_type))
+    order = make_order(100, style=style)
+
+    if resume_dt is not None:
+        # 非交易时段即使没有成交量，也应保留订单，不能触发无量撤单。
+        minute_env.bar.volume = 0
+        matcher.match(FakeAccount(), order, open_auction=False)
+
+        assert order.status == ORDER_STATUS.ACTIVE
+        assert order.filled_quantity == 0
+        assert minute_env.event_bus.events == []
+
+        minute_env.calendar_dt = resume_dt
+        minute_env.bar.volume = 1000
+
+    matcher.match(FakeAccount(), order, open_auction=False)
+
+    trades = trade_events(minute_env)
+    assert len(trades) == 1
+    assert trades[0].trade.last_quantity == 100
+    assert trades[0].trade.last_price == expected_price
+    assert order.status == ORDER_STATUS.FILLED
+
+
+def test_broker_matches_deferred_auction_order_as_regular_order(minute_env):
+    account = FakeAccount()
+    minute_env.get_account = lambda _: account
+    config = make_mod_config(MATCHING_TYPE.NEXT_BAR_OPEN, slippage=0.01)
+    broker = SimulationBroker(minute_env, config)
+    minute_env.calendar_dt = datetime(2020, 1, 2, 8, 58)
+    order = make_order(100)
+    with ExecutionContext(EXECUTION_PHASE.OPEN_AUCTION):
+        broker.submit_order(order)
+    submission_events = list(minute_env.event_bus.events)
+
+    # 混合品种的首个 bar 可能早于股票开市，竞价订单同样需要暂缓。
+    minute_env.calendar_dt = datetime(2020, 1, 2, 9, 1)
+    broker.on_bar(Event(EVENT.BAR))
+
+    assert order.status == ORDER_STATUS.ACTIVE
+    assert order.filled_quantity == 0
+    assert broker.get_open_orders() == [order]
+    assert minute_env.event_bus.events == submission_events
+
+    minute_env.calendar_dt = datetime(2020, 1, 2, 9, 31)
+    broker.on_bar(Event(EVENT.BAR))
+
+    trades = trade_events(minute_env)
+    assert len(trades) == 1
+    assert trades[0].trade.last_quantity == 100
+    # 延期后的竞价订单按普通订单处理，成交价包含滑点。
+    assert trades[0].trade.last_price == pytest.approx(9.595)
+    assert order.status == ORDER_STATUS.FILLED
+    assert broker.get_open_orders() == []
 
 
 def test_matcher_reduces_cash_limited_fill_by_order_step_for_transaction_cost(fake_env):
