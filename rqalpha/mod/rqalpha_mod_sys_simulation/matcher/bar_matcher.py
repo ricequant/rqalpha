@@ -1,5 +1,4 @@
 from rqalpha.const import MATCHING_TYPE, ORDER_TYPE, POSITION_EFFECT, SIDE
-from rqalpha.core.hooks import HookSpec, Waterfall
 from rqalpha.environment import Environment
 from rqalpha.portfolio.account import Account
 from rqalpha.model.order import Order, ALGO_ORDER_STYLES
@@ -10,18 +9,12 @@ from rqalpha.utils.i18n import gettext as _
 from .base import BaseMatcher, OrderRejected, OrderCancelled, OrderNotMatchable
 
 
-# 是否允许撮合，返回 False 表示暂缓本轮撮合；回调须保留上游的 False 结果
-BAR_MATCH_ALLOWED: "HookSpec[Waterfall[[Order, MATCHING_TYPE], bool]]" = HookSpec("sys_simulation.bar_match_allowed", Waterfall)
-
-
 class DefaultBarMatcher(BaseMatcher):
     SUPPORT_POSITION_EFFECTS = (POSITION_EFFECT.OPEN, POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY)
     SUPPORT_SIDES = (SIDE.BUY, SIDE.SELL)
 
     def __init__(self, env: Environment, mod_config, partial_fill_on_insufficient_cash: bool = False):
         super(DefaultBarMatcher, self).__init__(env, mod_config, partial_fill_on_insufficient_cash)
-        self._matching_type = mod_config.matching_type
-        self._match_allowed = env.hook_registry.hook(BAR_MATCH_ALLOWED)
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
@@ -128,12 +121,16 @@ class DefaultBarMatcher(BaseMatcher):
             )
             raise OrderCancelled(reason)
 
+    def _validate_trading_hours(self, instrument: Instrument):
+        if self._env.config.base.frequency == "1m" and self._matching_type == MATCHING_TYPE.NEXT_BAR_OPEN:
+            current_time = self._env.calendar_dt.time()
+            if not instrument.during_continuous_auction(current_time):
+                raise OrderNotMatchable(_(f"{instrument.order_book_id} not during continous auction: {current_time}"))
+
     def match(self, account, order, open_auction):
         # order 是否合法
         if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
             raise NotImplementedError
-        if not self._match_allowed.apply(True, order, self._matching_type):
-            return
         super().match(account, order, open_auction)
 
     def update(self, event):
