@@ -58,7 +58,6 @@ class BaseMatcher(AbstractMatcher):
         self._volume_percent = mod_config.volume_percent
         self._inactive_limit = mod_config.inactive_limit
         self._volume_limit = mod_config.volume_limit
-        self._matching_type = mod_config.matching_type
 
     def _get_deal_price(self, order: Order, instrument: Instrument, open_auction: bool) -> float:
         """
@@ -168,12 +167,6 @@ class BaseMatcher(AbstractMatcher):
             raise OrderCancelled(reason)
         raise OrderRejected(reason)
 
-    def _validate_trading_hours(self, instrument: Instrument):
-        """
-        检验标的在当前时间点是否允许撮合，默认允许
-        """
-        pass
-
     def _publish_trade(self, account: Account, order: Order, price: float, amount: int, open_auction: bool, close_today_amount: int):
         trade = Trade.__from_create__(
             order_id=order.order_id,
@@ -205,7 +198,6 @@ class BaseMatcher(AbstractMatcher):
         open_auction = self._during_call_auction(instrument, open_auction)
 
         try:
-            self._validate_trading_hours(instrument)
             # 1. 获取订单成交价
             deal_price = self._get_deal_price(order, instrument, open_auction)
             # 2. 校验限价条件和涨跌停规则

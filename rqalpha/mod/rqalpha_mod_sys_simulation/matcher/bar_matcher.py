@@ -15,6 +15,7 @@ class DefaultBarMatcher(BaseMatcher):
 
     def __init__(self, env: Environment, mod_config, partial_fill_on_insufficient_cash: bool = False):
         super(DefaultBarMatcher, self).__init__(env, mod_config, partial_fill_on_insufficient_cash)
+        self._matching_type = mod_config.matching_type
         self._deal_price_decider = self._create_deal_price_decider(mod_config.matching_type)
 
     def _create_deal_price_decider(self, matching_type):
@@ -121,16 +122,14 @@ class DefaultBarMatcher(BaseMatcher):
             )
             raise OrderCancelled(reason)
 
-    def _validate_trading_hours(self, instrument: Instrument):
-        if self._env.config.base.frequency == "1m" and self._matching_type == MATCHING_TYPE.NEXT_BAR_OPEN:
-            current_time = self._env.calendar_dt.time()
-            if not instrument.during_continuous_auction(current_time):
-                raise OrderNotMatchable(_(f"{instrument.order_book_id} not during continous auction: {current_time}"))
-
     def match(self, account, order, open_auction):
         # order 是否合法
         if not (order.position_effect in self.SUPPORT_POSITION_EFFECTS and order.side in self.SUPPORT_SIDES):
             raise NotImplementedError
+        if self._env.config.base.frequency == "1m" and self._matching_type == MATCHING_TYPE.NEXT_BAR_OPEN:
+            instrument = self._env.data_proxy.get_active_instrument(order.order_book_id, self._env.trading_dt)
+            if not instrument.during_continuous_auction(self._env.calendar_dt.time()):  # 对于未处于交易时间段内的标的订单，先不执行撮合
+                return
         super().match(account, order, open_auction)
 
     def update(self, event):
