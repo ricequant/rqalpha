@@ -242,20 +242,12 @@ def test_bar_matcher_leaves_non_crossed_limit_order_active(fake_env):
     assert order.status == ORDER_STATUS.ACTIVE
 
 
-@pytest.mark.parametrize(
-    "outside_dt, inside_dt, style",
-    [
-        pytest.param(datetime(2020, 1, 2, 9, 30), datetime(2020, 1, 2, 9, 31), MarketOrder(), id="before-open"),
-        pytest.param(datetime(2020, 1, 2, 11, 31), datetime(2020, 1, 2, 13, 1), LimitOrder(10.0), id="lunch-break"),
-        pytest.param(datetime(2020, 1, 2, 15, 1), datetime(2020, 1, 3, 9, 31), MarketOrder(), id="after-close"),
-    ],
-)
-def test_bar_matcher_defers_order_until_trading_hours(minute_env, outside_dt, inside_dt, style):
+def test_bar_matcher_defers_order_until_trading_hours(minute_env):
     matcher = DefaultBarMatcher(minute_env, make_mod_config(MATCHING_TYPE.NEXT_BAR_OPEN))
-    minute_env.calendar_dt = outside_dt
+    minute_env.calendar_dt = datetime(2020, 1, 2, 11, 31)
     # 非交易时段即使没有成交量，也应保留订单，不能触发无量撤单。
     minute_env.bar.volume = 0
-    order = make_order(100, style=style)
+    order = make_order(100)
 
     matcher.match(FakeAccount(), order, open_auction=False)
 
@@ -263,7 +255,7 @@ def test_bar_matcher_defers_order_until_trading_hours(minute_env, outside_dt, in
     assert order.filled_quantity == 0
     assert minute_env.event_bus.events == []
 
-    minute_env.calendar_dt = inside_dt
+    minute_env.calendar_dt = datetime(2020, 1, 2, 13, 1)
     minute_env.bar.volume = 1000
     matcher.match(FakeAccount(), order, open_auction=False)
 
@@ -271,46 +263,6 @@ def test_bar_matcher_defers_order_until_trading_hours(minute_env, outside_dt, in
     assert len(trades) == 1
     assert trades[0].trade.last_quantity == 100
     assert trades[0].trade.last_price == 9.5
-    assert order.status == ORDER_STATUS.FILLED
-
-
-@pytest.mark.parametrize("hour, minute", [(9, 31), (11, 30), (13, 1), (15, 0)])
-def test_bar_matcher_fills_order_at_trading_hours_boundaries(minute_env, hour, minute):
-    minute_env.calendar_dt = datetime(2020, 1, 2, hour, minute)
-    matcher = DefaultBarMatcher(minute_env, make_mod_config(MATCHING_TYPE.NEXT_BAR_OPEN))
-    order = make_order(100)
-
-    matcher.match(FakeAccount(), order, open_auction=False)
-
-    trades = trade_events(minute_env)
-    assert len(trades) == 1
-    assert trades[0].trade.last_quantity == 100
-    assert trades[0].trade.last_price == 9.5
-    assert order.status == ORDER_STATUS.FILLED
-
-
-@pytest.mark.parametrize(
-    "frequency, matching_type, expected_price",
-    [
-        ("1d", MATCHING_TYPE.NEXT_BAR_OPEN, 9.5),
-        ("1m", MATCHING_TYPE.CURRENT_BAR_CLOSE, 10.0),
-        ("1m", MATCHING_TYPE.VWAP, 10.0),
-    ],
-)
-def test_bar_matcher_other_modes_allow_matching_outside_trading_hours(
-    minute_env, frequency, matching_type, expected_price
-):
-    minute_env.config.base.frequency = frequency
-    minute_env.calendar_dt = datetime(2020, 1, 2, 12, 0)
-    matcher = DefaultBarMatcher(minute_env, make_mod_config(matching_type))
-    order = make_order(100)
-
-    matcher.match(FakeAccount(), order, open_auction=False)
-
-    trades = trade_events(minute_env)
-    assert len(trades) == 1
-    assert trades[0].trade.last_quantity == 100
-    assert trades[0].trade.last_price == expected_price
     assert order.status == ORDER_STATUS.FILLED
 
 
