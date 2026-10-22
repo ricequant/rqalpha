@@ -29,7 +29,7 @@ from rqalpha.environment import Environment
 
 
 def _to_timestamp(d: Union[datetime.date, str, int, float]) -> pd.Timestamp:
-    return pd.Timestamp(d).replace(hour=0, minute=0, second=0, microsecond=0)  # type: ignore
+    return pd.Timestamp(d).normalize()
 
 
 class TradingDatesMixin(object):

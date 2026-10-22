@@ -6,7 +6,7 @@ from filelock import FileLock, Timeout
 
 import h5py
 import numpy as np
-from rqalpha.utils.datetime_func import convert_date_to_date_int
+from rqalpha.utils.datetime_func import convert_date_to_date_int, convert_int_to_date
 from rqalpha.utils.i18n import gettext as _
 from rqalpha.utils.functools import lru_cache
 from rqalpha.environment import Environment
@@ -23,7 +23,7 @@ class AutomaticUpdateBundle(object):
         self._filename = filename
         self._api = api
         self._fields = fields
-        self._start_date = start_date
+        self._start_date = convert_int_to_date(start_date).date() if isinstance(start_date, int) else start_date
         self.updated = []
         self._env = Environment.get_instance()
         self._file_lock = FileLock(self._file + ".lock")

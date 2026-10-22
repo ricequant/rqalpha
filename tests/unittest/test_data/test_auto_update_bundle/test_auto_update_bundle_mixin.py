@@ -48,7 +48,7 @@ class AutomaticUpdateBundleTestCase(DataProxyFixture, RQAlphaTestCase):
         df['order_book_id'] = order_book_id
         df = df.set_index(["order_book_id", "datetime"])
         return df
-    
+
     def _mock_get_open_auction_volume(self, instrument, dt):
         # type: (Instrument, datetime.date) -> float
         data = self._auto_update_bundle_module.get_data(instrument, dt)
@@ -72,4 +72,4 @@ class AutomaticUpdateBundleTestCase(DataProxyFixture, RQAlphaTestCase):
         f_df = pickle_data.loc['A2401']
         # 期货由于有夜盘，open_auction_info 的时间为前一个交易日的晚上，即从 pickle 文件中获取时，date 应该提前一个交易日
         assert f_volume == f_df[f_df.index.date == datetime.date(2023, 12, 27)].volume.iloc[0]
-        
+
