@@ -22,6 +22,7 @@ import pandas as pd
 import numpy as np
 
 from rqalpha.utils.functools import lru_cache
+from rqalpha.utils.datetime_func import convert_int_to_date
 from rqalpha.const import TRADING_CALENDAR_TYPE, MARKET
 from rqalpha.utils.typing import DateLike
 from rqalpha.interface import AbstractDataSource
@@ -29,7 +30,9 @@ from rqalpha.environment import Environment
 
 
 def _to_timestamp(d: Union[datetime.date, str, int, float]) -> pd.Timestamp:
-    return pd.Timestamp(d).replace(hour=0, minute=0, second=0, microsecond=0)  # type: ignore
+    if isinstance(d, (int, np.integer, float, np.floating)):
+        d = convert_int_to_date(d)
+    return pd.Timestamp(d).normalize()
 
 
 class TradingDatesMixin(object):
