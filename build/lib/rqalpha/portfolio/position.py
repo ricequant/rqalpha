@@ -1,0 +1,537 @@
+# -*- coding: utf-8 -*-
+# 版权所有 2019 深圳米筐科技有限公司（下称“米筐科技”）
+#
+# 除非遵守当前许可，否则不得使用本软件。
+#
+#     * 非商业用途（非商业用途指个人出于非商业目的使用本软件，或者高校、研究所等非营利机构出于教育、科研等目的使用本软件）：
+#         遵守 Apache License 2.0（下称“Apache 2.0 许可”），
+#         您可以在以下位置获得 Apache 2.0 许可的副本：http://www.apache.org/licenses/LICENSE-2.0。
+#         除非法律有要求或以书面形式达成协议，否则本软件分发时需保持当前许可“原样”不变，且不得附加任何条件。
+#
+#     * 商业用途（商业用途指个人出于任何商业目的使用本软件，或者法人或其他组织出于任何目的使用本软件）：
+#         未经米筐科技授权，任何个人不得出于任何商业目的使用本软件（包括但不限于向第三方提供、销售、出租、出借、转让本软件、
+#         本软件的衍生产品、引用或借鉴了本软件功能或源代码的产品或服务），任何法人或其他组织不得出于任何目的使用本软件，
+#         否则米筐科技有权追究相应的知识产权侵权责任。
+#         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可，Apache 2.0 许可与本许可冲突之处，以本许可为准。
+#         详细的授权流程，请联系 public@ricequant.com 获取。
+
+from collections import UserDict, deque
+from datetime import date
+from decimal import Decimal
+from typing import Dict, Iterable, Tuple, Optional, Deque, List, Union
+
+from rqalpha.const import POSITION_DIRECTION, POSITION_EFFECT, MARKET
+from rqalpha.environment import Environment
+from rqalpha.utils.exception import InstrumentNotFound
+from rqalpha.interface import AbstractPosition
+from rqalpha.model.instrument import Instrument
+from rqalpha.model.order import Order
+from rqalpha.model.trade import Trade
+from rqalpha.utils import is_valid_price
+from rqalpha.utils.i18n import gettext as _
+from rqalpha.utils.repr import PropertyReprMeta, property_repr
+from rqalpha.utils.logger import user_system_log
+from rqalpha.utils.class_helper import cached_property
+
+
+def new_position_meta():
+    type_map = {}
+
+    class Meta(PropertyReprMeta):
+        def __new__(mcs, *args, **kwargs):
+            cls = super(Meta, mcs).__new__(mcs, *args, **kwargs)
+            try:
+                instrument_types = cls.__instrument_types__
+            except AttributeError:
+                pass
+            else:
+                for instrument_type in instrument_types:
+                    type_map[instrument_type] = cls
+            return cls
+
+    return type_map, Meta
+
+
+POSITION_TYPE_MAP, PositionMeta = new_position_meta()
+POSITION_PROXY_TYPE_MAP, PositionProxyMeta = new_position_meta()
+
+
+class Position(AbstractPosition, metaclass=PositionMeta):
+    __repr_properties__ = (
+        "order_book_id", "direction", "quantity", "market_value", "trading_pnl", "position_pnl", "last_price"
+    )
+
+    # 用于注册该 Position 类型适用的 instrument_type
+    __instrument_types__ = []
+
+    def __new__(cls, instrument, direction, init_quantity=0, init_price=None):
+        if cls == Position:
+            env = Environment.get_instance()
+            if isinstance(instrument, str):  # FIXME: 此前的参数为 order_book_id，是一个 str 类型，需要先向前兼容后逐步去掉对 str 的支持
+                instrument = env.data_proxy.get_instrument_history(instrument)[-1]
+            try:
+                position_cls = POSITION_TYPE_MAP[instrument.type]
+            except KeyError:
+                raise NotImplementedError("")
+            return position_cls.__new__(position_cls, instrument, direction, init_quantity, init_price)
+        else:
+            return object.__new__(cls)
+
+    def __init__(self, instrument: Union[Instrument, str], direction: POSITION_DIRECTION, init_quantity=0, init_price=None):
+        self._env = Environment.get_instance()
+
+        if isinstance(instrument, str):  # FIXME: 此前的参数为 order_book_id，是一个 str 类型，需要先向前兼容后逐步去掉对 str 的支持
+            instruments = self._env.data_proxy.get_instrument_history(instrument, self._env.trading_dt)
+            if not instruments:
+                raise InstrumentNotFound(_("No instruments found at {dt}: {id_or_sym}").format(dt=self._env.trading_dt, id_or_sym=instrument))
+            # 获取已上市合约中的最新一个，即使该合约已退市也能获取到，这是为了兼容 get_position 可获取已退市合约的 position 对象的历史行为
+            instrument = instruments[-1]
+
+        self._instrument = instrument
+        self._order_book_id = instrument.order_book_id
+        self._direction = direction
+
+        self._quantity = init_quantity
+        self._old_quantity = init_quantity
+        self._logical_old_quantity = 0
+
+        self._avg_price: float = init_price or 0
+        self._trade_cost: float = 0
+        self._transaction_cost: float = 0
+        self._prev_close: Optional[float] = init_price
+        self._last_price: Optional[float] = init_price
+
+        self._direction_factor = 1 if direction == POSITION_DIRECTION.LONG else -1
+
+        self._queue = PositionQueue()
+        if init_quantity:
+            self._queue.handle_trade(init_quantity, self._env.trading_dt.date())
+
+    def __bool__(self):
+        return bool(self.quantity != 0 or self.equity != 0)
+
+    @property
+    def order_book_id(self) -> str:
+        return self._order_book_id
+
+    @property
+    def direction(self) -> POSITION_DIRECTION:
+        return self._direction
+
+    @property
+    def quantity(self) -> int:
+        return self._quantity
+
+    @property
+    def transaction_cost(self) -> float:
+        return self._transaction_cost
+
+    @property
+    def avg_price(self) -> float:
+        return self._avg_price
+
+    @property
+    def trading_pnl(self) -> float:
+        """
+        交易盈亏
+        即当日所做的交易相比使用最新价交易产生的盈亏
+
+        买方向：sum(t.quantity * (last_price - t.price) for t in trades)
+        卖方向：sum(t.quantity * (t.price - last_price) for t in trades)
+
+        direction = 1 if buy else -1
+        trading_pnl 
+            = sum(t.quantity * (last_price - t.price) * direction for t in trades)
+            = sum(t.quantity * last_price * direction for t in trades) - sum(t.quantity * t.price * direction for t in trades)
+            = net_trade_quantity * last_price * direction - sum(t.quantity * t.price * direction for t in trades)
+        
+        trade_cost = sum(t.quantity * t.price * direction for t in trades)
+        trading_pnl = net_trade_quantity * last_price * direction - trade_cost
+        """
+        trade_quantity = self._quantity - self._logical_old_quantity
+        return (trade_quantity * self.last_price - self._trade_cost) * self._direction_factor
+
+    @property
+    def position_pnl(self) -> float:
+        if self._logical_old_quantity:
+            return self._logical_old_quantity * (self.last_price - self.prev_close) * self._direction_factor
+        else:
+            return 0
+
+    @property
+    def pnl(self) -> float:
+        """
+        返回该持仓的累积盈亏
+        """
+        return (self.last_price - self.avg_price) * self._quantity * self._direction_factor
+
+    @property
+    def market_value(self) -> float:
+        return self.last_price * self._quantity if self._quantity else 0
+
+    @property
+    def equity(self) -> float:
+        return self.last_price * self._quantity if self._quantity else 0
+
+    @property
+    def prev_close(self) -> float:
+        # （前复权过的）昨收价
+        if not is_valid_price(self._prev_close):
+            self._prev_close = self._env.data_proxy.get_prev_close(self._order_book_id, self._env.trading_dt)
+            if not is_valid_price(self._prev_close):
+                user_system_log.warn("invalid prev close of {}: {}".format(self._order_book_id, self._prev_close))
+        return self._prev_close
+
+    @property
+    def last_price(self) -> float:
+        if not is_valid_price(self._last_price):
+            self._last_price = self._env.data_proxy.get_last_price(self._order_book_id)
+            if not is_valid_price(self._last_price):
+                # 如果是未上市的仓位，则直接返回 0
+                if self._instrument.listed_date > self._env.trading_dt:
+                    return 0
+                user_system_log.warn("invalid last price of {}: {}".format(self._order_book_id, self._last_price))
+        return self._last_price
+
+    @property
+    def closable(self) -> int:
+        """
+        可平仓位
+        """
+        order_quantity = sum(o.unfilled_quantity for o in self._open_orders if o.position_effect in (
+            POSITION_EFFECT.CLOSE, POSITION_EFFECT.CLOSE_TODAY, POSITION_EFFECT.EXERCISE
+        ))
+        return self._quantity - order_quantity
+
+    @property
+    def today_closable(self) -> int:
+        return self._quantity - self._old_quantity - sum(
+            o.unfilled_quantity for o in self._open_orders if o.position_effect == POSITION_EFFECT.CLOSE_TODAY
+        )
+
+    @cached_property
+    def market(self) -> MARKET:
+        return self._instrument.market
+
+    def get_state(self):
+        """"""
+        return {
+            "old_quantity": self._old_quantity,
+            "logical_old_quantity": self._logical_old_quantity,
+            "quantity": self._quantity,
+            "avg_price": self._avg_price,
+            "trade_cost": self._trade_cost,
+            "transaction_cost": self._transaction_cost,
+            "prev_close": self._prev_close,
+            "position_queue": list(self._queue.queue)
+        }
+
+    def set_state(self, state):
+        """"""
+        self._old_quantity = state.get("old_quantity", 0)
+        self._logical_old_quantity = state.get("logical_old_quantity", self._old_quantity)
+        if "quantity" in state:
+            self._quantity = state["quantity"]
+        else:
+            # forward compatible
+            self._quantity = self._old_quantity + state.get("today_quantity", 0)
+        self._avg_price = state.get("avg_price", 0)
+        self._trade_cost = state.get("trade_cost", 0)
+        self._transaction_cost = state.get("transaction_cost", 0)
+        self._prev_close = state.get("prev_close")
+        self._queue.set_sate(state.get("position_queue", []))
+
+    def before_trading(self, trading_date: date) -> float:
+        # 返回该阶段导致总资金的变化量
+        self._old_quantity = self._quantity
+        self._logical_old_quantity = self._old_quantity
+        self._trade_cost = self._non_closable = 0
+        self._transaction_cost = 0
+        self._prev_close = None
+        return 0
+
+    def _update_costs(self, trade: Trade):
+        self._transaction_cost += trade.transaction_cost
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            self._trade_cost += trade.last_price * trade.last_quantity
+        else:
+            self._trade_cost -= trade.last_price * trade.last_quantity
+
+    def apply_trade(self, trade: Trade) -> Tuple[float, float]:
+        # return: (总资金的变化量, 增值税基变化量)
+        self._update_costs(trade)
+        if trade.position_effect == POSITION_EFFECT.OPEN:
+            close_details = self._queue.handle_trade(trade.last_quantity, self._env.trading_dt.date())
+            self._after_position_queue_updated(trade, close_details)
+            if self._quantity < 0:
+                self._avg_price = trade.last_price if self._quantity + trade.last_quantity > 0 else 0
+            else:
+                cost = self._quantity * self._avg_price + trade.last_quantity * trade.last_price
+                self._avg_price = cost / (self._quantity + trade.last_quantity)
+            self._quantity += trade.last_quantity
+            return (-1 * trade.last_price * trade.last_quantity) - trade.transaction_cost, 0
+        elif trade.position_effect == POSITION_EFFECT.CLOSE:
+            # 先平昨，后平今
+            close_details = self._queue.handle_trade(-trade.last_quantity, self._env.trading_dt.date())
+            self._after_position_queue_updated(trade, close_details)
+            self._old_quantity -= min(trade.last_quantity, self._old_quantity)
+            self._quantity -= trade.last_quantity
+            return trade.last_price * trade.last_quantity - trade.transaction_cost, 0
+        else:
+            raise NotImplementedError("{} does not support position effect {}".format(
+                self.__class__.__name__, trade.position_effect
+            ))
+
+    def settlement(self, trading_date: date) -> float:
+        # 返回该阶段导致总资金的变化量以及反映该阶段引起其他持仓变化的虚拟交易，虚拟交易用于换代码，转股等操作
+        return 0
+
+    def update_last_price(self, price):
+        self._last_price = price
+
+    def calc_close_today_amount(self, trade_amount, position_effect):
+        return 0
+
+    @property
+    def position_queue(self) -> Deque[Tuple[date, int]]:
+        """
+        获取持仓队列，返回每笔持仓的开仓时间和数量
+        格式为 [(开仓日期, 持仓数量), ...]
+        """
+        return self._queue.queue
+
+    @property
+    def _open_orders(self) -> Iterable[Order]:
+        for order in self._env.broker.get_open_orders(self.order_book_id):
+            if order.position_direction == self._direction:
+                yield order
+
+    @property
+    def instrument(self) -> Instrument:
+        return self._instrument
+
+    def _after_position_queue_updated(self, trade: Trade, close_details: List[Tuple[date, int]]):
+        pass
+
+
+class PositionQueue:
+    def __init__(self):
+        self._queue: Deque[Tuple[date, int]] = deque()
+
+    def set_sate(self, state: List[Tuple[date, int]]):
+        self._queue = deque(state)
+
+    def handle_trade(self, delta_quantity, trading_date: date, close_today: bool = False) -> List[Tuple[date, int]]:
+        close_details = []
+        if delta_quantity == 0:
+            return close_details
+        if self._queue and self._queue[0][1] * delta_quantity < 0:
+            # 从正平仓到负或者从负平仓到正
+            if close_today:
+                # 强制先平今
+                d, qty_in_queue = self._queue[-1]
+                if d >= trading_date:
+                    if abs(qty_in_queue) <= abs(delta_quantity):
+                        close_details.append((d, -qty_in_queue))
+                        delta_quantity += qty_in_queue
+                        self._queue.pop()
+                    else:
+                        close_details.append((d, delta_quantity))
+                        self._queue[-1] = (d, qty_in_queue + delta_quantity)
+                        delta_quantity = 0
+            while delta_quantity and self._queue:
+                d, qty_in_queue = self._queue[0]
+                if abs(qty_in_queue) <= abs(delta_quantity):
+                    # 当前持仓批次全部平掉
+                    close_details.append((d, -qty_in_queue))
+                    delta_quantity += qty_in_queue
+                    self._queue.popleft()
+                else:
+                    # 当前持仓批次部分平掉
+                    close_details.append((d, delta_quantity))
+                    self._queue[0] = (d, qty_in_queue + delta_quantity)
+                    delta_quantity = 0
+            if delta_quantity != 0:
+                # queue 消耗光了，delta_quantity 还没消耗完
+                self._queue.append((trading_date, delta_quantity))
+        else:
+            # 开仓
+            if self._queue and self._queue[-1][0] == trading_date:
+                # 当日已有开仓，更新数量
+                _, quantity = self._queue.pop()
+                self._queue.append((trading_date, quantity + delta_quantity))
+            else:
+                # 当日首次开仓
+                self._queue.append((trading_date, delta_quantity))
+        return close_details
+
+    def handle_split(self, ratio: Decimal, expected_quantity):
+        self._queue = deque(
+            (d, round(Decimal(q) * ratio)) for d, q in self._queue
+        )
+        diff = expected_quantity - sum(q for _, q in self._queue)
+        if diff != 0:
+            # 有可能因为 round 的原因导致差1股
+            self._queue[-1] = (self._queue[-1][0], self._queue[-1][1] + diff)
+
+
+    def clear(self):
+        self._queue.clear()
+
+    @property
+    def queue(self):
+        return self._queue.copy()
+
+
+class PositionProxy(metaclass=PositionProxyMeta):
+    __repr_properties__ = (
+        "order_book_id", "positions"
+    )
+    # 用于注册该 Position 类型适用的 instrument_type
+    __instrument_types__ = []
+
+    def __init__(self, long, short):
+        # type: (Position, Position) -> PositionProxy
+        self._long = long
+        self._short = short
+
+    __repr__ = property_repr
+
+    @property
+    def type(self):
+        raise NotImplementedError
+
+    @property
+    def order_book_id(self):
+        return self._long.order_book_id
+
+    @property
+    def last_price(self):
+        return self._long.last_price
+
+    @property
+    def market_value(self):
+        return self._long.market_value - self._short.market_value
+
+    # -- PNL 相关
+    @property
+    def position_pnl(self):
+        """
+        [float] 昨仓盈亏，当前交易日盈亏中来源于昨仓的部分
+
+        多方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (最新价 - 昨收价)
+        空方向昨仓盈亏 = 昨日收盘时的持仓 * 合约乘数 * (昨收价 - 最新价)
+
+        """
+        return self._long.position_pnl + self._short.position_pnl
+
+    @property
+    def trading_pnl(self):
+        """
+        [float] 交易盈亏，当前交易日盈亏中来源于当日成交的部分
+
+        单比买方向成交的交易盈亏 = 成交量 * (最新价 - 成交价)
+        单比卖方向成交的交易盈亏 = 成交量 * (成交价 - 最新价)
+
+        """
+        return self._long.trading_pnl + self._short.trading_pnl
+
+    @property
+    def daily_pnl(self):
+        """
+        [float] 当日盈亏
+
+        当日盈亏 = 昨仓盈亏 + 交易盈亏
+
+        """
+        return self._long.position_pnl + self._long.trading_pnl + self._short.position_pnl + \
+               self._short.trading_pnl - self.transaction_cost
+
+    @property
+    def pnl(self):
+        return self._long.pnl + self._short.pnl
+
+    # -- Quantity 相关
+    @property
+    def open_orders(self):
+        return Environment.get_instance().broker.get_open_orders(self.order_book_id)
+
+    # -- Margin 相关
+    @property
+    def margin(self):
+        """
+        [float] 保证金
+
+        保证金 = 持仓量 * 最新价 * 合约乘数 * 保证金率
+
+        股票保证金 = 市值 = 持仓量 * 最新价
+
+        """
+        return self._long.margin + self._short.margin
+
+    @property
+    def transaction_cost(self):
+        """
+        [float] 交易费率
+        """
+        return self._long.transaction_cost + self._short.transaction_cost
+
+    @property
+    def positions(self):
+        return [self._long, self._short]
+
+    @property
+    def long(self):
+        return self._long
+
+    @property
+    def short(self):
+        return self._short
+
+
+PositionDictType = Dict[str, Dict[POSITION_DIRECTION, Position]]
+
+
+class PositionProxyDict(UserDict):
+    def __init__(self, positions):
+        super(PositionProxyDict, self).__init__()
+        self._positions = positions  # type: PositionDictType
+
+    def keys(self):
+        return self._positions.keys()
+
+    def __getitem__(self, order_book_id):
+        position_type, position_proxy_type = self._get_position_types(order_book_id)
+        if order_book_id not in self._positions:
+            long = position_type(order_book_id, POSITION_DIRECTION.LONG)
+            short = position_type(order_book_id, POSITION_DIRECTION.SHORT)
+        else:
+            positions = self._positions[order_book_id]
+            long = positions[POSITION_DIRECTION.LONG]
+            short = positions[POSITION_DIRECTION.SHORT]
+        return position_proxy_type(long, short)
+
+    def __contains__(self, item):
+        return item in self._positions
+
+    def __iter__(self):
+        return iter(self._positions)
+
+    def __len__(self):
+        return len(self._positions)
+
+    def __setitem__(self, key, value):
+        raise TypeError("{} object does not support item assignment".format(self.__class__.__name__))
+
+    def __delitem__(self, key):
+        raise TypeError("{} object does not support item deletion".format(self.__class__.__name__))
+
+    def __repr__(self):
+        return repr({k: self[k] for k in self._positions.keys()})
+
+    def _get_position_types(self, order_book_id):
+        # type: (str) -> Tuple[type, type]
+        instrument_type = Environment.get_instance().data_proxy.instrument(order_book_id).type
+        position_type = POSITION_TYPE_MAP.get(instrument_type, Position)
+        position_proxy_type = POSITION_PROXY_TYPE_MAP.get(instrument_type, PositionProxy)
+        return position_type, position_proxy_type

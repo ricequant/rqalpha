@@ -1,0 +1,20 @@
+# WARNING: DO NOT EDIT
+
+mod:
+  # 载入 Account 和 Postion Model
+  sys_accounts:
+    enabled: true
+  # 回测 / 模拟交易 支持 Mod
+  sys_simulation:
+    enabled: true
+  # 开启该选项，可以在命令行查看回测进度
+  sys_progress:
+    enabled: true
+  sys_risk:
+    enabled: true
+  sys_analyser:
+    enabled: true
+  sys_scheduler:
+    enabled: true
+  sys_transaction_cost:
+    enabled: true
